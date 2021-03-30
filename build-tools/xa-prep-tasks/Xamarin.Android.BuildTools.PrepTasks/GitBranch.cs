@@ -28,14 +28,23 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (GitBranch)}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (WorkingDirectory)}: {WorkingDirectory.ItemSpec}");
 
+			var build_sourcebranchname = Environment.GetEnvironmentVariable ("BUILD_SOURCEBRANCHNAME");
+			if (!string.IsNullOrEmpty (build_sourcebranchname) && build_sourcebranchname != "merge") {
+				Log.LogMessage ("Using $BUILD_SOURCEBRANCHNAME");
+				Branch = build_sourcebranchname;
+				return true;
+			}
+
 			string gitHeadFile = Path.Combine (WorkingDirectory.ItemSpec, ".git", "HEAD");
 			if (File.Exists (gitHeadFile)) {
+				Log.LogMessage ($"Using {gitHeadFile}");
 				string gitHeadFileContent = File.ReadAllText (gitHeadFile);
 				Match match = GitHeadRegex.Match (gitHeadFileContent);
 				Branch = match.Value;
 			}
 
 			if (string.IsNullOrEmpty (Branch)) {
+				Log.LogMessage ("Using git command");
 				base.Execute ();
 			}
 
