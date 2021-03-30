@@ -15,6 +15,7 @@ schedules:
     include:
     - main
     - d16-9
+    - 6.0.*
 
 # External sources, scripts, tests, and yaml template files.
 resources:
