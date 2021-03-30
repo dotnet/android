@@ -15,9 +15,11 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string JetBrainsOpenJDK11Version = "11.0.7";
-		const string JetBrainsOpenJDK11Release = "944.14";
-		static readonly string JetBrainsOpenJDK11DownloadVersion = JetBrainsOpenJDK11Version.Replace ('.', '_');
+		const string MicrosoftOpenJDK11Version      = "11.0.10";
+		const string MicrosoftOpenJDK11Release      = "9.1";
+		const string MicrosoftOpenJDK11RootDirName  = "jdk-11.0.10+9";
+		const string MicrosoftOpenJDK11DirVersion   = MicrosoftOpenJDK11RootDirName + ".1";
+		const string MicrosoftOpenJDK11FileVersion  = "11.0.10.9";
 
 		const string JetBrainsOpenJDK8VersionMinor = "8";
 		const string JetBrainsOpenJDK8VersionRevision = "202";
@@ -37,10 +39,10 @@ namespace Xamarin.Android.Prepare
 			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-windows-x64-b1483.37.tar.gz
 			public static readonly Uri JetBrainsOpenJDK8 = new Uri ($"https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-{JetBrainsOpenJDK8DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK8Release}.tar.gz");
 
-			// https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-11_0_7-linux-x64-b944.14.tar.gz
-			// https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-11_0_7-osx-x64-b944.14.tar.gz
-			// https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-11_0_7-windows-x64-b944.14.tar.gz
-			public static readonly Uri JetBrainsOpenJDK11 = new Uri ($"https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-{JetBrainsOpenJDK11DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK11Release}.tar.gz");
+			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/linux/x64/microsoft-jdk-11.0.10.9-linux-x64.tar.gz
+			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/macOS/x64/microsoft-jdk-11.0.10.9-macOS-x64.tar.gz
+			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/windows/x64/microsoft-jdk-11.0.10.9-windows-x64.zip
+			public static readonly Uri MicrosoftOpenJDK11 = new Uri ($"https://msopenjdk.azureedge.net/jdk11u/{MicrosoftOpenJDK11DirVersion}/{MicrosoftOpenJDKOperatingSystem}/microsoft-jdk-{MicrosoftOpenJDK11FileVersion}-{MicrosoftOpenJDKOperatingSystem.Replace ('/', '-')}.{MicrosoftOpenJDKFileExtension}");
 
 			/// <summary>
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>
@@ -58,8 +60,9 @@ namespace Xamarin.Android.Prepare
 
 			public static readonly string JdkFolder                        = "jdk-11";
 
-			public static readonly Version JetBrainsOpenJDK11Version = new Version (Configurables.JetBrainsOpenJDK11Version);
-			public static readonly Version JetBrainsOpenJDK11Release = new Version (Configurables.JetBrainsOpenJDK11Release);
+			public static readonly Version MicrosoftOpenJDK11Version = new Version (Configurables.MicrosoftOpenJDK11Version);
+			public static readonly Version MicrosoftOpenJDK11Release = new Version (Configurables.MicrosoftOpenJDK11Release);
+			public static readonly string  MicrosoftOpenJDK11RootDirName   = Configurables.MicrosoftOpenJDK11RootDirName;
 
 			public static readonly Version JetBrainsOpenJDK8Version = new Version (Configurables.JetBrainsOpenJDK8VersionFull);
 			public static readonly Version JetBrainsOpenJDK8Release = new Version (Configurables.JetBrainsOpenJDK8Release);

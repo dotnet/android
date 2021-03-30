@@ -5,6 +5,7 @@ namespace Xamarin.Android.Prepare
 	partial class Configurables
 	{
 		const string JetBrainsOpenJDKOperatingSystem = "osx-x64";
+		const string MicrosoftOpenJDKOperatingSystem = "macOS/x64";
 
 		partial class Defaults
 		{

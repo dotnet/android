@@ -6,6 +6,8 @@ namespace Xamarin.Android.Prepare
 	partial class Configurables
 	{
 		const string JetBrainsOpenJDKOperatingSystem = "windows-x64";
+		const string MicrosoftOpenJDKOperatingSystem = "windows/x64";
+		const string MicrosoftOpenJDKFileExtension   = "zip";
 
 		partial class Defaults
 		{

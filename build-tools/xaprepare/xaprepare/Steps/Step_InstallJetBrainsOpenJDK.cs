@@ -9,9 +9,8 @@ using System.Xml.Linq;
 
 namespace Xamarin.Android.Prepare
 {
-	abstract partial class Step_InstallJetBrainsOpenJDK : StepWithDownloadProgress
+	abstract partial class Step_InstallOpenJDK : StepWithDownloadProgress
 	{
-		protected const string ProductName = "JetBrains OpenJDK";
 		const string XAVersionInfoFile = "xa_jdk_version.txt";
 		const string URLQueryFilePathField = "file_path";
 
@@ -25,10 +24,11 @@ namespace Xamarin.Android.Prepare
 			Path.Combine ("include", "jni.h"),
 		};
 
-		public Step_InstallJetBrainsOpenJDK (string description)
+		public Step_InstallOpenJDK (string description)
 			: base (description)
 		{}
 
+		protected   abstract    string  ProductName     {get;}
 		protected   abstract    string  JdkInstallDir	{get;}
 		protected   abstract    Version JdkVersion      {get;}
 		protected   abstract    Version JdkRelease      {get;}
@@ -51,31 +51,12 @@ namespace Xamarin.Android.Prepare
 				return true;
 			}
 
-			Log.StatusLine ($"JetBrains JDK {JdkVersion} r{JdkRelease} will be installed");
+			Log.StatusLine ($"{ProductName} {JdkVersion} r{JdkRelease} will be installed");
 			Uri jdkURL = JdkUrl;
 			if (jdkURL == null)
 				throw new InvalidOperationException ($"{ProductName} URL must not be null");
 
-			string[] queryParams = jdkURL.Query.TrimStart ('?').Split (QuerySeparator, StringSplitOptions.RemoveEmptyEntries);
-			if (queryParams.Length == 0) {
-				Log.ErrorLine ($"Unable to extract file name from {ProductName} URL as it contains no query component");
-				return false;
-			}
-
-			string? packageName = null;
-			foreach (string p in queryParams) {
-				if (!p.StartsWith (URLQueryFilePathField, StringComparison.Ordinal)) {
-					continue;
-				}
-
-				int idx = p.IndexOf ('=');
-				if (idx < 0) {
-					Log.DebugLine ($"{ProductName} URL query field '{URLQueryFilePathField}' has no value, unable to detect file name");
-					break;
-				}
-
-				packageName = p.Substring (idx + 1).Trim ();
-			}
+			string? packageName = GetPackageName (jdkURL);
 
 			if (String.IsNullOrEmpty (packageName)) {
 				Log.ErrorLine ($"Unable to extract file name from {ProductName} URL");
@@ -109,6 +90,34 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return true;
+		}
+
+		string? GetPackageName (Uri jdkURL)
+		{
+			string[] queryParams = jdkURL.Query.TrimStart ('?').Split (QuerySeparator, StringSplitOptions.RemoveEmptyEntries);
+			if (queryParams.Length == 0) {
+				if (jdkURL.Segments.Length > 0) {
+					return jdkURL.Segments [jdkURL.Segments.Length-1];
+				}
+				Log.ErrorLine ($"Unable to extract file name from {ProductName} URL as it contains no query component");
+				return null;
+			}
+
+			string? packageName = null;
+			foreach (string p in queryParams) {
+				if (!p.StartsWith (URLQueryFilePathField, StringComparison.Ordinal)) {
+					continue;
+				}
+
+				int idx = p.IndexOf ('=');
+				if (idx < 0) {
+					Log.DebugLine ($"{ProductName} URL query field '{URLQueryFilePathField}' has no value, unable to detect file name");
+					break;
+				}
+
+				packageName = p.Substring (idx + 1).Trim ();
+			}
+			return packageName;
 		}
 
 		async Task<bool> DownloadOpenJDK (Context context, string localPackagePath, Uri url)
@@ -247,13 +256,16 @@ namespace Xamarin.Android.Prepare
 		}
 	}
 
-	class Step_InstallJetBrainsOpenJDK8 : Step_InstallJetBrainsOpenJDK {
+	class Step_InstallJetBrainsOpenJDK8 : Step_InstallOpenJDK {
+
+		const string _ProductName = "JetBrains OpenJDK";
 
 		public Step_InstallJetBrainsOpenJDK8 ()
-			: base ($"Installing {ProductName} 1.8")
+			: base ($"Installing {_ProductName} 1.8")
 		{
 		}
 
+		protected   override    string  ProductName      => _ProductName;
 		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK8InstallDir;
 		protected   override    Version JdkVersion       => Configurables.Defaults.JetBrainsOpenJDK8Version;
 		protected   override    Version JdkRelease       => Configurables.Defaults.JetBrainsOpenJDK8Release;
@@ -262,18 +274,21 @@ namespace Xamarin.Android.Prepare
 		protected   override    string  RootDirName      => "jdk";
 	}
 
-	class Step_InstallJetBrainsOpenJDK11 : Step_InstallJetBrainsOpenJDK {
+	class Step_InstallMicrosoftOpenJDK11 : Step_InstallOpenJDK {
 
-		public Step_InstallJetBrainsOpenJDK11 ()
-			: base ($"Installing {ProductName} 11")
+		const string _ProductName = "Microsoft OpenJDK";
+
+		public Step_InstallMicrosoftOpenJDK11 ()
+			: base ($"Installing {_ProductName} 11")
 		{
 		}
 
+		protected   override    string  ProductName      => _ProductName;
 		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK11InstallDir;
-		protected   override    Version JdkVersion       => Configurables.Defaults.JetBrainsOpenJDK11Version;
-		protected   override    Version JdkRelease       => Configurables.Defaults.JetBrainsOpenJDK11Release;
-		protected   override    Uri     JdkUrl           => Configurables.Urls.JetBrainsOpenJDK11;
+		protected   override    Version JdkVersion       => Configurables.Defaults.MicrosoftOpenJDK11Version;
+		protected   override    Version JdkRelease       => Configurables.Defaults.MicrosoftOpenJDK11Release;
+		protected   override    Uri     JdkUrl           => Configurables.Urls.MicrosoftOpenJDK11;
 		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDK11CacheDir;
-		protected   override    string  RootDirName      => "jbrsdk";
+		protected   override    string  RootDirName      => Configurables.Defaults.MicrosoftOpenJDK11RootDirName;
 	}
 }
