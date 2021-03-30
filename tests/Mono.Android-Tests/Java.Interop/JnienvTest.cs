@@ -219,7 +219,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // https://github.com/xamarin/xamarin-android/issues/5265
 		public void CreateTypeWithExportedMethods ()
 		{
 			using (var e = new ContainsExportedMethods ()) {
@@ -454,9 +453,7 @@ namespace Java.InteropTests
 			Constructed = true;
 		}
 
-#if !NET // https://github.com/xamarin/xamarin-android/issues/5265
 		[Export]
-#endif
 		public void Exported ()
 		{
 			Count++;

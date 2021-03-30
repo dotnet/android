@@ -10,7 +10,7 @@ using NUnit.Framework;
 
 namespace System.NetTests {
 
-	[TestFixture, Category ("InetAccess")]
+	[TestFixture, Category ("InetAccess"), Category ("DotNetIgnore")]
 	public class SslTest
 	{
 		bool ShouldIgnoreException (WebException wex)
