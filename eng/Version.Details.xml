@@ -4,9 +4,9 @@
       <Uri>https://github.com/dotnet/installer</Uri>
       <Sha>4b7fdd1b32953dca9cb935092f46e5ab1ee5f62a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="6.0.100-preview.2.21180.1">
+    <Dependency Name="Microsoft.NET.ILLink" Version="6.0.100-preview.2.21180.4">
       <Uri>https://github.com/mono/linker</Uri>
-      <Sha>26d9440e6683b44c4db5f45b25e9c857a6563bb8</Sha>
+      <Sha>dd7d70118b7146125781c830bbff47a8cb953f39</Sha>
     </Dependency>
   </ProductDependencies>
 </Dependencies>
