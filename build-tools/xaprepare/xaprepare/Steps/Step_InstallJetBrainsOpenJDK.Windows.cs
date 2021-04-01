@@ -28,7 +28,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			if (fullArchivePath.EndsWith ("tar.gz", StringComparision.OrdinalIgnoreCase)) {
+			if (fullArchivePath.EndsWith ("tar.gz", StringComparison.OrdinalIgnoreCase)) {
 				// On Windows we don't have Tar available and the Windows package is a .tar.gz
 				// 7zip can unpack tar.gz but it's a two-stage process - first it decompresses the package, then it can be
 				// invoked again to extract the actual tar contents.
