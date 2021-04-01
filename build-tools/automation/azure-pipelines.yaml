@@ -431,9 +431,11 @@ stages:
     - template: yaml-templates\fail-on-issue.yaml
 
 # Check - "Xamarin.Android (Linux Build and Smoke Test)"
+# TODO: Azure artifact authentication is not working against PR builds from forks.
 - stage: linux_build_test
   displayName: Linux
   dependsOn: []
+  condition: ne(variables['System.PullRequest.IsFork'], 'true')
   jobs:
   - job: linux_build_test
     displayName: Build and Smoke Test
