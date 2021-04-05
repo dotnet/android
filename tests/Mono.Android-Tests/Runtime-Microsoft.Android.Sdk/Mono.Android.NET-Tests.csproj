@@ -20,7 +20,7 @@
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <PlotDataLabelSuffix>-NET6</PlotDataLabelSuffix>
     <!-- TODO: Fix excluded tests -->
-    <ExcludeCategories>DotNetIgnore:InetAccess</ExcludeCategories>
+    <ExcludeCategories>DotNetIgnore</ExcludeCategories>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
