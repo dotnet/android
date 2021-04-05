@@ -8,7 +8,7 @@
         Text="Please set the %24(ContractAssembly) property!"
     />
     <PropertyGroup>
-      <_GenAPI>"$(XAPackagesDir)\microsoft.dotnet.genapi\5.0.0-beta.20181.7\tools\net472\Microsoft.DotNet.GenAPI.exe"</_GenAPI>
+      <_GenAPI>"$(XAPackagesDir)\microsoft.dotnet.genapi\$(MicrosoftDotNetApiCompatPackageVersion)\tools\net472\Microsoft.DotNet.GenAPI.exe"</_GenAPI>
       <_CilStrip>"$(XAInstallPrefix)\xbuild\Xamarin\Android\cil-strip.exe"</_CilStrip>
       <_ContractRefDll>$(MSBuildThisFileDirectory)\reference\Mono.Android.dll</_ContractRefDll>
       <_ContractRefSrc>$(MSBuildThisFileDirectory)\reference\Mono.Android.dll.cs</_ContractRefSrc>
