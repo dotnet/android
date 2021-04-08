@@ -8,6 +8,7 @@ namespace Xamarin.Android.Prepare
 			new DebianLinuxProgram ("autoconf"),
 			new DebianLinuxProgram ("autotools-dev"),
 			new DebianLinuxProgram ("automake"),
+			new DebianLinuxProgram ("ccache"),
 			new DebianLinuxProgram ("cmake"),
 			new DebianLinuxProgram ("build-essential"),
 			new DebianLinuxProgram ("cli-common-dev"),
