@@ -396,12 +396,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				Assert.IsTrue (b.Build (proj), "First build failed");
-				if (!Builder.UseDotNet) {
-					// In .NET 5+, there are ILLink warnings
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
-							"First build should not contain warnings!  Contains\n" +
-							string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
-				}
+				b.AssertHasNoWarnings ();
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
@@ -425,12 +420,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
 				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
-				if (!Builder.UseDotNet) {
-					// In .NET 5+, there are ILLink warnings
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
-						"Second build should not contain warnings!  Contains\n" +
-						string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
-				}
+				b.AssertHasNoWarnings ();
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
