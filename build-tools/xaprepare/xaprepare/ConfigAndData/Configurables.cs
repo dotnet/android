@@ -21,23 +21,21 @@ namespace Xamarin.Android.Prepare
 		const string MicrosoftOpenJDK11DirVersion   = MicrosoftOpenJDK11RootDirName + ".1";
 		const string MicrosoftOpenJDK11FileVersion  = "11.0.10.9";
 
-		const string JetBrainsOpenJDK8VersionMinor = "8";
-		const string JetBrainsOpenJDK8VersionRevision = "202";
-		const string JetBrainsOpenJDK8VersionFull = "1." + JetBrainsOpenJDK8VersionMinor + ".0." + JetBrainsOpenJDK8VersionRevision;
-		const string JetBrainsOpenJDK8Release = "1483.37";
-		static readonly string JetBrainsOpenJDK8DownloadVersion = $"{JetBrainsOpenJDK8VersionMinor}u{JetBrainsOpenJDK8VersionRevision}";
-
-		const string CorrettoDistVersion = "8.242.08.1";
-		const string CorrettoUrlPathVersion = CorrettoDistVersion;
+		const string AdoptOpenJDKUpdate = "282";
+		const string AdoptOpenJDKBuild = "b08";
+		const string AdoptOpenJDKRelease = "8.0"; // build_number.0
+		static readonly string AdoptOpenJDKUrlVersion = $"8u{AdoptOpenJDKUpdate}{AdoptOpenJDKBuild}";
+		static readonly string AdoptOpenJDKTag = $"jdk8u{AdoptOpenJDKUpdate}-{AdoptOpenJDKBuild}";
+		static readonly string AdoptOpenJDKVersion = $"1.8.0.{AdoptOpenJDKUpdate}";
 
 		static Context ctx => Context.Instance;
 
 		public static partial class Urls
 		{
-			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-linux-x64-b1483.37.tar.gz
-			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-osx-x64-b1483.37.tar.gz
-			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-windows-x64-b1483.37.tar.gz
-			public static readonly Uri JetBrainsOpenJDK8 = new Uri ($"https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-{JetBrainsOpenJDK8DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK8Release}.tar.gz");
+			// https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u282-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u282b08.tar.gz
+			// https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u282-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u282b08.tar.gz
+			// https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u282-b08/OpenJDK8U-jdk_x64_windows_hotspot_8u282b08.zip
+			public static readonly Uri AdoptOpenJDK8 = new Uri ($"https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/{AdoptOpenJDKTag}/OpenJDK8U-jdk_{AdoptOpenJDKOperatingSystem}_hotspot_{AdoptOpenJDKUrlVersion}.{AdoptOpenJDKArchiveExtension}");
 
 			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/linux/x64/microsoft-jdk-11.0.10.9-linux-x64.tar.gz
 			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/macOS/x64/microsoft-jdk-11.0.10.9-macOS-x64.tar.gz
@@ -64,8 +62,9 @@ namespace Xamarin.Android.Prepare
 			public static readonly Version MicrosoftOpenJDK11Release = new Version (Configurables.MicrosoftOpenJDK11Release);
 			public static readonly string  MicrosoftOpenJDK11RootDirName   = Configurables.MicrosoftOpenJDK11RootDirName;
 
-			public static readonly Version JetBrainsOpenJDK8Version = new Version (Configurables.JetBrainsOpenJDK8VersionFull);
-			public static readonly Version JetBrainsOpenJDK8Release = new Version (Configurables.JetBrainsOpenJDK8Release);
+			public static readonly Version AdoptOpenJDK8Version     = new Version (Configurables.AdoptOpenJDKVersion);
+			public static readonly Version AdoptOpenJDK8Release     = new Version (Configurables.AdoptOpenJDKRelease);
+			public static readonly string  AdoptOpenJDK8RootDirName = Configurables.AdoptOpenJDKTag;
 
 			public const string DotNetTestRuntimeVersion                   = "3.1.11";
 
@@ -351,7 +350,7 @@ namespace Xamarin.Android.Prepare
 			public static string Mingw32CmakePath                    => GetCachedPath (ref mingw32CmakePath, ()                    => Path.Combine (BuildBinDir, "mingw-32.cmake"));
 			public static string Mingw64CmakePath                    => GetCachedPath (ref mingw64CmakePath, ()                    => Path.Combine (BuildBinDir, "mingw-64.cmake"));
 
-			// JetBrains OpenJDK
+			// AdoptOpenJDK
 			public static string OldOpenJDKInstallDir                => GetCachedPath (ref oldOpenJDKInstallDir, ()                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
 			public static string OpenJDK8InstallDir                  => GetCachedPath (ref openJDK8InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-1.8"));
 			public static string OpenJDK8CacheDir                    => GetCachedPath (ref openJDK8CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
