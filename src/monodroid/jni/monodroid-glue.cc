@@ -82,6 +82,7 @@
 #include "timing.hh"
 #include "xa-internal-api-impl.hh"
 #include "build-info.hh"
+#include "monovm-properties.hh"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
@@ -1804,15 +1805,18 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 #if defined (NET6)
 	{
-		PInvokeOverrideFn pinvoke_override_cb = monodroid_pinvoke_override;
-		char ptr_str[20];
-		snprintf (ptr_str, sizeof(ptr_str), "%p", pinvoke_override_cb);
+		MonoVMProperties monovm_props (monodroid_pinvoke_override);
 
-		const char* property_keys[] { "PINVOKE_OVERRIDE" };
-		const char* property_values[] { ptr_str };
-
-		log_warn (LOG_DEFAULT, "Initializing .NET6 Mono VM (override callback at %p, passed as %s", pinvoke_override_cb, ptr_str);
-		monovm_initialize (1, property_keys, property_values);
+		// NOTE: the `const_cast` breaks the contract made to MonoVMProperties that the arrays it returns won't be
+		// modified, but it's "ok" since Mono doesn't modify them and by using `const char* const*` in MonoVMProperties
+		// we may get better code generated (since the methods returning the arrays are marked as `const`, thus not
+		// modifying the class state, allowing the compiler to make some assumptions when optimizing) and the class
+		// itself doesn't touch the arrays outside its constructor.
+		monovm_initialize (
+			monovm_props.property_count (),
+			const_cast<const char**>(monovm_props.property_keys ()),
+			const_cast<const char**>(monovm_props.property_values ())
+		);
 	}
 #endif // def NET6
 
