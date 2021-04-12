@@ -102,7 +102,13 @@ namespace Xamarin.Android.Build.Tests
 			// Remove the default MainActivity.cs & AndroidResources
 			app.AndroidResources.Clear ();
 			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\foo.xml") {
-				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" />"
+				TextContent = () =>
+@"<?xml version=""1.0"" encoding=""utf-8""?>
+<LinearLayout
+  xmlns:android=""http://schemas.android.com/apk/res/android""
+  android:layout_width=""fill_parent""
+  android:layout_height=""wrap_content""
+/>"
 			});
 			app.Sources.Remove (app.GetItem ("MainActivity.cs"));
 
