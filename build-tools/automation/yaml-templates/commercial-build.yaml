@@ -86,27 +86,15 @@ steps:
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
 
-# Create and upload .nupkgs
-- task: MSBuild@1
-  displayName: pack all nupkgs
-  inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
-    configuration: $(XA.Build.Configuration)
-    msbuildArguments: >-
-      /t:CreateAllPacks
-      /restore
-      /p:NuGetLicense=${{ parameters.xaSourcePath }}/external/monodroid/tools/scripts/License.txt
-      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+- script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make create-installers
 
 - task: PublishPipelineArtifact@1
   displayName: upload nupkgs
   inputs:
     artifactName: $(NuGetArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
-
-- script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make create-installers
 
 - script: >
     mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&

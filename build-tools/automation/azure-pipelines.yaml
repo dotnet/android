@@ -54,7 +54,7 @@ variables:
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
   DotNetCoreVersion: 3.1.405
-  DotNet5Version: 5.0.103
+  DotNet5Version: 5.0.201
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: Xamarin-Android-Win2019
@@ -158,7 +158,7 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        artifactName: Build Results - Nightly macOS
+        artifactName: Build Results - macOS
 
     - script: mono $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=DetermineApplicableTests --no-emoji --run-mode=CI
       displayName: determine which test stages to run
@@ -357,11 +357,12 @@ stages:
         projects: Xamarin.Android.sln
         arguments: '-c $(XA.Build.Configuration) -target:Prepare -m:1 -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
+    # Build, pack .nupkgs, and extract workload packs to dotnet preview test directory
     - task: DotNetCoreCLI@2
       displayName: Build Solution
       inputs:
         projects: Xamarin.Android.sln
-        arguments: '-c $(XA.Build.Configuration) -m:1 -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog'
+        arguments: '-t:PackDotNet -c $(XA.Build.Configuration) -m:1 -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog'
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
@@ -369,14 +370,6 @@ stages:
         solution: build-tools\create-vsix\create-vsix.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-create-vsix.binlog
-
-    # Pack .nupkgs and extract workload packs to dotnet preview test directory
-    - task: MSBuild@1
-      displayName: PackDotNet
-      inputs:
-        solution: Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:PackDotNet /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-packdotnet.binlog
 
     - task: MSBuild@1
       displayName: msbuild xabuild
@@ -414,15 +407,13 @@ stages:
       displayName: install apkdiff dotnet tool
       continueOnError: true
 
-    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
-    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
-    # Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
+        useDotNet: true
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\netcoreapp3.1\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-SmokeMSBuildTests-WinDotnetBuildTree-$(XA.Build.Configuration).xml
-        nunitConsoleExtraArgs: --where "cat == SmokeTests"
+        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
 
     - template: yaml-templates\upload-results.yaml
       parameters:
@@ -489,15 +480,13 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make jenkins
 
-    - task: MSBuild@1
-      displayName: pack all nupkgs
+    - task: DotNetCoreCLI@2
+      displayName: extract workload packs
       inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:CreateAllPacks,ExtractWorkloadPacks /restore
-          /p:NuGetLicense=$(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/tools/scripts/License.txt
-          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+        projects: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
+        arguments: >-
+          -t:CreateAllPacks,ExtractWorkloadPacks -c $(XA.Build.Configuration)
+          -bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
