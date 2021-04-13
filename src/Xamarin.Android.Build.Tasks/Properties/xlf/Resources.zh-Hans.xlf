@@ -294,11 +294,6 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
 {1} - The literal name of the MSBuild property
 {2} - The lint version number</note>
       </trans-unit>
-      <trans-unit id="XA0124">
-        <source>Interpreter is not supported by the x86 ABI</source>
-        <target state="translated">X86 ABI 不支持解释程序</target>
-        <note />
-      </trans-unit>
       <trans-unit id="XA1000">
         <source>There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</source>
         <target state="translated">分析 {0} 时出现问题。这可能是由于 XML 不完整或无效。异常: {1}</target>

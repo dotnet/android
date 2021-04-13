@@ -2034,7 +2034,6 @@ because xbuild doesn't support framework reference assemblies.
     LibraryProjectJars="@(ExtractedJarImports)"
     TlsProvider="$(AndroidTlsProvider)"
     UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-    InterpreterEnabled="$(AndroidUseInterpreter)"
     ProjectFullPath="$(MSBuildProjectFullPath)"
     IncludeWrapSh="$(AndroidIncludeWrapSh)"
     CheckedBuild="$(_AndroidCheckedBuild)">

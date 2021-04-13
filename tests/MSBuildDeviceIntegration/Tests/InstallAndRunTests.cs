@@ -551,7 +551,7 @@ using System.Runtime.Serialization.Json;");
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
-			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86_64" };
+			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
 			builder = CreateApkBuilder ();
