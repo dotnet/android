@@ -8,6 +8,8 @@ namespace Xamarin.Android.Prepare
 		const string JetBrainsOpenJDKOperatingSystem = "windows-x64";
 		const string MicrosoftOpenJDKOperatingSystem = "windows/x64";
 		const string MicrosoftOpenJDKFileExtension   = "zip";
+		const string AdoptOpenJDKOperatingSystem     = "x64_windows";
+		const string AdoptOpenJDKArchiveExtension    = "zip";
 
 		partial class Defaults
 		{

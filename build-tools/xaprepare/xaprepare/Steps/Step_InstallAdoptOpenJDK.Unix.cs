@@ -10,11 +10,5 @@ namespace Xamarin.Android.Prepare
 		{
 			return await Utilities.Unpack (fullArchivePath, destinationDirectory, cleanDestinatioBeforeUnpacking: true);
 		}
-
-		void MoveContents (string sourceDir, string destinationDir)
-		{
-			string realSourceDir = Path.Combine (sourceDir, "Contents", "Home");
-			Utilities.MoveDirectoryContentsRecursively (realSourceDir, destinationDir);
-		}
 	}
 }

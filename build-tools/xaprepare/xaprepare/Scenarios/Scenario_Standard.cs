@@ -20,7 +20,7 @@ namespace Xamarin.Android.Prepare
 
 			Steps.Add (new Step_ShowEnabledRuntimes ());
 			Steps.Add (new Step_InstallDotNetPreview ());
-			Steps.Add (new Step_InstallJetBrainsOpenJDK8 ());
+			Steps.Add (new Step_InstallAdoptOpenJDK8 ());
 			Steps.Add (new Step_InstallMicrosoftOpenJDK11 ());
 			Steps.Add (new Step_Android_SDK_NDK ());
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true));

@@ -76,7 +76,7 @@ namespace Xamarin.Android.Prepare
 
 				string rootDir = Path.Combine (tempDir, RootDirName);
 				if (!Directory.Exists (rootDir)) {
-					Log.ErrorLine ($"JetBrains root directory not found after unpacking: {RootDirName}");
+					Log.ErrorLine ($"${ProductName} root directory not found after unpacking: {RootDirName}");
 					return false;
 				}
 
@@ -163,15 +163,15 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			string jetBrainsReleaseFile = Path.Combine (installDir, "release");
-			if (!File.Exists (jetBrainsReleaseFile)) {
-				Log.DebugLine ($"{ProductName} release file {jetBrainsReleaseFile} does not exist, cannot determine version");
+			string openJDKReleaseFile = Path.Combine (installDir, "release");
+			if (!File.Exists (openJDKReleaseFile)) {
+				Log.DebugLine ($"{ProductName} release file {openJDKReleaseFile} does not exist, cannot determine version");
 				return false;
 			}
 
-			string[] lines = File.ReadAllLines (jetBrainsReleaseFile);
+			string[] lines = File.ReadAllLines (openJDKReleaseFile);
 			if (lines == null || lines.Length == 0) {
-				Log.DebugLine ($"{ProductName} release file {jetBrainsReleaseFile} is empty, cannot determine version");
+				Log.DebugLine ($"{ProductName} release file {openJDKReleaseFile} is empty, cannot determine version");
 				return false;
 			}
 
@@ -188,7 +188,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			if (String.IsNullOrEmpty (cv)) {
-				Log.DebugLine ($"Unable to find version of {ProductName} in release file {jetBrainsReleaseFile}");
+				Log.DebugLine ($"Unable to find version of {ProductName} in release file {openJDKReleaseFile}");
 				return false;
 			}
 
@@ -256,22 +256,22 @@ namespace Xamarin.Android.Prepare
 		}
 	}
 
-	class Step_InstallJetBrainsOpenJDK8 : Step_InstallOpenJDK {
+	class Step_InstallAdoptOpenJDK8 : Step_InstallOpenJDK {
 
-		const string _ProductName = "JetBrains OpenJDK";
+		const string _ProductName = "AdoptOpenJDK";
 
-		public Step_InstallJetBrainsOpenJDK8 ()
+		public Step_InstallAdoptOpenJDK8 ()
 			: base ($"Installing {_ProductName} 1.8")
 		{
 		}
 
 		protected   override    string  ProductName      => _ProductName;
 		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK8InstallDir;
-		protected   override    Version JdkVersion       => Configurables.Defaults.JetBrainsOpenJDK8Version;
-		protected   override    Version JdkRelease       => Configurables.Defaults.JetBrainsOpenJDK8Release;
-		protected   override    Uri     JdkUrl           => Configurables.Urls.JetBrainsOpenJDK8;
+		protected   override    Version JdkVersion       => Configurables.Defaults.AdoptOpenJDK8Version;
+		protected   override    Version JdkRelease       => Configurables.Defaults.AdoptOpenJDK8Release;
+		protected   override    Uri     JdkUrl           => Configurables.Urls.AdoptOpenJDK8;
 		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDK8CacheDir;
-		protected   override    string  RootDirName      => "jdk";
+		protected   override    string  RootDirName      => Configurables.Defaults.AdoptOpenJDK8RootDirName;
 	}
 
 	class Step_InstallMicrosoftOpenJDK11 : Step_InstallOpenJDK {
