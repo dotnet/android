@@ -542,5 +542,41 @@ using System.Runtime.Serialization.Json;");
 				return line.Contains ("TestJsonDeserializationCreatesJavaHandle");
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did contain TestJsonDeserializationCreatesJavaHandle!");
 		}
+
+		[Test]
+		public void RunWithInterpreterEnabled ([Values (false, true)] bool isRelease)
+		{
+			AssertHasDevices ();
+
+			proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			if (!Builder.UseDotNet) {
+				foreach (var abi in abis) {
+					Assert.IsTrue (builder.LastBuildOutput.ContainsText (Path.Combine ($"interpreter-{abi}", "libmono-native.so")), $"interpreter-{abi}/libmono-native.so should be used.");
+					Assert.IsTrue (builder.LastBuildOutput.ContainsText (Path.Combine ($"interpreter-{abi}", "libmonosgen-2.0.so")), $"interpreter-{abi}/libmonosgen-2.0.so should be used.");
+				}
+			}
+
+			ClearAdbLogcat ();
+			RunAdbCommand ("shell setprop debug.mono.log all");
+			if (CommercialBuildAvailable)
+				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+			else
+				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			var logcatFilePath = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity", logcatFilePath, 30);
+			RunAdbCommand ("shell setprop debug.mono.log \"\"");
+			Assert.True (didStart, "Activity should have started.");
+			Assert.IsTrue (File.ReadAllText (logcatFilePath).Contains ("Enabling Mono Interpreter"), "logcat output did not contain 'Enabling Mono Interpreter'.");
+		}
+
 	}
 }
