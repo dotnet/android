@@ -55,22 +55,19 @@ steps:
   displayName: install test dependencies
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-# Restore solutions for Xamarin.Android.Tools.sln, Xamarin.Android.sln, and Xamarin.Android-Tests.sln
-- task: NuGetToolInstaller@0
-  inputs:
-    versionSpec: 5.x
-
-- task: NuGetCommand@2
+- task: MSBuild@1
   displayName: nuget restore Xamarin.Android.Build.Tasks.sln
   inputs:
-    command: custom
-    arguments: restore ${{ parameters.xaSourcePath }}/Xamarin.Android.Build.Tasks.sln -ConfigFile ${{ parameters.xaSourcePath }}/NuGet.config -Verbosity detailed
+    solution: ${{ parameters.xaSourcePath }}/Xamarin.Android.Build.Tasks.sln
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: /t:Restore /p:RestoreConfigFile=${{ parameters.xaSourcePath }}/NuGet.config /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android.Build.Tasks.binlog
 
-- task: NuGetCommand@2
+- task: MSBuild@1
   displayName: nuget restore Xamarin.Android-Tests.sln
   inputs:
-    command: custom
-    arguments: restore ${{ parameters.xaSourcePath }}/Xamarin.Android-Tests.sln -ConfigFile ${{ parameters.xaSourcePath }}/NuGet.config -Verbosity detailed
+    solution: ${{ parameters.xaSourcePath }}/Xamarin.Android-Tests.sln
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: /t:Restore /p:RestoreConfigFile=${{ parameters.xaSourcePath }}/NuGet.config /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android-Tests.binlog
 
 - task: MSBuild@1
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
