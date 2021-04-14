@@ -68,7 +68,6 @@ ms.date: 01/24/2020
 + [XA0121](xa0121.md): Assembly '{assembly}' is using '[assembly: Java.Interop.JavaLibraryReferenceAttribute]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.
 + [XA0122](xa0122.md): Assembly '{assembly}' is using a deprecated attribute '[assembly: Java.Interop.DoNotPackageAttribute]'. Use a newer version of this NuGet package or notify the library author.
 + XA0123: Removing {issue} from {propertyName}. Lint {version} does not support this check.
-+ [XA0124](xa0124.md): Interpreter is not supported by the x86 ABI
 + [XA0125](xa0125.md): `{Project}` is using a deprecated debug information level.
 Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the 'DebugType' MSBuild property to 'portable' to use the newer, cross-platform debug information level.
 If this file comes from a NuGet package, update to a newer version of the NuGet package or notify the library author.

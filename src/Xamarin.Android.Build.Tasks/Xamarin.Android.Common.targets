@@ -159,6 +159,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_XAMajorVersionNumber>1</_XAMajorVersionNumber>
 	<_XASupportsFastDev Condition=" Exists ('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') ">True</_XASupportsFastDev>
 	<_XASupportsFastDev Condition=" '$(_XASupportsFastDev)' == '' ">False</_XASupportsFastDev>
+	<AndroidUseInterpreter Condition=" '$(AndroidUseInterpreter)' == '' ">$(UseInterpreter)</AndroidUseInterpreter>
 	<AndroidUseInterpreter Condition=" '$(AndroidUseInterpreter)' == '' ">False</AndroidUseInterpreter>
 	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' == ''">False</AndroidNeedsInternetPermission>
@@ -2032,7 +2033,6 @@ because xbuild doesn't support framework reference assemblies.
     LibraryProjectJars="@(ExtractedJarImports)"
     TlsProvider="$(AndroidTlsProvider)"
     UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-    InterpreterEnabled="$(AndroidUseInterpreter)"
     ProjectFullPath="$(MSBuildProjectFullPath)"
     IncludeWrapSh="$(AndroidIncludeWrapSh)"
     CheckedBuild="$(_AndroidCheckedBuild)">

@@ -307,9 +307,6 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
 {1} - The literal name of the MSBuild property
 {2} - The lint version number</comment>
   </data>
-  <data name="XA0124" xml:space="preserve">
-    <value>Interpreter is not supported by the x86 ABI</value>
-  </data>
   <data name="XA0125" xml:space="preserve">
     <value>'{0}' is using a deprecated debug information level.
 Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the 'DebugType' MSBuild property to 'portable' to use the newer, cross-platform debug information level.
