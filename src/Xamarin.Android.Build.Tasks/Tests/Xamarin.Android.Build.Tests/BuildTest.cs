@@ -3932,11 +3932,7 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
-				if (Builder.UseDotNet) {
-					Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}{Environment.NewLine}mono.enable_assembly_preload=0", File.ReadAllText (environment).Trim ());
-				} else {
-					Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}", File.ReadAllText (environment).Trim ());
-				}
+				Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}", File.ReadAllText (environment).Trim ());
 			}
 		}
 
