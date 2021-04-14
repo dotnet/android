@@ -30,7 +30,7 @@ namespace Xamarin.Android.Prepare
 			// Assume we're building a merge commit as part of an Azure Pipelines PR build. Otherwise, run all tests.
 			//  Example: Merge 0b66502c8b9f33cbb8d21b2dab7c100629aec081 into 0bef8aa5cd74d83d77c4e2b3f63975a0deb804b3
 			var commitMessagePieces = commitMessage.Split (new string [] { " " }, StringSplitOptions.RemoveEmptyEntries);
-			if (string.IsNullOrEmpty (commitMessagePieces [3])) {
+			if (commitMessagePieces.Length <= 3 || string.IsNullOrEmpty (commitMessagePieces [3])) {
 				Log.WarningLine ($"Unable to parse merge commit message from: '{commitMessage}'.");
 				Log.MessageLine (runAllTestsLoggingCommand);
 				return true;
