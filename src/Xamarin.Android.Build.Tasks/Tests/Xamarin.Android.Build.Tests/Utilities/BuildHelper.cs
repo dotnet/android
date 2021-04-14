@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Xamarin.ProjectTools;
@@ -31,6 +32,7 @@ namespace Xamarin.Android.Build.Tests
 	}
 
 	public static class StringAssertEx {
+		[DebuggerHidden]
 		public static void DoesNotContain (string text, IEnumerable<string> collection, string message = null)
 		{
 			foreach (var line in collection) {
@@ -41,6 +43,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[DebuggerHidden]
 		public static void Contains (string text, IEnumerable<string> collection, string message = null)
 		{
 			foreach (var line in collection) {
@@ -59,11 +62,13 @@ namespace Xamarin.Android.Build.Tests
 			return regex.Match (string.Join ("\n", collection)).Success;
 		}
 
+		[DebuggerHidden]
 		public static void ContainsRegex (string pattern, IEnumerable<string> collection, string message = null, RegexOptions additionalOptions = 0)
 		{
 			Assert.IsTrue (ContainsRegex (pattern, collection, additionalOptions), message);
 		}
 
+		[DebuggerHidden]
 		public static void DoesNotContainRegex (string pattern, IEnumerable<string> collection, string message = null, RegexOptions additionalOptions = 0)
 		{
 			Assert.IsFalse (ContainsRegex (pattern, collection, additionalOptions), message);

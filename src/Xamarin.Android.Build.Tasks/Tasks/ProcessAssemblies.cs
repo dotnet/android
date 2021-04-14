@@ -74,7 +74,13 @@ namespace Xamarin.Android.Tasks
 				// If we end up with more than 1 unique mvid, we need *all* assemblies
 				if (mvids.Count > 1) {
 					foreach (var assembly in group) {
-						symbols.TryGetValue (Path.ChangeExtension (assembly.ItemSpec, ".pdb"), out var symbol);
+						var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
+						if (!symbols.TryGetValue (symbolPath, out var symbol)) {
+							// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
+							if (File.Exists (symbolPath)) {
+								symbols [symbolPath] = symbol = new TaskItem (symbolPath);
+							}
+						}
 						SetDestinationSubDirectory (assembly, group.Key, symbol);
 						output.Add (assembly);
 					}
@@ -85,9 +91,13 @@ namespace Xamarin.Android.Tasks
 						var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
 						if (first) {
 							first = false;
-							if (symbols.TryGetValue (symbolPath, out var symbol)) {
-								symbol.SetDestinationSubPath ();
+							if (!symbols.TryGetValue (symbolPath, out var symbol)) {
+								// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
+								if (File.Exists (symbolPath)) {
+									symbols [symbolPath] = symbol = new TaskItem (symbolPath);
+								}
 							}
+							symbol?.SetDestinationSubPath ();
 							assembly.SetDestinationSubPath ();
 							output.Add (assembly);
 						} else {
