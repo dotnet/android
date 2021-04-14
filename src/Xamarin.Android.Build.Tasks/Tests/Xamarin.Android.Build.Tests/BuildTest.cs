@@ -177,7 +177,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+				b.AssertHasNoWarnings ();
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
@@ -195,7 +195,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidEnableMultiDex", "true");
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+				b.AssertHasNoWarnings ();
 
 				// $(AndroidEnableMultiDex) should not add android-support-multidex.jar!
 				if (Builder.UseDotNet) {
@@ -4066,10 +4066,7 @@ namespace UnnamedProject
 
 				StringAssertEx.Contains ("error XA4310", builder.LastBuildOutput, "Error should be XA4310");
 				StringAssertEx.Contains ("`DoesNotExist`", builder.LastBuildOutput, "Error should include the name of the nonexistent file");
-				if (!Builder.UseDotNet) {
-					// ILLink produces lots of warnings in .NET 5+
-					StringAssertEx.Contains ("0 Warning(s)", builder.LastBuildOutput, "Should have no MSBuild warnings.");
-				}
+				builder.AssertHasNoWarnings ();
 			}
 		}
 

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Xml;
 using Microsoft.Build.Framework;
@@ -61,7 +62,7 @@ Specifies the supported Android platform versions for this SDK.
 				writer.WriteEndElement (); // </TargetPlatformSupported>
 				writer.WriteStartElement ("TargetPlatformVersion");
 				writer.WriteAttributeString ("Condition", " '$(TargetPlatformVersion)' == '' ");
-				writer.WriteString (versions.MaxStableVersion.ApiLevel.ToString ());
+				writer.WriteString (versions.MaxStableVersion.ApiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
 				writer.WriteEndElement (); // </TargetPlatformVersion>
 				writer.WriteEndElement (); // </PropertyGroup>
 
@@ -70,7 +71,7 @@ Specifies the supported Android platform versions for this SDK.
 						.Where (v => v.ApiLevel >= MinimumApiLevel)
 						.OrderBy (v => v.ApiLevel)) {
 					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatformVersion");
-					writer.WriteAttributeString ("Include", version.ApiLevel.ToString ());
+					writer.WriteAttributeString ("Include", version.ApiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
 					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatformVersion>
 				}
 				writer.WriteStartElement ("SdkSupportedTargetPlatformVersion");
