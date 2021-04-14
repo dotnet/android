@@ -404,7 +404,7 @@ namespace Xamarin.Android.Prepare
 			{
 				return Path.Combine (
 					XAPackagesDir,
-					$"microsoft.netcore.app.runtime.android-{androidTarget}",
+					$"microsoft.netcore.app.runtime.mono.android-{androidTarget}",
 					ctx.BundledPreviewRuntimePackVersion,
 					"runtimes",
 					$"android-{androidTarget}"
