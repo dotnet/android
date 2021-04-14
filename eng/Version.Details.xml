@@ -14,5 +14,9 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>6ee69696ea00da39f35066c22c21a00ceab93d00</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21212.6">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>db49d790a4bfa977a9ed7436bf2aa242cefae45e</Sha>
+    </Dependency>
   </ToolsetDependencies>
 </Dependencies>
