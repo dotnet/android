@@ -757,10 +757,10 @@ namespace UnamedProject
 
 				// None of these files should be *older* than the starting time of this test!
 				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
-				var linkerOutput = Path.Combine (intermediate, "linked") + Path.DirectorySeparatorChar;
 				foreach (var file in files) {
-					//NOTE: ILLink in .NET 5+ currently copies assemblies with older timestamps
-					if (Builder.UseDotNet && file.StartsWith (linkerOutput)) {
+					//NOTE: ILLink from the dotnet/sdk currently copies assemblies with older timestamps, and only $(_LinkSemaphore) is touched
+					//see: https://github.com/dotnet/sdk/blob/a245b6ff06b483927e57d953b803a390ad31db95/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L113-L116
+					if (Builder.UseDotNet && Directory.GetParent (file).Name == "linked") {
 						continue;
 					}
 					var info = new FileInfo (file);
