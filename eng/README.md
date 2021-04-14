@@ -60,10 +60,16 @@ association, run the [`darc add-default-channel`][6] command:
 darc add-default-channel --channel ".NET 6" --branch "main" --repo https://github.com/xamarin/xamarin-android
 ```
 
+When a new release branch is created, this command should look something like this:
+```
+darc add-default-channel --channel ".NET 6.0.1xx SDK Preview 4" --branch "release/6.0.1xx-preview4" --repo https://github.com/xamarin/xamarin-android
+```
+
 Other products/tools can consume our package version info in the following way:
 ```
 darc add-dependency -n Microsoft.Android.Sdk.Windows -t product -r https://github.com/xamarin/xamarin-android -v 1.2.3
 ```
+
 
 [0]: https://github.com/dotnet/arcade/blob/ea609b8e036359934332480de9336d98fcbb3f91/Documentation/Darc.md
 [1]: https://github.com/dotnet/arcade/blob/ea609b8e036359934332480de9336d98fcbb3f91/Documentation/Darc.md#setting-up-your-darc-client
