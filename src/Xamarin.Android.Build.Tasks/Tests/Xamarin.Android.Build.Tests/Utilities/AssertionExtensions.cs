@@ -89,5 +89,17 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (contents, actual, $"{archivePath} should contain {contents}");
 			}
 		}
+
+		[DebuggerHidden]
+		public static void AssertHasNoWarnings (this ProjectBuilder builder)
+		{
+			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
+		}
+
+		[DebuggerHidden]
+		public static void AssertHasNoWarnings (this DotNetCLI dotnet)
+		{
+			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), $"{dotnet.BuildLogFile} should have no MSBuild warnings.");
+		}
 	}
 }

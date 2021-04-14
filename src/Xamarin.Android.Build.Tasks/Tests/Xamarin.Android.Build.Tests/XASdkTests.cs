@@ -392,8 +392,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-
-			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+			dotnet.AssertHasNoWarnings ();
 
 			var outputPath = Path.Combine (FullProjectDirectory, proj.OutputPath);
 			var intermediateOutputPath = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
@@ -460,7 +459,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinFormsXASdkProject ();
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+			dotnet.AssertHasNoWarnings ();
 		}
 
 		[Test]
@@ -552,6 +551,43 @@ namespace Xamarin.Android.Build.Tests
 			using var nupkg = ZipHelper.OpenZip (nupkgPath);
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetTargetFramework}/{proj.ProjectName}.dll");
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{legacyTargetFramework}/{proj.ProjectName}.dll");
+		}
+
+		[Test]
+		public void MauiTargetFramework ([Values ("net6.0-android", "net6.0-android30", "net6.0-android30.0")] string targetFramework)
+		{
+			var library = new XASdkProject (outputType: "Library") {
+				TargetFramework = targetFramework,
+			};
+			library.ExtraNuGetConfigSources.Add ("https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json");
+			library.Sources.Clear ();
+			library.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () =>
+@"using Microsoft.Maui;
+using Microsoft.Maui.Handlers;
+
+public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirtualView, TNativeView>
+	where TVirtualView : class, IView
+#if ANDROID
+	where TNativeView : Android.Views.View
+#else
+	where TNativeView : class
+#endif  
+{
+		protected Foo (PropertyMapper mapper) : base(mapper)
+		{
+#if ANDROID
+			var t = this.Context;
+#endif
+		}
+}",
+			});
+
+			library.PackageReferences.Add (new Package { Id = "Microsoft.Maui.Core", Version = "6.0.100-preview.3.269" });
+
+			var dotnet = CreateDotNetBuilder (library);
+			Assert.IsTrue (dotnet.Build (), $"{library.ProjectName} should succeed");
+			dotnet.AssertHasNoWarnings ();
 		}
 
 		[Test]
