@@ -71,6 +71,7 @@
     <ItemGroup>
       <_GlobalProperties Include="-p:Configuration=$(Configuration)" />
       <_GlobalProperties Include="-p:NuGetLicense=$(NuGetLicense)" />
+      <_GlobalProperties Include="-p:IncludeSymbols=False" />
     </ItemGroup>
   </Target>
 
