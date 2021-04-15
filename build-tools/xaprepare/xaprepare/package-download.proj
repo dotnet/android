@@ -16,10 +16,10 @@ dotnet\sdk\$(MicrosoftDotnetSdkInternalPackageVersion)\Microsoft.NETCoreSdk.Bund
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-arm" Version="[$(DotNetRuntimePacksVersion)]" />
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-arm64" Version="[$(DotNetRuntimePacksVersion)]" />
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-x86" Version="[$(DotNetRuntimePacksVersion)]" />
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-x64" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-arm" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-arm64" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x86" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x64" Version="[$(DotNetRuntimePacksVersion)]" />
   </ItemGroup>
 
 </Project>
