@@ -108,11 +108,19 @@
     </ItemGroup>
     <PropertyGroup>
       <_WLPackVersion>@(_WLManifest->'%(Filename)'->Replace('Microsoft.NET.Workload.Android.', ''))</_WLPackVersion>
+      <_SdkManifestsFolder>$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\</_SdkManifestsFolder>
     </PropertyGroup>
     <Unzip
         SourceFiles="@(_WLManifest)"
-        DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android"
+        DestinationFolder="$(_SdkManifestsFolder)temp"
     />
+    <!-- The .nupkg contains the files under /data/, so we need to move them -->
+    <ItemGroup>
+      <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE" />
+      <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
+    </ItemGroup>
+    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)Microsoft.NET.Workload.Android" />
+    <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
     <Unzip
         SourceFiles="@(_WLPacks)"
         DestinationFolder="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(_WLPackVersion)', ''))\$(_WLPackVersion)"

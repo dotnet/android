@@ -37,8 +37,8 @@ workload manifest pack containing information about the various Microsoft.Androi
     </ReplaceFileContents>
 
     <ItemGroup>
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Workload.Android\WorkloadManifest.targets" PackagePath="\" />
-      <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="\" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Workload.Android\WorkloadManifest.targets" PackagePath="data" />
+      <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
     </ItemGroup>
   </Target>
 
