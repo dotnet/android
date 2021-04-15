@@ -1283,12 +1283,14 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-create-pkg.binlog
 
-    - task: MSBuild@1
-      displayName: msbuild /t:CreateWorkloadInstallers
+    - task: DotNetCoreCLI@2
+      displayName: create workload .pkg installer
       inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-workload.binlog
+        projects: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.sln
+        arguments: >-
+          -t:CreateWorkloadInstallers -c $(XA.Build.Configuration) -v:n
+          -p:SignType=$(MicroBuildSignType) -p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+          -bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-workload.binlog
 
     - powershell: |
         $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/*" -Include *.pkg -File
@@ -1394,12 +1396,13 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\restore-create-msi.binlog
 
-    - task: MSBuild@1
-      displayName: msbuild /t:CreateWorkloadInstallers
+    - task: DotNetCoreCLI@2
+      displayName: create workload .msi installer
       inputs:
-        solution: Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
+        projects: Xamarin.Android.sln
+        arguments: >-
+          -t:CreateWorkloadInstallers -c $(XA.Build.Configuration) -v:n -p:SignType=$(MicroBuildSignType)
+          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
 
     - script: copy /Y $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\*.msi $(System.DefaultWorkingDirectory)\installer-artifacts
       displayName: copy .msi
