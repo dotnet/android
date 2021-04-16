@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": "@WORKLOAD_VERSION@",
   "workloads": {
     "microsoft-android-sdk-full": {
       "description": "Android SDK",
@@ -14,7 +14,7 @@
   "packs": {
     "Microsoft.Android.Sdk": {
       "kind": "sdk",
-      "version": "@SDK_PACK_VERSION@",
+      "version": "@WORKLOAD_VERSION@",
       "alias-to": {
         "osx-x64": "Microsoft.Android.Sdk.Darwin",
         "osx-arm64": "Microsoft.Android.Sdk.Darwin",
@@ -25,15 +25,15 @@
     },
     "Microsoft.Android.Sdk.BundleTool": {
       "kind": "sdk",
-      "version": "@SDK_PACK_VERSION@"
+      "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Ref": {
       "kind": "framework",
-      "version": "@REF_PACK_VERSION@"
+      "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Templates": {
       "kind": "template",
-      "version": "@TEMPLATE_PACK_VERSION@"
+      "version": "@WORKLOAD_VERSION@"
     }
   }
 }
