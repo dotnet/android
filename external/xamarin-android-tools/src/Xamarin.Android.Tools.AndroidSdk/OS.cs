@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Xamarin.Android.Tools
@@ -172,6 +173,27 @@ namespace Xamarin.Android.Tools
 
 		[DllImport ("advapi32.dll", SetLastError = true)]
 		static extern int RegCloseKey (UIntPtr hKey);
+
+		internal static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe)
+		{
+			try {
+				string key_name = string.Format (@"{0}\{1}\{2}", key == RegistryEx.CurrentUser ? "HKCU" : "HKLM", subkey, valueName);
+
+				var path = AndroidSdkBase.NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
+
+				if (path == null) {
+					return false;
+				}
+
+				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe).Any ()) {
+					return false;
+				}
+
+				return true;
+			} catch (Exception) {
+				return false;
+			}
+		}
 
 		public static IEnumerable<string> EnumerateSubkeys (UIntPtr key, string subkey, Wow64 wow64)
 		{

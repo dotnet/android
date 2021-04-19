@@ -279,7 +279,7 @@ namespace Xamarin.Android.Tools
 			return result;
 		}
 
-		protected static string? NullIfEmpty (string? s)
+		internal static string? NullIfEmpty (string? s)
 		{
 			if (s == null || s.Length != 0)
 				return s;

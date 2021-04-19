@@ -8,12 +8,14 @@ using Xamarin.Android.Tools.AndroidSdk.Properties;
 
 namespace Xamarin.Android.Tools
 {
+	using static RegistryEx;
+
 	class AndroidSdkWindows : AndroidSdkBase
 	{
 		const string MDREG_KEY = @"SOFTWARE\Novell\Mono for Android";
 		const string MDREG_ANDROID_SDK = "AndroidSdkDirectory";
 		const string MDREG_ANDROID_NDK = "AndroidNdkDirectory";
-		const string MDREG_JAVA_SDK = "JavaSdkDirectory";
+		internal const string MDREG_JAVA_SDK = "JavaSdkDirectory";
 		const string ANDROID_INSTALLER_PATH = @"SOFTWARE\Android SDK Tools";
 		const string ANDROID_INSTALLER_KEY = "Path";
 		const string XAMARIN_ANDROID_INSTALLER_PATH = @"SOFTWARE\Xamarin\MonoAndroid";
@@ -63,7 +65,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		static string GetMDRegistryKey ()
+		internal static string GetMDRegistryKey ()
 		{
 			var regKey = Environment.GetEnvironmentVariable ("XAMARIN_ANDROID_REGKEY");
 			return string.IsNullOrWhiteSpace (regKey) ? MDREG_KEY : regKey;
@@ -106,165 +108,6 @@ namespace Xamarin.Android.Tools
 			foreach (var basePath in paths)
 				if (Directory.Exists (basePath))
 					yield return basePath;
-		}
-
-		internal static IEnumerable<JdkInfo> GetJdkInfos (Action<TraceLevel, string> logger)
-		{
-			JdkInfo? TryGetJdkInfo (string path, string locator)
-			{
-				JdkInfo? jdk = null;
-				try {
-					jdk = new JdkInfo (path, locator);
-				}
-				catch (Exception e) {
-					logger (TraceLevel.Warning, string.Format (Resources.InvalidJdkDirectory_path_locator_message, path, locator, e.Message));
-					logger (TraceLevel.Verbose, e.ToString ());
-				}
-				return jdk;
-			}
-
-			IEnumerable<JdkInfo> ToJdkInfos (IEnumerable<string> paths, string locator)
-			{
-				return paths.Select (p => TryGetJdkInfo (p, locator))
-					.Where (jdk => jdk != null)
-					.Select(jdk => jdk!)
-					.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
-			}
-
-			return ToJdkInfos (GetPreferredJdkPaths (), "Preferred Registry")
-				.Concat (ToJdkInfos (GetMicrosoftOpenJdkFilesystemPaths (), "Microsoft OpenJDK Filesystem"))
-				.Concat (ToJdkInfos (GetMicrosoftOpenJdkRegistryPaths (), "Microsoft OpenJDK Registry"))
-				.Concat (ToJdkInfos (GetVSAndroidJdkPaths (), @"HKLM\SOFTWARE\Microsoft\VisualStudio\Android@JavaHome"))
-				.Concat (ToJdkInfos (GetOracleJdkPaths (), "Oracle JDK"))
-				;
-		}
-
-		private static IEnumerable<string> GetPreferredJdkPaths ()
-		{
-			// check the user specified path
-			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
-			const RegistryEx.Wow64 wow = RegistryEx.Wow64.Key32;
-			var regKey = GetMDRegistryKey ();
-
-			foreach (var root in roots) {
-				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_JAVA_SDK, wow, "bin", _JarSigner))
-					yield return RegistryEx.GetValueString (root, regKey, MDREG_JAVA_SDK, wow) ?? "";
-			}
-		}
-
-		private static IEnumerable<string> GetVSAndroidJdkPaths ()
-		{
-			var root = RegistryEx.LocalMachine;
-			var wows = new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 };
-			var subKey = @"SOFTWARE\Microsoft\VisualStudio\Android";
-			var valueName = "JavaHome";
-
-			foreach (var wow in wows) {
-				if (CheckRegistryKeyForExecutable (root, subKey, valueName, wow, "bin", _JarSigner))
-					yield return RegistryEx.GetValueString (root, subKey, valueName, wow) ?? "";
-			}
-		}
-
-		static IEnumerable<string> GetMicrosoftOpenJdkFilesystemPaths ()
-		{
-			const string JdkFolderNamePrefix = "jdk-";
-
-			var paths = new List<Tuple<string, Version>> ();
-			var rootPaths = new List<string> {
-				Path.Combine (Environment.ExpandEnvironmentVariables ("%ProgramW6432%"), "Microsoft"),
-				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "Android", "jdk"),
-			};
-
-			foreach (var rootPath in rootPaths) {
-				if (!Directory.Exists (rootPath))
-					continue;
-				foreach (var directoryName in Directory.EnumerateDirectories (rootPath, $"{JdkFolderNamePrefix}*")) {
-					var version = ExtractVersion (directoryName, JdkFolderNamePrefix);
-					if (version == null)
-						continue;
-					paths.Add (Tuple.Create (directoryName, version));
-				}
-			}
-
-			return paths.OrderByDescending (v => v.Item2)
-				.Where (openJdk => ProcessUtils.FindExecutablesInDirectory (Path.Combine (openJdk.Item1, "bin"), _JarSigner).Any ())
-				.Select (openJdk => openJdk.Item1);
-		}
-
-		static IEnumerable<string> GetMicrosoftOpenJdkRegistryPaths ()
-		{
-			var paths   = new List<(Version version, string path)> ();
-			var roots   = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
-			var wows    = new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 };
-			foreach (var root in roots)
-			foreach (var wow in wows) {
-				foreach (var subkeyName in RegistryEx.EnumerateSubkeys (root, MICROSOFT_OPENJDK_PATH, wow)) {
-					if (!Version.TryParse (subkeyName, out var version))
-						continue;
-					var msiKey  = $@"{MICROSOFT_OPENJDK_PATH}\{subkeyName}\hotspot\MSI";
-					var path    = RegistryEx.GetValueString (root, msiKey, "Path", wow);
-					if (path == null)
-						continue;
-					paths.Add ((version, path));
-				}
-			}
-
-			return paths.OrderByDescending (e => e.version)
-				.Select (e => e.path);
-		}
-
-		internal static Version? ExtractVersion (string path, string prefix)
-		{
-			var name = Path.GetFileName (path);
-			if (name.Length <= prefix.Length)
-				return null;
-			if (!name.StartsWith (prefix, StringComparison.OrdinalIgnoreCase))
-				return null;
-
-			var start   = prefix.Length;
-			while (start < name.Length && !char.IsDigit (name, start)) {
-				++start;
-			}
-			if (start == name.Length)
-				return null;
-
-			name    = name.Substring (start);
-			int end = 0;
-			while (end < name.Length &&
-					(char.IsDigit (name [end]) || name [end] == '.')) {
-				end++;
-			}
-
-			do {
-				if (Version.TryParse (name.Substring (0, end), out var v))
-					return v;
-				end = name.LastIndexOf ('.', end-1);
-			} while (end > 0);
-
-			return null;
-		}
-
-		private static IEnumerable<string> GetOracleJdkPaths ()
-		{ 
-			string subkey = @"SOFTWARE\JavaSoft\Java Development Kit";
-
-			foreach (var wow64 in new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 }) {
-				string key_name = string.Format (@"{0}\{1}\{2}", "HKLM", subkey, "CurrentVersion");
-				var currentVersion = RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey, "CurrentVersion", wow64);
-
-				if (!string.IsNullOrEmpty (currentVersion)) {
-
-					// No matter what the CurrentVersion is, look for 1.6 or 1.7 or 1.8
-					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64, "bin", _JarSigner))
-						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64) ?? "";
-
-					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.7", "JavaHome", wow64, "bin", _JarSigner))
-						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.7", "JavaHome", wow64) ?? "";
-
-					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64, "bin", _JarSigner))
-						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64) ?? "";
-				}
-			}
 		}
 
 		protected override IEnumerable<string> GetAllAvailableAndroidNdks ()
@@ -332,29 +175,6 @@ namespace Xamarin.Android.Tools
 			var regKey = GetMDRegistryKey ();
 			RegistryEx.SetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, path ?? "", RegistryEx.Wow64.Key32);
 		}
-
-		#region Helper Methods
-		private static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe)
-		{
-			try {
-				string key_name = string.Format (@"{0}\{1}\{2}", key == RegistryEx.CurrentUser ? "HKCU" : "HKLM", subkey, valueName);
-
-				var path = NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
-
-				if (path == null) {
-					return false;
-				}
-
-				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe).Any ()) {
-					return false;
-				}
-
-				return true;
-			} catch (Exception) {
-				return false;
-			}
-		}
-		#endregion
 
 		public override void Initialize (string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null)
 		{

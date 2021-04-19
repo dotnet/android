@@ -285,9 +285,12 @@ namespace Xamarin.Android.Tools
 			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 
 			return GetEnvironmentVariableJdks ("JI_JAVA_HOME", logger)
-				.Concat (GetWindowsJdks (logger))
-				.Concat (GetConfiguredJdks (logger))
-				.Concat (GetMacOSMicrosoftOpenJdks (logger))
+				.Concat (JdkLocations.GetPreferredJdks (logger))
+				.Concat (XAPrepareJdkLocations.GetXAPrepareJdks (logger))
+				.Concat (MicrosoftOpenJdkLocations.GetMicrosoftOpenJdks (logger))
+				.Concat (AzulJdkLocations.GetAzulJdks (logger))
+				.Concat (OracleJdkLocations.GetOracleJdks (logger))
+				.Concat (VSAndroidJdkLocations.GetVSAndroidJdks (logger))
 				.Concat (GetEnvironmentVariableJdks ("JAVA_HOME", logger))
 				.Concat (GetPathEnvironmentJdks (logger))
 				.Concat (GetLibexecJdks (logger))
@@ -295,68 +298,7 @@ namespace Xamarin.Android.Tools
 				;
 		}
 
-		static IEnumerable<JdkInfo> GetConfiguredJdks (Action<TraceLevel, string> logger)
-		{
-			return GetConfiguredJdkPaths (logger)
-				.Select (p => TryGetJdkInfo (p, logger, "monodroid-config.xml"))
-				.Where (jdk => jdk != null)
-				.Select (jdk => jdk!)
-				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
-		}
-
-		static IEnumerable<string> GetConfiguredJdkPaths (Action<TraceLevel, string> logger)
-		{
-			var config = AndroidSdkUnix.GetUnixConfigFile (logger);
-			foreach (var java_sdk in config.Root.Elements ("java-sdk")) {
-				var path    = (string) java_sdk.Attribute ("path");
-				yield return path;
-			}
-		}
-
-		internal static IEnumerable<JdkInfo> GetMicrosoftOpenJdks (Action<TraceLevel, string> logger)
-		{
-			foreach (var dir in GetMacOSMicrosoftOpenJdks (logger))
-				yield return dir;
-			if (Path.DirectorySeparatorChar != '\\')
-				yield break;
-			foreach (var dir in AndroidSdkWindows.GetJdkInfos (logger)) {
-				yield return dir;
-			}
-		}
-
-		static IEnumerable<JdkInfo> GetMacOSMicrosoftOpenJdks (Action<TraceLevel, string> logger)
-		{
-			return GetMacOSMicrosoftOpenJdkPaths ()
-				.Select (p => TryGetJdkInfo (p, logger, "/Library/Java/JavaVirtualMachines/microsoft-*.jdk"))
-				.Where (jdk => jdk != null)
-				.Select (jdk => jdk!)
-				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
-		}
-
-		static IEnumerable<string> GetMacOSMicrosoftOpenJdkPaths ()
-		{
-			var root    = "/Library/Java/JavaVirtualMachines";
-			var pattern = "microsoft-*.jdk";
-			var toHome  = Path.Combine ("Contents", "Home");
-			var jdks    = AppDomain.CurrentDomain.GetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}")
-				?.ToString ();
-			if (jdks != null) {
-				root    = jdks;
-				toHome  = "";
-				pattern = "*";
-			}
-			if (!Directory.Exists (root)) {
-				yield break;
-			}
-			foreach (var dir in Directory.EnumerateDirectories (root, pattern)) {
-				var home = Path.Combine (dir, toHome);
-				if (!Directory.Exists (home))
-					continue;
-				yield return home;
-			}
-		}
-
-		static JdkInfo? TryGetJdkInfo (string path, Action<TraceLevel, string> logger, string locator)
+		internal static JdkInfo? TryGetJdkInfo (string path, Action<TraceLevel, string> logger, string locator)
 		{
 			JdkInfo? jdk = null;
 			try {
@@ -367,13 +309,6 @@ namespace Xamarin.Android.Tools
 				logger (TraceLevel.Verbose, e.ToString ());
 			}
 			return jdk;
-		}
-
-		static IEnumerable<JdkInfo> GetWindowsJdks (Action<TraceLevel, string> logger)
-		{
-			if (!OS.IsWindows)
-				return Enumerable.Empty<JdkInfo> ();
-			return AndroidSdkWindows.GetJdkInfos (logger);
 		}
 
 		static IEnumerable<JdkInfo> GetEnvironmentVariableJdks (string envVar, Action<TraceLevel, string> logger)
