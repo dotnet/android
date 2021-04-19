@@ -686,7 +686,7 @@
       "Size": 351
     },
     "res/drawable-mdpi-v4/icon.png": {
-      "Size": 2200
+      "Size": 2199
     },
     "res/drawable-mdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 215
@@ -860,7 +860,7 @@
       "Size": 507
     },
     "res/drawable-hdpi-v4/icon.png": {
-      "Size": 4762
+      "Size": 4791
     },
     "res/drawable-hdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 212
@@ -1634,232 +1634,211 @@
       "Size": 3455260
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
-      "Size": 6258
+      "Size": 6252
     },
     "assemblies/Xamarin.AndroidX.AppCompat.dll": {
-      "Size": 122440
+      "Size": 122435
     },
     "assemblies/Xamarin.AndroidX.AppCompat.AppCompatResources.dll": {
-      "Size": 6325
+      "Size": 6319
     },
     "assemblies/Xamarin.AndroidX.CardView.dll": {
-      "Size": 7091
+      "Size": 7085
     },
     "assemblies/Xamarin.AndroidX.CoordinatorLayout.dll": {
-      "Size": 17904
+      "Size": 17898
     },
     "assemblies/Xamarin.AndroidX.Core.dll": {
-      "Size": 104058
+      "Size": 104053
     },
     "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
-      "Size": 15151
+      "Size": 15145
     },
     "assemblies/Xamarin.AndroidX.Fragment.dll": {
-      "Size": 42706
+      "Size": 42701
     },
     "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
-      "Size": 6433
+      "Size": 6427
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.Common.dll": {
-      "Size": 6780
+      "Size": 6774
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.Core.dll": {
-      "Size": 6901
+      "Size": 6895
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.ViewModel.dll": {
-      "Size": 3290
+      "Size": 3284
     },
     "assemblies/Xamarin.AndroidX.Loader.dll": {
-      "Size": 13312
+      "Size": 13306
     },
     "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
-      "Size": 92081
+      "Size": 92074
     },
     "assemblies/Xamarin.AndroidX.SavedState.dll": {
-      "Size": 5201
+      "Size": 5195
     },
     "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
-      "Size": 10947
+      "Size": 10941
     },
     "assemblies/Xamarin.AndroidX.ViewPager.dll": {
-      "Size": 19142
+      "Size": 19137
     },
     "assemblies/Xamarin.Google.Android.Material.dll": {
-      "Size": 43160
+      "Size": 43153
     },
     "assemblies/FormsViewGroup.dll": {
-      "Size": 7236
+      "Size": 7205
     },
     "assemblies/Xamarin.Forms.Core.dll": {
-      "Size": 528450
+      "Size": 524838
     },
     "assemblies/Xamarin.Forms.Platform.Android.dll": {
-      "Size": 384976
+      "Size": 384970
     },
     "assemblies/Xamarin.Forms.Platform.dll": {
-      "Size": 56878
+      "Size": 56872
     },
     "assemblies/Xamarin.Forms.Xaml.dll": {
-      "Size": 60774
+      "Size": 55851
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 117075
+      "Size": 117185
     },
     "assemblies/Microsoft.Win32.Primitives.dll": {
-      "Size": 3925
-    },
-    "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 12139
-    },
-    "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 8991
-    },
-    "assemblies/System.Collections.dll": {
-      "Size": 21440
-    },
-    "assemblies/System.ComponentModel.Primitives.dll": {
-      "Size": 2781
-    },
-    "assemblies/System.ComponentModel.TypeConverter.dll": {
-      "Size": 6316
-    },
-    "assemblies/System.ComponentModel.dll": {
-      "Size": 2182
-    },
-    "assemblies/System.Console.dll": {
-      "Size": 6360
-    },
-    "assemblies/System.Core.dll": {
-      "Size": 2131
-    },
-    "assemblies/System.Diagnostics.TraceSource.dll": {
-      "Size": 7237
-    },
-    "assemblies/System.Drawing.Primitives.dll": {
-      "Size": 12437
-    },
-    "assemblies/System.Drawing.dll": {
-      "Size": 2174
-    },
-    "assemblies/System.Formats.Asn1.dll": {
-      "Size": 28223
-    },
-    "assemblies/System.IO.Compression.Brotli.dll": {
-      "Size": 12168
-    },
-    "assemblies/System.IO.Compression.dll": {
-      "Size": 19600
-    },
-    "assemblies/System.IO.FileSystem.dll": {
-      "Size": 24156
-    },
-    "assemblies/System.IO.IsolatedStorage.dll": {
-      "Size": 11335
-    },
-    "assemblies/System.Linq.Expressions.dll": {
-      "Size": 191713
-    },
-    "assemblies/System.Linq.dll": {
-      "Size": 20421
-    },
-    "assemblies/System.Net.Http.dll": {
-      "Size": 215682
-    },
-    "assemblies/System.Net.NameResolution.dll": {
-      "Size": 10636
-    },
-    "assemblies/System.Net.NetworkInformation.dll": {
-      "Size": 18057
-    },
-    "assemblies/System.Net.Primitives.dll": {
-      "Size": 42793
-    },
-    "assemblies/System.Net.Quic.dll": {
-      "Size": 40598
-    },
-    "assemblies/System.Net.Security.dll": {
-      "Size": 58992
-    },
-    "assemblies/System.Net.Sockets.dll": {
-      "Size": 57033
-    },
-    "assemblies/System.ObjectModel.dll": {
-      "Size": 12023
-    },
-    "assemblies/System.Private.DataContractSerialization.dll": {
-      "Size": 197524
-    },
-    "assemblies/System.Private.Uri.dll": {
-      "Size": 40508
-    },
-    "assemblies/System.Private.Xml.Linq.dll": {
-      "Size": 15823
-    },
-    "assemblies/System.Private.Xml.dll": {
-      "Size": 261250
-    },
-    "assemblies/System.Runtime.CompilerServices.Unsafe.dll": {
-      "Size": 1438
-    },
-    "assemblies/System.Runtime.InteropServices.RuntimeInformation.dll": {
-      "Size": 3088
-    },
-    "assemblies/System.Runtime.Numerics.dll": {
-      "Size": 19088
-    },
-    "assemblies/System.Runtime.Serialization.Formatters.dll": {
-      "Size": 2739
-    },
-    "assemblies/System.Runtime.Serialization.Primitives.dll": {
-      "Size": 3993
-    },
-    "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 2102
-    },
-    "assemblies/System.Runtime.dll": {
-      "Size": 2615
-    },
-    "assemblies/System.Security.Cryptography.Algorithms.dll": {
-      "Size": 39934
-    },
-    "assemblies/System.Security.Cryptography.Encoding.dll": {
-      "Size": 14367
-    },
-    "assemblies/System.Security.Cryptography.Primitives.dll": {
-      "Size": 9238
-    },
-    "assemblies/System.Security.Cryptography.X509Certificates.dll": {
-      "Size": 66055
-    },
-    "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 79212
-    },
-    "assemblies/System.Threading.Channels.dll": {
-      "Size": 15609
-    },
-    "assemblies/System.Xml.dll": {
-      "Size": 1993
-    },
-    "assemblies/System.dll": {
-      "Size": 2485
-    },
-    "assemblies/mscorlib.dll": {
       "Size": 3991
     },
-    "assemblies/netstandard.dll": {
-      "Size": 5671
+    "assemblies/System.Collections.Concurrent.dll": {
+      "Size": 12209
+    },
+    "assemblies/System.Collections.NonGeneric.dll": {
+      "Size": 9076
+    },
+    "assemblies/System.Collections.dll": {
+      "Size": 21670
+    },
+    "assemblies/System.ComponentModel.Primitives.dll": {
+      "Size": 2787
+    },
+    "assemblies/System.ComponentModel.TypeConverter.dll": {
+      "Size": 6374
+    },
+    "assemblies/System.ComponentModel.dll": {
+      "Size": 2188
+    },
+    "assemblies/System.Console.dll": {
+      "Size": 6385
+    },
+    "assemblies/System.Diagnostics.TraceSource.dll": {
+      "Size": 7265
+    },
+    "assemblies/System.Drawing.Primitives.dll": {
+      "Size": 12458
+    },
+    "assemblies/System.Formats.Asn1.dll": {
+      "Size": 26714
+    },
+    "assemblies/System.IO.Compression.Brotli.dll": {
+      "Size": 12200
+    },
+    "assemblies/System.IO.Compression.dll": {
+      "Size": 19748
+    },
+    "assemblies/System.IO.FileSystem.dll": {
+      "Size": 25875
+    },
+    "assemblies/System.IO.IsolatedStorage.dll": {
+      "Size": 11485
+    },
+    "assemblies/System.Linq.Expressions.dll": {
+      "Size": 191828
+    },
+    "assemblies/System.Linq.dll": {
+      "Size": 20956
+    },
+    "assemblies/System.Net.Http.dll": {
+      "Size": 216025
+    },
+    "assemblies/System.Net.NameResolution.dll": {
+      "Size": 10669
+    },
+    "assemblies/System.Net.NetworkInformation.dll": {
+      "Size": 18141
+    },
+    "assemblies/System.Net.Primitives.dll": {
+      "Size": 43167
+    },
+    "assemblies/System.Net.Quic.dll": {
+      "Size": 37414
+    },
+    "assemblies/System.Net.Security.dll": {
+      "Size": 67451
+    },
+    "assemblies/System.Net.Sockets.dll": {
+      "Size": 56476
+    },
+    "assemblies/System.ObjectModel.dll": {
+      "Size": 12420
+    },
+    "assemblies/System.Private.DataContractSerialization.dll": {
+      "Size": 197526
+    },
+    "assemblies/System.Private.Uri.dll": {
+      "Size": 40715
+    },
+    "assemblies/System.Private.Xml.Linq.dll": {
+      "Size": 15853
+    },
+    "assemblies/System.Private.Xml.dll": {
+      "Size": 261841
+    },
+    "assemblies/System.Runtime.CompilerServices.Unsafe.dll": {
+      "Size": 3384
+    },
+    "assemblies/System.Runtime.InteropServices.RuntimeInformation.dll": {
+      "Size": 3091
+    },
+    "assemblies/System.Runtime.Numerics.dll": {
+      "Size": 22340
+    },
+    "assemblies/System.Runtime.Serialization.Formatters.dll": {
+      "Size": 3023
+    },
+    "assemblies/System.Runtime.Serialization.Primitives.dll": {
+      "Size": 4183
+    },
+    "assemblies/System.Security.Cryptography.Algorithms.dll": {
+      "Size": 40331
+    },
+    "assemblies/System.Security.Cryptography.Encoding.dll": {
+      "Size": 12505
+    },
+    "assemblies/System.Security.Cryptography.OpenSsl.dll": {
+      "Size": 3546
+    },
+    "assemblies/System.Security.Cryptography.Primitives.dll": {
+      "Size": 9564
+    },
+    "assemblies/System.Security.Cryptography.X509Certificates.dll": {
+      "Size": 94292
+    },
+    "assemblies/System.Text.RegularExpressions.dll": {
+      "Size": 79409
+    },
+    "assemblies/System.Threading.Channels.dll": {
+      "Size": 15726
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 684466
+      "Size": 681719
     },
     "assemblies/Java.Interop.dll": {
       "Size": 64243
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 433309
+      "Size": 433276
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 142600
+      "Size": 142120
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 776168
@@ -1868,54 +1847,102 @@
       "Size": 75824
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.OpenSsl.so": {
-      "Size": 145864
+      "Size": 100408
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3720720
+      "Size": 3737376
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 346800
+      "Size": 346960
     },
     "lib/arm64-v8a/libxamarin-debug-app-helper.so": {
-      "Size": 37104
+      "Size": 37096
     },
-    "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
+    "META-INF/androidx.versionedparcelable_versionedparcelable.version": {
       "Size": 6
     },
-    "META-INF/androidx.transition_transition.version": {
+    "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
       "Size": 6
     },
-    "META-INF/androidx.legacy_legacy-support-core-utils.version": {
+    "META-INF/androidx.core_core.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.customview_customview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.viewpager_viewpager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable.version": {
       "Size": 6
     },
     "META-INF/androidx.interpolator_interpolator.version": {
       "Size": 6
     },
-    "META-INF/androidx.cursoradapter_cursoradapter.version": {
+    "META-INF/androidx.vectordrawable_vectordrawable-animated.version": {
       "Size": 6
     },
-    "META-INF/androidx.activity_activity.version": {
+    "META-INF/androidx.savedstate_savedstate.version": {
       "Size": 6
     },
-    "META-INF/androidx.coordinatorlayout_coordinatorlayout.version": {
+    "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.arch.core_core-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata-core.version": {
       "Size": 6
     },
     "META-INF/androidx.loader_loader.version": {
       "Size": 6
     },
-    "META-INF/androidx.vectordrawable_vectordrawable-animated.version": {
+    "META-INF/androidx.activity_activity.version": {
       "Size": 6
     },
     "META-INF/androidx.fragment_fragment.version": {
       "Size": 6
     },
-    "META-INF/androidx.drawerlayout_drawerlayout.version": {
+    "META-INF/androidx.transition_transition.version": {
       "Size": 6
     },
     "META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version": {
       "Size": 6
     },
-    "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
+    "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.recyclerview_recyclerview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.print_print.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.documentfile_documentfile.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-utils.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.drawerlayout_drawerlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.cursoradapter_cursoradapter.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.coordinatorlayout_coordinatorlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-ui.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.cardview_cardview.version": {
       "Size": 6
     },
     "META-INF/androidx.appcompat_appcompat-resources.version": {
@@ -1930,78 +1957,30 @@
     "META-INF/com.google.android.material_material.version": {
       "Size": 10
     },
-    "META-INF/androidx.cardview_cardview.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.versionedparcelable_versionedparcelable.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.documentfile_documentfile.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.recyclerview_recyclerview.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.arch.core_core-runtime.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.savedstate_savedstate.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.lifecycle_lifecycle-livedata-core.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.print_print.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.core_core.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.browser_browser.version": {
+    "META-INF/androidx.media_media.version": {
       "Size": 6
     },
     "META-INF/androidx.lifecycle_lifecycle-livedata.version": {
       "Size": 6
     },
-    "META-INF/androidx.viewpager_viewpager.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.legacy_legacy-support-core-ui.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.media_media.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.vectordrawable_vectordrawable.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.customview_customview.version": {
-      "Size": 6
-    },
     "META-INF/androidx.legacy_legacy-support-v4.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.browser_browser.version": {
       "Size": 6
     },
     "META-INF/proguard/androidx-annotations.pro": {
       "Size": 339
     },
     "META-INF/ANDROIDD.SF": {
-      "Size": 80445
+      "Size": 79770
     },
     "META-INF/ANDROIDD.RSA": {
       "Size": 1213
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 80318
+      "Size": 79643
     }
   },
-  "PackageSize": 8730233
+  "PackageSize": 8746124
 }
