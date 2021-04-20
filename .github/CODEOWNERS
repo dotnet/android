@@ -15,12 +15,15 @@
 
 /build-tools/api-merge @jonpryor
 /build-tools/api-xml-adjuster @jonpryor
+/build-tools/automation @pjcollins @jonpryor
 /build-tools/debian-metadata @directhex
 /build-tools/enumification-helpers @jonpryor
 /build-tools/manifest-attribute-codegen @jonpryor
 /build-tools/scripts/PrepareWindows.targets @jonathanpeppers
 /build-tools/timing @jonathanpeppers @radekdoulik
 /build-tools/xaprepare @grendello
+
+/eng @jonathanpeppers @pjcollins @jonpryor
 
 /src/OpenTK-1.0 @radekdoulik @jonpryor
 /src/Mono.Android.Export @jonpryor
