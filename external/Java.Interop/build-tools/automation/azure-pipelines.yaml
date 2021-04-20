@@ -18,6 +18,7 @@ pr:
 variables:
   RunningOnCI: true
   Build.Configuration: Release
+  MaxJdkVersion: 8
   DotNetCoreVersion: 5.0.103
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -108,15 +109,15 @@ jobs:
 
   - template: templates\install-dependencies.yaml
     
-  - script: make prepare CONFIGURATION=$(Build.Configuration)
+  - script: make prepare CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion)
     displayName: make prepare
     
-  - script: make all CONFIGURATION=$(Build.Configuration)
+  - script: make all CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion)
     displayName: make all
     
   - script: |
       r=0
-      make run-all-tests CONFIGURATION=$(Build.Configuration) || r=$?
+      make run-all-tests CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion) || r=$?
       jar cf xatb.jar -C tests/Xamarin.Android.Tools.Bytecode-Tests/obj/*/classes .
       zip -r bin.zip bin
       exit $r
@@ -158,7 +159,7 @@ jobs:
 
   - template: templates\install-dependencies.yaml
     
-  - script: make prepare-core CONFIGURATION=$(Build.Configuration)
+  - script: make prepare-core CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion)
     displayName: make prepare-core
       
   - template: templates\core-build.yaml

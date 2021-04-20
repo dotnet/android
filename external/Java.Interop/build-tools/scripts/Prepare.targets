@@ -7,10 +7,14 @@
   <Target Name="Prepare">
     <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\..\build-tools\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.csproj" />
+    <PropertyGroup>
+      <_MaxJdk>$(MaxJdkVersion)</_MaxJdk>
+      <_MaxJdk Condition=" '$(_MaxJdk)' == '' ">$(JI_MAX_JDK)</_MaxJdk>
+    </PropertyGroup>
     <JdkInfo
         JdksRoot="$(ProgramFiles)\Java"
         MakeFragmentFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.mk"
-        MaximumJdkVersion="$(JI_MAX_MDK)"
+        MaximumJdkVersion="$(_MaxJdk)"
         PropertyFile="$(_TopDir)\bin\Build$(Configuration)\JdkInfo.props">
       <Output TaskParameter="JavaHomePath" PropertyName="_JavaSdkDirectory" />
     </JdkInfo>

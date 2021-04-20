@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Text;
+using System.Xml.Linq;
 
 using Xamarin.Android.Tools;
 
@@ -47,12 +48,45 @@ namespace Java.InteropTests
 
 		static string GetJvmLibraryPath ()
 		{
-			var env = Environment.GetEnvironmentVariable ("JI_JVM_PATH");
-			if (!string.IsNullOrEmpty (env))
-				return env;
+			var jdkDir  = ReadJavaSdkDirectoryFromJdkInfoProps ();
+			if (jdkDir != null) {
+				return jdkDir;
+			}
 			var jdk = JdkInfo.GetKnownSystemJdkInfos ()
 				.FirstOrDefault ();
 			return jdk?.JdkJvmPath;
+		}
+
+		static string ReadJavaSdkDirectoryFromJdkInfoProps ()
+		{
+			var location    = typeof (TestJVM).Assembly.Location;
+			var binDir      = Path.GetDirectoryName (Path.GetDirectoryName (location));
+			var testDir     = Path.GetFileName (Path.GetDirectoryName (location));
+			if (!testDir.StartsWith ("Test", StringComparison.OrdinalIgnoreCase)) {
+				return null;
+			}
+			var buildName   = testDir.Replace ("Test", "Build");
+			if (buildName.Contains ('-')) {
+				buildName   = buildName.Substring (0, buildName.IndexOf ('-'));
+			}
+			var jdkPropFile = Path.Combine (binDir, buildName, "JdkInfo.props");
+			if (!File.Exists (jdkPropFile)) {
+				return null;
+			}
+
+			var msbuild     = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
+
+			var jdkProps    = XDocument.Load (jdkPropFile);
+			var jdkJvmPath  = jdkProps.Elements ()
+				.Elements (msbuild + "Choose")
+				.Elements (msbuild + "When")
+				.Elements (msbuild + "PropertyGroup")
+				.Elements (msbuild + "JdkJvmPath")
+				.FirstOrDefault ();
+			if (jdkJvmPath == null) {
+				return null;
+			}
+			return jdkJvmPath.Value;
 		}
 
 		Dictionary<string, Type> typeMappings;
