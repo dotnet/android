@@ -8,6 +8,7 @@
 namespace xamarin::android::internal
 {
 #define STRINGIFY(_val_) #_val_
+#define API_STRING(_api_) STRINGIFY(_api_)
 #define VERSION_STRING(_major_, _minor_, _build_) STRINGIFY(_major_) "." STRINGIFY(_minor_) "." STRINGIFY(_build_)
 
 	class BuildInfo final
@@ -50,7 +51,7 @@ namespace xamarin::android::internal
 
 		static constexpr char ndk_api_level[] =
 #if defined (__ANDROID_API__)
-			STRINGIFY(__ANDROID_API__);
+			API_STRING(__ANDROID_API__);
 #else // def __ANDROID_API__
 			"";
 #endif // ndef __ANDROID_API__
