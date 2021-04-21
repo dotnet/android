@@ -63,7 +63,7 @@ indentation.  When referring to MSBuild properties, use syntax like:
 `AndroidLinkMode` MSBuild property
 ```
 
-To facilitate the final publication workflow, use either inline links or named
+To facilitate the final publication workflow, prefer inline links or named
 link labels like `[android]`.  Avoid numbered link labels like `[0]`.
 
 ### For low visibility changes
@@ -373,15 +373,7 @@ added to `Documentation/release-notes/images/`.
    [_README_](/README.md) with the new info.
 
 9. Add all of the pull requests and issues included in the new version to the
-   appropriate GitHub milestone.
-
-   For Preview versions, the milestone has the format:
-
-   ```
-   11.3 Preview (d16-10)
-   ```
-
-   For Release versions, the milestone has the format:
+   appropriate GitHub milestone.  The milestone has the format:
 
    ```
    11.2 Release (d16-9)
