@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tools {
 				try {
 					homes = Directory.EnumerateDirectories (root, pattern);
 				}
-				catch (IOException e) {
+				catch (IOException) {
 					continue;
 				}
 				foreach (var home in homes) {
