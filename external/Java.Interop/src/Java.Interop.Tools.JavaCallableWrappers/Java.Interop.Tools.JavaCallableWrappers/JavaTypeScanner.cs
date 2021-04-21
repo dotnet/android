@@ -51,11 +51,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 		void AddJavaTypes (List<TypeDefinition> javaTypes, TypeDefinition type)
 		{
 			if (type.IsSubclassOf ("Java.Lang.Object", cache) ||
-			    		type.IsSubclassOf ("Java.Lang.Throwable", cache) ||
+					type.IsSubclassOf ("Java.Lang.Throwable", cache) ||
 					(type.IsInterface && type.ImplementsInterface ("Java.Interop.IJavaPeerable", cache))) {
 				// For subclasses of e.g. Android.App.Activity.
 				javaTypes.Add (type);
-			} else if (type.IsClass && !type.IsSubclassOf ("System.Exception", cache) && type.ImplementsInterface ("Android.Runtime.IJa", cache)) {
+			} else if (type.IsClass && !type.IsSubclassOf ("System.Exception", cache) && type.ImplementsInterface ("Android.Runtime.IJavaObject", cache)) {
 				var level   = ErrorOnCustomJavaObject ? TraceLevel.Error : TraceLevel.Warning;
 				var prefix  = ErrorOnCustomJavaObject ? "error" : "warning";
 				Logger (
