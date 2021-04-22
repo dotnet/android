@@ -328,6 +328,11 @@ namespace Xamarin.Android.Tasks
 
 			bool ok = true;
 			foreach (var t in javaTypes) {
+				if (t.IsInterface) {
+					// Interfaces are in typemap but they shouldn't have JCW generated for them
+					continue;
+				}
+
 				using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {
 						var jti = new JavaCallableWrapperGenerator (t, Log.LogWarning, cache) {
