@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Java.Interop.Tools.Generator;
 using Mono.Cecil;
 
 using Xamarin.Android.Tools;

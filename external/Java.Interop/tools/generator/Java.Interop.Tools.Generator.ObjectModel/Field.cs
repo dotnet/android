@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using MonoDroid.Utils;
+using Java.Interop.Tools.Generator;
 
 namespace MonoDroid.Generation
 {

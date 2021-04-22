@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.JavaCallableWrappers;
 using MonoDroid.Utils;
 using Xamarin.Android.Tools;
@@ -12,6 +14,96 @@ namespace MonoDroid.Generation
 	class XmlApiImporter
 	{
 		static readonly Regex api_level = new Regex (@"api-(\d+).xml");
+
+		public static List<GenBase> Parse (XDocument doc, CodeGenerationOptions options)
+		{
+			if (doc is null)
+				return null;
+
+			var root = doc.Root;
+
+			if ((root == null) || !root.HasElements) {
+				Report.LogCodedWarning (0, Report.WarningNoPackageElements);
+				return null;
+			}
+
+			var gens = new List<GenBase> ();
+
+			foreach (var elem in root.Elements ()) {
+				switch (elem.Name.LocalName) {
+					case "package":
+						gens.AddRange (ParsePackage (elem, options));
+						break;
+					case "enum":
+						var name = elem.XGetAttribute ("name");
+						var sym = new EnumSymbol (name);
+						options.SymbolTable.AddType (name, sym);
+						continue;
+					default:
+						Report.LogCodedWarning (0, Report.WarningUnexpectedRootChildNode, elem.Name.ToString ());
+						break;
+				}
+			}
+
+			return gens;
+		}
+
+		public static List<GenBase> ParsePackage (XElement ns, CodeGenerationOptions options)
+		{
+			var result = new List<GenBase> ();
+			var nested = new Dictionary<string, GenBase> ();
+			var by_name = new Dictionary<string, GenBase> ();
+
+			foreach (var elem in ns.Elements ()) {
+
+				var name = elem.XGetAttribute ("name");
+				GenBase gen = null;
+
+				switch (elem.Name.LocalName) {
+					case "class":
+						if (elem.XGetAttribute ("obfuscated") == "true")
+							continue;
+						gen = CreateClass (ns, elem, options);
+						break;
+					case "interface":
+						if (elem.XGetAttribute ("obfuscated") == "true")
+							continue;
+						gen = CreateInterface (ns, elem, options);
+						break;
+					default:
+						Report.LogCodedWarning (0, Report.WarningUnexpectedPackageChildNode, elem.Name.ToString ());
+						break;
+				}
+
+				if (gen is null)
+					continue;
+
+				var idx = name.IndexOf ('<');
+
+				if (idx > 0)
+					name = name.Substring (0, idx);
+
+				by_name [name] = gen;
+
+				if (name.IndexOf ('.') > 0)
+					nested [name] = gen;
+				else
+					result.Add (gen);
+			}
+
+			foreach (var name in nested.Keys) {
+				var top_ancestor = name.Substring (0, name.IndexOf ('.'));
+
+				if (by_name.ContainsKey (top_ancestor))
+					by_name [top_ancestor].AddNestedType (nested [name]);
+				else {
+					Report.LogCodedWarning (0, Report.WarningNestedTypeAncestorNotFound, top_ancestor, nested [name].FullName);
+					nested [name].Invalidate ();
+				}
+			}
+
+			return result;
+		}
 
 		public static ClassGen CreateClass (XElement pkg, XElement elem, CodeGenerationOptions options)
 		{

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Java.Interop.Tools.Generator;
 using MonoDroid.Generation.Utilities;
 
 namespace MonoDroid.Generation

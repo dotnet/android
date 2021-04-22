@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Text;
+using Java.Interop.Tools.Generator;
 using MonoDroid.Generation.Utilities;
 
 namespace MonoDroid.Generation

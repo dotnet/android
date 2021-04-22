@@ -15,4 +15,8 @@
     <Compile Include="..\utils\NullableAttributes.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Java.Interop.Localization\Java.Interop.Localization.csproj" />
+  </ItemGroup>
+
 </Project>

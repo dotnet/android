@@ -1,88 +1,57 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
 using System.Xml.XPath;
 using System.Xml.Linq;
 
 using Xamarin.Android.Tools;
-using Java.Interop.Tools.Generator;
 
-namespace MonoDroid.Generation
+namespace Java.Interop.Tools.Generator
 {
-	public class ApiFixup
+	public class FixupXmlDocument
 	{
-		XDocument api_doc;
-		string apiSource = "";
-
-		public string ApiSource { get { return apiSource; } }
+		public XDocument FixupDocument { get; }
 		
-		public ApiFixup (XDocument apiDoc)
+		public FixupXmlDocument (XDocument fixupDocument)
 		{
-			api_doc = apiDoc;
-			var api = api_doc.Root;
-			if (api != null)
-				apiSource = api.XGetAttribute ("api-source");
+			FixupDocument = fixupDocument;
 		}
 
-		public void Process (IEnumerable<XDocument> metaDocs, string apiLevel, int productVersion)
+		public static FixupXmlDocument? Load (string filename)
 		{
-			foreach (var metaDoc in metaDocs)
-				Process (metaDoc, apiLevel, productVersion);
-		}
-		
-		bool ShouldSkip (XElement node, int apiLevel, int productVersion)
-		{
-			if (apiLevel > 0) {
-				string apiSince = node.XGetAttribute ("api-since");
-				string apiUntil = node.XGetAttribute ("api-until");
-				if (!string.IsNullOrEmpty (apiSince) && int.Parse (apiSince) > apiLevel)
-					return true;
-				if (!string.IsNullOrEmpty (apiUntil) && int.Parse (apiUntil) < apiLevel)
-					return true;
-			}
-			if (productVersion > 0) {
-				var product_version = node.XGetAttribute ("product-version");
-				if (!string.IsNullOrEmpty (product_version) && int.Parse (product_version) > productVersion)
-					return true;
-			}
-			return false;
+			if (UtilityExtensions.LoadXmlDocument (filename) is XDocument doc)
+				return new FixupXmlDocument (doc);
+
+			return null;
 		}
 
-		bool ShouldApply (XElement node) 
+		public void Apply (ApiXmlDocument apiDocument, string apiLevelString, int productVersion)
 		{
-			if (!string.IsNullOrEmpty (apiSource)) {
-				var targetsource = node.XGetAttribute ("api-source");
-				if (string.IsNullOrEmpty (targetsource))
-						return true;
-				return targetsource == apiSource;
-			}
-			return true;
-		}
-		
-		void Process (XDocument meta_doc, string apiLevelString, int productVersion)
-		{
-			int apiLevel = 0;
-			int.TryParse (apiLevelString, out apiLevel);
+			// Defaulting to 0 here is fine
+			int.TryParse (apiLevelString, out var apiLevel);
 
-			var metadataChildren = meta_doc.XPathSelectElements ("/metadata/*");
-			string prev_path = null;
-			XElement attr_last_cache = null;
+			var metadataChildren = FixupDocument.XPathSelectElements ("/metadata/*");
+
+			string? prev_path = null;
+			XElement? attr_last_cache = null;
 
 			foreach (var metaitem in metadataChildren) {
 				if (ShouldSkip (metaitem, apiLevel, productVersion))
 					continue;
-				if (!ShouldApply (metaitem))
+				if (!ShouldApply (metaitem, apiDocument))
 					continue;
-				string path = metaitem.XGetAttribute ("path");
+
+				var path = metaitem.XGetAttribute ("path");
+
 				if (path != prev_path)
 					attr_last_cache = null;
+
 				prev_path = path;
 
 				switch (metaitem.Name.LocalName) {
 				case "remove-node":
 					try {
-						var nodes = api_doc.XPathSelectElements (path).ToArray ();
+						var nodes = apiDocument.ApiDocument.XPathSelectElements (path).ToArray ();
+
 						if (nodes.Any ())
 							foreach (var node in nodes)
 								node.Remove ();
@@ -96,7 +65,8 @@ namespace MonoDroid.Generation
 					break;
 				case "add-node":
 					try {
-						var nodes = api_doc.XPathSelectElements (path);
+						var nodes = apiDocument.ApiDocument.XPathSelectElements (path);
+
 						if (!nodes.Any ())
 							// BG8A01
 							Report.LogCodedWarning (0, Report.WarningAddNodeMatchedNoNodes, null, metaitem, $"<add-node path=\"{path}\" />");
@@ -108,11 +78,12 @@ namespace MonoDroid.Generation
 						// BG4302
 						Report.LogCodedError (Report.ErrorAddNodeInvalidXPath, e, metaitem, path);
 					}
-						break;
+					break;
 				case "change-node":
 					try {
-						var nodes = api_doc.XPathSelectElements (path);
-						bool matched = false;
+						var nodes = apiDocument.ApiDocument.XPathSelectElements (path);
+						var matched = false;
+
 						foreach (var node in nodes) {
 							var newChild = new XElement (metaitem.Value);
 							newChild.Add (node.Attributes ());
@@ -131,12 +102,14 @@ namespace MonoDroid.Generation
 					break;
 				case "attr":
 					try {
-						string attr_name = metaitem.XGetAttribute ("name");
+						var  attr_name = metaitem.XGetAttribute ("name");
+
 						if (string.IsNullOrEmpty (attr_name))
 							// BG4307
 							Report.LogCodedError (Report.ErrorMissingAttrName, null, metaitem, path);
-						var nodes = attr_last_cache != null ? new XElement [] { attr_last_cache } : api_doc.XPathSelectElements (path);
-						int attr_matched = 0;
+						var nodes = attr_last_cache != null ? new XElement [] { attr_last_cache } : apiDocument.ApiDocument.XPathSelectElements (path);
+						var attr_matched = 0;
+
 						foreach (var n in nodes) {
 							n.SetAttributeValue (attr_name, metaitem.Value);
 							attr_matched++;
@@ -153,9 +126,10 @@ namespace MonoDroid.Generation
 					break;
 				case "move-node":
 					try {
-						string parent = metaitem.Value;
-						var parents = api_doc.XPathSelectElements (parent);
-						bool matched = false;
+						var parent = metaitem.Value;
+						var parents = apiDocument.ApiDocument.XPathSelectElements (parent);
+						var matched = false;
+
 						foreach (var parent_node in parents) {
 							var nodes = parent_node.XPathSelectElements (path).ToArray ();
 							foreach (var node in nodes)
@@ -173,9 +147,9 @@ namespace MonoDroid.Generation
 					break;
 				case "remove-attr":
 					try {
-						string name = metaitem.XGetAttribute ("name");
-						var nodes = api_doc.XPathSelectElements (path);
-						bool matched = false;
+						var name = metaitem.XGetAttribute ("name");
+						var nodes = apiDocument.ApiDocument.XPathSelectElements (path);
+						var matched = false;
 
 						foreach (var node in nodes) {
 							node.RemoveAttributes ();
@@ -193,6 +167,41 @@ namespace MonoDroid.Generation
 				}
 			}
 		}
+
+		bool ShouldSkip (XElement node, int apiLevel, int productVersion)
+		{
+			if (apiLevel > 0) {
+				var since = node.XGetAttributeAsInt ("api-since");
+				var until = node.XGetAttributeAsInt ("api-until");
+
+				if (since is int since_int && since_int > apiLevel)
+					return true;
+				else if (until is int until_int && until_int < apiLevel)
+					return true;
+			}
+
+			if (productVersion > 0) {
+				var product_version = node.XGetAttributeAsInt ("product-version");
+
+				if (product_version is int version && version > productVersion)
+					return true;
+
+			}
+			return false;
+		}
+
+		bool ShouldApply (XElement node, ApiXmlDocument apiDocument)
+		{
+			if (apiDocument.ApiSource.HasValue ()) {
+				var targetsource = node.XGetAttribute ("api-source");
+
+				if (!targetsource.HasValue ())
+					return true;
+
+				return targetsource == apiDocument.ApiSource;
+			}
+
+			return true;
+		}
 	}
 }
-

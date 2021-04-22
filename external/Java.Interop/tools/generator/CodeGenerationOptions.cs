@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-
+using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.JavaCallableWrappers;
 
 using Xamarin.Android.Binder;

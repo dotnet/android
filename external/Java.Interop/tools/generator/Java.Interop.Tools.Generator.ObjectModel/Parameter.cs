@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using Java.Interop.Tools.Generator;
 using Mono.Cecil;
 
 using Xamarin.Android.Binder;

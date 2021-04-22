@@ -62,7 +62,7 @@ namespace generatortests
 		protected List<GenBase> ParseApiDefinition (string xml)
 		{
 			var doc = XDocument.Parse (xml);
-			var gens = new Parser (options).Parse (doc, Enumerable.Empty<string> (), "29", 7);
+			var gens = XmlApiImporter.Parse (doc, options);
 
 			foreach (var gen in gens)
 				options.SymbolTable.AddType (gen);

@@ -260,7 +260,7 @@ namespace generatortests
 					</package>
 				</api>");
 
-			var gens = new Parser (opt).Parse (xml, new List<string> (), "0", 0);
+			var gens = XmlApiImporter.Parse (xml, opt);
 			var klass = gens.Single ();
 
 			Assert.AreEqual (0, klass.Fields.Count);

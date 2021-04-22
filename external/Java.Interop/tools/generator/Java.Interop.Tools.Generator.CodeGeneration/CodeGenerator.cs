@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using generator.SourceWriters;
+using Java.Interop.Tools.Generator;
 using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation

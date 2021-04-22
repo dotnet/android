@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.TypeNameMappings;
 using Xamarin.Android.Binder;
 

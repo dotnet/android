@@ -14,6 +14,7 @@ using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.TypeNameMappings;
 using MonoDroid.Generation.Utilities;
 using Java.Interop.Tools.Generator.Transformation;
+using Java.Interop.Tools.Generator;
 
 namespace Xamarin.Android.Binder
 {
@@ -139,12 +140,25 @@ namespace Xamarin.Android.Binder
 				fixups.Add (enum_metadata);
 			}
 
-			Parser p = new Parser (opt);
-			List<GenBase> gens = p.Parse (apiXmlFile, fixups, api_level, product_version);
-			if (gens == null) {
+			// Load the API XML document
+			var api = ApiXmlDocument.Load (apiXmlFile, api_level, product_version);
+
+			if (api is null)
 				return;
-			}
-			apiSource = p.ApiSource;
+
+			// Apply metadata fixups
+			foreach (var fixup in fixups)
+				api.ApplyFixupFile (fixup);
+
+			api.ApiDocument.Save (apiXmlFile + ".fixed");
+
+			// Parse API XML
+			var gens = XmlApiImporter.Parse (api.ApiDocument, opt);
+
+			if (gens is null)
+				return;
+
+			apiSource = api.ApiSource;
 
 			// disable interface default methods here, especially before validation.
 			gens = gens.Where (g => !g.IsObfuscated && g.Visibility != "private").ToList ();

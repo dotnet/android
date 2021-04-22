@@ -6,6 +6,7 @@ using Mono.Options;
 using Java.Interop.Tools.JavaSource;
 
 using MonoDroid.Generation;
+using Java.Interop.Tools.Generator;
 
 namespace Xamarin.Android.Binder
 {
