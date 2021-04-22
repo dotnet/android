@@ -29,22 +29,22 @@
       "Size": 316728
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3160
+      "Size": 3167
     },
     "assemblies/System.Linq.dll": {
-      "Size": 10643
+      "Size": 10642
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2422
+      "Size": 2420
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 516667
+      "Size": 516394
     },
     "assemblies/Java.Interop.dll": {
       "Size": 57083
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 82086
+      "Size": 81984
     },
     "lib/arm64-v8a/libxamarin-app.so": {
       "Size": 68560
@@ -59,10 +59,10 @@
       "Size": 145864
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3707712
+      "Size": 3588112
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 346800
+      "Size": 347016
     },
     "lib/arm64-v8a/libxamarin-debug-app-helper.so": {
       "Size": 37104
@@ -77,5 +77,5 @@
       "Size": 2278
     }
   },
-  "PackageSize": 2877294
+  "PackageSize": 2828142
 }
