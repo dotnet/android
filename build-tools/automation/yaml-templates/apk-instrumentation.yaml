@@ -6,31 +6,49 @@ parameters:
   extraBuildArgs: ""
   testResultsFormat: NUnit
   packageType: Apk
-  artifactName: ""
+  artifactSource: ""
   artifactFolder: ""
+  useDotNetPreview: false
   condition: succeeded()
 
 steps:
-- task: MSBuild@1
-  displayName: run ${{ parameters.testName }}
-  inputs:
-    solution: ${{ parameters.project }}
-    configuration: ${{ parameters.configuration }}
-    msbuildArguments: >-
-      /restore
-      /t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
-      /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
-      ${{ parameters.extraBuildArgs }}
-  condition: ${{ parameters.condition }}
-  continueOnError: true
+- ${{ if ne(parameters.useDotNetPreview, true) }}:
+  - task: MSBuild@1
+    displayName: run ${{ parameters.testName }}
+    inputs:
+      solution: ${{ parameters.project }}
+      configuration: ${{ parameters.configuration }}
+      msbuildArguments: >-
+        /restore
+        /t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
+        /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
+        ${{ parameters.extraBuildArgs }}
+    condition: ${{ parameters.condition }}
+    continueOnError: true
+
+- ${{ if eq(parameters.useDotNetPreview, true) }}:
+  - powershell: |
+      $dotnetPath = "$env:HOME/Library/Android/dotnet/dotnet"
+      if ([Environment]::OSVersion.Platform -eq "Unix") {
+          if (-not (Test-Path $dotnetPath)) {
+              $dotnetPath = "$env:HOME/android-toolchain/dotnet/dotnet"
+          }
+      } else {
+          $dotnetPath = "$env:USERPROFILE\android-toolchain\dotnet\dotnet.exe"
+      }
+      $targetArg = "-t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures"
+      $binlogArg = "-bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog"
+      & $dotnetPath build -m:1 -v:n $targetArg $binlogArg ${{ parameters.project }} -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+    displayName: run ${{ parameters.testName }}
+    condition: ${{ parameters.condition }}
+    continueOnError: true
 
 - script: >
-    SOURCE="$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/${{ parameters.artifactName }}" &&
     DEST="$(Build.ArtifactStagingDirectory)/${{ parameters.artifactFolder }}/" &&
     mkdir -p "$DEST" &&
-    cp "$SOURCE" "$DEST"
+    cp "${{ parameters.artifactSource }}" "$DEST"
   displayName: copy apk/aab
-  condition: ${{ parameters.condition }}
+  condition: eq(variables['agent.jobstatus'], 'SucceededWithIssues')
   continueOnError: true
 
 - task: PublishTestResults@2

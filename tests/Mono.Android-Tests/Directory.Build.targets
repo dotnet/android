@@ -59,14 +59,4 @@
     />
   </Target>
 
-  <Target Name="RunDotNetInstrumentation"
-      DependsOnTargets="GenerateNuGetConfig" >
-    <ItemGroup>
-      <_RuntimeTestArgs Include="-p:Configuration=$(Configuration)" />
-      <_RuntimeTestArgs Include="-t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures" />
-      <_RuntimeTestArgs Include="-bl:$(XamarinAndroidSourcePath)bin\Test$(Configuration)\run-Mono.Android.NET-Tests.binlog" />
-    </ItemGroup>
-    <Exec Command="$(DotNetPreviewTool) build /v:n @(_RuntimeTestArgs, ' ') &quot;$(MSBuildThisFileDirectory)Runtime-Microsoft.Android.Sdk\Mono.Android.NET-Tests.csproj&quot;" />
-  </Target>
-
 </Project>
