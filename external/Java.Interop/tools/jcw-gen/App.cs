@@ -83,6 +83,10 @@ namespace Java.Interop.Tools
 
 		static void GenerateJavaCallableWrapper (TypeDefinition type, string outputPath, TypeDefinitionCache cache)
 		{
+			if (type.IsInterface) {
+				return;
+			}
+
 			var generator = new JavaCallableWrapperGenerator (type, log: Console.WriteLine, cache) {
 			};
 			generator.Generate (outputPath);
