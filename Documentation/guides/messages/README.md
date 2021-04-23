@@ -77,6 +77,22 @@ If this file comes from a NuGet package, update to a newer version of the NuGet 
 + [XA0129](xa0129.md): Error deploying `{File}`. Please disable fast deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.
 + [XA0130](xa0130.md): Sorry. Fast deployment is only supported on devices running Android 5.0 (API level 21) or higher.
 Please disable fast deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.
++ [XA0131](xa0131.md): The 'run-as' tool has been disabled on this device. Either enable it by activating the developer options on the device or by setting `ro.boot.disable_runas` to `false`.
++ [XA0132](xa0132.md): The package was not installed. Please check you do not have it installed under any other user.
+If the package does show up on the device, try manually uninstalling it then try again.
+You should be able to uninstall the app via the Settings app on the device.
++ [XA0133](xa0133.md): The 'run-as' tool required by the Fast Deployment system has been disabled on this device by the manufacturer. Please disable Fast Deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.
++ [XA0134](xa0134.md): The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.
+This is required in order for Fast Deployment to work. This is normally enabled by default by
+the Xamarin.Android build system for Debug builds.
++ [XA0135](xa0135.md): The package is a 'system' application. These are applications which install under
+the 'system' user on a device. These types of applications cannot use 'run-as'.
++ [XA0136](xa0136.md): The currently installation of the package in corrupt. Please manually uninstall the
+package from all the users on device and try again. If that does not work you can disable Fast Deployment.
++ [XA0137](xa0137.md): The 'run-as' command failed with '{0}'.
+Fast Deployment is not currently supported on this device.
+Please file an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio
+or 'Help->Report a Problem' in Visual Studio for Mac.
 
 ## XA1xxx: Project related
 
