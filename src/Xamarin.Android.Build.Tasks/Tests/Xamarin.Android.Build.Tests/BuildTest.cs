@@ -3987,6 +3987,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // OpenTK not even shipped for .net 6.
 		public void XA4313 ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {

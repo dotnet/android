@@ -22,7 +22,6 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CleanIntermediateIfNeeded;
       _CheckProjectItems;
       _CheckForContent;
-      _CheckForObsoleteFrameworkAssemblies;
       _ValidateAndroidPackageProperties;
       AddLibraryJarsToBind;
       $(BuildDependsOn);
@@ -88,7 +87,6 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CleanIntermediateIfNeeded;
       _AddAndroidDefines;
       _CheckForContent;
-      _CheckForObsoleteFrameworkAssemblies;
       _RemoveLegacyDesigner;
       _ValidateAndroidPackageProperties;
       AddLibraryJarsToBind;
