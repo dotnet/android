@@ -34,6 +34,7 @@ resources:
 variables:
   RunningOnCI: true
   XA.Build.Configuration: Release
+  XA.Jdk11.Folder: jdk-11
   XA.Jdk8.Folder: jdk-1.8
   NuGetArtifactName: nuget-unsigned
   InstallerArtifactName: installers-unsigned
