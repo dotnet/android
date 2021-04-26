@@ -35,6 +35,7 @@ steps:
         -t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
         -bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
         -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+      condition: ${{ parameters.condition }}
 
 - script: >
     DEST="$(Build.ArtifactStagingDirectory)/${{ parameters.artifactFolder }}/" &&

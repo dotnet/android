@@ -31,13 +31,14 @@ steps:
   - powershell: Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
   - template: run-dotnet-preview.yaml
     parameters:
-      displayName: run ${{ parameters.testRunTitle }}
       command: test
       project: ${{ parameters.testAssembly }}
       useExitCodeForErrors: true
       arguments: >-
         --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}"
         ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
+      displayName: run ${{ parameters.testRunTitle }}
+      condition: ${{ parameters.condition }}
 
 - template: kill-processes.yaml
 

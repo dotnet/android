@@ -4,7 +4,7 @@ parameters:
   arguments: ''
   useExitCodeForErrors: false
   displayName: run dotnet preview
-  condition: succeededOrFailed()
+  condition: succeeded()
   continueOnError: true
 
 steps:
