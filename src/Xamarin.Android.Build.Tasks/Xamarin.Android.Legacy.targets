@@ -229,10 +229,11 @@ projects. .NET 5 projects will not import this file.
 
   <Target Name="_CheckForObsoleteFrameworkAssemblies">
     <AndroidWarning
-      Code="XA4313"
-      ResourceName="XA4313"
-      FormatArguments="OpenTK-1.0;Xamarin.Legacy.OpenTK"
-      Condition=" '%(Reference.Identity)' == 'OpenTK-1.0' " />
+        Condition=" '%(Reference.Identity)' == 'OpenTK-1.0' "
+        Code="XA4313"
+        ResourceName="XA4313"
+        FormatArguments="OpenTK-1.0;Xamarin.Legacy.OpenTK"
+    />
   </Target>
 
   <Target Name="_GetReferenceAssemblyPaths">
