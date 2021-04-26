@@ -12,11 +12,10 @@ parameters:
 steps:
 - ${{ if eq(parameters.useDotNet, false) }}:
   - powershell: |
+      Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
       if ([Environment]::OSVersion.Platform -eq "Unix") {
-          Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
           & ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
       } else {
-          Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
           & cmd /c '${{ parameters.nunitConsole }}.cmd' ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
       }
       if ($LASTEXITCODE -ne 0) {
@@ -28,7 +27,7 @@ steps:
     condition: ${{ parameters.condition }}
     continueOnError: true
 
-- ${{ if or(ne(parameters.useDotNet, false), contains(parameters.testAssembly, 'netcoreapp3.1')) }}:
+- ${{ if eq(parameters.useDotNet, true) }}:
   - powershell: Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
   - template: run-dotnet-preview.yaml
     parameters:

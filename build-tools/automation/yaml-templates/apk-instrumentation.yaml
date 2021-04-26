@@ -26,7 +26,7 @@ steps:
     condition: ${{ parameters.condition }}
     continueOnError: true
 
-- ${{ if ne(parameters.useDotNet, false) }}:
+- ${{ if eq(parameters.useDotNet, true) }}:
   - template: run-dotnet-preview.yaml
     parameters:
       displayName: run ${{ parameters.testName }}
