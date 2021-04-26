@@ -17,7 +17,7 @@ steps:
     } else {
         $dotnetPath = "$env:USERPROFILE\android-toolchain\dotnet\dotnet.exe"
     }
-    & $dotnetPath ${{ parameters.command } ${{ parameters.project }} ${{ parameters.arguments }}
+    & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
     if ([System.Convert]::ToBoolean("${{ parameters.useExitCodeForErrors }}") -and $LASTEXITCODE -ne 0) {
         Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
         Write-Host "##vso[task.complete result=Failed;]"
