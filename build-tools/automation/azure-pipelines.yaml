@@ -823,7 +823,7 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration).xml
         artifactSource: bin/Test$(XA.Build.Configuration)/net6-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: net6-Default
-        useDotNetPreview: true
+        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -835,7 +835,7 @@ stages:
         packageType: Aab
         artifactSource: bin/Test$(XA.Build.Configuration)/net6-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: net6-Aab
-        useDotNetPreview: true
+        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -846,7 +846,7 @@ stages:
         extraBuildArgs: /p:TestsFlavor=Interpreter /p:UseInterpreter=True
         artifactSource: bin/Test$(XA.Build.Configuration)/net6-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: net6-Interpreter
-        useDotNetPreview: true
+        useDotNet: true
 
     - task: MSBuild@1
       displayName: shut down emulator

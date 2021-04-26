@@ -10,36 +10,34 @@ parameters:
   condition: succeeded()
 
 steps:
-- powershell: |
-    if ([Environment]::OSVersion.Platform -eq "Unix") {
-        if ("${{ parameters.useDotNet }}" -eq $true) {
-            Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
-            $dotnetPath = "$env:HOME/Library/Android/dotnet/dotnet"
-            if (-not (Test-Path $dotnetPath)) {
-                $dotnetPath = "$env:HOME/android-toolchain/dotnet/dotnet"
-            }
-            & $dotnetPath test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
-        } else {
-            Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
-            & ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
-        }
-    } else {
-        if ("${{ parameters.useDotNet }}" -eq $true) {
-           Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
-           & $env:USERPROFILE\android-toolchain\dotnet\dotnet.exe test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
-        } else {
-           Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
-           & cmd /c '${{ parameters.nunitConsole }}.cmd' ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
-        }
-    }
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
-        Write-Host "##vso[task.complete result=Failed;]"
-        exit 0
-    }
-  displayName: run ${{ parameters.testRunTitle }}
-  condition: ${{ parameters.condition }}
-  continueOnError: true
+- ${{ if ne(parameters.useDotNet, true) }}:
+  - powershell: |
+      if ([Environment]::OSVersion.Platform -eq "Unix") {
+          Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
+          & ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
+      } else {
+          Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
+          & cmd /c '${{ parameters.nunitConsole }}.cmd' ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
+      }
+      if ($LASTEXITCODE -ne 0) {
+          Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
+          Write-Host "##vso[task.complete result=Failed;]"
+          exit 0
+      }
+    displayName: run ${{ parameters.testRunTitle }}
+    condition: ${{ parameters.condition }}
+    continueOnError: true
+
+- ${{ if eq(parameters.useDotNet, true) }}:
+  - powershell: Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
+  - template: run-dotnet-preview.yaml
+    parameters:
+      displayName: run ${{ parameters.testRunTitle }}
+      command: test
+      project: ${{ parameters.testAssembly }}
+      arguments: >-
+        --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}"
+        ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
 
 - template: kill-processes.yaml
 
