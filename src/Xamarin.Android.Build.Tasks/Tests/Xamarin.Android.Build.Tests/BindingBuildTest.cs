@@ -135,7 +135,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\android-crop-1.0.1.aar") {
-				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
 			proj.MetadataXml = @"
 				<metadata>
