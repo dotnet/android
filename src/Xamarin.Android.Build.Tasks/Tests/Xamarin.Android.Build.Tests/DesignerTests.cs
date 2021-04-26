@@ -225,7 +225,7 @@ namespace UnnamedProject
 				WebContent = $"https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/{jar}"
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidAarLibrary ("android-crop-1.0.1.aar") {
-				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
 			// Each NuGet package and AAR file are in libraryprojectimports.cache, AndroidJavaSource is not
 			int libraryProjectImportsJars = 14;
