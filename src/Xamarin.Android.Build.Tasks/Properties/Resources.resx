@@ -724,6 +724,15 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>The following are literal names and should not be translated: Android Wear, Android, Wear.
 {0} - The referenced Android Wear project.</comment>
   </data>
+  <data name="XA4313" xml:space="preserve">
+    <value>The built-in '{0}' reference has been deprecated.
+Remove the '{0}' reference from your project and add the '{1}' NuGet package instead.
+</value>
+  <comment>The following are literal names and should not be translated:
+{0} - The Assembly name which is deprecated
+{1} - A Nuget package name.
+  </comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>

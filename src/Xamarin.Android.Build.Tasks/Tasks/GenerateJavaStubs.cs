@@ -163,8 +163,11 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
 					continue;
 				}
-				allTypemapAssemblies.Add (asm.ItemSpec);
-				userAssemblies.Add (Path.GetFileNameWithoutExtension (asm.ItemSpec), asm.ItemSpec);
+				if (!allTypemapAssemblies.Contains (asm.ItemSpec))
+					allTypemapAssemblies.Add (asm.ItemSpec);
+				string name = Path.GetFileNameWithoutExtension (asm.ItemSpec);
+				if (!userAssemblies.ContainsKey (name))
+					userAssemblies.Add (name, asm.ItemSpec);
 			}
 
 			// Step 1 - Find all the JLO types

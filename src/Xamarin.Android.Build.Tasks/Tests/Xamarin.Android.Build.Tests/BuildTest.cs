@@ -3986,6 +3986,36 @@ namespace UnnamedProject
 			}
 		}
 
+		[Test]
+		[Category ("DotNetIgnore")] // OpenTK not even shipped for .net 6.
+		public void XA4313 ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				References = {
+					new BuildItem.Reference ("OpenTK-1.0")
+				},
+			};
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				string error = builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build succeeded."))
+						.FirstOrDefault (x => x.Contains ("warning XA4313"));
+				Assert.IsNotNull (error, "Build should have failed with XA4313.");
+			}
+		}
+
+		[Test]
+		public void OpenTKNugetWorks ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_OpenTK);
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			}
+		}
+
 		static readonly object [] XA1027XA1028Source = new object [] {
 			new object [] {
 				/* linkTool */                   "r8",

@@ -1,4 +1,4 @@
-.PHONY: leeroy jenkins leeroy-all opentk-jcw
+.PHONY: leeroy jenkins leeroy-all
 .PHONY: create-vsix
 
 #
@@ -24,15 +24,8 @@ ifneq ("$(wildcard $(topdir)/external/monodroid/Makefile)","")
 endif
 	$(MAKE) leeroy $(ZIP_OUTPUT)
 
-leeroy: leeroy-all framework-assemblies opentk-jcw
+leeroy: leeroy-all framework-assemblies
 
 leeroy-all:
 	$(call MSBUILD_BINLOG,leeroy-all,$(_SLN_BUILD)) /restore $(SOLUTION) /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)
 	$(call MSBUILD_BINLOG,leeroy-all,$(_SLN_BUILD)) /restore tools/xabuild/xabuild.csproj /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)
-
-opentk-jcw:
-	$(foreach api_level, $(API_LEVELS), \
-		touch bin/$(CONFIGURATION)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/*/OpenTK-1.0.dll; \
-		$(call MSBUILD_BINLOG,OpenTK-JCW,$(_SLN_BUILD)) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj \
-			/t:GenerateJavaCallableWrappers /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) \
-			/p:AndroidApiLevel=$(api_level) /p:AndroidPlatformId=$(word $(api_level), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(api_level), $(ALL_FRAMEWORKS)) || exit 1; )
