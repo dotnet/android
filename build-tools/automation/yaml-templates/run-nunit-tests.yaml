@@ -35,6 +35,7 @@ steps:
       displayName: run ${{ parameters.testRunTitle }}
       command: test
       project: ${{ parameters.testAssembly }}
+      useExitCodeForErrors: true
       arguments: >-
         --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}"
         ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
