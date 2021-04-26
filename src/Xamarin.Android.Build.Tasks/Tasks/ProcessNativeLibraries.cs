@@ -57,6 +57,10 @@ namespace Xamarin.Android.Tasks
 							continue;
 						library.SetMetadata ("ArchiveFileName", "libmonodroid.so");
 					}
+				} else if (fileName == "libxamarin-debug-app-helper") {
+					// libxamarin-debug-app-helper.so is only needed for Debug builds
+					if (!IncludeDebugSymbols)
+						continue;
 				}
 				output.Add (library);
 			}
