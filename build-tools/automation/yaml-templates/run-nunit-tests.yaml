@@ -1,7 +1,7 @@
 parameters:
   nunitConsole: $(System.DefaultWorkingDirectory)/build-tools/scripts/nunit3-console
   testRunTitle: Xamarin Android Tests
-  testAssembly: []
+  testAssembly: ''
   testResultsFile: TestResult.xml
   nunitConsoleExtraArgs: ''
   dotNetTestExtraArgs: ''
@@ -10,7 +10,7 @@ parameters:
   condition: succeeded()
 
 steps:
-- ${{ if ne(parameters.useDotNet, true) }}:
+- ${{ if eq(parameters.useDotNet, false) }}:
   - powershell: |
       if ([Environment]::OSVersion.Platform -eq "Unix") {
           Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
@@ -28,7 +28,7 @@ steps:
     condition: ${{ parameters.condition }}
     continueOnError: true
 
-- ${{ if eq(parameters.useDotNet, true) }}:
+- ${{ if or(ne(parameters.useDotNet, false), contains(parameters.testAssembly, 'netcoreapp3.1')) }}:
   - powershell: Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
   - template: run-dotnet-preview.yaml
     parameters:

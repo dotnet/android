@@ -16,8 +16,6 @@ jobs:
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
-    variables:
-      UseDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
     steps:
     - template: setup-test-environment.yaml
       parameters:
@@ -57,7 +55,6 @@ jobs:
 
     - template: run-nunit-tests.yaml
       parameters:
-        useDotNet: $(UseDotNet)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
