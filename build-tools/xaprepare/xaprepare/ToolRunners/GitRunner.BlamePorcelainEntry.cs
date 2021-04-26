@@ -72,6 +72,7 @@ namespace Xamarin.Android.Prepare
 					}
 
 					var newParts = new string[] { parts [0], String.Empty };
+					parts = newParts;
 					Log.Instance.Warning ($"Unexpected commit header format (wrong number of fields): {line}");
 					Log.Instance.Warning ("Using empty string for the header value");
 				}
