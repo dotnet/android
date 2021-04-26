@@ -292,6 +292,7 @@ namespace Xamarin.Android.Tools
 				.Concat (AzulJdkLocations.GetAzulJdks (logger))
 				.Concat (OracleJdkLocations.GetOracleJdks (logger))
 				.Concat (VSAndroidJdkLocations.GetVSAndroidJdks (logger))
+				.Concat (MicrosoftDistJdkLocations.GetMicrosoftDistJdks (logger))
 				.Concat (GetEnvironmentVariableJdks ("JAVA_HOME", logger))
 				.Concat (GetPathEnvironmentJdks (logger))
 				.Concat (GetLibexecJdks (logger))
