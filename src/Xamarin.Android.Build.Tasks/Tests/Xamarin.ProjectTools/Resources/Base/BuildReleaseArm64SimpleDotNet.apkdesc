@@ -29,7 +29,7 @@
       "Size": 316728
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3167
+      "Size": 3168
     },
     "assemblies/System.Linq.dll": {
       "Size": 10628
@@ -59,23 +59,20 @@
       "Size": 145864
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3699344
+      "Size": 3588112
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 346992
     },
-    "lib/arm64-v8a/libxamarin-debug-app-helper.so": {
-      "Size": 37104
-    },
     "META-INF/ANDROIDD.SF": {
-      "Size": 2405
+      "Size": 2289
     },
     "META-INF/ANDROIDD.RSA": {
       "Size": 1213
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2278
+      "Size": 2162
     }
   },
-  "PackageSize": 2873198
+  "PackageSize": 2815764
 }
