@@ -1,0 +1,28 @@
+parameters:
+  command: build
+  project: ''
+  arguments: ''
+  useExitCodeForErrors: false
+  displayName: run dotnet preview
+  condition: succeeded()
+  continueOnError: true
+
+steps:
+- powershell: |
+    if ([Environment]::OSVersion.Platform -eq "Unix") {
+        $dotnetPath = "$env:HOME/Library/Android/dotnet/dotnet"
+        if (-not (Test-Path $dotnetPath)) {
+            $dotnetPath = "$env:HOME/android-toolchain/dotnet/dotnet"
+        }
+    } else {
+        $dotnetPath = "$env:USERPROFILE\android-toolchain\dotnet\dotnet.exe"
+    }
+    & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
+    if ([System.Convert]::ToBoolean("${{ parameters.useExitCodeForErrors }}") -and $LASTEXITCODE -ne 0) {
+        Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
+        Write-Host "##vso[task.complete result=Failed;]"
+        exit 0
+    }
+  displayName: ${{ parameters.displayName }}
+  condition: ${{ parameters.condition }}
+  continueOnError: ${{ parameters.continueOnError }}

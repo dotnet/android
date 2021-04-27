@@ -525,9 +525,9 @@ stages:
   dependsOn: mac_build
   jobs:
 
-  # Check - "Xamarin.Android (Smoke Tests APK Instrumentation - macOS)"
-  - job: mac_apk_tests
-    displayName: APK Instrumentation - macOS
+  # Check - "Xamarin.Android (Smoke Tests APKs Legacy - macOS)"
+  - job: mac_apk_tests_legacy
+    displayName: APKs Legacy - macOS
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 240
@@ -541,11 +541,12 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --no-mingw-w64 --run-mode=CI
-      displayName: install required brew tools and prepare java.interop
-
     - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
       displayName: install emulator
+
+    - script: make prepare V=1 CONFIGURATION=$(ApkTestConfiguration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
+      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
+      displayName: prepare java.interop
 
     - script: 'dotnet tool update apkdiff -g'
       displayName: install apkdiff dotnet tool
@@ -557,7 +558,7 @@ stages:
         testName: Mono.Android_Tests
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration).xml
-        artifactName: Mono.Android_Tests-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
         artifactFolder: Default
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -567,7 +568,7 @@ stages:
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True /p:EnableLlvm=True
-        artifactName: Mono.Android_Tests-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
         artifactFolder: AotLlvm
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -577,7 +578,7 @@ stages:
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Profiled-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
-        artifactName: Mono.Android_Tests-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
         artifactFolder: Profiled-Aot
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -587,7 +588,7 @@ stages:
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Bundle.xml
         extraBuildArgs: /p:BundleAssemblies=true
-        artifactName: Mono.Android_Tests-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
         artifactFolder: Bundle
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -597,7 +598,7 @@ stages:
         project: tests/Mono.Android-Tests/Runtime-AppBundle/Mono.Android-TestsAppBundle.csproj
         testResultsFiles: TestResult-Mono.Android_TestsAppBundle-$(ApkTestConfiguration).xml
         packageType: Aab
-        artifactName: Mono.Android_TestsAppBundle-Signed.aab
+        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_TestsAppBundle-Signed.aab
         artifactFolder: Aab
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -606,7 +607,7 @@ stages:
         testName: Mono.Android_TestsMultiDex
         project: tests/Mono.Android-Tests/Runtime-MultiDex/Mono.Android-TestsMultiDex.csproj
         testResultsFiles: TestResult-Mono.Android_TestsMultiDex-$(ApkTestConfiguration).xml
-        artifactName: Mono.Android_TestsMultiDex-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_TestsMultiDex-Signed.apk
         artifactFolder: MultiDex
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -615,7 +616,7 @@ stages:
         testName: Xamarin.Android.JcwGen_Tests
         project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
-        artifactName: Xamarin.Android.JcwGen_Tests-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.JcwGen_Tests-Signed.apk
         artifactFolder: Default
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -624,7 +625,7 @@ stages:
         testName: Xamarin.Android.JcwGen_Tests_FastDev
         project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
-        artifactName: Xamarin.Android.JcwGen_Tests-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.JcwGen_Tests-Signed.apk
         artifactFolder: FastDev_Assemblies_Dexes
         extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
 
@@ -634,7 +635,7 @@ stages:
         testName: Xamarin.Android.Locale_Tests
         project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration).xml
-        artifactName: Xamarin.Android.Locale_Tests-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Locale_Tests-Signed.apk
         artifactFolder: Default
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -644,7 +645,7 @@ stages:
         project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True
-        artifactName: Xamarin.Android.Locale_Tests-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Locale_Tests-Signed.apk
         artifactFolder: Aot
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -654,7 +655,7 @@ stages:
         project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Profiled-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
-        artifactName: Xamarin.Android.Locale_Tests-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Locale_Tests-Signed.apk
         artifactFolder: Profiled-Aot
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -663,7 +664,7 @@ stages:
         testName: Xamarin.Android.EmbeddedDSO_Test
         project: tests/EmbeddedDSOs/EmbeddedDSO/EmbeddedDSO.csproj
         testResultsFiles: TestResult-Xamarin.Android.EmbeddedDSO_Test.nunit-$(ApkTestConfiguration).xml
-        artifactName: Xamarin.Android.EmbeddedDSO_Test-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.EmbeddedDSO_Test-Signed.apk
         artifactFolder: Default
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -672,7 +673,7 @@ stages:
         testName: Xamarin.Forms-Performance-Integration
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
         testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration).xml
-        artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Default
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -682,7 +683,7 @@ stages:
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
         testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Aot.xml
         extraBuildArgs: /p:AotAssemblies=true
-        artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Aot
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -692,7 +693,7 @@ stages:
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
         testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Profiled-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
-        artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Profiled-Aot
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -702,7 +703,7 @@ stages:
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
         testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Bundle.xml
         extraBuildArgs: /p:BundleAssemblies=true
-        artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Bundle
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -711,29 +712,8 @@ stages:
         testName: VSAndroidApp
         project: samples/VSAndroidAppProxy.csproj
         testResultsFiles: TestResult-apkdiff-com.companyname.vsandroidapp-Signed-$(ApkTestConfiguration).xml
-        artifactName: com.companyname.vsandroidapp-Signed.apk
+        artifactSource: bin/Test$(ApkTestConfiguration)/com.companyname.vsandroidapp-Signed.apk
         artifactFolder: Default
-
-    - task: MSBuild@1
-      displayName: run Mono.Android.NET_Tests
-      inputs:
-        solution: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
-        configuration: $(ApkTestConfiguration)
-        msbuildArguments: /t:RunDotNetInstrumentation
-      continueOnError: true
-
-    - script: >
-        mkdir -p $(Build.ArtifactStagingDirectory)/OneDotNet &&
-        cp "$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk" "$(Build.ArtifactStagingDirectory)/OneDotNet"
-      displayName: copy apk/aab
-      continueOnError: true
-
-    - task: PublishTestResults@2
-      displayName: publish Mono.Android.NET_Tests results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(ApkTestConfiguration).xml
-        testRunTitle: Mono.Android.NET_Tests
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -748,7 +728,7 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        artifactName: Test Results - APK Instrumentation - macOS
+        artifactName: Test Results - APKs Legacy - macOS
 
     # Plots: Utilize command-line utility built here to send plot information contained in CSV files to AppInsights
     - task: MSBuild@1
@@ -760,7 +740,7 @@ stages:
           /restore
           /t:Build
           /v:normal
-          /bl:$(System.DefaultWorkingDirectory)/bin/Tools$(ApkTestConfiguration)plots-to-appinsights.binlog
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/plots-to-appinsights.binlog
       continueOnError: true
       condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
 
@@ -800,6 +780,109 @@ stages:
         plotGroup: Test times
         plotTitle: Xamarin.Forms app startup
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Test-times.csv
+
+    - template: yaml-templates/fail-on-issue.yaml
+
+ # Check - "Xamarin.Android (Smoke Tests APKs .NET - macOS)"
+  - job: mac_apk_tests_net
+    displayName: APKs .NET - macOS
+    pool:
+      vmImage: $(HostedMacImage)
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+
+    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
+      displayName: install emulator
+
+    - script: make prepare V=1 CONFIGURATION=$(XA.Build.Configuration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
+      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
+      displayName: prepare java.interop
+
+    - script: 'dotnet tool update apkdiff -g'
+      displayName: install apkdiff dotnet tool
+      continueOnError: true
+
+    - task: MSBuild@1
+      displayName: create nuget.config for Mono.Android.NET_Tests
+      inputs:
+        solution: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:GenerateNuGetConfig
+      continueOnError: true
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: Mono.Android.NET_Tests
+        project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration).xml
+        artifactSource: bin/Test$(XA.Build.Configuration)/net6-android/Mono.Android.NET_Tests-Signed.apk
+        artifactFolder: net6-Default
+        useDotNet: true
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: Mono.Android.NET_Tests-Aab
+        project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aab.xml
+        extraBuildArgs: /p:TestsFlavor=Aab /p:AndroidPackageFormat=aab
+        packageType: Aab
+        artifactSource: bin/Test$(XA.Build.Configuration)/net6-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: net6-Aab
+        useDotNet: true
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: Mono.Android.NET_Tests-Interpreter
+        project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Interpreter.xml
+        extraBuildArgs: /p:TestsFlavor=Interpreter /p:UseInterpreter=True
+        artifactSource: bin/Test$(XA.Build.Configuration)/net6-android/Mono.Android.NET_Tests-Signed.apk
+        artifactFolder: net6-Interpreter
+        useDotNet: true
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:AcquireAndroidTarget,ReleaseAndroidTarget
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+      condition: always()
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        artifactName: Test Results - APKs .NET - macOS
+
+    - task: MSBuild@1
+      displayName: build plots-to-appinsights
+      inputs:
+        solution: build-tools/plots-to-appinsights/ProcessPlotCSVFile.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /restore
+          /t:Build
+          /v:normal
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/plots-to-appinsights.binlog
+      continueOnError: true
+      condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(XA.Build.Configuration)
+        plotGroup: Test times
+        plotTitle: Runtime merged net6
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android.NET_Tests-times.csv
 
     - template: yaml-templates/fail-on-issue.yaml
 
@@ -1188,7 +1271,7 @@ stages:
         testName: Xamarin.Android.Bcl-Tests
         project: tests/BCL-Tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.nunit-$(XA.Build.Configuration).xml
-        artifactName: Xamarin.Android.Bcl_Tests-Signed.apk
+        artifactSource: bin/Test$(XA.Build.Configuration)/Xamarin.Android.Bcl_Tests-Signed.apk
         artifactFolder: Default
 
     - task: PublishTestResults@2
