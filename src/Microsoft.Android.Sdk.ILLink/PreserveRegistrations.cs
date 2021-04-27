@@ -12,11 +12,7 @@ namespace Microsoft.Android.Sdk.ILLink
 {
 	class PreserveRegistrations : IMarkHandler
 	{
-		readonly TypeDefinitionCache cache;
-
 		LinkContext context;
-
-		public PreserveRegistrations (TypeDefinitionCache cache) => this.cache = cache;
 
 		public void Initialize (LinkContext context, MarkContext markContext)
 		{
@@ -81,7 +77,7 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (!method.TryGetRegisterMember (out var member, out var nativeMethod, out var signature)) {
 				if (PreserveJniMarshalMethods () &&
 				    method.DeclaringType.GetMarshalMethodsType () != null &&
-				    method.TryGetBaseOrInterfaceRegisterMember (cache, out member, out nativeMethod, out signature)) {
+				    context.TryGetBaseOrInterfaceRegisterMember (method, out member, out nativeMethod, out signature)) {
 					preserveJniMarshalMethodOnly = true;
 				} else {
 					return;

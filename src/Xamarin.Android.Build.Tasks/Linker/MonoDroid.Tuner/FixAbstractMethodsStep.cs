@@ -22,27 +22,23 @@ namespace MonoDroid.Tuner
 	public class FixAbstractMethodsStep
 #if NET5_LINKER
 	: IMarkHandler
-#else
-	: BaseStep
-#endif
 	{
-		readonly TypeDefinitionCache cache;
-
-#if NET5_LINKER
 		protected LinkContext Context { get; private set; }
 		protected AnnotationStore Annotations => Context?.Annotations;
-#endif
 
-		public FixAbstractMethodsStep (TypeDefinitionCache cache)
-		{
-			this.cache = cache;
-		}
-
-#if NET5_LINKER
 		public void Initialize (LinkContext context, MarkContext markContext)
 		{
 			Context = context;
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
+#else
+	: BaseStep
+	{
+		readonly TypeDefinitionCache cache;
+
+		public FixAbstractMethodsStep (TypeDefinitionCache cache)
+		{
+			this.cache = cache;
 		}
 #endif
 
@@ -141,7 +137,11 @@ namespace MonoDroid.Tuner
 
 		bool MightNeedFix (TypeDefinition type)
 		{
+#if NET5_LINKER
+			return !type.IsAbstract && Context.IsSubclassOf (type, "Java.Lang.Object");
+#else
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
+#endif
 		}
 
 		static bool CompareTypes (TypeReference iType, TypeReference tType)
@@ -250,7 +250,11 @@ namespace MonoDroid.Tuner
 
 			bool rv = false;
 			List<MethodDefinition> typeMethods = new List<MethodDefinition> (type.Methods);
+#if NET5_LINKER
+			foreach (var baseType in Context.GetBaseTypes (type))
+#else
 			foreach (var baseType in type.GetBaseTypes (cache))
+#endif
 				typeMethods.AddRange (baseType.Methods);
 
 			foreach (var ifaceInfo in type.Interfaces) {

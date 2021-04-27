@@ -19,6 +19,7 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_TrimmerDumpDependencies Condition=" '$(LinkerDumpDependencies)' == 'true' ">true</_TrimmerDumpDependencies>
       <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose</_ExtraTrimmerArgs>
+      <_CustomStepDll>$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll</_CustomStepDll>
     </PropertyGroup>
     <ItemGroup>
       <RuntimeHostConfigurationOption Include="Android.Runtime.AndroidEnvironment.VSAndroidDesignerIsEnabled"
@@ -32,15 +33,29 @@ This file contains the .NET 5-specific targets to customize ILLink
       </ResolvedFileToPublish>
 
       <_TrimmerCustomData Include="XATargetFrameworkDirectories" Value="$(_XATargetFrameworkDirectories)" />
-      <_TrimmerCustomData Condition=" '$(AndroidAddKeepAlives)' != '' " Include="AddKeepAlivesStep" Value="$(AndroidAddKeepAlives)" />
       <_TrimmerCustomData Condition=" '$(_ProguardProjectConfiguration)' != '' " Include="ProguardConfiguration" Value="$(_ProguardProjectConfiguration)" />
-      <_TrimmerCustomData Condition=" '$(AndroidLinkResources)' != '' " Include="AndroidLinkResources" Value="$(AndroidLinkResources)" />
 
       <!-- add our custom steps -->
-      <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll">
-        <BeforeStep>MarkStep</BeforeStep>
-        <Type>Microsoft.Android.Sdk.ILLink.SetupStep</Type>
-      </_TrimmerCustomSteps>
+      <!-- Custom steps that run before MarkStep -->
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" BeforeStep="MarkStep" Type="Microsoft.Android.Sdk.ILLink.SetupStep" />
+      <!-- Custom MarkHandlers that run during MarkStep -->
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" Type="Microsoft.Android.Sdk.ILLink.PreserveSubStepDispatcher" />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" Type="MonoDroid.Tuner.MarkJavaObjects" />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" Type="MonoDroid.Tuner.PreserveJavaExceptions" />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" Type="MonoDroid.Tuner.PreserveApplications" />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" Type="Microsoft.Android.Sdk.ILLink.PreserveRegistrations" />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" Type="MonoDroid.Tuner.FixAbstractMethodsStep" />
+      <!-- Custom steps that run after MarkStep -->
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" AfterStep="CleanStep" Type="Mono.Linker.Steps.GenerateProguardConfiguration"
+                           Condition=" '$(_ProguardProjectConfiguration)' != '' " />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" AfterStep="CleanStep" Type="MonoDroid.Tuner.AddKeepAlivesStep"
+                           Condition=" '$(AndroidAddKeepAlives)' == 'true' " />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" AfterStep="CleanStep" Type="MonoDroid.Tuner.RemoveResourceDesignerStep"
+                           Condition=" '$(AndroidLinkResources)' == 'true' " />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" AfterStep="CleanStep" Type="MonoDroid.Tuner.GetAssembliesStep"
+                           Condition=" '$(AndroidLinkResources)' == 'true' " />
+      <_TrimmerCustomSteps Include="$(_CustomStepDll)" AfterStep="CleanStep" Type="MonoDroid.Tuner.StripEmbeddedLibraries" />
 
       <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
       <TrimmerRootDescriptor

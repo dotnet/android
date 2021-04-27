@@ -16,10 +16,19 @@ using Mono.Cecil;
 namespace Mono.Linker.Steps {
 	public class GenerateProguardConfiguration : BaseStep
 	{
+
+#if NET5_LINKER
+		public GenerateProguardConfiguration ()
+		{
+			if (Context.TryGetCustomData ("ProguardConfiguration", out string proguardPath))
+				this.filename = proguardPath;
+		}
+#else
 		public GenerateProguardConfiguration (string outputFileName)
 		{
 			this.filename = outputFileName;
 		}
+#endif
 
 		string filename;
 		TextWriter writer;

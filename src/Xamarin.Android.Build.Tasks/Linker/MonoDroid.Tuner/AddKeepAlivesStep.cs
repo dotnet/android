@@ -10,17 +10,22 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 
 using Mono.Cecil.Cil;
+#if NET5_LINKER
+using Microsoft.Android.Sdk.ILLink;
+#endif
 
 namespace MonoDroid.Tuner
 {
 	public class AddKeepAlivesStep : BaseStep
 	{
+#if !NET5_LINKER
 		readonly TypeDefinitionCache cache;
 
 		public AddKeepAlivesStep (TypeDefinitionCache cache)
 		{
 			this.cache = cache;
 		}
+#endif
 
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
@@ -65,7 +70,11 @@ namespace MonoDroid.Tuner
 
 		bool MightNeedFix (TypeDefinition type)
 		{
+#if NET5_LINKER
+			return !type.IsAbstract && Context.IsSubclassOf (type, "Java.Lang.Object");
+#else
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
+#endif
 		}
 
 		MethodDefinition methodKeepAlive = null;
