@@ -3299,10 +3299,6 @@ public class MyReceiver : BroadcastReceiver
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
 				WebContent = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
 			});
-			//Twitter SDK https://bintray.com/twitteross/twitterkit/twitter-core/3.3.0
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "twitter-core-3.3.0.aar") {
-				WebContent = "https://dl.bintray.com/twitteross/twitterkit/com/twitter/sdk/android/twitter-core/3.3.0/twitter-core-3.3.0.aar",
-			});
 			/* The source is simple:
 			 *
 				public class Lambda
@@ -3983,6 +3979,36 @@ namespace UnnamedProject
 						.FirstOrDefault (x => x.Contains ("error XA1018:"));
 				Assert.IsNotNull (error, "Build should have failed with XA1018.");
 				StringAssert.Contains ("DoesNotExist", error, "Error should include the name of the nonexistent file");
+			}
+		}
+
+		[Test]
+		[Category ("DotNetIgnore")] // OpenTK not even shipped for .net 6.
+		public void XA4313 ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				References = {
+					new BuildItem.Reference ("OpenTK-1.0")
+				},
+			};
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				string error = builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build succeeded."))
+						.FirstOrDefault (x => x.Contains ("warning XA4313"));
+				Assert.IsNotNull (error, "Build should have failed with XA4313.");
+			}
+		}
+
+		[Test]
+		public void OpenTKNugetWorks ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_OpenTK);
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			}
 		}
 

@@ -550,6 +550,11 @@ namespace Xamarin.ProjectTools
 			Version = "2.4.1",
 			TargetFramework = "MonoAndroid10",
 		};
+		public static Package Xamarin_Legacy_OpenTK = new Package {
+			Id = "Xamarin.Legacy.OpenTK",
+			Version = "0.0.1-alpha",
+			TargetFramework = "MonoAndroid10",
+		};
 	}
 }
 

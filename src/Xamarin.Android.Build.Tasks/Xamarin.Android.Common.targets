@@ -1320,7 +1320,6 @@ because xbuild doesn't support framework reference assemblies.
     Outputs="$(_AndroidStampDirectory)_GenerateJniMarshalMethods.stamp">
   <ItemGroup>
     <_JniFrameworkAssembly Include="Mono.Android.dll" />
-    <_JniFrameworkAssembly Include="OpenTK-1.0.dll" />
     <_JniFrameworkAssembly Include="OpenTK.dll" />
     <_JniFrameworkAssembly Include="Xamarin.Android.NUnitLite.dll" />
     <_AssembliesToProcess Include="@(ResolvedUserAssemblies)" />

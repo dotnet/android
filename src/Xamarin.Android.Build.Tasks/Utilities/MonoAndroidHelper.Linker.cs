@@ -19,6 +19,7 @@ namespace Xamarin.Android.Tasks
 			"Mono.Posix.dll",
 		};
 		internal static readonly HashSet<string> FrameworkAssembliesToTreatAsUserAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
+			"OpenTK-1.0.dll",
 			"Mono.Android.Support.v13.dll",
 			"Mono.Android.Support.v4.dll",
 			"Xamarin.Android.NUnitLite.dll",
