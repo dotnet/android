@@ -1868,7 +1868,7 @@
       "Size": 145864
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3588112
+      "Size": 3699344
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 346992
@@ -1997,5 +1997,5 @@
       "Size": 80100
     }
   },
-  "PackageSize": 8574419
+  "PackageSize": 8623571
 }
