@@ -58,6 +58,8 @@ properties that determine build ordering.
       _ResolveAssemblies;
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
+      _CreateBaseApk;
+      _BuildDynamicFeatures;
       _LinkAssemblies;
       _GenerateJavaStubs;
       _ManifestMerger;
@@ -69,7 +71,6 @@ properties that determine build ordering.
       _CreateApplicationSharedLibraries;
       _CompileDex;
       $(_AfterCompileDex);
-      _CreateBaseApk;
       _PrepareAssemblies;
       _ResolveSatellitePaths;
       _CheckApkPerAbiFlag;
