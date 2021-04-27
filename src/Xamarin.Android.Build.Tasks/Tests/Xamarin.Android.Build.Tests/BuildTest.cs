@@ -3299,10 +3299,6 @@ public class MyReceiver : BroadcastReceiver
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
 				WebContent = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
 			});
-			//Twitter SDK https://bintray.com/twitteross/twitterkit/twitter-core/3.3.0
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "twitter-core-3.3.0.aar") {
-				WebContent = "https://dl.bintray.com/twitteross/twitterkit/com/twitter/sdk/android/twitter-core/3.3.0/twitter-core-3.3.0.aar",
-			});
 			/* The source is simple:
 			 *
 				public class Lambda
