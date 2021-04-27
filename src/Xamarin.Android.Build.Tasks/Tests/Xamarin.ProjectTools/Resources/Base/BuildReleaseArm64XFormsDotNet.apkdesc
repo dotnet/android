@@ -1703,151 +1703,151 @@
       "Size": 60774
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 117069
+      "Size": 117070
     },
     "assemblies/Microsoft.Win32.Primitives.dll": {
-      "Size": 3923
+      "Size": 3930
     },
     "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 12145
+      "Size": 12141
     },
     "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 9009
+      "Size": 8991
     },
     "assemblies/System.Collections.dll": {
-      "Size": 21451
+      "Size": 21444
     },
     "assemblies/System.ComponentModel.Primitives.dll": {
-      "Size": 2779
+      "Size": 2783
     },
     "assemblies/System.ComponentModel.TypeConverter.dll": {
-      "Size": 7307
+      "Size": 6322
     },
     "assemblies/System.ComponentModel.dll": {
-      "Size": 2181
+      "Size": 2187
     },
     "assemblies/System.Console.dll": {
-      "Size": 6362
+      "Size": 6366
     },
     "assemblies/System.Core.dll": {
-      "Size": 2132
+      "Size": 2135
     },
     "assemblies/System.Diagnostics.TraceSource.dll": {
-      "Size": 7232
+      "Size": 7243
     },
     "assemblies/System.Drawing.Primitives.dll": {
-      "Size": 12346
+      "Size": 12352
     },
     "assemblies/System.Drawing.dll": {
-      "Size": 2174
+      "Size": 2179
     },
     "assemblies/System.Formats.Asn1.dll": {
-      "Size": 28176
+      "Size": 28180
     },
     "assemblies/System.IO.Compression.Brotli.dll": {
-      "Size": 12167
+      "Size": 12174
     },
     "assemblies/System.IO.Compression.dll": {
-      "Size": 19598
+      "Size": 19601
     },
     "assemblies/System.IO.FileSystem.dll": {
-      "Size": 24150
+      "Size": 24159
     },
     "assemblies/System.IO.IsolatedStorage.dll": {
-      "Size": 11333
+      "Size": 11340
     },
     "assemblies/System.Linq.Expressions.dll": {
-      "Size": 191544
+      "Size": 191548
     },
     "assemblies/System.Linq.dll": {
-      "Size": 20449
+      "Size": 20421
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 191552
+      "Size": 191225
     },
     "assemblies/System.Net.NameResolution.dll": {
-      "Size": 10637
+      "Size": 10640
     },
     "assemblies/System.Net.NetworkInformation.dll": {
-      "Size": 18053
+      "Size": 18061
     },
     "assemblies/System.Net.Primitives.dll": {
-      "Size": 42770
+      "Size": 42767
     },
     "assemblies/System.Net.Security.dll": {
-      "Size": 59225
+      "Size": 59218
     },
     "assemblies/System.Net.Sockets.dll": {
-      "Size": 57107
+      "Size": 57029
     },
     "assemblies/System.ObjectModel.dll": {
-      "Size": 12022
+      "Size": 12027
     },
     "assemblies/System.Private.DataContractSerialization.dll": {
-      "Size": 201985
+      "Size": 197701
     },
     "assemblies/System.Private.Uri.dll": {
-      "Size": 44297
+      "Size": 40517
     },
     "assemblies/System.Private.Xml.Linq.dll": {
       "Size": 15824
     },
     "assemblies/System.Private.Xml.dll": {
-      "Size": 261404
+      "Size": 261254
     },
     "assemblies/System.Runtime.CompilerServices.Unsafe.dll": {
-      "Size": 1487
+      "Size": 1438
     },
     "assemblies/System.Runtime.InteropServices.RuntimeInformation.dll": {
-      "Size": 3089
+      "Size": 3092
     },
     "assemblies/System.Runtime.Numerics.dll": {
-      "Size": 19205
+      "Size": 19211
     },
     "assemblies/System.Runtime.Serialization.Formatters.dll": {
-      "Size": 2739
+      "Size": 2743
     },
     "assemblies/System.Runtime.Serialization.Primitives.dll": {
-      "Size": 3992
+      "Size": 3997
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 2103
+      "Size": 2106
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2615
+      "Size": 2621
     },
     "assemblies/System.Security.Cryptography.Algorithms.dll": {
-      "Size": 26066
+      "Size": 26076
     },
     "assemblies/System.Security.Cryptography.Encoding.dll": {
-      "Size": 14365
+      "Size": 14362
     },
     "assemblies/System.Security.Cryptography.Primitives.dll": {
-      "Size": 5909
+      "Size": 5919
     },
     "assemblies/System.Security.Cryptography.X509Certificates.dll": {
-      "Size": 58416
+      "Size": 58421
     },
     "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 79214
+      "Size": 79219
     },
     "assemblies/System.Threading.Channels.dll": {
-      "Size": 13934
+      "Size": 13942
     },
     "assemblies/System.Xml.dll": {
-      "Size": 1994
+      "Size": 1993
     },
     "assemblies/System.dll": {
-      "Size": 2485
+      "Size": 2489
     },
     "assemblies/mscorlib.dll": {
-      "Size": 3993
+      "Size": 3995
     },
     "assemblies/netstandard.dll": {
-      "Size": 5669
+      "Size": 5672
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 710121
+      "Size": 683997
     },
     "assemblies/Java.Interop.dll": {
       "Size": 64243
@@ -1868,7 +1868,7 @@
       "Size": 145864
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3588112
+      "Size": 3699344
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 346992
@@ -1997,5 +1997,5 @@
       "Size": 80100
     }
   },
-  "PackageSize": 8611283
+  "PackageSize": 8623571
 }
