@@ -17,7 +17,6 @@ jobs:
     cancelTimeoutInMinutes: 5
     variables:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
-      UseDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
     steps:
     - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
@@ -45,7 +44,7 @@ jobs:
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     - template: run-nunit-tests.yaml
       parameters:
-        useDotNet: $(UseDotNet)
+        useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
         testRunTitle: Xamarin.Android.Build.Tests - Windows-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Build.Tests.dll
         nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
@@ -56,7 +55,7 @@ jobs:
     - ${{ if eq(parameters.run_extra_tests, true) }}:
       - template: run-nunit-tests.yaml
         parameters:
-          useDotNet: $(UseDotNet)
+          useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
           testRunTitle: Xamarin.Android.Build.Tests - Windows - No Node
           testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Build.Tests.dll
           nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
@@ -67,7 +66,7 @@ jobs:
     - ${{ if eq(parameters.run_extra_tests, true) }}:
       - template: run-nunit-tests.yaml
         parameters:
-          useDotNet: $(UseDotNet)
+          useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
           testRunTitle: Xamarin.Android.Tools.Aidl-Tests - Windows
           testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Tools.Aidl-Tests.dll
           testResultsFile: TestResult-Aidl-Tests-Windows-$(XA.Build.Configuration).xml
