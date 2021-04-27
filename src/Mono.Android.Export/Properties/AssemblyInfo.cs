@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright ("Xamarin Inc.")]
 [assembly: AssemblyTrademark ("Xamarin")]
 [assembly: AssemblyCulture ("")]
+[assembly: AssemblyMetadata ("IsTrimmable", "True")]
 
 // The following attributes are used to specify the signing key for the assembly, 
 // if desired. See the Mono documentation for more information about signing.
