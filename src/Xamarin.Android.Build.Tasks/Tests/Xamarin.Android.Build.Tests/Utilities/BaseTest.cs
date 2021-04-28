@@ -49,7 +49,7 @@ namespace Xamarin.Android.Build.Tests
 
 			static SetUp ()
 			{
-#if NETCOREAPP3_1
+#if NET6
 				Builder.UseDotNet = true;
 #else
 				Builder.UseDotNet = false;

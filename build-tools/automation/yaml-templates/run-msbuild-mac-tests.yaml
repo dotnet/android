@@ -36,7 +36,7 @@ jobs:
 
     - template: run-nunit-tests.yaml
       parameters:
-        useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
+        useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
         testRunTitle: Xamarin.Android.Build.Tests - macOS-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
         nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
@@ -47,7 +47,7 @@ jobs:
     - ${{ if eq(parameters.run_extra_tests, true) }}:
       - template: run-nunit-tests.yaml
         parameters:
-          useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
+          useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
           testRunTitle: Xamarin.Android.Build.Tests - macOS - No Node
           testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
           nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
@@ -58,7 +58,7 @@ jobs:
     - ${{ if eq(parameters.run_extra_tests, true) }}:
       - template: run-nunit-tests.yaml
         parameters:
-          useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
+          useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
           testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
           testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Tools.Aidl-Tests.dll
           testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml

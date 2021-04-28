@@ -27,7 +27,7 @@ variables:
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.1.405
-  DotNet5Version: 5.0.201
+  DotNet6Version: 6.0.100-preview.3.21202.5
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
 
 stages:
@@ -54,7 +54,6 @@ stages:
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
-        version: $(DotNet5Version)
         remove_dotnet: true
 
     - template: yaml-templates/use-dot-net.yaml
@@ -174,9 +173,6 @@ stages:
       submodules: recursive
 
     - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNet5Version)
-        remove_dotnet: true
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:

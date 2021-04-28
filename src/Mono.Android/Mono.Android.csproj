@@ -5,7 +5,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>monoandroid10;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>monoandroid10;net6.0</TargetFrameworks>
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -41,7 +41,7 @@
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(TargetFramework)\</OutputPath>
   </PropertyGroup>
 
@@ -92,7 +92,7 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
     <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml">
       <LogicalName>ILLink.LinkAttributes.xml</LogicalName>
@@ -375,8 +375,8 @@
   <Target Name="GetTargetPath" />
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <!-- Only build the 'netcoreapp3.1' version of 'Mono.Android.dll' once for the latest stable Android version. -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
+  <!-- Only build the 'net6.0' version of 'Mono.Android.dll' once for the latest stable Android version. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 
