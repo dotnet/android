@@ -27,7 +27,23 @@
           "args": [ ],
           "cwd": "${workspaceRoot}",
           "stopAtEntry": false
-        }
+        },
+        {
+          "name": "Debug Sample",
+          "type": "mono",
+          "request": "attach",
+          "preLaunchTask": "run-sample",
+          "address": "localhost",
+          "port": 10000
+        },
+        {
+          "name": "Debug Sample Under DotNet",
+          "type": "mono",
+          "request": "attach",
+          "address": "localhost",
+          "port": 10000,
+          "preLaunchTask": "run-sample-under-dotnet",
+        },
     ],
     "inputs": [
       {
