@@ -312,9 +312,9 @@ namespace MonoDroid.Tuner
 			LogMessage ($"Added method: {method} to type: {type.FullName} scope: {type.Scope}");
 		}
 
-		MethodReference abstractMethodErrorConstructor;
+		MethodDefinition abstractMethodErrorConstructor;
 
-		MethodReference AbstractMethodErrorConstructor {
+		MethodDefinition AbstractMethodErrorConstructor {
 			get {
 				if (abstractMethodErrorConstructor != null)
 					return abstractMethodErrorConstructor;
@@ -345,11 +345,12 @@ namespace MonoDroid.Tuner
 			if (markedAbstractMethodErrorType)
 				return;
 			markedAbstractMethodErrorType = true;
-				
-			var td = AbstractMethodErrorConstructor.DeclaringType.Resolve ();
+
+
+			var td = AbstractMethodErrorConstructor.DeclaringType;
 			Annotations.Mark (td);
 			Annotations.SetPreserve (td, TypePreserve.Nothing);
-			Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor.Resolve ());
+			Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor);
 		}
 
 		public virtual void LogMessage (string message)

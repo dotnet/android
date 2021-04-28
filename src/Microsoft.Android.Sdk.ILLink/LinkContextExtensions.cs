@@ -133,7 +133,7 @@ namespace Microsoft.Android.Sdk.ILLink
 		{
 			if (type.FullName == c.FullName)
 				return true;
-			var d = context.ResolveTypeDefinition (c);
+			var d = context.TryResolveTypeDefinition (c);
 			if (d == null)
 				return false;
 			foreach (var t in context.GetTypeAndBaseTypes (d)) {

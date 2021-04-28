@@ -9,7 +9,7 @@ namespace Microsoft.Android.Sdk.ILLink
 	public class PreserveSubStepDispatcher : MarkSubStepsDispatcher
 	{
 		public PreserveSubStepDispatcher ()
-			: base (new List<ISubStep> () {
+			: base (new ISubStep[] {
 				new ApplyPreserveAttribute (),
 				new PreserveExportedTypes ()
 			})
