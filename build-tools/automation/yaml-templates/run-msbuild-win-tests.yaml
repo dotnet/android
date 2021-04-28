@@ -34,12 +34,6 @@ jobs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
 
-    - task: CmdLine@2
-      displayName: install apkdiff dotnet tool
-      inputs:
-        script: 'dotnet tool update apkdiff --version 0.0.13 --add-source https://api.nuget.org/v3/index.json -g'
-      continueOnError: true
-
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     - template: run-nunit-tests.yaml
