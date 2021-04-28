@@ -90,7 +90,7 @@
         {
           "label": "build-sample",
           "type": "shell",
-          "command": "bin/${input:configuration}/bin/xabuild samples/HelloWorld/HelloWorld.csproj /t:Install /p:Configuration=${input:configuration}",
+          "command": "bin/${input:configuration}/bin/xabuild ${input:project} /t:${input:target} /p:Configuration=${input:configuration}",
           "group": {
               "kind": "build",
               "isDefault": true
