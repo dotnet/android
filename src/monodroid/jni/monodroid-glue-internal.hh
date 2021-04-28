@@ -224,7 +224,7 @@ namespace xamarin::android::internal
 		void disable_external_signal_handlers ();
 		void lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info);
 		void load_assembly (MonoDomain *domain, jstring_wrapper &assembly);
-		void load_assemblies (MonoDomain *domain, jstring_array_wrapper &assemblies);
+		void load_assemblies (MonoDomain *domain, bool preload, jstring_array_wrapper &assemblies);
 		void set_debug_options ();
 		void parse_gdb_options ();
 		void mono_runtime_init (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args);

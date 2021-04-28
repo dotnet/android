@@ -1595,7 +1595,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 }
 
 inline void
-MonodroidRuntime::load_assemblies (MonoDomain *domain, jstring_array_wrapper &assemblies)
+MonodroidRuntime::load_assemblies (MonoDomain *domain, bool preload, jstring_array_wrapper &assemblies)
 {
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
@@ -1604,6 +1604,9 @@ MonodroidRuntime::load_assemblies (MonoDomain *domain, jstring_array_wrapper &as
 	for (size_t i = 0; i < assemblies.get_length (); ++i) {
 		jstring_wrapper &assembly = assemblies [i];
 		load_assembly (domain, assembly);
+		// only load the first "main" assembly if we are not preloading.
+		if (!preload)
+			break;
 	}
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
@@ -1638,8 +1641,8 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	if (assembliesBytes != nullptr)
 		designerAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes, assembliesPaths);
 #endif
-	if (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies))
-		load_assemblies (domain, assemblies);
+	bool preload = (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
+	load_assemblies (domain, preload, assemblies);
 	init_android_runtime (domain, env, runtimeClass, loader);
 
 	osBridge.add_monodroid_domain (domain);
