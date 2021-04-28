@@ -31,7 +31,7 @@ jobs:
     - task: CmdLine@2
       displayName: install apkdiff dotnet tool
       inputs:
-        script: 'dotnet tool update apkdiff -g'
+        script: 'dotnet tool update apkdiff --version 0.0.13 --add-source https://api.nuget.org/v3/index.json -g'
       continueOnError: true
 
     - template: run-nunit-tests.yaml

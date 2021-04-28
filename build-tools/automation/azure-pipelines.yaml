@@ -279,7 +279,7 @@ stages:
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Build Tree
 
-    - script: dotnet tool update apkdiff -g
+    - script: dotnet tool update apkdiff --version 0.0.13 --add-source https://api.nuget.org/v3/index.json -g
       displayName: install apkdiff dotnet tool
       continueOnError: true
 
@@ -403,7 +403,7 @@ stages:
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Dotnet Build
 
-    - script: 'dotnet tool update apkdiff -g'
+    - script: 'dotnet tool update apkdiff --version 0.0.13 --add-source https://api.nuget.org/v3/index.json -g'
       displayName: install apkdiff dotnet tool
       continueOnError: true
 
@@ -503,7 +503,7 @@ stages:
         artifactName: nuget-linux-unsigned
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
-    - script: dotnet tool update apkdiff -g
+    - script: dotnet tool update apkdiff --version 0.0.13 --add-source https://api.nuget.org/v3/index.json -g
       displayName: install apkdiff dotnet tool
       continueOnError: true
 
@@ -550,7 +550,7 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
       displayName: prepare java.interop
 
-    - script: 'dotnet tool update apkdiff -g'
+    - script: 'dotnet tool update apkdiff --version 0.0.13 --add-source https://api.nuget.org/v3/index.json -g'
       displayName: install apkdiff dotnet tool
       continueOnError: true
 
@@ -805,7 +805,7 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
       displayName: prepare java.interop
 
-    - script: 'dotnet tool update apkdiff -g'
+    - script: 'dotnet tool update apkdiff --version 0.0.13 --add-source https://api.nuget.org/v3/index.json -g'
       displayName: install apkdiff dotnet tool
       continueOnError: true
 
