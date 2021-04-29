@@ -351,19 +351,16 @@ int xml myxml 0x7f140000
 			}
 		}
 
-		[Test]
-		public void GenerateDesignerFileWithÜmläüts ()
+		GenerateResourceDesigner CreateTask (string path)
 		{
-			var path = Path.Combine ("temp", TestName + " Some Space");
-			CreateResourceDirectory (path);
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new GenerateResourceDesigner {
-				BuildEngine = engine
+				BuildEngine = new MockBuildEngine (TestContext.Out)
 			};
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = true;
 			task.Namespace = "Foo.Foo";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
+			task.DesignTimeOutputFile = Path.Combine (Root, path, "designtime", "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
 			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
 			task.Resources = new TaskItem [] {
@@ -376,10 +373,30 @@ int xml myxml 0x7f140000
 			};
 			task.IsApplication = true;
 			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
-			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
-			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
-			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
+			return task;
+		}
+
+		void AssertResourceDesigner (GenerateResourceDesigner task, string expectedFile)
+		{
+			var expected = Path.Combine (Root, "Expected", expectedFile);
+
+			FileAssert.Exists (task.NetResgenOutputFile);
 			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
+
+			if (!string.IsNullOrEmpty (task.DesignTimeOutputFile)) {
+				FileAssert.Exists (task.DesignTimeOutputFile);
+				CompareFilesIgnoreRuntimeInfoString (task.DesignTimeOutputFile, expected);
+			}
+		}
+
+		[Test]
+		public void GenerateDesignerFileWithÜmläüts ()
+		{
+			var path = Path.Combine ("temp", TestName + " Some Space");
+			CreateResourceDirectory (path);
+			var task = CreateTask (path);
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
+			AssertResourceDesigner (task, "GenerateDesignerFileExpected.cs");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -388,28 +405,9 @@ int xml myxml 0x7f140000
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
-			File.WriteAllText (Path.Combine (Root, path, "R.txt"), Rtxt);
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
-			var task = new GenerateResourceDesigner {
-				BuildEngine = engine
-			};
-			task.UseManagedResourceGenerator = true;
-			task.DesignTimeBuild = true;
-			task.Namespace = "Foo.Foo";
+			var task = CreateTask (path);
 			task.RTxtFile = Path.Combine (Root, path, "R.txt");
-			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
-			task.ProjectDir = Path.Combine (Root, path);
-			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
-			task.Resources = new TaskItem [] {
-				new TaskItem (Path.Combine (Root, path, "res", "values", "strings.xml"), new Dictionary<string, string> () {
-					{ "LogicalName", "values\\strings.xml" },
-				}),
-			};
-			task.AdditionalResourceDirectories = new TaskItem [] {
-				new TaskItem (Path.Combine (Root, path, "lp", "res")),
-			};
-			task.IsApplication = true;
-			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
+			File.WriteAllText (task.RTxtFile, Rtxt);
 			if (withLibraryReference) {
 				var libraryPath = Path.Combine (path, "Library");
 				BuildLibraryWithResources (libraryPath);
@@ -418,9 +416,7 @@ int xml myxml 0x7f140000
 				};
 			}
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
-			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
-			var expected = Path.Combine (Root, "Expected", withLibraryReference ? "GenerateDesignerFileWithLibraryReferenceExpected.cs" : "GenerateDesignerFileExpected.cs");
-			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
+			AssertResourceDesigner (task, withLibraryReference ? "GenerateDesignerFileWithLibraryReferenceExpected.cs" : "GenerateDesignerFileExpected.cs");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
