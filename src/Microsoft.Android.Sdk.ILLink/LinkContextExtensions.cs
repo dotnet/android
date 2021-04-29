@@ -7,9 +7,9 @@ using System.Collections.Generic;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
-    public static class LinkContextExtensions
-    {
-        public static MethodDefinition GetBaseDefinition (this LinkContext context, MethodDefinition method)
+	public static class LinkContextExtensions
+	{
+		public static MethodDefinition GetBaseDefinition (this LinkContext context, MethodDefinition method)
 		{
 			if (method.IsStatic || method.IsNewSlot || !method.IsVirtual)
 				return method;
@@ -79,7 +79,7 @@ namespace Microsoft.Android.Sdk.ILLink
 			return true;
 		}
 
-        static bool IsParameterCompatibleWith (this LinkContext context, TypeReference a, TypeReference b)
+		static bool IsParameterCompatibleWith (this LinkContext context, TypeReference a, TypeReference b)
 		{
 			if (a is TypeSpecification || b is TypeSpecification) {
 				if (a.GetType () != b.GetType ())
@@ -157,5 +157,5 @@ namespace Microsoft.Android.Sdk.ILLink
 			}
 			return false;
 		}
-    }
+	}
 }
