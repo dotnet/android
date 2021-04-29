@@ -10,12 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('windows'))" >
-    <!-- Compile against Microsoft.Build* NuGet refs, but do not copy to OutputDir. -->
     <!-- Only use these on Windows as it causes problems with running unit tests in the IDE's on MacOS -->
-    <PackageReference Include="Microsoft.Build"                Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" />
-    <PackageReference Include="Microsoft.Build.Framework"      Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core"     Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" />
+    <PackageReference Include="Microsoft.Build"                Version="$(MSBuildPackageReferenceVersion)" />
+    <PackageReference Include="Microsoft.Build.Framework"      Version="$(MSBuildPackageReferenceVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core"     Version="$(MSBuildPackageReferenceVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageReferenceVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="!$([MSBuild]::IsOSPlatform('windows'))">
@@ -47,14 +46,6 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('windows'))" >
-    <!-- Copy system Microsoft.Build*.dll and dependencies for tests to run against. We can remove this
-          and rely entirely on NuGet assets when mono/msbuild is merged into microsoft/msbuild. -->
-    <None Include="$(MSBuildToolsPath)\Microsoft.Build*.dll" >
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>
