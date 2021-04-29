@@ -3770,6 +3770,9 @@ public class ApplicationRegistration { }");
 			};
 			lib.SetProperty ("AndroidApplication", "False");
 			lib.AndroidUseAapt2 = useAapt2;
+			if (Builder.UseDotNet) {
+				lib.RemoveProperty ("OutputType");
+			}
 
 			// Create an "app" that is basically empty and references the library
 			var app = new XamarinAndroidLibraryProject {
