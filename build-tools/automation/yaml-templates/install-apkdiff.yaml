@@ -1,0 +1,10 @@
+parameters:
+  version: '0.0.13'
+  condition: succeeded()
+  continueOnError: true
+
+steps:
+- script: dotnet tool update apkdiff --version ${{ parameters.version }} --add-source https://api.nuget.org/v3/index.json -g
+  displayName: install apkdiff ${{ parameters.version }}
+  condition: ${{ parameters.condition }}
+  continueOnError: ${{ parameters.continueOnError }}
