@@ -128,7 +128,7 @@
     <MakeDir Directories="$(DotNetPreviewPath)template-packs" />
     <!-- Copy template packs to lowercase destination when running on Linux -->
     <Copy Condition="'$(HostOS)' != 'Linux'" SourceFiles="@(_WLTemplates)" DestinationFolder="$(DotNetPreviewPath)template-packs" />
-    <Copy Condition="'$(HostOS)' == 'Linux'" SourceFiles="@(_WLTemplates)" DestinationFiles="@(_WLTemplates->'%(Filename)'->ToLower()->'$(DotNetPreviewPath)template-packs\%(Identity)')" />
+    <Copy Condition="'$(HostOS)' == 'Linux'" SourceFiles="@(_WLTemplates)" DestinationFiles="@(_WLTemplates->'%(Filename)%(Extension)'->ToLower()->'$(DotNetPreviewPath)template-packs\%(Identity)')" />
     <ItemGroup>
       <_UnixExecutables Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.*\*\tools\$(HostOS)\**\*.*" />
       <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**" />
