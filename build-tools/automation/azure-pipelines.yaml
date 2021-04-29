@@ -1310,7 +1310,7 @@ stages:
     - checkout: release_scripts
       clean: true
 
-    - template: use-dot-net.yaml
+    - template: yaml-templates/use-dot-net.yaml
       parameters:
         remove_dotnet: true
 
@@ -1413,7 +1413,7 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - template: use-dot-net.yaml
+    - template: yaml-templates/use-dot-net.yaml
 
     - task: DownloadPipelineArtifact@2
       inputs:
