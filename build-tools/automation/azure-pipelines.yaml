@@ -279,9 +279,7 @@ stages:
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Build Tree
 
-    - script: dotnet tool update apkdiff -g
-      displayName: install apkdiff dotnet tool
-      continueOnError: true
+    - template: yaml-templates\install-apkdiff.yaml
 
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
@@ -403,9 +401,7 @@ stages:
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Dotnet Build
 
-    - script: 'dotnet tool update apkdiff -g'
-      displayName: install apkdiff dotnet tool
-      continueOnError: true
+    - template: yaml-templates\install-apkdiff.yaml
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
@@ -503,9 +499,7 @@ stages:
         artifactName: nuget-linux-unsigned
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
-    - script: dotnet tool update apkdiff -g
-      displayName: install apkdiff dotnet tool
-      continueOnError: true
+    - template: yaml-templates/install-apkdiff.yaml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
@@ -549,10 +543,6 @@ stages:
     - script: make prepare V=1 CONFIGURATION=$(ApkTestConfiguration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
       workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
       displayName: prepare java.interop
-
-    - script: 'dotnet tool update apkdiff -g'
-      displayName: install apkdiff dotnet tool
-      continueOnError: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -804,10 +794,6 @@ stages:
     - script: make prepare V=1 CONFIGURATION=$(XA.Build.Configuration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
       workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
       displayName: prepare java.interop
-
-    - script: 'dotnet tool update apkdiff -g'
-      displayName: install apkdiff dotnet tool
-      continueOnError: true
 
     - task: MSBuild@1
       displayName: create nuget.config for Mono.Android.NET_Tests
