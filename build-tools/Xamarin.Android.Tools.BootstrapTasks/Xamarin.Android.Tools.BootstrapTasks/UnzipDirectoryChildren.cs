@@ -1,6 +1,7 @@
 ﻿using Microsoft.Build.Framework;
 using System.IO;
 using System.Text;
+using System.Collections.Generic;
 using Xamarin.Tools.Zip;
 using MTask = Microsoft.Build.Utilities.Task;
 using TTask = System.Threading.Tasks.Task;
@@ -17,6 +18,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		[Required]
 		public  ITaskItem       DestinationFolder   { get; set; }
+
+		public ITaskItem[]      FilesToExtract      { get; set; }
 
 		public bool NoSubdirectory { get; set; }
 
@@ -42,13 +45,20 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				? null
 				: Encoding.GetEncoding (EntryNameEncoding);
 
+			var filesToExtract = new HashSet<string> ();
+			if (FilesToExtract != null) {
+				foreach (var file in FilesToExtract) {
+					filesToExtract.Add (file.ItemSpec);
+				}
+			}
+
 			var tasks = new TTask [SourceFiles.Length];
 			for (int i = 0; i < SourceFiles.Length; ++i) {
 				var sourceFile      = SourceFiles [i];
 				var relativeDestDir = sourceFile.GetMetadata ("DestDir");
 				var enc             = encoding;
 				var destFolder      = DestinationFolder.ItemSpec;
-				tasks [i] = TTask.Run (() => ExtractFile (sourceFile.ItemSpec, relativeDestDir, destFolder, enc));
+				tasks [i] = TTask.Run (() => ExtractFile (sourceFile.ItemSpec, relativeDestDir, destFolder, enc, filesToExtract));
 			}
 
 			TTask.WaitAll (tasks);
@@ -56,18 +66,21 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			return !Log.HasLoggedErrors;
 		}
 
-		void ExtractFile (string sourceFile, string relativeDestDir, string destinationFolder, Encoding encoding)
+		void ExtractFile (string sourceFile, string relativeDestDir, string destinationFolder, Encoding encoding, HashSet<string> filesToExtract)
 		{
 			relativeDestDir = relativeDestDir?.Replace ('\\', Path.DirectorySeparatorChar);
 
 			using (var zip = ZipArchive.Open (sourceFile, FileMode.Open)) {
 				foreach (var entry in zip) {
 					if (!entry.IsDirectory) {
+						if (filesToExtract.Count > 0 && !filesToExtract.Contains (Path.GetFileName (entry.FullName)))
+							continue;
 						var entryPath = entry.NativeFullName;
 						if (!NoSubdirectory) {
 							entryPath = entryPath.Substring (entryPath.IndexOf (Path.DirectorySeparatorChar) + 1);
 						}
 						var destinationPath = Path.Combine (destinationFolder, relativeDestDir, entryPath);
+						Log.LogMessage (MessageImportance.Low, $"Extracting {entry.NativeFullName} to {destinationPath}");
 						entry.Extract (Path.GetDirectoryName (destinationPath), Path.GetFileName (destinationPath));
 					}
 				}
