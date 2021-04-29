@@ -34,8 +34,7 @@ namespace Xamarin.Android.Prepare
 
 			// The next two steps MUST be after InstallMonoRuntimes above since the latter cleans up the target
 			// directory where the NDK binutils are installed
-			Steps.Add (new Step_InstallNDKBinutils ());
-			Steps.Add (new Step_Get_Windows_Binutils ());
+			Steps.Add (new Step_InstallGNUBinutils ());
 			Steps.Add (new Step_GenerateCGManifest ());
 
 			AddRequiredOSSpecificSteps (false);

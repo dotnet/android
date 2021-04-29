@@ -26,7 +26,6 @@
     <ThirdParty Include="x86_64-linux-android-as.exe" />
     <ThirdParty Include="x86_64-linux-android-ld.exe" />
     <ThirdParty Include="x86_64-linux-android-strip.exe" />
-    <ThirdParty Include="libwinpthread-1.dll" />
   </ItemGroup>
 
   <ItemGroup>
