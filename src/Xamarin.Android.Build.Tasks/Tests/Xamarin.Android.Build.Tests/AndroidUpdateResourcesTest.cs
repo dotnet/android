@@ -112,9 +112,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }),
 						"first build failed");
 					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
-					if (useManagedParser) {
-						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
-					}
+					FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }), "second build failed");

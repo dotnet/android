@@ -1195,6 +1195,7 @@ because xbuild doesn't support framework reference assemblies.
 		Condition="'$(_AndroidResourceDesignerFile)' != ''"
 		ContinueOnError="$(DesignTimeBuild)"
 		NetResgenOutputFile="$(_AndroidResourceDesignerFile)"
+		DesignTimeOutputFile="$(_AndroidManagedResourceDesignerFile)"
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		RTxtFile="$(IntermediateOutputPath)R.txt"
 		Namespace="$(AndroidResgenNamespace)"
