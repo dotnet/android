@@ -55,7 +55,7 @@ jobs:
 
     - template: run-nunit-tests.yaml
       parameters:
-        useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
+        useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
         testRunTitle: MSBuildDeviceIntegration On Device - macOS - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"

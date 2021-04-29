@@ -403,7 +403,7 @@ stages:
       parameters:
         useDotNet: true
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net6.0\Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\netcoreapp3.1\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-SmokeMSBuildTests-WinDotnetBuildTree-$(XA.Build.Configuration).xml
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
 
@@ -499,7 +499,7 @@ stages:
       parameters:
         useDotNet: true
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
-        testAssembly: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Test$(XA.Build.Configuration)/net6.0/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Test$(XA.Build.Configuration)/netcoreapp3.1/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter CheckSignApk  # TODO: Add more tests (e.g. "TestCategory = SmokeTests $(DotNetNUnitCategories)" )
         testResultsFile: TestResult-NET6SmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
 
@@ -999,7 +999,7 @@ stages:
       job_name: mac_dotnet_tests_1
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: 'netcoreapp3.1'
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -1007,7 +1007,7 @@ stages:
       job_name: mac_dotnet_tests_2
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: 'netcoreapp3.1'
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -1015,7 +1015,7 @@ stages:
       job_name: mac_dotnet_tests_3
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: 'netcoreapp3.1'
 
   # Xamarin.Android (Test MSBuild One .NET - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -1024,7 +1024,7 @@ stages:
       job_name: win_dotnet_tests_1
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: 'netcoreapp3.1'
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -1032,7 +1032,7 @@ stages:
       job_name: win_dotnet_tests_2
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: 'netcoreapp3.1'
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -1040,7 +1040,7 @@ stages:
       job_name: win_dotnet_tests_3
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: 'netcoreapp3.1'
 
 - stage: msbuilddevice_tests
   displayName: MSBuild Emulator Tests
@@ -1060,7 +1060,7 @@ stages:
       job_name: mac_dotnetdevice_tests
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: 'netcoreapp3.1'
 
 - stage: designer_tests
   displayName: Designer Tests
