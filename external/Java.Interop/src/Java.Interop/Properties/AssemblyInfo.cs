@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProduct ("")]
 [assembly: AssemblyTrademark ("Microsoft Corporation")]
 [assembly: AssemblyVersion ("0.1.0.0")]
+[assembly: AssemblyMetadata ("IsTrimmable", "True")]
 
 [assembly: InternalsVisibleTo (
 	"Java.Interop.GenericMarshaler, PublicKey=" +
