@@ -1310,6 +1310,10 @@ stages:
     - checkout: release_scripts
       clean: true
 
+    - template: use-dot-net.yaml
+      parameters:
+        remove_dotnet: true
+
     - template: yaml-templates/use-dot-net.yaml
       parameters:
         version: $(DotNetCoreVersion)
@@ -1408,6 +1412,8 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
+
+    - template: use-dot-net.yaml
 
     - task: DownloadPipelineArtifact@2
       inputs:
