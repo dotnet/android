@@ -59,8 +59,7 @@ namespace MonoDroid.Tuner
 
 		void UpdateAssemblyAction (AssemblyDefinition assembly)
 		{
-			AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
-			if (action == AssemblyAction.Copy)
+			if (Annotations.GetAction (assembly) == AssemblyAction.Copy)
 				Annotations.SetAction (assembly, AssemblyAction.Save);
 		}
 
