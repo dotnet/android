@@ -6,31 +6,43 @@ parameters:
   extraBuildArgs: ""
   testResultsFormat: NUnit
   packageType: Apk
-  artifactName: ""
+  artifactSource: ""
   artifactFolder: ""
+  useDotNet: false
   condition: succeeded()
 
 steps:
-- task: MSBuild@1
-  displayName: run ${{ parameters.testName }}
-  inputs:
-    solution: ${{ parameters.project }}
-    configuration: ${{ parameters.configuration }}
-    msbuildArguments: >-
-      /restore
-      /t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
-      /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
-      ${{ parameters.extraBuildArgs }}
-  condition: ${{ parameters.condition }}
-  continueOnError: true
+- ${{ if eq(parameters.useDotNet, false) }}:
+  - task: MSBuild@1
+    displayName: run ${{ parameters.testName }}
+    inputs:
+      solution: ${{ parameters.project }}
+      configuration: ${{ parameters.configuration }}
+      msbuildArguments: >-
+        /restore
+        /t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
+        /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
+        ${{ parameters.extraBuildArgs }}
+    condition: ${{ parameters.condition }}
+    continueOnError: true
+
+- ${{ if eq(parameters.useDotNet, true) }}:
+  - template: run-dotnet-preview.yaml
+    parameters:
+      displayName: run ${{ parameters.testName }}
+      project: ${{ parameters.project }}
+      arguments: >-
+        -t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
+        -bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
+        -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+      condition: ${{ parameters.condition }}
 
 - script: >
-    SOURCE="$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/${{ parameters.artifactName }}" &&
     DEST="$(Build.ArtifactStagingDirectory)/${{ parameters.artifactFolder }}/" &&
     mkdir -p "$DEST" &&
-    cp "$SOURCE" "$DEST"
+    cp "${{ parameters.artifactSource }}" "$DEST"
   displayName: copy apk/aab
-  condition: ${{ parameters.condition }}
+  condition: eq(variables['agent.jobstatus'], 'SucceededWithIssues')
   continueOnError: true
 
 - task: PublishTestResults@2

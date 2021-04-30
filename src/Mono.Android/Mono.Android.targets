@@ -43,7 +43,7 @@
       <_PackageVersion>$(ProductVersion)</_PackageVersion>
       <_PackageVersionBuild>$(XAVersionCommitCount)</_PackageVersionBuild>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
       <_PackageVersion>$(AndroidPackVersion)</_PackageVersion>
       <_PackageVersionBuild>$(PackVersionCommitCount)</_PackageVersionBuild>
     </PropertyGroup>

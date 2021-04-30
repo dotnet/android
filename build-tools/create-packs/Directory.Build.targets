@@ -14,7 +14,7 @@
   <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
 
   <PropertyGroup>
-    <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\netcoreapp3.1\</_MonoAndroidNETOutputDir>
+    <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0\</_MonoAndroidNETOutputDir>
     <_WorkloadResolverFlagFile>$(DotNetPreviewPath)sdk\$(MicrosoftDotnetSdkInternalPackageVersion)\EnableWorkloadResolver.sentinel</_WorkloadResolverFlagFile>
   </PropertyGroup>
 
@@ -75,12 +75,8 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="BuildILLinkCustomStep">
-    <Exec Command="dotnet build -p:Configuration=$(Configuration) &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj&quot;" />
-  </Target>
-
   <Target Name="CreateAllPacks"
-      DependsOnTargets="BuildILLinkCustomStep;DeleteExtractedWorkloadPacks;_SetGlobalProperties">
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties">
     <RemoveDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />

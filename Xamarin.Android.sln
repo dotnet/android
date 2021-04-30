@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Aidl"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Build.Tasks", "src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj", "{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Sdk.ILLink", "src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj", "{71FE54FA-0BF5-48EF-ACAA-17557B28C9F4}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Bytecode", "external\Java.Interop\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj", "{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{864062D3-A415-4A6F-9324-5820237BA058}"
@@ -198,6 +200,10 @@ Global
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{71FE54FA-0BF5-48EF-ACAA-17557B28C9F4}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{71FE54FA-0BF5-48EF-ACAA-17557B28C9F4}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{71FE54FA-0BF5-48EF-ACAA-17557B28C9F4}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{71FE54FA-0BF5-48EF-ACAA-17557B28C9F4}.Release|AnyCPU.Build.0 = Release|Any CPU
 		{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
 		{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}.Release|AnyCPU.ActiveCfg = Release|Any CPU
