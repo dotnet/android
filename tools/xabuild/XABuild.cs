@@ -119,6 +119,7 @@ namespace Xamarin.Android.Build
 				xml.Load (reader);
 
 			var toolsets = xml.SelectSingleNode ("configuration/msbuildToolsets/toolset");
+			SetProperty (toolsets, "XABuild", "true"); // Enables MSBuild .targets to check for xabuild
 			SetProperty (toolsets, "VsInstallRoot", paths.VsInstallRoot);
 			SetProperty (toolsets, "MSBuildToolsPath", paths.MSBuildBin);
 			SetProperty (toolsets, "MSBuildToolsPath32", paths.MSBuildBin);

@@ -16,5 +16,6 @@
     <JavaCPath Condition=" '$(JavaCPath)' == '' ">@javac@</JavaCPath>
     <JarPath Condition=" '$(JarPath)' == '' ">@jar@</JarPath>
     <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">@javahome@</JavaSdkDirectory>
+    <DotnetToolPath Condition=" '$(DotnetToolPath)' == '' ">@dotnet@</DotnetToolPath>
   </PropertyGroup>
 </Project>

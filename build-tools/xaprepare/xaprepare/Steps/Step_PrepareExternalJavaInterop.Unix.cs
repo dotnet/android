@@ -9,6 +9,9 @@ namespace Xamarin.Android.Prepare
 		async Task<bool> ExecuteOSSpecific (Context context)
 		{
 			string javaInteropDir = context.Properties.GetRequiredValue (KnownProperties.JavaInteropFullPath);
+			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
+			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
+
 			Log.StatusLine ();
 			var make = new MakeRunner (context) {
 				NoParallelJobs = true
@@ -23,6 +26,7 @@ namespace Xamarin.Android.Prepare
 					$"JI_JAVA_HOME={context.OS.JavaHome}",
 					$"JAVA_HOME={context.OS.JavaHome}",
 					$"JI_MAX_JDK={Configurables.Defaults.MaxJDKVersion}",
+					$"DOTNET_TOOL_PATH={dotnetTool}"
 				}
 			);
 			if (!result)
@@ -36,6 +40,7 @@ namespace Xamarin.Android.Prepare
 					$"bin/Build{context.Configuration}/JdkInfo.props",
 					$"CONFIGURATION={context.Configuration}",
 					$"JI_MAX_JDK={Configurables.Defaults.MaxJDKVersion}",
+					$"DOTNET_TOOL_PATH={dotnetTool}"
 				}
 			);
 			return result;

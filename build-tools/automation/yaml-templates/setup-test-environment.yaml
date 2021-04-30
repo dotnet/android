@@ -19,12 +19,15 @@ steps:
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
 
-- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/${{ parameters.jdkTestFolder }}"
+- script: |
+    echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/${{ parameters.jdkTestFolder }}"
+    echo "##vso[task.setvariable variable=DOTNET_TOOL_PATH]$HOME/Library/Android/dotnet/dotnet"
   displayName: set JI_JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
 - script: |
     echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\${{ parameters.jdkTestFolder }}
+    echo ##vso[task.setvariable variable=DOTNET_TOOL_PATH]%USERPROFILE%\android-toolchain\dotnet\dotnet.exe
   displayName: set JI_JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
