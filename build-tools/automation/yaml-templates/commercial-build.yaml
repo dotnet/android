@@ -8,7 +8,6 @@ steps:
 
 - template: use-dot-net.yaml
   parameters:
-    version: $(DotNet5Version)
     remove_dotnet: true
 
 - template: use-dot-net.yaml

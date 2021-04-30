@@ -54,7 +54,7 @@ variables:
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
   DotNetCoreVersion: 3.1.405
-  DotNet5Version: 5.0.201
+  DotNet6Version: 6.0.100-preview.3.21202.5
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: Xamarin-Android-Win2019
@@ -193,8 +193,6 @@ stages:
       displayName: set JI_JAVA_HOME
 
     - template: yaml-templates\use-dot-net.yaml
-      parameters:
-        version: $(DotNet5Version)
 
     - template: yaml-templates\use-dot-net.yaml
       parameters:
@@ -317,8 +315,6 @@ stages:
       displayName: set JI_JAVA_HOME
 
     - template: yaml-templates\use-dot-net.yaml
-      parameters:
-        version: $(DotNet5Version)
 
     - template: yaml-templates\use-dot-net.yaml
       parameters:
@@ -445,8 +441,6 @@ stages:
       displayName: delete external xamarin-android submodule
 
     - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNet5Version)
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
@@ -1318,6 +1312,10 @@ stages:
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
+        remove_dotnet: true
+
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
         version: $(DotNetCoreVersion)
 
     - task: DownloadPipelineArtifact@2
@@ -1414,6 +1412,8 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
+
+    - template: yaml-templates/use-dot-net.yaml
 
     - task: DownloadPipelineArtifact@2
       inputs:
