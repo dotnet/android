@@ -72,7 +72,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ClassLibraryMainLauncherRuns ()
+		public void ClassLibraryMainLauncherRuns ([Values (true, false)] bool preloadAssemblies)
 		{
 			AssertHasDevices ();
 
@@ -85,6 +85,7 @@ namespace Xamarin.Android.Build.Tests
 				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
 			app.SetDefaultTargetDevice ();
+			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
 
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "MyLibrary"
