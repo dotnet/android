@@ -111,7 +111,6 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         RuntimePackNamePatterns="Microsoft.Android.Runtime.**RID**"
         RuntimePackRuntimeIdentifiers="@(_AndroidNETAppRuntimePackRids, '%3B')"
         Profile="Android"
-        IsTrimmable="true"
     />
   </ItemGroup>
 </Project>
