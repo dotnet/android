@@ -4,6 +4,11 @@ parameters:
   continueOnError: true
 
 steps:
+- powershell: dotnet tool uninstall apkdiff -g
+  displayName: uninstall apkdiff
+  ignoreLASTEXITCODE: true
+  condition: ${{ parameters.condition }}
+
 - script: dotnet tool update apkdiff --version ${{ parameters.version }} --add-source https://api.nuget.org/v3/index.json -g
   displayName: install apkdiff ${{ parameters.version }}
   condition: ${{ parameters.condition }}
