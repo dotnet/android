@@ -15,9 +15,6 @@ This file contains the .NET 5-specific targets to customize ILLink
       DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
     <PropertyGroup>
       <_TrimmerDumpDependencies Condition=" '$(LinkerDumpDependencies)' == 'true' ">true</_TrimmerDumpDependencies>
-      <!-- Make the output verbose to see what the linker is doing. This will include messages with Low importance,
-           which will show up depending on the MSBuild verbosity. -->
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose</_ExtraTrimmerArgs>
       <_CustomStepDll>$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll</_CustomStepDll>
     </PropertyGroup>
     <ItemGroup>
