@@ -7,27 +7,28 @@ assignees: 'jpobst'
 
 ---
 
-### Steps to Reproduce
-
-1. 
-2. 
-3. 
-
 <!--
-If you have a repro project, you may drag & drop the .zip/etc. onto the issue editor to attach it.
+
+Documentation for how to troubleshoot issues with binding projects, as well as common issues and how to solve them, is available here:
+
+https://github.com/xamarin/java.interop/wiki/Troubleshooting-Android-Bindings-Issues
+
 -->
 
-### Expected Behavior
+### Error Message or Issue
 
-### Actual Behavior
+
+
 
 ### Version Information
 
 <details>
 <!--
-1. On macOS and within Visual Studio, select Visual Studio > About Visual Studio, then click the Show Details button, then click the Copy Information button.
+
+1. In the Visual Studio menus, select 'Visual Studio' > 'About Visual Studio', then click the 'Show Details' button, then click the 'Copy Information' button.
 
 2. Paste below this comment block.
+
 -->
 
 
@@ -38,12 +39,19 @@ If you have a repro project, you may drag & drop the .zip/etc. onto the issue ed
 ### Log File
 
 <!--
+
 Some useful binding logging is only available with MSBuild Diagnostic logging enabled.
 
 Enable [Diagnostic logging](https://docs.microsoft.com/en-us/xamarin/android/troubleshooting/troubleshooting#diagnostic-msbuild-output), **Rebuild** (not just Build) your project, and attach the log.
 
+-->
 
+
+### Other Helpful Info
 
 <!--
-Switch to the "Preview" tab to ensure your issue renders correctly.
+
+If you have other things that might be helpful, like the .jar or .aar you are trying to bind, or a sample project that reproduces the error, please drag and drop to attach it to this issue.
+
 -->
+
