@@ -42,7 +42,7 @@ resources:
   - repository: xfsamples
     type: github
     name: xamarin/xamarin-forms-samples
-    ref: refs/heads/master
+    ref: refs/heads/main
     endpoint: xamarin
 
 # Global variables
