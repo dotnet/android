@@ -1041,6 +1041,32 @@ namespace generatortests
 		}
 
 		[Test]
+		public void WriteInterfaceEventArgsWithParamArray ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='MyListener' static='true' visibility='public' jni-signature='Lcom/xamarin/android/MyListener;'>
+			      <method abstract='true' deprecated='deprecated' final='false' name='onDoSomething' jni-signature='([Ljava/lang/Object;)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+			        <parameter name='args' type='java.lang.Object...' jni-type='[Ljava/lang/Object;'></parameter>
+			      </method>
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "IMyListener");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteInterfaceEventArgs (iface as InterfaceGen, iface.Methods [0], string.Empty);
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventArgsWithParamArray)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
 		public void WriteInterfaceEventHandler ()
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);

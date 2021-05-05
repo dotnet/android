@@ -598,10 +598,14 @@ namespace MonoDroid.Generation
 						if (p.IsSender)
 							continue;
 						writer.WriteLine ();
-						//var safeTypeName = p.Type.StartsWith ("params ", StringComparison.Ordinal) ? p.Type.Substring ("params ".Length) : p.Type;
-						writer.WriteLine ("{0}\t{1} {2};", indent, opt.GetTypeReferenceName (p), opt.GetSafeIdentifier (p.Name));
+
+						// Remove "params" from things like "global::Java.Lang.Object[]"
+						var type_reference_name = opt.GetTypeReferenceName (p);
+						type_reference_name = type_reference_name.StartsWith ("params ", StringComparison.Ordinal) ? type_reference_name.Substring ("params ".Length) : type_reference_name;
+
+						writer.WriteLine ("{0}\t{1} {2};", indent, type_reference_name, opt.GetSafeIdentifier (p.Name));
 						// AbsListView.IMultiChoiceModeListener.onItemCheckedStateChanged() hit this strict name check, at parameter "@checked".
-						writer.WriteLine ("{0}\tpublic {1} {2} {{", indent, opt.GetTypeReferenceName (p), p.PropertyName);
+						writer.WriteLine ("{0}\tpublic {1} {2} {{", indent, type_reference_name, p.PropertyName);
 						writer.WriteLine ("{0}\t\tget {{ return {1}; }}", indent, opt.GetSafeIdentifier (p.Name));
 						writer.WriteLine ("{0}\t}}", indent);
 					}
