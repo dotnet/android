@@ -45,4 +45,5 @@ endif # $(OS)=Linux
 $(_INCLUDE_MK) $(_INCLUDE_PROPS): bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll
 	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/jdk.targets /t:GetPreferredJdkRoot \
 		/p:JdksRoot="$(_JDKS_ROOT)" \
+		/p:DotnetToolPath="$(DOTNET_TOOL_PATH)" \
 		$(if $(JI_MAX_JDK),"/p:MaximumJdkVersion=$(JI_MAX_JDK)")

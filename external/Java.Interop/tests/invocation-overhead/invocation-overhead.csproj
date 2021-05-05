@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net472;net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <AppendTargetFrameworkToOutputPath>True</AppendTargetFrameworkToOutputPath>
     <DefineConstants>FEATURE_JNIENVIRONMENT_JI_INTPTRS;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIENVIRONMENT_XA_INTPTRS </DefineConstants>

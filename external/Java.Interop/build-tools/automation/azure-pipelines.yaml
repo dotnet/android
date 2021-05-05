@@ -19,10 +19,10 @@ variables:
   RunningOnCI: true
   Build.Configuration: Release
   MaxJdkVersion: 8
-  DotNetCoreVersion: 5.0.103
+  DotNetCoreVersion: 6.0.x
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
-  NetCoreTargetFrameworkPathSuffix: -netcoreapp3.1
+  NetCoreTargetFrameworkPathSuffix: -net6.0
   VSInstallRoot: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
 
 jobs:
@@ -38,15 +38,13 @@ jobs:
 
   - template: templates\install-dependencies.yaml
 
-  - task: NuGetToolInstaller@0
+  - task: MSBuild@1
+    displayName: MSBuild Java.Interop.sln /t:Restore
     inputs:
-      versionSpec: 5.x
+      solution: Java.Interop.sln
+      configuration: $(Build.Configuration)
+      msbuildArguments: /t:Restore /p:RestoreConfigFile=$(System.DefaultWorkingDirectory)\external\xamarin-android-tools\NuGet.config
 
-  - task: NuGetCommand@2
-    inputs:
-      command: custom
-      arguments: restore external\xamarin-android-tools\Xamarin.Android.Tools.sln -ConfigFile external\xamarin-android-tools\NuGet.config
-      
   - task: MSBuild@1
     displayName: MSBuild Java.Interop.sln /t:Prepare
     inputs:
@@ -108,7 +106,12 @@ jobs:
     submodules: recursive
 
   - template: templates\install-dependencies.yaml
-    
+
+  - script: >
+      dotnet tool install --global boots &&
+      boots --preview Mono
+    displayName: Install Mono
+
   - script: make prepare CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion)
     displayName: make prepare
     

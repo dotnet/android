@@ -6,3 +6,4 @@ steps:
   displayName: Use .NET Core $(DotNetCoreVersion)
   inputs:
     version: $(DotNetCoreVersion)
+    includePreviewVersions: true

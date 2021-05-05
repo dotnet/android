@@ -21,6 +21,8 @@ namespace Java.Interop.BootstrapTasks
 
 		public  string  MaximumJdkVersion     { get; set; }
 
+		public  string  DotnetToolPath        { get; set; }
+
 		static  Regex   VersionExtractor  = new Regex (@"(?<version>[\d]+(\.\d+)+)", RegexOptions.Compiled);
 
 		[Required]
@@ -95,6 +97,7 @@ namespace Java.Interop.BootstrapTasks
 
 		void WritePropertyFile (string javaPath, string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
 		{
+			var dotnet = string.IsNullOrEmpty (DotnetToolPath) ? "dotnet" : DotnetToolPath;
 			var msbuild = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
 			var project = new XElement (msbuild + "Project",
 				new XElement (msbuild + "Choose",
@@ -112,6 +115,8 @@ namespace Java.Interop.BootstrapTasks
 						javacPath),
 					new XElement (msbuild + "JarPath", new XAttribute ("Condition", " '$(JarPath)' == '' "),
 						jarPath),
+					new XElement (msbuild + "DotnetToolPath", new XAttribute ("Condition", " '$(DotnetToolPath)' == '' "),
+						dotnet),
 					CreateJreRtJarPath (msbuild, rtJarPath)));
 			project.Save (PropertyFile.ItemSpec);
 		}

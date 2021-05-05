@@ -29,7 +29,7 @@
         Targets="_Run_net472"
     />
     <MSBuild Projects="$(MSBuildThisFileDirectory)invocation-overhead.csproj"
-        Properties="TargetFramework=netcoreapp3.1"
+        Properties="TargetFramework=net6.0"
         Targets="_Run_netcoreapp"
     />
   </Target>

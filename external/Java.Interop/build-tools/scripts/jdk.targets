@@ -6,6 +6,7 @@
         JdksRoot="$(JdksRoot)"
         MakeFragmentFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.mk"
         MaximumJdkVersion="$(MaximumJdkVersion)"
+        DotnetToolPath="$(DotnetToolPath)"
         PropertyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props">
       <Output TaskParameter="JavaHomePath" PropertyName="_JavaHome"/>
     </JdkInfo>
