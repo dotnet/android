@@ -462,5 +462,31 @@ namespace generatortests
 			Assert.True (generated.Contains ("GetOnActivityDestroyed_IHandler:Com.Xamarin.Android.Application/IActivityLifecycleInterface, MyAssembly"));
 			Assert.False (generated.Contains ("GetOnActivityDestroyed_IHandler:Com.Xamarin.Android.Application.IActivityLifecycleInterface, MyAssembly"));
 		}
+
+		[Test]
+		public void WriteInterfaceFieldAsDimProperty ()
+		{
+			// Ensure we write interface fields that are not constant, and thus must be written as properties
+			var xml = @"<api>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='MyInterface' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyInterface;'>
+			      <field deprecated='not deprecated' final='true' name='EGL_NATIVE_VISUAL_ID' jni-signature='I' static='true' transient='false' type='int' type-generic-aware='int' value='12334' visibility='public' volatile='false'></field>
+			      <field deprecated='not deprecated' final='false' name='EGL_NO_SURFACE' jni-signature='I' static='true' transient='false' type='int' type-generic-aware='int' visibility='public' volatile='false'></field>
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.OfType<InterfaceGen> ().Single ();
+
+			var result = iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
+			Assert.True (result);
+
+			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+
+			var generated = writer.ToString ();
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceFieldAsDimProperty)), writer.ToString ().NormalizeLineEndings ());
+		}
 	}
 }

@@ -1,0 +1,126 @@
+[Register ("com/xamarin/android/MyInterface", DoNotGenerateAcw=true)]
+public abstract class MyInterface : Java.Lang.Object {
+	internal MyInterface ()
+	{
+	}
+
+	// Metadata.xml XPath field reference: path="/api/package[@name='com.xamarin.android']/interface[@name='MyInterface']/field[@name='EGL_NATIVE_VISUAL_ID']"
+	[Register ("EGL_NATIVE_VISUAL_ID")]
+	public const int EglNativeVisualId = (int) 12334;
+
+
+	// Metadata.xml XPath field reference: path="/api/package[@name='com.xamarin.android']/interface[@name='MyInterface']/field[@name='EGL_NO_SURFACE']"
+	[Register ("EGL_NO_SURFACE")]
+	public static int EglNoSurface {
+		get {
+			const string __id = "EGL_NO_SURFACE.I";
+
+			var __v = _members.StaticFields.GetInt32Value (__id);
+			return __v;
+		}
+		set {
+			const string __id = "EGL_NO_SURFACE.I";
+
+			try {
+				_members.StaticFields.SetValue (__id, value);
+			} finally {
+			}
+		}
+	}
+
+	static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/MyInterface", typeof (MyInterface));
+
+}
+
+[Register ("com/xamarin/android/MyInterface", DoNotGenerateAcw=true)]
+[global::System.Obsolete ("Use the 'MyInterface' type. This type will be removed in a future release.", error: true)]
+public abstract class MyInterfaceConsts : MyInterface {
+	private MyInterfaceConsts ()
+	{
+	}
+
+}
+
+// Metadata.xml XPath interface reference: path="/api/package[@name='com.xamarin.android']/interface[@name='MyInterface']"
+[Register ("com/xamarin/android/MyInterface", "", "Com.Xamarin.Android.IMyInterfaceInvoker")]
+public partial interface IMyInterface : IJavaObject, IJavaPeerable {
+	private static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/MyInterface", typeof (IMyInterface), isInterface: true);
+
+
+	// Metadata.xml XPath field reference: path="/api/package[@name='com.xamarin.android']/interface[@name='MyInterface']/field[@name='EGL_NO_SURFACE']"
+	[Register ("EGL_NO_SURFACE")]
+	public static int EglNoSurface {
+		get {
+			const string __id = "EGL_NO_SURFACE.I";
+
+			var __v = _members.StaticFields.GetInt32Value (__id);
+			return __v;
+		}
+		set {
+			const string __id = "EGL_NO_SURFACE.I";
+
+			try {
+				_members.StaticFields.SetValue (__id, value);
+			} finally {
+			}
+		}
+	}
+
+}
+
+[global::Android.Runtime.Register ("com/xamarin/android/MyInterface", DoNotGenerateAcw=true)]
+internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
+	static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/MyInterface", typeof (IMyInterfaceInvoker));
+
+	static IntPtr java_class_ref {
+		get { return _members.JniPeerType.PeerReference.Handle; }
+	}
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members; }
+	}
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	protected override IntPtr ThresholdClass {
+		get { return class_ref; }
+	}
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	protected override global::System.Type ThresholdType {
+		get { return _members.ManagedPeerType; }
+	}
+
+	IntPtr class_ref;
+
+	public static IMyInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
+	{
+		return global::Java.Lang.Object.GetObject<IMyInterface> (handle, transfer);
+	}
+
+	static IntPtr Validate (IntPtr handle)
+	{
+		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
+			throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'com.xamarin.android.MyInterface'.");
+		return handle;
+	}
+
+	protected override void Dispose (bool disposing)
+	{
+		if (this.class_ref != IntPtr.Zero)
+			JNIEnv.DeleteGlobalRef (this.class_ref);
+		this.class_ref = IntPtr.Zero;
+		base.Dispose (disposing);
+	}
+
+	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
+	{
+		IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
+		this.class_ref = JNIEnv.NewGlobalRef (local_ref);
+		JNIEnv.DeleteLocalRef (local_ref);
+	}
+
+}

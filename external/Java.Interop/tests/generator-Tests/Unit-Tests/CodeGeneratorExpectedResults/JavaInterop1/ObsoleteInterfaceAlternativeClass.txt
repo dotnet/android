@@ -72,6 +72,18 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 	[Obsolete ("deprecated")]
 	public const string AlreadyObsolete = (string) "android.permission.ACCEPT_HANDOVER";
 
+
+	// Metadata.xml XPath field reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/field[@name='API_NAME']"
+	[Register ("API_NAME")]
+	public static string ApiName {
+		get {
+			const string __id = "API_NAME.Ljava/lang/String;";
+
+			var __v = _members.StaticFields.GetObjectValue (__id);
+			return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+		}
+	}
+
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparing' and count(parameter)=0]"
 	[Register ("comparing", "()I", "")]
 	public static unsafe int Comparing ()

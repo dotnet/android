@@ -153,14 +153,14 @@ namespace generator.SourceWriters
 
 		void AddClassHandle (InterfaceGen iface, CodeGenerationOptions opt)
 		{
-			if (opt.SupportDefaultInterfaceMethods && (iface.HasDefaultMethods || iface.HasStaticMethods))
+			if (opt.SupportDefaultInterfaceMethods && (iface.HasDefaultMethods || iface.HasStaticMethods || iface.HasFieldsAsProperties))
 				Fields.Add (new PeerMembersField (opt, iface.RawJniName, iface.Name, true));
 		}
 
 		void AddFields (InterfaceGen iface, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
 			// Interface fields are only supported with DIM
-			if (!opt.SupportInterfaceConstants)
+			if (!opt.SupportInterfaceConstants && !opt.SupportDefaultInterfaceMethods)
 				return;
 
 			var seen = new HashSet<string> ();
