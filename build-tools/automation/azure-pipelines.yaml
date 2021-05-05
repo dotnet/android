@@ -29,21 +29,6 @@ resources:
     name: xamarin/UITools
     ref: refs/heads/main
     endpoint: xamarin
-  - repository: qa
-    type: github
-    name: xamarin/QualityAssurance
-    ref: refs/heads/master
-    endpoint: xamarin
-  - repository: samples
-    type: github
-    name: xamarin/monodroid-samples
-    ref: refs/heads/master
-    endpoint: xamarin
-  - repository: xfsamples
-    type: github
-    name: xamarin/xamarin-forms-samples
-    ref: refs/heads/master
-    endpoint: xamarin
 
 # Global variables
 variables:
