@@ -45,7 +45,7 @@
 
   <Target Name="_Properties">
     <PropertyGroup>
-      <License Condition=" '$(License)' == '' ">$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\LICENSE</License>
+      <License Condition=" '$(License)' == '' ">$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Sdk.Android\LICENSE</License>
       <_LicenseDestination>$(IntermediateOutputPath)LICENSE.rtf</_LicenseDestination>
       <_WixFile>$(IntermediateOutputPath)Microsoft.NET.Workload.Android.wix</_WixFile>
       <_WixObj>$(IntermediateOutputPath)Microsoft.NET.Workload.Android.wixobj</_WixObj>

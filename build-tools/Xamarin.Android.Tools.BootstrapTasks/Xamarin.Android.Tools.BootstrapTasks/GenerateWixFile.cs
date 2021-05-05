@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				packWriter.WriteAttributeString ("Id", "DOTNETVERSIONBAND");
 				packWriter.WriteAttributeString ("Name", version_band);
 				packWriter.WriteAttributeString ("FileSource", sdk_manifests);
-				var workload = Path.Combine (sdk_manifests, "Microsoft.NET.Workload.Android");
+				var workload = Path.Combine (sdk_manifests, "Microsoft.NET.Sdk.Android");
 				if (Directory.Exists (workload)) {
 					RecurseDirectory (sdk_manifests, packWriter, componentWriter, workload);
 				} else {

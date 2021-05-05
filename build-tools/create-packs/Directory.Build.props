@@ -14,4 +14,6 @@
     <NoWarn>$(NoWarn);NU5128;NU5131</NoWarn>
   </PropertyGroup>
 
+  <Import Project="..\..\Configuration.props" />
+
 </Project>

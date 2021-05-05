@@ -2,8 +2,8 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.proj
 
-This project file is used to create the Microsoft.Android.Sdk.$(RID) NuGets, which are the
-core workload sdk packs imported by Microsoft.NET.Workload.Android.
+This project file is used to create the Microsoft.Android.Sdk.$(HostOS) NuGets, which are the
+core workload SDK packs imported by WorkloadManifest.targets.
 ***********************************************************************************************
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
