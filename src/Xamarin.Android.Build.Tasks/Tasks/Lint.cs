@@ -185,6 +185,10 @@ namespace Xamarin.Android.Tasks
 			// MonoPackageManager.java causes this warning to be emitted.
 			// This is by design so we can safely ignore this.
 			{ "ObsoleteSdkInt", new Version (26, 1, 1) },
+			// In cmdline-tools/4.0 and LintVersion=4.2.0 we started seeing errors such as:
+			// obj/Debug/android/AndroidManifest.xml(12,89): error XA0103: MainActivity must extend android.app.Activity [Instantiatable]
+			// obj/Debug/android/AndroidManifest.xml(18,28): error XA0103: MonoRuntimeProvider must extend android.content.ContentProvider [Instantiatable]
+			{ "Instantiatable", new Version (4, 2, 0) },
 		};
 
 		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)", RegexOptions.Compiled);
