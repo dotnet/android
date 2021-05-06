@@ -24,9 +24,26 @@ namespace Xamarin.Android.Prepare
 			// Delete any custom Microsoft.Android packs that may have been installed by test runs. Other ref/runtime packs will be ignored.
 			var packsPath = Path.Combine (dotnetPath, "packs");
 			if (Directory.Exists (packsPath)) {
-				foreach (var packToRemove in Directory.EnumerateDirectories (packsPath).Where (p => new DirectoryInfo (p).Name.Contains ("Android"))) {
-					Log.StatusLine ($"Removing Android pack: {packToRemove}");
-					Utilities.DeleteDirectory (packToRemove);
+				foreach (var packToRemove in Directory.EnumerateDirectories (packsPath)) {
+					var info = new DirectoryInfo (packToRemove);
+					if (info.Name.IndexOf ("Android", StringComparison.OrdinalIgnoreCase) != -1) {
+						Log.StatusLine ($"Removing Android pack: {packToRemove}");
+						Utilities.DeleteDirectory (packToRemove);
+					}
+				}
+			}
+
+			// Delete Workload manifests, such as sdk-manifests/6.0.100/Microsoft.NET.Sdk.Android
+			var sdkManifestsPath = Path.Combine (dotnetPath, "sdk-manifests");
+			if (Directory.Exists (sdkManifestsPath)) {
+				foreach (var versionBand in Directory.EnumerateDirectories (sdkManifestsPath)) {
+					foreach (var workloadManifestDirectory in Directory.EnumerateDirectories (versionBand)) {
+						var info = new DirectoryInfo (workloadManifestDirectory);
+						if (info.Name.IndexOf ("Android", StringComparison.OrdinalIgnoreCase) != -1) {
+							Log.StatusLine ($"Removing Android manifest directory: {workloadManifestDirectory}");
+							Utilities.DeleteDirectory (workloadManifestDirectory);
+						}
+					}
 				}
 			}
 
@@ -36,6 +53,18 @@ namespace Xamarin.Android.Prepare
 				foreach (var sdkToRemove in Directory.EnumerateDirectories (sdkPath).Where (s => new DirectoryInfo (s).Name != dotnetPreviewVersion)) {
 					Log.StatusLine ($"Removing out of date SDK: {sdkToRemove}");
 					Utilities.DeleteDirectory (sdkToRemove);
+				}
+			}
+
+			// Delete Android template-packs
+			var templatePacksPath = Path.Combine (dotnetPath, "template-packs");
+			if (Directory.Exists (templatePacksPath)) {
+				foreach (var templateToRemove in Directory.EnumerateFiles (templatePacksPath)) {
+					var name = Path.GetFileName (templateToRemove);
+					if (name.IndexOf ("Android", StringComparison.OrdinalIgnoreCase) != -1) {
+						Log.StatusLine ($"Removing Android template: {templateToRemove}");
+						Utilities.DeleteFile (templateToRemove);
+					}
 				}
 			}
 
