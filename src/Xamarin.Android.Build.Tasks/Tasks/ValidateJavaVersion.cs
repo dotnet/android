@@ -48,12 +48,12 @@ namespace Xamarin.Android.Tasks
 		// `java -version` will produce values such as:
 		//  java version "9.0.4"
 		//  java version "1.8.0_77"
-		static readonly Regex JavaVersionRegex = new Regex (@"version ""(?<version>[\d\.]+)(_d+)?[^""]*""");
+		static readonly Regex JavaVersionRegex = new Regex (@"version ""(?<version>[\d\.]+)(_\d+)?[^""]*""");
 
 		// `javac -version` will produce values such as:
 		//  javac 9.0.4
 		//  javac 1.8.0_77
-		static readonly Regex JavacVersionRegex = new Regex (@"(?<version>[\d\.]+)(_d+)?");
+		internal static readonly Regex JavacVersionRegex = new Regex (@"(?<version>[\d\.]+)(_\d+)?");
 
 		bool ValidateJava ()
 		{

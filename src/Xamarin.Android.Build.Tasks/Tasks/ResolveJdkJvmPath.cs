@@ -20,6 +20,12 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string JdkJvmPath { get; set; }
 
+		[Required]
+		public string MinimumSupportedJavaVersion   { get; set; }
+
+		[Required]
+		public string LatestSupportedJavaVersion    { get; set; }
+
 		public override bool RunTask ()
 		{
 			try {
@@ -54,12 +60,10 @@ namespace Xamarin.Android.Tasks
 				return cached;
 			}
 
-			JdkInfo info = null;
-			try {
-				info = new JdkInfo (JavaSdkPath);
-			} catch {
-				info = JdkInfo.GetKnownSystemJdkInfos (this.CreateTaskLogger ()).FirstOrDefault ();
-			}
+			var minVersion  = Version.Parse (MinimumSupportedJavaVersion);
+			var maxVersion  = Version.Parse (LatestSupportedJavaVersion);
+
+			JdkInfo info    = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion);
 
 			if (info == null)
 				return null;

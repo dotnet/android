@@ -122,6 +122,19 @@ namespace Xamarin.Android.Tasks
 		}
 #endif  // MSBUILD
 
+		public static JdkInfo GetJdkInfo (Action<TraceLevel, string> logger, string javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion)
+		{
+			JdkInfo info = null;
+			try {
+				info = new JdkInfo (javaSdkPath);
+			} catch {
+				info = JdkInfo.GetKnownSystemJdkInfos (logger)
+					.Where (jdk => jdk.Version >= minSupportedVersion && jdk.Version <= maxSupportedVersion)
+					.FirstOrDefault ();
+			}
+			return info;
+		}
+
 		class SizeAndContentFileComparer : IEqualityComparer<FileInfo>
 #if MSBUILD
 			, IEqualityComparer<ITaskItem>
