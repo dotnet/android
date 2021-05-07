@@ -8,19 +8,19 @@
       "Size": 57122
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 82120
+      "Size": 82119
     },
     "assemblies/System.Linq.dll": {
-      "Size": 10651
+      "Size": 10642
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 516048
+      "Size": 515642
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2425
+      "Size": 2415
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3176
+      "Size": 3162
     },
     "classes.dex": {
       "Size": 316728
@@ -29,7 +29,7 @@
       "Size": 346848
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3918016
+      "Size": 3922032
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 776168
@@ -44,7 +44,7 @@
       "Size": 68560
     },
     "META-INF/ANDROIDD.RSA": {
-      "Size": 1211
+      "Size": 1213
     },
     "META-INF/ANDROIDD.SF": {
       "Size": 2289
