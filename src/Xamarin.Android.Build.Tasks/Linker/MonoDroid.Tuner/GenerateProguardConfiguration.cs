@@ -17,13 +17,7 @@ namespace Mono.Linker.Steps {
 	public class GenerateProguardConfiguration : BaseStep
 	{
 
-#if NET5_LINKER
-		public GenerateProguardConfiguration ()
-		{
-			if (Context.TryGetCustomData ("ProguardConfiguration", out string proguardPath))
-				this.filename = proguardPath;
-		}
-#else
+#if !NET5_LINKER
 		public GenerateProguardConfiguration (string outputFileName)
 		{
 			this.filename = outputFileName;
@@ -35,6 +29,10 @@ namespace Mono.Linker.Steps {
 
 		protected override void Process ()
 		{
+#if NET5_LINKER
+			if (Context.TryGetCustomData ("ProguardConfiguration", out string proguardPath))
+				filename = proguardPath;
+#endif
 			var dir = Path.GetDirectoryName (filename);
 			if (!Directory.Exists (dir))
 				Directory.CreateDirectory (dir);
@@ -97,4 +95,3 @@ namespace Mono.Linker.Steps {
 		}
 	}
 }
-
