@@ -36,7 +36,7 @@ This file contains the .NET 5-specific targets to customize ILLink
 
       <_TrimmerCustomData Include="XATargetFrameworkDirectories" Value="$(_XATargetFrameworkDirectories)" />
       <_TrimmerCustomData Condition=" '$(_ProguardProjectConfiguration)' != '' " Include="ProguardConfiguration" Value="$(_ProguardProjectConfiguration)" />
-      <_TrimmerCustomData Conditiont=" '$(AndroidLinkResources)' != '' " Include="AndroidLinkResources" Value="$(AndroidLinkResources)" />
+      <_TrimmerCustomData Condition=" '$(AndroidLinkResources)' != '' " Include="AndroidLinkResources" Value="$(AndroidLinkResources)" />
 
       <!-- add our custom steps -->
       <!-- Custom steps that run before MarkStep -->
