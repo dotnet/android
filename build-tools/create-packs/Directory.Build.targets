@@ -13,7 +13,6 @@
 
   <PropertyGroup>
     <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0\</_MonoAndroidNETOutputDir>
-    <_WorkloadResolverFlagFile>$(DotNetPreviewPath)sdk\$(MicrosoftDotnetSdkInternalPackageVersion)\EnableWorkloadResolver.sentinel</_WorkloadResolverFlagFile>
   </PropertyGroup>
 
   <!-- LICENSE setup -->
@@ -133,11 +132,6 @@
     />
     <!-- Some files had timestamps in the future -->
     <Touch Files="@(_FilesToTouch)" />
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName ($(_WorkloadResolverFlagFile)))" />
-    <Touch
-        Files="$(_WorkloadResolverFlagFile)"
-        AlwaysCreate="true"
-    />
   </Target>
 
   <Target Name="DeleteExtractedWorkloadPacks" >
@@ -148,7 +142,6 @@
       <_PackFilesToDelete Include="$(DotNetPreviewPath)template-packs\Microsoft.Android.Templates.*.nupkg" />
     </ItemGroup>
     <RemoveDir Directories="%(_PackFilesToDelete.RootDir)%(_PackFilesToDelete.Directory)" />
-    <Delete Files="$(_WorkloadResolverFlagFile)" />
   </Target>
 
   <Target Name="PushManifestToBuildAssetRegistry" >

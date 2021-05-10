@@ -24,9 +24,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public string DotNetPath { get; set; }
 
 		[Required]
-		public string DotNetVersion { get; set; }
-
-		[Required]
 		public string MSIVersion { get; set; }
 
 		public override bool Execute ()
@@ -44,37 +41,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				// Components
 				componentWriter.WriteStartElement ("ComponentGroup");
 				componentWriter.WriteAttributeString ("Id", "ProductComponents");
-				componentWriter.WriteStartElement ("ComponentRef");
-				componentWriter.WriteAttributeString ("Id", "EnableWorkloadResolver");
-				componentWriter.WriteEndElement (); // </ComponentRef>
 
 				// dotnet
 				packWriter.WriteStartElement ("Directory");
 				packWriter.WriteAttributeString ("Id", "dotnet");
 				packWriter.WriteAttributeString ("Name", "dotnet");
-
-				// sdk
-				packWriter.WriteStartElement ("Directory");
-				packWriter.WriteAttributeString ("Id", "sdk");
-				packWriter.WriteAttributeString ("Name", "sdk");
-
-				// DOTNETVERSION
-				packWriter.WriteStartElement ("Directory");
-				packWriter.WriteAttributeString ("Id", "DOTNETVERSION");
-				packWriter.WriteAttributeString ("Name", DotNetVersion);
-				packWriter.WriteAttributeString ("FileSource", Path.Combine (DotNetPath, "sdk", DotNetVersion));
-
-				// EnableWorkloadResolver
-				packWriter.WriteStartElement ("Component");
-				packWriter.WriteAttributeString ("Id", "EnableWorkloadResolver");
-				packWriter.WriteStartElement ("File");
-				packWriter.WriteAttributeString ("Id", "EnableWorkloadResolver");
-				packWriter.WriteAttributeString ("Name", "EnableWorkloadResolver.sentinel");
-				packWriter.WriteAttributeString ("KeyPath", "yes");
-				packWriter.WriteEndElement (); // </File>
-				packWriter.WriteEndElement (); // </Component>
-				packWriter.WriteEndElement (); // </Directory> DOTNETVERSION
-				packWriter.WriteEndElement (); // </Directory> sdk
 
 				// sdk-manifests
 				var sdk_manifests_root = Path.Combine (DotNetPath, "sdk-manifests");
