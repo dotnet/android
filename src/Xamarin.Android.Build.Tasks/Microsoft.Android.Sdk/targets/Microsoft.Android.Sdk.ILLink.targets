@@ -36,6 +36,7 @@ This file contains the .NET 5-specific targets to customize ILLink
 
       <_TrimmerCustomData Include="XATargetFrameworkDirectories" Value="$(_XATargetFrameworkDirectories)" />
       <_TrimmerCustomData Condition=" '$(_ProguardProjectConfiguration)' != '' " Include="ProguardConfiguration" Value="$(_ProguardProjectConfiguration)" />
+      <_TrimmerCustomData Conditiont=" '$(AndroidLinkResources)' != '' " Include="AndroidLinkResources" Value="$(AndroidLinkResources)" />
 
       <!-- add our custom steps -->
       <!-- Custom steps that run before MarkStep -->
@@ -53,10 +54,6 @@ This file contains the .NET 5-specific targets to customize ILLink
                            Condition=" '$(_ProguardProjectConfiguration)' != '' " />
       <_TrimmerCustomSteps Include="$(_CustomStepDll)" AfterStep="CleanStep" Type="MonoDroid.Tuner.AddKeepAlivesStep"
                            Condition=" '$(AndroidAddKeepAlives)' == 'true' " />
-      <_TrimmerCustomSteps Include="$(_CustomStepDll)" AfterStep="CleanStep" Type="MonoDroid.Tuner.RemoveResourceDesignerStep"
-                           Condition=" '$(AndroidLinkResources)' == 'true' " />
-      <_TrimmerCustomSteps Include="$(_CustomStepDll)" AfterStep="CleanStep" Type="MonoDroid.Tuner.GetAssembliesStep"
-                           Condition=" '$(AndroidLinkResources)' == 'true' " />
       <_TrimmerCustomSteps Include="$(_CustomStepDll)" AfterStep="CleanStep" Type="MonoDroid.Tuner.StripEmbeddedLibraries" />
 
       <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
