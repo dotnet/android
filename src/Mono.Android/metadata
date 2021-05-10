@@ -1643,6 +1643,14 @@
   <attr api-since="31" path="/api/package[@name='android.location']/*[@name='LocationManager']/method[@name='addTestProvider']/parameter[@name='powerUsage']" name="name">powerRequirement</attr>
   <attr api-since="31" path="/api/package[@name='java.math']/*[@name='RoundingMode']/method[@name='valueOf']/parameter[@name='rm']" name="name">mode</attr>
 
+  <!-- Rename Namespaces -->
+  <attr api-since="31" path="/api/package[@name='android.app.appsearch']" name="managedName">Android.App.AppSearch</attr>
+  <attr api-since="31" path="/api/package[@name='android.app.appsearch.exceptions']" name="managedName">Android.App.AppSearch.Exceptions</attr>
+  <attr api-since="31" path="/api/package[@name='android.location.provider']" name="managedName">Android.Locations.Provider</attr>
+  <attr api-since="31" path="/api/package[@name='android.net.ipsec.ike']" name="managedName">Android.Net.IpSec.Ike</attr>
+  <attr api-since="31" path="/api/package[@name='android.net.ipsec.ike.exceptions']" name="managedName">Android.Net.IpSec.Ike.Exceptions</attr>
+  <attr api-since="31" path="/api/package[@name='android.view.displayhash']" name="managedName">Android.Views.DisplayHash</attr>
+
   <!-- These interfaces contain constants users need to reference, but the interfaces are protected, nested in a sealed type. -->
   <!-- C# won't let you access protected types in a sealed type, so make them public so they can be used by user code. -->
   <attr api-since="30" path="/api/package[@name='android.provider']/interface[contains(@name, 'Contract.') and contains(@name, 'Columns') and @visibility='protected']" name="visibility">public</attr>

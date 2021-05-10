@@ -40,6 +40,7 @@ the new platform will be downloaded to your local Android SDK.
 - Read the note at the bottom of `/src/Mono.Android/metadata` that has a few lines that must be 
   copy/pasted for new API levels
 - Add required metadata fixes in `/src/Mono.Android/metadata` until `Mono.Android.csproj` builds
+  - Check that new package/namespaces are properly cased
   
 ### ApiCompat
 
