@@ -67,6 +67,8 @@ projects.
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"
         JavaSdkPath="$(JavaSdkDirectory)"
+        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
+        LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
         ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
       <Output TaskParameter="CommandLineToolsPath"      PropertyName="_AndroidToolsDirectory" />
       <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
@@ -82,6 +84,8 @@ projects.
     </ResolveSdks>
     <ResolveJdkJvmPath
         JavaSdkPath="$(_JavaSdkDirectory)"
+        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
+        LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
         Condition=" '$(DesignTimeBuild)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
       <Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath" />
     </ResolveJdkJvmPath>
