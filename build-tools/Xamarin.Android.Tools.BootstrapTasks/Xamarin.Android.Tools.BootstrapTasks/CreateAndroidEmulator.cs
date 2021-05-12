@@ -13,7 +13,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 	{
 		public                  string          SdkVersion      {get; set;}
 		public                  string          AndroidAbi      {get; set;}
-		public                  string          AndroidSdkHome  {get; set;}
+		/// <summary>
+		/// Specifies $ANDROID_SDK_HOME. This is not the path to the Android SDK, but a root folder that contains the `.android` folder.
+		/// </summary>
+		[Required]
+		public                  string          AvdManagerHome  {get; set;}
 		public                  string          JavaSdkHome     {get; set;}
 
 		public                  string          TargetId        {get; set;}
@@ -42,22 +46,23 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				TargetId = "system-images;android-" + SdkVersion + ";default;" + AndroidAbi;
 			}
 
+			var env = new List<string> ();
+			env.Add ($"ANDROID_SDK_HOME={AvdManagerHome}");
+			if (!string.IsNullOrEmpty (JavaSdkHome)) {
+				env.Add ($"JAVA_HOME={JavaSdkHome}");
+			}
+			EnvironmentVariables = env.ToArray ();
+
 			base.Execute ();
 
 			if (Log.HasLoggedErrors)
 				return false;
 
-			var configPaths = new [] {
-				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.Personal), ".android", "avd", $"{ImageName}.avd", "config.ini"),
-				Path.Combine (AndroidSdkHome, ".android", "avd", $"{ImageName}.avd", "config.ini")
-			};
-
-			foreach (var configPath in configPaths) {
-				if (File.Exists (configPath)) {
-					Log.LogMessage ($"Config file for AVD '{ImageName}' found at {configPath}");
-					WriteConfigFile (configPath);
-					return !Log.HasLoggedErrors;
-				}
+			var configPath = Path.Combine (AvdManagerHome, ".android", "avd", $"{ImageName}.avd", "config.ini");
+			if (File.Exists (configPath)) {
+				Log.LogMessage ($"Config file for AVD '{ImageName}' found at {configPath}");
+				WriteConfigFile (configPath);
+				return !Log.HasLoggedErrors;
 			}
 
 			Log.LogWarning ($"AVD '{ImageName}' will use default emulator settings (memory and data partition size)");
