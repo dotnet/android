@@ -41,7 +41,7 @@ namespace Xamarin.Android.Build.Tests
 	</PropertyGroup>
 	<ItemGroup>
 		<JavaSource Include=""java\**\*.java"" />
-		<AndroidJavaSource Include=""@(JavaSource)"" />
+		<AndroidJavaSource Include=""@(JavaSource)"" Bind=""False"" />
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedJar Include=""$(OutputPath)try.jar"" />

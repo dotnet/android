@@ -20,7 +20,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <GeneratedOutputPath        Condition=" '$(GeneratedOutputPath)' == '' ">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
     <AndroidJavadocVerbosity    Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
     <ApiOutputFile              Condition=" '$(ApiOutputFile)' == '' ">$(IntermediateOutputPath)api.xml</ApiOutputFile>
-    <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
+    <_GeneratorStampFile>$(_AndroidStampDirectory)generator.stamp</_GeneratorStampFile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(_UseLegacyJavadocImport)' != 'true' ">
@@ -29,7 +29,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
   </PropertyGroup>
 
   <Target Name="_SetAndroidGenerateManagedBindings"
-      Condition=" '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' ">
+      Condition=" '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' Or '@(_JavaBindingSource->Count())' != '0' ">
     <PropertyGroup>
       <!-- Used throughout to determine if C# binding-related targets should skip -->
       <_AndroidGenerateManagedBindings>true</_AndroidGenerateManagedBindings>
@@ -115,13 +115,14 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <Delete Files="$(_GeneratorStampFile)" />
     <Delete Files="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')" />
     <Delete Files="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')" />
+    <Delete Files="$(_AndroidIntermediateBindingClassesZip)" />
     <RemoveDirFixed Directories="$(GeneratedOutputPath)" />
-    <RemoveDirFixed Directories="$(_AndroidStampDirectory)" />
     <RemoveDirFixed Directories="$(IntermediateOutputPath)docs" />
     <RemoveDirFixed Directories="$(IntermediateOutputPath)javadocs" />
     <RemoveDirFixed Directories="$(IntermediateOutputPath)javasources" />
+    <RemoveDirFixed Directories="$(_AndroidIntermediateBindingJavaClassDirectory)" />
   </Target>
-  
+
   <Target Name="CleanLibraryProjectIntermediaries">
     <Delete Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
     <Delete Files="$(_AndroidLibraryImportsCache)" />

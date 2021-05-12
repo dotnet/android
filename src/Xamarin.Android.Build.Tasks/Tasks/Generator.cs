@@ -236,8 +236,8 @@ namespace Xamarin.Android.Tasks
 					WriteLine (sw, "--use-legacy-java-resolver=true");
 			}
 
-			cmd.AppendSwitch (ApiXmlInput);
-			cmd.AppendSwitch ($"@{responseFile}");
+			cmd.AppendSwitch ($"\"{ApiXmlInput}\"");
+			cmd.AppendSwitch ($"\"@{responseFile}\"");
 			return cmd.ToString ();
 		}
 
