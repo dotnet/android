@@ -114,10 +114,20 @@ namespace Java.Interop.Tools.JavaSource {
 					if (!grammar.ShouldImport (ImportJavadoc.ReturnTag)) {
 						return;
 					}
-					var r = new XElement ("returns",
+					// When encountering multiple @return keys in a line, append subsequent @return key content to the original <returns> element.
+					var jdi = FinishParse (context, parseNode);
+					if (jdi.Returns.Count == 0) {
+						var r = new XElement ("returns",
 							AstNodeToXmlContent (parseNode.ChildNodes [1]));
-					FinishParse (context, parseNode).Returns.Add (r);
-					parseNode.AstNode   = r;
+						FinishParse (context, parseNode).Returns.Add (r);
+						parseNode.AstNode = r;
+					} else {
+						var r = jdi.Returns.First () as XElement;
+						if (r != null) {
+							r.Add (" ", AstNodeToXmlContent (parseNode.ChildNodes [1]));
+							parseNode.AstNode = r;
+						}
+					}
 				};
 
 				SeeDeclaration.Rule = "@see" + BlockValues;

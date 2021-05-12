@@ -17,21 +17,19 @@ namespace Java.Interop.Tools.JavaSource.Tests
 	[TestFixture]
 	public class SourceJavadocToXmldocParserTests : SourceJavadocToXmldocGrammarFixture {
 
-		[Test]
-		public void TryParse ()
+		[Test, TestCaseSource (nameof (TryParse_Success))]
+		public void TryParse (ParseResult parseResult)
 		{
-			foreach (var values in TryParse_Success) {
-				ParseTree parseTree;
-				var p = new SourceJavadocToXmldocParser (XmldocStyle.Full);
-				var n = p.TryParse (values.Javadoc, null, out parseTree);
-				Assert.IsFalse (parseTree.HasErrors (), DumpMessages (parseTree, p));
-				Assert.AreEqual (values.FullXml, GetMemberXml (n), $"while parsing input: ```{values.Javadoc}```");
+			ParseTree parseTree;
+			var p = new SourceJavadocToXmldocParser (XmldocStyle.Full);
+			var n = p.TryParse (parseResult.Javadoc, null, out parseTree);
+			Assert.IsFalse (parseTree.HasErrors (), DumpMessages (parseTree, p));
+			Assert.AreEqual (parseResult.FullXml, GetMemberXml (n), $"while parsing input: ```{parseResult.Javadoc}```");
 
-				p = new SourceJavadocToXmldocParser (XmldocStyle.IntelliSense);
-				n = p.TryParse (values.Javadoc, null, out parseTree);
-				Assert.IsFalse (parseTree.HasErrors (), DumpMessages (parseTree, p));
-				Assert.AreEqual (values.IntelliSenseXml, GetMemberXml (n), $"while parsing input: ```{values.Javadoc}```");
-			}
+			p = new SourceJavadocToXmldocParser (XmldocStyle.IntelliSense);
+			n = p.TryParse (parseResult.Javadoc, null, out parseTree);
+			Assert.IsFalse (parseTree.HasErrors (), DumpMessages (parseTree, p));
+			Assert.AreEqual (parseResult.IntelliSenseXml, GetMemberXml (n), $"while parsing input: ```{parseResult.Javadoc}```");
 		}
 
 		static string GetMemberXml (IEnumerable<XNode> members)
@@ -40,7 +38,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			return e.ToString ();
 		}
 
-		static readonly ParseResult[] TryParse_Success = new ParseResult[]{
+		public static readonly ParseResult[] TryParse_Success = new ParseResult[]{
 			new ParseResult {
 				Javadoc = "Summary.\n\nP2.\n\n<p>Hello!</p>",
 				FullXml = @"<member>
@@ -78,6 +76,17 @@ namespace Java.Interop.Tools.JavaSource.Tests
   <returns>
     <c>true</c> if something
  or other; otherwise <c>false</c>.</returns>
+</member>",
+			},
+			new ParseResult {
+				Javadoc = "@return {@code true} if something else @return {@code false}.",
+				FullXml = @"<member>
+  <returns>
+    <c>true</c> if something else <c>false</c>.</returns>
+</member>",
+				IntelliSenseXml = @"<member>
+  <returns>
+    <c>true</c> if something else <c>false</c>.</returns>
 </member>",
 			},
 			new ParseResult {
@@ -166,7 +175,7 @@ more description here.</para>
 			},
 		};
 
-		class ParseResult {
+		public class ParseResult {
 			public  string  Javadoc;
 			public  string  FullXml;
 			public  string  IntelliSenseXml;
