@@ -5,7 +5,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>monoandroid10;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>monoandroid10;net6.0</TargetFrameworks>
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -30,7 +30,7 @@
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
     <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
-    <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1587;CS1591;</NoWarn>
+    <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -41,7 +41,7 @@
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(TargetFramework)\</OutputPath>
   </PropertyGroup>
 
@@ -92,10 +92,14 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
-
-    <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml" />
+    <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml">
+      <LogicalName>ILLink.LinkAttributes.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ILLink/ILLink.Substitutions.xml">
+      <LogicalName>ILLink.Substitutions.xml</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -111,6 +115,8 @@
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
       <Link>Crc64.Table.cs</Link>
     </Compile>
+    <Compile Include="Android.Icu\RelativeDateTimeFormatter.cs" />
+    <Compile Include="Android.Icu\DateIntervalFormat.cs" />
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
   </ItemGroup>
@@ -369,8 +375,8 @@
   <Target Name="GetTargetPath" />
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <!-- Only build the 'netcoreapp3.1' version of 'Mono.Android.dll' once for the latest stable Android version. -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
+  <!-- Only build the 'net6.0' version of 'Mono.Android.dll' once for the latest stable Android version. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 

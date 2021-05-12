@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -37,14 +38,14 @@ namespace Xamarin.Android.Tasks
 				var directory = Path.GetDirectoryName (item.ItemSpec);
 				var directoryName = Path.GetFileName (directory);
 				Log.LogDebugMessage ($"{directoryName} -> {item.ItemSpec}");
-				if (directoryName == "netstandard2.0") {
+				if (directoryName.StartsWith ("netstandard2", StringComparison.OrdinalIgnoreCase)) {
 					var parent = Directory.GetParent (directory);
 					foreach (var nugetDirectory in parent.EnumerateDirectories ()) {
 						var name = Path.GetFileName (nugetDirectory.Name);
 						foreach (var fallback in PackageTargetFallback) {
 							if (!string.Equals (name, fallback, StringComparison.OrdinalIgnoreCase))
 								continue;
-							var fallbackDirectory = Path.Combine (parent.FullName, fallback);
+							var fallbackDirectory = Path.Combine (parent.FullName, name);
 							fallbackDirectories.Add (fallbackDirectory);
 
 							// Remove the netstandard assembly, if there is a platform-specific one

@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 using System.Text;
 using System.Xml.Linq;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -15,16 +16,6 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("Commercial"), Category ("UsesDevice")]
 	public class InstallTests : DeviceTest
 	{
-		static byte [] GetKeystore ()
-		{
-			var assembly = typeof (XamarinAndroidCommonProject).Assembly;
-			using (var stream = assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.test.keystore")) {
-				var data = new byte [stream.Length];
-				stream.Read (data, 0, (int) stream.Length);
-				return data;
-			}
-		}
-
 		string GetContentFromAllOverrideDirectories (string packageName, bool useRunAsCommand = true)
 		{
 			var adbShellArgs = $"shell run-as {packageName} ls";
@@ -114,7 +105,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var builder = CreateApkBuilder ()) {
 				// Use the default debug.keystore XA generates
 				Assert.IsTrue (builder.Install (proj), "first install should succeed.");
-				byte [] data = GetKeystore ();
+				byte [] data = ResourceData.GetKeystore ();
 				proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "test.keystore") {
 					BinaryContent = () => data
 				});
@@ -201,13 +192,19 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Install (proj));
 				var runtimeInfo = builder.GetSupportedRuntimes ();
 				var apkPath = Path.Combine (Root, builder.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					foreach (var abi in abis) {
-						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == "debug");
+						string runtimeAbiName;
+						if (Builder.UseDotNet) {
+							runtimeAbiName = $"{abi}-net6";
+						} else {
+							runtimeAbiName = abi;
+						}
+						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Runtime == "debug");
 						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
 						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
-						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Size == inApk.Length);
+						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Size == inApk.Length);
 						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
 						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", "debug", inApkRuntime.Runtime);
 					}
@@ -325,7 +322,8 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var serial = GetAttachedDeviceSerial ();
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject () {
+			};
 			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", false);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -380,9 +378,9 @@ namespace Xamarin.Android.Build.Tests
 			string path = Path.Combine ("temp", TestName.Replace (expected, expected.Replace ("-", "_")));
 			string storepassfile = Path.Combine (Root, path, "storepass.txt");
 			string keypassfile = Path.Combine (Root, path, "keypass.txt");
-			byte [] data = GetKeystore ();
+			byte [] data = ResourceData.GetKeystore ();
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease
+				IsRelease = isRelease,
 			};
 			Dictionary<string, string> envVar = new Dictionary<string, string> ();
 			if (password.StartsWith ("env:", StringComparison.Ordinal)) {
@@ -440,35 +438,36 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
-			var proj = new XamarinAndroidApplicationProject {
-				EmbedAssembliesIntoApk = false,
-				OtherBuildItems = {
-					new BuildItem ("EmbeddedResource", "Foo.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
-					},
-					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
-					}
-				}
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Localization",
 			};
+			InlineData.AddCultureResourcesToProject (lib, "Bar", "CancelButton");
 
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				var projectOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var app = new XamarinAndroidApplicationProject {
+				EmbedAssembliesIntoApk = false,
+			};
+			InlineData.AddCultureResourcesToProject (lib, "Foo", "CancelButton");
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "Library Build should have succeeded.");
+				Assert.IsTrue (appBuilder.Install (app), "App Install should have succeeded.");
+				var projectOutputPath = Path.Combine (Root, appBuilder.ProjectDirectory, app.OutputPath);
 				var resourceFilesFromDisk = Directory.EnumerateFiles (projectOutputPath, "*.resources.dll", SearchOption.AllDirectories)
 					.Select (r => r = r.Replace (projectOutputPath, string.Empty).Replace ("\\", "/"));
 
 				var overrideContents = string.Empty;
-				foreach (var dir in GetOverrideDirectoryPaths (proj.PackageName)) {
-					overrideContents += RunAdbCommand ($"shell run-as {proj.PackageName} find {dir}");
+				foreach (var dir in GetOverrideDirectoryPaths (app.PackageName)) {
+					overrideContents += RunAdbCommand ($"shell run-as {app.PackageName} find {dir}");
 				}
-				builder.BuildLogFile = "uninstall.log";
-				builder.Uninstall (proj);
 				Assert.IsTrue (resourceFilesFromDisk.Any (), $"Unable to find any localized assemblies in {resourceFilesFromDisk}");
 				foreach (var res in resourceFilesFromDisk) {
 					StringAssert.Contains (res, overrideContents, $"{res} did not exist in the .__override__ directory.\nFound:{overrideContents}");
 				}
-
+				appBuilder.BuildLogFile = "uninstall.log";
+				appBuilder.Uninstall (app);
 			}
 		}
 
@@ -565,6 +564,5 @@ namespace Xamarin.Android.Build.Tests
 					$"Fourth unchanged install: '{fourthInstalTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
 			}
 		}
-
 	}
 }

@@ -2,28 +2,18 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.proj
 
-This project file is used to create the Microsoft.Android.Sdk.$(RID) NuGets, which are the
-core workload sdk packs imported by Microsoft.NET.Workload.Android.
+This project file is used to create the Microsoft.Android.Sdk.$(HostOS) NuGets, which are the
+core workload SDK packs imported by WorkloadManifest.targets.
 ***********************************************************************************************
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Linux' ">linux-x64</AndroidHostRID>
-    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Darwin' ">osx-x64</AndroidHostRID>
-    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Windows' ">win-x64</AndroidHostRID>
-    <PackageId>Microsoft.Android.Sdk.$(AndroidHostRID)</PackageId>
-    <Authors>Microsoft</Authors>
+    <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
     <Description>C# Tools and Bindings for the Android SDK</Description>
-    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
     <!-- Exclude mono bundle components declared in `create-installers.targets`. -->
     <IncludeMonoBundleComponents>false</IncludeMonoBundleComponents>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" GeneratePathProperty="true" PrivateAssets="all" />
-  </ItemGroup>
 
  <PropertyGroup>
     <BeforePack>
@@ -36,7 +26,7 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions;_GetLicense">
     <PropertyGroup>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
-      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-netcoreapp3.1\</NetCoreAppToolsSourceDir>
+      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-net6.0\</NetCoreAppToolsSourceDir>
     </PropertyGroup>
 
     <ItemGroup>
@@ -46,18 +36,11 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
       <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="@(_MSBuildFilesWin)" Condition=" '$(AndroidHostRID)' == 'win-x64' ">
+      <AndroidSdkBuildTools Include="@(_MSBuildFilesWin)" Condition=" '$(HostOS)' == 'Windows' ">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
-      <!-- Exclude host-os specific native libraries, aside from libMonoPosixHelper.dylib which is required by LibZipSharp on macOS. -->
-      <AndroidSdkBuildTools Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" Condition=" '$(AndroidHostRID)' == 'linux-x64' or '$(AndroidHostRID)' == 'osx-x64' ">
+      <AndroidSdkBuildTools Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' ">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
-      </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib" Condition=" '$(AndroidHostRID)' == 'osx-x64' ">
-        <RelativePath>libMonoPosixHelper.dylib</RelativePath>
-      </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="$(PkgMono_Posix_NETStandard)\runtimes\linux-x64\native\libMonoPosixHelper.so" Condition=" '$(AndroidHostRID)' == 'linux-x64' " >
-        <RelativePath>libMonoPosixHelper.so</RelativePath>
       </AndroidSdkBuildTools>
       <!-- Remove items with '%(ExcludeFromAndroidNETSdk)' == 'true' metadata -->
       <AndroidSdkBuildTools Remove="@(AndroidSdkBuildTools)" Condition=" '%(AndroidSdkBuildTools.ExcludeFromAndroidNETSdk)' == 'true' " />
@@ -76,13 +59,13 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)Java.Interop.Tools.Generator.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.runtimeconfig.json" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\Version*" PackagePath="tools" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" PackagePath="targets" />
+      <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 
@@ -97,7 +80,7 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
     </PropertyGroup>
 
     <ItemGroup>
-      <_AndroidNETAppRuntimePackRids Include="android.21-arm;android.21-arm64;android.21-x86;android.21-x64" />
+      <_AndroidNETAppRuntimePackRids Include="android-arm;android-arm64;android-x86;android-x64" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -128,7 +111,6 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         RuntimePackNamePatterns="Microsoft.Android.Runtime.**RID**"
         RuntimePackRuntimeIdentifiers="@(_AndroidNETAppRuntimePackRids, '%3B')"
         Profile="Android"
-        IsTrimmable="true"
     />
   </ItemGroup>
 </Project>

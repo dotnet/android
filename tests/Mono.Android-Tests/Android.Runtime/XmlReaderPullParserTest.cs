@@ -13,7 +13,6 @@ namespace Android.RuntimeTests {
 	public class XmlReaderPullParserTest {
 
 		[Test]
-		[Category ("DotNetIgnore")] // Missing crypto / networking support.
 		public void ToLocalJniHandle ()
 		{
 			var p = Application.Context.Resources.GetXml (MyResource.Xml.XmlReaderResourceParser);

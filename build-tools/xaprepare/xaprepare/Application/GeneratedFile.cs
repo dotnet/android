@@ -6,8 +6,9 @@ namespace Xamarin.Android.Prepare
 	abstract class GeneratedFile : AppObject
 	{
 		public string InputPath { get; }
-		public string OutputPath { get; }
+		public string OutputPath { get; protected set; }
 		public bool EchoOutput { get; set; }
+		public bool IsExecutable { get; set; }
 
 		protected GeneratedFile (string outputPath)
 		{

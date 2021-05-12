@@ -6,6 +6,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -73,7 +74,13 @@ namespace Xamarin.Android.Tasks
 				// If we end up with more than 1 unique mvid, we need *all* assemblies
 				if (mvids.Count > 1) {
 					foreach (var assembly in group) {
-						symbols.TryGetValue (Path.ChangeExtension (assembly.ItemSpec, ".pdb"), out var symbol);
+						var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
+						if (!symbols.TryGetValue (symbolPath, out var symbol)) {
+							// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
+							if (File.Exists (symbolPath)) {
+								symbols [symbolPath] = symbol = new TaskItem (symbolPath);
+							}
+						}
 						SetDestinationSubDirectory (assembly, group.Key, symbol);
 						output.Add (assembly);
 					}
@@ -84,9 +91,13 @@ namespace Xamarin.Android.Tasks
 						var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
 						if (first) {
 							first = false;
-							if (symbols.TryGetValue (symbolPath, out var symbol)) {
-								symbol.SetDestinationSubPath ();
+							if (!symbols.TryGetValue (symbolPath, out var symbol)) {
+								// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
+								if (File.Exists (symbolPath)) {
+									symbols [symbolPath] = symbol = new TaskItem (symbolPath);
+								}
 							}
+							symbol?.SetDestinationSubPath ();
 							assembly.SetDestinationSubPath ();
 							output.Add (assembly);
 						} else {
@@ -128,7 +139,7 @@ namespace Xamarin.Android.Tasks
 		void SetDestinationSubDirectory (ITaskItem assembly, string fileName, ITaskItem symbol)
 		{
 			var rid = assembly.GetMetadata ("RuntimeIdentifier");
-			var abi = MonoAndroidHelper.RuntimeIdentifierToAbi (rid);
+			var abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
 			if (!string.IsNullOrEmpty (abi)) {
 				string destination = Path.Combine (assembly.GetMetadata ("DestinationSubDirectory"), abi);
 				assembly.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);

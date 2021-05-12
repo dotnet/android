@@ -237,7 +237,8 @@ namespace Library1 {
 			AssertHasDevices ();
 			AssertCommercialBuild ();
 
-			proj = new XamarinAndroidApplicationProject ();
+			proj = new XamarinAndroidApplicationProject () {
+			};
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			string mlpdDestination = Path.Combine (Root, builder.ProjectDirectory, "profile.mlpd");
@@ -417,6 +418,164 @@ namespace Library1 {
 				StringAssert.Contains ("[LINKALLPASS]", logcatOutput);
 				StringAssert.DoesNotContain ("[LINKALLFAIL]", logcatOutput);
 			}
+		}
+
+		[Test]
+		public void JsonDeserializationCreatesJavaHandle ([Values (false, true)] bool isRelease)
+		{
+			AssertHasDevices ();
+
+			proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+
+			if (isRelease || !CommercialBuildAvailable) {
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86");
+			}
+
+			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
+
+			if (Builder.UseDotNet) {
+				// serialization is broken on net6 when the app is linked. enable again once it is fixed
+				if (isRelease)
+					return;
+
+				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Json"));
+				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Formatters"));
+			}
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+				@"TestJsonDeserializationCreatesJavaHandle();
+		}
+
+		void TestJsonDeserialization (Person p)
+		{
+			var stream      = new MemoryStream ();
+			var serializer  = new DataContractJsonSerializer (typeof (Person));
+
+			serializer.WriteObject (stream, p);
+
+			stream.Position = 0;
+			StreamReader sr = new StreamReader (stream);
+
+			Console.WriteLine ($""JSON Person representation: {sr.ReadToEnd ()}"");
+
+			stream.Position = 0;
+			Person p2 = (Person) serializer.ReadObject (stream);
+
+			Console.WriteLine ($""JSON Person parsed: Name '{p2.Name}' Age '{p2.Age}' Handle '0x{p2.Handle:X}'"");
+
+			if (p2.Name != ""John Smith"")
+				throw new InvalidOperationException (""JSON deserialization of Name"");
+			if (p2.Age != 900)
+				throw new InvalidOperationException (""JSON deserialization of Age"");
+			if (p2.Handle == IntPtr.Zero)
+				throw new InvalidOperationException (""Failed to instantiate new Java instance for Person!"");
+
+			Console.WriteLine ($""JSON Person deserialized OK"");
+		}
+
+		void TestBinaryDeserialization (Person p)
+		{
+			var stream      = new MemoryStream ();
+			var serializer  = new BinaryFormatter();
+
+			serializer.Serialize (stream, p);
+
+			stream.Position = 0;
+			StreamReader sr = new StreamReader (stream);
+
+			stream.Position = 0;
+			serializer.Binder = new Person.Binder ();
+			Person p2 = (Person) serializer.Deserialize (stream);
+
+			Console.WriteLine ($""BinaryFormatter deserialzied: Name '{p2.Name}' Age '{p2.Age}' Handle '0x{p2.Handle:X}'"");
+
+			if (p2.Name != ""John Smith"")
+				throw new InvalidOperationException (""BinaryFormatter deserialization of Name"");
+			if (p2.Age != 900)
+				throw new InvalidOperationException (""BinaryFormatter deserialization of Age"");
+			if (p2.Handle == IntPtr.Zero)
+				throw new InvalidOperationException (""Failed to instantiate new Java instance for Person!"");
+
+			Console.WriteLine ($""BinaryFormatter Person deserialized OK"");
+		}
+
+		void TestJsonDeserializationCreatesJavaHandle ()
+		{
+			Person p = new Person () {
+				Name = ""John Smith"",
+				Age = 900,
+			};
+
+			TestBinaryDeserialization (p);
+			TestJsonDeserialization (p);").Replace ("//${AFTER_MAINACTIVITY}", @"
+	[DataContract]
+	[Serializable]
+	class Person : Java.Lang.Object {
+		[DataMember]
+		public string Name;
+
+		[DataMember]
+		public int Age;
+
+		internal sealed class Binder : SerializationBinder
+		{
+			public override Type BindToType (string assemblyName, string typeName)
+			{
+				if (typeName == ""Person"")
+					return typeof (Person);
+
+				return null;
+			}
+		}
+	}").Replace ("using System;", @"using System;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization.Json;");
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			Assert.IsFalse (MonitorAdbLogcat ((line) => {
+				return line.Contains ("TestJsonDeserializationCreatesJavaHandle");
+			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did contain TestJsonDeserializationCreatesJavaHandle!");
+		}
+
+		[Test]
+		public void RunWithInterpreterEnabled ([Values (false, true)] bool isRelease)
+		{
+			AssertHasDevices ();
+
+			proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			if (!Builder.UseDotNet) {
+				foreach (var abi in abis) {
+					Assert.IsTrue (builder.LastBuildOutput.ContainsText (Path.Combine ($"interpreter-{abi}", "libmono-native.so")), $"interpreter-{abi}/libmono-native.so should be used.");
+					Assert.IsTrue (builder.LastBuildOutput.ContainsText (Path.Combine ($"interpreter-{abi}", "libmonosgen-2.0.so")), $"interpreter-{abi}/libmonosgen-2.0.so should be used.");
+				}
+			}
+
+			ClearAdbLogcat ();
+			RunAdbCommand ("shell setprop debug.mono.log all");
+			if (CommercialBuildAvailable)
+				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+			else
+				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			var logcatFilePath = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity", logcatFilePath, 30);
+			RunAdbCommand ("shell setprop debug.mono.log \"\"");
+			Assert.True (didStart, "Activity should have started.");
+			Assert.IsTrue (File.ReadAllText (logcatFilePath).Contains ("Enabling Mono Interpreter"), "logcat output did not contain 'Enabling Mono Interpreter'.");
 		}
 
 	}

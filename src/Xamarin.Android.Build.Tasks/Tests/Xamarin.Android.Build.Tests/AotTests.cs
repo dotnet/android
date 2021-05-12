@@ -118,6 +118,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				BundleAssemblies = false,
 				AotAssemblies = true,
+				PackageName = "com.xamarin.buildaotappwithspecialchars",
 			};
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetAndroidSupportedAbis (supportedAbis);
@@ -143,10 +144,20 @@ namespace Xamarin.Android.Build.Tests
 					return;
 				//NOTE: Windows has shortened paths such as: C:\Users\myuser\ANDROI~3\ndk\PLATFO~1\AN3971~1\arch-x86\usr\lib\libc.so
 				if (checkMinLlvmPath && !IsWindows) {
+					bool ndk22OrNewer = false;
+					if (Xamarin.Android.Tasks.NdkUtil.GetNdkToolchainRelease (AndroidNdkPath, out Xamarin.Android.Tasks.NdkUtilOld.NdkVersion ndkVersion)) {
+						ndk22OrNewer = ndkVersion.Version >= 22;
+					}
+
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
 					// Since we overrode minSdkVersion=16, that means we should use libc.so from android-16.
-					StringAssertEx.ContainsRegex (@"\s*\[aot-compiler stdout].*android-16.arch-.*.usr.lib.libc\.so", b.LastBuildOutput, "AOT+LLVM should use libc.so from minSdkVersion!");
+					if (ndk22OrNewer) {
+						// NDK r22 or newer store libc in [toolchain]/sysroot/usr/lib/[ARCH]/[API]/libc.so
+						StringAssertEx.ContainsRegex (@"\s*\[aot-compiler stdout].*sysroot.*.usr.lib.*16.libc\.so", b.LastBuildOutput, "AOT+LLVM should use libc.so from minSdkVersion!");
+					} else {
+						StringAssertEx.ContainsRegex (@"\s*\[aot-compiler stdout].*android-16.arch-.*.usr.lib.libc\.so", b.LastBuildOutput, "AOT+LLVM should use libc.so from minSdkVersion!");
+					}
 				}
 				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
 					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
@@ -156,14 +167,14 @@ namespace Xamarin.Android.Build.Tests
 						"aot", abi, "libaot-UnnamedProject.dll.so");
 					Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
 					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
-							"lib/{0}/libaot-UnnamedProject.dll.so should be in the UnnamedProject.UnnamedProject.apk", abi);
+							$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}.apk", abi);
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							"assemblies/UnnamedProject.dll"),
-							"UnnamedProject.dll should be in the UnnamedProject.UnnamedProject.apk");
+							$"UnnamedProject.dll should be in the {proj.PackageName}.apk");
 					}
 				}
 				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");
@@ -186,6 +197,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				BundleAssemblies = true,
 				AotAssemblies = true,
+				PackageName = "com.xamarin.buildaotappandbundlewithspecialchars",
 			};
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetAndroidSupportedAbis (supportedAbis);
@@ -207,14 +219,14 @@ namespace Xamarin.Android.Build.Tests
 						"aot", abi, "libaot-UnnamedProject.dll.so");
 					Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
 					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
-							"lib/{0}/libaot-UnnamedProject.dll.so should be in the UnnamedProject.UnnamedProject.apk", abi);
+							$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}.apk", abi);
 						Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
 							"assemblies/UnnamedProject.dll"),
-							"UnnamedProject.dll should not be in the UnnamedProject.UnnamedProject.apk");
+							$"UnnamedProject.dll should not be in the {proj.PackageName}.apk");
 					}
 				}
 				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");

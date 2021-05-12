@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
   <Import Project="..\installers\create-installers.targets" />
   <PropertyGroup>
     <!-- Don't ever deploy, since that won't work on Mac -->
@@ -33,6 +32,8 @@
       <ReferenceAssemblies Include="@(FrameworkItemsWin)" >
         <VSIXSubPath>Microsoft/Framework/MonoAndroid/$([System.IO.Path]::GetDirectoryName(%(RelativePath)))</VSIXSubPath>
       </ReferenceAssemblies>
+      <!-- Remove items with '%(ExcludeFromLegacy)' == 'true' metadata -->
+      <MSBuildItemsWin Remove="@(MSBuildItemsWin)" Condition=" '%(MSBuildItemsWin.ExcludeFromLegacy)' == 'true' " />
       <MSBuild Include="@(MSBuildItemsWin)" >
         <VSIXSubPath>Xamarin/Android/$([System.IO.Path]::GetDirectoryName(%(RelativePath)))</VSIXSubPath>
       </MSBuild>

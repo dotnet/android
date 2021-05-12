@@ -193,6 +193,34 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RemoveDesigner ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
+			proj.SetProperty ("AndroidLinkResources", "True");
+			string assemblyName = proj.ProjectName;
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ($"assemblies/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
+					var entry = zip.ReadEntry ($"assemblies/{assemblyName}.dll");
+					using (var stream = new MemoryStream ()) {
+						entry.Extract (stream);
+						stream.Position = 0;
+						using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
+							var type = assembly.MainModule.GetType ($"{assemblyName}.Resource");
+							Assert.AreEqual (0, type.NestedTypes.Count, "All Nested Resource Types should be removed.");
+						}
+					}
+				}
+			}
+		}
+
+		[Test]
 		public void LinkDescription ()
 		{
 			string assembly_name = Builder.UseDotNet ? "System.Console" : "mscorlib";
@@ -289,11 +317,43 @@ $@"			var myButton = new AttributedButtonStub (this);
 			}
 		}
 
+		static readonly object [] AndroidAddKeepAlivesSource = new object [] {
+			// Debug configuration
+			new object [] {
+				/* isRelease */                  false,
+				/* AndroidAddKeepAlives=true */  false,
+				/* AndroidLinkMode=None */       false,
+				/* should add KeepAlives */      false,
+			},
+			// Debug configuration, AndroidAddKeepAlives=true
+			new object [] {
+				/* isRelease */                  false,
+				/* AndroidAddKeepAlives=true */  true,
+				/* AndroidLinkMode=None */       false,
+				/* should add KeepAlives */      true,
+			},
+			// Release configuration
+			new object [] {
+				/* isRelease */                  true,
+				/* AndroidAddKeepAlives=true */  false,
+				/* AndroidLinkMode=None */       false,
+				/* should add KeepAlives */      true,
+			},
+			// Release configuration, AndroidLinkMode=None
+			new object [] {
+				/* isRelease */                  true,
+				/* AndroidAddKeepAlives=true */  false,
+				/* AndroidLinkMode=None */       true,
+				/* should add KeepAlives */      true,
+			},
+		};
+
 		[Test]
-		public void AndroidAddKeepAlives ()
+		[TestCaseSource (nameof (AndroidAddKeepAlivesSource))]
+		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives)
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem ("Compile", "Method.cs") { TextContent = () => @"
 using System;
@@ -323,10 +383,17 @@ namespace UnnamedProject {
 
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
 
+			if (setAndroidAddKeepAlivesTrue)
+				proj.SetProperty ("AndroidAddKeepAlives", "True");
+
+			if (setLinkModeNone)
+				proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "AndroidLinkMode", "None");
+
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
 
-				var assemblyPath = BuildTest.GetLinkedPath (b,  true, "UnnamedProject.dll");
+				var assemblyFile = "UnnamedProject.dll";
+				var assemblyPath = (Builder.UseDotNet && (!isRelease || setLinkModeNone)) ? b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", assemblyFile)) : BuildTest.GetLinkedPath (b,  true, assemblyFile);
 				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 					Assert.IsTrue (assembly != null);
 
@@ -351,7 +418,30 @@ namespace UnnamedProject {
 						break;
 					}
 
-					Assert.IsTrue (hasKeepAliveCall);
+					Assert.IsTrue (hasKeepAliveCall == shouldAddKeepAlives);
+				}
+			}
+		}
+
+		[Test]
+		public void TypeRegistrationsFallback ([Values (true, false)] bool enabled)
+		{
+			if (!Builder.UseDotNet)
+				Assert.Ignore ("Test only valid on .NET 6");
+
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			if (enabled)
+				proj.SetProperty (proj.ActiveConfigurationProperties, "VSAndroidDesigner", "true");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var assemblyFile = "Mono.Android.dll";
+				var assemblyPath = BuildTest.GetLinkedPath (b, true, assemblyFile);
+				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+					Assert.IsTrue (assembly != null);
+
+					var td = assembly.MainModule.GetType ("Java.Interop.__TypeRegistrations");
+					Assert.IsTrue ((td != null) == enabled);
 				}
 			}
 		}

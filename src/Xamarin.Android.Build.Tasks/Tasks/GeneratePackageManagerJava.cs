@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -11,6 +11,7 @@ using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.TypeNameMappings;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -123,7 +124,7 @@ namespace Xamarin.Android.Tasks
 				// Only copy to the real location if the contents actually changed
 				var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager_Resources.java"));
 
-				MonoAndroidHelper.CopyIfStreamChanged (pkgmgr.BaseStream, dest);
+				Files.CopyIfStreamChanged (pkgmgr.BaseStream, dest);
 			}
 
 			AddEnvironment ();
@@ -260,7 +261,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
-			var appConfState = BuildEngine4.GetRegisteredTaskObject (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build) as ApplicationConfigTaskState;
+			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 			foreach (string abi in SupportedAbis) {
 				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
@@ -283,7 +284,7 @@ namespace Xamarin.Android.Tasks
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					asmgen.Write (sw);
 					sw.Flush ();
-					MonoAndroidHelper.CopyIfStreamChanged (sw.BaseStream, asmFilePath);
+					Files.CopyIfStreamChanged (sw.BaseStream, asmFilePath);
 				}
 			}
 

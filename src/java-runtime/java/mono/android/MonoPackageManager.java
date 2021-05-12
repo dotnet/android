@@ -79,13 +79,13 @@ public class MonoPackageManager {
 				}
 				System.loadLibrary("xamarin-app");
 
-				// .net5+ APKs don't contain `libmono-native.so` but we can't just perform a file existence check
-				// because we might be running with embedded DSOs enabled in which case the check would fail and we
-				// would have to catch the exception anyway in this case.
-				try {
+				if (!BuildConfig.DotNetRuntime) {
+					// .net5+ APKs don't contain `libmono-native.so`
 					System.loadLibrary("mono-native");
-				} catch (java.lang.UnsatisfiedLinkError ex) {
-					Log.i ("monodroid", "Failed to preload libmono-native.so (may not exist), ignoring", ex);
+				} else {
+					// for .net6 we temporarily need to load the SSL DSO
+					// see: https://github.com/dotnet/runtime/issues/51274#issuecomment-832963657
+					System.loadLibrary("System.Security.Cryptography.Native.OpenSsl");
 				}
 
 				System.loadLibrary("monodroid");

@@ -35,7 +35,7 @@
 
   <Target Name="GenerateNuGetConfig" >
     <PropertyGroup>
-      <LocalNupkgDirectory Condition=" '$(LocalNupkgDirectory)' == '' ">$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\</LocalNupkgDirectory>
+      <LocalNupkgDirectory Condition=" '$(LocalNupkgDirectory)' == '' ">$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\</LocalNupkgDirectory>
       <AndroidNETTestConfigOutputDir Condition=" '$(AndroidNETTestConfigOutputDir)' == '' ">$(MSBuildThisFileDirectory)Runtime-Microsoft.Android.Sdk\</AndroidNETTestConfigOutputDir>
       <AndroidNETTestConfigOutputDir>$([MSBuild]::EnsureTrailingSlash($(AndroidNETTestConfigOutputDir)))</AndroidNETTestConfigOutputDir>
       <NuGetConfigContent>
@@ -45,7 +45,7 @@
     <add key="xamarin-impl" value="https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json" />
     <add key="dotnet5" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json" />
     <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
-    <add key="xa-nupkgs" value="$(LocalNupkgDirectory)" />
+    <add key="local-xa" value="$(LocalNupkgDirectory)" />
   </packageSources>
 </configuration>
 ]]>
@@ -57,16 +57,6 @@
         Lines="$(NuGetConfigContent)"
         Overwrite="true"
     />
-  </Target>
-
-  <Target Name="RunDotNetInstrumentation"
-      DependsOnTargets="GenerateNuGetConfig" >
-    <ItemGroup>
-      <_RuntimeTestArgs Include="-p:Configuration=$(Configuration)" />
-      <_RuntimeTestArgs Include="-t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures" />
-      <_RuntimeTestArgs Include="-bl:$(XamarinAndroidSourcePath)bin\Test$(Configuration)\run-Mono.Android.NET-Tests.binlog" />
-    </ItemGroup>
-    <Exec Command="$(DotNetPreviewTool) build /v:n @(_RuntimeTestArgs, ' ') &quot;$(MSBuildThisFileDirectory)Runtime-Microsoft.Android.Sdk\Mono.Android.NET-Tests.csproj&quot;" />
   </Target>
 
 </Project>

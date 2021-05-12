@@ -16,6 +16,7 @@ using System.Runtime.CompilerServices;
 // FIXME: Probably need to add Copyright 2009-2011 Novell Inc.
 // [assembly: AssemblyCopyright ("Copyright 2011-2014 Xamarin Inc.")]
 [assembly: AssemblyCompany ("Microsoft Corporation")]
+[assembly: AssemblyMetadata ("IsTrimmable", "True")]
 
 [assembly: System.Runtime.CompilerServices.TypeForwardedToAttribute(typeof(System.Drawing.Color))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedToAttribute(typeof(System.Drawing.ColorConverter))]

@@ -307,9 +307,6 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
 {1} - The literal name of the MSBuild property
 {2} - The lint version number</comment>
   </data>
-  <data name="XA0124" xml:space="preserve">
-    <value>Interpreter is not supported by the x86 ABI</value>
-  </data>
   <data name="XA0125" xml:space="preserve">
     <value>'{0}' is using a deprecated debug information level.
 Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the 'DebugType' MSBuild property to 'portable' to use the newer, cross-platform debug information level.
@@ -712,8 +709,10 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>The following are literal names and should not be translated: MultiDexMainDexList</comment>
   </data>
   <data name="XA4310" xml:space="preserve">
-    <value>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</value>
-    <comment>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</comment>
+    <value>`{0}` file `{1}` could not be found.</value>
+    <comment>{0} - The MSBuildProperty which contains the file name value.
+{1} - The value of the MSBuildProperty. Normally a filename.
+</comment>
   </data>
   <data name="XA4311" xml:space="preserve">
     <value>The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</value>
@@ -724,6 +723,15 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.</value>
     <comment>The following are literal names and should not be translated: Android Wear, Android, Wear.
 {0} - The referenced Android Wear project.</comment>
+  </data>
+  <data name="XA4313" xml:space="preserve">
+    <value>The built-in '{0}' reference has been deprecated.
+Remove the '{0}' reference from your project and add the '{1}' NuGet package instead.
+</value>
+  <comment>The following are literal names and should not be translated:
+{0} - The Assembly name which is deprecated
+{1} - A Nuget package name.
+  </comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>

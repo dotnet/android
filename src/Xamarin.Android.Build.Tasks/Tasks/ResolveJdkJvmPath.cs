@@ -1,9 +1,10 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using System.Linq;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -18,6 +19,12 @@ namespace Xamarin.Android.Tasks
 
 		[Output]
 		public string JdkJvmPath { get; set; }
+
+		[Required]
+		public string MinimumSupportedJavaVersion   { get; set; }
+
+		[Required]
+		public string LatestSupportedJavaVersion    { get; set; }
 
 		public override bool RunTask ()
 		{
@@ -43,6 +50,8 @@ namespace Xamarin.Android.Tasks
 
 		string GetJvmPath ()
 		{
+			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
+			// because JavaSdkPath is the key and the value is a string.
 			var key = new Tuple<string, string> (nameof (ResolveJdkJvmPath), JavaSdkPath);
 			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as string;
 			if (cached != null) {
@@ -51,12 +60,10 @@ namespace Xamarin.Android.Tasks
 				return cached;
 			}
 
-			JdkInfo info = null;
-			try {
-				info = new JdkInfo (JavaSdkPath);
-			} catch {
-				info = JdkInfo.GetKnownSystemJdkInfos (this.CreateTaskLogger ()).FirstOrDefault ();
-			}
+			var minVersion  = Version.Parse (MinimumSupportedJavaVersion);
+			var maxVersion  = Version.Parse (LatestSupportedJavaVersion);
+
+			JdkInfo info    = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion);
 
 			if (info == null)
 				return null;

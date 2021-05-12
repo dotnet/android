@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Security.Cryptography;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -51,9 +52,9 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"  Skipping {src} it is up to date");
 					continue;
 				}
-				if (!MonoAndroidHelper.CopyIfChanged (src.FullName, dest.FullName)) {
+				if (!Files.CopyIfChanged (src.FullName, dest.FullName)) {
 					Log.LogDebugMessage ($"  Skipping {src} it was not changed.");
-					MonoAndroidHelper.SetWriteable (dest.FullName);
+					Files.SetWriteable (dest.FullName);
 					continue;
 				}
 				modifiedFiles.Add (new TaskItem (dest.FullName));

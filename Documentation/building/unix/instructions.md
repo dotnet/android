@@ -87,11 +87,11 @@ packages with:
 
     make pack-dotnet
 
-Several `.nupkg` files will be output in `./bin/BuildDebug/nupkgs`,
+Several `.nupkg` files will be output in `./bin/BuildDebug/nuget-unsigned`,
 but this is only part of the story. Your local
 `~/android-toolchain/dotnet/packs` directory will be populated with a
-local Android "workload" in `Microsoft.Android.Sdk.osx-x64` or
-`Microsoft.Android.Sdk.linux-x64` matching your operating system.
+local Android "workload" in `Microsoft.Android.Sdk.$(HostOS)` matching
+your operating system.
 
 To use the Android workload, you will need a `NuGet.config`:
 
@@ -100,12 +100,12 @@ To use the Android workload, you will need a `NuGet.config`:
 <configuration>
   <packageSources>
     <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
-    <add key="local-xa" value="/full/path/to/bin/BuildDebug/nupkgs" />
+    <add key="local-xa" value="/full/path/to/bin/BuildDebug/nuget-unsigned" />
   </packageSources>
 </configuration>
 ```
 
-The local package source in the `bin/BuildDebug/nupkgs` directory is
+The local package source in the `bin/BuildDebug/nuget-unsigned` directory is
 currently needed for the Android runtime packages.
 
 Then use a `.csproj` file such as:

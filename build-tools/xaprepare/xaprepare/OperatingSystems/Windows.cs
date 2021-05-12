@@ -52,14 +52,11 @@ namespace Xamarin.Android.Prepare
 		public override string Which (string programPath, bool required = true)
 		{
 			if (String.Compare ("7za", programPath, StringComparison.OrdinalIgnoreCase) == 0) {
-				string homeDir = Context.Instance.OS.HomeDirectory;
-				if (String.IsNullOrEmpty (homeDir)) {
-					Log.WarningLine ("User's home directory not known (yet?), cannot return path to 7za");
-					return base.Which (programPath, required);
+				string packagePath = Context.Instance.Properties.GetValue (KnownProperties.Pkg7Zip_CommandLine);
+				if (String.IsNullOrEmpty (packagePath)) {
+					packagePath = Path.Combine (Configurables.Paths.XAPackagesDir, "7-zip.commandline", "18.1.0");
 				}
-
-				string packagePath = Path.Combine (Configurables.Paths.XAPackagesDir, "7-zip.commandline", "18.1.0", "tools");
-
+				packagePath = Path.Combine (packagePath, "tools");
 				if (Is64Bit)
 					packagePath = Path.Combine (packagePath, "x64");
 				return Path.Combine (packagePath, "7za.exe");
@@ -81,6 +78,16 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return base.Which (programPath, required);
+		}
+
+		public override string AppendExecutableExtension (string programName)
+		{
+			string ext = Path.GetExtension (programName);
+			if (String.Compare (".exe", ext, StringComparison.OrdinalIgnoreCase) == 0) {
+				return programName;
+			}
+
+			return $"{programName}.exe";
 		}
 
 		protected override string AssertIsExecutable (string fullPath)

@@ -10,6 +10,13 @@
   <Import Project="..\scripts\XAVersionInfo.targets" />
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(MicroBuildCoreVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="**" />
     <None Include="$(_WixTemplate)" />
   </ItemGroup>
@@ -38,7 +45,7 @@
 
   <Target Name="_Properties">
     <PropertyGroup>
-      <License Condition=" '$(License)' == '' ">$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\LICENSE</License>
+      <License Condition=" '$(License)' == '' ">$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Sdk.Android\LICENSE</License>
       <_LicenseDestination>$(IntermediateOutputPath)LICENSE.rtf</_LicenseDestination>
       <_WixFile>$(IntermediateOutputPath)Microsoft.NET.Workload.Android.wix</_WixFile>
       <_WixObj>$(IntermediateOutputPath)Microsoft.NET.Workload.Android.wixobj</_WixObj>
@@ -67,7 +74,6 @@
         Template="$(_WixTemplate)"
         DestinationFile="$(_WixFile)"
         DotNetPath="$(DotNetPreviewPath)"
-        DotNetVersion="$(DotNetPreviewVersionFull)"
         MSIVersion="$(AndroidMSIVersion)"
     />
     <ItemGroup>
@@ -100,6 +106,9 @@
     <ItemGroup>
       <FileWrites Include="$(_WixMsi)" />
       <None Include="$(_WixMsi)" CopyToOutputDirectory="PreserveNewest" Link="Microsoft.NET.Workload.Android.$(AndroidMSIVersion).msi" />
+      <FilesToSign Include="$(OutputPath)\Microsoft.NET.Workload.Android.$(AndroidMSIVersion).msi">
+        <Authenticode>Microsoft400</Authenticode>
+      </FilesToSign>
     </ItemGroup>
   </Target>
 

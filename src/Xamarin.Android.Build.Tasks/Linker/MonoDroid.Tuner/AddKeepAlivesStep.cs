@@ -103,22 +103,49 @@ namespace MonoDroid.Tuner
 					if (method.Parameters [i].ParameterType.IsValueType || method.Parameters [i].ParameterType.FullName == "System.String")
 						continue;
 
-					changed = true;
-
 					if (methodKeepAlive == null)
-						methodKeepAlive = Context.GetMethod (
-#if NETCOREAPP
-							"System.Private.CoreLib",
-#else
-							"mscorlib",
-#endif
-							"System.GC", "KeepAlive", new string [] { "System.Object" });
+						methodKeepAlive = GetKeepAliveMethod ();
+
+					if (methodKeepAlive == null) {
+						LogMessage ("Unable to add KeepAlive call, did not find System.GC.KeepAlive method.");
+						break;
+					}
 
 					processor.InsertBefore (end, GetLoadArgumentInstruction (method.IsStatic ? i : i + 1, method.Parameters [i]));
 					processor.InsertBefore (end, Instruction.Create (OpCodes.Call, module.ImportReference (methodKeepAlive)));
+					changed = true;
 				}
 			}
 			return changed;
+		}
+
+		protected virtual AssemblyDefinition GetCorlibAssembly ()
+		{
+			return Context.GetAssembly (
+#if NETCOREAPP
+							"System.Private.CoreLib"
+#else
+							"mscorlib"
+#endif
+				);
+		}
+
+		MethodDefinition GetKeepAliveMethod ()
+		{
+			var corlibAssembly = GetCorlibAssembly ();
+			if (corlibAssembly == null)
+				return null;
+
+			var gcType = Extensions.GetType (corlibAssembly, "System.GC");
+			if (gcType == null)
+				return null;
+
+			return Extensions.GetMethod (gcType, "KeepAlive", new string [] { "System.Object" });
+		}
+
+		public virtual void LogMessage (string message)
+		{
+			Context.LogMessage (message);
 		}
 
 		// Adapted from src/Mono.Android.Export/Mono.CodeGeneration/CodeArgumentReference.cs

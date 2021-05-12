@@ -13,6 +13,7 @@ using Microsoft.Build.Utilities;
 using Java.Interop.Tools.Diagnostics;
 using Xamarin.Android.Tools;
 using Xamarin.Build;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -85,7 +86,8 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (EnableLLVM && !NdkUtil.Init (LogCodedError, AndroidNdkDirectory))
+			// NdkUtil must always be initialized - once per thread
+			if (!NdkUtil.Init (LogCodedError, AndroidNdkDirectory))
 				return false;
 
 			return base.RunTask ();
@@ -228,6 +230,12 @@ namespace Xamarin.Android.Tasks
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
+			// NdkUtil must always be initialized - once per thread
+			if (!NdkUtil.Init (LogCodedError, AndroidNdkDirectory)) {
+				LogDebugMessage ("Failed to initialize NdkUtil");
+				return;
+			}
+
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
 			if (!hasValidAotMode) {
 				LogCodedError ("XA3002", Properties.Resources.XA3002, AndroidAotMode);
@@ -375,6 +383,19 @@ namespace Xamarin.Android.Tasks
 					ldFlags = string.Join(";", libs);
 				}
 
+				string ldName = String.Empty;
+				if (EnableLLVM) {
+					ldName = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "ld", level);
+					if (!String.IsNullOrEmpty (ldName)) {
+						ldName = Path.GetFileName (ldName);
+						if (ldName.IndexOf ('-') >= 0) {
+							ldName = ldName.Substring (ldName.LastIndexOf ("-") + 1);
+						}
+					}
+				} else {
+					ldName = "ld";
+				}
+
 				foreach (var assembly in ResolvedAssemblies) {
 					string outputFile = Path.Combine(outdir, string.Format ("libaot-{0}.so",
 						Path.GetFileName (assembly.ItemSpec)));
@@ -408,6 +429,12 @@ namespace Xamarin.Android.Tasks
 					aotOptions.Add ($"tool-prefix={toolPrefix}");
 					aotOptions.Add ($"llvm-path={sdkBinDirectory}");
 					aotOptions.Add ($"temp-path={tempDir}");
+
+					if (!String.IsNullOrEmpty (ldName)) {
+						// MUST be before `ld-flags`, otherwise Mono fails to parse it on Windows
+						aotOptions.Add ($"ld-name={ldName}");
+					}
+
 					aotOptions.Add ($"ld-flags={ldFlags}");
 
 					// we need to quote the entire --aot arguments here to make sure it is parsed
@@ -445,7 +472,7 @@ namespace Xamarin.Android.Tasks
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
 
-			using (var sw = new StreamWriter (responseFile, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM)) {
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM)) {
 				sw.WriteLine (aotOptions + " " + QuoteFileName (assembly));
 			}
 

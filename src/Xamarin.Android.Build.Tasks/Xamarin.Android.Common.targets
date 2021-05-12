@@ -159,6 +159,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_XAMajorVersionNumber>1</_XAMajorVersionNumber>
 	<_XASupportsFastDev Condition=" Exists ('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') ">True</_XASupportsFastDev>
 	<_XASupportsFastDev Condition=" '$(_XASupportsFastDev)' == '' ">False</_XASupportsFastDev>
+	<AndroidUseInterpreter Condition=" '$(AndroidUseInterpreter)' == '' ">$(UseInterpreter)</AndroidUseInterpreter>
 	<AndroidUseInterpreter Condition=" '$(AndroidUseInterpreter)' == '' ">False</AndroidUseInterpreter>
 	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' == ''">False</AndroidNeedsInternetPermission>
@@ -290,7 +291,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
 
 	<!-- If true it will cause all the assemblies in the apk to be preloaded on startup time -->
-        <_AndroidEnablePreloadAssembliesDefault>True</_AndroidEnablePreloadAssembliesDefault>
+	<_AndroidEnablePreloadAssembliesDefault Condition=" '$(UsingAndroidNETSdk)' == 'true' ">False</_AndroidEnablePreloadAssembliesDefault>
+	<_AndroidEnablePreloadAssembliesDefault Condition=" '$(UsingAndroidNETSdk)' != 'true' ">True</_AndroidEnablePreloadAssembliesDefault>
 	<AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">$(_AndroidEnablePreloadAssembliesDefault)</AndroidEnablePreloadAssemblies>
 	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
 	<_AndroidUseNewTypemaps>True</_AndroidUseNewTypemaps>
@@ -489,20 +491,31 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</ItemGroup>
 </Target>
 
-<Target Name="_ValidateAndroidPackageProperties">
-	<CreateProperty Value="$(ProjectDir)$(AndroidManifest)" Condition="'$(AndroidManifest)' != ''">
-		<Output TaskParameter="Value" PropertyName="_AndroidManifestAbs"/>
-	</CreateProperty>
-	<AndroidError Code="XA1018"
-		ResourceName="XA1018"
-		FormatArguments="$(_AndroidManifestAbs)"
-		Condition="'$(_AndroidManifestAbs)'!='' And !Exists ('$(_AndroidManifestAbs)')" />
+<Target Name="_GetAndroidPackageName">
+  <PropertyGroup>
+    <_AndroidManifestAbs Condition=" '$(AndroidManifest)' != '' ">$(ProjectDir)$(AndroidManifest)</_AndroidManifestAbs>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(GenerateApplicationManifest)' == 'true' ">
+    <_AndroidPackage>$(ApplicationId)</_AndroidPackage>
+    <_ApplicationLabel>$(ApplicationTitle)</_ApplicationLabel>
+    <_AndroidVersionName>$(ApplicationVersion)</_AndroidVersionName>
+    <_AndroidVersionCode Condition=" '$(AndroidCreatePackagePerAbi)' != 'true' ">$(AndroidVersionCode)</_AndroidVersionCode>
+  </PropertyGroup>
+  <AndroidError Code="XA1018"
+      ResourceName="XA1018"
+      FormatArguments="$(_AndroidManifestAbs)"
+      Condition=" '$(_AndroidManifestAbs)' != '' and !Exists ('$(_AndroidManifestAbs)') "
+  />
+  <GetAndroidPackageName
+      ManifestFile="$(_AndroidManifestAbs)"
+      AssemblyName="$(AssemblyName)"
+      PackageName="$(_AndroidPackage)">
+    <Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
+  </GetAndroidPackageName>
+</Target>
 
-	<GetAndroidPackageName ManifestFile="$(_AndroidManifestAbs)" AssemblyName="$(AssemblyName)">
-		<Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
-	</GetAndroidPackageName>
-	<Error Text="Could not determine package name." Condition="'$(_AndroidPackage)' == ''" />
-
+<Target Name="_ValidateAndroidPackageProperties"
+    DependsOnTargets="_GetAndroidPackageName">
 	<GetJavaPlatformJar
 		AndroidSdkPlatform="$(_AndroidApiLevel)"
 		AndroidManifest="$(_AndroidManifestAbs)">
@@ -849,6 +862,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_SetLatestTargetFrameworkVersion;_ResolveMonoAndroidSdks">
 	<PropertyGroup>
 		<AndroidAddKeepAlives Condition="'$(AndroidAddKeepAlives)' == '' And '$(AndroidIncludeDebugSymbols)' != 'True'">True</AndroidAddKeepAlives>
+		<AndroidLinkResources Condition="'$(AndroidLinkResources)' == '' And '$(AndroidIncludeDebugSymbols)' != 'True'">False</AndroidLinkResources>
 		<_AndroidBuildPropertiesCacheExists Condition=" Exists('$(_AndroidBuildPropertiesCache)') ">True</_AndroidBuildPropertiesCacheExists>
 		<_NuGetAssetsFile      Condition=" Exists('$(ProjectLockFile)') ">$(ProjectLockFile)</_NuGetAssetsFile>
 		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('packages.config') ">packages.config</_NuGetAssetsFile>
@@ -867,6 +881,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
+		<_PropertyCacheItems Include="AndroidLinkResources=$(AndroidLinkResources)" />
 		<_PropertyCacheItems Include="AndroidPackageFormat=$(AndroidPackageFormat)" />
 		<_PropertyCacheItems Include="EmbedAssembliesIntoApk=$(EmbedAssembliesIntoApk)" />
 		<_PropertyCacheItems Include="AndroidLinkMode=$(AndroidLinkMode)" />
@@ -1021,7 +1036,8 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 </Target>
 
-<Target Name="_AddMultiDexDependencyJars">
+<Target Name="_AddMultiDexDependencyJars"
+    Condition=" '$(AndroidApplication)' == 'true' ">
   <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != '' ">
     <AndroidJavaLibrary Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)" />
   </ItemGroup>
@@ -1180,6 +1196,7 @@ because xbuild doesn't support framework reference assemblies.
 		Condition="'$(_AndroidResourceDesignerFile)' != ''"
 		ContinueOnError="$(DesignTimeBuild)"
 		NetResgenOutputFile="$(_AndroidResourceDesignerFile)"
+		DesignTimeOutputFile="$(_AndroidManagedResourceDesignerFile)"
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		RTxtFile="$(IntermediateOutputPath)R.txt"
 		Namespace="$(AndroidResgenNamespace)"
@@ -1247,8 +1264,11 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CollectRuntimeJarFilenames">
   <PropertyGroup>
-    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
-    <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime.dex</_RuntimeDex>
+    <_RuntimeJar Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
+    <_RuntimeDex Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(MSBuildThisFileDirectory)\java_runtime.dex</_RuntimeDex>
+
+    <_RuntimeJar Condition=" '$(UsingAndroidNETSdk)' == 'True' ">$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
+    <_RuntimeDex Condition=" '$(UsingAndroidNETSdk)' == 'True' ">$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
   </PropertyGroup>
 </Target>
 
@@ -1302,7 +1322,6 @@ because xbuild doesn't support framework reference assemblies.
     Outputs="$(_AndroidStampDirectory)_GenerateJniMarshalMethods.stamp">
   <ItemGroup>
     <_JniFrameworkAssembly Include="Mono.Android.dll" />
-    <_JniFrameworkAssembly Include="OpenTK-1.0.dll" />
     <_JniFrameworkAssembly Include="OpenTK.dll" />
     <_JniFrameworkAssembly Include="Xamarin.Android.NUnitLite.dll" />
     <_AssembliesToProcess Include="@(ResolvedUserAssemblies)" />
@@ -1392,6 +1411,9 @@ because xbuild doesn't support framework reference assemblies.
       AndroidSdkPlatform="$(_AndroidApiLevel)"
       AndroidSdkDir="$(_AndroidSdkDirectory)"
       PackageName="$(_AndroidPackage)"
+      VersionName="$(_AndroidVersionName)"
+      VersionCode="$(_AndroidVersionCode)"
+      ApplicationLabel="$(_ApplicationLabel)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       OutputDirectory="$(IntermediateOutputPath)android"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)"
@@ -2012,7 +2034,6 @@ because xbuild doesn't support framework reference assemblies.
     LibraryProjectJars="@(ExtractedJarImports)"
     TlsProvider="$(AndroidTlsProvider)"
     UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-    InterpreterEnabled="$(AndroidUseInterpreter)"
     ProjectFullPath="$(MSBuildProjectFullPath)"
     IncludeWrapSh="$(AndroidIncludeWrapSh)"
     CheckedBuild="$(_AndroidCheckedBuild)">
@@ -2284,6 +2305,8 @@ because xbuild doesn't support framework reference assemblies.
 		KeyAlias="$(_ApkKeyAlias)"
 		KeyPass="$(_ApkKeyPass)"
 		StorePass="$(_ApkStorePass)"
+		PlatformKey="$(AndroidSigningPlatformKey)"
+		PlatformCert="$(AndroidSigningPlatformCert)"
 		ToolPath="$(JavaToolPath)"
 		ToolExe="$(JavaToolExe)"
 		ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
@@ -2355,10 +2378,8 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_CleanMsymArchive">
-	<GetAndroidPackageName ManifestFile="$(ProjectDir)$(AndroidManifest)" AssemblyName="$(AssemblyName)">
-		<Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
-	</GetAndroidPackageName>
+<Target Name="_CleanMsymArchive"
+    DependsOnTargets="_GetAndroidPackageName">
 	<RemoveDirFixed Directories="$(OutDir)$(_AndroidPackage).$(AndroidPackageFormat).mSYM" Condition=" '$(_AndroidPackage)' != '' " />
 </Target>
 
@@ -2500,6 +2521,7 @@ because xbuild doesn't support framework reference assemblies.
       KeyAlias="$(_ApkKeyAlias)"
       KeyPass="$(_ApkKeyPass)"
       StorePass="$(_ApkStorePass)"
+      ExtraArgs="$(AndroidBundleToolExtraArgs)"
   />
   <InstallApkSet
       ToolPath="$(JavaToolPath)"
@@ -2509,6 +2531,7 @@ because xbuild doesn't support framework reference assemblies.
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       ApkSet="$(_ApkSetIntermediate)"
+      Modules="@(AndroidInstallModules)"
   />
 </Target>
 
@@ -2548,7 +2571,6 @@ because xbuild doesn't support framework reference assemblies.
     ManifestFile="$(_ProjectAndroidManifest)"
     BuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
     PlatformToolsVersion="$(AndroidSdkPlatformToolsVersion)"
-    ToolsVersion="$(AndroidSdkToolsVersion)"
     NdkVersion="$(AndroidNdkVersion)"
     NdkRequired="$(_NdkRequired)"
   >

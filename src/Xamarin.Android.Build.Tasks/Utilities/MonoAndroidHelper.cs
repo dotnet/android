@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 
 #if MSBUILD
 using Microsoft.Build.Framework;
@@ -25,9 +26,6 @@ namespace Xamarin.Android.Tasks
 		// Requires that ResolveSdks.Execute() run before anything else
 		public static AndroidVersions   SupportedVersions;
 		public static AndroidSdkInfo    AndroidSdk;
-
-		public static readonly Encoding UTF8withoutBOM = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false);
-		readonly static byte[] Utf8Preamble = Encoding.UTF8.GetPreamble ();
 
 		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
 		{
@@ -90,12 +88,10 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		static TaskLoggingHelper androidSdkLogger;
-
 		public static void RefreshAndroidSdk (string sdkPath, string ndkPath, string javaPath, TaskLoggingHelper logHelper = null)
 		{
 			Action<TraceLevel, string> logger = (level, value) => {
-				var log = logHelper ?? androidSdkLogger;
+				var log = logHelper;
 				switch (level) {
 				case TraceLevel.Error:
 					if (log == null)
@@ -125,6 +121,19 @@ namespace Xamarin.Android.Tasks
 			SupportedVersions   = new AndroidVersions (referenceAssemblyPaths);
 		}
 #endif  // MSBUILD
+
+		public static JdkInfo GetJdkInfo (Action<TraceLevel, string> logger, string javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion)
+		{
+			JdkInfo info = null;
+			try {
+				info = new JdkInfo (javaSdkPath);
+			} catch {
+				info = JdkInfo.GetKnownSystemJdkInfos (logger)
+					.Where (jdk => jdk.Version >= minSupportedVersion && jdk.Version <= maxSupportedVersion)
+					.FirstOrDefault ();
+			}
+			return info;
+		}
 
 		class SizeAndContentFileComparer : IEqualityComparer<FileInfo>
 #if MSBUILD
@@ -197,16 +206,6 @@ namespace Xamarin.Android.Tasks
 		{
 			return filePaths.Distinct (MonoAndroidHelper.SizeAndContentFileComparer.DefaultComparer);
 		}
-
-		public static void InitializeAndroidLogger (TaskLoggingHelper logger)
-		{
-			androidSdkLogger    = logger;
-		}
-
-		public static void ClearAndroidLogger ()
-		{
-			androidSdkLogger    = null;
-		}
 #endif
 
 		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths)
@@ -247,14 +246,6 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-
-		static readonly string[] ValidAbis = new[]{
-			"arm64-v8a",
-			"armeabi-v7a",
-			"x86",
-			"x86_64",
-		};
-
 		static readonly Dictionary<string, string> ClangAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
 			{"arm64-v8a",   "aarch64"},
 			{"armeabi-v7a", "arm"},
@@ -268,48 +259,6 @@ namespace Xamarin.Android.Tasks
 				return clangAbi;
 			}
 			return null;
-		}
-
-		public static string GetNativeLibraryAbi (string lib)
-		{
-			// The topmost directory the .so file is contained within
-			var dir = Path.GetFileName (Path.GetDirectoryName (lib)).ToLowerInvariant ();
-			if (dir.StartsWith ("interpreter-", StringComparison.Ordinal)) {
-				dir = dir.Substring (12);
-			}
-			if (ValidAbis.Contains (dir)) {
-				return dir;
-			}
-			return null;
-		}
-
-		public static string GetNativeLibraryAbi (ITaskItem lib)
-		{
-			// If Abi is explicitly specified, simply return it.
-			var lib_abi = lib.GetMetadata ("Abi");
-
-			if (!string.IsNullOrWhiteSpace (lib_abi))
-				return lib_abi;
-
-			// Try to figure out what type of abi this is from the path
-			// First, try nominal "Link" path.
-			var link = lib.GetMetadata ("Link");
-			if (!string.IsNullOrWhiteSpace (link)) {
-				var linkdirs = link.ToLowerInvariant ().Split ('/', '\\');
-				lib_abi = ValidAbis.Where (p => linkdirs.Contains (p)).FirstOrDefault ();
-			}
-
-			// Check for a RuntimeIdentifier
-			var rid = lib.GetMetadata ("RuntimeIdentifier");
-			if (!string.IsNullOrWhiteSpace (rid)) {
-				lib_abi = RuntimeIdentifierToAbi (rid);
-			}
-			
-			if (!string.IsNullOrWhiteSpace (lib_abi))
-				return lib_abi;
-
-			// If not resolved, use ItemSpec
-			return GetNativeLibraryAbi (lib.ItemSpec);
 		}
 #endif
 
@@ -360,80 +309,20 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static void SetWriteable (string source, bool checkExists = true)
-		{
-			if (checkExists && !File.Exists (source))
-				return;
-
-			var attributes = File.GetAttributes (source);
-			if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-				File.SetAttributes (source, attributes & ~FileAttributes.ReadOnly);
-		}
-
-		public static void SetDirectoryWriteable (string directory)
-		{
-			if (!Directory.Exists (directory))
-				return;
-
-			var dirInfo = new DirectoryInfo (directory);
-			if ((dirInfo.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-				dirInfo.Attributes &= ~FileAttributes.ReadOnly;
-
-			foreach (var dir in Directory.EnumerateDirectories (directory, "*", SearchOption.AllDirectories)) {
-				dirInfo = new DirectoryInfo (dir);
-				if ((dirInfo.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-					dirInfo.Attributes &= ~FileAttributes.ReadOnly;
-			}
-
-			foreach (var file in Directory.EnumerateFiles (directory, "*", SearchOption.AllDirectories)) {
-				SetWriteable (Path.GetFullPath (file));
-			}
-		}
-
 		public static bool CopyAssemblyAndSymbols (string source, string destination)
 		{
-			bool changed = CopyIfChanged (source, destination);
+			bool changed = Files.CopyIfChanged (source, destination);
 			var mdb = source + ".mdb";
 			if (File.Exists (mdb)) {
 				var mdbDestination = destination + ".mdb";
-				CopyIfChanged (mdb, mdbDestination);
+				Files.CopyIfChanged (mdb, mdbDestination);
 			}
 			var pdb = Path.ChangeExtension (source, "pdb");
 			if (File.Exists (pdb) && Files.IsPortablePdb (pdb)) {
 				var pdbDestination = Path.ChangeExtension (destination, "pdb");
-				CopyIfChanged (pdb, pdbDestination);
+				Files.CopyIfChanged (pdb, pdbDestination);
 			}
 			return changed;
-		}
-
-		public static bool CopyIfChanged (string source, string destination)
-		{
-			return Files.CopyIfChanged (source, destination);
-		}
-
-		public static bool CopyIfStringChanged (string contents, string destination)
-		{
-			return Files.CopyIfStringChanged (contents, destination);
-		}
-
-		public static bool CopyIfBytesChanged (byte [] bytes, string destination)
-		{
-			return Files.CopyIfBytesChanged (bytes, destination);
-		}
-
-		public static bool CopyIfStreamChanged (Stream source, string destination)
-		{
-			return Files.CopyIfStreamChanged (source, destination);
-		}
-
-		public static bool CopyIfZipChanged (Stream source, string destination)
-		{
-			return Files.CopyIfZipChanged (source, destination);
-		}
-
-		public static bool CopyIfZipChanged (string source, string destination)
-		{
-			return Files.CopyIfZipChanged (source, destination);
 		}
 
 		public static ZipArchive ReadZipFile (string filename)
@@ -443,87 +332,6 @@ namespace Xamarin.Android.Tasks
 			} catch (ZipIOException ex) {
 				throw new ZipIOException ($"There was an error opening {filename}. The file is probably corrupt. Try deleting it and building again. {ex.Message}", ex);
 			}
-		}
-
-		public static bool IsValidZip (string filename)
-		{
-			try {
-				using (var zip = Files.ReadZipFile (filename, strictConsistencyChecks: true)) {
-				}
-			} catch (ZipIOException) {
-				return false;
-			}
-			return true;
-		}
-
-		public static string HashFile (string filename)
-		{
-			return Files.HashFile (filename);
-		}
-
-		public static string HashFile (string filename, HashAlgorithm hashAlg)
-		{
-			return Files.HashFile (filename, hashAlg);
-		}
-
-		public static string HashStream (Stream stream)
-		{
-			return Files.HashStream (stream);
-		}
-
-		public static string HashBytes (byte[] bytes)
-		{
-			return Files.HashBytes (bytes);
-		}
-
-		public static bool HasFileChanged (string source, string destination)
-		{
-			return Files.HasFileChanged (source, destination);
-		}
-
-		/// <summary>
-		/// Open a file given its path and remove the 3 bytes UTF-8 BOM if there is one
-		/// </summary>
-		public static void CleanBOM (string filePath)
-		{
-			if (string.IsNullOrEmpty (filePath) || !File.Exists (filePath))
-				return;
-
-			string temp = null;
-			try {
-				using (var input = File.OpenRead (filePath)) {
-					// Check if the file actually has a BOM
-					for (int i = 0; i < Utf8Preamble.Length; i++) {
-						var next = input.ReadByte ();
-						if (next == -1)
-							return;
-						if (Utf8Preamble [i] != (byte) next)
-							return;
-					}
-
-					temp = Path.GetTempFileName ();
-					using (var stream = File.OpenWrite (temp))
-						input.CopyTo (stream);
-				}
-
-				SetWriteable (filePath);
-				File.Delete (filePath);
-				File.Copy (temp, filePath);
-			} finally {
-				if (temp != null) {
-					File.Delete (temp);
-				}
-			}
-		}
-
-		public static bool IsRawResourcePath (string projectPath)
-		{
-			// Extract resource type folder name
-			var dir = Path.GetDirectoryName (projectPath);
-			var name = Path.GetFileName (dir);
-
-			return string.Equals (name, "raw", StringComparison.OrdinalIgnoreCase)
-				|| name.StartsWith ("raw-", StringComparison.OrdinalIgnoreCase);
 		}
 
 #if MSBUILD
@@ -554,7 +362,7 @@ namespace Xamarin.Android.Tasks
 
 		public static Dictionary<string, HashSet<string>> LoadCustomViewMapFile (IBuildEngine4 engine, string mapFile)
 		{
-			var cachedMap = (Dictionary<string, HashSet<string>>)engine?.GetRegisteredTaskObject (mapFile, RegisteredTaskObjectLifetime.Build);
+			var cachedMap = engine?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, HashSet<string>>> (mapFile, RegisteredTaskObjectLifetime.Build);
 			if (cachedMap != null)
 				return cachedMap;
 			var map = new Dictionary<string, HashSet<string>> ();
@@ -574,14 +382,14 @@ namespace Xamarin.Android.Tasks
 
 		public static bool SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
 		{
-			engine?.RegisterTaskObject (mapFile, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+			engine?.RegisterTaskObjectAssemblyLocal (mapFile, map, RegisteredTaskObjectLifetime.Build);
 			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				foreach (var i in map.OrderBy (x => x.Key)) {
 					foreach (var v in i.Value.OrderBy (x => x))
 						writer.WriteLine ($"{i.Key};{v}");
 				}
 				writer.Flush ();
-				return CopyIfStreamChanged (writer.BaseStream, mapFile);
+				return Files.CopyIfStreamChanged (writer.BaseStream, mapFile);
 			}
 		}
 
@@ -633,11 +441,10 @@ namespace Xamarin.Android.Tasks
 		static readonly string ResourceCaseMapKey = $"{nameof (MonoAndroidHelper)}_ResourceCaseMap";
 
 		public static void SaveResourceCaseMap (IBuildEngine4 engine, Dictionary<string, string> map) =>
-			engine.RegisterTaskObject (ResourceCaseMapKey, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+			engine.RegisterTaskObjectAssemblyLocal (ResourceCaseMapKey, map, RegisteredTaskObjectLifetime.Build);
 
 		public static Dictionary<string, string> LoadResourceCaseMap (IBuildEngine4 engine) =>
-			engine.GetRegisteredTaskObject (ResourceCaseMapKey, RegisteredTaskObjectLifetime.Build)
-				as Dictionary<string, string> ?? new Dictionary<string, string> (0);
+			engine.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (ResourceCaseMapKey, RegisteredTaskObjectLifetime.Build) ?? new Dictionary<string, string> (0);
 
 		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
 		{
@@ -669,39 +476,6 @@ namespace Xamarin.Android.Tasks
 			var head = string.Join ("\\", path.Split (DirectorySeparators).TakeWhile (s => !s.Equals (assetsDirectory, StringComparison.OrdinalIgnoreCase)));
 			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
 			return path;
-		}
-
-		/// <summary>
-		/// Converts .NET 5 RIDs to Android ABIs or an empty string if no match.
-		/// 
-		/// Known RIDs:
-		/// "android.21-arm64" -> "arm64-v8a"
-		/// "android.21-arm"   -> "armeabi-v7a"
-		/// "android.21-x86"   -> "x86"
-		/// "android.21-x64"   -> "x86_64"
-		/// "android-arm64"    -> "arm64-v8a"
-		/// "android-arm"      -> "armeabi-v7a"
-		/// "android-x86"      -> "x86"
-		/// "android-x64"      -> "x86_64"
-		/// </summary>
-		public static string RuntimeIdentifierToAbi (string runtimeIdentifier)
-		{
-			if (string.IsNullOrEmpty (runtimeIdentifier)) {
-				return "";
-			}
-			if (runtimeIdentifier.EndsWith ("-arm64", StringComparison.OrdinalIgnoreCase)) {
-				return "arm64-v8a";
-			}
-			if (runtimeIdentifier.EndsWith ("-arm", StringComparison.OrdinalIgnoreCase)) {
-				return "armeabi-v7a";
-			}
-			if (runtimeIdentifier.EndsWith ("-x86", StringComparison.OrdinalIgnoreCase)) {
-				return "x86";
-			}
-			if (runtimeIdentifier.EndsWith ("-x64", StringComparison.OrdinalIgnoreCase)) {
-				return "x86_64";
-			}
-			return "";
 		}
 	}
 }

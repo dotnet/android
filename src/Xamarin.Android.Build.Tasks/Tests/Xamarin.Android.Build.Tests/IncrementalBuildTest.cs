@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -837,7 +838,7 @@ namespace Lib2
 
 				// Add a new AAR file to the project
 				var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
-					WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+					WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 				};
 				proj.OtherBuildItems.Add (aar);
 
@@ -1113,7 +1114,7 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
 				FileAssert.Exists (output);
-				string expectedHash = MonoAndroidHelper.HashFile (output);
+				string expectedHash = Files.HashFile (output);
 				Guid expectedMvid;
 				using (var assembly = AssemblyDefinition.ReadAssembly (output)) {
 					expectedMvid = assembly.MainModule.Mvid;
@@ -1125,10 +1126,10 @@ namespace Lib2
 				using (var assembly = AssemblyDefinition.ReadAssembly (output)) {
 					if (deterministic) {
 						Assert.AreEqual (expectedMvid, assembly.MainModule.Mvid, "Mvid should match");
-						Assert.AreEqual (expectedHash, MonoAndroidHelper.HashFile (output), "hash should match");
+						Assert.AreEqual (expectedHash, Files.HashFile (output), "hash should match");
 					} else {
 						Assert.AreNotEqual (expectedMvid, assembly.MainModule.Mvid, "Mvid should *not* match");
-						Assert.AreNotEqual (expectedHash, MonoAndroidHelper.HashFile (output), "hash should *not* match");
+						Assert.AreNotEqual (expectedHash, Files.HashFile (output), "hash should *not* match");
 					}
 				}
 			}
@@ -1268,7 +1269,7 @@ namespace Lib2
 				TextContent = () => text
 			});
 			using (var b = CreateApkBuilder ()) {
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject.apk");
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				AssertAssetContents (apk);
 
@@ -1309,7 +1310,7 @@ namespace Lib2
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject.apk");
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsTrue (zip.ContainsEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
@@ -1369,7 +1370,7 @@ namespace Lib2
 				b.Build (proj);
 
 				var parameters = Builder.UseDotNet ?
-					new [] { $"{KnownProperties.RuntimeIdentifier}=android.21-x86" } :
+					new [] { $"{KnownProperties.RuntimeIdentifier}=android-x86" } :
 					new [] { $"{KnownProperties.AndroidSupportedAbis}=x86" };
 				b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true);
 			}
@@ -1395,7 +1396,7 @@ namespace Lib2
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
-				var apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject-Signed.apk");
+				var apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var firstAssemblyWrite = new FileInfo (assemblyPath).LastWriteTime;
 				var firstApkWrite = new FileInfo (apkPath).LastWriteTime;
 

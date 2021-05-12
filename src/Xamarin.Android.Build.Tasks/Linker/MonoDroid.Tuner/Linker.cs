@@ -77,7 +77,7 @@ namespace MonoDroid.Tuner
 				pipeline.AppendStep (new LoadI18nAssemblies (options.I18nAssemblies));
 
 			pipeline.AppendStep (new BlacklistStep ());
-			
+
 			foreach (var desc in options.LinkDescriptions)
 				pipeline.AppendStep (new ResolveFromXmlStep (new XPathDocument (desc)));
 
@@ -94,7 +94,6 @@ namespace MonoDroid.Tuner
 				new RemoveSecurity (),
 				new MarkJavaObjects (),
 				new PreserveJavaExceptions (),
-				new PreserveJavaTypeRegistrations (),
 				new PreserveApplications (),
 				new RemoveAttributes (),
 				new PreserveDynamicTypes (),
@@ -122,6 +121,11 @@ namespace MonoDroid.Tuner
 			pipeline.AppendStep (new StripEmbeddedLibraries ());
 			if (options.AddKeepAlives)
 				pipeline.AppendStep (new AddKeepAlivesStep (cache));
+
+			if (options.LinkResources) {
+				pipeline.AppendStep (new GetAssembliesStep ());
+				pipeline.AppendStep (new RemoveResourceDesignerStep ());
+			}
 			// end monodroid specific
 			pipeline.AppendStep (new RegenerateGuidStep ());
 			pipeline.AppendStep (new OutputStepWithTimestamps ());

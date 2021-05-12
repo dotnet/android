@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2012 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2012 Xamarin, Inc. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -10,6 +10,7 @@ using Microsoft.Build.Utilities;
 using System.Text;
 using Bytecode = Xamarin.Android.Tools.Bytecode;
 using System.Diagnostics;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -28,7 +29,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			using (var output = new StreamWriter (OutputFile, append: false, 
-						encoding: MonoAndroidHelper.UTF8withoutBOM)) {
+						encoding: Files.UTF8withoutBOM)) {
 				Bytecode.Log.OnLog = LogEventHandler;
 				var classPath = new Bytecode.ClassPath () {
 					ApiSource = "class-parse",

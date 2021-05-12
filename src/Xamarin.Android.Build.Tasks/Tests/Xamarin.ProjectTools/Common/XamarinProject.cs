@@ -30,7 +30,7 @@ namespace Xamarin.ProjectTools
 		public IList<Package> Packages { get; private set; }
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
-		public string GlobalPackagesFolder { get; set; } = Path.Combine (XABuildPaths.TopDirectory, "packages");
+		public string GlobalPackagesFolder { get; set; } = FileSystemUtils.FindNugetGlobalPackageFolder ();
 		public IList<string> ExtraNuGetConfigSources { get; set; }
 
 		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
@@ -40,13 +40,23 @@ namespace Xamarin.ProjectTools
 		public virtual bool ShouldPopulate => true;
 		public IList<Import> Imports { get; private set; }
 		PropertyGroup common, debug, release;
+		bool isRelease;
 
 		/// <summary>
 		/// Configures projects with Configuration=Debug or Release
 		/// * Directly in the `.csproj` file for legacy projects
 		/// * Uses `Directory.Build.props` for .NET 5+ projects
 		/// </summary>
-		public bool IsRelease { get; set; }
+		public bool IsRelease {
+			get => isRelease;
+			set {
+				isRelease = value;
+
+				if (Builder.UseDotNet) {
+					Touch ("Directory.Build.props");
+				}
+			}
+		}
 
 		public string Configuration => IsRelease ? releaseConfigurationName : debugConfigurationName;
 
@@ -91,7 +101,7 @@ $@"<Project>
 
 				// Feeds only needed for .NET 5+
 				ExtraNuGetConfigSources = new List<string> {
-					Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs"),
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
 				};
 			} else {

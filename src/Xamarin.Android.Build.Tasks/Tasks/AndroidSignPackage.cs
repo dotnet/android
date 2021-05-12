@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -20,30 +21,30 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		[Output]
 		public string KeyStore { get; set; }
-		
+
 		[Required]
 		public string KeyAlias { get; set; }
-		
+
 		/// <summary>
 		/// The Password for the Key.
 		/// You can use the raw password here, however if you want to hide your password in logs
-		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// you can use a preview of env: or file: to point it to an Environment variable or
 		/// a file.
 		///
 		///   env:<PasswordEnvironentVariable>
-		///   file:<PasswordFile> 
+		///   file:<PasswordFile>
 		/// </summary>
 		[Required]
 		public string KeyPass { get; set; }
-		
+
 		/// <summary>
 		/// The Password for the Keystore.
 		/// You can use the raw password here, however if you want to hide your password in logs
-		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// you can use a preview of env: or file: to point it to an Environment variable or
 		/// a file.
 		///
 		///   env:<PasswordEnvironentVariable>
-		///   file:<PasswordFile> 
+		///   file:<PasswordFile>
 		/// </summary>
 		[Required]
 		public string StorePass { get; set; }
@@ -97,7 +98,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-signedjar ", Path.Combine (SignedApkDirectory, $"{fileName}{FileSuffix}{extension}" ));
 
 			cmd.AppendFileNameIfNotNull (UnsignedApk);
-			cmd.AppendSwitch (KeyAlias);
+			cmd.AppendSwitchIfNotNull (" ", KeyAlias);
 
 			return cmd.ToString ();
 		}
@@ -134,12 +135,12 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		/// <summary>
-		/// See: http://hg.openjdk.java.net/jdk8u/jdk8u-dev/jdk/file/0fc878b99541/src/share/classes/sun/security/tools/jarsigner/Resources.java
-		/// </summary>
 		static readonly string [] IgnoredWarnings = new [] {
+			// See: http://hg.openjdk.java.net/jdk8u/jdk8u-dev/jdk/file/0fc878b99541/src/share/classes/sun/security/tools/jarsigner/Resources.java
 			"certificate is self-signed",
 			"No -tsa or -tsacert is provided",
+			// FIXME: warning encountered when using: https://aka.ms/getopenjdk
+			"POSIX file permission and/or symlink attributes detected"
 		};
 
 		protected override string ToolName
@@ -150,7 +151,7 @@ namespace Xamarin.Android.Tasks
 		protected override bool ValidateParameters ()
 		{
 			if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
-				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, KeyStore);
+				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningKeyStore)", KeyStore);
 				return false;
 			}
 			return base.ValidateParameters ();

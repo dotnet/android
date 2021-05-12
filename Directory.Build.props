@@ -13,22 +13,41 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProductVersion>11.2.99</ProductVersion>
+    <ProductVersion>11.3.99</ProductVersion>
     <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
          Rules:
+         * Major/Minor match Android stable API level, such as 30.0 for API 30.
          * Reset patch version (third number) to 100 every time either major or minor version is bumped.
          * Bump last two digits of the patch version for service releases.
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
-    <AndroidPackVersion>11.0.200</AndroidPackVersion>
+    <AndroidPackVersion>30.0.100</AndroidPackVersion>
   </PropertyGroup>
-  
-  <!-- Add Roslyn analyzers NuGet to all projects (except NRefactory which has violations but is only used for running tests and XamarinManifestGenerator which uses packages.config ) -->
-  <ItemGroup Condition=" '$(EnableRoslynAnalyzers)' == 'True' And !$(AssemblyName.StartsWith ('ICSharpCode.NRefactory')) And !$(AssemblyName.StartsWith ('XamarinManifestGenerator')) ">
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
 
+  <!-- Common <PackageReference/> versions -->
+  <PropertyGroup>
+    <LibZipSharpVersion>1.0.24</LibZipSharpVersion>
+    <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
+    <MonoCecilVersion>0.11.2</MonoCecilVersion>
+    <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
+    <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
+    <MonoOptionsVersion>6.6.0.161</MonoOptionsVersion>
+    <SystemCollectionsImmutableVersion>1.7.1</SystemCollectionsImmutableVersion>
+  </PropertyGroup>
+
+  <!-- Properties to help us run managed assemblies on various runtimes.
+       Ex:
+       * Mono: mono xaprepare.exe
+       * Windows .NET: xaprepare.exe
+       * dotnet: dotnet xaprepare.dll
+-->
+  <PropertyGroup Condition=" '$(MSBuildRuntimeType)' != 'Core' ">
+    <ManagedToolInvocationRuntime>$(Runtime) </ManagedToolInvocationRuntime>
+    <ManagedToolInvocationExtension>.exe</ManagedToolInvocationExtension>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(MSBuildRuntimeType)' == 'Core' ">
+    <ManagedToolInvocationRuntime>dotnet </ManagedToolInvocationRuntime>
+    <ManagedToolInvocationExtension>.dll</ManagedToolInvocationExtension>
+  </PropertyGroup>
 </Project>

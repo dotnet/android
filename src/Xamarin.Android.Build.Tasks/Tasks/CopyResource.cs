@@ -7,6 +7,7 @@ using Microsoft.Build.Utilities;
 using System.Reflection;
 
 using Java.Interop.Tools.JavaCallableWrappers;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -29,7 +30,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogCodedError ("XA0116", Properties.Resources.XA0116, ResourceName);
 					return false;
 				}
-				if (MonoAndroidHelper.CopyIfStreamChanged (from, OutputPath)) {
+				if (Files.CopyIfStreamChanged (from, OutputPath)) {
 					Log.LogDebugMessage ($"Wrote resource {OutputPath}.");
 				} else {
 					Log.LogDebugMessage ($"Resource {OutputPath} is unchanged. Skipping.");

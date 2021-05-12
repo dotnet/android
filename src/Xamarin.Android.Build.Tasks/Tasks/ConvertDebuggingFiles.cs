@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Pdb2Mdb;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -28,7 +29,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 
 				try {
-					MonoAndroidHelper.SetWriteable (pdb);
+					Microsoft.Android.Build.Tasks.Files.SetWriteable (pdb);
 					Converter.Convert (Path.ChangeExtension (pdb, ".dll"));
 					convertedFiles.Add (new TaskItem (Path.ChangeExtension (pdb, ".dll")));
 				} catch (Exception ex) {

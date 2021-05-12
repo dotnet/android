@@ -7,7 +7,6 @@ using NUnit.Framework;
 namespace System.Drawing {
 
 	[TestFixture]
-	[NUnit.Framework.Category ("DotNetIgnore")] // https://github.com/xamarin/xamarin-android/issues/5275
 	public class TypeConverterTest {
 
 		[Test]

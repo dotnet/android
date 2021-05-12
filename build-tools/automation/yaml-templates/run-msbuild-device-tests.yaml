@@ -5,19 +5,21 @@ parameters:
   job_suffix: ''
   nunit_categories: ''
   target_framework: 'net472'
+  jdkTestFolder: $(XA.Jdk11.Folder)
 
 jobs:
   - job: ${{ parameters.job_name }}
     displayName: MSBuild With Emulator - macOS - ${{ parameters.job_suffix }}
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 150
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
-    variables:
-      UseDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
     steps:
     - template: setup-test-environment.yaml
+      parameters:
+        jdkTestFolder: ${{ parameters.jdkTestFolder }}
 
     - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
       displayName: install emulator
@@ -53,10 +55,10 @@ jobs:
 
     - template: run-nunit-tests.yaml
       parameters:
-        useDotNet: $(UseDotNet)
+        useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
         testRunTitle: MSBuildDeviceIntegration On Device - macOS - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
+        nunitConsoleExtraArgs: --where "cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
         dotNetTestExtraArgs: --filter "TestCategory != TimeZoneInfo & TestCategory != SmokeTests ${{ parameters.nunit_categories }}"
         testResultsFile: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}-$(XA.Build.Configuration).xml
 

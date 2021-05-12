@@ -25,6 +25,7 @@ namespace Xamarin.Android.Tools.Aidl
 		public BindingDatabase (IEnumerable<AssemblyDefinition> asses)
 		{
 			this.asses.AddRange (asses);
+			Initialize (null, null);
 		}
 		
 		public IDictionary<string,string> NamespaceMappings {

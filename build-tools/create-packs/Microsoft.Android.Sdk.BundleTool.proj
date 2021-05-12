@@ -9,11 +9,8 @@ Since bundletool.jar is quite large (and optional), it is in a separate pack.
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <PackageId>Microsoft.Android.Sdk.BundleTool</PackageId>
-    <Authors>Microsoft</Authors>
     <Description>Contains tooling for Android App Bundles.</Description>
-    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
     <MSBuildSrcDir>$(RootBuildDir)lib\xamarin.android\xbuild\Xamarin\Android\</MSBuildSrcDir>
   </PropertyGroup>
 

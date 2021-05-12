@@ -249,7 +249,7 @@ namespace Xamarin.Android.NetTests {
 			return innerHandler.GetType ();
 		}
 
-		[Test]
+		[Test, Category ("DotNetIgnore")]
 		public void Sanity_Tls_1_2_Url_WithMonoClientHandlerFails ()
 		{
 			var tlsProvider   = global::System.Environment.GetEnvironmentVariable ("XA_TLS_PROVIDER");

@@ -1,0 +1,115 @@
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+  makeMSBuildArgs: ''
+
+steps:
+- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
+  displayName: set JI_JAVA_HOME
+
+- template: use-dot-net.yaml
+  parameters:
+    remove_dotnet: true
+
+- template: use-dot-net.yaml
+  parameters:
+    version: $(DotNetCoreVersion)
+
+- task: NuGetAuthenticate@0
+  displayName: authenticate with azure artifacts
+  inputs:
+    forceReinstallCredentialProvider: true
+
+- task: provisionator@2
+  displayName: Install Xcode
+  inputs:
+    github_token: $(GitHub.Token)
+    provisioning_script: ${{ parameters.xaSourcePath }}/build-tools/provisioning/xcode.csx
+    provisioning_extra_args: '-v -v -v -v'
+
+- script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make prepare-update-mono
+
+# Clone and prepare monodroid with submodules, but disregard the unused xamarin-android submodule.
+- checkout: monodroid
+  clean: true
+  submodules: recursive
+  path: s/xamarin-android/external/monodroid
+  persistCredentials: true
+
+- script: rm -rf external/monodroid/external/xamarin-android
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: delete legacy xamarin-android submodule
+
+- script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make prepare-external-git-dependencies
+
+# Prepare and Build everything
+- script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make jenkins
+
+# Build and package test assemblies
+- script: make all-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make all-tests
+
+- script: >
+    cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests &&
+    cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: copy bcl-tests assemblies
+
+- task: PublishPipelineArtifact@1
+  displayName: upload test assemblies
+  inputs:
+    artifactName: $(TestAssembliesArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+# Restore needs to be executed first or MicroBuild targets won't be imported in time
+- task: MSBuild@1
+  displayName: msbuild /t:Restore sign-pkg-content.proj
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-pkg-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: /t:Restore /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
+
+- task: MSBuild@1
+  displayName: sign and harden legacy and .NET 6 .pkg content
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-pkg-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: >-
+      /p:SignType=$(MicroBuildSignType)
+      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
+
+- script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make create-installers
+
+- task: PublishPipelineArtifact@1
+  displayName: upload nupkgs
+  inputs:
+    artifactName: $(NuGetArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+
+- script: >
+    mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+    cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+    cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: copy unsigned installers
+
+- script: >
+    VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct` &&
+    echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: create updateinfo file
+
+- task: PublishPipelineArtifact@1
+  displayName: upload installers
+  inputs:
+    artifactName: $(InstallerArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)

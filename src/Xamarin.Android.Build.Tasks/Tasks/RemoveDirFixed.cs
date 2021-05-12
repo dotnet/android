@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -55,7 +56,7 @@ namespace Xamarin.Android.Tasks
 					// if that fails we probably have readonly files (or locked files)
 					// so try to make them writable and try again.
 					try {
-						MonoAndroidHelper.SetDirectoryWriteable (fullPath);
+						Files.SetDirectoryWriteable (fullPath);
 						Directory.Delete (fullPath, true);
 						temporaryRemovedDirectories.Add (directory);
 					} catch (Exception inner) {

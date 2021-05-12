@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -123,7 +124,7 @@ namespace Xamarin.Android.Tasks
 
 			string responseFile = Path.Combine (OutputDirectory, "generator.rsp");
 			Log.LogDebugMessage ("[Generator] response file: {0}", responseFile);
-			using (var sw = new StreamWriter (responseFile, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM)) {
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM)) {
 
 				if (OnlyRunXmlAdjuster)
 					WriteLine (sw, "--only-xml-adjuster");

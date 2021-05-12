@@ -154,7 +154,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
 			proj.SetProperty (proj.ReleaseProperties, "DebugSymbols", "true");
-			proj.SetProperty (proj.ReleaseProperties, "DebugType", "PdbOnly");
+			proj.SetProperty (proj.ReleaseProperties, "DebugType", "Portable");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
 			proj.SetAndroidSupportedAbis (supportedAbis);
@@ -248,7 +248,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidTlsProvider", androidTlsProvider);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var apk = Path.Combine (intermediateOutputDir, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+				var apk = Path.Combine (intermediateOutputDir, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zipFile = ZipHelper.OpenZip (apk)) {
 					foreach (var abi in supportedAbis) {
 						if (expected) {

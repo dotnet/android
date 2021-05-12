@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using Microsoft.Build.Construction;
+using System.Runtime.CompilerServices;
 
 namespace Xamarin.ProjectTools
 {
@@ -34,7 +35,7 @@ namespace Xamarin.ProjectTools
 
 		}
 
-		public XamarinAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
+		public XamarinAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			if (Builder.UseDotNet) {
@@ -67,7 +68,7 @@ namespace Xamarin.ProjectTools
 			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			LayoutMain = default_layout_main;
 			StringsXml = default_strings_xml;
-			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
+			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 
 			OtherBuildItems.Add (new BuildItem.NoActionResource ("Properties\\AndroidManifest.xml") {
@@ -175,6 +176,8 @@ namespace Xamarin.ProjectTools
 		public string MainActivity { get; set; }
 		public string StringsXml { get; set; }
 		public string PackageName { get; set; }
+
+		public string PackageNameJavaIntermediatePath { get { return PackageName.Replace ('.', Path.DirectorySeparatorChar).ToLower ();}}
 		public string JavaPackageName { get; set; }
 
 		public override BuildOutput CreateBuildOutput (ProjectBuilder builder)

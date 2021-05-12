@@ -86,13 +86,8 @@ namespace Xamarin.Android.Build.Tests
 				new [] {
 					"Java.Interop.dll",
 					"Mono.Android.dll",
-					"System.Console.dll",
-					"System.Linq.Expressions.dll",
-					"System.ObjectModel.dll",
-					"System.Runtime.Serialization.Primitives.dll",
 					"System.Private.CoreLib.dll",
-					"System.Collections.Concurrent.dll",
-					"System.Collections.dll",
+					"System.Runtime.dll",
 					"System.Linq.dll",
 					"UnnamedProject.dll",
 				} :
@@ -103,7 +98,6 @@ namespace Xamarin.Android.Build.Tests
 					"System.Core.dll",
 					"System.Data.dll",
 					"System.dll",
-					"System.Runtime.Serialization.dll",
 					"UnnamedProject.dll",
 					"Mono.Data.Sqlite.dll",
 					"Mono.Data.Sqlite.dll.config",
@@ -111,7 +105,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
 					var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
@@ -143,7 +137,7 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsTrue (zip.ContainsEntry ("classes.dex"), "Apk should contain classes.dex");
 				}
@@ -166,7 +160,7 @@ namespace Xamarin.Android.Build.Tests
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				CompressionMethod method = compressNativeLibraries ? CompressionMethod.Deflate : CompressionMethod.Store;
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/") && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
@@ -197,7 +191,7 @@ namespace Xamarin.Android.Build.Tests
 				AssertExtractNativeLibs (manifest, extractNativeLibs: false);
 
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				AssertEmbeddedDSOs (apk);
 
 				//Delete the apk & build again
@@ -223,10 +217,10 @@ namespace Xamarin.Android.Build.Tests
 		void AssertCompression (ZipEntry entry, bool compressed)
 		{
 			if (compressed) {
-				Assert.AreNotEqual (entry.CompressionMethod, CompressionMethod.Store, $"`{entry.FullName}` should be compressed!");
+				Assert.AreNotEqual (CompressionMethod.Store, entry.CompressionMethod, $"`{entry.FullName}` should be compressed!");
 				Assert.AreNotEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be compressed!");
 			} else {
-				Assert.AreEqual (entry.CompressionMethod, CompressionMethod.Store, $"`{entry.FullName}` should be uncompressed!");
+				Assert.AreEqual (CompressionMethod.Store, entry.CompressionMethod, $"`{entry.FullName}` should be uncompressed!");
 				Assert.AreEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be uncompressed!");
 			}
 		}
@@ -246,7 +240,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
@@ -261,6 +255,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.Touch ("Properties\\AndroidManifest.xml");
 				proj.SetProperty ("AndroidStoreUncompressedFileExtensions", ".bar");
 
+				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
 
 				FileAssert.Exists (apk);
@@ -366,16 +361,15 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			string keyfile = Path.Combine (Root, "temp", TestName, "release.keystore");
 			if (File.Exists (keyfile))
 				File.Delete (keyfile);
-			var androidSdk = new AndroidSdkInfo ((level, message) => {
-			}, AndroidSdkPath, AndroidNdkPath);
-			string keyToolPath = Path.Combine (androidSdk.JavaSdkPath, "bin");
+			string keyToolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin");
 			var engine = new MockBuildEngine (Console.Out);
 			string pass = "Cy(nBW~j.&@B-!R_aq7/syzFR!S$4]7R%i6)R!";
+			string alias = "release store";
 			var task = new AndroidCreateDebugKey {
 				BuildEngine = engine,
 				KeyStore = keyfile,
 				StorePass = pass,
-				KeyAlias = "releasestore",
+				KeyAlias = alias,
 				KeyPass = pass,
 				KeyAlgorithm="RSA",
 				Validity=30,
@@ -387,14 +381,10 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
-			if (useApkSigner) {
-				proj.SetProperty ("AndroidUseApkSigner", "true");
-			} else {
-				proj.RemoveProperty ("AndroidUseApkSigner");
-			}
+			proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", keyfile);
-			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", "releasestore");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", alias);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
@@ -406,12 +396,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				Assert.IsTrue (b.Build (proj), "First build failed");
-				if (!Builder.UseDotNet) {
-					// In .NET 5+, there are ILLink warnings
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
-							"First build should not contain warnings!  Contains\n" +
-							string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
-				}
+				b.AssertHasNoWarnings ();
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
@@ -435,12 +420,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
 				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
-				if (!Builder.UseDotNet) {
-					// In .NET 5+, there are ILLink warnings
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
-						"Second build should not contain warnings!  Contains\n" +
-						string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
-				}
+				b.AssertHasNoWarnings ();
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
@@ -518,7 +498,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 
 				// Make sure the AAB is signed
-				var aab = Path.Combine (bin, "UnnamedProject.UnnamedProject-Signed.aab");
+				var aab = Path.Combine (bin, $"{proj.PackageName}-Signed.aab");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"AAB file `{aab}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
 				}
@@ -689,25 +669,14 @@ namespace App1
 				"Mono.Android.Export.dll",
 				"App1.dll",
 				"FormsViewGroup.dll",
-				"Xamarin.Android.Arch.Core.Common.dll",
 				"Xamarin.Android.Arch.Lifecycle.Common.dll",
-				"Xamarin.Android.Arch.Lifecycle.Runtime.dll",
 				"Xamarin.Android.Support.Compat.dll",
 				"Xamarin.Android.Support.Core.UI.dll",
 				"Xamarin.Android.Support.Core.Utils.dll",
 				"Xamarin.Android.Support.Design.dll",
 				"Xamarin.Android.Support.Fragment.dll",
-				"Xamarin.Android.Support.Media.Compat.dll",
-				"Xamarin.Android.Support.v4.dll",
 				"Xamarin.Android.Support.v7.AppCompat.dll",
-				"Xamarin.Android.Support.Animated.Vector.Drawable.dll",
-				"Xamarin.Android.Support.Vector.Drawable.dll",
-				"Xamarin.Android.Support.Transition.dll",
-				"Xamarin.Android.Support.v7.MediaRouter.dll",
-				"Xamarin.Android.Support.v7.RecyclerView.dll",
-				"Xamarin.Android.Support.Annotations.dll",
 				"Xamarin.Android.Support.v7.CardView.dll",
-				"Xamarin.Android.Support.v7.Palette.dll",
 				"Xamarin.Forms.Core.dll",
 				"Xamarin.Forms.Platform.Android.dll",
 				"Xamarin.Forms.Platform.dll",
@@ -728,7 +697,7 @@ namespace App1
 					Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample should have built.");
 					Assert.IsTrue (ab.Build (app), "App should have built.");
 					var apk = Path.Combine (Root, ab.ProjectDirectory,
-						app.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						app.IntermediateOutputPath, "android", "bin", $"{app.PackageName}.apk");
 					using (var zip = ZipHelper.OpenZip (apk)) {
 						var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
 						var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
@@ -838,7 +807,7 @@ namespace App1
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsTrue (zip.ContainsEntry ("classes.dex"), "Apk should contain classes.dex");
 				}

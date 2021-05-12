@@ -46,8 +46,15 @@ namespace Xamarin.Android.Build.Tests
 				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
 			proj.AndroidClassParser = classParser;
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+					var typeName = "Com.Larvalabs.Svgandroid.SVG";
+					var type = assembly.MainModule.GetType (typeName);
+					Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
+				}
 
 				//A list of properties we check exist in binding projects
 				var properties = new [] {
@@ -128,7 +135,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\android-crop-1.0.1.aar") {
-				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
 			proj.MetadataXml = @"
 				<metadata>
@@ -641,6 +648,43 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				var libraryProjects = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath, "lp");
 				Assert.IsFalse (Directory.EnumerateFiles (libraryProjects, "lint.jar", SearchOption.AllDirectories).Any (),
 					"`lint.jar` should not be extracted!");
+			}
+		}
+
+		/// <summary>
+		/// Tests two .aar files with r-classes.jar
+		/// </summary>
+		[Test]
+		public void AarWithRClassesJar ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib1 = new XamarinAndroidBindingProject {
+				ProjectName = "Library1",
+				AndroidClassParser = "class-parse",
+				Jars = {
+					new AndroidItem.LibraryProjectZip ("Library1.aar") {
+						BinaryContent = () => ResourceData.Library1Aar
+					}
+				},
+			};
+			var lib2 = new XamarinAndroidBindingProject {
+				ProjectName = "Library2",
+				AndroidClassParser = "class-parse",
+				Jars = {
+					new AndroidItem.LibraryProjectZip ("Library2.aar") {
+						BinaryContent = () => ResourceData.Library2Aar
+					}
+				},
+			};
+			var app = new XamarinAndroidApplicationProject ();
+			app.AddReference (lib1);
+			app.AddReference (lib2);
+			using (var lib1Builder = CreateDllBuilder (Path.Combine (path, lib1.ProjectName)))
+			using (var lib2Builder = CreateDllBuilder (Path.Combine (path, lib2.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (lib1Builder.Build (lib1), "Library1 build should have succeeded.");
+				Assert.IsTrue (lib2Builder.Build (lib2), "Library2 build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
 			}
 		}
 	}

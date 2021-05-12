@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using Mono.Options;
@@ -15,6 +16,7 @@ namespace Xamarin.Android.Prepare
 			public bool ShowHelp               { get; set; } = false;
 			public bool DumpProps              { get; set; } = false;
 			public bool NoEmoji                { get; set; } = !Configurables.Defaults.UseEmoji;
+			public bool NoMingwW64             { get; set; } = false;
 			public bool ForceRuntimesBuild     { get; set; } = false;
 			public string? HashAlgorithm       { get; set; }
 			public uint MakeConcurrency        { get; set; } = 0;
@@ -74,6 +76,9 @@ namespace Xamarin.Android.Prepare
 		{
 			Log.SetContext (Context.Instance);
 
+			// Kajabity requires an encoding (iso-8859-4) that does not ship with .NET Core by default.
+			Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
+
 			var optionErrors = new List <string> ();
 			ParsedOptions parsedOptions = new ParsedOptions {
 				AutoProvision         = ParseBoolean (Context.Instance.Properties.GetValue (KnownProperties.AutoProvision)),
@@ -89,6 +94,7 @@ namespace Xamarin.Android.Prepare
 				{"d|dump-properties", "Dump values of all the defined properties to the screen", v => parsedOptions.DumpProps = true },
 				{"j|make-concurrency=", "Number of concurrent jobs for make to run. A positive integer or 0 for the default. Defaults to the number of CPUs/cores", v => parsedOptions.MakeConcurrency = EnsureUInt (v, "Invalid Make concurrency value") },
 				{"no-emoji", "Do not use any emoji characters in the output", v => parsedOptions.NoEmoji = true },
+				{"no-mingw-w64", "Do not install mingw-w64 compiler", v => parsedOptions.NoMingwW64 = true },
 				{"r|run-mode=", $"Specify the execution mode: {GetExecutionModes()}. See documentation for mode descriptions. Default: {Configurables.Defaults.ExecutionMode}", v => parsedOptions.ExecutionMode = ParseExecutionMode (v)},
 				{"f|build-runtimes", $"Build runtimes even if the bundle/archives are available.", v => parsedOptions.ForceRuntimesBuild = true },
 				{"H|hash-algorithm=", "Use the specified hash algorithm instead of the default {Configurables.Defaults.HashAlgorithm}", v => parsedOptions.HashAlgorithm = v?.Trim () },
@@ -130,6 +136,7 @@ namespace Xamarin.Android.Prepare
 
 			Context.Instance.MakeConcurrency       = parsedOptions.MakeConcurrency;
 			Context.Instance.NoEmoji               = parsedOptions.NoEmoji;
+			Context.Instance.NoMingwW64            = parsedOptions.NoMingwW64;
 			Context.Instance.ExecutionMode         = parsedOptions.ExecutionMode;
 			Context.Instance.ForceRuntimesBuild    = parsedOptions.ForceRuntimesBuild;
 			Context.Instance.LoggingVerbosity      = parsedOptions.Verbosity;

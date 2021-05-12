@@ -133,6 +133,8 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public string HomebrewPrefix { get; set; } = String.Empty;
 
+		public virtual bool ProcessIsTranslated => false;
+
 		/// <summary>
 		///   File extension used for ZIP archives
 		/// </summary>
@@ -517,6 +519,11 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return String.Empty;
+		}
+
+		public virtual string AppendExecutableExtension (string programName)
+		{
+			return programName;
 		}
 
 		protected static string FindProgram (string programName, List<string> directories)

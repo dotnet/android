@@ -17,8 +17,6 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
-  <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
-  
   <PropertyGroup>
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>

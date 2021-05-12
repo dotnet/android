@@ -27,6 +27,13 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       $(BuildDependsOn);
       _CompileDex;
       $(_AfterCompileDex);
+    </BuildDependsOn>
+    <!--
+      Outside IDEs: we need to produce an .apk/.aab and sign
+      Inside IDEs: the Install target produces .apk/.aab files & signs
+    -->
+    <BuildDependsOn Condition=" '$(BuildingInsideVisualStudio)' != 'true' ">
+      $(BuildDependsOn);
       _CopyPackage;
       _Sign;
     </BuildDependsOn>
@@ -65,6 +72,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CheckApkPerAbiFlag;
       _LintChecks;
       _IncludeNativeSystemLibraries;
+      _StripFrameworkNativeLibraries;
       _CheckGoogleSdkRequirements;
     </_PrepareBuildApkDependsOnTargets>
   </PropertyGroup>

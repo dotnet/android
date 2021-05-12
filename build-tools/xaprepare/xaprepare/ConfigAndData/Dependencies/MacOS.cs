@@ -8,6 +8,7 @@ namespace Xamarin.Android.Prepare
 		static readonly List<Program> programs = new List<Program> {
 			new HomebrewProgram ("autoconf"),
 			new HomebrewProgram ("automake"),
+			new HomebrewProgram ("ccache"),
 			new HomebrewProgram ("cmake"),
 
 			new HomebrewProgram ("git", new Uri("https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/git.rb"), "/usr/local/bin/git") {
@@ -16,15 +17,8 @@ namespace Xamarin.Android.Prepare
 
 			new HomebrewProgram ("make"),
 
-			new HomebrewProgram ("mingw-w64") {
-				MinimumVersion = "7.0.0_2",
-				MaximumVersion = "7.0.0_3",
-				Pin = true,
-			},
-
 			new HomebrewProgram ("ninja"),
 			new HomebrewProgram ("p7zip", "7za"),
-			new HomebrewProgram ("xamarin/xamarin-android-windeps/mingw-zlib", "xamarin/xamarin-android-windeps", null),
 
 			new MonoPkgProgram ("Mono", "com.xamarin.mono-MDK.pkg", new Uri (Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoDarwinPackageUrl))) {
 				MinimumVersion = Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoRequiredMinimumVersion),
@@ -32,9 +26,17 @@ namespace Xamarin.Android.Prepare
 			},
 		};
 
+		static readonly HomebrewProgram mingw = new HomebrewProgram ("mingw-w64") {
+			MinimumVersion = "7.0.0_2",
+			MaximumVersion = "7.0.0_3",
+			Pin = true,
+		};
+
 		protected override void InitializeDependencies ()
 		{
 			Dependencies.AddRange (programs);
+			if (!Context.Instance.NoMingwW64)
+				Dependencies.Add (mingw);
 		}
 	}
 }

@@ -51,7 +51,7 @@
       <_PackageVersion>$(ProductVersion)</_PackageVersion>
       <_PackageVersionBuild>$(XAVersionCommitCount)</_PackageVersionBuild>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
       <_PackageVersion>$(AndroidPackVersion)</_PackageVersion>
       <_PackageVersionBuild>$(PackVersionCommitCount)</_PackageVersionBuild>
     </PropertyGroup>
@@ -253,8 +253,8 @@
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
     <CheckApiCompatibility
-        ApiCompatPath="$(XAPackagesDir)\microsoft.dotnet.apicompat\5.0.0-beta.20181.7\tools\net472\"
-        CodeGenPath="$(XAPackagesDir)\microsoft.dotnet.genapi\5.0.0-beta.20181.7\tools\net472\"
+        ApiCompatPath="$(XAPackagesDir)\microsoft.dotnet.apicompat\$(MicrosoftDotNetApiCompatPackageVersion)\tools\net472\"
+        CodeGenPath="$(XAPackagesDir)\microsoft.dotnet.genapi\$(MicrosoftDotNetApiCompatPackageVersion)\tools\net472\"
         ApiLevel="$(AndroidFrameworkVersion)"
         LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
         TargetImplementationPath="$(OutputPath)"

@@ -1,0 +1,19 @@
+<Project> 
+  <Import Project="..\..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageType>DotnetPlatform</PackageType>
+    <Authors>Microsoft</Authors>
+    <OutputPath>$(BootstrapOutputDirectory)nuget-unsigned\</OutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- Remove the `<group targetFramework=".NETStandard2.0" />` entry from the .nuspec. -->
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <!-- Ignore TargetFramework reference group related warnings, these are workload packs not functional NuGets. -->
+    <NoWarn>$(NoWarn);NU5128;NU5131</NoWarn>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+
+</Project>

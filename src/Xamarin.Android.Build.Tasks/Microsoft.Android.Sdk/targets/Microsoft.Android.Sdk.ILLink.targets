@@ -9,45 +9,26 @@ This file contains the .NET 5-specific targets to customize ILLink
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <PropertyGroup>
-    <!--
-      Runtime libraries feature switches defaults
-      Available feature switches: https://github.com/dotnet/runtime/blob/master/docs/workflow/trimming/feature-switches.md
-     -->
-    <DebuggerSupport Condition="'$(DebuggerSupport)' == ''">$(AndroidUseDebugRuntime)</DebuggerSupport>
-    <EnableUnsafeUTF7Encoding Condition="'$(EnableUnsafeUTF7Encoding)' == ''">false</EnableUnsafeUTF7Encoding>
-    <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
-    <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
-    <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == ''">true</UseSystemResourceKeys>
-    <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == ''">false</HttpActivityPropagationSupport>
-    <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
-  </PropertyGroup>
-
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
     <ItemGroup>
-      <!-- Mark all assemblies to be linked for AndroidLinkMode=Full -->
-      <ResolvedFileToPublish
-          Update="@(ResolvedFileToPublish)"
-          Condition=" '$(AndroidLinkMode)' == 'Full' and '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.AssetType)' != 'native' "
-          TrimMode="link"
-      />
+      <RuntimeHostConfigurationOption Include="Android.Runtime.AndroidEnvironment.VSAndroidDesignerIsEnabled"
+          Condition="'$(VSAndroidDesigner)' != ''"
+          Value="$(VSAndroidDesigner)"
+          Trim="true" />
       <!-- TODO: remove setting the trim mode here, once the support packages are updated to NET6 and compatability packages not needed -->
       <ResolvedFileToPublish
           Condition=" '$(AndroidLinkMode)' == 'SdkOnly' and ( $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.AndroidX.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Android.Support.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Google.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.GooglePlayServices.')) ) ">
         <TrimMode>link</TrimMode>
       </ResolvedFileToPublish>
       <!-- Mark our entry assembly as a root assembly. -->
-      <TrimmerRootAssembly Include="$(AssemblyName)" />
+      <TrimmerRootAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Filename)' == '$(AssemblyName)' and '%(ResolvedFileToPublish.Extension)' == '.dll' " />
     </ItemGroup>
     <PropertyGroup>
       <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose --deterministic --custom-data XATargetFrameworkDirectories="$(_XATargetFrameworkDirectories)"</_ExtraTrimmerArgs>
-
-      <!-- we don't want to ignore stuff we can't find -->
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --skip-unresolved false</_ExtraTrimmerArgs>
       <_AdditionalTaskAssemblyDirectory>$(XamarinSdkRootDirectory)tools/dotnet-linker/</_AdditionalTaskAssemblyDirectory>
       <_AdditionalTaskAssembly>$(_AdditionalTaskAssemblyDirectory)dotnet-linker.dll</_AdditionalTaskAssembly>
     </PropertyGroup>
@@ -60,13 +41,17 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data ProguardConfiguration="$(_ProguardProjectConfiguration)"</_ExtraTrimmerArgs>
     </PropertyGroup>
     <PropertyGroup
+        Condition=" '$(AndroidLinkResources)' != '' ">
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data AndroidLinkResources="$(AndroidLinkResources)"</_ExtraTrimmerArgs>
+    </PropertyGroup>
+    <PropertyGroup
         Condition=" '$(LinkerDumpDependencies)' == 'true' ">
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --dump-dependencies"</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs>--dump-dependencies $(_ExtraTrimmerArgs)"</_ExtraTrimmerArgs>
     </PropertyGroup>
     <ItemGroup>
       <!-- add our custom steps -->
       <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll">
-        <BeforeStep>LoadReferencesStep</BeforeStep>
+        <BeforeStep>MarkStep</BeforeStep>
         <Type>Microsoft.Android.Sdk.ILLink.SetupStep</Type>
       </_TrimmerCustomSteps>
     </ItemGroup>

@@ -28,6 +28,24 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[DebuggerHidden]
+		public static void AssertTargetIsSkipped (this DotNetCLI dotnet, string target, int? occurrence = null)
+		{
+			if (occurrence != null)
+				Assert.IsTrue (dotnet.IsTargetSkipped (target), $"The target {target} should have been skipped. ({occurrence})");
+			else
+				Assert.IsTrue (dotnet.IsTargetSkipped (target), $"The target {target} should have been skipped.");
+		}
+
+		[DebuggerHidden]
+		public static void AssertTargetIsNotSkipped (this DotNetCLI dotnet, string target, int? occurrence = null)
+		{
+			if (occurrence != null)
+				Assert.IsFalse (dotnet.IsTargetSkipped (target), $"The target {target} should have *not* been skipped. ({occurrence})");
+			else
+				Assert.IsFalse (dotnet.IsTargetSkipped (target), $"The target {target} should have *not* been skipped.");
+		}
+
+		[DebuggerHidden]
 		public static void AssertTargetIsPartiallyBuilt (this BuildOutput output, string target, int? occurrence = null)
 		{
 			if (occurrence != null)
@@ -70,6 +88,18 @@ namespace Xamarin.Android.Build.Tests
 				var actual = reader.ReadToEnd ();
 				Assert.AreEqual (contents, actual, $"{archivePath} should contain {contents}");
 			}
+		}
+
+		[DebuggerHidden]
+		public static void AssertHasNoWarnings (this ProjectBuilder builder)
+		{
+			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
+		}
+
+		[DebuggerHidden]
+		public static void AssertHasNoWarnings (this DotNetCLI dotnet)
+		{
+			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), $"{dotnet.BuildLogFile} should have no MSBuild warnings.");
 		}
 	}
 }

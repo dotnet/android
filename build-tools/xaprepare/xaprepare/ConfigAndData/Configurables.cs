@@ -15,32 +15,32 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string JetBrainsOpenJDK11Version = "11.0.7";
-		const string JetBrainsOpenJDK11Release = "944.14";
-		static readonly string JetBrainsOpenJDK11DownloadVersion = JetBrainsOpenJDK11Version.Replace ('.', '_');
+		const string MicrosoftOpenJDK11Version      = "11.0.10";
+		const string MicrosoftOpenJDK11Release      = "9.1";
+		const string MicrosoftOpenJDK11RootDirName  = "jdk-11.0.10+9";
+		const string MicrosoftOpenJDK11DirVersion   = MicrosoftOpenJDK11RootDirName + ".1";
+		const string MicrosoftOpenJDK11FileVersion  = "11.0.10.9";
 
-		const string JetBrainsOpenJDK8VersionMinor = "8";
-		const string JetBrainsOpenJDK8VersionRevision = "202";
-		const string JetBrainsOpenJDK8VersionFull = "1." + JetBrainsOpenJDK8VersionMinor + ".0." + JetBrainsOpenJDK8VersionRevision;
-		const string JetBrainsOpenJDK8Release = "1483.37";
-		static readonly string JetBrainsOpenJDK8DownloadVersion = $"{JetBrainsOpenJDK8VersionMinor}u{JetBrainsOpenJDK8VersionRevision}";
-
-		const string CorrettoDistVersion = "8.242.08.1";
-		const string CorrettoUrlPathVersion = CorrettoDistVersion;
+		const string AdoptOpenJDKUpdate = "282";
+		const string AdoptOpenJDKBuild = "b08";
+		const string AdoptOpenJDKRelease = "8.0"; // build_number.0
+		static readonly string AdoptOpenJDKUrlVersion = $"8u{AdoptOpenJDKUpdate}{AdoptOpenJDKBuild}";
+		static readonly string AdoptOpenJDKTag = $"jdk8u{AdoptOpenJDKUpdate}-{AdoptOpenJDKBuild}";
+		static readonly string AdoptOpenJDKVersion = $"1.8.0.{AdoptOpenJDKUpdate}";
 
 		static Context ctx => Context.Instance;
 
 		public static partial class Urls
 		{
-			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-linux-x64-b1483.37.tar.gz
-			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-osx-x64-b1483.37.tar.gz
-			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-windows-x64-b1483.37.tar.gz
-			public static readonly Uri JetBrainsOpenJDK8 = new Uri ($"https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-{JetBrainsOpenJDK8DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK8Release}.tar.gz");
+			// https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u282-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u282b08.tar.gz
+			// https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u282-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u282b08.tar.gz
+			// https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u282-b08/OpenJDK8U-jdk_x64_windows_hotspot_8u282b08.zip
+			public static readonly Uri AdoptOpenJDK8 = new Uri ($"https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/{AdoptOpenJDKTag}/OpenJDK8U-jdk_{AdoptOpenJDKOperatingSystem}_hotspot_{AdoptOpenJDKUrlVersion}.{AdoptOpenJDKArchiveExtension}");
 
-			// https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-11_0_7-linux-x64-b944.14.tar.gz
-			// https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-11_0_7-osx-x64-b944.14.tar.gz
-			// https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-11_0_7-windows-x64-b944.14.tar.gz
-			public static readonly Uri JetBrainsOpenJDK11 = new Uri ($"https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-{JetBrainsOpenJDK11DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK11Release}.tar.gz");
+			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/linux/x64/microsoft-jdk-11.0.10.9-linux-x64.tar.gz
+			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/macOS/x64/microsoft-jdk-11.0.10.9-macOS-x64.tar.gz
+			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/windows/x64/microsoft-jdk-11.0.10.9-windows-x64.zip
+			public static readonly Uri MicrosoftOpenJDK11 = new Uri ($"https://msopenjdk.azureedge.net/jdk11u/{MicrosoftOpenJDK11DirVersion}/{MicrosoftOpenJDKOperatingSystem}/microsoft-jdk-{MicrosoftOpenJDK11FileVersion}-{MicrosoftOpenJDKOperatingSystem.Replace ('/', '-')}.{MicrosoftOpenJDKFileExtension}");
 
 			/// <summary>
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>
@@ -58,13 +58,15 @@ namespace Xamarin.Android.Prepare
 
 			public static readonly string JdkFolder                        = "jdk-11";
 
-			public static readonly Version JetBrainsOpenJDK11Version = new Version (Configurables.JetBrainsOpenJDK11Version);
-			public static readonly Version JetBrainsOpenJDK11Release = new Version (Configurables.JetBrainsOpenJDK11Release);
+			public static readonly Version MicrosoftOpenJDK11Version = new Version (Configurables.MicrosoftOpenJDK11Version);
+			public static readonly Version MicrosoftOpenJDK11Release = new Version (Configurables.MicrosoftOpenJDK11Release);
+			public static readonly string  MicrosoftOpenJDK11RootDirName   = Configurables.MicrosoftOpenJDK11RootDirName;
 
-			public static readonly Version JetBrainsOpenJDK8Version = new Version (Configurables.JetBrainsOpenJDK8VersionFull);
-			public static readonly Version JetBrainsOpenJDK8Release = new Version (Configurables.JetBrainsOpenJDK8Release);
+			public static readonly Version AdoptOpenJDK8Version     = new Version (Configurables.AdoptOpenJDKVersion);
+			public static readonly Version AdoptOpenJDK8Release     = new Version (Configurables.AdoptOpenJDKRelease);
+			public static readonly string  AdoptOpenJDK8RootDirName = Configurables.AdoptOpenJDKTag;
 
-			public const string DotNetTestRuntimeVersion                   = "3.1.3";
+			public const string DotNetTestRuntimeVersion                   = "3.1.11";
 
 			// Mono runtimes
 			public const string DebugFileExtension                         = ".pdb";
@@ -266,6 +268,12 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public static readonly List <string> BuildStatusBundleExclude = new List <string> {
 			};
+
+			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
+				new NDKTool (name: "as"),
+				new NDKTool (name: "ld.gold", destinationName: "ld"),
+				new NDKTool (name: "strip"),
+			};
 		}
 
 		public static partial class Paths
@@ -312,10 +320,11 @@ namespace Xamarin.Android.Prepare
 
 			public static string TestBinDir                          => GetCachedPath (ref testBinDir, ()                          => Path.Combine (Configurables.Paths.BinDirRoot, $"Test{ctx.Configuration}"));
 			public static string BinDir                              => GetCachedPath (ref binDir, ()                              => Path.Combine (Configurables.Paths.BinDirRoot, ctx.Configuration));
-			public static string NetCoreBinDir                       => GetCachedPath (ref netCoreBinDir, ()                       => Path.Combine (Configurables.Paths.BinDirRoot, $"{ctx.Configuration}-netcoreapp3.1"));
+			public static string NetCoreBinDir                       => GetCachedPath (ref netCoreBinDir, ()                       => Path.Combine (Configurables.Paths.BinDirRoot, $"{ctx.Configuration}-net6.0"));
 			public static string BuildBinDir                         => GetCachedPath (ref buildBinDir, ()                         => Path.Combine (Configurables.Paths.BinDirRoot, $"Build{ctx.Configuration}"));
 			public static string MingwBinDir                         => GetCachedPath (ref mingwBinDir, ()                         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidMxeFullPath), "bin"));
 			public static string ProfileAssembliesProjitemsPath      => GetCachedPath (ref profileAssembliesProjitemsPath, ()      => Path.Combine (BuildBinDir, "ProfileAssemblies.projitems"));
+			public static string ConfigurationPropsGeneratedPath     => GetCachedPath (ref configurationPropsGeneratedPath, ()     => Path.Combine (BuildBinDir, "Configuration.Generated.props"));
 
 			// Mono Runtimes
 			public static string MonoAndroidFrameworksSubDir         = Path.Combine ("xbuild-frameworks", "MonoAndroid");
@@ -341,7 +350,7 @@ namespace Xamarin.Android.Prepare
 			public static string Mingw32CmakePath                    => GetCachedPath (ref mingw32CmakePath, ()                    => Path.Combine (BuildBinDir, "mingw-32.cmake"));
 			public static string Mingw64CmakePath                    => GetCachedPath (ref mingw64CmakePath, ()                    => Path.Combine (BuildBinDir, "mingw-64.cmake"));
 
-			// JetBrains OpenJDK
+			// AdoptOpenJDK
 			public static string OldOpenJDKInstallDir                => GetCachedPath (ref oldOpenJDKInstallDir, ()                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
 			public static string OpenJDK8InstallDir                  => GetCachedPath (ref openJDK8InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-1.8"));
 			public static string OpenJDK8CacheDir                    => GetCachedPath (ref openJDK8CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
@@ -360,12 +369,29 @@ namespace Xamarin.Android.Prepare
 			public static string MonoArchiveLocalPath                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveFileName);
 			public static string MonoArchiveWindowsLocalPath         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveWindowsFileName);
 
+			// .NET 6
+			public static string NetcoreAppRuntimeAndroidARM         => GetCachedPath (ref netcoreAppRuntimeAndroidARM, () => GetNetcoreAppRuntimePath (ctx, "arm"));
+			public static string NetcoreAppRuntimeAndroidARM64       => GetCachedPath (ref netcoreAppRuntimeAndroidARM64, () => GetNetcoreAppRuntimePath (ctx, "arm64"));
+			public static string NetcoreAppRuntimeAndroidX86         => GetCachedPath (ref netcoreAppRuntimeAndroidX86, () => GetNetcoreAppRuntimePath (ctx, "x86"));
+			public static string NetcoreAppRuntimeAndroidX86_64      => GetCachedPath (ref netcoreAppRuntimeAndroidX86_64, () => GetNetcoreAppRuntimePath (ctx, "x64"));
+
+			// CMake
+			public static string CmakeMSBuildPropsName               = "cmake-config.props";
+			public static string CmakeShellScriptsPropsName          = "cmake-config.sh";
+			public static string CmakeMonodroidTargets               = "cmake-monodroid.targets";
+			public static string MonodroidSourceDir                  => GetCachedPath (ref monodroidSourceDir, () => Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "monodroid"));
+
 			// Other
-			public static string AndroidToolchainBinDirectory => EnsureAndroidToolchainBinDirectories ();
+			public static string AndroidNdkDirectory                 => ctx.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
+			public static string AndroidToolchainRootDirectory       => GetCachedPath (ref androidToolchainRootDirectory,       () => Path.Combine (AndroidNdkDirectory, "toolchains", "llvm", "prebuilt", NdkToolchainOSTag));
+			public static string AndroidToolchainBinDirectory        => GetCachedPath (ref androidToolchainBinDirectory,        () => Path.Combine (AndroidToolchainRootDirectory, "bin"));
+			public static string AndroidToolchainSysrootLibDirectory => GetCachedPath (ref androidToolchainSysrootLibDirectory, () => Path.Combine (AndroidToolchainRootDirectory, "sysroot", "usr", "lib"));
+			public static string WindowsBinutilsInstallDir           => GetCachedPath (ref windowsBinutilsInstallDir,           () => Path.Combine (InstallMSBuildDir, "ndk"));
+			public static string HostBinutilsInstallDir              => GetCachedPath (ref hostBinutilsInstallDir,              () => Path.Combine (InstallMSBuildDir, ctx.Properties.GetRequiredValue (KnownProperties.HostOS), "ndk"));
 
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
 			public static string XAInstallPrefix                => ctx.Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
-			public static string XAPackagesDir                  => ctx.Properties.GetRequiredValue (KnownProperties.XAPackagesDir);
+			public static string XAPackagesDir                  = DetermineNugetPackagesDir (ctx);
 			public static string MonoSourceFullPath             => ctx.Properties.GetRequiredValue (KnownProperties.MonoSourceFullPath);
 			public static string MonoSdksTpnPath                => GetCachedPath (ref monoSdksTpnPath, ()         => Path.Combine (MonoSDKSOutputDir, "android-tpn"));
 			public static string MonoSdksTpnExternalPath        => GetCachedPath (ref monoSdksTpnExternalPath, () => Path.Combine (MonoSdksTpnPath, "external"));
@@ -373,6 +399,28 @@ namespace Xamarin.Android.Prepare
 				var path = Path.Combine (MonoSdksTpnExternalPath, "llvm-project", "llvm");
 				return Directory.Exists (path) ? path : Path.Combine (MonoSdksTpnExternalPath, "llvm");
 			});
+
+			static string GetNetcoreAppRuntimePath (Context ctx, string androidTarget)
+			{
+				return Path.Combine (
+					XAPackagesDir,
+					$"microsoft.netcore.app.runtime.mono.android-{androidTarget}",
+					ctx.BundledPreviewRuntimePackVersion,
+					"runtimes",
+					$"android-{androidTarget}"
+				);
+			}
+
+			static string DetermineNugetPackagesDir (Context ctx)
+			{
+				return Path.GetFullPath (
+					Path.Combine (
+						ctx.Properties.GetRequiredValue (KnownProperties.PkgXamarin_LibZipSharp),
+						"..",
+						".."
+					)
+				);
+			}
 
 			static string EnsureAndroidToolchainBinDirectories ()
 			{
@@ -398,7 +446,9 @@ namespace Xamarin.Android.Prepare
 			static string? binDir;
 			static string? netCoreBinDir;
 			static string? monoSDKsOutputDir;
+			static string? androidToolchainRootDirectory;
 			static string? androidToolchainBinDirectory;
+			static string? androidToolchainSysrootLibDirectory;
 			static string? monoProfileDir;
 			static string? monoProfileToolsDir;
 			static string? bclTestsDestDir;
@@ -436,6 +486,14 @@ namespace Xamarin.Android.Prepare
 			static string? openJDK8InstallDir,  openJDK11InstallDir;
 			static string? openJDK8CacheDir,    openJDK11CacheDir;
 			static string? oldOpenJDKInstallDir;
+			static string? configurationPropsGeneratedPath;
+			static string? windowsBinutilsInstallDir;
+			static string? hostBinutilsInstallDir;
+			static string? netcoreAppRuntimeAndroidARM;
+			static string? netcoreAppRuntimeAndroidARM64;
+			static string? netcoreAppRuntimeAndroidX86;
+			static string? netcoreAppRuntimeAndroidX86_64;
+			static string? monodroidSourceDir;
 		}
 	}
 }

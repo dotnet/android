@@ -10,7 +10,9 @@
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <ContentTargetFolders>content</ContentTargetFolders>
-    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
+    <OutputPath>..\..\bin\Build$(Configuration)\nuget-unsigned\</OutputPath>
+    <!-- Remove the `<group targetFramework=".NETStandard2.0" />` entry from the .nuspec. -->
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

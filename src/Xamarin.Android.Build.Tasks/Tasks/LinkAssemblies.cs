@@ -15,6 +15,7 @@ using ML = Mono.Linker;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -54,6 +55,8 @@ namespace Xamarin.Android.Tasks
 		public bool PreserveJniMarshalMethods { get; set; }
 
 		public bool Deterministic { get; set; }
+
+		public bool LinkResources { get; set; }
 
 		IEnumerable<AssemblyDefinition> GetRetainAssemblies (DirectoryAssemblyResolver res)
 		{
@@ -105,6 +108,7 @@ namespace Xamarin.Android.Tasks
 			options.AddKeepAlives = AddKeepAlives;
 			options.PreserveJniMarshalMethods = PreserveJniMarshalMethods;
 			options.DeterministicOutput = Deterministic;
+			options.LinkResources = LinkResources;
 
 			var skiplist = new List<string> ();
 

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -22,7 +23,7 @@ namespace Xamarin.Android.Tasks
 				var key = new Tuple<string, string> (nameof (WriteLockFile), path); // Use the full path as part of the key
 
 				// Check if already registered, for sanity
-				var existing = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.Build) as DeleteFileAfterBuild;
+				var existing = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<DeleteFileAfterBuild> (key, RegisteredTaskObjectLifetime.Build);
 				if (existing == null) {
 					if (File.Exists (path)) {
 						Log.LogCodedWarning ("XA5302", Properties.Resources.XA5302, path);
@@ -31,7 +32,7 @@ namespace Xamarin.Android.Tasks
 						File.WriteAllText (path, "");
 					}
 
-					BuildEngine4.RegisterTaskObject (key, new DeleteFileAfterBuild (path), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+					BuildEngine4.RegisterTaskObjectAssemblyLocal (key, new DeleteFileAfterBuild (path), RegisteredTaskObjectLifetime.Build);
 				} else {
 					Log.LogDebugMessage ("Lock file was created earlier in the build.");
 				}

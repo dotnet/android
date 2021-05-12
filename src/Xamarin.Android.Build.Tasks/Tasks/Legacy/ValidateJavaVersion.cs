@@ -2,6 +2,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 using System.Text.RegularExpressions;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks.Legacy
 {

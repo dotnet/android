@@ -20,6 +20,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string          AndroidSdkHome  {get; set;}
 		public                  string          Port            {get; set;}
 		public                  string          ImageName       {get; set;} = "XamarinAndroidTestRunner64";
+		public			string		Arguments	{get; set;}
 		public                  string          ToolPath        {get; set;}
 		public                  string          ToolExe         {get; set;}
 
@@ -62,7 +63,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				return;
 
 			var port = string.IsNullOrEmpty (Port) ? "" : $" -port {Port}";
-			var arguments = $"-verbose -avd {ImageName}{port} -cache-size 512";
+			var arguments = $"{Arguments ?? string.Empty} -verbose -no-boot-anim -no-audio -no-snapshot -cache-size 512 -timezone \"Etc/UTC\" -avd {ImageName}{port}";
 			Log.LogMessage (MessageImportance.Low, $"Tool {emulator} execution started with arguments: {arguments}");
 			var psi = new ProcessStartInfo () {
 				FileName                = emulator,
@@ -115,8 +116,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					Log.LogError ($"Emulator failed to start: `{e.Data}`. Please try again?");
 					sawError.Set ();
 				}
+				// The following may not be fatal:
+				// [emulator stderr] eglMakeCurrent failed in binding subwindow!
 				if (e.Data.IndexOf ("ERROR:", StringComparison.Ordinal) >= 0 ||
-						e.Data.IndexOf (" failed ", StringComparison.Ordinal) >= 0) {
+						(e.Data.IndexOf (" failed ", StringComparison.Ordinal) >= 0 && e.Data.IndexOf ("eglMakeCurrent", StringComparison.Ordinal) == -1)) {
 					Log.LogError ($"Emulator failed to start: {e.Data}");
 					sawError.Set ();
 				}

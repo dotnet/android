@@ -5,6 +5,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -55,7 +56,7 @@ namespace Xamarin.Android.Tasks
 			var compiledArchive = Path.Combine (FlatArchivesDirectory, "compiled.flata");
 			if (File.Exists (compiledArchive)) {
 				Log.LogDebugMessage ($"Coping: {compiledArchive} to {outDirInfo.FullName}");
-				MonoAndroidHelper.CopyIfChanged (compiledArchive, Path.Combine (outDirInfo.FullName, "compiled.flata"));
+				Files.CopyIfChanged (compiledArchive, Path.Combine (outDirInfo.FullName, "compiled.flata"));
 			}
 
 			if (AndroidAssets != null) {
@@ -64,7 +65,7 @@ namespace Xamarin.Android.Tasks
 					Directory.CreateDirectory (dstsub);
 				foreach (var item in AndroidAssets) {
 					var path = MonoAndroidHelper.GetRelativePathForAndroidAsset (MonoAndroidAssetsPrefix, item);
-					MonoAndroidHelper.CopyIfChanged (item.ItemSpec, Path.Combine (dstsub, path));
+					Files.CopyIfChanged (item.ItemSpec, Path.Combine (dstsub, path));
 				}
 			}
 			// resources folders are converted to the structure that aapt accepts.
@@ -74,7 +75,7 @@ namespace Xamarin.Android.Tasks
 					Directory.CreateDirectory (dstsub);
 				foreach (var file in Directory.GetFiles (srcsub)) {
 					var filename = Path.GetFileName (file);
-					MonoAndroidHelper.CopyIfChanged (file, Path.Combine (dstsub, Path.GetFileName (file)));
+					Files.CopyIfChanged (file, Path.Combine (dstsub, Path.GetFileName (file)));
 				}
 			}
 			if (RemovedAndroidResourceFiles != null) {
@@ -89,10 +90,10 @@ namespace Xamarin.Android.Tasks
 			}
 			if (AndroidJavaSources != null)
 				foreach (var item in AndroidJavaSources)
-					MonoAndroidHelper.CopyIfChanged (item.ItemSpec, Path.Combine (outDirInfo.FullName, item.ItemSpec));
+					Files.CopyIfChanged (item.ItemSpec, Path.Combine (outDirInfo.FullName, item.ItemSpec));
 			if (AndroidJavaLibraries != null)
 				foreach (var item in AndroidJavaLibraries)
-					MonoAndroidHelper.CopyIfChanged (item.ItemSpec, Path.Combine (outDirInfo.FullName, item.ItemSpec));
+					Files.CopyIfChanged (item.ItemSpec, Path.Combine (outDirInfo.FullName, item.ItemSpec));
 			
 			var nameCaseMap = new StringWriter ();
 

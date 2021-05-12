@@ -89,7 +89,8 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			XASdkProject proj;
-			proj = new XASdkProject ();
+			proj = new XASdkProject () {
+			};
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 

@@ -20,8 +20,8 @@ namespace Xamarin.Android.Prepare
 
 			Steps.Add (new Step_ShowEnabledRuntimes ());
 			Steps.Add (new Step_InstallDotNetPreview ());
-			Steps.Add (new Step_InstallJetBrainsOpenJDK8 ());
-			Steps.Add (new Step_InstallJetBrainsOpenJDK11 ());
+			Steps.Add (new Step_InstallAdoptOpenJDK8 ());
+			Steps.Add (new Step_InstallMicrosoftOpenJDK11 ());
 			Steps.Add (new Step_Android_SDK_NDK ());
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true));
 			Steps.Add (new Step_PrepareProps ());
@@ -31,6 +31,10 @@ namespace Xamarin.Android.Prepare
 			Steps.Add (new Step_DownloadMonoArchive ());
 			AddRequiredOSSpecificSteps (true);
 			Steps.Add (new Step_InstallMonoRuntimes ());
+
+			// The next two steps MUST be after InstallMonoRuntimes above since the latter cleans up the target
+			// directory where the NDK binutils are installed
+			Steps.Add (new Step_InstallNDKBinutils ());
 			Steps.Add (new Step_Get_Windows_Binutils ());
 			Steps.Add (new Step_GenerateCGManifest ());
 

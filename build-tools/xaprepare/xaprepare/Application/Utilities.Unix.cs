@@ -13,6 +13,40 @@ namespace Xamarin.Android.Prepare
 		public static int ConsoleCursorLeft   => Console.CursorLeft;
 		public static int ConsoleWindowHeight => Console.WindowHeight;
 
+		public static string EscapePathSeparators (string path)
+		{
+			return path;
+		}
+
+		public static bool MakeExecutable (string filePath, bool throwOnError = true)
+		{
+			if (String.IsNullOrEmpty (filePath)) {
+				throw new ArgumentException ("must not be null or empty", nameof (filePath));
+			}
+
+			if (!File.Exists (filePath)) {
+				Log.WarningLine ($"Script {filePath} does not exist");
+				return true;
+			}
+
+			int ret = Syscall.chmod (filePath,
+			                         FilePermissions.S_IRGRP | FilePermissions.S_IXGRP |
+			                         FilePermissions.S_IROTH | FilePermissions.S_IXOTH |
+			                         FilePermissions.S_IRUSR | FilePermissions.S_IXUSR | FilePermissions.S_IWUSR
+			);
+
+			if (ret == 0) {
+				return true;
+			}
+
+			string message = $"Failed to make {filePath} executable: {Stdlib.strerror (Stdlib.GetLastError ())}";
+			if (throwOnError) {
+				throw new InvalidOperationException (message);
+			}
+			Log.WarningLine (message);
+			return false;
+		}
+
 		public static void ConsoleSetCursorPosition (int left, int top)
 		{
 			// Console will throw an exception when the cursor coordinates are out of range, but we don't

@@ -15,6 +15,7 @@ namespace Xamarin.Android.Prepare
 			string AndroidNdkVersion       = BuildAndroidPlatforms.AndroidNdkVersion;
 			string AndroidPkgRevision      = BuildAndroidPlatforms.AndroidNdkPkgRevision;
 			string AndroidNdkDirectory     = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
+			string AndroidCmakeUrlPrefix   = Context.Instance.Properties.GetValue (KnownProperties.AndroidCmakeUrlPrefix) ?? String.Empty;
 			string AndroidCmakeVersion     = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
 			string AndroidCmakeVersionPath = GetRequiredProperty (KnownProperties.AndroidCmakeVersionPath);
 			string CommandLineToolsVersion = GetRequiredProperty (KnownProperties.CommandLineToolsVersion);
@@ -61,6 +62,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-28_r04",   apiLevel: "28", pkgRevision: "4"),
 				new AndroidPlatformComponent ("platform-29_r01",   apiLevel: "29", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-30_r01",   apiLevel: "30", pkgRevision: "1"),
+				new AndroidPlatformComponent ("platform-S_r03",    apiLevel: "S",  pkgRevision: "3"),
 
 				new AndroidToolchainComponent ("sources-30_r01",   destDir: Path.Combine ("platforms", $"android-30", "src"), pkgRevision: "1", dependencyType: AndroidToolchainComponentType.BuildDependency),
 
@@ -74,7 +76,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidToolchainComponent ($"{XAPlatformToolsPackagePrefix}platform-tools_r{XAPlatformToolsVersion}-{osTag}", destDir: "platform-tools", pkgRevision: XAPlatformToolsVersion),
 				new AndroidToolchainComponent ($"sdk-tools-{osTag}-4333796",                        destDir: "tools", pkgRevision: "26.1.1"),
 				new AndroidToolchainComponent ($"emulator-{osTag}-{EmulatorVersion}",               destDir: "emulator", pkgRevision: EmulatorPkgRevision, dependencyType: AndroidToolchainComponentType.EmulatorDependency),
-				new AndroidToolchainComponent ($"cmake-{AndroidCmakeVersion}-{osTag}-x86_64",       destDir: Path.Combine ("cmake", AndroidCmakeVersionPath), isMultiVersion: true, noSubdirectory: true, pkgRevision: "3.10.2"),
+				new AndroidToolchainComponent ($"{AndroidCmakeUrlPrefix}cmake-{AndroidCmakeVersion}-{osTag}",       destDir: Path.Combine ("cmake", AndroidCmakeVersionPath), isMultiVersion: true, noSubdirectory: true, pkgRevision: "3.18.1"),
 			};
 		}
 

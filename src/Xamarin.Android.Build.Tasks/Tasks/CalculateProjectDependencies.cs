@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -27,8 +28,6 @@ namespace Xamarin.Android.Tasks
 		public string BuildToolsVersion { get; set; }
 
 		public string PlatformToolsVersion { get; set; }
-
-		public string ToolsVersion { get; set; }
 
 		public string NdkVersion { get; set; }
 
@@ -66,9 +65,6 @@ namespace Xamarin.Android.Tasks
 			}
 			if (!string.IsNullOrEmpty (CommandLineToolsVersion)) {
 				dependencies.Add (CreateAndroidDependency ($"cmdline-tools/{CommandLineToolsVersion}", CommandLineToolsVersion));
-			}
-			if (!string.IsNullOrEmpty (ToolsVersion)) {
-				dependencies.Add (CreateAndroidDependency ("tools", ToolsVersion));
 			}
 			if (!string.IsNullOrEmpty (NdkVersion) && NdkRequired) {
 				dependencies.Add (CreateAndroidDependency ("ndk-bundle", NdkVersion));

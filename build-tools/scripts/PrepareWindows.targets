@@ -3,7 +3,8 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
-    <_XAPrepareExe>$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe</_XAPrepareExe>
+    <_XAPrepareExe Condition=" '$(MSBuildRuntimeType)' != 'Core' ">"$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe"</_XAPrepareExe>
+    <_XAPrepareExe Condition=" '$(MSBuildRuntimeType)' == 'Core' ">"$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\netcoreapp3.1\xaprepare.dll"</_XAPrepareExe>
     <_XAPrepareStandardArgs Condition=" '$(RunningOnCI)' == 'true' ">--no-emoji --run-mode=CI -v:d</_XAPrepareStandardArgs>
     <_XAPrepareStandardArgs Condition=" '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
   </PropertyGroup>
@@ -13,7 +14,16 @@
   </Target>
   <Target Name="PrepareExternal"
           DependsOnTargets="_BuildXAPrepare">
-    <Exec Command="$(_XAPrepareExe) -s:PrepareExternalGitDependencies $(_XAPrepareStandardArgs)" />
+    <Exec Command="$(ManagedToolInvocationRuntime)$(_XAPrepareExe) -s:PrepareExternalGitDependencies $(_XAPrepareStandardArgs)" />
+  </Target>
+  <Target Name="BuildExternal"
+          DependsOnTargets="PrepareExternal">
+    <ItemGroup>
+      <_MonodroidBuildProps Include="-p:Configuration=$(Configuration)" />
+      <_MonodroidBuildProps Include="-p:DebuggingToolsOutputDirectory=$(XAInstallPrefix)xbuild\Xamarin\Android" />
+      <_MonodroidBuildProps Include="-p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild\Novell" />
+    </ItemGroup>
+    <Exec Command="dotnet build &quot;$(XamarinAndroidSourcePath)\external\monodroid\monodroid.proj&quot; @(_MonodroidBuildProps, ' ')" />
   </Target>
   <Target Name="Prepare"
           DependsOnTargets="_BuildXAPrepare">
@@ -21,7 +31,7 @@
         Text="The specified `%24(AndroidToolchainDirectory)` '$(AndroidToolchainDirectory)' contains a space. Android NDK commands do not support this. Please create a Configuration.Override.props file that sets the AndroidToolchainDirectory property to a different path."
         Condition="$(AndroidToolchainDirectory.Contains (' '))"
     />
-    <Exec Command="$(_XAPrepareExe) $(_XAPrepareStandardArgs) -a" WorkingDirectory="$(_TopDir)" />
+    <Exec Command="$(ManagedToolInvocationRuntime)$(_XAPrepareExe) $(_XAPrepareStandardArgs) -a" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="$(_TopDir)\Xamarin.Android.BootstrapTasks.sln" Targets="Restore;Build" />
     <MSBuild Projects="$(_TopDir)\Xamarin.Android.sln" Targets="Restore" />
   </Target>

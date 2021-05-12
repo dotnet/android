@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Xamarin.Android.Prepare
 {
@@ -25,6 +26,10 @@ After all the issues are fixed, please re-run the bootstrapper.
 		public string Build            { get; }
 		public Version HomebrewVersion { get; private set; }
 		public bool HomebrewErrors     { get; set; }
+
+		bool processIsTranslated;
+
+		public override bool ProcessIsTranslated => processIsTranslated;
 
 		public MacOS (Context context)
 			: base (context)
@@ -52,7 +57,19 @@ After all the issues are fixed, please re-run the bootstrapper.
 				Version = new Version (0, 0, 0);
 			}
 
+			processIsTranslated = GetProcessIsTranslated ();
+
 			Dependencies = new List<Program> ();
+		}
+
+		unsafe bool GetProcessIsTranslated ()
+		{
+			int ret = 0;
+			ulong size = sizeof (int);
+			if (NativeMethods.sysctlbyname ("sysctl.proc_translated", &ret, &size, null, 0) == -1) {
+				return false;
+			}
+			return ret != 0;
 		}
 
 		protected override void PopulateEnvironmentVariables ()
@@ -104,4 +121,10 @@ After all the issues are fixed, please re-run the bootstrapper.
 			Log.WarningLine (HomebrewErrorsAdvice, ConsoleColor.White, showSeverity: false);
 		}
 	};
+
+	partial class NativeMethods {
+		[DllImport ("c")]
+		internal static unsafe extern int sysctlbyname (
+			string name, void* oldp, ulong *oldlenp, void* newp, ulong newlen);
+	}
 }

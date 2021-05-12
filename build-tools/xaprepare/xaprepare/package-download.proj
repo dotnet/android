@@ -1,0 +1,25 @@
+<!--
+***********************************************************************************************
+package-download.proj
+
+Downloads .NET runtime packs using the version specified in $(DotNetRuntimePacksVersion) if set.
+Otherwise, the $(BundledNETCoreAppPackageVersion) version specified in the Microsoft.NET.Sdk that
+is building/restoring this project will be used.  $(BundledNETCoreAppPackageVersion) is set in 
+dotnet\sdk\$(MicrosoftDotnetSdkInternalPackageVersion)\Microsoft.NETCoreSdk.BundledVersions.props
+***********************************************************************************************
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <DotNetRuntimePacksVersion Condition=" '$(DotNetRuntimePacksVersion)' == '' " >$(BundledNETCoreAppPackageVersion)</DotNetRuntimePacksVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-arm" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-arm64" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x86" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x64" Version="[$(DotNetRuntimePacksVersion)]" />
+  </ItemGroup>
+
+</Project>

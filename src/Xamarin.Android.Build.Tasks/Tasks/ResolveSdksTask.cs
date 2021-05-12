@@ -31,6 +31,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using System.Linq;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -44,6 +45,12 @@ namespace Xamarin.Android.Tasks
 		public string [] ReferenceAssemblyPaths { get; set; }
 
 		public string CommandLineToolsVersion { get; set; }
+
+		[Required]
+		public string MinimumSupportedJavaVersion   { get; set; }
+
+		[Required]
+		public string LatestSupportedJavaVersion    { get; set; }
 
 		[Output]
 		public string CommandLineToolsPath { get; set; }
@@ -79,6 +86,11 @@ namespace Xamarin.Android.Tasks
 			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
 			MonoAndroidLibPath  = MonoAndroidHelper.GetOSLibPath () + Path.DirectorySeparatorChar;
 			AndroidBinUtilsPath = MonoAndroidBinPath + "ndk" + Path.DirectorySeparatorChar;
+
+			var minVersion      = Version.Parse (MinimumSupportedJavaVersion);
+			var maxVersion      = Version.Parse (LatestSupportedJavaVersion);
+
+			JavaSdkPath         = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion)?.HomePath;
 
 			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
 

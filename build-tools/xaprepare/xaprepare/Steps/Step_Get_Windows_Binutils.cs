@@ -79,26 +79,32 @@ namespace Xamarin.Android.Prepare
 		protected override async Task<bool> Execute (Context context)
 		{
 			string ndkVersion = BuildAndroidPlatforms.AndroidNdkVersion;
+			string baseArchivePath = $"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin";
 
-			var neededFiles = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-as.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-ld.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-strip.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-as.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-ld.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-strip.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/x86_64-linux-android-as.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/x86_64-linux-android-ld.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/x86_64-linux-android-strip.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-as.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ld.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-strip.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/libwinpthread-1.dll",
+			var neededFiles = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+				{ $"{baseArchivePath}/libwinpthread-1.dll", String.Empty },
 			};
 
-			string destinationDirectory = Path.Combine (Configurables.Paths.InstallMSBuildDir, "ndk");
+			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
+				string archPrefix = kvp.Value;
+				foreach (NDKTool ndkTool in Configurables.Defaults.NDKTools) {
+					string sourcePath = $"{baseArchivePath}/{archPrefix}-{ndkTool.Name}.exe";
+					string destPath;
+
+					if (ndkTool.DestinationName.Length == 0) {
+						destPath = String.Empty;
+					} else {
+						destPath = $"{baseArchivePath}/{archPrefix}-{ndkTool.DestinationName}.exe";
+					}
+
+					neededFiles [sourcePath] = destPath;
+				}
+			}
+
+			string destinationDirectory = Configurables.Paths.WindowsBinutilsInstallDir;
 			int existingFiles = 0;
-			foreach (string f in neededFiles) {
+			foreach (var kvp in neededFiles) {
+				string f = GetDestinationFile (kvp);
 				string file = Path.Combine (destinationDirectory, Path.GetFileName (f));
 				string stampFile = GetStampFile (f, destinationDirectory, ndkVersion);
 				if (File.Exists (file)) {
@@ -112,7 +118,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			if (existingFiles == neededFiles.Count) {
-				Log.StatusLine ("All Windows GAS binaries already downloaded.");
+				Log.StatusLine ("All Windows binutils binaries already downloaded.");
 				return true;
 			}
 
@@ -129,10 +135,16 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		void StampFiles (HashSet<string> neededFiles, string destinationDirectory, string ndkVersion)
+		string GetDestinationFile (KeyValuePair<string, string> kvp)
+		{
+			return kvp.Value.Length == 0 ? kvp.Key : kvp.Value;
+		}
+
+		void StampFiles (Dictionary<string, string> neededFiles, string destinationDirectory, string ndkVersion)
 		{
 			var now = DateTime.UtcNow;
-			foreach (string file in neededFiles) {
+			foreach (var kvp in neededFiles) {
+				string file = GetDestinationFile (kvp);
 				File.WriteAllText (GetStampFile (file, destinationDirectory, ndkVersion), now.ToString ());
 			}
 		}
@@ -142,7 +154,7 @@ namespace Xamarin.Android.Prepare
 			return Path.Combine (destinationDirectory, $"{Path.GetFileName (file)}.{ndkVersion}");
 		}
 
-		async Task<bool> FetchFiles (HashSet<string> neededFiles, string destinationDirectory, Uri url)
+		async Task<bool> FetchFiles (Dictionary<string, string> neededFiles, string destinationDirectory, Uri url)
 		{
 			Utilities.CreateDirectory (destinationDirectory);
 			using (var httpClient = new HttpClient ()) {
@@ -185,9 +197,10 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		async Task<bool> ProcessEntries (HttpClient httpClient, Uri url, EOCD eocd, Stream centralDirectory, HashSet<string> neededFiles, string destinationDirectory)
+		async Task<bool> ProcessEntries (HttpClient httpClient, Uri url, EOCD eocd, Stream centralDirectory, Dictionary<string, string> neededFiles, string destinationDirectory)
 		{
 			long foundEntries = 0;
+			var foundFiles = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 			using (var br = new BinaryReader (centralDirectory)) {
 				long nread = 0;
@@ -201,27 +214,38 @@ namespace Xamarin.Android.Prepare
 						return false;
 					}
 
-					if (!neededFiles.Contains (cdh.FileName))
+					if (!neededFiles.TryGetValue (cdh.FileName, out string destinationFileName))
 						continue;
 
-					if (!await ReadEntry (httpClient, url, cdh, br, destinationDirectory))
+					foundFiles.Add (cdh.FileName);
+
+					if (!await ReadEntry (httpClient, url, cdh, br, destinationDirectory, destinationFileName))
 						return false;
 					foundEntries++;
 				}
 			}
 
 			if (foundEntries < neededFiles.Count) {
-				Log.ErrorLine ($"Could not find all required binaries. Found {foundEntries} out of {neededFiles.Count}");
+				Log.ErrorLine ();
+				Log.ErrorLine ($"Could not find all required binaries. Found {foundEntries} out of {neededFiles.Count}, the missing files are:");
+				foreach (string file in neededFiles.Keys) {
+					if (foundFiles.Contains (file)) {
+						continue;
+					}
+					Log.StatusLine ($"  {Context.Instance.Characters.Bullet} {file} ");
+				}
+
 				return false;
 			}
 
 			return true;
 		}
 
-		async Task<bool> ReadEntry (HttpClient httpClient, Uri url, CDHeader cdh, BinaryReader br, string destinationDirectory)
+		async Task<bool> ReadEntry (HttpClient httpClient, Uri url, CDHeader cdh, BinaryReader br, string destinationDirectory, string destinationFileName)
 		{
 			Context context = Context.Instance;
-			string destFilePath = Path.Combine (destinationDirectory, Path.GetFileName (cdh.FileName));
+			string destFileName = Path.GetFileName (destinationFileName.Length == 0 ? cdh.FileName : destinationFileName);
+			string destFilePath = Path.Combine (destinationDirectory, destFileName);
 			string compressedFilePath = Path.Combine (destinationDirectory, $"{destFilePath}.deflated");
 			Log.Status ($"  {context.Characters.Bullet} {Path.GetFileName (cdh.FileName)} ");
 			Log.Status ($"{context.Characters.RightArrow}", ConsoleColor.Cyan);

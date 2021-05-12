@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -52,7 +53,7 @@ namespace Xamarin.Android.Tasks
 				WriteStructureSize (output, label, size);
 
 				dataOutput.Flush ();
-				MonoAndroidHelper.CopyIfStreamChanged (dataOutput.BaseStream, dataIncludeFile);
+				Files.CopyIfStreamChanged (dataOutput.BaseStream, dataIncludeFile);
 			}
 
 			WriteCompressedAssembliesStructure (output, (uint)assemblies.Count, label);

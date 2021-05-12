@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -47,12 +48,12 @@ namespace Xamarin.Android.Tasks
 		// `java -version` will produce values such as:
 		//  java version "9.0.4"
 		//  java version "1.8.0_77"
-		static readonly Regex JavaVersionRegex = new Regex (@"version ""(?<version>[\d\.]+)(_d+)?[^""]*""");
+		static readonly Regex JavaVersionRegex = new Regex (@"version ""(?<version>[\d\.]+)(_\d+)?[^""]*""");
 
 		// `javac -version` will produce values such as:
 		//  javac 9.0.4
 		//  javac 1.8.0_77
-		static readonly Regex JavacVersionRegex = new Regex (@"(?<version>[\d\.]+)(_d+)?");
+		internal static readonly Regex JavacVersionRegex = new Regex (@"(?<version>[\d\.]+)(_\d+)?");
 
 		bool ValidateJava ()
 		{
@@ -91,6 +92,8 @@ namespace Xamarin.Android.Tasks
 
 		protected Version GetVersionFromTool (string javaExe, Regex versionRegex)
 		{
+			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
+			// because the path to java/javac is the key and the value is a System.Version.
 			var javaTool = Path.Combine (JavaSdkPath, "bin", javaExe);
 			var key = new Tuple<string, string> (nameof (ValidateJavaVersion), javaTool);
 			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as Version;

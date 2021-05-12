@@ -18,8 +18,9 @@
     <EnableDefaultAndroidResourceItems>false</EnableDefaultAndroidResourceItems>
     <EnableDefaultAndroidAssetItems>false</EnableDefaultAndroidAssetItems>
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
+    <PlotDataLabelSuffix>-$(TestsFlavor)NET6</PlotDataLabelSuffix>
     <!-- TODO: Fix excluded tests -->
-    <ExcludeCategories>DotNetIgnore:InetAccess</ExcludeCategories>
+    <ExcludeCategories>DotNetIgnore</ExcludeCategories>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -33,7 +34,7 @@
     <Compile Remove="..\Mono.Data.Sqlite\SqliteTests.cs" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
     <TestApk Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.apk">
       <Package>$(_MonoAndroidTestPackage)</Package>
       <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
@@ -44,6 +45,19 @@
       <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
       <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
     </TestApk>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+    <TestAab Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.aab">
+      <Package>$(_MonoAndroidTestPackage)</Package>
+      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
+      <ResultsPath>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
+      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
+      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
+      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
+      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
+      <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
+    </TestAab>
   </ItemGroup>
 
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />

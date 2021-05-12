@@ -7,19 +7,21 @@ parameters:
   nunit_categories: ''
   target_framework: 'net472'
   run_extra_tests: false
+  jdkTestFolder: $(XA.Jdk11.Folder)
 
 jobs:
   - job: ${{ parameters.job_name }}
     displayName: MSBuild ${{ parameters.job_suffix }} - macOS-${{ parameters.node_id }}
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
-    variables:
-      UseDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
     steps:
     - template: setup-test-environment.yaml
+      parameters:
+        jdkTestFolder: ${{ parameters.jdkTestFolder }}
 
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -28,7 +30,7 @@ jobs:
 
     - template: run-nunit-tests.yaml
       parameters:
-        useDotNet: $(UseDotNet)
+        useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
         testRunTitle: Xamarin.Android.Build.Tests - macOS-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
         nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
@@ -39,19 +41,21 @@ jobs:
     - ${{ if eq(parameters.run_extra_tests, true) }}:
       - template: run-nunit-tests.yaml
         parameters:
-          useDotNet: $(UseDotNet)
-          testRunTitle: Xamarin.Android.Build.Tests.Commercial - macOS
-          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
-          testResultsFile: TestResult-MSBuildTestsCommercial-macOS-$(XA.Build.Configuration).xml
-          
-      - template: run-nunit-tests.yaml
-        parameters:
-          useDotNet: $(UseDotNet)
+          useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
           testRunTitle: Xamarin.Android.Build.Tests - macOS - No Node
           testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
           nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
           dotNetTestExtraArgs: --filter "TestCategory != Node-1 & TestCategory != Node-2 & TestCategory != Node-3"
           testResultsFile: TestResult-MSBuildTests-macOS-NoNode-$(XA.Build.Configuration).xml
+
+    # Only run these tests on node 2
+    - ${{ if eq(parameters.run_extra_tests, true) }}:
+      - template: run-nunit-tests.yaml
+        parameters:
+          useDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
+          testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Tools.Aidl-Tests.dll
+          testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
 
     - template: upload-results.yaml
       parameters:

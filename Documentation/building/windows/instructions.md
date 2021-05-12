@@ -18,15 +18,7 @@ MSBuild version 15 or later is required.
 
  4. (Optional) [Configure the build](../configuration.md).
 
- 5. (For Microsoft team members only) (Optional) In a [Developer Command
-    Prompt][developer-prompt], prepare external proprietary git
-    dependencies:
-
-        msbuild Xamarin.Android.sln /t:PrepareExternal
-
-    This will configure external proprietary components such as monodroid.
-
- 6. In a [Developer Command Prompt][developer-prompt], prepare the project:
+ 5. In a [Developer Command Prompt][developer-prompt], prepare the project:
 
         msbuild Xamarin.Android.sln /t:Prepare
 
@@ -34,22 +26,34 @@ MSBuild version 15 or later is required.
     `git submodule update`, download NuGet dependencies, and other
     "preparatory" and pre-build tasks that need to be performed.
 
- 7. Build the project:
+ 6. Build the project:
 
         msbuild Xamarin.Android.sln
+
+ 7. In order to use the in-tree Xamarin.Android, build xabuild:
+ 
+         msbuild tools/xabuild/xabuild.csproj
+
+ 8. (For Microsoft team members only - Optional) In a [Developer Command
+    Prompt][developer-prompt], build external proprietary git
+    dependencies:
+
+        msbuild Xamarin.Android.sln /t:BuildExternal
+
+    This will clone and build external proprietary components such as `monodroid`.
 
 After the solution has built successfully, you can [use your
 build][using-your-build] to build Xamarin.Android application and library
 projects.  Note that by default `Xamarin.Android.sln` only builds support for
 the `$(TargetFrameworkVersion)` specified in the `$(AndroidFrameworkVersion)`
-property of the [`Configuration.props`][configprops-master] file (`v11.0` when
+property of the [`Configuration.props`][configprops-main] file (`v11.0` when
 this guide was last updated), so you will need to ensure that your application
 and library projects are configured to use that particular target framework
 version.
 
 [developer-prompt]: https://docs.microsoft.com/dotnet/framework/tools/developer-command-prompt-for-vs
-[using-your-build]: https://github.com/xamarin/xamarin-android/blob/master/Documentation/workflow/UsingYourBuild.md
-[configprops-master]: https://github.com/xamarin/xamarin-android/blob/master/Configuration.props
+[using-your-build]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/workflow/UsingYourBuild.md
+[configprops-main]: https://github.com/xamarin/xamarin-android/blob/main/Configuration.props
 
 ## Windows Build Notes
 
@@ -97,11 +101,11 @@ the .NET 6 packages with:
 
     msbuild Xamarin.Android.sln /t:PackDotNet
 
-Several `.nupkg` files will be output in `.\bin\BuildDebug\nupkgs`,
+Several `.nupkg` files will be output in `.\bin\BuildDebug\nuget-unsigned`,
 but this is only part of the story. Your local
 `%USERPROFILE%\android-toolchain\dotnet\packs` directory will be
 populated with a local Android "workload" in
-`Microsoft.Android.Sdk.win-x64` matching your operating system.
+`Microsoft.Android.Sdk.$(HostOS)` matching your operating system.
 
 To use the Android workload, you will need a `NuGet.config`:
 
@@ -110,12 +114,12 @@ To use the Android workload, you will need a `NuGet.config`:
 <configuration>
   <packageSources>
     <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
-    <add key="local-xa" value="C:\full\path\to\bin\BuildDebug\nupkgs" />
+    <add key="local-xa" value="C:\full\path\to\bin\BuildDebug\nuget-unsigned" />
   </packageSources>
 </configuration>
 ```
 
-The local package source in the `bin\BuildDebug\nupkgs` directory is
+The local package source in the `bin\BuildDebug\nuget-unsigned` directory is
 currently needed for the Android runtime packages.
 
 Then use a `.csproj` file such as:

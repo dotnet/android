@@ -32,6 +32,7 @@ BOOTSTRAP_MSBUILD_FLAGS = /t:Restore,Build /binaryLogger:"$(BOOTSTRAP_BUILD_LOG)
 
 all:
 	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) $(SOLUTION)
+	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) tools/xabuild/xabuild.csproj
 
 -include bin/Build$(CONFIGURATION)/rules.mk
 
@@ -135,12 +136,6 @@ uninstall::
 	rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
 topdir  := $(shell pwd)
-
-# Used by External XA Build
-EXTERNAL_XA_PATH=$(topdir)
-EXTERNAL_GIT_PATH=$(topdir)/external
-
--include $(EXTERNAL_GIT_PATH)/monodroid/xa-integration.mk
 
 include build-tools/scripts/BuildEverything.mk
 

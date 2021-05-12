@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
+  <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <Import Project="..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="2.4.5" />
+    <PackageReference Include="MSBuild.StructuredLogger" Version="2.1.303" />
   </ItemGroup>
 
   <ItemGroup>

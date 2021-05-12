@@ -1,4 +1,14 @@
-create-installers: create-pkg create-vsix create-workload-installers
+# If commercial components exist in output, set required variables
+ifneq ("$(wildcard $(topdir)/bin/$(CONFIGURATION)/lib/xamarin.android/xbuild/Xamarin/Android/Xamarin.Android.Common.Debugging.targets)","")
+PKG_LICENSE_EN=$(topdir)/external/monodroid/tools/scripts/License.txt
+USE_COMMERCIAL_INSTALLER_NAME=true
+EXPERIMENTAL=false
+endif
+
+create-installers: create-nupkgs create-pkg create-vsix
+
+create-nupkgs:
+	$(call DOTNET_BINLOG,create-all-packs) -t:CreateAllPacks $(topdir)/build-tools/create-packs/Microsoft.Android.Sdk.proj
 
 create-pkg:
 	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-pkg) /p:Configuration=$(CONFIGURATION) /t:CreatePkg \

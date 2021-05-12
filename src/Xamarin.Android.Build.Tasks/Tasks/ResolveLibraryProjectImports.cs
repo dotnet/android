@@ -9,6 +9,7 @@ using Xamarin.Tools.Zip;
 using Xamarin.Android.Tools;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -98,11 +99,11 @@ namespace Xamarin.Android.Tasks
 				.ToArray ();
 
 			foreach (var directory in ResolvedResourceDirectories) {
-				MonoAndroidHelper.SetDirectoryWriteable (directory.ItemSpec);
+				Files.SetDirectoryWriteable (directory.ItemSpec);
 			}
 
 			foreach (var directory in ResolvedAssetDirectories) {
-				MonoAndroidHelper.SetDirectoryWriteable (directory.ItemSpec);
+				Files.SetDirectoryWriteable (directory.ItemSpec);
 			}
 
 			if (!string.IsNullOrEmpty (CacheFile)) {
@@ -112,14 +113,14 @@ namespace Xamarin.Android.Tasks
 						new XElement ("Jars",
 							Jars.Select(e => new XElement ("Jar", e))),
 						new XElement ("ResolvedResourceDirectories",
-							XDocumentExtensions.ToXElements (ResolvedResourceDirectories, "ResolvedResourceDirectory", knownMetadata)
+							ResolvedResourceDirectories.ToXElements ("ResolvedResourceDirectory", knownMetadata)
 							),
 						new XElement ("ResolvedAssetDirectories", 
-							XDocumentExtensions.ToXElements (ResolvedAssetDirectories, "ResolvedAssetDirectory", knownMetadata)),
+							ResolvedAssetDirectories.ToXElements ("ResolvedAssetDirectory", knownMetadata)),
 						new XElement ("ResolvedEnvironmentFiles",
-							XDocumentExtensions.ToXElements (ResolvedEnvironmentFiles, "ResolvedEnvironmentFile", knownMetadata)),
+							ResolvedEnvironmentFiles.ToXElements ("ResolvedEnvironmentFile", knownMetadata)),
 						new XElement ("ResolvedResourceDirectoryStamps",
-							XDocumentExtensions.ToXElements (ResolvedResourceDirectoryStamps, "ResolvedResourceDirectoryStamp", knownMetadata))
+							ResolvedResourceDirectoryStamps.ToXElements ("ResolvedResourceDirectoryStamp", knownMetadata))
 					));
 				document.SaveIfChanged (CacheFile);
 			}
@@ -146,7 +147,7 @@ namespace Xamarin.Android.Tasks
 			// lets "upgrade" the old directory.
 			string oldPath = Path.GetFullPath (Path.Combine (OutputImportDirectory, "..", "__library_projects__"));
 			if (!OutputImportDirectory.Contains ("__library_projects__") && Directory.Exists (oldPath)) {
-				MonoAndroidHelper.SetDirectoryWriteable (Path.Combine (oldPath, ".."));
+				Files.SetDirectoryWriteable (Path.Combine (oldPath, ".."));
 				Directory.Delete (oldPath, recursive: true);
 			}
 			var outdir = Path.GetFullPath (OutputImportDirectory);
@@ -180,7 +181,7 @@ namespace Xamarin.Android.Tasks
 
 				// Skip already-extracted resources.
 				bool updated = false;
-				string assemblyHash = MonoAndroidHelper.HashFile (assemblyPath);
+				string assemblyHash = Files.HashFile (assemblyPath);
 				string stamp = Path.Combine (outdir, assemblyIdentName + ".stamp");
 				string stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
 				if (assemblyHash == stampHash) {
@@ -222,7 +223,7 @@ namespace Xamarin.Android.Tasks
 						if (name.StartsWith ("__AndroidEnvironment__", StringComparison.OrdinalIgnoreCase)) {
 							var outFile = Path.Combine (outDirForDll, name);
 							using (var stream = pe.GetEmbeddedResourceStream (resource)) {
-								updated |= MonoAndroidHelper.CopyIfStreamChanged (stream, outFile);
+								updated |= Files.CopyIfStreamChanged (stream, outFile);
 							}
 							resolvedEnvironments.Add (new TaskItem (Path.GetFullPath (outFile), new Dictionary<string, string> {
 								{ OriginalFile, assemblyPath }
@@ -232,7 +233,7 @@ namespace Xamarin.Android.Tasks
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {
 							using (var stream = pe.GetEmbeddedResourceStream (resource)) {
 								AddJar (jars, importsDir, name, assemblyPath);
-								updated |= MonoAndroidHelper.CopyIfStreamChanged (stream, Path.Combine (importsDir, name));
+								updated |= Files.CopyIfStreamChanged (stream, Path.Combine (importsDir, name));
 							}
 						}
 						// embedded native libraries
@@ -337,7 +338,7 @@ namespace Xamarin.Android.Tasks
 				string assetsDir = Path.Combine (importsDir, "assets");
 
 				bool updated = false;
-				string aarHash = MonoAndroidHelper.HashFile (aarFile.ItemSpec);
+				string aarHash = Files.HashFile (aarFile.ItemSpec);
 				string stamp = Path.Combine (outdir, aarIdentityName + ".stamp");
 				string stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
 				var aarFullPath = Path.GetFullPath (aarFile.ItemSpec);

@@ -55,11 +55,11 @@ projects.
          See https://github.com/dotnet/sdk/blob/9eeb58e24af894597a534326156d09173d9f0f91/src/Tasks/Microsoft.NET.Build.Tasks/ResolveTargetingPackAssets.cs#L56
     -->
     <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
-      <_ResolveSdksFrameworkRefAssemblyPaths Include="@(ResolvedTargetingPack->'%(Path)\ref\%(TargetFramework)')" Condition=" '@(ResolvedTargetingPack)' == '@(FrameworkReference)' and '%(Identity)' != '' " />
+      <_ResolveSdksFrameworkRefAssemblyPaths Include="@(Reference->'$([System.String]::Copy('%(RootDir)%(Directory)').TrimEnd('\'))')" Condition=" '%(Reference.FrameworkReferenceName)' != '' " />
     </ItemGroup>
     <PropertyGroup>
       <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
-      <_XATargetFrameworkDirectories Condition=" '$(UsingAndroidNETSdk)' == 'True' ">@(_ResolveSdksFrameworkRefAssemblyPaths)</_XATargetFrameworkDirectories>
+      <_XATargetFrameworkDirectories Condition=" '$(UsingAndroidNETSdk)' == 'True' ">@(_ResolveSdksFrameworkRefAssemblyPaths->Distinct())</_XATargetFrameworkDirectories>
     </PropertyGroup>
     <ResolveSdks
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
@@ -67,6 +67,8 @@ projects.
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"
         JavaSdkPath="$(JavaSdkDirectory)"
+        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
+        LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
         ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
       <Output TaskParameter="CommandLineToolsPath"      PropertyName="_AndroidToolsDirectory" />
       <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
@@ -82,6 +84,8 @@ projects.
     </ResolveSdks>
     <ResolveJdkJvmPath
         JavaSdkPath="$(_JavaSdkDirectory)"
+        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
+        LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
         Condition=" '$(DesignTimeBuild)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
       <Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath" />
     </ResolveJdkJvmPath>

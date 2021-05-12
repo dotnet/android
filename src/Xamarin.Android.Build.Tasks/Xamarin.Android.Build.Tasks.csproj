@@ -4,7 +4,7 @@
   <Import Project="..\tools\BuildTasks.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\LocalizationLanguages.projitems" />
-  <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
+  <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
 
   <PropertyGroup>
@@ -50,12 +50,11 @@
     <PackageReference Include="NuGet.Protocol" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="System.CodeDom" Version="4.7.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.7.0" />
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="1.8.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="XliffTasks" Version="1.0.0-beta.20420.1" PrivateAssets="all" />
-    <PackageReference Include="K4os.Compression.LZ4" Version="1.1.11" />
   </ItemGroup>
 
   <ItemGroup>
@@ -367,6 +366,12 @@
     <None Include="startup-xf.aotprofile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(PkgMono_Posix_NETStandard)\runtimes\linux-x64\native\libMonoPosixHelper.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -441,6 +446,7 @@
     <ProjectReference Include="..\bundletool\bundletool.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />

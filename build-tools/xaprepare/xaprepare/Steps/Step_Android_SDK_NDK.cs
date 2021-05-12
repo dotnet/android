@@ -55,7 +55,7 @@ namespace Xamarin.Android.Prepare
 					return false;
 				}
 				WritePackageXmls (sdkRoot);
-				return GatherNDKInfo (context, ndkRoot);
+				return GatherNDKInfo (context);
 			}
 
 			Log.MessageLine ();
@@ -101,7 +101,7 @@ namespace Xamarin.Android.Prepare
 
 			WritePackageXmls (sdkRoot);
 
-			return GatherNDKInfo (context, ndkRoot);
+			return GatherNDKInfo (context);
 		}
 
 		bool AcceptLicenses (Context context, string sdkRoot)
@@ -109,7 +109,6 @@ namespace Xamarin.Android.Prepare
 			string[] sdkManagerPaths = new[]{
 				Path.Combine (sdkRoot, "cmdline-tools", context.Properties [KnownProperties.CommandLineToolsFolder], "bin", "sdkmanager"),
 				Path.Combine (sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager"),
-				Path.Combine (sdkRoot, "tools", "bin", "sdkmanager"),
 			};
 			string sdkManager = "";
 			foreach (var sdkManagerPath in sdkManagerPaths) {
@@ -145,13 +144,13 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		bool GatherNDKInfo (Context context, string ndkRoot)
+		bool GatherNDKInfo (Context context)
 		{
 			// Ignore NDK property setting if not installing the NDK
 			if (!DependencyTypeToInstall.HasFlag (AndroidToolchainComponentType.BuildDependency))
 				return true;
 			else
-				return context.BuildInfo.GatherNDKInfo (context, ndkRoot);
+				return context.BuildInfo.GatherNDKInfo (context);
 		}
 
 		void CheckPackageStatus (Context context, string packageCacheDir, AndroidPackage pkg, List <AndroidPackage> toDownload)

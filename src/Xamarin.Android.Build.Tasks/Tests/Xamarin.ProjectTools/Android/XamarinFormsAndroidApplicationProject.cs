@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Xamarin.ProjectTools
 {
@@ -37,12 +38,11 @@ namespace Xamarin.ProjectTools
 				App_xaml_cs = sr.ReadToEnd ();
 		}
 
-		public XamarinFormsAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
-			: base (debugConfigurationName, releaseConfigurationName)
+		public XamarinFormsAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
+			: base (debugConfigurationName, releaseConfigurationName, packageName)
 		{
 			if (Builder.UseDotNet) {
 				PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
-				this.AddDotNetCompatPackages ();
 			} else {
 				PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
 			}
@@ -63,7 +63,7 @@ namespace Xamarin.ProjectTools
 				TextContent = MainPageXaml,
 			});
 			Sources.Add (new BuildItem.Source ("MainPage.xaml.cs") {
-				TextContent = () => ProcessSourceTemplate (MainPage_xaml_cs),
+				TextContent = () => ProcessSourceTemplate (MainPage),
 			});
 			OtherBuildItems.Add (new BuildItem ("EmbeddedResource", "App.xaml") {
 				TextContent = () => ProcessSourceTemplate (App_xaml),
@@ -73,7 +73,10 @@ namespace Xamarin.ProjectTools
 			});
 
 			MainActivity = default_main_activity_cs;
+			MainPage = MainPage_xaml_cs;
 		}
+
+		public string MainPage { get; set; }
 
 		protected virtual string MainPageXaml () => ProcessSourceTemplate (MainPage_xaml);
 	}

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">  
+  <PropertyGroup>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>2021 Microsoft Corporation</Copyright>
+    <Version>0.0.1</Version>
+    <TargetFramework>net472</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RootNamespace>Xamarin.Android.Tools.DecompressAssemblies</RootNamespace>
+    <AssemblyName>decompress-assemblies</AssemblyName>
+    <OutputPath>../../bin/$(Configuration)/bin</OutputPath>
+    <OutputType>Exe</OutputType>
+    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+
+  <ItemGroup>
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
+    <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\scripts\decompress-assemblies">
+      <Link>decompress-assemblies</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

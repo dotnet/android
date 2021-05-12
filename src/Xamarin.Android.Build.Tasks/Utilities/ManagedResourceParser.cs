@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +9,8 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Text.RegularExpressions;
 using System.Text;
+using Microsoft.Android.Build.Tasks;
+
 
 namespace Xamarin.Android.Tasks
 {

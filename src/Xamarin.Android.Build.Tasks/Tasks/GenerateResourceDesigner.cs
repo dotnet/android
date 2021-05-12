@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -16,6 +17,8 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string NetResgenOutputFile { get; set; }
+
+		public string DesignTimeOutputFile { get; set; }
 
 		public string JavaResgenInputFile { get; set; }
 
@@ -173,6 +176,12 @@ namespace Xamarin.Android.Tasks
 
 			WriteFile (NetResgenOutputFile, resources, language, isCSharp, aliases);
 
+			// During a regular build, write the designtime/Resource.designer.cs file as well
+
+			if (!string.IsNullOrEmpty (DesignTimeOutputFile) && Files.CopyIfChanged (NetResgenOutputFile, DesignTimeOutputFile)) {
+				Log.LogDebugMessage ($"Writing to: {DesignTimeOutputFile}");
+			}
+
 			return !Log.HasLoggedErrors;
 		}
 
@@ -234,7 +243,7 @@ namespace Xamarin.Android.Tasks
 				code = o.ToString ();
 			}
 
-			if (MonoAndroidHelper.CopyIfStringChanged (code, file)) {
+			if (Files.CopyIfStringChanged (code, file)) {
 				Log.LogDebugMessage ($"Writing to: {file}");
 			}
 		}

@@ -24,8 +24,15 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string apiLevel;
 			proj.TargetFrameworkVersion = builder.LatestTargetFrameworkVersion (out apiLevel);
+
+			// TODO: We aren't sure how to support preview bindings in .NET6 yet.
+			if (Builder.UseDotNet && apiLevel == "31") {
+				apiLevel = "30";
+				proj.TargetFrameworkVersion = "v11.0";
+			}
+
 			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnnamedProject.UnnamedProject"">
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
 	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
@@ -65,7 +72,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ClassLibraryMainLauncherRuns ()
+		public void ClassLibraryMainLauncherRuns ([Values (true, false)] bool preloadAssemblies)
 		{
 			AssertHasDevices ();
 
@@ -78,6 +85,7 @@ namespace Xamarin.Android.Build.Tests
 				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
 			app.SetDefaultTargetDevice ();
+			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
 
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "MyLibrary"
@@ -95,7 +103,13 @@ namespace Xamarin.Android.Build.Tests
 			// Remove the default MainActivity.cs & AndroidResources
 			app.AndroidResources.Clear ();
 			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\foo.xml") {
-				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" />"
+				TextContent = () =>
+@"<?xml version=""1.0"" encoding=""utf-8""?>
+<LinearLayout
+  xmlns:android=""http://schemas.android.com/apk/res/android""
+  android:layout_width=""fill_parent""
+  android:layout_height=""wrap_content""
+/>"
 			});
 			app.Sources.Remove (app.GetItem ("MainActivity.cs"));
 
@@ -300,6 +314,7 @@ namespace ${ROOT_NAMESPACE} {
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
+			var path = Path.Combine ("temp", TestName);
 			int userId = GetUserId (username);
 			List<string> parameters = new List<string> ();
 			if (userId >= 0)
@@ -309,17 +324,46 @@ namespace ${ROOT_NAMESPACE} {
 				ClickButton ("", "android:id/button1", "Yes continue");
 			}
 
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () =>
+@"public class Foo
+{
+	public Foo ()
+	{
+	}
+}"
+					},
+				},
+			};
+
+			var app = new XamarinFormsAndroidApplicationProject {
+				ProjectName = "App",
 				IsRelease = false,
 				EmbedAssembliesIntoApk = embedAssemblies,
 				AndroidFastDeploymentType = fastDevType
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			proj.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
-			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				SetTargetFrameworkAndManifest (proj, b);
-				Assert.True (b.Install (proj, parameters: parameters.ToArray ()), "Project should have installed.");
+			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
+			app.AddReference (lib);
+			app.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
+			app.SetDefaultTargetDevice ();
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.True (libBuilder.Build (lib), "Library should have built.");
+
+				SetTargetFrameworkAndManifest (app, appBuilder);
+				Assert.True (appBuilder.Install (app, parameters: parameters.ToArray ()), "App should have installed.");
+
+				if (!embedAssemblies) {
+					// Check that we deployed .pdb files
+					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+{app.ProjectName}\.pdb", appBuilder.LastBuildOutput,
+						$"{app.ProjectName}.pdb should be deployed!");
+					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+{lib.ProjectName}\.pdb", appBuilder.LastBuildOutput,
+						$"{lib.ProjectName}.pdb should be deployed!");
+				}
 
 				int breakcountHitCount = 0;
 				ManualResetEvent resetEvent = new ManualResetEvent (false);
@@ -327,10 +371,11 @@ namespace ${ROOT_NAMESPACE} {
 				// setup the debugger
 				var session = new SoftDebuggerSession ();
 				session.Breakpoints = new BreakpointStore {
-					{ Path.Combine (Root, b.ProjectDirectory, "MainActivity.cs"),  20 },
-					{ Path.Combine (Root, b.ProjectDirectory, "MainPage.xaml.cs"), 14 },
-					{ Path.Combine (Root, b.ProjectDirectory, "MainPage.xaml.cs"), 19 },
-					{ Path.Combine (Root, b.ProjectDirectory, "App.xaml.cs"), 12 },
+					{ Path.Combine (Root, appBuilder.ProjectDirectory, "MainActivity.cs"),  20 },
+					{ Path.Combine (Root, appBuilder.ProjectDirectory, "MainPage.xaml.cs"), 14 },
+					{ Path.Combine (Root, appBuilder.ProjectDirectory, "MainPage.xaml.cs"), 19 },
+					{ Path.Combine (Root, appBuilder.ProjectDirectory, "App.xaml.cs"), 12 },
+					{ Path.Combine (Root, libBuilder.ProjectDirectory, "Foo.cs"), 4 },
 				};
 				session.TargetHitBreakpoint += (sender, e) => {
 					TestContext.WriteLine ($"BREAK {e.Type}, {e.Backtrace.GetFrame (0)}");
@@ -344,23 +389,23 @@ namespace ${ROOT_NAMESPACE} {
 					MaxConnectionAttempts = 10,
 				};
 				var startInfo = new SoftDebuggerStartInfo (args) {
-					WorkingDirectory = Path.Combine (b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets"),
+					WorkingDirectory = Path.Combine (appBuilder.ProjectDirectory, app.IntermediateOutputPath, "android", "assets"),
 				};
 				var options = new DebuggerSessionOptions () {
 					EvaluationOptions = EvaluationOptions.DefaultOptions,
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
 				ClearAdbLogcat ();
-				b.BuildLogFile = "run.log";
+				appBuilder.BuildLogFile = "run.log";
 
 				parameters.Add ($"AndroidSdbTargetPort={port}");
 				parameters.Add ($"AndroidSdbHostPort={port}");
 				parameters.Add ("AndroidAttachDebugger=True");
 
-				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true,
+				Assert.True (appBuilder.RunTarget (app, "_Run", doNotCleanupOnUpdate: true,
 					parameters: parameters.ToArray ()), "Project should have run.");
 
-				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
+				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log")), "Activity should have started");
 				// we need to give a bit of time for the debug server to start up.
 				WaitFor (2000);
 				session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
@@ -372,7 +417,7 @@ namespace ${ROOT_NAMESPACE} {
 				// we need to wait here for a while to allow the breakpoints to hit
 				// but we need to timeout
 				TimeSpan timeout = TimeSpan.FromSeconds (60);
-				int expected = 3;
+				int expected = 4;
 				while (session.IsConnected && breakcountHitCount < 3 && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
@@ -381,15 +426,15 @@ namespace ${ROOT_NAMESPACE} {
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
 				breakcountHitCount = 0;
 				ClearAdbLogcat ();
-				ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
+				ClickButton (app.PackageName, "myXFButton", "CLICK ME");
 				while (session.IsConnected && breakcountHitCount < 1 && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
 				}
 				expected = 1;
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
-				b.BuildLogFile = "uninstall.log";
-				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
+				appBuilder.BuildLogFile = "uninstall.log";
+				Assert.True (appBuilder.Uninstall (app), "Project should have uninstalled.");
 				session.Exit ();
 			}
 		}

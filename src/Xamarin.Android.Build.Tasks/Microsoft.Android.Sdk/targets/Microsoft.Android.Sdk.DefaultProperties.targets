@@ -2,8 +2,6 @@
 
   <!-- User-facing configuration-agnostic defaults -->
   <PropertyGroup>
-    <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">1.0</AndroidCommandLineToolsVersion>
-    <LatestSupportedJavaVersion Condition=" '$(LatestSupportedJavaVersion)' == '' ">11.0.99</LatestSupportedJavaVersion>
     <MinimumSupportedJavaVersion Condition=" '$(MinimumSupportedJavaVersion)' == '' ">1.8.0</MinimumSupportedJavaVersion>
     <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">System</AndroidBoundExceptionType>
     <MonoAndroidResourcePrefix Condition=" '$(MonoAndroidResourcePrefix)' == '' ">Resources</MonoAndroidResourcePrefix>
@@ -27,6 +25,7 @@
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
     -->
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
+    <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' ">true</UseMonoRuntime>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->
@@ -51,14 +50,40 @@
     <SelfContained Condition=" '$(SelfContained)' == '' ">true</SelfContained>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and ('$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full') ">true</PublishTrimmed>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and '$(Configuration)' == 'Release' and '$(AndroidLinkMode)' != 'None' ">true</PublishTrimmed>
-    <TrimMode Condition=" '$(PublishTrimmed)' == 'true' and '$(TrimMode)' == '' ">link</TrimMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
+    <TrimmerDefaultAction Condition=" '$(TrimmerDefaultAction)' == '' and '$(AndroidLinkMode)' == 'Full' ">link</TrimmerDefaultAction>
+    <SuppressTrimAnalysisWarnings Condition=" '$(SuppressTrimAnalysisWarnings)' == '' ">true</SuppressTrimAnalysisWarnings>
     <!-- Prefer $(RuntimeIdentifiers) plural -->
-    <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android.21-arm64;android.21-x86</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android-arm64;android-x86</RuntimeIdentifiers>
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
     <AndroidManifest Condition=" '$(AndroidManifest)' == '' and Exists ('Properties\AndroidManifest.xml') and !Exists ('AndroidManifest.xml') ">Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidManifest Condition=" '$(AndroidManifest)' == '' ">AndroidManifest.xml</AndroidManifest>
+    <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
+
+    <!--
+      Runtime libraries feature switches defaults
+      Available feature switches: https://github.com/dotnet/runtime/blob/master/docs/workflow/trimming/feature-switches.md
+     -->
+    <DebuggerSupport Condition="'$(DebuggerSupport)' == ''">$(AndroidUseDebugRuntime)</DebuggerSupport>
+    <EnableUnsafeUTF7Encoding Condition="'$(EnableUnsafeUTF7Encoding)' == ''">false</EnableUnsafeUTF7Encoding>
+    <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
+    <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
+    <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
+    <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == ''">true</UseSystemResourceKeys>
+    <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == ''">false</HttpActivityPropagationSupport>
+    <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
+    <UseNativeHttpHandler Condition="'$(UseNativeHttpHandler)' == ''">true</UseNativeHttpHandler>
+
+    <!-- XA feature switches defaults -->
+    <VSAndroidDesigner Condition="'$(VSAndroidDesigner)' == ''">false</VSAndroidDesigner>
+
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
+    <ApplicationVersion Condition=" '$(ApplicationVersion)' == '' ">1.0</ApplicationVersion>
+    <AndroidVersionCode Condition=" '$(AndroidVersionCode)' == '' ">1</AndroidVersionCode>
+    <AssemblyVersion Condition=" '$(AssemblyVersion)' == '' ">$(ApplicationVersion)</AssemblyVersion>
+    <FileVersion Condition=" '$(FileVersion)' == '' ">$(ApplicationVersion)</FileVersion>
   </PropertyGroup>
 
 </Project>

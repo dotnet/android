@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using System;
+using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -48,6 +50,16 @@ namespace Xamarin.Android.Build.Tests
 
 			base.CleanupTest ();
 		}
+
+		[OneTimeTearDown]
+		protected static void UnInstallTestApp ()
+ 		{
+			var packages = TestPackageNames.Values.ToArray ();
+			TestPackageNames.Clear ();
+ 			foreach(var package in packages) {
+ 				RunAdbCommand ($"uninstall {package}");
+			}
+ 		}
 
 		protected static void RunAdbInput (string command, params object [] args)
 		{
@@ -125,8 +137,8 @@ namespace Xamarin.Android.Build.Tests
 					proc.BeginOutputReadLine ();
 					TimeSpan time = TimeSpan.FromSeconds (timeout);
 					while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
-						proc.WaitForExit (100);
-						time -= TimeSpan.FromMilliseconds (100);
+						proc.WaitForExit (10);
+						time -= TimeSpan.FromMilliseconds (10);
 					}
 					proc.Kill ();
 					proc.WaitForExit ();

@@ -8,7 +8,7 @@
             "name": "Launch",
             "type": "mono",
             "request": "launch",
-            "program": "${workspaceRoot}packages/nunit.consolerunner/3.11.1/tools/nunit3-console.exe ${workspaceRoot}bin/Test${input:configuration}/net472/Xamarin.Android.Build.Tests.dll",
+            "program": "${workspaceRoot}build-tools/scripts/nunit3-console ${workspaceRoot}bin/Test${input:configuration}/net472/Xamarin.Android.Build.Tests.dll",
             "cwd": "${workspaceRoot}bin/Test${input:configuration}/"
         },
         {

@@ -1,0 +1,13 @@
+<Project>
+  <!--Package versions-->
+  <PropertyGroup>
+    <MicrosoftDotnetSdkInternalPackageVersion>6.0.100-preview.5.21260.2</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>6.0.100-preview.5.21257.3</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftDotNetApiCompatPackageVersion>5.0.0-beta.20181.7</MicrosoftDotNetApiCompatPackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>6.0.0-beta.21212.6</MicrosoftDotNetBuildTasksFeedPackageVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Trim all characters after first `-` or `+` is encountered. -->
+    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$([System.Text.RegularExpressions.Regex]::Replace($(MicrosoftDotnetSdkInternalPackageVersion), `[-+].*$`, ""))</DotNetPreviewVersionBand>
+  </PropertyGroup>
+</Project>

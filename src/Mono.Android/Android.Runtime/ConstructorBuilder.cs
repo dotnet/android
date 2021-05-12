@@ -18,7 +18,8 @@ namespace Android.Runtime {
 		static FieldInfo Throwable_handle = typeof (Java.Lang.Throwable).GetField ("handle", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
 
-		internal static Action <IntPtr, object? []?> CreateDelegate (Type type, ConstructorInfo cinfo, Type [] parameter_types) {
+		internal static Action <IntPtr, object? []?> CreateDelegate (ConstructorInfo cinfo) {
+			var type = cinfo.DeclaringType;
 			var handle = handlefld;
 			if (typeof (Java.Lang.Throwable).IsAssignableFrom (type)) {
 				handle = Throwable_handle;
@@ -38,7 +39,9 @@ namespace Android.Runtime {
 			il.Emit (OpCodes.Stfld, handle);
 
 			il.Emit (OpCodes.Ldloc_0);
-			for (int i = 0; i < parameter_types.Length; i++) {
+
+			var len = cinfo.GetParameters ().Length;
+			for (int i = 0; i < len; i++) {
 				il.Emit (OpCodes.Ldarg, 1);
 				il.Emit (OpCodes.Ldc_I4, i);
 				il.Emit (OpCodes.Ldelem_Ref);

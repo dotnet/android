@@ -66,8 +66,16 @@ namespace Xamarin.Android.Prepare
 			void StoreHeader (string line)
 			{
 				string[] parts = line.Split (FieldSeparator, 2, StringSplitOptions.RemoveEmptyEntries);
-				if (parts.Length != 2)
-					throw new InvalidOperationException ($"Unexpected commit header format (wrong number of fields): {line}");
+				if (parts.Length != 2) {
+					if (parts.Length == 0) { // should be "impossible"
+						return;
+					}
+
+					var newParts = new string[] { parts [0], String.Empty };
+					parts = newParts;
+					Log.Instance.Warning ($"Unexpected commit header format (wrong number of fields): {line}");
+					Log.Instance.Warning ("Using empty string for the header value");
+				}
 
 				if (IsHeaderName ("author")) {
 					Author = parts [1];

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace Xamarin.ProjectTools
 {
@@ -40,11 +41,10 @@ namespace Xamarin.ProjectTools
 				App_xaml_cs = sr.ReadToEnd ();
 		}
 
-		public XamarinFormsXASdkProject (string outputType = "Exe")
-			: base (outputType)
+		public XamarinFormsXASdkProject (string outputType = "Exe", [CallerMemberName] string packageName = "")
+			: base (outputType, packageName)
 		{
 			PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
-			this.AddDotNetCompatPackages ();
 
 			// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
 			Imports.Add (new Import (() => "Directory.Build.targets") {

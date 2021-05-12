@@ -112,9 +112,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }),
 						"first build failed");
 					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
-					if (useManagedParser) {
-						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
-					}
+					FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }), "second build failed");
@@ -151,9 +149,6 @@ namespace Xamarin.Android.Build.Tests
 					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
-			if (Builder.UseDotNet) {
-				proj.AddDotNetCompatPackages ();
-			}
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "android", "support", "v7", "appcompat", "R$drawable.class"));
@@ -989,9 +984,6 @@ namespace Lib1 {
 				},
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
-			if (Builder.UseDotNet) {
-				appProj.AddDotNetCompatPackages ();
-			}
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
 				libBuilder.AutomaticNuGetRestore = false;
 				Assert.IsTrue (libBuilder.RunTarget (libProj, "Restore"), "Library project should have restored.");
@@ -1247,7 +1239,7 @@ namespace UnnamedProject
 						b.Output.IsTargetSkipped ("_FixupCustomViewsForAapt2"),
 						"The target _FixupCustomViewsForAapt2 should have been skipped");
 				}
-				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "unnamedproject", "unnamedproject", "R.java");
+				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", proj.PackageNameJavaIntermediatePath, "R.java");
 				FileAssert.Exists (r_java);
 				var r_java_contents = File.ReadAllLines (r_java);
 				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"android/support/compat/R.java should contain `{textView1}`!");

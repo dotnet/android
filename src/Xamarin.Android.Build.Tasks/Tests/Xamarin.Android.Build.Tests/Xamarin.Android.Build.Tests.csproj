@@ -7,12 +7,15 @@
   </PropertyGroup>
 
   <Import Project="..\..\..\..\Configuration.props" />
-  <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
+  <Import Project="..\..\..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
     <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>..\..\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
+      <HintPath>$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Android.Build.Debugging.Tasks" Condition="Exists('$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.Build.Debugging.Tasks.dll')">
+      <HintPath>$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.Build.Debugging.Tasks.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -23,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="DebuggingTasksTests.cs" Condition="!Exists('$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.Build.Debugging.Tasks.dll')" />
     <Compile Remove="Expected\**" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>
@@ -39,14 +43,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\javasourcejartest.jar">
-      <LogicalName>javasourcejartest.jar</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\javasourcejartest-sources.jar">
-      <LogicalName>javasourcejartest-sources.jar</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\javasourcejartest-javadoc.jar">
-      <LogicalName>javasourcejartest-javadoc.jar</LogicalName>
+    <EmbeddedResource Include="Resources\*">
+      <LogicalName>%(FileName)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

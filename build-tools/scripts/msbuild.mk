@@ -23,6 +23,8 @@
 #   $(MSBUILD_FLAGS): Additional MSBuild flags; contains $(CONFIGURATION), $(V), $(MSBUILD_ARGS).
 
 MSBUILD       = msbuild
+DOTNET_TOOL   = dotnet
+DOTNET_VERB   = build
 MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
 
 ifeq ($(OS_NAME),Darwin)
@@ -41,6 +43,12 @@ ifeq ($(USE_MSBUILD),1)
 define MSBUILD_BINLOG
 	$(if $(2),$(2),$(MSBUILD)) $(MSBUILD_FLAGS) /v:normal \
 		/binaryLogger:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/$(if $(3),$(3),Build)$(CONFIGURATION)/msbuild-`date +%Y%m%dT%H%M%S`-$(1).binlog"
+endef
+
+# $(call DOTNET_BINLOG,name,dotnet=$(DOTNET_TOOL)) build=$(DOTNET_VERB)
+define DOTNET_BINLOG
+	$(if $(2),$(2),$(DOTNET_TOOL)) $(DOTNET_VERB) -c $(CONFIGURATION) -v:n \
+		-bl:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/Build$(CONFIGURATION)/msbuild-`date +%Y%m%dT%H%M%S`-$(1).binlog"
 endef
 
 else    # $(MSBUILD) != 1

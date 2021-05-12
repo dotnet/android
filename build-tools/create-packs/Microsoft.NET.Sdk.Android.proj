@@ -1,0 +1,46 @@
+<!--
+***********************************************************************************************
+Microsoft.NET.Sdk.Android.proj
+
+This project file is used to create the Microsoft.NET.Sdk.Android
+NuGet, which is the workload manifest pack containing information
+about the various Microsoft.Android workloads.
+***********************************************************************************************
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <PackageId>Microsoft.NET.Sdk.Android.Manifest-$(DotNetPreviewVersionBand)</PackageId>
+    <Description>Microsoft.NET.Sdk.Android workload manifest. Please do not reference directly.</Description>
+  </PropertyGroup>
+
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+
+  <PropertyGroup>
+    <BeforePack>
+      _GenerateXAWorkloadContent;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <!-- FIXME: Temporarily Generate WorkloadManifest.targets and WorkloadManifest.json files inline while content is trivial. -->
+  <Target Name="_GenerateXAWorkloadContent"
+      DependsOnTargets="_GetDefaultPackageVersion;_GetLicense">
+    <PropertyGroup>
+      <WorkloadManifestJsonPath>$(OutputPath)workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
+    </PropertyGroup>
+
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName ($(WorkloadManifestJsonPath)))" />
+    <ReplaceFileContents
+        SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.json"
+        DestinationFile="$(WorkloadManifestJsonPath)"
+        Replacements="@WORKLOAD_VERSION@=$(AndroidPackVersionLong)">
+    </ReplaceFileContents>
+
+    <ItemGroup>
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.targets" PackagePath="data" />
+      <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
+    </ItemGroup>
+  </Target>
+
+</Project>

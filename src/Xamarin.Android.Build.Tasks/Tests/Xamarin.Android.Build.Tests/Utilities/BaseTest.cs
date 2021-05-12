@@ -10,12 +10,15 @@ using System.Threading;
 using System.Xml.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using Microsoft.Android.Build.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace Xamarin.Android.Build.Tests
 {
 	public class BaseTest
 	{
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
+		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
 
 		[SetUpFixture]
 		public class SetUp {
@@ -237,7 +240,28 @@ namespace Xamarin.Android.Build.Tests
 			return RunProcess (adb, $"{adbTarget} {command}");
 		}
 
+		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args)
+		{
+			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+
+			try {
+				return RunProcessWithExitCode ("apkdiff" + ext, args);
+			} catch (System.ComponentModel.Win32Exception) {
+				// apkdiff's location might not be in the $PATH, try known location
+				var profileDir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
+
+				return RunProcessWithExitCode (Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext), args);
+			}
+		}
+
 		protected static string RunProcess (string exe, string args)
+		{
+			var (_, stdOutput, stdError) = RunProcessWithExitCode (exe, args);
+
+			return stdOutput + stdError;
+		}
+
+		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args)
 		{
 			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
 			var info = new ProcessStartInfo (exe, args) {
@@ -266,12 +290,12 @@ namespace Xamarin.Android.Build.Tests
 				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
 					proc.Kill ();
 					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
-					return null; //Don't try to read stdout/stderr
+					return (-1, null, null); //Don't try to read stdout/stderr
 				}
 
 				proc.WaitForExit ();
 
-				return standardOutput.ToString ().Trim () + errorOutput.ToString ().Trim ();
+				return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
 			}
 		}
 
@@ -365,48 +389,93 @@ namespace Xamarin.Android.Build.Tests
 
 		protected string CreateFauxJavaSdkDirectory (string path, string javaVersion, out string javaExe, out string javacExe)
 		{
-			javaExe = IsWindows ? "Java.cmd" : "java.bash";
-			javacExe  = IsWindows ? "Javac.cmd" : "javac.bash";
-			var jarSigner = IsWindows ? "jarsigner.exe" : "jarsigner";
+			javaExe = IsWindows ? "java.cmd" : "java";
+			javacExe  = IsWindows ? "javac.cmd" : "javac";
+
 			var javaPath = Path.Combine (Root, path);
+
+			CreateFauxJdk (javaPath, javaVersion, javaVersion, javaVersion);
+
+			var jarSigner = IsWindows ? "jarsigner.exe" : "jarsigner";
 			var javaBinPath = Path.Combine (javaPath, "bin");
-			Directory.CreateDirectory (javaBinPath);
-
-			CreateFauxJavaExe (Path.Combine (javaBinPath, javaExe), javaVersion);
-			CreateFauxJavacExe (Path.Combine (javaBinPath, javacExe), javaVersion);
-
 			File.WriteAllText (Path.Combine (javaBinPath, jarSigner), "");
+
 			return javaPath;
 		}
 
-		void CreateFauxJavaExe (string javaExeFullPath, string version)
+		// https://github.com/xamarin/xamarin-android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L60-L100
+		void CreateFauxJdk (string dir, string releaseVersion, string releaseBuildNumber, string javaVersion)
 		{
-			var sb  = new StringBuilder ();
-			if (IsWindows) {
-				sb.AppendLine ("@echo off");
-				sb.AppendLine ($"echo java version \"{version}\"");
-				sb.AppendLine ($"echo Java(TM) SE Runtime Environment (build {version}-b13)");
-				sb.AppendLine ($"echo Java HotSpot(TM) 64-Bit Server VM (build 25.101-b13, mixed mode)");
-			} else {
-				sb.AppendLine ("#!/bin/bash");
-				sb.AppendLine ($"echo \"java version \\\"{version}\\\"\"");
-				sb.AppendLine ($"echo \"Java(TM) SE Runtime Environment (build {version}-b13)\"");
-				sb.AppendLine ($"echo \"Java HotSpot(TM) 64-Bit Server VM (build 25.101-b13, mixed mode)\"");
+			Directory.CreateDirectory (dir);
+
+			using (var release = new StreamWriter (Path.Combine (dir, "release"))) {
+				release.WriteLine ($"JAVA_VERSION=\"{releaseVersion}\"");
+				release.WriteLine ($"BUILD_NUMBER={releaseBuildNumber}");
+				release.WriteLine ($"JUST_A_KEY");
 			}
-			CreateFauxExecutable (javaExeFullPath, sb);
+
+			var bin = Path.Combine (dir, "bin");
+			var inc = Path.Combine (dir, "include");
+			var jre = Path.Combine (dir, "jre");
+			var jli = Path.Combine (jre, "lib", "jli");
+
+			Directory.CreateDirectory (bin);
+			Directory.CreateDirectory (inc);
+			Directory.CreateDirectory (jli);
+			Directory.CreateDirectory (jre);
+
+			string quote = IsWindows ? "" : "\"";
+			string java = IsWindows
+				? $"echo java version \"{javaVersion}\"{Environment.NewLine}"
+				: $"echo java version '\"{javaVersion}\"'{Environment.NewLine}";
+			java = java +
+				$"echo Property settings:{Environment.NewLine}" +
+				$"echo {quote}    java.home = {dir}{quote}{Environment.NewLine}" +
+				$"echo {quote}    java.vendor = Xamarin.Android Unit Tests{quote}{Environment.NewLine}" +
+				$"echo {quote}    java.version = {javaVersion}{quote}{Environment.NewLine}" +
+				$"echo {quote}    xamarin.multi-line = line the first{quote}{Environment.NewLine}" +
+				$"echo {quote}        line the second{quote}{Environment.NewLine}" +
+				$"echo {quote}        .{quote}{Environment.NewLine}";
+
+			string javac =
+				$"echo javac {javaVersion}{Environment.NewLine}";
+
+			CreateShellScript (Path.Combine (bin, "jar"), "");
+			CreateShellScript (Path.Combine (bin, "java"), java);
+			CreateShellScript (Path.Combine (bin, "javac"), javac);
+			CreateShellScript (Path.Combine (jli, "libjli.dylib"), "");
+			CreateShellScript (Path.Combine (jre, "libjvm.so"), "");
+			CreateShellScript (Path.Combine (jre, "jvm.dll"), "");
 		}
 
-		void CreateFauxJavacExe (string javacExeFullPath, string version)
+		// https://github.com/xamarin/xamarin-android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L108-L132
+		void CreateShellScript (string path, string contents)
 		{
-			var sb  = new StringBuilder ();
-			if (IsWindows) {
-				sb.AppendLine ("@echo off");
-				sb.AppendLine ($"echo javac {version}");
-			} else {
-				sb.AppendLine ("#!/bin/bash");
-				sb.AppendLine ($"echo \"javac {version}\"");
+			if (IsWindows && string.Compare (Path.GetExtension (path), ".dll", true) != 0)
+				path += ".cmd";
+			using (var script = new StreamWriter (path)) {
+				if (IsWindows) {
+					script.WriteLine ("@echo off");
+				}
+				else {
+					script.WriteLine ("#!/bin/sh");
+				}
+				script.WriteLine (contents);
 			}
-			CreateFauxExecutable (javacExeFullPath, sb);
+			if (IsWindows)
+				return;
+			var chmod = new ProcessStartInfo {
+				FileName                    = "chmod",
+				Arguments                   = $"+x \"{path}\"",
+				UseShellExecute             = false,
+				RedirectStandardInput       = false,
+				RedirectStandardOutput      = true,
+				RedirectStandardError       = true,
+				CreateNoWindow              = true,
+				WindowStyle                 = ProcessWindowStyle.Hidden,
+			};
+			var p = Process.Start (chmod);
+			p.WaitForExit ();
 		}
 
 		void CreateFauxExecutable (string exeFullPath, StringBuilder sb) {
@@ -416,11 +485,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected ProjectBuilder CreateApkBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
+		protected ProjectBuilder CreateApkBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false, [CallerMemberName] string packageName = "")
 		{
 			if (string.IsNullOrEmpty (directory))
 				directory = Path.Combine ("temp", TestName);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
+			TestPackageNames [packageName] = $"com.xamarin.{packageName}";
 			return BuildHelper.CreateApkBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
@@ -455,8 +525,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			Assert.IsNotNull (stream1, "stream1 of StreamCompare should not be null");
 			Assert.IsNotNull (stream2, "stream2 of StreamCompare should not be null");
-			string hash1 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
-			string hash2 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
+			string hash1 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
+			string hash2 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
 			return hash1 == hash2;
 		}
 

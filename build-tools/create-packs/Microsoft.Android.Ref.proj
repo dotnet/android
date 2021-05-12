@@ -10,11 +10,8 @@ by projects that use the Microsoft.Android framework in .NET 5.
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <PackageId>Microsoft.Android.Ref</PackageId>
-    <Authors>Microsoft</Authors>
     <Description>Microsoft.Android reference assemblies. Please do not reference directly.</Description>
-    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
     <_AndroidRefPackAssemblyPath>ref\net6.0</_AndroidRefPackAssemblyPath>
   </PropertyGroup>
 
@@ -34,7 +31,7 @@ by projects that use the Microsoft.Android framework in .NET 5.
     </PropertyGroup>
 
     <ItemGroup>
-      <_AndroidRefPackAssemblies Include="$(JavaInteropSourceDirectory)\bin\$(Configuration)-netcoreapp3.1\ref\Java.Interop.dll" />
+      <_AndroidRefPackAssemblies Include="$(JavaInteropSourceDirectory)\bin\$(Configuration)-net6.0\ref\Java.Interop.dll" />
       <_AndroidRefPackAssemblies Include="$(_MonoAndroidNETOutputDir)ref\Mono.Android.dll" />
       <_AndroidRefPackAssemblies Include="$(_MonoAndroidNETOutputDir)ref\Mono.Android.Export.dll" />
       <FrameworkListFileClass Include="@(_AndroidRefPackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />

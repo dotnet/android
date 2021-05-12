@@ -35,6 +35,7 @@ projects. .NET 5 projects will not import this file.
       _CheckProjectItems;
       _CheckForContent;
       _CheckTargetFramework;
+      _CheckForObsoleteFrameworkAssemblies;
       _RemoveLegacyDesigner;
       _ValidateAndroidPackageProperties;
       $(BuildDependsOn);
@@ -70,6 +71,7 @@ projects. .NET 5 projects will not import this file.
       _AddAndroidEnvironmentToCompile;
       _CheckForContent;
       _CheckTargetFramework;
+      _CheckForObsoleteFrameworkAssemblies;
       _RemoveLegacyDesigner;
       _ValidateAndroidPackageProperties;
       $(BuildDependsOn);
@@ -223,6 +225,15 @@ projects. .NET 5 projects will not import this file.
 
   <Target Name="_CheckTargetFramework">
     <Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/>
+  </Target>
+
+  <Target Name="_CheckForObsoleteFrameworkAssemblies">
+    <AndroidWarning
+        Condition=" '%(Reference.Identity)' == 'OpenTK-1.0' "
+        Code="XA4313"
+        ResourceName="XA4313"
+        FormatArguments="OpenTK-1.0;Xamarin.Legacy.OpenTK"
+    />
   </Target>
 
   <Target Name="_GetReferenceAssemblyPaths">
@@ -399,7 +410,7 @@ projects. .NET 5 projects will not import this file.
 
   <Target Name="_ConvertDebuggingFiles"
       Inputs="$(OutDir)$(TargetFileName);$(_IntermediatePdbFile)"
-      Outputs="$(OutDir)$(TargetFileName).mdb" 
+      Outputs="$(OutDir)$(TargetFileName).mdb"
       DependsOnTargets="_ValidateAndroidPackageProperties">
     <ConvertDebuggingFiles Files="$(OutDir)$(TargetFileName)" />
     <Touch Files="$(OutDir)$(TargetFileName).mdb" />
@@ -440,7 +451,7 @@ projects. .NET 5 projects will not import this file.
         OutputDirectory="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)"
         EmbeddedNativeLibraries="@(EmbeddedNativeLibrary)"
     />
-    <Touch Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
+    <Touch Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
       <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
@@ -464,7 +475,7 @@ projects. .NET 5 projects will not import this file.
         FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
         RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
     />
-    <Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+    <Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
       <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
@@ -519,8 +530,8 @@ projects. .NET 5 projects will not import this file.
       <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-checked+$(_AndroidCheckedBuild).debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
       <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True'  And '$(_AndroidCheckedBuild)' == '' " ArchiveFileName="libmonodroid.so" />
       <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-checked+$(_AndroidCheckedBuild).release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
-      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api.so" Condition=" '$(_AndroidCheckedBuild)' == ''" />
-      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api-checked+$(_AndroidCheckedBuild).so" Condition=" '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libxa-internal-api.so" />
+      <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libxa-internal-api.so" Condition=" '$(_AndroidCheckedBuild)' == ''" />
+      <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libxa-internal-api-checked+$(_AndroidCheckedBuild).so" Condition=" '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libxa-internal-api.so" />
       <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-btls-shared.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />
       <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-btls-shared.d.so" Condition=" '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libmono-btls-shared.so" />
       <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-profiler-aot.so" Condition=" @(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'aot')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all'))) " />
@@ -638,6 +649,7 @@ projects. .NET 5 projects will not import this file.
         LinkDescriptions="@(LinkDescription)"
         ProguardConfiguration="$(_ProguardProjectConfiguration)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
+        LinkResources="$(AndroidLinkResources)"
         PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
         EnableProguard="$(AndroidEnableProguard)"
         Deterministic="$(Deterministic)"

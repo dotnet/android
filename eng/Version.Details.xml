@@ -1,0 +1,22 @@
+<Dependencies>
+  <ProductDependencies>
+    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="6.0.100-preview.5.21260.2">
+      <Uri>https://github.com/dotnet/installer</Uri>
+      <Sha>c1feef4a98dfc1bd2913b876e620d2ed2a01b90b</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.5.21257.3" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+      <Uri>https://github.com/mono/linker</Uri>
+      <Sha>fafb6cf6a385a8c753faa174b9ab7c3600a9d494</Sha>
+    </Dependency>
+  </ProductDependencies>
+  <ToolsetDependencies>
+    <Dependency Name="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20181.7">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>6ee69696ea00da39f35066c22c21a00ceab93d00</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21212.6">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>db49d790a4bfa977a9ed7436bf2aa242cefae45e</Sha>
+    </Dependency>
+  </ToolsetDependencies>
+</Dependencies>

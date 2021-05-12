@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -32,7 +33,7 @@ namespace Xamarin.Android.Tasks
 			var output = new List<ITaskItem> (InputLibraries.Length);
 
 			foreach (var library in InputLibraries) {
-				var abi = MonoAndroidHelper.GetNativeLibraryAbi (library);
+				var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (library);
 				if (string.IsNullOrEmpty (abi)) {
 					var packageId = library.GetMetadata ("NuGetPackageId");
 					if (!string.IsNullOrEmpty (packageId)) {
@@ -56,6 +57,10 @@ namespace Xamarin.Android.Tasks
 							continue;
 						library.SetMetadata ("ArchiveFileName", "libmonodroid.so");
 					}
+				} else if (fileName == "libxamarin-debug-app-helper") {
+					// libxamarin-debug-app-helper.so is only needed for Debug builds
+					if (!IncludeDebugSymbols)
+						continue;
 				}
 				output.Add (library);
 			}

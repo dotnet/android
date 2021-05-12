@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tasks
 {
 	/// <summary>
 	/// Invokes `bundletool` to create an APK set (.apks file)
-	/// 
+	///
 	/// Usage: bundletool build-apks --bundle=foo.aab --output=foo.apks
 	/// </summary>
 	public class BuildApkSet : BundleToolAdbTask
@@ -39,6 +39,8 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string StorePass { get; set; }
+
+		public string ExtraArgs { get; set; }
 
 		public override bool RunTask ()
 		{
@@ -77,6 +79,8 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);
 			AddStorePass (cmd, "--key-pass", KeyPass);
 			AddStorePass (cmd, "--ks-pass", StorePass);
+			if (!string.IsNullOrEmpty (ExtraArgs))
+				cmd.AppendSwitch (ExtraArgs);
 			return cmd;
 		}
 	}

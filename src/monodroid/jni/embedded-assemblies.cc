@@ -133,8 +133,20 @@ EmbeddedAssemblies::get_assembly_data (const MonoBundledAssembly *e, char*& asse
 }
 
 MonoAssembly*
+#if defined (NET6) && defined (NET6_ALC_WORKS)
+EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, MonoError *error)
+#else // !(def NET6 && def NET6_ALC_WORKS)
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
+#endif // def NET6 && def NET6_ALC_WORKS
 {
+#if defined (NET6)
+	// NET6 doesn't support reference-only loads, define the variable here to minimize ifdefs in the code below
+#if defined (NET6_ALC_WORKS)
+	constexpr bool ref_only = false;
+#else // def NET6_ALC_WORKS
+	ref_only = false;
+#endif // ndef NET6_ALC_WORKS
+#endif // def NET6
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
 
@@ -176,19 +188,51 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 
 		get_assembly_data (e, assembly_data, assembly_data_size);
 
-		if ((image  = mono_image_open_from_data_with_name (assembly_data, assembly_data_size, 0, nullptr, ref_only, name.get ())) != nullptr &&
-		    (a      = mono_assembly_load_from_full (image, name.get (), &status, ref_only)) != nullptr) {
-			mono_config_for_assembly (image);
-			break;
+#if defined (NET6) && defined (NET6_ALC_WORKS)
+		image = mono_image_open_from_data_alc (
+			alc_gchandle,
+			assembly_data,
+			assembly_data_size,
+			0 /* need_copy */,
+			nullptr /* status */,
+			name.get ()
+		);
+#else // (def NET6 && def NET6_ALC_WORKS)
+		image = mono_image_open_from_data_with_name (assembly_data, assembly_data_size, 0, nullptr, ref_only, name.get ());
+#endif // !(def NET6 && def NET6_ALC_WORKS)
+		if (image == nullptr) {
+			continue;
 		}
+
+		a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
+		if (a == nullptr) {
+			continue;
+		}
+
+		mono_config_for_assembly (image);
+		break;
 	}
 
-	if (a && utils.should_log (LOG_ASSEMBLY)) {
+	if (a != nullptr && utils.should_log (LOG_ASSEMBLY)) {
 		log_info_nocheck (LOG_ASSEMBLY, "open_from_bundles: loaded assembly: %p\n", a);
 	}
+
+#if defined (NET6) && defined (NET6_ALC_WORKS)
+	if (error != nullptr) {
+		error->error_code = a == nullptr ? MONO_ERROR_NONE : MONO_ERROR_FILE_NOT_FOUND;
+	}
+#endif // def NET6 && def NET6_ALC_WORKS
 	return a;
 }
 
+#if defined (NET6) && defined (NET6_ALC_WORKS)
+MonoAssembly*
+EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data, MonoError *error)
+{
+	log_warn (LOG_DEFAULT, __PRETTY_FUNCTION__);
+	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error);
+}
+#else // def NET6 && def NET6_ALC_WORKS
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, UNUSED_ARG char **assemblies_path, UNUSED_ARG void *user_data)
 {
@@ -200,12 +244,23 @@ EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, UNUSED_A
 {
 	return embeddedAssemblies.open_from_bundles (aname, true);
 }
+#endif // !(def NET6 && def NET6_ALC_WORKS)
 
 void
 EmbeddedAssemblies::install_preload_hooks ()
 {
+#if defined (NET6) && defined (NET6_ALC_WORKS)
+	mono_install_assembly_preload_hook_v3 (
+		open_from_bundles,
+		nullptr /* user_data */,
+		0 /* append */
+	);
+#else // def NET6 && def NET6_ALC_WORKS
 	mono_install_assembly_preload_hook (open_from_bundles_full, nullptr);
+#if !defined (NET6) // Reference-only loads don't exist in NET6
 	mono_install_assembly_refonly_preload_hook (open_from_bundles_refonly, nullptr);
+#endif // !def NET6
+#endif // !(def NET6 && def NET6_ALC_WORKS)
 }
 
 template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size>

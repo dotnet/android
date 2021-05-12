@@ -5,6 +5,8 @@
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
 // designer on desktop.
+uint64_t format_tag = FORMAT_TAG;
+
 #if defined (DEBUG) || !defined (ANDROID)
 static TypeMapEntry java_to_managed[] = {};
 

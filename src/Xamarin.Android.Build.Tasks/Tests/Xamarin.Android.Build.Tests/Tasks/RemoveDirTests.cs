@@ -6,6 +6,7 @@ using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {

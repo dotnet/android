@@ -39,6 +39,7 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_register
 JNIEXPORT void JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged
   (JNIEnv *, jclass);
 
+#if !defined (ANDROID)
 /*
  * Class:     mono_android_Runtime
  * Method:    createNewContext
@@ -70,6 +71,7 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_switchToContext
  */
 JNIEXPORT void JNICALL Java_mono_android_Runtime_destroyContexts
   (JNIEnv *, jclass, jintArray);
+#endif // ndef ANDROID
 
 /*
  * Class:     mono_android_Runtime

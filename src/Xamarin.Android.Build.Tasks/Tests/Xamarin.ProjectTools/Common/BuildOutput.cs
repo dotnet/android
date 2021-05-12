@@ -52,10 +52,14 @@ namespace Xamarin.ProjectTools
 			return File.ReadLines (path).ToList ();
 		}
 
-		public bool IsTargetSkipped (string target)
+		public bool IsTargetSkipped (string target) => IsTargetSkipped (Builder.LastBuildOutput, target);
+
+		public static bool IsTargetSkipped (IEnumerable<string> output, string target)
 		{
 			bool found = false;
-			foreach (var line in Builder.LastBuildOutput) {
+			foreach (var line in output) {
+					if (line.Contains ($"Building target \"{target}\" completely."))
+						return false;
 					found = line.Contains ($"Target {target} skipped due to ")
 					            || line.Contains ($"Skipping target \"{target}\" because it has no ") //NOTE: message can say `inputs` or `outputs`
 					            || line.Contains ($"Target \"{target}\" skipped, due to")

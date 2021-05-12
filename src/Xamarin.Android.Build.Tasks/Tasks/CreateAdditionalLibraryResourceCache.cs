@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -39,7 +40,7 @@ namespace Xamarin.Android.Tasks
 				foreach (string newPath in Directory.EnumerateFiles (src, "*", SearchOption.AllDirectories)) {
 					var destPath = newPath.Replace (src, dest);
 					var cachedDate = File.GetLastWriteTimeUtc (src);
-					MonoAndroidHelper.CopyIfChanged (newPath, destPath);
+					Files.CopyIfChanged (newPath, destPath);
 					copiedResources.Add (new TaskItem (destPath));
 				}
 			}

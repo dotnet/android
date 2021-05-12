@@ -3,15 +3,17 @@
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
 trigger:
-- master
+- main
 - d16-*
+- release/*
 
 pr:
   autoCancel: false
   branches:
     include:
-    - master
+    - main
     - d16-*
+    - release/*
 
 # Global variables
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
@@ -19,15 +21,13 @@ pr:
 variables:
   XA.Jdk8.Folder: jdk-1.8
   XA.Jdk11.Folder: jdk-11
-  XA.Build.MacOSSPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android-OSS
-  XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
   XA.Build.Configuration: Release
-  NuGetArtifactName: nupkgs
-  InstallerArtifactName: Installers
+  NuGetArtifactName: nuget-unsigned
+  InstallerArtifactName: installers-unsigned
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
-  DotNetCoreVersion: 3.1.201
-  DotNet5Version: 5.0.100
+  DotNetCoreVersion: 3.1.405
+  DotNet6Version: 6.0.100-preview.3.21202.5
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
 
 stages:
@@ -38,7 +38,9 @@ stages:
   - job: mac_build
     displayName: Mac Build
     pool:
-      name: $(XA.Build.MacOSSPool)
+      name: VSEng-Xamarin-RedmondMac-Android-OSS
+      demands:
+      - agent.osversionfamily -equals 10.15
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -52,7 +54,6 @@ stages:
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
-        version: $(DotNet5Version)
         remove_dotnet: true
 
     - template: yaml-templates/use-dot-net.yaml
@@ -108,16 +109,10 @@ stages:
       displayName: make jenkins
 
     - script: >
-        echo "make create-pkg create-vsix V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
-        make create-pkg create-vsix V=1 CONFIGURATION=$(XA.Build.Configuration)
+        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
+        make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: create installers
-
-    - script: >
-        echo "make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1" &&
-        make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: package oss
 
     - script: >
         mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
@@ -132,6 +127,12 @@ stages:
         artifactName: $(InstallerArtifactName) - macOS and Windows
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
+    - task: PublishPipelineArtifact@1
+      displayName: upload nupkgs
+      inputs:
+        artifactName: $(NuGetArtifactName) - macOS
+        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+
     - script: >
         echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
         make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
@@ -143,19 +144,6 @@ stages:
         make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package build status
-
-    - task: MSBuild@1
-      displayName: pack all nupkgs
-      inputs:
-        solution: $(Build.SourcesDirectory)/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /bl:$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload nupkgs
-      inputs:
-        artifactName: $(NuGetArtifactName) - macOS
-        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - script: >
         echo "make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
@@ -175,7 +163,7 @@ stages:
   jobs:
   - job: linux_build_package
     displayName: Linux Build
-    pool: $(XA.Build.LinuxOSSPool)
+    pool: Xamarin-Android-Ubuntu-Public
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -184,38 +172,45 @@ stages:
     - checkout: self
       submodules: recursive
 
+    - template: yaml-templates/use-dot-net.yaml
+
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: $(DotNetCoreVersion)
+
     - task: NuGetToolInstaller@1
       displayName: 'Use NuGet 5.x'
       inputs:
         versionSpec: 5.x
 
     - script: >
-        sudo apt-get install -y gnupg ca-certificates &&
+        sudo apt remove -y --purge --auto-remove mono-devel &&
+        sudo apt install -y gnupg ca-certificates &&
         sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&
         (echo "deb https://download.mono-project.com/repo/ubuntu preview-bionic main" | sudo tee /etc/apt/sources.list.d/mono-official-preview.list) &&
-        sudo apt-get update &&
-        sudo apt-get install -y mono-devel &&
-        sudo apt-get install -y ca-certificates-mono
+        sudo apt update &&
+        sudo apt install -y mono-devel
       displayName: install mono preview
 
-    - script: echo "##vso[task.setvariable variable=HOME]$(Agent.HomeDirectory)"
-      displayName: set HOME to agent directory
+    - script: >
+        sudo apt remove -y --purge --auto-remove cmake &&
+        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null &&
+        sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' &&
+        sudo apt-get update &&
+        sudo apt install -y cmake
+      displayName: install updated version of cmake
 
-    - script: echo "##vso[task.setvariable variable=PATH]$PATH:$(Agent.HomeDirectory)/android-toolchain/$(XA.Jdk11.Folder)/bin"
+    - script: echo "##vso[task.setvariable variable=PATH]$PATH:$HOME/android-toolchain/$(XA.Jdk11.Folder)/bin"
       displayName: append jdk tools to PATH
 
     - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make jenkins
 
+    - script: make create-nupkgs V=1 CONFIGURATION=$(XA.Build.Configuration)
+      displayName: make create-nupkgs
+
     - script: make package-deb V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make package-deb
-
-    - task: MSBuild@1
-      displayName: pack all nupkgs
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/linux-artifacts &&

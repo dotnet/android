@@ -9,19 +9,24 @@ using System.Reflection;
 using Microsoft.Build.Framework;
 using TPL = System.Threading.Tasks;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
 	internal class Aapt2Daemon : IDisposable
 	{
+		static readonly string TypeFullName = typeof (Aapt2Daemon).FullName;
+
+		internal static object RegisterTaskObjectKey => TypeFullName;
+
 		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, string aapt2, int numberOfInstances, int initalNumberOfDaemons, bool registerInDomain = false)
 		{
 			var area = registerInDomain ? RegisteredTaskObjectLifetime.AppDomain : RegisteredTaskObjectLifetime.Build;
-			Aapt2Daemon daemon = (Aapt2Daemon)engine.GetRegisteredTaskObject (typeof (Aapt2Daemon).FullName, area);
+			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (RegisterTaskObjectKey, area);
 			if (daemon == null)
 			{
 				daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons);
-				engine.RegisterTaskObject (typeof (Aapt2Daemon).FullName, daemon, area, allowEarlyCollection: false);
+				engine.RegisterTaskObjectAssemblyLocal (RegisterTaskObjectKey, daemon, area, allowEarlyCollection: false);
 			}
 			return daemon;
 		}
@@ -194,14 +199,14 @@ namespace Xamarin.Android.Tasks
 				// otherwise aapt2 will try to interpret the BOM as an argument.
 				// Cant use this cos its netstandard 2.1 only
 				// and we are using netstandard 2.0
-				//StandardInputEncoding = MonoAndroidHelper.UTF8withoutBOM,
+				//StandardInputEncoding = Files.UTF8withoutBOM,
 			};
 			Process aapt2;
 			Encoding currentEncoding = Console.InputEncoding;
  			lock (lockObject) {
 				try {
-					if (!SetProcessInputEncoding (info, MonoAndroidHelper.UTF8withoutBOM))
-						SetConsoleInputEncoding (MonoAndroidHelper.UTF8withoutBOM);
+					if (!SetProcessInputEncoding (info, Files.UTF8withoutBOM))
+						SetConsoleInputEncoding (Files.UTF8withoutBOM);
 					aapt2 = new Process ();
 					aapt2.StartInfo = info;
 					aapt2.Start ();
@@ -215,7 +220,7 @@ namespace Xamarin.Android.Tasks
 					bool errored = false;
 					try {
 						// try to write Unicode UTF8 to aapt2
-						using (StreamWriter writer = new StreamWriter (aapt2.StandardInput.BaseStream, MonoAndroidHelper.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true)) {
+						using (StreamWriter writer = new StreamWriter (aapt2.StandardInput.BaseStream, Files.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true)) {
 							foreach (var arg in job.Commands) {
 								writer.WriteLine (arg);
 							}
