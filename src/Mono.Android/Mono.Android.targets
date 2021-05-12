@@ -272,22 +272,35 @@
   <Target Name="UpdateExternalDocumentation">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
         Properties="TargetFramework=monoandroid10"
-        Targets="_UpdateExternalDocumentation"
+        Targets="_UpdateExternalDocumentation;_RunMdoc"
     />
   </Target>
   <Target Name="_UpdateExternalDocumentation">
-    <Exec
-        Command="git clean -xdf obj"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-    />
+    <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
     <PropertyGroup>
       <_Binlog>UpdateExternalDocumentation-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).binlog</_Binlog>
     </PropertyGroup>
     <Exec
-        Command="msbuild /restore /p:IncludeAndroidJavadoc=True /bl:$(_Binlog)"
+        Condition=" '$(HostOS)' != 'Windows' "
+        Command="msbuild /restore /p:Configuration=$(Configuration) /p:IncludeAndroidJavadoc=True /bl:$(_Binlog)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
+    <MSBuild
+        Condition=" '$(HostOS)' == 'Windows' "
+        Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
+        Properties="IncludeAndroidJavadoc=True"
+        Targets="Restore;Build"
+    />
+  </Target>
+
+  <Target Name="RunMdoc">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
+        Properties="TargetFramework=monoandroid10"
+        Targets="_RunMdoc"
+    />
+  </Target>
+  <Target Name="_RunMdoc">
     <PropertyGroup>
       <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/mdoc.exe"</_Mdoc>
       <_Libdir>-L "$(OutputPath)../v1.0"</_Libdir>
@@ -295,10 +308,12 @@
       <_ImportXml>-i "$(_AssemblyBasename).xml"</_ImportXml>
       <_Assembly>"$(_AssemblyBasename).dll"</_Assembly>
       <_Output>-o "$(MSBuildThisFileDirectory)../../external/android-api-docs/docs/Mono.Android/en"</_Output>
+      <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
     </PropertyGroup>
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug update --use-docid --delete $(_Libdir) $(_ImportXml) $(_Output) $(_Assembly)"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug update --use-docid --delete $(_Libdir) $(_ImportXml) $(_Output) $(_DocTypeArgs) $(_Assembly) "
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>
+
 </Project>
