@@ -266,5 +266,41 @@ namespace generatortests
 			Assert.AreEqual (0, klass.Fields.Count);
 			Assert.AreEqual (0, klass.Methods.Count);
 		}
+
+		[Test]
+		public void IgnoreTypesWithInvalidNames ()
+		{
+			var xml = XDocument.Parse (@"
+				<api>
+					<package name='com.example.test' jni-name='com/example/test'>
+						<class name='' visibility='public' />
+						<class name='Document.' visibility='public' />
+						<interface name='' visibility='public' />
+						<interface name='Document.' visibility='public' />
+					</package>
+				</api>");
+
+			var gens = XmlApiImporter.Parse (xml, opt);
+
+			// None of these should be parsed because they have invalid names
+			Assert.AreEqual (0, gens.Count);
+		}
+
+		[Test]
+		public void IgnoreUserObfuscatedTypes ()
+		{
+			var xml = XDocument.Parse (@"
+				<api>
+					<package name='com.example.test' jni-name='com/example/test'>
+						<class name='MyClass' visibility='public' obfuscated='true' />
+						<interface name='MyInterface' visibility='public' obfuscated='true' />
+					</package>
+				</api>");
+
+			var gens = XmlApiImporter.Parse (xml, opt);
+
+			// None of these should be parsed because the user has said they are obfuscated
+			Assert.AreEqual (0, gens.Count);
+		}
 	}
 }

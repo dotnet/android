@@ -61,14 +61,12 @@ namespace MonoDroid.Generation
 
 				switch (elem.Name.LocalName) {
 					case "class":
-						if (elem.XGetAttribute ("obfuscated") == "true")
-							continue;
-						gen = CreateClass (ns, elem, options);
+						if (ShouldBind (elem))
+							gen = CreateClass (ns, elem, options);
 						break;
 					case "interface":
-						if (elem.XGetAttribute ("obfuscated") == "true")
-							continue;
-						gen = CreateInterface (ns, elem, options);
+						if (ShouldBind (elem))
+							gen = CreateInterface (ns, elem, options);
 						break;
 					default:
 						Report.LogCodedWarning (0, Report.WarningUnexpectedPackageChildNode, elem.Name.ToString ());
@@ -521,6 +519,21 @@ namespace MonoDroid.Generation
 				model.LineNumber = info.LineNumber;
 				model.LinePosition = info.LinePosition;
 			}
+		}
+
+		static bool ShouldBind (XElement elem)
+		{
+			// Don't bind things the user has said are "obfuscated"
+			if (elem.XGetAttribute ("obfuscated") == "true")
+				return false;
+
+			var java_name = elem.XGetAttribute ("name");
+
+			// Ignore types that do not have a name (nested classes would end in a period like "Document.")
+			if (!java_name.HasValue () || java_name.EndsWith (".", StringComparison.Ordinal))
+				return false;
+
+			return true;
 		}
 	}
 }
