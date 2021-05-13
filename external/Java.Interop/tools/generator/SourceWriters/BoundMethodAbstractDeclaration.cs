@@ -19,6 +19,9 @@ namespace generator.SourceWriters
 			this.method = method;
 			this.opt = opt;
 
+			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
+			this.AddMethodParameters (method.Parameters, opt);
+
 			if (method.RetVal.IsGeneric && gen != null) {
 				Name = method.Name;
 				ExplicitInterfaceImplementation = opt.GetOutputName (gen.FullName);
@@ -35,7 +38,6 @@ namespace generator.SourceWriters
 			IsAbstract = true;
 			IsShadow = impl.RequiresNew (method.Name, method);
 			SetVisibility (method.Visibility);
-			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 
 			NewFirst = true;
 
@@ -51,7 +53,6 @@ namespace generator.SourceWriters
 			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.ConnectorName, additionalProperties: method.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
-			this.AddMethodParameters (method.Parameters, opt);
 		}
 
 		public override void Write (CodeWriter writer)

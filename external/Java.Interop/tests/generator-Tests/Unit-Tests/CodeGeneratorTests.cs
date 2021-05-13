@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using generator.SourceWriters;
 using MonoDroid.Generation;
 using NUnit.Framework;
 using Xamarin.Android.Binder;
+using Xamarin.SourceWriter;
 
 namespace generatortests
 {
@@ -1270,6 +1272,56 @@ namespace generatortests
 			var result = writer.ToString ().NormalizeLineEndings ();
 			Assert.True (result.Contains ("internal static new IntPtr class_ref".NormalizeLineEndings ()));
 			Assert.False (result.Contains ("internal static IntPtr class_ref".NormalizeLineEndings ()));
+		}
+
+		[Test]
+		public void WriteBoundMethodAbstractDeclarationWithGenericReturn ()
+		{
+			// Fix a case where the ReturnType of a class method implementing a generic interface method
+			// that has a generic parameter type return (like T) wasn't getting set, resulting in a NRE.
+			var gens = ParseApiDefinition (@"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			    <interface abstract='false' deprecated='not deprecated' final='false' name='Comparable' static='false' visibility='public' jni-signature='Ljava/lang/Double;' />
+			  </package>
+
+			  <package name='com.example' jni-name='com/example'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='FlowIterator' static='false' visibility='public' jni-signature='Lcom/example/FlowIterator;'>
+			      <typeParameters>
+			        <typeParameter name='R' classBound='java.lang.Object' jni-classBound='Ljava/lang/Object;'></typeParameter>
+			      </typeParameters>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='next' jni-signature='()Ljava/lang/Object;' bridge='false' native='false' return='R' jni-return='TR;' static='false' synchronized='false' synthetic='false' visibility='public' />
+			    </interface>
+			    <class abstract='true' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='FlowIterator.RangeIterator' static='true' visibility='public' jni-signature='Lcom/example/FlowIterator$RangeIterator;'>
+			      <implements name='com.example.FlowIterator' name-generic-aware='com.example.FlowIterator&lt;T&gt;' jni-type='Lcom/example/FlowIterator&lt;TT;&gt;;'></implements>
+			      <typeParameters>
+			        <typeParameter name='T' interfaceBounds='java.lang.Comparable&lt;T&gt;' jni-interfaceBounds='Ljava/lang/Comparable&lt;TT;&gt;;'>
+			          <genericConstraints>
+			            <genericConstraint type='java.lang.Comparable&lt;T&gt;'></genericConstraint>
+			          </genericConstraints>
+			        </typeParameter>
+			      </typeParameters>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='next' jni-signature='()Ljava/lang/Comparable;' bridge='false' native='false' return='T' jni-return='TT;' static='false' synchronized='false' synthetic='false' visibility='public' />
+			    </class>
+			  </package>
+			</api>");
+
+			var declIface = gens.OfType<InterfaceGen> ().Single (c => c.Name == "IFlowIterator");
+			var declClass = declIface.NestedTypes.OfType<ClassGen> ().Single (c => c.Name == "FlowIteratorRangeIterator");
+			var method = declClass.Methods.Single ();
+
+			var bmad = new BoundMethodAbstractDeclaration (declClass, method, options, null);
+			var source_writer = new CodeWriter (writer);
+
+			bmad.Write (source_writer);
+
+			var expected = @"Java.Lang.Object Com.Example.FlowIteratorRangeIterator.Next ()
+					{
+					  throw new NotImplementedException ();
+					}";
+
+			// Ignore nullable operator so this test works on all generators  ;)
+			Assert.AreEqual (expected.NormalizeLineEndings (), writer.ToString ().NormalizeLineEndings ().Replace ("?", ""));
 		}
 	}
 }
