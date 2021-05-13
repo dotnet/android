@@ -86,7 +86,7 @@ namespace Xamarin.Test {
 				if (id_getAdapter == IntPtr.Zero)
 					id_getAdapter = JNIEnv.GetMethodID (class_ref, "getAdapter", "()Lxamarin/test/Adapter;");
 				try {
-					return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
+					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
 				} finally {
 				}
 			}

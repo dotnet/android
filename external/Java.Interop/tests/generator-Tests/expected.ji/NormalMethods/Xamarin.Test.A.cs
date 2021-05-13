@@ -65,7 +65,7 @@ namespace Xamarin.Test {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue (index);
 					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-					return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 				} finally {
 				}
 			}

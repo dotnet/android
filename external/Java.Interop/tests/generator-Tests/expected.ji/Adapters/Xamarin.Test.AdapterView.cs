@@ -109,7 +109,7 @@ namespace Xamarin.Test {
 				const string __id = "getAdapter.()Lxamarin/test/Adapter;";
 				try {
 					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-					return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 				} finally {
 				}
 			}
