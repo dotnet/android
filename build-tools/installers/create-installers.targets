@@ -322,7 +322,6 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-as.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-ld.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-strip.exe" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\libwinpthread-1.dll" />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.debug.dll"   Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.release.dll" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libMonoPosixHelper.dll" />

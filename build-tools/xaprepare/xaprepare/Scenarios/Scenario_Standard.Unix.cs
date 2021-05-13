@@ -9,16 +9,6 @@ namespace Xamarin.Android.Prepare
 		{
 			AddRequiredMacOSSteps (beforeBundle);
 
-			if (!beforeBundle) {
-				// It has to go after the bundle step because bundle unpacking or creation *always* cleans its
-				// destination directory and this is where we download the GAS binaries. They are not part of the bundle
-				// (because they're not useful for every day work with XA) so they must be downloaded after the bundle
-				// is unpacked.
-				Log.DebugLine ("Adding Windows GAS download step (AFTER bundle)");
-				Steps.Add (new Step_Get_Windows_Binutils ());
-				return;
-			}
-
 			if (Context.Instance.WindowsJitAbisEnabled) {
 				Log.DebugLine ("Windows JIT ABIs ENABLED, ADDING MinGW dependencies build step (BEFORE bundle)");
 				Steps.Add (new Step_BuildMingwDependencies ());
