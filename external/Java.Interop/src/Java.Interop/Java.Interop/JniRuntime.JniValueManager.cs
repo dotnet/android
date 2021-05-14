@@ -333,7 +333,7 @@ namespace Java.Interop
 				return GetActivationConstructor (fallbackType);
 			}
 
-			static ConstructorInfo GetActivationConstructor (Type type)
+			static ConstructorInfo? GetActivationConstructor (Type type)
 			{
 				return
 					(from c in type.GetConstructors (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
@@ -675,6 +675,8 @@ namespace Java.Interop
 
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
+			targetType ??= typeof (object);
+
 			var r   = Expression.Variable (targetType, sourceValue.Name + "_val");
 			context.LocalVariables.Add (r);
 			context.CreationStatements.Add (

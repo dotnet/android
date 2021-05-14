@@ -176,7 +176,7 @@ namespace Java.Interop {
 			static  readonly    Type[]      EmptyTypeArray      = Array.Empty<Type> ();
 
 
-			public  Type    GetType (JniTypeSignature typeSignature)
+			public  Type?    GetType (JniTypeSignature typeSignature)
 			{
 				AssertValid ();
 

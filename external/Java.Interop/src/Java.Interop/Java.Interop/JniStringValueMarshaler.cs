@@ -61,6 +61,8 @@ namespace Java.Interop {
 		{
 			Func<IntPtr, string?>   m   = JniEnvironment.Strings.ToString;
 
+			targetType ??= typeof (object);
+
 			var value = Expression.Variable (targetType, sourceValue.Name + "_val");
 			context.LocalVariables.Add (value);
 			context.CreationStatements.Add (Expression.Assign (value, Expression.Call (m.GetMethodInfo (), sourceValue)));

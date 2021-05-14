@@ -15,7 +15,7 @@ namespace Java.Interop.Expressions {
 
 		protected override string GetKeyForItem (ParameterExpression item)
 		{
-			return item.Name;
+			return item.Name!;
 		}
 	}
 
@@ -169,7 +169,7 @@ namespace Java.Interop {
 			return ReturnObjectReferenceToJni (context, sourceValue.Name, Expression.Property (s, "ReferenceValue"));
 		}
 
-		protected Expression ReturnObjectReferenceToJni (JniValueMarshalerContext context, string namePrefix, Expression sourceValue)
+		protected Expression ReturnObjectReferenceToJni (JniValueMarshalerContext context, string? namePrefix, Expression sourceValue)
 		{
 			Func<JniObjectReference, IntPtr>    m = JniEnvironment.References.NewReturnToJniRef;
 			var r   = Expression.Variable (MarshalType, namePrefix + "_rtn");
