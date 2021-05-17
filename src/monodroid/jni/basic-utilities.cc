@@ -17,7 +17,7 @@ char*
 BasicUtilities::path_combine (const char *path1, const char *path2)
 {
 	// Don't let erroneous nullptr parameters situation propagate
-	assert (path1 != nullptr || path2 != nullptr);
+	abort_unless (path1 != nullptr || path2 != nullptr, "At least one path must be a valid pointer");
 
 	if (path1 == nullptr)
 		return strdup_new (path2);

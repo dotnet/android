@@ -62,8 +62,8 @@ BasicAndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApk
 void
 BasicAndroidSystem::add_apk_libdir (const char *apk, size_t index, [[maybe_unused]] size_t apk_count, void *user_data)
 {
-	assert (user_data != nullptr);
-	assert (index < app_lib_directories_size);
+	abort_if_invalid_pointer_argument (user_data);
+	abort_unless (index < app_lib_directories_size, "Index out of range");
 	app_lib_directories [index] = utils.string_concat (apk, "!/lib/", static_cast<const char*>(user_data));
 	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", app_lib_directories[index]);
 }

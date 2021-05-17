@@ -6,9 +6,9 @@
 // Based on code from mt's libmonotouch/debug.m file.
 //
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #ifndef WINDOWS
 #include <arpa/inet.h>
@@ -23,10 +23,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <ctype.h>
-#include <assert.h>
-#include <limits.h>
+#include <cerrno>
+#include <cctype>
+
 #include <mono/metadata/mono-debug.h>
 
 #ifdef ANDROID
@@ -149,14 +148,14 @@ Debug::set_debugger_log_level (const char *level)
 	}
 
 	unsigned long v = strtoul (level, nullptr, 0);
-	if (v == ULONG_MAX && errno == ERANGE) {
+	if (v == std::numeric_limits<unsigned long>::max () && errno == ERANGE) {
 		log_error (LOG_DEFAULT, "Invalid debugger log level value '%s', expecting a positive integer or zero", level);
 		return;
 	}
 
-	if (v > INT_MAX) {
-		log_warn (LOG_DEFAULT, "Debugger log level value is higher than the maximum of %u, resetting to the maximum value.", INT_MAX);
-		v = INT_MAX;
+	if (v > std::numeric_limits<int>::max ()) {
+		log_warn (LOG_DEFAULT, "Debugger log level value is higher than the maximum of %u, resetting to the maximum value.", std::numeric_limits<int>::max ());
+		v = std::numeric_limits<int>::max ();
 	}
 
 	got_debugger_log_level = true;
@@ -177,7 +176,7 @@ Debug::parse_options (char *options, ConnOptions *opts)
 
 		if (strstr (arg, "port=") == arg) {
 			int port = atoi (arg + strlen ("port="));
-			if (port < 0 || port > USHRT_MAX) {
+			if (port < 0 || port > std::numeric_limits<unsigned short>::max ()) {
 				log_error (LOG_DEFAULT, "Invalid debug port value %d", port);
 				continue;
 			}
@@ -647,7 +646,7 @@ Debug::enable_soft_breakpoints (void)
 void*
 xamarin::android::conn_thread (void *arg)
 {
-	assert (arg != nullptr);
+	abort_if_invalid_pointer_argument (arg);
 
 	int res;
 	Debug *instance = static_cast<Debug*> (arg);

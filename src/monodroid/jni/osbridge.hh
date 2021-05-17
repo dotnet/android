@@ -157,7 +157,7 @@ namespace xamarin::android::internal
 		int gc_weak_gref_count = 0;
 		int gc_disabled = 0;
 
-		MonodroidBridgeProcessingInfo *domains_list;
+		MonodroidBridgeProcessingInfo *domains_list = nullptr;
 
 		MonodroidGCTakeRefFunc take_global_ref = nullptr;
 		MonodroidGCTakeRefFunc take_weak_global_ref = nullptr;
@@ -172,7 +172,7 @@ namespace xamarin::android::internal
 		// These will be loaded as needed and persist between GCs
 		// FIXME: This code assumes it is totally safe to hold onto these GREFs forever. Can
 		// mono.android.jar ever be unloaded?
-		jclass    ArrayList_class;
+		jclass    ArrayList_class = nullptr;
 		jclass    GCUserPeer_class;
 		jmethodID ArrayList_ctor;
 		jmethodID ArrayList_get;

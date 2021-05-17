@@ -1,6 +1,5 @@
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #if __APPLE__
 #include <sys/types.h>
@@ -10,6 +9,7 @@
 #include <windows.h>
 #endif
 
+#include "cpp-util.hh"
 #include "cpu-arch.hh"
 
 #if __ANDROID__
@@ -19,12 +19,12 @@
 static int
 find_in_maps (const char *str)
 {
+	abort_if_invalid_pointer_argument (str);
+
 	FILE *maps = fopen ("/proc/self/maps", "r");
 	char *line;
 	char  buf [BUF_SIZE];
 
-	assert (str);
-	
 	if (!maps)
 		return -1;
 
@@ -32,7 +32,7 @@ find_in_maps (const char *str)
 		if (strstr (line, str))
 			return 1;
 	}
-	
+
 	return 0;
 }
 
@@ -90,7 +90,7 @@ static int
 get_built_for_cpu_android ([[maybe_unused]] unsigned short *built_for_cpu)
 {
 	int retval = 1;
-	
+
 #if __arm__
 	*built_for_cpu = CPU_KIND_ARM;
 #elif __aarch64__
@@ -104,7 +104,7 @@ get_built_for_cpu_android ([[maybe_unused]] unsigned short *built_for_cpu)
 #else
 	retval = 0;
 #endif
-	
+
 	return retval;
 }
 
@@ -119,7 +119,7 @@ get_built_for_cpu (unsigned short *built_for_cpu)
 
 	if (get_built_for_cpu_android (built_for_cpu))
 		return;
-	
+
 	*built_for_cpu = CPU_KIND_UNKNOWN;
 }
 
@@ -147,7 +147,7 @@ get_running_on_cpu_windows ([[maybe_unused]] unsigned short *running_on_cpu)
 			*running_on_cpu = CPU_KIND_UNKNOWN;
 			break;
 	}
-	
+
 	return 1;
 #else
 	return 0;
@@ -176,7 +176,7 @@ get_running_on_cpu_apple ([[maybe_unused]] unsigned short *running_on_cpu)
 			*running_on_cpu = CPU_KIND_UNKNOWN;
 			break;
 	}
-	
+
 	return 1;
 #else
 	return 0;
@@ -187,7 +187,7 @@ static int
 get_running_on_cpu_android ([[maybe_unused]] unsigned short *running_on_cpu)
 {
 	int retval = 1;
-	
+
 #if __arm__
 	if (!detect_houdini ()) {
 		*running_on_cpu = CPU_KIND_ARM;
@@ -228,9 +228,9 @@ get_running_on_cpu (unsigned short *running_on_cpu)
 void
 _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit)
 {
-	assert (built_for_cpu);
-	assert (running_on_cpu);
-	assert (is64bit);
+	abort_if_invalid_pointer_argument (built_for_cpu);
+	abort_if_invalid_pointer_argument (running_on_cpu);
+	abort_if_invalid_pointer_argument (is64bit);
 
 	*is64bit = is_64_bit ();
 	get_built_for_cpu (built_for_cpu);

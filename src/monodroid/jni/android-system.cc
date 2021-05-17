@@ -1,8 +1,6 @@
-#include <limits.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <assert.h>
+#include <cstring>
+#include <cstdlib>
+#include <cerrno>
 #include <ctype.h>
 #include <fcntl.h>
 
@@ -383,7 +381,7 @@ AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exis
 void*
 AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags)
 {
-	assert (directories != nullptr);
+	abort_if_invalid_pointer_argument (directories);
 	if (dso_name == nullptr)
 		return nullptr;
 
@@ -509,7 +507,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 				break;
 		}
 		if (max < 0)
-			max = INT_MAX;
+			max = std::numeric_limits<int>::max ();
 		if (*e) {
 			log_warn (LOG_GC, "Unsupported '%s' value '%s'.", Debug::DEBUG_MONO_MAX_GREFC, override.get ());
 		}
@@ -521,7 +519,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 long
 AndroidSystem::get_gref_gc_threshold ()
 {
-	if (max_gref_count == INT_MAX)
+	if (max_gref_count == std::numeric_limits<int>::max ())
 		return max_gref_count;
 	return static_cast<int> ((max_gref_count * 90LL) / 100LL);
 }
@@ -606,13 +604,13 @@ AndroidSystem::setup_environment_from_override_file (const char *path)
 
 	char *endptr;
 	unsigned long name_width = strtoul (buf, &endptr, 16);
-	if ((name_width == ULONG_MAX && errno == ERANGE) || (*buf != '\0' && *endptr != '\0')) {
+	if ((name_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (*buf != '\0' && *endptr != '\0')) {
 		log_warn (LOG_DEFAULT, "Malformed header of the environment override file %s: name width has invalid format", path);
 		return;
 	}
 
 	unsigned long value_width = strtoul (buf.get () + 11, &endptr, 16);
-	if ((value_width == ULONG_MAX && errno == ERANGE) || (*buf != '\0' && *endptr != '\0')) {
+	if ((value_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (*buf != '\0' && *endptr != '\0')) {
 		log_warn (LOG_DEFAULT, "Malformed header of the environment override file %s: value width has invalid format", path);
 		return;
 	}
