@@ -15,8 +15,7 @@ namespace generator.SourceWriters
 
 		public override void WriteAttribute (CodeWriter writer)
 		{
-			// Disabled until we can properly build .NET 5/6 assemblies in our XA tree.
-			//writer.WriteLine ($"[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android{Version}.0\")]");
+			writer.WriteLine ($"[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android{Version}.0\")]");
 		}
 	}
 }

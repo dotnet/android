@@ -276,20 +276,18 @@ namespace generatortests
 	{
 		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
 
+		[Test]
+		public void SupportedOSPlatform ()
+		{
+			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
+			klass.ApiAvailableSince = 30;
 
-		// Disabled until we can properly build .NET 5/6 assemblies in our XA tree.
-		//[Test]
-		//public void SupportedOSPlatform ()
-		//{
-		//	var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
-		//	klass.ApiAvailableSince = 30;
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
 
-		//	generator.Context.ContextTypes.Push (klass);
-		//	generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
-		//	generator.Context.ContextTypes.Pop ();
-
-		//	StringAssert.Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
-		//}
+			StringAssert.Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
+		}
 	}
 
 	[TestFixture]
