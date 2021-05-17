@@ -85,7 +85,7 @@ public class MonoPackageManager {
 				} else {
 					// for .net6 we temporarily need to load the SSL DSO
 					// see: https://github.com/dotnet/runtime/issues/51274#issuecomment-832963657
-					System.loadLibrary("System.Security.Cryptography.Native.OpenSsl");
+					System.loadLibrary("System.Security.Cryptography.Native.Android");
 				}
 
 				System.loadLibrary("monodroid");
