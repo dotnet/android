@@ -1,12 +1,10 @@
 #include <host-config.h>
 
-#include <assert.h>
-#include <errno.h>
+#include <cerrno>
 #include <dlfcn.h>
-#include <limits.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -369,8 +367,8 @@ get_ifaddrs_impl (int (**getifaddrs_implementation) (struct _monodroid_ifaddrs *
 {
 	void *libc;
 
-	assert (getifaddrs_implementation);
-	assert (freeifaddrs_implementation);
+	abort_if_invalid_pointer_argument (getifaddrs_implementation);
+	abort_if_invalid_pointer_argument (freeifaddrs_implementation);
 
 	libc = dlopen ("libc.so", RTLD_NOW);
 	if (libc) {
@@ -415,7 +413,7 @@ free_single_xamarin_ifaddrs (struct _monodroid_ifaddrs **ifap)
 static int
 open_netlink_session (netlink_session *session)
 {
-	assert (session != 0);
+	abort_if_invalid_pointer_argument (session);
 
 	memset (session, 0, sizeof (*session));
 	session->sock_fd = socket (AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
@@ -487,9 +485,9 @@ send_netlink_dump_request (netlink_session *session, int type)
 static int
 append_ifaddr (struct _monodroid_ifaddrs *addr, struct _monodroid_ifaddrs **ifaddrs_head, struct _monodroid_ifaddrs **last_ifaddr)
 {
-	assert (addr);
-	assert (ifaddrs_head);
-	assert (last_ifaddr);
+	abort_if_invalid_pointer_argument (addr);
+	abort_if_invalid_pointer_argument (ifaddrs_head);
+	abort_if_invalid_pointer_argument (last_ifaddr);
 
 	if (!*ifaddrs_head) {
 		*ifaddrs_head = *last_ifaddr = addr;
@@ -507,10 +505,8 @@ append_ifaddr (struct _monodroid_ifaddrs *addr, struct _monodroid_ifaddrs **ifad
 	if (addr == *last_ifaddr)
 		return 0;
 
-	assert (addr != *last_ifaddr);
 	(*last_ifaddr)->ifa_next = addr;
 	*last_ifaddr = addr;
-	assert ((*last_ifaddr)->ifa_next == NULL);
 
 	return 0;
 }
@@ -525,9 +521,9 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 	int ret = -1;
 	unsigned char *response = NULL;
 
-	assert (session);
-	assert (ifaddrs_head);
-	assert (last_ifaddr);
+	abort_if_invalid_pointer_argument (session);
+	abort_if_invalid_pointer_argument (ifaddrs_head);
+	abort_if_invalid_pointer_argument (last_ifaddr);
 
 	size_t buf_size = static_cast<size_t>(getpagesize ());
 	log_debug (LOG_NETLINK, "receive buffer size == %d", buf_size);
@@ -627,16 +623,19 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 static int
 fill_sa_address (struct sockaddr **sa, struct ifaddrmsg *net_address, void *rta_data, size_t rta_payload_length)
 {
-	assert (sa);
-	assert (net_address);
-	assert (rta_data);
+	abort_if_invalid_pointer_argument (sa);
+	abort_if_invalid_pointer_argument (net_address);
+	abort_if_invalid_pointer_argument (rta_data);
 
 	switch (net_address->ifa_family) {
 		case AF_INET: {
 			struct sockaddr_in *sa4;
-			assert (rta_payload_length == 4); /* IPv4 address length */
+			if (rta_payload_length != 4) /* IPv4 address length */ {
+				log_warn (LOG_NETLINK, "Unexpected IPv4 address payload length %u", rta_payload_length);
+				return -1;
+			}
 			sa4 = (struct sockaddr_in*)calloc (1, sizeof (*sa4));
-			if (!sa4)
+			if (sa4 == nullptr)
 				return -1;
 
 			sa4->sin_family = AF_INET;
@@ -647,9 +646,12 @@ fill_sa_address (struct sockaddr **sa, struct ifaddrmsg *net_address, void *rta_
 
 		case AF_INET6: {
 			struct sockaddr_in6 *sa6;
-			assert (rta_payload_length == 16); /* IPv6 address length */
+			if (rta_payload_length != 16) /* IPv6 address length */ {
+				log_warn (LOG_NETLINK, "Unexpected IPv6 address payload length %u", rta_payload_length);
+				return -1;
+			}
 			sa6 = (struct sockaddr_in6*)calloc (1, sizeof (*sa6));
-			if (!sa6)
+			if (sa6 == nullptr)
 				return -1;
 
 			sa6->sin6_family = AF_INET6;
@@ -662,7 +664,11 @@ fill_sa_address (struct sockaddr **sa, struct ifaddrmsg *net_address, void *rta_
 
 		default: {
 			struct sockaddr *sagen;
-			assert (rta_payload_length <= sizeof (sagen->sa_data));
+			if (rta_payload_length > sizeof (sagen->sa_data)) {
+				log_warn (LOG_NETLINK, "Unexpected RTA payload length %u (wanted at most %u)", rta_payload_length, sizeof (sagen->sa_data));
+				return -1;
+			}
+
 			*sa = sagen = (struct sockaddr*)calloc (1, sizeof (*sagen));
 			if (!sagen)
 				return -1;
@@ -679,8 +685,8 @@ fill_sa_address (struct sockaddr **sa, struct ifaddrmsg *net_address, void *rta_
 static int
 fill_ll_address (struct sockaddr_ll_extended **sa, struct ifinfomsg *net_interface, void *rta_data, size_t rta_payload_length)
 {
-	assert (sa);
-	assert (net_interface);
+	abort_if_invalid_pointer_argument (sa);
+	abort_if_invalid_pointer_argument (net_interface);
 
 	/* Always allocate, do not free - caller may reuse the same variable */
 	*sa = reinterpret_cast<sockaddr_ll_extended*>(calloc (1, sizeof (**sa)));
@@ -700,7 +706,7 @@ fill_ll_address (struct sockaddr_ll_extended **sa, struct ifinfomsg *net_interfa
 		return -1;
 	}
 
-	if (rta_payload_length > UCHAR_MAX) {
+	if (rta_payload_length > std::numeric_limits<unsigned char>::max ()) {
 		log_info (LOG_NETLINK, "Payload length too big to fit in the address structure");
 		free (*sa);
 		*sa = NULL;
@@ -836,7 +842,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	struct sockaddr **sa;
 	size_t payload_size;
 
-	assert (message);
+	abort_if_invalid_pointer_argument (message);
 	net_address = reinterpret_cast<ifaddrmsg*> (NLMSG_DATA (message));
 	length = static_cast<ssize_t>(IFA_PAYLOAD (message));
 	log_debug (LOG_NETLINK, "   address data length: %u", length);
@@ -986,7 +992,7 @@ get_link_info (const struct nlmsghdr *message)
 	struct _monodroid_ifaddrs *ifa = NULL;
 	struct sockaddr_ll_extended *sa = NULL;
 
-	assert (message);
+	abort_if_invalid_pointer_argument (message);
 	net_interface = reinterpret_cast <ifinfomsg*> (NLMSG_DATA (message));
 	length = static_cast<ssize_t>(message->nlmsg_len - NLMSG_LENGTH (sizeof (*net_interface)));
 	if (length <= 0) {
