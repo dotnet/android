@@ -5,13 +5,11 @@ using MonoDroid.Tuner;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
-	class PreserveJavaInterfaces : IMarkHandler
+	class PreserveJavaInterfaces : BaseMarkHandler
 	{
-		LinkContext context;
-
 		public void Initialize (LinkContext context, MarkContext markContext)
 		{
-			this.context = context;
+			base.Initialize (context, markContext);
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
 
@@ -35,7 +33,7 @@ namespace Microsoft.Android.Sdk.ILLink
 				return;
 
 			foreach (MethodReference method in type.Methods)
-				context.Annotations.AddPreservedMethod (type, method.Resolve ());
+				Annotations.AddPreservedMethod (type, method.Resolve ());
 		}
 	}
 }

@@ -10,13 +10,11 @@ using MonoDroid.Tuner;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
-	class PreserveRegistrations : IMarkHandler
+	class PreserveRegistrations : BaseMarkHandler
 	{
-		LinkContext context;
-
 		public void Initialize (LinkContext context, MarkContext markContext)
 		{
-			this.context = context;
+			base.Initialize (context, markContext);
 			markContext.RegisterMarkMethodAction (method => ProcessMethod (method));
 		}
 
@@ -27,7 +25,7 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		bool PreserveJniMarshalMethods ()
 		{
-			if (context.TryGetCustomData ("XAPreserveJniMarshalMethods", out var boolValue))
+			if (Context.TryGetCustomData ("XAPreserveJniMarshalMethods", out var boolValue))
 				return bool.Parse (boolValue);
 
 			return false;
@@ -76,8 +74,8 @@ namespace Microsoft.Android.Sdk.ILLink
 			bool preserveJniMarshalMethodOnly = false;
 			if (!method.TryGetRegisterMember (out var member, out var nativeMethod, out var signature)) {
 				if (PreserveJniMarshalMethods () &&
-				    method.DeclaringType.GetMarshalMethodsType () != null &&
-				    context.TryGetBaseOrInterfaceRegisterMember (method, out member, out nativeMethod, out signature)) {
+					method.DeclaringType.GetMarshalMethodsType () != null &&
+					Context.TryGetBaseOrInterfaceRegisterMember (method, out member, out nativeMethod, out signature)) {
 					preserveJniMarshalMethodOnly = true;
 				} else {
 					return;
@@ -98,7 +96,7 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		void AddPreservedMethod (MethodDefinition key, MethodDefinition method)
 		{
-			context.Annotations.AddPreservedMethod (key, method);
+			Annotations.AddPreservedMethod (key, method);
 		}
 	}
 }

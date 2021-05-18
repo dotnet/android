@@ -14,19 +14,16 @@ namespace MonoDroid.Tuner {
 
 	public class PreserveJavaExceptions :
 #if NET5_LINKER
-	IMarkHandler
+	BaseMarkHandler
 #else   // !NET5_LINKER
 	BaseSubStep
 #endif  // !NET5_LINKER
 	{
 
 #if NET5_LINKER
-		LinkContext context;
-		AnnotationStore Annotations => context?.Annotations;
-
 		public void Initialize (LinkContext context, MarkContext markContext)
 		{
-			this.context = context;
+			base.Initialize (context, markContext);
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
 #else   // !NET5_LINKER

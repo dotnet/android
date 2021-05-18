@@ -14,19 +14,16 @@ namespace MonoDroid.Tuner {
 
 	public class PreserveApplications :
 #if NET5_LINKER
-	IMarkHandler
+	BaseMarkHandler
 #else   // !NET5_LINKER
 	BaseSubStep
 #endif  // !NET5_LINKER
 	{
 
 #if NET5_LINKER
-		LinkContext context;
-		AnnotationStore Annotations => context?.Annotations;
-
 		public void Initialize (LinkContext context, MarkContext markContext)
 		{
-			this.context = context;
+			base.Initialize (context, markContext);
 			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly));
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}

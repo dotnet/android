@@ -21,19 +21,16 @@ namespace MonoDroid.Tuner
 	/// </summary>
 	public class FixAbstractMethodsStep :
 #if NET5_LINKER
-	IMarkHandler
+	BaseMarkHandler
 #else   // !NET5_LINKER
 	BaseStep
 #endif  // !NET5_LINKER
 	{
 
 #if NET5_LINKER
-		protected LinkContext Context { get; private set; }
-		protected AnnotationStore Annotations => Context?.Annotations;
-
 		public void Initialize (LinkContext context, MarkContext markContext)
 		{
-			Context = context;
+			base.Initialize (context, markContext);
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
 #else   // !NET5_LINKER

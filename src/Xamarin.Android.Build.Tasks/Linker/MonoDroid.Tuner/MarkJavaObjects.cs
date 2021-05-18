@@ -11,7 +11,7 @@ namespace MonoDroid.Tuner {
 
 	public class MarkJavaObjects :
 #if NET5_LINKER
-	IMarkHandler
+	BaseMarkHandler
 #else   // !NET5_LINKER
 	BaseSubStep
 #endif  // !NET5_LINKER
@@ -19,21 +19,16 @@ namespace MonoDroid.Tuner {
 		Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> module_types = new Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> ();
 
 #if NET5_LINKER
-		AnnotationStore Annotations => context?.Annotations;
-		LinkContext context;
+		public void Initialize (LinkContext context, MarkContext markContext)
+		{
+			base.Initialize (context, markContext);
+			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
 #else   // !NET5_LINKER
 		public override SubStepTargets Targets {
 			get { return SubStepTargets.Type; }
 		}
 #endif  // !NET5_LINKER
-
-#if NET5_LINKER
-		public void Initialize (LinkContext context, MarkContext markContext)
-		{
-			this.context = context;
-			markContext.RegisterMarkTypeAction (type => ProcessType (type));
-		}
-#endif  // NET5_LINKER
 
 		public
 #if !NET5_LINKER
