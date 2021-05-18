@@ -12,7 +12,7 @@ using Mono.Linker.Steps;
 using Mono.Cecil.Cil;
 #if NET5_LINKER
 using Microsoft.Android.Sdk.ILLink;
-#endif
+#endif  // NET5_LINKER
 
 namespace MonoDroid.Tuner
 {
@@ -25,7 +25,7 @@ namespace MonoDroid.Tuner
 		{
 			this.cache = cache;
 		}
-#endif
+#endif  // !NET5_LINKER
 
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
@@ -72,9 +72,9 @@ namespace MonoDroid.Tuner
 		{
 #if NET5_LINKER
 			return !type.IsAbstract && Context.IsSubclassOf (type, "Java.Lang.Object");
-#else
+#else   // !NET5_LINKER
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
-#endif
+#endif  // !NET5_LINKER
 		}
 
 		MethodDefinition methodKeepAlive = null;

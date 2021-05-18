@@ -19,10 +19,15 @@ namespace MonoDroid.Tuner
 	/// <summary>
 	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
 	/// </summary>
-	public class FixAbstractMethodsStep
+	public class FixAbstractMethodsStep :
 #if NET5_LINKER
-	: IMarkHandler
+	IMarkHandler
+#else   // !NET5_LINKER
+	BaseStep
+#endif  // !NET5_LINKER
 	{
+
+#if NET5_LINKER
 		protected LinkContext Context { get; private set; }
 		protected AnnotationStore Annotations => Context?.Annotations;
 
@@ -31,16 +36,14 @@ namespace MonoDroid.Tuner
 			Context = context;
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
-#else
-	: BaseStep
-	{
+#else   // !NET5_LINKER
 		readonly TypeDefinitionCache cache;
 
 		public FixAbstractMethodsStep (TypeDefinitionCache cache)
 		{
 			this.cache = cache;
 		}
-#endif
+#endif  // !NET5_LINKER
 
 		bool CheckShouldProcessAssembly (AssemblyDefinition assembly)
 		{
@@ -52,7 +55,7 @@ namespace MonoDroid.Tuner
 
 #if !NET5_LINKER
 			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
-#endif
+#endif  // !NET5_LINKER
 
 			return assembly.MainModule.HasTypeReference ("Java.Lang.Object");
 		}
@@ -79,7 +82,7 @@ namespace MonoDroid.Tuner
 			UpdateAssemblyAction (assembly);
 			MarkAbstractMethodErrorType ();
 		}
-#else
+#else   // !NET5_LINKER
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
 			if (!CheckShouldProcessAssembly (assembly))
@@ -127,7 +130,7 @@ namespace MonoDroid.Tuner
 			}
 			return changed;
 		}
-#endif
+#endif  // !NET5_LINKER
 
 		bool IsProductOrSdkAssembly (AssemblyDefinition assembly)
 		{
@@ -138,9 +141,9 @@ namespace MonoDroid.Tuner
 		{
 #if NET5_LINKER
 			return !type.IsAbstract && Context.IsSubclassOf (type, "Java.Lang.Object");
-#else
+#else   // !NET5_LINKER
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
-#endif
+#endif  // !NET5_LINKER
 		}
 
 		static bool CompareTypes (TypeReference iType, TypeReference tType)
@@ -251,9 +254,9 @@ namespace MonoDroid.Tuner
 			List<MethodDefinition> typeMethods = new List<MethodDefinition> (type.Methods);
 #if NET5_LINKER
 			foreach (var baseType in Context.GetBaseTypes (type))
-#else
+#else   // !NET5_LINKER
 			foreach (var baseType in type.GetBaseTypes (cache))
-#endif
+#endif  // !NET5_LINKER
 				typeMethods.AddRange (baseType.Methods);
 
 			foreach (var ifaceInfo in type.Interfaces) {
@@ -340,7 +343,8 @@ namespace MonoDroid.Tuner
 
 		bool markedAbstractMethodErrorType;
 
-		void MarkAbstractMethodErrorType () {
+		void MarkAbstractMethodErrorType ()
+		{
 			if (markedAbstractMethodErrorType)
 				return;
 			markedAbstractMethodErrorType = true;
@@ -365,9 +369,9 @@ namespace MonoDroid.Tuner
 					return assembly;
 			}
 			return null;
-#else
+#else   // NET5_LINKER
 			return Context.GetLoadedAssembly ("Mono.Android");
-#endif
+#endif  // NET5_LINKER
 		}
 	}
 }

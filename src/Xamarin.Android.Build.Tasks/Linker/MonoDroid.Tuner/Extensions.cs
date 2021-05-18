@@ -13,7 +13,7 @@ using Java.Interop.Tools.Cecil;
 
 #if NET5_LINKER
 using Microsoft.Android.Sdk.ILLink;
-#endif
+#endif  // NET5_LINKER
 
 namespace MonoDroid.Tuner {
 
@@ -261,9 +261,9 @@ namespace MonoDroid.Tuner {
 
 #if NET5_LINKER
 		public static bool TryGetBaseOrInterfaceRegisterMember (this LinkContext context, MethodDefinition method, out string member, out string nativeMethod, out string signature)
-#else
+#else   // !NET5_LINKER
 		public static bool TryGetBaseOrInterfaceRegisterMember (this MethodDefinition method, TypeDefinitionCache cache, out string member, out string nativeMethod, out string signature)
-#endif
+#endif  // !NET5_LINKER
 		{
 			var type = method.DeclaringType;
 
@@ -274,13 +274,13 @@ namespace MonoDroid.Tuner {
 
 #if NET5_LINKER
 			var m = context.GetBaseDefinition (method);
-#else
+#else   // !NET5_LINKER
 			var m = method.GetBaseDefinition (cache);
-#endif
+#endif  // !NET5_LINKER
 
 			while (m != null) {
 				if (m == method)
-                                        break;
+					break;
 
 				method = m;
 
@@ -289,9 +289,9 @@ namespace MonoDroid.Tuner {
 
 #if NET5_LINKER
 				context.GetBaseDefinition (m);
-#else
+#else   // !NET5_LINKER
 				m = m.GetBaseDefinition (cache);
-#endif
+#endif  // !NET5_LINKER
 			}
 
 			if (!method.DeclaringType.HasInterfaces || !method.IsNewSlot)
@@ -299,7 +299,7 @@ namespace MonoDroid.Tuner {
 
 			foreach (var iface in method.DeclaringType.Interfaces) {
 				if (iface.InterfaceType.IsGenericInstance)
-                                        continue;
+					continue;
 
 				var itype = iface.InterfaceType.Resolve ();
 				if (itype == null || !itype.HasMethods)
@@ -308,28 +308,28 @@ namespace MonoDroid.Tuner {
 				foreach (var im in itype.Methods)
 #if NET5_LINKER
 					if (context.IsEqual (im, method))
-#else
+#else   // !NET5_LINKER
 					if (im.IsEqual (method, cache))
-#endif
+#endif  // !NET5_LINKER
 						return im.TryGetRegisterMember (out member, out nativeMethod, out signature);
-                        }
+				}
 
-                        return false;
+			return false;
 		}
 
 #if NET5_LINKER
 		public static bool IsEqual (this LinkContext context, MethodDefinition m1, MethodDefinition m2)
-#else
+#else   // !NET5_LINKER
 		public static bool IsEqual (this MethodDefinition m1, MethodDefinition m2, TypeDefinitionCache cache)
-#endif
+#endif  // !NET5_LINKER
 		{
 			if (m1.Name != m2.Name || m1.ReturnType.Name != m2.ReturnType.Name)
 				return false;
 #if NET5_LINKER
 			return context.AreParametersCompatibleWith (m1.Parameters, m2.Parameters);
-#else
+#else   // !NET5_LINKER
 			return m1.Parameters.AreParametersCompatibleWith (m2.Parameters, cache);
-#endif
+#endif  // !NET5_LINKER
 		}
 
 		public static bool TryGetMarshalMethod (this MethodDefinition method, string nativeMethod, string signature, out MethodDefinition marshalMethod)

@@ -22,7 +22,7 @@ namespace Mono.Linker.Steps {
 		{
 			this.filename = outputFileName;
 		}
-#endif
+#endif  // !NET5_LINKER
 
 		string filename;
 		TextWriter writer;
@@ -32,7 +32,7 @@ namespace Mono.Linker.Steps {
 #if NET5_LINKER
 			if (Context.TryGetCustomData ("ProguardConfiguration", out string proguardPath))
 				filename = proguardPath;
-#endif
+#endif  // NET5_LINKER
 			var dir = Path.GetDirectoryName (filename);
 			if (!Directory.Exists (dir))
 				Directory.CreateDirectory (dir);

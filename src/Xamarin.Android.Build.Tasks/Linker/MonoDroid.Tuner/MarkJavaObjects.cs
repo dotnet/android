@@ -9,23 +9,23 @@ using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner {
 
-	public class MarkJavaObjects
+	public class MarkJavaObjects :
 #if NET5_LINKER
-	: IMarkHandler
-#else
-	: BaseSubStep
-#endif
+	IMarkHandler
+#else   // !NET5_LINKER
+	BaseSubStep
+#endif  // !NET5_LINKER
 	{
 		Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> module_types = new Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> ();
 
 #if NET5_LINKER
 		AnnotationStore Annotations => context?.Annotations;
 		LinkContext context;
-#else
+#else   // !NET5_LINKER
 		public override SubStepTargets Targets {
 			get { return SubStepTargets.Type; }
 		}
-#endif
+#endif  // !NET5_LINKER
 
 #if NET5_LINKER
 		public void Initialize (LinkContext context, MarkContext markContext)
@@ -33,12 +33,12 @@ namespace MonoDroid.Tuner {
 			this.context = context;
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
-#endif
+#endif  // NET5_LINKER
 
 		public
 #if !NET5_LINKER
 		override
-#endif
+#endif  // !NET5_LINKER
 		void ProcessType (TypeDefinition type)
 		{
 			// If this isn't a JLO or IJavaObject implementer,
