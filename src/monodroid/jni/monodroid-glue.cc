@@ -837,7 +837,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	 * Looking for assemblies from the update dir takes precedence over
 	 * everything else, and thus must go LAST.
 	 */
-	embeddedAssemblies.install_preload_hooks ();
+	embeddedAssemblies.install_preload_hooks_for_appdomains ();
 #ifndef RELEASE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
@@ -894,8 +894,11 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	}
 
 	MonoDomain *domain;
+#if !defined (NET6)
 	if (is_root_domain) {
+#endif // ndef NET6
 		domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
+#if !defined (NET6)
 	} else {
 		MonoDomain* root_domain = mono_get_root_domain ();
 
@@ -909,6 +912,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 		domain = utils.monodroid_create_appdomain (root_domain, domain_name.get (), /*shadow_copy:*/ 1, /*shadow_directory:*/ androidSystem.get_override_dir (0));
 	}
+#endif // ndef NET6
 
 	if constexpr (is_running_on_desktop) {
 		if (is_root_domain) {
@@ -1002,7 +1006,12 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
-	MonoAssembly *assm = utils.monodroid_load_assembly (domain, "Mono.Android");
+	MonoAssembly *assm;
+#if defined (NET6)
+	assm = utils.monodroid_load_assembly (default_alc, MONO_ANDROID_ASSEMBLY_NAME);
+#else // def NET6
+	assm = utils.monodroid_load_assembly (domain, MONO_ANDROID_ASSEMBLY_NAME);
+#endif // ndef NET6
 	MonoImage *image = mono_assembly_get_image (assm);
 
 	uint32_t i = 0;
@@ -1020,7 +1029,13 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 		exit (FATAL_EXIT_MISSING_INIT);
 	}
 
-	MonoAssembly    *ji_assm    = utils.monodroid_load_assembly (domain, "Java.Interop");
+	MonoAssembly *ji_assm;
+#if defined (NET6)
+	ji_assm = utils.monodroid_load_assembly (default_alc, JAVA_INTEROP_ASSEMBLY_NAME);
+#else // def NET6
+	ji_assm = utils.monodroid_load_assembly (domain, JAVA_INTEROP_ASSEMBLY_NAME);
+#endif // ndef NET6
+
 	MonoImage       *ji_image   = mono_assembly_get_image  (ji_assm);
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES + OSBridge::NUM_JI_GC_BRIDGE_TYPES; ++i) {
 		lookup_bridge_info (domain, ji_image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
@@ -1072,7 +1087,12 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 MonoClass*
 MonodroidRuntime::get_android_runtime_class (MonoDomain *domain)
 {
-	MonoAssembly *assm = utils.monodroid_load_assembly (domain, "Mono.Android");
+	MonoAssembly *assm;
+#if defined (NET6)
+	assm = utils.monodroid_load_assembly (default_alc, MONO_ANDROID_ASSEMBLY_NAME);
+#else // def NET6
+	assm = utils.monodroid_load_assembly (domain, MONO_ANDROID_ASSEMBLY_NAME);
+#endif // ndef NET6
 	MonoImage *image   = mono_assembly_get_image (assm);
 	MonoClass *runtime = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "JNIEnv");
 
@@ -1615,6 +1635,31 @@ MonodroidRuntime::disable_external_signal_handlers (void)
 	}
 }
 
+#if defined (NET6)
+inline void
+MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly)
+{
+	log_warn (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
+
+	timing_period total_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		total_time.mark_start ();
+
+	const char *assm_name = assembly.get_cstr ();
+	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
+
+	MonoImageOpenStatus open_status;
+	mono_assembly_load_full_alc (alc_handle, aname, nullptr /* basedir */, &open_status);
+
+	mono_assembly_name_free (aname);
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+		TIMING_LOG_INFO (total_time, "Assembly load (ALC): %s", assm_name);
+	}
+}
+#endif // NET6
+
 inline void
 MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 {
@@ -1623,34 +1668,32 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 		total_time.mark_start ();
 
 	const char *assm_name = assembly.get_cstr ();
-	MonoAssemblyName *aname;
-
-	aname = mono_assembly_name_new (assm_name);
+	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
 
 #ifndef ANDROID
 	if (designerAssemblies.has_assemblies () && designerAssemblies.try_load_assembly (domain, aname) != nullptr) {
 		log_debug (LOG_ASSEMBLY, "Dynamically opened assembly %s", mono_assembly_name_get_name (aname));
 	} else
 #endif
-	if (domain != mono_domain_get ()) {
-		MonoDomain *current = mono_domain_get ();
-		mono_domain_set (domain, FALSE);
-		mono_assembly_load_full (aname, NULL, NULL, 0);
-		mono_domain_set (current, FALSE);
-	} else {
-		mono_assembly_load_full (aname, NULL, NULL, 0);
-	}
+		if (domain != mono_domain_get ()) {
+			MonoDomain *current = mono_domain_get ();
+			mono_domain_set (domain, FALSE);
+			mono_assembly_load_full (aname, NULL, NULL, 0);
+			mono_domain_set (current, FALSE);
+		} else {
+			mono_assembly_load_full (aname, NULL, NULL, 0);
+		}
 
 	mono_assembly_name_free (aname);
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
-		TIMING_LOG_INFO (total_time, "Assembly load: %s preloaded", assm_name);
+		TIMING_LOG_INFO (total_time, "Assembly load (domain): %s", assm_name);
 	}
 }
 
 inline void
-MonodroidRuntime::load_assemblies (MonoDomain *domain, bool preload, jstring_array_wrapper &assemblies)
+MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preload, jstring_array_wrapper &assemblies)
 {
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
@@ -1658,7 +1701,7 @@ MonodroidRuntime::load_assemblies (MonoDomain *domain, bool preload, jstring_arr
 
 	for (size_t i = 0; i < assemblies.get_length (); ++i) {
 		jstring_wrapper &assembly = assemblies [i];
-		load_assembly (domain, assembly);
+		load_assembly (ctx, assembly);
 		// only load the first "main" assembly if we are not preloading.
 		if (!preload)
 			break;
@@ -1692,12 +1735,25 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 		}
 	}
 
+#if defined (NET6)
+	default_alc = mono_alc_get_default_gchandle ();
+	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
+
+	embeddedAssemblies.install_preload_hooks_for_alc ();
+	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
+#endif // def NET6
+
 #ifndef ANDROID
 	if (assembliesBytes != nullptr)
 		designerAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes, assembliesPaths);
 #endif
 	bool preload = (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
-	load_assemblies (domain, preload, assemblies);
+
+#if defined (NET6)
+		load_assemblies (default_alc, preload, assemblies);
+#else // def NET6
+		load_assemblies (domain, preload, assemblies);
+#endif // ndef NET6
 	init_android_runtime (domain, env, runtimeClass, loader);
 
 	osBridge.add_monodroid_domain (domain);
@@ -2197,7 +2253,7 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 
 	MonoMethod *register_jni_natives = registerType;
 	if constexpr (is_running_on_desktop) {
-		MonoClass *runtime = utils.monodroid_get_class_from_name (domain, "Mono.Android", "Android.Runtime", "JNIEnv");
+		MonoClass *runtime = utils.monodroid_get_class_from_name (domain, MONO_ANDROID_ASSEMBLY_NAME, "Android.Runtime", "JNIEnv");
 		register_jni_natives = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
 	}
 	utils.monodroid_runtime_invoke (domain, register_jni_natives, nullptr, args, nullptr);

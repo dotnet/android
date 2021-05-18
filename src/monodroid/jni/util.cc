@@ -173,6 +173,24 @@ Util::monodroid_store_package_name (const char *name)
 	log_info (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
 }
 
+#if defined (NET6)
+MonoAssembly*
+Util::monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const char *basename)
+{
+	MonoImageOpenStatus  status;
+	MonoAssemblyName    *aname = mono_assembly_name_new (basename);
+	MonoAssembly        *assm = mono_assembly_load_full_alc (alc_handle, aname, nullptr, &status);
+
+	mono_assembly_name_free (aname);
+
+	if (assm == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+		log_fatal (LOG_DEFAULT, "Unable to find assembly '%s'.", basename);
+		exit (FATAL_EXIT_MISSING_ASSEMBLY);
+	}
+	return assm;
+}
+#endif // def NET6
+
 MonoAssembly *
 Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 {
