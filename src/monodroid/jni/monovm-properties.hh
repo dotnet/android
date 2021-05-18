@@ -9,35 +9,42 @@ namespace xamarin::android::internal
 {
 	class MonoVMProperties final
 	{
-		constexpr static size_t PROPERTY_COUNT = 1;
-
-		constexpr static char PINVOKE_OVERRIDE_KEY[] = "PINVOKE_OVERRIDE";
-		constexpr static size_t PINVOKE_OVERRIDE_INDEX = 0;
+		constexpr static size_t PROPERTY_COUNT = 0;
 
 		using property_array = const char*[PROPERTY_COUNT];
 
 	public:
-		explicit MonoVMProperties (PInvokeOverrideFn pinvoke_override_cb)
+		explicit MonoVMProperties ()
 		{
 			static_assert (PROPERTY_COUNT == N_PROPERTY_KEYS);
 			static_assert (PROPERTY_COUNT == N_PROPERTY_VALUES);
-
-			snprintf (ptr_str, sizeof(ptr_str), "%p", pinvoke_override_cb);
 		}
 
 		int property_count () const
 		{
-			return _property_count;
+			if constexpr (PROPERTY_COUNT != 0) {
+				return _property_count;
+			} else {
+				return 0;
+			}
 		}
 
 		const char* const* property_keys () const
 		{
-			return _property_keys;
+			if constexpr (PROPERTY_COUNT != 0) {
+				return _property_keys;
+			} else {
+				return nullptr;
+			}
 		}
 
 		const char* const* property_values () const
 		{
-			return _property_values;
+			if constexpr (PROPERTY_COUNT != 0) {
+				return _property_values;
+			} else {
+				return nullptr;
+			}
 		}
 
 	private:
@@ -51,18 +58,13 @@ namespace xamarin::android::internal
 		}
 
 	private:
-		property_array _property_keys = {
-			PINVOKE_OVERRIDE_KEY,
-		};
+		property_array _property_keys = {};
 		constexpr static size_t N_PROPERTY_KEYS = sizeof(_property_keys) / sizeof(const char*);
 
-		property_array _property_values = {
-			ptr_str,
-		};
+		property_array _property_values = {};
 		constexpr static size_t N_PROPERTY_VALUES = sizeof(_property_values) / sizeof(const char*);
 
-		int _property_count = 1;
-		char ptr_str[20];
+		int _property_count = 0;
 	};
 }
 #endif // def NET6

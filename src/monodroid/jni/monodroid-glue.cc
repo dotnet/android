@@ -104,9 +104,27 @@ using namespace xamarin::android::internal;
 
 std::mutex MonodroidRuntime::api_init_lock;
 void *MonodroidRuntime::api_dso_handle = nullptr;
-#else // def NET6
+#else // ndef NET6
 std::mutex MonodroidRuntime::pinvoke_map_write_lock;
-#endif // ndef NET6
+
+// The pragmas will go away once we switch to C++20, where the designator becomes part of the language standard. Both
+// gcc and clang support it now as an extension, though.
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-designator"
+#endif
+
+MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
+	.trusted_platform_assemblies = nullptr,
+	.app_paths = nullptr,
+	.native_dll_search_directories = nullptr,
+	.pinvoke_override = &MonodroidRuntime::monodroid_pinvoke_override
+};
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif
+#endif // def NET6
 
 #ifdef WINDOWS
 static const char* get_xamarin_android_msbuild_path (void);
@@ -1794,14 +1812,15 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 #if defined (NET6)
 	{
-		MonoVMProperties monovm_props (monodroid_pinvoke_override);
+		MonoVMProperties monovm_props;
 
 		// NOTE: the `const_cast` breaks the contract made to MonoVMProperties that the arrays it returns won't be
 		// modified, but it's "ok" since Mono doesn't modify them and by using `const char* const*` in MonoVMProperties
 		// we may get better code generated (since the methods returning the arrays are marked as `const`, thus not
 		// modifying the class state, allowing the compiler to make some assumptions when optimizing) and the class
 		// itself doesn't touch the arrays outside its constructor.
-		monovm_initialize (
+		monovm_initialize_preparsed (
+			&monovm_core_properties,
 			monovm_props.property_count (),
 			const_cast<const char**>(monovm_props.property_keys ()),
 			const_cast<const char**>(monovm_props.property_values ())
