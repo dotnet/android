@@ -15,7 +15,7 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string BinutilsVersion                = "2.36.1-XA.4";
+		const string BinutilsVersion                = "2.36.1-XA.1";
 
 		const string MicrosoftOpenJDK11Version      = "11.0.10";
 		const string MicrosoftOpenJDK11Release      = "9.1";
@@ -53,7 +53,7 @@ namespace Xamarin.Android.Prepare
 
 			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
 
-			public static Uri BinutilsArchive = new Uri ($"https://github.com/grendello/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-binutils-{BinutilsVersion}.7z");
+			public static Uri BinutilsArchive = new Uri ($"https://github.com/xamarin/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-binutils-{BinutilsVersion}.7z");
 		}
 
 		public static partial class Defaults
