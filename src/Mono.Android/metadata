@@ -1650,6 +1650,7 @@
   <attr api-since="31" path="/api/package[@name='android.net.ipsec.ike']" name="managedName">Android.Net.IpSec.Ike</attr>
   <attr api-since="31" path="/api/package[@name='android.net.ipsec.ike.exceptions']" name="managedName">Android.Net.IpSec.Ike.Exceptions</attr>
   <attr api-since="31" path="/api/package[@name='android.view.displayhash']" name="managedName">Android.Views.DisplayHash</attr>
+  <attr api-since="31" path="/api/package[@name='android.view.translation']" name="managedName">Android.Views.Translation</attr>
 
   <!-- These interfaces contain constants users need to reference, but the interfaces are protected, nested in a sealed type. -->
   <!-- C# won't let you access protected types in a sealed type, so make them public so they can be used by user code. -->
