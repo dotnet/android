@@ -6,10 +6,6 @@ using System.Linq;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
-#if NET5_LINKER
-using Microsoft.Android.Sdk.ILLink;
-#endif
-
 using Mono.Tuner;
 using Mobile.Tuner;
 

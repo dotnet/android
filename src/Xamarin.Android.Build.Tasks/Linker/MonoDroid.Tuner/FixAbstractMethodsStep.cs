@@ -136,11 +136,7 @@ namespace MonoDroid.Tuner
 
 		bool MightNeedFix (TypeDefinition type)
 		{
-#if NET5_LINKER
-			return !type.IsAbstract && Context.IsSubclassOf (type, "Java.Lang.Object");
-#else   // !NET5_LINKER
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
-#endif  // !NET5_LINKER
 		}
 
 		static bool CompareTypes (TypeReference iType, TypeReference tType)
@@ -249,11 +245,7 @@ namespace MonoDroid.Tuner
 
 			bool rv = false;
 			List<MethodDefinition> typeMethods = new List<MethodDefinition> (type.Methods);
-#if NET5_LINKER
-			foreach (var baseType in Context.GetBaseTypes (type))
-#else   // !NET5_LINKER
 			foreach (var baseType in type.GetBaseTypes (cache))
-#endif  // !NET5_LINKER
 				typeMethods.AddRange (baseType.Methods);
 
 			foreach (var ifaceInfo in type.Interfaces) {

@@ -18,7 +18,15 @@ namespace MonoDroid.Tuner
 {
 	public class AddKeepAlivesStep : BaseStep
 	{
-#if !NET5_LINKER
+
+#if NET5_LINKER
+		LinkContextMetadataResolver cache;
+
+		protected override void Process ()
+		{
+			cache = new LinkContextMetadataResolver (Context);
+		}
+#else   // !NET5_LINKER
 		readonly TypeDefinitionCache cache;
 
 		public AddKeepAlivesStep (TypeDefinitionCache cache)
@@ -70,11 +78,7 @@ namespace MonoDroid.Tuner
 
 		bool MightNeedFix (TypeDefinition type)
 		{
-#if NET5_LINKER
-			return !type.IsAbstract && Context.IsSubclassOf (type, "Java.Lang.Object");
-#else   // !NET5_LINKER
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
-#endif  // !NET5_LINKER
 		}
 
 		MethodDefinition methodKeepAlive = null;
