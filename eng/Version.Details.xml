@@ -8,6 +8,10 @@
       <Uri>https://github.com/mono/linker</Uri>
       <Sha>7a5c445a69359415b7ff18b91cd24472ef9509ff</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="6.0.0-preview.5.21265.5" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>64303750a9198a49f596bcc3aa13de804e421579</Sha>
+    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20181.7">
