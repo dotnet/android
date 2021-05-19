@@ -19,7 +19,7 @@ namespace MonoDroid.Tuner {
 		Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> module_types = new Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> ();
 
 #if NET5_LINKER
-		public void Initialize (LinkContext context, MarkContext markContext)
+		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));

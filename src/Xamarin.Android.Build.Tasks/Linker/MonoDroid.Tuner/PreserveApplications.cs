@@ -21,7 +21,7 @@ namespace MonoDroid.Tuner {
 	{
 
 #if NET5_LINKER
-		public void Initialize (LinkContext context, MarkContext markContext)
+		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly));

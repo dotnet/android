@@ -12,7 +12,7 @@ namespace Microsoft.Android.Sdk.ILLink
 {
 	class PreserveRegistrations : BaseMarkHandler
 	{
-		public void Initialize (LinkContext context, MarkContext markContext)
+		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkMethodAction (method => ProcessMethod (method));

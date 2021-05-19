@@ -7,7 +7,7 @@ namespace Microsoft.Android.Sdk.ILLink
 {
 	class PreserveJavaInterfaces : BaseMarkHandler
 	{
-		public void Initialize (LinkContext context, MarkContext markContext)
+		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
