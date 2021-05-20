@@ -83,7 +83,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 
 	if (packageName != nullptr) {
 		jstr = packageName;
-		androidSystem.set_override_dir (1, utils.string_concat ("/data/local/tmp/.", jstr.get_cstr ()));
+		androidSystem.set_override_dir (1, utils.string_concat ("/data/local/tmp/.xamarin/", jstr.get_cstr ()));
 	}
 
 	if (runtimeNativeLibDir != nullptr) {
