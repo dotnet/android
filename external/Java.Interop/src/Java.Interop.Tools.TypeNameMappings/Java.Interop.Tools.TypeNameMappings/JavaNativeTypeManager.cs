@@ -408,28 +408,37 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
 		public static bool IsApplication (TypeDefinition type) =>
-			IsApplication (type, cache: null);
+			IsApplication (type, resolver: null);
 
-		public static bool IsApplication (TypeDefinition type, TypeDefinitionCache? cache)
+		public static bool IsApplication (TypeDefinition type, TypeDefinitionCache? cache) =>
+			IsApplication (type, (IMetadataResolver?) cache);
+
+		public static bool IsApplication (TypeDefinition type, IMetadataResolver? resolver)
 		{
-			return type.GetBaseTypes (cache).Any (b => b.FullName == "Android.App.Application");
+			return type.GetBaseTypes (resolver).Any (b => b.FullName == "Android.App.Application");
 		}
 
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
 		public static bool IsInstrumentation (TypeDefinition type) =>
-			IsInstrumentation (type, cache: null);
+			IsInstrumentation (type, resolver: null);
 
-		public static bool IsInstrumentation (TypeDefinition type, TypeDefinitionCache? cache)
+		public static bool IsInstrumentation (TypeDefinition type, TypeDefinitionCache? cache) =>
+			IsInstrumentation (type, (IMetadataResolver?) cache);
+
+		public static bool IsInstrumentation (TypeDefinition type, IMetadataResolver? resolver)
 		{
-			return type.GetBaseTypes (cache).Any (b => b.FullName == "Android.App.Instrumentation");
+			return type.GetBaseTypes (resolver).Any (b => b.FullName == "Android.App.Instrumentation");
 		}
 
 		// moved from JavaTypeInfo
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
 		public static string? GetJniSignature (MethodDefinition method) =>
-			GetJniSignature (method, cache: null);
+			GetJniSignature (method, resolver: null);
 
-		public static string? GetJniSignature (MethodDefinition method, TypeDefinitionCache? cache)
+		public static string? GetJniSignature (MethodDefinition method, TypeDefinitionCache? cache) =>
+			GetJniSignature (method, (IMetadataResolver?) cache);
+
+		public static string? GetJniSignature (MethodDefinition method, IMetadataResolver? resolver)
 		{
 			return GetJniSignature<TypeReference,ParameterDefinition> (
 				method.Parameters,
@@ -437,21 +446,24 @@ namespace Java.Interop.Tools.TypeNameMappings
 				p => GetExportKind (p),
 				method.ReturnType,
 				GetExportKind (method.MethodReturnType),
-				(t, k) => GetJniTypeName (t, k, cache),
+				(t, k) => GetJniTypeName (t, k, resolver),
 				method.IsConstructor);
 		}
 
 		// moved from JavaTypeInfo
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
 		public static string? GetJniTypeName (TypeReference typeRef) =>
-			GetJniTypeName (typeRef, cache: null);
+			GetJniTypeName (typeRef, resolver: null);
 
-		public static string? GetJniTypeName (TypeReference typeRef, TypeDefinitionCache? cache)
+		public static string? GetJniTypeName (TypeReference typeRef, TypeDefinitionCache? cache) =>
+			GetJniTypeName (typeRef, (IMetadataResolver?) cache);
+
+		public static string? GetJniTypeName (TypeReference typeRef, IMetadataResolver? resolver)
 		{
-			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified, cache);
+			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified, resolver);
 		}
 
-		internal static string? GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind, TypeDefinitionCache? cache)
+		internal static string? GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind, IMetadataResolver? cache)
 		{
 			return GetJniTypeName<TypeReference, TypeDefinition> (typeRef, exportKind, t => t.Resolve (), t => {
 				TypeReference etype;
@@ -462,11 +474,21 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
 		public static string ToCompatJniName (TypeDefinition type) =>
-			ToCompatJniName (type, cache: null);
+			ToCompatJniName (type, resolver: null);
 
-		public static string ToCompatJniName (TypeDefinition type, TypeDefinitionCache? cache)
+		public static string ToCompatJniName (TypeDefinition type, TypeDefinitionCache? cache) =>
+			ToCompatJniName (type, (IMetadataResolver?) cache);
+
+		public static string ToCompatJniName (TypeDefinition type, IMetadataResolver? resolver)
 		{
-			return ToJniName (type, t => t.DeclaringType, t => t.Name, ToCompatPackageName, ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition, cache));
+			return ToJniName (
+					type:               type,
+					decl:               t => t.DeclaringType,
+					name:               t => t.Name,
+					ns:                 ToCompatPackageName,
+					overrideName:       t => ToJniNameFromAttributes (t, resolver),
+					shouldUpdateName:   t => IsNonStaticInnerClass (t as TypeDefinition, resolver)
+			);
 		}
 
 		static string ToCompatPackageName (TypeDefinition type)
@@ -476,15 +498,18 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		// Keep in sync with ToJniNameFromAttributes(Type) and ToJniName(Type)
 		public static string ToJniName (TypeDefinition type) =>
-			ToJniName (type, cache: null);
+			ToJniName (type, resolver: null);
 
-		public static string ToJniName (TypeDefinition type, TypeDefinitionCache? cache)
+		public static string ToJniName (TypeDefinition type, TypeDefinitionCache? cache) =>
+			ToJniName (type, (IMetadataResolver?) cache);
+
+		public static string ToJniName (TypeDefinition type, IMetadataResolver? resolver)
 		{
-			return ToJniName (type, ExportParameterKind.Unspecified, cache) ??
+			return ToJniName (type, ExportParameterKind.Unspecified, resolver) ??
 				"java/lang/Object";
 		}
 
-		static string? ToJniName (TypeDefinition type, ExportParameterKind exportKind, TypeDefinitionCache? cache)
+		static string? ToJniName (TypeDefinition type, ExportParameterKind exportKind, IMetadataResolver? cache)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
@@ -499,13 +524,20 @@ namespace Java.Interop.Tools.TypeNameMappings
 				return GetSpecialExportJniType (type.FullName, exportKind);
 			}
 
-			return ToJniName (type, t => t.DeclaringType, t => t.Name, t => GetPackageName (t, cache), ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition, cache));
+			return ToJniName (
+					type:               type,
+					decl:               t => t.DeclaringType,
+					name:               t => t.Name,
+					ns:                 t => GetPackageName (t, cache),
+					overrideName:       t => ToJniNameFromAttributes (t, cache),
+					shouldUpdateName:   t => IsNonStaticInnerClass (t as TypeDefinition, cache)
+			);
 		}
 
-		static string? ToJniNameFromAttributes (TypeDefinition type)
+		static string? ToJniNameFromAttributes (TypeDefinition type, IMetadataResolver? resolver)
 		{
 			#region CustomAttribute alternate name support
-			var attrs = type.CustomAttributes.Where (a => a.AttributeType.Resolve ().Interfaces.Any (it => it.InterfaceType.FullName == typeof (IJniNameProviderAttribute).FullName));
+			var attrs = type.CustomAttributes.Where (a => Resolve (resolver, a.AttributeType).Interfaces.Any (it => it.InterfaceType.FullName == typeof (IJniNameProviderAttribute).FullName));
 			return attrs.Select (attr => {
 				var ap = attr.Properties.FirstOrDefault (p => p.Name == "Name");
 				string? name = null;
@@ -524,6 +556,11 @@ namespace Java.Interop.Tools.TypeNameMappings
 				.FirstOrDefault (s => s != null);
 			#endregion
 		}
+
+		static TypeDefinition Resolve (IMetadataResolver? resolver, TypeReference typeReference) =>
+			resolver?.Resolve (typeReference) ??
+			typeReference.Resolve () ??
+			throw new InvalidOperationException ();
 
 		public static int GetArrayInfo (Mono.Cecil.TypeReference type, out Mono.Cecil.TypeReference elementType)
 		{
@@ -561,19 +598,22 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
 		public static string GetPackageName (TypeDefinition type) =>
-			GetPackageName (type, cache: null);
+			GetPackageName (type, resolver: null);
 
-		public static string GetPackageName (TypeDefinition type, TypeDefinitionCache? cache)
+		public static string GetPackageName (TypeDefinition type, TypeDefinitionCache? cache) =>
+			GetPackageName (type, (IMetadataResolver?) cache);
+
+		public static string GetPackageName (TypeDefinition type, IMetadataResolver? resolver)
 		{
-			if (IsPackageNamePreservedForAssembly (type.GetPartialAssemblyName (cache)))
+			if (IsPackageNamePreservedForAssembly (type.GetPartialAssemblyName (resolver)))
 				return type.Namespace.ToLowerInvariant ();
 			switch (PackageNamingPolicy) {
 			case PackageNamingPolicy.Lowercase:
 				return type.Namespace.ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
-				return "assembly_" + (type.GetPartialAssemblyName (cache).Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
+				return "assembly_" + (type.GetPartialAssemblyName (resolver).Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseCrc64:
-				return CRC_PREFIX + ToCrc64 (type.Namespace + ":" + type.GetPartialAssemblyName (cache));
+				return CRC_PREFIX + ToCrc64 (type.Namespace + ":" + type.GetPartialAssemblyName (resolver));
 			default:
 					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}
@@ -619,7 +659,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 #if HAVE_CECIL
-		internal static bool IsNonStaticInnerClass (TypeDefinition? type, TypeDefinitionCache? cache)
+		internal static bool IsNonStaticInnerClass (TypeDefinition? type, IMetadataResolver? cache)
 		{
 			if (type == null)
 				return false;
@@ -633,7 +673,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 				.Any (ctor => ctor.Parameters.Any (p => p.Name == "__self"));
 		}
 
-		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type, TypeDefinitionCache? cache)
+		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type, IMetadataResolver? cache)
 		{
 			var baseType = type.GetBaseTypes (cache).FirstOrDefault (t => t.GetCustomAttributes (typeof (RegisterAttribute)).Any ());
 			if (baseType != null)

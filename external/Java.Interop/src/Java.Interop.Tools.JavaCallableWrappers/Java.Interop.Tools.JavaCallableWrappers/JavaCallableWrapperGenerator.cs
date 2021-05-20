@@ -23,11 +23,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 	 public class JavaCallableWrapperGenerator {
 
 		class JavaFieldInfo {
-			public JavaFieldInfo (MethodDefinition method, string fieldName, TypeDefinitionCache cache)
+			public JavaFieldInfo (MethodDefinition method, string fieldName, IMetadataResolver resolver)
 			{
 				this.FieldName = fieldName;
 				InitializerName = method.Name;
-				TypeName = JavaNativeTypeManager.ReturnTypeFromSignature (GetJniSignature (method, cache)).Type;
+				TypeName = JavaNativeTypeManager.ReturnTypeFromSignature (GetJniSignature (method, resolver)).Type;
 				IsStatic = method.IsStatic;
 				Access = method.Attributes & MethodAttributes.MemberAccessMask;
 				Annotations = GetAnnotationsString ("\t", method.CustomAttributes);
@@ -54,15 +54,20 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		List<Signature> methods = new List<Signature> ();
 		List<Signature> ctors   = new List<Signature> ();
 		List<JavaCallableWrapperGenerator> children;
-		readonly TypeDefinitionCache cache;
+		readonly IMetadataResolver cache;
 
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
 		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object []> log)
-			: this (type, null, log, cache: null)
+			: this (type, null, log, resolver: null)
 		{ }
 
 		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, TypeDefinitionCache cache)
-			: this (type, null, log, cache)
+			: this (type, log, (IMetadataResolver) cache)
+		{
+		}
+
+		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, IMetadataResolver resolver)
+			: this (type, null, log, resolver)
 		{
 			if (type.HasNestedTypes) {
 				children = new List<JavaCallableWrapperGenerator> ();
@@ -103,11 +108,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			HasExport |= children.Any (t => t.HasExport);
 		}
 
-		JavaCallableWrapperGenerator (TypeDefinition type, string outerType, Action<string, object[]> log, TypeDefinitionCache cache)
+		JavaCallableWrapperGenerator (TypeDefinition type, string outerType, Action<string, object[]> log, IMetadataResolver resolver)
 		{
 			this.type = type;
 			this.log = log;
-			this.cache = cache ?? new TypeDefinitionCache ();
+			this.cache = resolver ?? new TypeDefinitionCache ();
 
 			if (type.IsEnum || type.IsInterface || type.IsValueType)
 				Diagnostic.Error (4200, LookupSource (type), Localization.Resources.JavaCallableWrappers_XA4200, type.FullName);
@@ -655,7 +660,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes);
 			}
 
-			public Signature (MethodDefinition method, ExportAttribute export, TypeDefinitionCache cache)
+			public Signature (MethodDefinition method, ExportAttribute export, IMetadataResolver cache)
 				: this (method.Name, GetJniSignature (method, cache), "__export__", null, null, export.SuperArgumentsString)
 			{
 				IsExport = true;
@@ -666,7 +671,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes);
 			}
 
-			public Signature (MethodDefinition method, ExportFieldAttribute exportField, TypeDefinitionCache cache)
+			public Signature (MethodDefinition method, ExportFieldAttribute exportField, IMetadataResolver cache)
 				: this (method.Name, GetJniSignature (method, cache), "__export__", null, null, null)
 			{
 				if (method.HasParameters)

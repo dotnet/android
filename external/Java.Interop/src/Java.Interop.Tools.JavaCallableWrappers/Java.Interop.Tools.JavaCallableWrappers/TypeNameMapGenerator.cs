@@ -61,11 +61,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		List<TypeDefinition>            Types;
 		DirectoryAssemblyResolver       Resolver;
 		JavaTypeScanner                 Scanner;
-		readonly TypeDefinitionCache    Cache;
+		readonly IMetadataResolver      Cache;
 
 		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<string>, Action<TraceLevel, string>, TypeDefinitionCache)")]
 		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<string, object []> logMessage)
-			: this (assemblies, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new[]{value}), cache: null)
+			: this (assemblies, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new[]{value}), resolver: null)
 		{
 			if (logMessage == null)
 				throw new ArgumentNullException (nameof (logMessage));
@@ -73,17 +73,22 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<string>, Action<TraceLevel, string>, TypeDefinitionCache)")]
 		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger)
-			: this (assemblies, logger, cache: null)
+			: this (assemblies, logger, resolver: null)
 		{ }
 
 		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger, TypeDefinitionCache cache)
+			: this (assemblies, logger, (IMetadataResolver) cache)
+		{
+		}
+
+		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger, IMetadataResolver resolver)
 		{
 			if (assemblies == null)
 				throw new ArgumentNullException ("assemblies");
 			if (logger == null)
 				throw new ArgumentNullException (nameof (logger));
-			Cache = cache ?? new TypeDefinitionCache ();
 
+			Cache           = resolver ?? new TypeDefinitionCache ();
 			Log             = logger;
 			var Assemblies  = assemblies.ToList ();
 			var rp          = new ReaderParameters ();
@@ -100,7 +105,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Resolver.Load (Path.GetFullPath (assembly));
 			}
 
-			Scanner     = new JavaTypeScanner (Log, cache) {
+			Scanner     = new JavaTypeScanner (Log, Cache) {
 				ErrorOnCustomJavaObject     = false,
 			};
 			Types       = Scanner.GetJavaTypes (Assemblies, Resolver);
@@ -108,7 +113,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<TypeDefinition>, Action<TraceLevel, string>, TypeDefinitionCache)")]
 		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<string, object[]> logMessage)
-			: this (types, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new [] { value }), cache: null)
+			: this (types, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new [] { value }), resolver: null)
 		{
 			if (logMessage == null)
 				throw new ArgumentNullException (nameof (logMessage));
@@ -116,16 +121,22 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<TypeDefinition>, Action<TraceLevel, string>, TypeDefinitionCache)")]
 		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger)
-			: this (types, logger, cache: null)
+			: this (types, logger, resolver: null)
 		{ }
 
 		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger, TypeDefinitionCache cache)
+			: this (types, logger, (IMetadataResolver) cache)
+		{
+		}
+
+		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger, IMetadataResolver resolver)
 		{
 			if (types == null)
 				throw new ArgumentNullException ("types");
 			if (logger == null)
 				throw new ArgumentNullException (nameof (logger));
-			Cache = cache ?? new TypeDefinitionCache ();
+
+			Cache       = resolver ?? new TypeDefinitionCache ();
 
 			Log         = logger;
 			Types       = types.ToList ();
