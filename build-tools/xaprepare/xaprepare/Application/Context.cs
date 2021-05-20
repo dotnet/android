@@ -344,6 +344,11 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public bool MonoArchiveDownloaded { get; set; }
 
+		// <summary>
+		///   Set by <see cref="Step_Get_Android_BuildTools"/> if the archive has been downloaded and validated.
+		/// </summary>
+		public bool BuildToolsArchiveDownloaded { get; set; }
+
 		/// <summary>
 		///   Determines whether or not we are running on a hosted azure pipelines agent.
 		///   These agents have certain limitations, the most pressing being the amount of available storage.

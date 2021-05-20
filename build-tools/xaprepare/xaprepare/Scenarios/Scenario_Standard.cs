@@ -36,6 +36,7 @@ namespace Xamarin.Android.Prepare
 			// directory where the NDK binutils are installed
 			Steps.Add (new Step_InstallGNUBinutils ());
 			Steps.Add (new Step_GenerateCGManifest ());
+			Steps.Add (new Step_Get_Android_BuildTools ());
 
 			AddRequiredOSSpecificSteps (false);
 		}

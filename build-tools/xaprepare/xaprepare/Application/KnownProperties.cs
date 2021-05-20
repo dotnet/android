@@ -49,6 +49,9 @@ namespace Xamarin.Android.Prepare
 		public const string RemapAssemblyRefToolExecutable      = "RemapAssemblyRefToolExecutable";
 		public const string XABuildToolsFolder                  = "XABuildToolsFolder";
 		public const string XABuildToolsVersion                 = "XABuildToolsVersion";
+		public const string XABuildToolsPackagePrefixMacOS      = "XABuildToolsPackagePrefixMacOS";
+		public const string XABuildToolsPackagePrefixWindows    = "XABuildToolsPackagePrefixWindows";
+		public const string XABuildToolsPackagePrefixLinux      = "XABuildToolsPackagePrefixLinux";
 		public const string XABuildToolsPackagePrefix           = "XABuildToolsPackagePrefix";
 		public const string XABinRelativeInstallPrefix          = "XABinRelativeInstallPrefix";
 		public const string XAInstallPrefix                     = "XAInstallPrefix";
