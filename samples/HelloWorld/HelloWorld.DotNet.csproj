@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>HelloWorld</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="HelloLibrary\HelloLibrary.DotNet.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+    <!-- <Compile Remove="Resources\Resource.designer.cs" /> -->
+    <Compile Remove="HelloLibrary\**\*.cs" />
+  </ItemGroup>
+</Project>
