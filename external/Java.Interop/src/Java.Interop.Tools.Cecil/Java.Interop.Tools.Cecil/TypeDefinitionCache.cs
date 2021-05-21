@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using Mono.Cecil;
 
-using Java.Interop.Tools.Diagnostics;
-
 namespace Java.Interop.Tools.Cecil
 {
 	/// <summary>
