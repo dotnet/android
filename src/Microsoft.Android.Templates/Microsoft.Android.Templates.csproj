@@ -5,7 +5,6 @@
     <PackageType>Template</PackageType>
     <PackageId>Microsoft.Android.Templates</PackageId>
     <Title>.NET Android Templates</Title>
-    <Authors>Microsoft</Authors>
     <Description>Templates for Android platforms.</Description>
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -16,6 +15,7 @@
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\create-packs\License.targets" />
 
   <ItemGroup>
     <Content Include="**\*" Exclude="**\bin\**;**\obj\**" />
