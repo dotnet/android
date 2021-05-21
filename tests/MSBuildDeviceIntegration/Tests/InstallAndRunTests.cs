@@ -56,7 +56,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			Assert.IsTrue (MonitorAdbLogcat ((line) => {
 				return line.Contains (expectedLogcatOutput);
-			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
+			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
 		[Test]
@@ -87,7 +87,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			string expectedLogcatOutput = "# Unhandled Exception: sender=RootDomain; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
 			Assert.IsTrue (MonitorAdbLogcat ((line) => {
 				return line.Contains (expectedLogcatOutput);
-			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
+			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
 		Regex ObfuscatedStackRegex = new Regex ("in <.*>:0", RegexOptions.Compiled);
@@ -435,14 +435,8 @@ namespace Library1 {
 
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
 
-			if (Builder.UseDotNet) {
-				// serialization is broken on net6 when the app is linked. enable again once it is fixed
-				if (isRelease)
-					return;
-
+			if (Builder.UseDotNet)
 				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Json"));
-				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Formatters"));
-			}
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 				@"TestJsonDeserializationCreatesJavaHandle();
@@ -507,8 +501,9 @@ namespace Library1 {
 				Name = ""John Smith"",
 				Age = 900,
 			};
-
+#if !NET
 			TestBinaryDeserialization (p);
+#endif
 			TestJsonDeserialization (p);").Replace ("//${AFTER_MAINACTIVITY}", @"
 	[DataContract]
 	[Serializable]
@@ -540,7 +535,7 @@ using System.Runtime.Serialization.Json;");
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			Assert.IsFalse (MonitorAdbLogcat ((line) => {
 				return line.Contains ("TestJsonDeserializationCreatesJavaHandle");
-			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did contain TestJsonDeserializationCreatesJavaHandle!");
+			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did contain TestJsonDeserializationCreatesJavaHandle!");
 		}
 
 		[Test]
@@ -566,16 +561,29 @@ using System.Runtime.Serialization.Json;");
 
 			ClearAdbLogcat ();
 			RunAdbCommand ("shell setprop debug.mono.log all");
+			var logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
+			Assert.AreEqual (logProp, "all", "The debug.mono.log prop was not set correctly.");
+
 			if (CommercialBuildAvailable)
 				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
 			else
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
-			var logcatFilePath = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
-			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity", logcatFilePath, 30);
-			RunAdbCommand ("shell setprop debug.mono.log \"\"");
-			Assert.True (didStart, "Activity should have started.");
-			Assert.IsTrue (File.ReadAllText (logcatFilePath).Contains ("Enabling Mono Interpreter"), "logcat output did not contain 'Enabling Mono Interpreter'.");
+			Func<string, bool> checkForInterpMessage = line => {
+				return line.Contains ("Enabling Mono Interpreter");
+			};
+			var timeoutInSeconds = 120;
+			var didPrintInterpMessage = MonitorAdbLogcat (
+				action: checkForInterpMessage,
+				logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "interpreter-logcat.log"),
+				timeout: timeoutInSeconds);
+			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds);
+			RunAdbCommand ("shell setprop debug.mono.log \"''\"");
+			logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
+			Assert.AreEqual (logProp, string.Empty, "The debug.mono.log prop was not unset correctly.");
+			Assert.IsTrue (didPrintInterpMessage, "logcat output did not contain 'Enabling Mono Interpreter'.");
+			Assert.IsTrue (didStart, "Activity should have started.");
 		}
 
 	}
