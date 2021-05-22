@@ -1,0 +1,23 @@
+<!-- Ownership and LICENSE settings for .nupkg's -->
+<Project>
+  <PropertyGroup>
+    <Authors>Microsoft</Authors>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <PackageProjectUrl>https://github.com/xamarin/xamarin-android</PackageProjectUrl>
+    <NuGetLicense Condition="Exists('$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt')">$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt</NuGetLicense>
+    <NuGetLicense Condition=" '$(NuGetLicense)' == '' ">$(XamarinAndroidSourcePath)LICENSE</NuGetLicense>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <BeforePack>_GetLicense;$(BeforePack)</BeforePack>
+  </PropertyGroup>
+  <Target Name="_GetLicense">
+    <!-- NuGet doesn't have a way to change the filename of License.txt, so copy it -->
+    <Copy
+        SourceFiles="$(NuGetLicense)"
+        DestinationFiles="$(IntermediateOutputPath)$(PackageLicenseFile)"
+        SkipUnchangedFiles="true"
+    />
+    <ItemGroup>
+      <_PackageFiles Include="$(IntermediateOutputPath)$(PackageLicenseFile)" PackagePath="\" />
+    </ItemGroup>
+  </Target>
+</Project>
