@@ -501,18 +501,25 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceholders ()
+		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				ManifestMerger = manifestMerger,
+				JavaPackageName = "com.foo.bar",
 			};
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ");
-			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1=val1");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false, false)) {
+			proj.AndroidManifest = proj.AndroidManifest.
+				Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ").
+				Replace ("package=\"${PACKAGENAME}\"", "package=\"${Package}\"");
+			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1=val1;Package=com.foo.bar");
+			using (var builder = CreateApkBuilder ()) {
 				builder.Build (proj);
 				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
 				Assert.IsTrue (manifest.Contains (" android:label=\"val1\""), "#1");
 				Assert.IsTrue (manifest.Contains (" x=\"a=b\\c\"".Replace ('\\', Path.DirectorySeparatorChar)), "#2");
+				Assert.IsTrue (manifest.Contains ("package=\"com.foo.bar\""), "PackageName should have been replaced with 'com.foo.bar'");
+				var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"com.foo.bar.apk");
+				FileAssert.Exists (apk, $"'{apk}' should have been created.");
 			}
 		}
 
