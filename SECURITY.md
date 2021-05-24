@@ -1,5 +1,9 @@
 # Security Policy
 
+## Supported Versions
+
+The Xamarin.Android support policy, including supported versions, can be found at the [Xamarin Support Policy](https://dotnet.microsoft.com/platform/support/policy/xamarin).
+
 ## Reporting a Vulnerability
 
 Security issues and bugs should be reported privately to the Microsoft Security Response Center (MSRC), either by emailing secure@microsoft.com or via the portal at https://msrc.microsoft.com.
