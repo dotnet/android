@@ -4,7 +4,7 @@ using Mono.Linker;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
-	public class LinkContextMetadataResolver : TypeDefinitionCache {
+	public class LinkContextMetadataResolver : IMetadataResolver {
 		LinkContext context;
 
 		public LinkContextMetadataResolver (LinkContext context)
@@ -12,9 +12,19 @@ namespace Microsoft.Android.Sdk.ILLink
 			this.context = context;
 		}
 
-		public override TypeDefinition Resolve (TypeReference typeReference)
+		public virtual TypeDefinition Resolve (TypeReference type)
 		{
-			return context.ResolveTypeDefinition (typeReference);
+			return context.ResolveTypeDefinition (type);
+		}
+
+		public virtual FieldDefinition Resolve (FieldReference field)
+		{
+			return context.ResolveFieldDefinition (field);
+		}
+
+		public virtual MethodDefinition Resolve (MethodReference method)
+		{
+			return context.ResolveMethodDefinition (method);
 		}
 	}
 }

@@ -7,12 +7,12 @@ namespace Mono.Linker
 	{
 		protected LinkContext Context;
 		protected AnnotationStore Annotations => Context?.Annotations;
-		protected LinkContextMetadataResolver cache;
+		protected LinkContextMetadataResolver resolver;
 
 		public virtual void Initialize (LinkContext context, MarkContext markContext)
 		{
 			Context = context;
-			cache = new LinkContextMetadataResolver (context);
+			resolver = new LinkContextMetadataResolver (context);
 		}
 	}
 }
