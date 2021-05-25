@@ -14,7 +14,7 @@ using namespace xamarin::android::internal;
 void
 DesignerAssemblies::add_or_update_from_java (MonoDomain *domain, JNIEnv *env, jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths)
 {
-	assert (assembliesBytes != nullptr);
+	abort_if_invalid_pointer_argument (assembliesBytes);
 	DesignerAssemblyEntry *new_entry = new DesignerAssemblyEntry (domain, env, assemblies, assembliesBytes, assembliesPaths);
 	add_or_replace_entry (new_entry);
 }

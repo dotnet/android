@@ -1,5 +1,4 @@
-#include <assert.h>
-#include <string.h>
+#include <cstring>
 
 #include <sys/types.h>
 #if defined (__linux__) || defined (__linux)
@@ -716,7 +715,9 @@ OSBridge::target_from_jobject (jobject jobj)
 int
 OSBridge::scc_get_stashed_index (MonoGCBridgeSCC *scc)
 {
-	assert ( (scc->num_objs < 0) || "Attempted to load stashed index from an object which does not contain one." == nullptr);
+	abort_if_invalid_pointer_argument (scc);
+	abort_unless (scc->num_objs < 0, "Attempted to load stashed index from an object which does not contain one.");
+
 	return -scc->num_objs - 1;
 }
 
@@ -768,7 +769,7 @@ OSBridge::gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridg
 		MonoGCBridgeSCC *scc = sccs [i];
 
 		/* num_objs < 0 case: This is a violation of the bridge API invariants. */
-		assert ( (scc->num_objs >= 0) || "Bridge processor submitted an SCC with a negative number of objects." == nullptr);
+		abort_unless (scc->num_objs >= 0, "Bridge processor submitted an SCC with a negative number of objects.");
 
 		/* num_objs > 1 case: The SCC contains many objects which must be collected as one.
 		 * Solution: Make all objects within the SCC directly or indirectly reference each other
@@ -793,13 +794,16 @@ OSBridge::gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridg
 		 */
 		} else if (scc->num_objs == 0) {
 			/* Once per process boot, look up JNI metadata we need to make temporary objects */
-			if (!ArrayList_class) {
+			if (ArrayList_class == nullptr) {
 				ArrayList_class = reinterpret_cast<jclass> (lref_to_gref (env, env->FindClass ("java/util/ArrayList")));
 				ArrayList_ctor = env->GetMethodID (ArrayList_class, "<init>", "()V");
 				ArrayList_add = env->GetMethodID (ArrayList_class, "add", "(Ljava/lang/Object;)Z");
 				ArrayList_get = env->GetMethodID (ArrayList_class, "get", "(I)Ljava/lang/Object;");
 
-				assert ( (ArrayList_class && ArrayList_ctor && ArrayList_get) || "Failed to load classes required for JNI" == nullptr);
+				abort_unless (
+					ArrayList_class != nullptr && ArrayList_ctor != nullptr && ArrayList_get != nullptr,
+					"Failed to load classes required for JNI"
+				);
 			}
 
 			/* Once per gc_prepare_for_java_collection call, create a list to hold the temporary
@@ -881,7 +885,7 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 			if (jref) {
 				alive++;
 				if (j > 0)
-					assert (sccs [i]->is_alive);
+					abort_unless (sccs [i]->is_alive, "Bridge SCC at index %d must be alive", i);
 				sccs [i]->is_alive = 1;
 				mono_field_get_value (obj, bridge_info->refs_added, &refs_added);
 				if (refs_added) {
@@ -903,7 +907,7 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 					env->DeleteLocalRef (java_class);
 				}
 			} else {
-				assert (!sccs [i]->is_alive);
+				abort_unless (!sccs [i]->is_alive, "Bridge SCC at index %d must NOT be alive", i);
 			}
 		}
 	}
@@ -1072,8 +1076,8 @@ OSBridge::ensure_jnienv (void)
 void
 OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env)
 {
-	assert (env != nullptr);
-	assert (vm != nullptr);
+	abort_if_invalid_pointer_argument (env);
+	abort_if_invalid_pointer_argument (vm);
 
 	jvm = vm;
 	jclass lref = env->FindClass ("java/lang/Runtime");
@@ -1087,15 +1091,20 @@ OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env)
 	env->DeleteLocalRef (lref);
 	weakrefCtor = env->GetMethodID (weakrefClass, "<init>", "(Ljava/lang/Object;)V");
 	weakrefGet = env->GetMethodID (weakrefClass, "get", "()Ljava/lang/Object;");
+
+	abort_unless (
+		weakrefClass != nullptr && weakrefCtor != nullptr && weakrefGet != nullptr,
+		"Failed to look up required java.lang.ref.WeakReference members"
+	);
 }
 
 void
 OSBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass)
 {
-	assert (env != nullptr);
+	abort_if_invalid_pointer_argument (env);
 	GCUserPeer_class      = utils.get_class_from_runtime_field(env, runtimeClass, "mono_android_GCUserPeer", true);
 	GCUserPeer_ctor       = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
-	assert ( (GCUserPeer_class && GCUserPeer_ctor) || "Failed to load mono.android.GCUserPeer!" == nullptr);
+	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
 }
 
 void

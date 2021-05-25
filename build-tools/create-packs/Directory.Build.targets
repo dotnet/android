@@ -5,6 +5,7 @@
     <PackageReference Include="Microsoft.DotNet.Arcade.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 
+  <Import Project="License.targets" />
   <Import Project="..\..\build-tools\installers\create-installers.targets" />
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
 
@@ -13,26 +14,7 @@
 
   <PropertyGroup>
     <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0\</_MonoAndroidNETOutputDir>
-    <_WorkloadResolverFlagFile>$(DotNetPreviewPath)sdk\$(MicrosoftDotnetSdkInternalPackageVersion)\EnableWorkloadResolver.sentinel</_WorkloadResolverFlagFile>
   </PropertyGroup>
-
-  <!-- LICENSE setup -->
-  <PropertyGroup>
-    <NuGetLicense Condition="Exists('$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt')">$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt</NuGetLicense>
-    <NuGetLicense Condition=" '$(NuGetLicense)' == '' ">$(XamarinAndroidSourcePath)LICENSE</NuGetLicense>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-  </PropertyGroup>
-  <Target Name="_GetLicense">
-    <!-- NuGet doesn't have a way to change the filename of License.txt, so copy it -->
-    <Copy
-        SourceFiles="$(NuGetLicense)"
-        DestinationFiles="$(IntermediateOutputPath)$(PackageLicenseFile)"
-        SkipUnchangedFiles="true"
-    />
-    <ItemGroup>
-      <_PackageFiles Include="$(IntermediateOutputPath)$(PackageLicenseFile)" PackagePath="\" />
-    </ItemGroup>
-  </Target>
 
   <!-- https://github.com/dotnet/runtime/blob/0647ec314948904319da5eb15e9931f7c85ed1e2/src/installer/pkg/projects/Directory.Build.targets#L281 -->
   <!-- TODO: Generate PlatformManifest.txt files? -->
@@ -133,11 +115,6 @@
     />
     <!-- Some files had timestamps in the future -->
     <Touch Files="@(_FilesToTouch)" />
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName ($(_WorkloadResolverFlagFile)))" />
-    <Touch
-        Files="$(_WorkloadResolverFlagFile)"
-        AlwaysCreate="true"
-    />
   </Target>
 
   <Target Name="DeleteExtractedWorkloadPacks" >
@@ -148,7 +125,6 @@
       <_PackFilesToDelete Include="$(DotNetPreviewPath)template-packs\Microsoft.Android.Templates.*.nupkg" />
     </ItemGroup>
     <RemoveDir Directories="%(_PackFilesToDelete.RootDir)%(_PackFilesToDelete.Directory)" />
-    <Delete Files="$(_WorkloadResolverFlagFile)" />
   </Target>
 
   <Target Name="PushManifestToBuildAssetRegistry" >

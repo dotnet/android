@@ -686,7 +686,7 @@
       "Size": 351
     },
     "res/drawable-mdpi-v4/icon.png": {
-      "Size": 2199
+      "Size": 2200
     },
     "res/drawable-mdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 215
@@ -1634,127 +1634,127 @@
       "Size": 3455100
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 116885
+      "Size": 116864
     },
     "assemblies/FormsViewGroup.dll": {
-      "Size": 7211
+      "Size": 7192
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
-      "Size": 7691
+      "Size": 7673
     },
     "assemblies/Xamarin.AndroidX.AppCompat.AppCompatResources.dll": {
-      "Size": 6641
+      "Size": 6628
     },
     "assemblies/Xamarin.AndroidX.AppCompat.dll": {
-      "Size": 125330
+      "Size": 125310
     },
     "assemblies/Xamarin.AndroidX.CardView.dll": {
-      "Size": 7358
+      "Size": 7343
     },
     "assemblies/Xamarin.AndroidX.CoordinatorLayout.dll": {
-      "Size": 18266
+      "Size": 18247
     },
     "assemblies/Xamarin.AndroidX.Core.dll": {
-      "Size": 131924
+      "Size": 131908
     },
     "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
-      "Size": 15422
+      "Size": 15404
     },
     "assemblies/Xamarin.AndroidX.Fragment.dll": {
-      "Size": 43130
+      "Size": 43114
     },
     "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
-      "Size": 6712
+      "Size": 6692
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.Common.dll": {
-      "Size": 7054
+      "Size": 7039
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.Core.dll": {
-      "Size": 7189
+      "Size": 7165
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.ViewModel.dll": {
-      "Size": 4866
+      "Size": 4845
     },
     "assemblies/Xamarin.AndroidX.Loader.dll": {
-      "Size": 13582
+      "Size": 13563
     },
     "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
-      "Size": 102323
+      "Size": 102309
     },
     "assemblies/Xamarin.AndroidX.SavedState.dll": {
-      "Size": 6269
+      "Size": 6253
     },
     "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
-      "Size": 11268
+      "Size": 11251
     },
     "assemblies/Xamarin.AndroidX.ViewPager.dll": {
-      "Size": 19420
+      "Size": 19400
     },
     "assemblies/Xamarin.Forms.Core.dll": {
-      "Size": 524735
+      "Size": 524712
     },
     "assemblies/Xamarin.Forms.Platform.Android.dll": {
-      "Size": 384869
+      "Size": 384845
     },
     "assemblies/Xamarin.Forms.Platform.dll": {
       "Size": 56878
     },
     "assemblies/Xamarin.Forms.Xaml.dll": {
-      "Size": 55798
+      "Size": 55776
     },
     "assemblies/Xamarin.Google.Android.Material.dll": {
-      "Size": 43496
+      "Size": 43475
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 110644
+      "Size": 110617
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 186653
+      "Size": 186635
     },
     "assemblies/Java.Interop.dll": {
       "Size": 68652
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 556942
+      "Size": 557091
     },
     "assemblies/mscorlib.dll": {
-      "Size": 915446
+      "Size": 915344
     },
     "assemblies/System.Core.dll": {
-      "Size": 164044
+      "Size": 164026
     },
     "assemblies/System.dll": {
-      "Size": 388893
+      "Size": 388843
     },
     "assemblies/System.Xml.dll": {
-      "Size": 395684
+      "Size": 395637
     },
     "assemblies/System.Numerics.dll": {
-      "Size": 15681
+      "Size": 15666
     },
     "assemblies/System.Drawing.Common.dll": {
-      "Size": 12355
+      "Size": 12338
     },
     "assemblies/System.ServiceModel.Internals.dll": {
-      "Size": 26586
+      "Size": 26568
     },
     "assemblies/Mono.Security.dll": {
-      "Size": 68486
+      "Size": 68408
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 139944
+      "Size": 140560
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 263536
+      "Size": 268792
     },
     "lib/arm64-v8a/libxa-internal-api.so": {
-      "Size": 65200
+      "Size": 65312
     },
     "lib/arm64-v8a/libmono-btls-shared.so": {
       "Size": 1613872
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 4033248
+      "Size": 4050176
     },
     "lib/arm64-v8a/libmono-native.so": {
       "Size": 707024

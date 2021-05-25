@@ -25,6 +25,10 @@ namespace Xamarin.Android.Build.Tests {
 			new ApiInfo () { Id = "Z",  Level = 127, Name = "Z",    FrameworkVersion = "v108.1.99", Stable = false },
 		};
 
+		// via Xamarin.Android.Common.props
+		const   string  MinimumSupportedJavaVersion     = "1.6.0";
+		const   string  LatestSupportedJavaVersion      = "11.0.99";
+
 		static object [] UseLatestAndroidSdkTestCases = new object [] {
 			new object[] {
 				/* buildtools */   "26.0.3",
@@ -167,6 +171,8 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				AndroidNdkPath = androidNdkPath,
 				JavaSdkPath = javaPath,
+				MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
+				LatestSupportedJavaVersion  = LatestSupportedJavaVersion,
 				ReferenceAssemblyPaths = new [] {
 					Path.Combine (referencePath, "MonoAndroid"),
 				},
@@ -220,6 +226,8 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				AndroidNdkPath = androidNdkPath,
 				JavaSdkPath = javaPath,
+				MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
+				LatestSupportedJavaVersion  = LatestSupportedJavaVersion,
 				ReferenceAssemblyPaths = new [] {
 					Path.Combine (referencePath, "MonoAndroid"),
 				},
@@ -391,6 +399,8 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				AndroidNdkPath = androidNdkPath,
 				JavaSdkPath = javaPath,
+				MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
+				LatestSupportedJavaVersion  = LatestSupportedJavaVersion,
 				ReferenceAssemblyPaths = new [] {
 					Path.Combine (referencePath, "MonoAndroid"),
 				},

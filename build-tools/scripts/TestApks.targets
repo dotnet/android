@@ -52,7 +52,7 @@
     <CreateAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         AndroidAbi="$(TestAvdAbi)"
-        AndroidSdkHome="$(AndroidSdkDirectory)"
+        AvdManagerHome="$(AvdManagerHome)"
         JavaSdkHome="$(JavaSdkDirectory)"
         SdkVersion="$(TestAvdApiLevel)"
         TargetId="$(SdkManagerImageName)"
@@ -64,7 +64,7 @@
     />
     <StartAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
-        AndroidSdkHome="$(AndroidSdkDirectory)"
+        AvdManagerHome="$(AvdManagerHome)"
         Arguments="$(TestEmulatorArguments)"
         ImageName="$(TestAvdName)"
         Port="$(_AdbEmulatorPort)"

@@ -15,6 +15,8 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
+		const string BinutilsVersion                = "2.36.1-XA.1";
+
 		const string MicrosoftOpenJDK11Version      = "11.0.10";
 		const string MicrosoftOpenJDK11Release      = "9.1";
 		const string MicrosoftOpenJDK11RootDirName  = "jdk-11.0.10+9";
@@ -50,10 +52,13 @@ namespace Xamarin.Android.Prepare
 			public static readonly Uri NugetUri = new Uri ("https://dist.nuget.org/win-x86-commandline/v4.9.4/nuget.exe");
 
 			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
+
+			public static Uri BinutilsArchive = new Uri ($"https://github.com/xamarin/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-binutils-{BinutilsVersion}.7z");
 		}
 
 		public static partial class Defaults
 		{
+			public static readonly string BinutilsVersion            = Configurables.BinutilsVersion;
 			public static readonly char[] PropertyListSeparator            = new [] { ':' };
 
 			public static readonly string JdkFolder                        = "jdk-11";
@@ -271,7 +276,7 @@ namespace Xamarin.Android.Prepare
 
 			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
 				new NDKTool (name: "as"),
-				new NDKTool (name: "ld.gold", destinationName: "ld"),
+				new NDKTool (name: "ld"),
 				new NDKTool (name: "strip"),
 			};
 		}
@@ -388,6 +393,8 @@ namespace Xamarin.Android.Prepare
 			public static string AndroidToolchainSysrootLibDirectory => GetCachedPath (ref androidToolchainSysrootLibDirectory, () => Path.Combine (AndroidToolchainRootDirectory, "sysroot", "usr", "lib"));
 			public static string WindowsBinutilsInstallDir           => GetCachedPath (ref windowsBinutilsInstallDir,           () => Path.Combine (InstallMSBuildDir, "ndk"));
 			public static string HostBinutilsInstallDir              => GetCachedPath (ref hostBinutilsInstallDir,              () => Path.Combine (InstallMSBuildDir, ctx.Properties.GetRequiredValue (KnownProperties.HostOS), "ndk"));
+			public static string BinutilsCacheDir                    => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory);
+			public static string AndroidBuildToolsCacheDir           => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory);
 
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
 			public static string XAInstallPrefix                => ctx.Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
@@ -405,7 +412,7 @@ namespace Xamarin.Android.Prepare
 				return Path.Combine (
 					XAPackagesDir,
 					$"microsoft.netcore.app.runtime.mono.android-{androidTarget}",
-					ctx.BundledPreviewRuntimePackVersion,
+					ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion),
 					"runtimes",
 					$"android-{androidTarget}"
 				);

@@ -1,17 +1,15 @@
 #include <host-config.h>
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <ctype.h>
+#include <cctype>
 #include <libgen.h>
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
-#include <climits>
 
 #if defined (HAVE_LZ4)
 #include <lz4.h>
@@ -234,13 +232,13 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchan
 }
 #else // def NET6 && def NET6_ALC_WORKS
 MonoAssembly*
-EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, UNUSED_ARG char **assemblies_path, UNUSED_ARG void *user_data)
+EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
 	return embeddedAssemblies.open_from_bundles (aname, false);
 }
 
 MonoAssembly*
-EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, UNUSED_ARG char **assemblies_path, UNUSED_ARG void *user_data)
+EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
 	return embeddedAssemblies.open_from_bundles (aname, true);
 }
@@ -657,7 +655,7 @@ EmbeddedAssemblies::register_debug_symbols_for_assembly (const char *entry_name,
 		if (eb_ext == nullptr)
 			return false;
 		off_t basename_len    = static_cast<off_t>(eb_ext - entry_basename);
-		assert (basename_len > 0 && "basename must have a length!");
+		abort_unless (basename_len > 0, "basename must have a length!");
 		if (strncmp (assembly->name, entry_basename, static_cast<size_t>(basename_len)) != 0)
 			return false;
 	}
@@ -855,7 +853,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 	uint8_t *managed_pos = managed_start;
 	TypeMapEntry *cur;
 
-	constexpr uint32_t INVALID_TYPE_INDEX = UINT32_MAX;
+	constexpr uint32_t INVALID_TYPE_INDEX = std::numeric_limits<uint32_t>::max ();
 	for (size_t i = 0; i < module.entry_count; i++) {
 		cur = &module.java_to_managed[i];
 		cur->from = reinterpret_cast<char*>(java_pos);

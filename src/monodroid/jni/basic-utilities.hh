@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cassert>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -56,7 +55,7 @@ namespace xamarin::android
 		template<size_t MaxStackSpace, typename TBuffer>
 		void path_combine (TBuffer& buf, const char* path1, size_t path1_len, const char* path2, size_t path2_len) noexcept
 		{
-			assert (path1 != nullptr || path2 != nullptr);
+			abort_unless (path1 != nullptr || path2 != nullptr, "At least one path must be a valid pointer");
 
 			if (path1 == nullptr) {
 				buf.append (path2);
@@ -194,7 +193,7 @@ namespace xamarin::android
 
 	protected:
 		template<typename CharType = char, typename ...Strings>
-		void concatenate_strings_into (UNUSED_ARG size_t len, UNUSED_ARG char *dest)
+		void concatenate_strings_into ([[maybe_unused]] size_t len, [[maybe_unused]] char *dest)
 		{}
 
 		template<typename CharType = char, typename ...Strings>

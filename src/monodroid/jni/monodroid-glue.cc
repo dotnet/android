@@ -3,14 +3,12 @@
 #include <cstdarg>
 
 #include <jni.h>
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
+#include <ctime>
+#include <cstdio>
+#include <cstring>
 #include <strings.h>
-#include <ctype.h>
-#include <assert.h>
-#include <errno.h>
-#include <limits.h>
+#include <cctype>
+#include <cerrno>
 
 #if defined (APPLE_OS_X)
 #include <dlfcn.h>
@@ -18,7 +16,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include <sys/time.h>
 #include <sys/types.h>
@@ -39,7 +37,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <errno.h>
 #endif
 
 #if defined (__linux__) || defined (__linux)
@@ -103,23 +100,37 @@ using namespace xamarin::android::internal;
 
 #if !defined (NET6)
 #include "config.include"
-#endif // ndef NET6
 #include "machine.config.include"
 
-#if defined (NET6)
-std::mutex MonodroidRuntime::pinvoke_map_write_lock;
-#else // def NET6
 std::mutex MonodroidRuntime::api_init_lock;
 void *MonodroidRuntime::api_dso_handle = nullptr;
-#endif // ndef NET6
+#else // ndef NET6
+std::mutex MonodroidRuntime::pinvoke_map_write_lock;
+
+// The pragmas will go away once we switch to C++20, where the designator becomes part of the language standard. Both
+// gcc and clang support it now as an extension, though.
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-designator"
+#endif
+
+MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
+	.trusted_platform_assemblies = nullptr,
+	.app_paths = nullptr,
+	.native_dll_search_directories = nullptr,
+	.pinvoke_override = &MonodroidRuntime::monodroid_pinvoke_override
+};
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif
+#endif // def NET6
 
 #ifdef WINDOWS
 static const char* get_xamarin_android_msbuild_path (void);
 const char *BasicAndroidSystem::SYSTEM_LIB_PATH = get_xamarin_android_msbuild_path();
-#endif
 
 /* Set of Windows-specific utility/reimplementation of Unix functions */
-#ifdef WINDOWS
 
 static char *msbuild_folder_path = nullptr;
 
@@ -157,6 +168,7 @@ setenv(const char *name, const char *value, int overwrite)
 }
 #endif // def WINDOWS
 
+#if !defined (NET6)
 typedef void* (*mono_mkbundle_init_ptr) (void (*)(const MonoBundledAssembly **), void (*)(const char* assembly_name, const char* config_xml),void (*) (int mode));
 mono_mkbundle_init_ptr mono_mkbundle_init;
 
@@ -198,14 +210,15 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 	}
 
 	mono_mkbundle_initialize_mono_api = reinterpret_cast<mono_mkbundle_initialize_mono_api_ptr> (java_interop_lib_symbol (libapp, "initialize_mono_api", nullptr));
-	if (!mono_mkbundle_initialize_mono_api)
+	if (mono_mkbundle_initialize_mono_api == nullptr)
 		log_error (LOG_BUNDLE, "Missing initialize_mono_api in the application");
 
 	mono_mkbundle_init = reinterpret_cast<mono_mkbundle_init_ptr> (java_interop_lib_symbol (libapp, "mono_mkbundle_init", nullptr));
-	if (!mono_mkbundle_init)
+	if (mono_mkbundle_init == nullptr)
 		log_error (LOG_BUNDLE, "Missing mono_mkbundle_init in the application");
 	log_info (LOG_BUNDLE, "Bundled app loaded: %s", dso_name);
 }
+#endif
 
 void
 MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
@@ -594,13 +607,13 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 				continue;
 			}
 
-			if (sdb_port < 0 || sdb_port > USHRT_MAX) {
+			if (sdb_port < 0 || sdb_port > std::numeric_limits<unsigned short>::max ()) {
 				log_error (LOG_DEFAULT, "Invalid SDB port value %d", sdb_port);
 				ret = false;
 				continue;
 			}
 
-			if (out_port > USHRT_MAX) {
+			if (out_port > std::numeric_limits<unsigned short>::max ()) {
 				log_error (LOG_DEFAULT, "Invalid output port value %d", out_port);
 				ret = false;
 				continue;
@@ -801,21 +814,14 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 
 	osBridge.register_gc_hooks ();
 
+#if !defined (NET6)
 	if (mono_mkbundle_initialize_mono_api) {
 		BundleMonoAPI bundle_mono_api = {
 			.mono_register_bundled_assemblies = mono_register_bundled_assemblies,
-#if !defined(NET6)
 			.mono_register_config_for_assembly = mono_register_config_for_assembly,
-#else
-			.mono_register_config_for_assembly = nullptr,
-#endif // ndef NET6
 			.mono_jit_set_aot_mode = reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode),
 			.mono_aot_register_module = mono_aot_register_module,
-#if !defined(NET6)
 			.mono_config_parse_memory = mono_config_parse_memory,
-#else
-			.mono_config_parse_memory = nullptr,
-#endif // ndef NET6
 			.mono_register_machine_config = reinterpret_cast<void (*)(const char *)>(mono_register_machine_config),
 		};
 
@@ -824,15 +830,8 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	}
 
 	if (mono_mkbundle_init)
-		mono_mkbundle_init (
-			mono_register_bundled_assemblies,
-#if defined(NET6)
-			nullptr,
-#else
-			mono_register_config_for_assembly,
-#endif // def NET6
-			reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode));
-
+		mono_mkbundle_init (mono_register_bundled_assemblies, mono_register_config_for_assembly, reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode));
+#endif // ndef NET6
 	/*
 	 * Assembly preload hooks are invoked in _reverse_ registration order.
 	 * Looking for assemblies from the update dir takes precedence over
@@ -848,10 +847,15 @@ MonoDomain*
 MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain)
 {
 	size_t user_assemblies_count   = 0;
+#if defined (NET6)
+	constexpr bool have_mono_mkbundle_init = false;
+#else // def NET6
+	bool have_mono_mkbundle_init = mono_mkbundle_init != nullptr;
+#endif // ndef NET6
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count);
 
-	if (!mono_mkbundle_init && user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
+	if (!have_mono_mkbundle_init && user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
 		           androidSystem.get_override_dir (0),
 		           (AndroidSystem::MAX_OVERRIDES > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
@@ -927,8 +931,8 @@ MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, cons
 	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
 	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
 	info->weak_handle       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("weak_handle"));
-	if (info->klass == NULL || info->handle == NULL || info->handle_type == NULL ||
-			info->refs_added == NULL || info->weak_handle == NULL) {
+	if (info->klass == nullptr || info->handle == nullptr || info->handle_type == nullptr ||
+			info->refs_added == nullptr || info->weak_handle == nullptr) {
 		log_fatal (LOG_DEFAULT, "The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
 				type->_namespace, type->_typename,
 				info->handle,
@@ -1808,14 +1812,15 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 #if defined (NET6)
 	{
-		MonoVMProperties monovm_props (monodroid_pinvoke_override);
+		MonoVMProperties monovm_props;
 
 		// NOTE: the `const_cast` breaks the contract made to MonoVMProperties that the arrays it returns won't be
 		// modified, but it's "ok" since Mono doesn't modify them and by using `const char* const*` in MonoVMProperties
 		// we may get better code generated (since the methods returning the arrays are marked as `const`, thus not
 		// modifying the class state, allowing the compiler to make some assumptions when optimizing) and the class
 		// itself doesn't touch the arrays outside its constructor.
-		monovm_initialize (
+		monovm_initialize_preparsed (
+			&monovm_core_properties,
 			monovm_props.property_count (),
 			const_cast<const char**>(monovm_props.property_keys ()),
 			const_cast<const char**>(monovm_props.property_values ())
@@ -1857,7 +1862,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	set_debug_env_vars ();
 #endif
 
+#if !defined (NET6)
 	setup_bundled_app ("libmonodroid_bundle_app.so");
+#endif
 
 #if defined (ANDROID)
 	if (mono_log_level == nullptr || *mono_log_level == '\0') {
@@ -1928,9 +1935,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 #if !defined (NET6)
 	mono_config_parse_memory (reinterpret_cast<const char*> (monodroid_config));
-#endif // ndef NET6
 	mono_register_machine_config (reinterpret_cast<const char*> (monodroid_machine_config));
-
+#endif // ndef NET6
 	log_info (LOG_DEFAULT, "Probing for Mono AOT mode\n");
 
 	MonoAotMode mode = MonoAotMode::MONO_AOT_MODE_NONE;

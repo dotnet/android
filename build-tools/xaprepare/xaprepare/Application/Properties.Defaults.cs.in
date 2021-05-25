@@ -26,6 +26,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.CommandLineToolsVersion,             StripQuotes ("@CommandLineToolsVersion@"));
 			properties.Add (KnownProperties.DotNetPreviewPath,                   StripQuotes (@"@DotNetPreviewPath@"));
 			properties.Add (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion, StripQuotes ("@MicrosoftDotnetSdkInternalPackageVersion@"));
+			properties.Add (KnownProperties.MicrosoftNETCoreAppRefPackageVersion, StripQuotes ("@MicrosoftNETCoreAppRefPackageVersion@"));
 			properties.Add (KnownProperties.EmulatorVersion,                     StripQuotes ("@EmulatorVersion@"));
 			properties.Add (KnownProperties.EmulatorPkgRevision,                 StripQuotes ("@EmulatorPkgRevision@"));
 			properties.Add (KnownProperties.HostOS,                              StripQuotes ("@HostOS@"));
@@ -53,6 +54,9 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.RemapAssemblyRefToolExecutable,      StripQuotes (@"@RemapAssemblyRefToolExecutable@"));
 			properties.Add (KnownProperties.XABuildToolsFolder,                  StripQuotes (@"@XABuildToolsFolder@"));
 			properties.Add (KnownProperties.XABuildToolsVersion,                 StripQuotes ("@XABuildToolsVersion@"));
+			properties.Add (KnownProperties.XABuildToolsPackagePrefixMacOS,      StripQuotes ("@XABuildToolsPackagePrefixMacOS@"));
+			properties.Add (KnownProperties.XABuildToolsPackagePrefixWindows,    StripQuotes ("@XABuildToolsPackagePrefixWindows@"));
+			properties.Add (KnownProperties.XABuildToolsPackagePrefixLinux,      StripQuotes ("@XABuildToolsPackagePrefixLinux@"));
 			properties.Add (KnownProperties.XABuildToolsPackagePrefix,           StripQuotes ("@XABuildToolsPackagePrefix@"));
 			properties.Add (KnownProperties.XABinRelativeInstallPrefix,          StripQuotes (@"@XABinRelativeInstallPrefix@"));
 			properties.Add (KnownProperties.XAInstallPrefix,                     StripQuotes (@"@XAInstallPrefix@"));

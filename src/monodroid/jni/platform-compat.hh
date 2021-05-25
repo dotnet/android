@@ -3,16 +3,6 @@
 
 #include <cstdint>
 
-#if __cplusplus >= 201703L
-#define UNUSED_ARG [[maybe_unused]]
-#else
-#if defined (__GNUC__)
-#define UNUSED_ARG __attribute__((__unused__))
-#else // !__GNUC__
-#define UNUSED_ARG
-#endif // __GNUC__
-#endif // __cplusplus >= 201703L
-
 #if WINDOWS
 constexpr char MONODROID_PATH_SEPARATOR[] = "\\";
 constexpr char MONODROID_PATH_SEPARATOR_CHAR = '\\';

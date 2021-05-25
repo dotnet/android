@@ -38,9 +38,6 @@
 
 #include <mono/jit/mono-private-unstable.h>
 #include <mono/metadata/mono-private-unstable.h>
-
-// This should be defined in the public Mono headers
-typedef void * (*PInvokeOverrideFn) (const char *libraryName, const char *entrypointName);
 #endif
 
 namespace xamarin::android::internal
@@ -228,7 +225,9 @@ namespace xamarin::android::internal
 		void set_debug_options ();
 		void parse_gdb_options ();
 		void mono_runtime_init (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args);
+#if !defined (NET6)
 		void setup_bundled_app (const char *dso_name);
+#endif // ndef NET6
 		void init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader);
 		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
 
@@ -305,6 +304,7 @@ namespace xamarin::android::internal
 		static std::mutex             pinvoke_map_write_lock;
 		static pinvoke_api_map        xa_pinvoke_map;
 		static pinvoke_library_map    other_pinvoke_map;
+		static MonoCoreRuntimeProperties monovm_core_properties;
 #else // def NET6
 		static std::mutex   api_init_lock;
 		static void        *api_dso_handle;

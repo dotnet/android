@@ -7,44 +7,36 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <_Aapt2Download Include="aapt2-$(Aapt2Version)-osx.zip">
+    <_BuildTools Include="build-tools_r$(XABuildToolsVersion)-macosx.zip">
       <Platform>osx</Platform>
       <HostOS>Darwin</HostOS>
-    </_Aapt2Download>
-    <_Aapt2Download Include="aapt2-$(Aapt2Version)-linux.zip">
+      <FilesToExtract>aapt2</FilesToExtract>
+    </_BuildTools>
+    <_BuildTools Include="build-tools_r$(XABuildToolsVersion)-linux.zip">
       <Platform>linux</Platform>
       <HostOS>Linux</HostOS>
-    </_Aapt2Download>
-    <_Aapt2Download Include="aapt2-$(Aapt2Version)-windows.zip">
+      <FilesToExtract>aapt2</FilesToExtract>
+    </_BuildTools>
+    <_BuildTools Include="build-tools_r$(XABuildToolsVersion)-windows.zip">
       <Platform>windows</Platform>
       <HostOS></HostOS>
-    </_Aapt2Download>
+      <FilesToExtract>aapt2.exe</FilesToExtract>
+    </_BuildTools>
   </ItemGroup>
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
 
-  <Target Name="_DownloadAapt2" BeforeTargets="Build">
-    <ItemGroup>
-      <_DownloadUrl Include="%(_Aapt2Download.Identity)">
-        <Platform>%(_Aapt2Download.Platform)</Platform>
-        <HostOS>%(_Aapt2Download.HostOS)</HostOS>
-        <Url>https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/$(Aapt2Version)/aapt2-$(Aapt2Version)-%(_Aapt2Download.Platform).jar</Url>
-      </_DownloadUrl>
-    </ItemGroup>
-
-    <DownloadUri
-        SourceUris="%(_DownloadUrl.Url)"
-        DestinationFiles="@(_DownloadUrl->'$(AndroidToolchainCacheDirectory)\%(Filename)%(Extension)')"
-    />
+  <Target Name="_ExtractAapt2" BeforeTargets="Build">
     <UnzipDirectoryChildren
-        NoSubdirectory="True"
-        SourceFiles="$(AndroidToolchainCacheDirectory)\%(_DownloadUrl.Filename)%(_DownloadUrl.Extension)"
-        DestinationFolder="$(_Destination)%(_DownloadUrl.HostOS)"
+        NoSubdirectory="False"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)"
+        DestinationFolder="$(_Destination)%(_BuildTools.HostOS)"
+        FilesToExtract="%(_BuildTools.FilesToExtract)"
     />
   </Target>
 
   <Target Name="_CleanAapt2" BeforeTargets="Clean">
-    <Delete Files="@(_Aapt2Download->'$(_Destination)\%(HostOS)')" />
+    <Delete Files="@(_BuildTools->'$(_Destination)\%(HostOS)')" />
   </Target>
 
 </Project>

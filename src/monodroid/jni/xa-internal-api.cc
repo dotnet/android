@@ -11,7 +11,7 @@
 #include "xa-internal-api-impl.hh"
 
 #if defined (WINDOWS)
-#define WINDOWS_UNUSED_ARG UNUSED_ARG
+#define WINDOWS_UNUSED_ARG [[maybe_unused]]
 #else
 #define WINDOWS_UNUSED_ARG
 #endif

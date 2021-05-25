@@ -1,8 +1,7 @@
-#include <assert.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cstdarg>
+#include <cstdio>
+#include <cerrno>
 #ifndef WINDOWS
 #include <sys/socket.h>
 #else
