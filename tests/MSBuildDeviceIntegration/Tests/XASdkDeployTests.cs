@@ -137,7 +137,7 @@ namespace Xamarin.Android.Build.Tests
 				"AndroidAttachDebugger=True",
 			}), "Project should have run.");
 			WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
-			Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, dotnet.ProjectDirectory, "logcat.log")), "Activity should have started");
+			Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, dotnet.ProjectDirectory, "logcat.log"), 120), "Activity should have started");
 			// we need to give a bit of time for the debug server to start up.
 			WaitFor (2000);
 			session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };

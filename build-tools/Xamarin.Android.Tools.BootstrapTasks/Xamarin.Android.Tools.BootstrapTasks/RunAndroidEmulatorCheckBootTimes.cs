@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -12,12 +13,16 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public class RunAndroidEmulatorCheckBootTimes : Task
 	{
+		public string AndroidSdkDirectory { get; set; }
+		public string AvdManagerHome { get; set; }
 		public string CheckBootTimesPath { get; set; }
 		public string DeviceName { get; set; } = "XamarinAndroidTestRunner64";
 
 		public override bool Execute ()
 		{
 			Log.LogMessage (MessageImportance.High, $"Task {nameof (RunAndroidEmulatorCheckBootTimes)}");
+			Log.LogMessage (MessageImportance.High, $"     {nameof (AndroidSdkDirectory)}: {AndroidSdkDirectory}");
+			Log.LogMessage (MessageImportance.High, $"     {nameof (AvdManagerHome)}: {AvdManagerHome}");
 			Log.LogMessage (MessageImportance.High, $"     {nameof (CheckBootTimesPath)}: {CheckBootTimesPath}");
 			Log.LogMessage (MessageImportance.High, $"     {nameof (DeviceName)}: {DeviceName}");
 
@@ -32,9 +37,16 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var timeoutInMS = (int) TimeSpan.FromMinutes (15).TotalMilliseconds;
 			bool finishAsExpected = false;
 			bool processTimedOut = false;
+			var args = new StringBuilder ($"--devicename {DeviceName} --verbose");
+			if (!string.IsNullOrWhiteSpace (AndroidSdkDirectory)) {
+				args.Append ($" --sdkpath \"{AndroidSdkDirectory.TrimEnd ('\\')}\"");
+			}
+			if (!string.IsNullOrWhiteSpace (AvdManagerHome)) {
+				args.Append ($" --avdhome \"{AvdManagerHome.TrimEnd ('\\')}\"");
+			}
 			var success = RunProcess (
 				fileInfo.FullName,
-				$"--devicename {DeviceName} --verbose",
+				args.ToString (),
 				timeoutInMS,
 				(string data, ManualResetEvent mre) => {
 					Log.LogMessage (MessageImportance.High, $"CheckBootTimes ({DateTime.UtcNow}): {data}");
