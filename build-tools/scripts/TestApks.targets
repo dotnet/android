@@ -346,6 +346,8 @@
   <Target Name="CheckBootTimes"
       DependsOnTargets="AcquireAndroidTarget;ReleaseAndroidTarget">
     <RunAndroidEmulatorCheckBootTimes
+        AndroidSdkDirectory="$(AndroidSdkDirectory)"
+        AvdManagerHome="$(AvdManagerHome)"
         DeviceName="$(TestAvdName)"
         CheckBootTimesPath="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\check-boot-times.exe"
     />
