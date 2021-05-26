@@ -222,7 +222,7 @@ namespace MonoDroid.Generation
 			if (type.StartsWith ("params "))
 				return "params " + GetOutputName (type.Substring ("params ".Length));
 			if (type.StartsWith ("global::"))
-				Report.LogCodedError (Report.ErrorUnexpectedGlobal);
+				Report.LogCodedErrorAndExit (Report.ErrorUnexpectedGlobal);
 			if (!UseGlobal)
 				return type;
 

@@ -22,11 +22,19 @@ namespace Xamarin.Android.Binder
 	{
 		public static int Main (string[] args)
 		{
-			var options = CodeGeneratorOptions.Parse (args);
-			if (options == null)
-				return 1;
+			try {
+				var options = CodeGeneratorOptions.Parse (args);
+				if (options == null)
+					return 1;
 
-			Run (options);
+				Run (options);
+			} catch (BindingGeneratorException) {
+				return 1;
+			} catch (Exception ex) {
+				Console.Error.WriteLine (Report.Format (true, 0, null, -1, -1, ex.ToString ()));
+				return 1;
+			}
+
 			return 0;
 		}
 

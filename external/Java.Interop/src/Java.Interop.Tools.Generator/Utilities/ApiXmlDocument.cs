@@ -40,7 +40,7 @@ namespace Java.Interop.Tools.Generator
 				fixup.Apply (this, ApiLevel, ProductVersion);
 			} catch (XmlException ex) {
 				// BG4200
-				Report.LogCodedError (Report.ErrorFailedToProcessMetadata, ex.Message);
+				Report.LogCodedErrorAndExit (Report.ErrorFailedToProcessMetadata, null, fixup.FixupDocument, ex.Message);
 			}
 		}
 	}

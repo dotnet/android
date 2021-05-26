@@ -66,7 +66,7 @@ namespace MonoDroid.Generation
 					sw.WriteLine ("  <remove-node path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" />",
 							package, type, member, enu.StartsWith ("I:") ? "interface" : "class");
 				} catch (Exception ex) {
-					Report.LogCodedError (Report.ErrorFailedToRemoveConstants, ex, enu);
+					Report.LogCodedErrorAndExit (Report.ErrorFailedToRemoveConstants, ex, enu);
 					throw;
 				}
 			}
@@ -93,7 +93,7 @@ namespace MonoDroid.Generation
 					sw.WriteLine ("  <remove-node path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" />",
 						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class");
 				} catch (Exception ex) {
-					Report.LogCodedError (Report.ErrorFailedToRemoveConstants, ex, enu);
+					Report.LogCodedErrorAndExit (Report.ErrorFailedToRemoveConstants, ex, enu);
 					throw;
 				}
 			}

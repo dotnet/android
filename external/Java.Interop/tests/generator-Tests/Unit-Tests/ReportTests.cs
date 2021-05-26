@@ -24,8 +24,8 @@ namespace generatortests
 			Assert.AreEqual ("error BG0037: There was a bad error", Report.Format (true, code, null, 0, 0, msg, args));
 			Assert.AreEqual (@"C:\code\test.cs: error BG0037: There was a bad error", Report.Format (true, code, sourcefile, 0, 0, msg, args));
 			Assert.AreEqual (@"C:\code\test.cs(32): error BG0037: There was a bad error", Report.Format (true, code, sourcefile, line, 0, msg, args));
-			Assert.AreEqual (@"C:\code\test.cs(32, 12): error BG0037: There was a bad error", Report.Format (true, code, sourcefile, line, col, msg, args));
-			Assert.AreEqual (@"C:\code\test.cs(32, 12): warning BG0037: There was a bad error", Report.Format (false, code, sourcefile, line, col, msg, args));
+			Assert.AreEqual (@"C:\code\test.cs(32,12): error BG0037: There was a bad error", Report.Format (true, code, sourcefile, line, col, msg, args));
+			Assert.AreEqual (@"C:\code\test.cs(32,12): warning BG0037: There was a bad error", Report.Format (false, code, sourcefile, line, col, msg, args));
 		}
 	}
 }

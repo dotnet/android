@@ -58,9 +58,9 @@ namespace Java.Interop.Tools.Generator
 						else
 							// BG8A00
 							Report.LogCodedWarning (0, Report.WarningRemoveNodeMatchedNoNodes, null, metaitem, $"<remove-node path=\"{path}\" />");
-					} catch (XPathException e) {
+					} catch (XPathException) {
 						// BG4301
-						Report.LogCodedError (Report.ErrorRemoveNodeInvalidXPath, e, metaitem, path);
+						Report.LogCodedError (Report.ErrorRemoveNodeInvalidXPath, metaitem, path);
 					}
 					break;
 				case "add-node":
@@ -74,9 +74,9 @@ namespace Java.Interop.Tools.Generator
 							foreach (var node in nodes)
 								node.Add (metaitem.Nodes ());
 						}
-					} catch (XPathException e) {
+					} catch (XPathException) {
 						// BG4302
-						Report.LogCodedError (Report.ErrorAddNodeInvalidXPath, e, metaitem, path);
+						Report.LogCodedError (Report.ErrorAddNodeInvalidXPath, metaitem, path);
 					}
 					break;
 				case "change-node":
@@ -95,9 +95,9 @@ namespace Java.Interop.Tools.Generator
 						if (!matched)
 							// BG8A03
 							Report.LogCodedWarning (0, Report.WarningChangeNodeTypeMatchedNoNodes, null, metaitem, $"<change-node-type path=\"{path}\" />");
-					} catch (XPathException e) {
+					} catch (XPathException) {
 						// BG4303
-						Report.LogCodedError (Report.ErrorChangeNodeInvalidXPath, e, metaitem, path);
+						Report.LogCodedError (Report.ErrorChangeNodeInvalidXPath, metaitem, path);
 					}
 					break;
 				case "attr":
@@ -106,7 +106,7 @@ namespace Java.Interop.Tools.Generator
 
 						if (string.IsNullOrEmpty (attr_name))
 							// BG4307
-							Report.LogCodedError (Report.ErrorMissingAttrName, null, metaitem, path);
+							Report.LogCodedError (Report.ErrorMissingAttrName, metaitem, path);
 						var nodes = attr_last_cache != null ? new XElement [] { attr_last_cache } : apiDocument.ApiDocument.XPathSelectElements (path);
 						var attr_matched = 0;
 
@@ -119,9 +119,9 @@ namespace Java.Interop.Tools.Generator
 							Report.LogCodedWarning (0, Report.WarningAttrMatchedNoNodes, null, metaitem, $"<attr path=\"{path}\" />");
 						if (attr_matched != 1)
 							attr_last_cache = null;
-					} catch (XPathException e) {
+					} catch (XPathException) {
 						// BG4304
-						Report.LogCodedError (Report.ErrorAttrInvalidXPath, e, metaitem, path);
+						Report.LogCodedError (Report.ErrorAttrInvalidXPath, metaitem, path);
 					}
 					break;
 				case "move-node":
@@ -140,9 +140,9 @@ namespace Java.Interop.Tools.Generator
 						if (!matched)
 							// BG8A05
 							Report.LogCodedWarning (0, Report.WarningMoveNodeMatchedNoNodes, null, metaitem, $"<move-node path=\"{path}\" />");
-					} catch (XPathException e) {
+					} catch (XPathException) {
 						// BG4305
-						Report.LogCodedError (Report.ErrorMoveNodeInvalidXPath, e, metaitem, path);
+						Report.LogCodedError (Report.ErrorMoveNodeInvalidXPath, metaitem, path);
 					}
 					break;
 				case "remove-attr":
@@ -159,9 +159,9 @@ namespace Java.Interop.Tools.Generator
 						if (!matched)
 							// BG8A06
 							Report.LogCodedWarning (0, Report.WarningRemoveAttrMatchedNoNodes, null, metaitem, $"<remove-attr path=\"{path}\" />");
-					} catch (XPathException e) {
+					} catch (XPathException) {
 						// BG4306
-						Report.LogCodedError (Report.ErrorRemoveAttrInvalidXPath, e, metaitem, path);
+						Report.LogCodedError (Report.ErrorRemoveAttrInvalidXPath, metaitem, path);
 					}
 					break;
 				}

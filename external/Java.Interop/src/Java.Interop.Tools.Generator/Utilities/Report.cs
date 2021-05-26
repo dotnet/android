@@ -69,23 +69,30 @@ namespace Java.Interop.Tools.Generator
 		public static LocalizedMessage WarningBaseInterfaceNotFound => new LocalizedMessage (0x8C00, Localization.Resources.Generator_BG8C00);
 		public static LocalizedMessage WarningBaseInterfaceInvalid => new LocalizedMessage (0x8C01, Localization.Resources.Generator_BG8C01);
 
-		public static void LogCodedError (LocalizedMessage message, params string [] args)
-			=> LogCodedError (message, null, null, -1, -1, args);
+		public static void LogCodedErrorAndExit (LocalizedMessage message, params string [] args)
+			=> LogCodedErrorAndExit (message, null, null, args);
 
-		public static void LogCodedError (LocalizedMessage message, Exception? innerException, params string [] args)
-			=> LogCodedError (message, innerException, null, -1, -1, args);
+		public static void LogCodedErrorAndExit (LocalizedMessage message, Exception? innerException, params string [] args)
+			=> LogCodedErrorAndExit (message, innerException, null, args);
 
-		public static void LogCodedError (LocalizedMessage message, Exception? innerException, XNode node, params string? [] args)
+		public static void LogCodedErrorAndExit (LocalizedMessage message, Exception? innerException, XNode? node, params string? [] args)
 		{
-			var file = Uri.TryCreate (node.BaseUri, UriKind.Absolute, out var uri) ? uri.LocalPath : null;
-			var line_info = (node as IXmlLineInfo)?.HasLineInfo () == true ? node as IXmlLineInfo : null;
+			LogCodedError (message, node, args);
 
-			LogCodedError (message, innerException, file, line_info?.LineNumber ?? -1, line_info?.LinePosition ?? -1, args);
+			// Throwing a BindingGeneratorException will cause generator to terminate
+			throw new BindingGeneratorException (message.Code, string.Format (message.Value, args), innerException);
 		}
 
-		public static void LogCodedError (LocalizedMessage message, Exception? innerException, string? sourceFile, int line, int column, params string? [] args)
+		public static void LogCodedError (LocalizedMessage message, XNode? node, params string? [] args)
 		{
-			throw new BindingGeneratorException (message.Code, sourceFile, line, column, string.Format (message.Value, args), innerException);
+			var (file, line, col) = GetLineInfo (node);
+
+			LogCodedError (message, file, line, col, args);
+		}
+
+		public static void LogCodedError (LocalizedMessage message, string? sourceFile, int line, int column, params string? [] args)
+		{
+			Console.Error.WriteLine (Format (true, message.Code, sourceFile, line, column, message.Value, args));
 		}
 
 		public static void LogCodedWarning (int verbosity, LocalizedMessage message, params string? [] args)
@@ -99,10 +106,9 @@ namespace Java.Interop.Tools.Generator
 
 		public static void LogCodedWarning (int verbosity, LocalizedMessage message, Exception? innerException, XNode node, params string? [] args)
 		{
-			var file = Uri.TryCreate (node.BaseUri, UriKind.Absolute, out var uri) ? uri.LocalPath : null;
-			var line_info = (node as IXmlLineInfo)?.HasLineInfo () == true ? node as IXmlLineInfo : null;
+			var (file, line, col) = GetLineInfo (node);
 
-			LogCodedWarning (verbosity, message, innerException, file, line_info?.LineNumber ?? -1, line_info?.LinePosition ?? -1, args);
+			LogCodedWarning (verbosity, message, innerException, file, line, col, args);
 		}
 
 		public static void LogCodedWarning (int verbosity, LocalizedMessage message, Exception? innerException, string? sourceFile, int line, int column, params string? [] args)
@@ -145,12 +151,26 @@ namespace Java.Interop.Tools.Generator
 				return ret + ": ";
 
 			if (column > 0)
-				return ret + $"({line}, {column}): ";
+				return ret + $"({line},{column}): ";
 
 			return ret + $"({line}): ";
 		}
+
+		static (string? file, int line, int col) GetLineInfo (XNode? node)
+		{
+			if (node is null)
+				return (null, -1, -1);
+
+			var file = Uri.TryCreate (node.BaseUri, UriKind.Absolute, out var uri) ? uri.LocalPath : null;
+			var pos = (node as IXmlLineInfo)?.HasLineInfo () == true ? node as IXmlLineInfo : null;
+
+			return (file, pos?.LineNumber ?? -1, pos?.LinePosition ?? -1);
+		}
 	}
-	
+
+	/// <summary>
+	/// Throwing this exception will cause generator to exit gracefully.
+	/// </summary>
 	public class BindingGeneratorException : Exception
 	{
 		public BindingGeneratorException (int errorCode, string message)
