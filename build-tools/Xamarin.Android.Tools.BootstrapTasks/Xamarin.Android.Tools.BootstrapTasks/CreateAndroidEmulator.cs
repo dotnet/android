@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string          SdkVersion      {get; set;}
 		public                  string          AndroidAbi      {get; set;}
 		/// <summary>
-		/// Specifies $ANDROID_SDK_HOME. This is not the path to the Android SDK, but a root folder that contains the `.android` folder.
+		/// Specifies $ANDROID_PREFS_ROOT. This is not the path to the Android SDK, but a root folder that contains the `.android` folder.
 		/// </summary>
 		[Required]
 		public                  string          AvdManagerHome  {get; set;}
@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			}
 
 			var env = new List<string> ();
-			env.Add ($"ANDROID_SDK_HOME={AvdManagerHome}");
+			env.Add ($"ANDROID_PREFS_ROOT={AvdManagerHome}");
 			if (!string.IsNullOrEmpty (JavaSdkHome)) {
 				env.Add ($"JAVA_HOME={JavaSdkHome}");
 			}
