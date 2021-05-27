@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  int             EmulatorProcessId       {get; set;}
 
 		/// <summary>
-		/// Specifies $ANDROID_SDK_HOME. This is not the path to the Android SDK, but a root folder that contains the `.android` folder.
+		/// Specifies $ANDROID_PREFS_ROOT. This is not the path to the Android SDK, but a root folder that contains the `.android` folder.
 		/// </summary>
 		[Required]
 		public                  string          AvdManagerHome  {get; set;}
@@ -78,8 +78,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var p = new Process () {
 				StartInfo = psi,
 			};
-			psi.EnvironmentVariables ["ANDROID_SDK_HOME"] = AvdManagerHome;
-			Log.LogMessage (MessageImportance.Low, $"\tANDROID_SDK_HOME=\"{AvdManagerHome}\"");
+			psi.EnvironmentVariables ["ANDROID_PREFS_ROOT"] = AvdManagerHome;
+			Log.LogMessage (MessageImportance.Low, $"\tANDROID_PREFS_ROOT=\"{AvdManagerHome}\"");
 
 			var sawError        = new AutoResetEvent (false);
 
