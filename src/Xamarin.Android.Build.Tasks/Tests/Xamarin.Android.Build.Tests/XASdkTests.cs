@@ -192,6 +192,7 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (resource_designer_cs);
 			var resource_designer_text = File.ReadAllText (resource_designer_cs);
 			StringAssert.Contains ("public const int MyLayout", resource_designer_text);
+			StringAssert.Contains ("global::LibraryB.Resource.Drawable.IMALLCAPS = global::AppA.Resource.Drawable.IMALLCAPS", resource_designer_text);
 		}
 
 		[Test]

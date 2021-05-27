@@ -20,7 +20,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "FLT";
 
-		const string TargetFrameworkIdentifier = "MonoAndroid";
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.AppDomain;
 
 		public ITaskItem [] InputAssemblies { get; set; }
@@ -36,11 +35,19 @@ namespace Xamarin.Android.Tasks
 			var output = new List<ITaskItem> (InputAssemblies.Length);
 			foreach (var assemblyItem in InputAssemblies) {
 				// Skip .NET 6.0 <FrameworkReference/> assemblies
-				if (!string.IsNullOrEmpty (assemblyItem.GetMetadata ("FrameworkReferenceName"))) {
-					continue;
+				var frameworkReferenceName = assemblyItem.GetMetadata ("FrameworkReferenceName") ?? "";
+				if (frameworkReferenceName == "Microsoft.Android") {
+					continue; // No need to process Mono.Android.dll or Java.Interop.dll
+				}
+				if (frameworkReferenceName.StartsWith ("Microsoft.NETCore.", StringComparison.OrdinalIgnoreCase)) {
+					continue; // No need to process BCL assemblies
 				}
 				if (!File.Exists (assemblyItem.ItemSpec)) {
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyItem.ItemSpec}'.");
+					continue;
+				}
+				if (string.Equals (assemblyItem.GetMetadata ("TargetPlatformIdentifier"), "android", StringComparison.OrdinalIgnoreCase)) {
+					output.Add (assemblyItem);
 					continue;
 				}
 				using (var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec))) {
@@ -58,8 +65,7 @@ namespace Xamarin.Android.Tasks
 					}
 					// Check assembly definition
 					var assemblyDefinition = reader.GetAssemblyDefinition ();
-					var targetFrameworkIdentifier = GetTargetFrameworkIdentifier (assemblyDefinition, reader);
-					if (string.Compare (targetFrameworkIdentifier, TargetFrameworkIdentifier, StringComparison.OrdinalIgnoreCase) == 0) {
+					if (IsAndroidAssembly (assemblyDefinition, reader)) {
 						output.Add (assemblyItem);
 						BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
 						continue;
@@ -87,16 +93,15 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		string GetTargetFrameworkIdentifier (AssemblyDefinition assembly, MetadataReader reader)
+		bool IsAndroidAssembly (AssemblyDefinition assembly, MetadataReader reader)
 		{
-			string targetFrameworkIdentifier = null;
 			foreach (var handle in assembly.GetCustomAttributes ()) {
 				var attribute = reader.GetCustomAttribute (handle);
 				var name = reader.GetCustomAttributeFullName (attribute);
 				switch (name) {
 					case "System.Runtime.Versioning.TargetFrameworkAttribute":
-						var arguments = attribute.GetCustomAttributeArguments ();
-						foreach (var p in arguments.FixedArguments) {
+						string targetFrameworkIdentifier = null;
+						foreach (var p in attribute.GetCustomAttributeArguments ().FixedArguments) {
 							// Of the form "MonoAndroid,Version=v8.1"
 							var value = p.Value?.ToString ();
 							if (!string.IsNullOrEmpty (value)) {
@@ -105,6 +110,18 @@ namespace Xamarin.Android.Tasks
 									targetFrameworkIdentifier = value.Substring (0, commaIndex);
 									break;
 								}
+							}
+						}
+						if (string.Equals (targetFrameworkIdentifier, "MonoAndroid", StringComparison.OrdinalIgnoreCase)) {
+							return true;
+						}
+						break;
+					case "System.Runtime.Versioning.TargetPlatformAttribute":
+						foreach (var p in attribute.GetCustomAttributeArguments ().FixedArguments) {
+							// Of the form "android30"
+							var value = p.Value?.ToString ();
+							if (value != null && value.StartsWith ("android", StringComparison.OrdinalIgnoreCase)) {
+								return true;
 							}
 						}
 						break;
@@ -117,7 +134,7 @@ namespace Xamarin.Android.Tasks
 						break;
 				}
 			}
-			return targetFrameworkIdentifier;
+			return false;
 		}
 
 		bool HasEmbeddedResource (MetadataReader reader)
