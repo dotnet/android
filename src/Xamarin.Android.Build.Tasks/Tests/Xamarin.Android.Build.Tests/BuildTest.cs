@@ -3922,9 +3922,6 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, Path.Combine ("armeabi", "libe_sqlite3.so")), "Build should not use `armeabi`.");
-				if (Builder.UseDotNet) {
-					StringAssertEx.Contains ("warning XA4301", b.LastBuildOutput, "Should get a XA4301 warning");
-				}
 			}
 		}
 
