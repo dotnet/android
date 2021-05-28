@@ -378,9 +378,10 @@ namespace Library1 {
 				},
 			};
 			if (Builder.UseDotNet) {
-				// NOTE: workaround for netcoreapp3.1 dependency preferred over monoandroid8.0
+				// NOTE: workaround for netcoreapp3.0 dependency being included along with monoandroid8.0
+				// See: https://www.nuget.org/packages/SQLitePCLRaw.bundle_green/2.0.3
 				proj.PackageReferences.Add (new Package {
-					Id = "SQLitePCLRaw.lib.e_sqlite3.android",
+					Id = "SQLitePCLRaw.provider.dynamic_cdecl",
 					Version = "2.0.4",
 				});
 			}
