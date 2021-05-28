@@ -788,7 +788,7 @@ stages:
         testName: Mono.Android.NET_Tests
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration).xml
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6-android/Mono.Android.NET_Tests-Signed.apk
+        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: net6-Default
         useDotNet: true
 
@@ -800,7 +800,7 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aab.xml
         extraBuildArgs: /p:TestsFlavor=Aab /p:AndroidPackageFormat=aab
         packageType: Aab
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6-android/Mono.Android.NET_Tests-Signed.aab
+        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: net6-Aab
         useDotNet: true
 
@@ -811,7 +811,7 @@ stages:
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Interpreter.xml
         extraBuildArgs: /p:TestsFlavor=Interpreter /p:UseInterpreter=True
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6-android/Mono.Android.NET_Tests-Signed.apk
+        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: net6-Interpreter
         useDotNet: true
 
