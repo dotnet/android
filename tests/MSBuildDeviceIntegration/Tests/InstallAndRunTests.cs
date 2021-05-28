@@ -382,7 +382,7 @@ namespace Library1 {
 				// See: https://www.nuget.org/packages/SQLitePCLRaw.bundle_green/2.0.3
 				proj.PackageReferences.Add (new Package {
 					Id = "SQLitePCLRaw.provider.dynamic_cdecl",
-					Version = "2.0.4",
+					Version = "2.0.3",
 				});
 			}
 
