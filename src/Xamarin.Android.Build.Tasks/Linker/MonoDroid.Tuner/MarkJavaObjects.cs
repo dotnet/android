@@ -11,9 +11,9 @@ namespace MonoDroid.Tuner {
 
 	public class MarkJavaObjects :
 #if NET5_LINKER
-	BaseMarkHandler
+		BaseMarkHandler
 #else   // !NET5_LINKER
-	BaseSubStep
+		BaseSubStep
 #endif  // !NET5_LINKER
 	{
 		Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> module_types = new Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> ();
