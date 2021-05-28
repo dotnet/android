@@ -1,5 +1,6 @@
-using Mono.Linker.Steps;
 using Microsoft.Android.Sdk.ILLink;
+using Mono.Cecil;
+using Mono.Linker.Steps;
 
 namespace Mono.Linker
 {
@@ -7,12 +8,12 @@ namespace Mono.Linker
 	{
 		protected LinkContext Context;
 		protected AnnotationStore Annotations => Context?.Annotations;
-		protected LinkContextMetadataResolver resolver;
+		protected IMetadataResolver cache;
 
 		public virtual void Initialize (LinkContext context, MarkContext markContext)
 		{
 			Context = context;
-			resolver = new LinkContextMetadataResolver (context);
+			cache = new LinkContextMetadataResolver (context);
 		}
 	}
 }

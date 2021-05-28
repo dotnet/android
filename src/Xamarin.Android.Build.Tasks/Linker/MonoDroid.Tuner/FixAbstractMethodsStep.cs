@@ -34,13 +34,14 @@ namespace MonoDroid.Tuner
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
 #else   // !NET5_LINKER
-		readonly TypeDefinitionCache resolver;
-
-		public FixAbstractMethodsStep (TypeDefinitionCache cache)
+		public FixAbstractMethodsStep (IMetadataResolver cache)
 		{
-			resolver = cache;
+			this.cache = cache;
 		}
+
+		readonly
 #endif  // !NET5_LINKER
+		IMetadataResolver cache;
 
 		bool CheckShouldProcessAssembly (AssemblyDefinition assembly)
 		{
@@ -136,7 +137,7 @@ namespace MonoDroid.Tuner
 
 		bool MightNeedFix (TypeDefinition type)
 		{
-			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", resolver);
+			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
 		}
 
 		static bool CompareTypes (TypeReference iType, TypeReference tType)
@@ -245,7 +246,7 @@ namespace MonoDroid.Tuner
 
 			bool rv = false;
 			List<MethodDefinition> typeMethods = new List<MethodDefinition> (type.Methods);
-			foreach (var baseType in type.GetBaseTypes (resolver))
+			foreach (var baseType in type.GetBaseTypes (cache))
 				typeMethods.AddRange (baseType.Methods);
 
 			foreach (var ifaceInfo in type.Interfaces) {

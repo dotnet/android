@@ -75,7 +75,7 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (!method.TryGetRegisterMember (out var member, out var nativeMethod, out var signature)) {
 				if (PreserveJniMarshalMethods () &&
 					method.DeclaringType.GetMarshalMethodsType () != null &&
-					method.TryGetBaseOrInterfaceRegisterMember (resolver, out member, out nativeMethod, out signature)) {
+					method.TryGetBaseOrInterfaceRegisterMember (cache, out member, out nativeMethod, out signature)) {
 					preserveJniMarshalMethodOnly = true;
 				} else {
 					return;
