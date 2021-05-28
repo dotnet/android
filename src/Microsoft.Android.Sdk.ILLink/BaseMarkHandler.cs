@@ -13,7 +13,7 @@ namespace Mono.Linker
 		public virtual void Initialize (LinkContext context, MarkContext markContext)
 		{
 			Context = context;
-			cache = new LinkContextMetadataResolver (context);
+			cache = context;
 		}
 	}
 }

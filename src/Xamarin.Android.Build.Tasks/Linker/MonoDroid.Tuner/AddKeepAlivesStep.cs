@@ -22,7 +22,7 @@ namespace MonoDroid.Tuner
 #if NET5_LINKER
 		protected override void Process ()
 		{
-			cache = new LinkContextMetadataResolver (Context);
+			cache = Context;
 		}
 #else   // !NET5_LINKER
 		public AddKeepAlivesStep (IMetadataResolver cache)
