@@ -14,9 +14,9 @@ namespace MonoDroid.Tuner {
 
 	public class PreserveApplications :
 #if NET5_LINKER
-	BaseMarkHandler
+		BaseMarkHandler
 #else   // !NET5_LINKER
-	BaseSubStep
+		BaseSubStep
 #endif  // !NET5_LINKER
 	{
 
