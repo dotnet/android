@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <TargetName>android-workload</TargetName>
+    <ManifestTeamProject>android</ManifestTeamProject>
+    <ManifestRepositoryName>xamarin-android</ManifestRepositoryName>
+    <ManifestBuildBranch>@WORKLOAD_BRANCH@</ManifestBuildBranch>
+    <ManifestBuildNumber>$([System.DateTime]::Now.ToString("yyMMdd")).1</ManifestBuildNumber>
+    <_FullWorkloadName>microsoft-android-sdk-full</_FullWorkloadName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ComponentResources Include="$(_FullWorkloadName)" Category=".NET" Title="Android SDK for .NET" Description="Build Tools and Bindings for the Android SDK."/>
+    <ComponentVersions Include="$(_FullWorkloadName)" Version="@WORKLOAD_VERSION@" />
+    <WorkloadPackages Include="$(NuGetPackagePath)\Microsoft.NET.Sdk.Android.Manifest*.nupkg" />
+  </ItemGroup>
+</Project>
