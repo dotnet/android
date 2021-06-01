@@ -88,7 +88,27 @@ namespace Xamarin.Android.Prepare
 			// Install runtime packs associated with the SDK previously installed.
 			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
 			var logPath = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs.binlog");
-			return Utilities.RunCommand (dotnetTool, new string [] { "restore", ProcessRunner.QuoteArgument (packageDownloadProj), ProcessRunner.QuoteArgument ($"-bl:{logPath}") });
+			if (!Utilities.RunCommand (dotnetTool, new string [] { "restore", ProcessRunner.QuoteArgument (packageDownloadProj), ProcessRunner.QuoteArgument ($"-bl:{logPath}") })) {
+				Log.ErrorLine ($"dotnet restore {packageDownloadProj} failed.");
+				return false;
+			}
+
+			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.Mono.ToolChain listed in package-download.proj
+			var destination = Path.Combine (dotnetPath, "sdk-manifests",
+				context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionBand),
+				"Microsoft.NET.Workload.Mono.ToolChain"
+			);
+			foreach (var file in Directory.GetFiles (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, "WorkloadManifest.*")) {
+				Utilities.CopyFileToDir (file, destination);
+			}
+
+			// Install the microsoft-net-runtime-android workload
+			if (!Utilities.RunCommand (dotnetTool, new [] { "workload", "install", "microsoft-net-runtime-android", "--skip-manifest-update", "--verbosity", "diag" })) {
+				Log.ErrorLine ($"dotnet workload install failed.");
+				return false;
+			}
+
+			return true;
 		}
 
 		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version, bool runtimeOnly = false)
