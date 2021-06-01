@@ -304,7 +304,7 @@ namespace Xamarin.Android.Tasks
 					outdir = Path.Combine (AotOutputDirectory, "arm64-v8a");
 					mtriple = "aarch64-linux-android";
 					arch = AndroidTargetArch.Arm64;
-					break;			
+					break;
 
 				case "x86":
 					aotCompiler = Path.Combine (sdkBinDirectory, "cross-x86");
@@ -366,21 +366,21 @@ namespace Xamarin.Android.Tasks
 
 					var libs = new List<string>();
 					if (NdkUtil.UsingClangNDK) {
-						libs.Add ($"-L{toolchainLibDir}");
-						libs.Add ($"-L{androidLibPath}");
+						libs.Add ($"-L{toolchainLibDir.TrimEnd ('\\')}");
+						libs.Add ($"-L{androidLibPath.TrimEnd ('\\')}");
 
 						if (arch == AndroidTargetArch.Arm) {
 							// Needed for -lunwind to work
 							string compilerLibDir = Path.Combine (toolchainPath, "..", "sysroot", "usr", "lib", NdkUtil.GetArchDirName (arch));
-							libs.Add ($"-L{compilerLibDir}");
+							libs.Add ($"-L{compilerLibDir.TrimEnd ('\\')}");
 						}
 					}
 
-					libs.Add ($"\\\"{Path.Combine (toolchainLibDir, "libgcc.a")}\\\"");
-					libs.Add ($"\\\"{Path.Combine (androidLibPath, "libc.so")}\\\"");
-					libs.Add ($"\\\"{Path.Combine (androidLibPath, "libm.so")}\\\"");
+					libs.Add (Path.Combine (toolchainLibDir, "libgcc.a"));
+					libs.Add (Path.Combine (androidLibPath, "libc.so"));
+					libs.Add (Path.Combine (androidLibPath, "libm.so"));
 
-					ldFlags = string.Join(";", libs);
+					ldFlags = $"\\\"{string.Join("\\\";\\\"", libs)}\\\"";
 				}
 
 				string ldName = String.Empty;
@@ -391,6 +391,7 @@ namespace Xamarin.Android.Tasks
 						if (ldName.IndexOf ('-') >= 0) {
 							ldName = ldName.Substring (ldName.LastIndexOf ("-") + 1);
 						}
+						ldName=$"\\\"{ldName}\\\"";
 					}
 				} else {
 					ldName = "ld";
@@ -466,7 +467,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 		}
-			
+
 		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly, string responseFile)
 		{
 			var stdout_completed = new ManualResetEvent (false);
@@ -487,7 +488,7 @@ namespace Xamarin.Android.Tasks
 				WindowStyle=ProcessWindowStyle.Hidden,
 				WorkingDirectory = WorkingDirectory,
 			};
-			
+
 			// we do not want options to be provided out of band to the cross compilers
 			psi.EnvironmentVariables ["MONO_ENV_OPTIONS"] = String.Empty;
 			// the C code cannot parse all the license details, including the activation code that tell us which license level is allowed
