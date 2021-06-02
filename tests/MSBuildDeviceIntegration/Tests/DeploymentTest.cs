@@ -16,11 +16,10 @@ using NUnit.Framework.Interfaces;
 using Xamarin.ProjectTools;
 using System.Xml.XPath;
 
-[assembly: NonParallelizable]
-
 namespace Xamarin.Android.Build.Tests
 {
-	[SingleThreaded, Category ("UsesDevice")]
+	[TestFixture]
+	[Category ("UsesDevice")]
 	public class DeploymentTest : DeviceTest {
 
 		static ProjectBuilder builder;
@@ -230,25 +229,25 @@ namespace Xamarin.Android.Build.Tests
 			return tests.Where (p => tests.IndexOf (p) % NODE_COUNT == node).ToArray ();
 		}
 
-		[Test, NonParallelizable]
+		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 0 })]
 		[Category ("TimeZoneInfo")]
 		[Retry (2)]
 		public void CheckTimeZoneInfoIsCorrectNode1 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
-		[Test, NonParallelizable]
+		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 1 })]
 		[Category ("TimeZoneInfo")]
 		[Retry (2)]
 		public void CheckTimeZoneInfoIsCorrectNode2 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
-		[Test, NonParallelizable]
+		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 2 })]
 		[Category ("TimeZoneInfo")]
 		[Retry (2)]
 		public void CheckTimeZoneInfoIsCorrectNode3 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
-		[Test, NonParallelizable]
+		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 3 })]
 		[Category ("TimeZoneInfo")]
 		[Retry (2)]
