@@ -11,7 +11,6 @@ using System.Collections.Generic;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[NonParallelizable] //These tests deploy to devices
 	[Category ("Commercial"), Category ("UsesDevice")]
 	public class SystemApplicationTests : DeviceTest
 	{

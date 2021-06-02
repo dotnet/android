@@ -7,8 +7,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[NonParallelizable] //These tests deploy to devices
-	[Category ("Commercial"), Category ("UsesDevices")]
+	[Category ("Commercial"), Category ("UsesDevice")]
 	public class InstantRunTest : DeviceTest
 	{
 		[Test]

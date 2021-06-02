@@ -10,7 +10,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture, NonParallelizable]
+	[TestFixture]
 	public class PerformanceTest : DeviceTest
 	{
 		const int Retry = 2;
