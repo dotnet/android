@@ -255,7 +255,7 @@ namespace MonoDroid.Tuner {
 			return null;
 		}
 
-		public static bool TryGetBaseOrInterfaceRegisterMember (this MethodDefinition method, TypeDefinitionCache cache, out string member, out string nativeMethod, out string signature)
+		public static bool TryGetBaseOrInterfaceRegisterMember (this MethodDefinition method, IMetadataResolver resolver, out string member, out string nativeMethod, out string signature)
 		{
 			var type = method.DeclaringType;
 
@@ -264,18 +264,18 @@ namespace MonoDroid.Tuner {
 			if (method.IsConstructor || type == null || !type.HasNestedTypes)
 				return false;
 
-			var m = method.GetBaseDefinition (cache);
+			var m = method.GetBaseDefinition (resolver);
 
 			while (m != null) {
 				if (m == method)
-                                        break;
+					break;
 
 				method = m;
 
 				if (m.TryGetRegisterMember (out member, out nativeMethod, out signature))
 					return true;
 
-				m = m.GetBaseDefinition (cache);
+				m = m.GetBaseDefinition (resolver);
 			}
 
 			if (!method.DeclaringType.HasInterfaces || !method.IsNewSlot)
@@ -283,26 +283,26 @@ namespace MonoDroid.Tuner {
 
 			foreach (var iface in method.DeclaringType.Interfaces) {
 				if (iface.InterfaceType.IsGenericInstance)
-                                        continue;
+					continue;
 
 				var itype = iface.InterfaceType.Resolve ();
 				if (itype == null || !itype.HasMethods)
 					continue;
 
 				foreach (var im in itype.Methods)
-					if (im.IsEqual (method, cache))
+					if (im.IsEqual (method, resolver))
 						return im.TryGetRegisterMember (out member, out nativeMethod, out signature);
-                        }
+				}
 
-                        return false;
+			return false;
 		}
 
-		public static bool IsEqual (this MethodDefinition m1, MethodDefinition m2, TypeDefinitionCache cache)
+		public static bool IsEqual (this MethodDefinition m1, MethodDefinition m2, IMetadataResolver resolver)
 		{
 			if (m1.Name != m2.Name || m1.ReturnType.Name != m2.ReturnType.Name)
 				return false;
 
-			return m1.Parameters.AreParametersCompatibleWith (m2.Parameters, cache);
+			return m1.Parameters.AreParametersCompatibleWith (m2.Parameters, resolver);
 		}
 
 		public static bool TryGetMarshalMethod (this MethodDefinition method, string nativeMethod, string signature, out MethodDefinition marshalMethod)
