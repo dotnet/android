@@ -391,7 +391,6 @@ namespace Xamarin.Android.Tasks
 						if (ldName.IndexOf ('-') >= 0) {
 							ldName = ldName.Substring (ldName.LastIndexOf ("-") + 1);
 						}
-						ldName=$"\\\"{ldName}\\\"";
 					}
 				} else {
 					ldName = "ld";
