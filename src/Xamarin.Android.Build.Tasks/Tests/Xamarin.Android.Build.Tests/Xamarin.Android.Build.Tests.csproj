@@ -28,6 +28,7 @@
   <ItemGroup>
     <Compile Remove="DebuggingTasksTests.cs" Condition="!Exists('$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.Build.Debugging.Tasks.dll')" />
     <Compile Remove="Expected\**" />
+    <Compile Include="..\..\..\..\tools\xabuild\SymbolicLink.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

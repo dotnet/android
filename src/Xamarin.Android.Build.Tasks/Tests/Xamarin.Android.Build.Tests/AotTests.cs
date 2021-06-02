@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using Xamarin.Android.Build;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -14,6 +15,41 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class AotTests : BaseTest
 	{
+		public string SdkWithSpacesPath {
+			get {
+				return Path.Combine (Root, "temp", string.Format ("SDK Ümläüts"));
+			}
+		}
+
+		[OneTimeSetUp]
+		public void Setup ()
+		{
+			if (!IsWindows)
+				return;
+
+			var sdkPath = AndroidSdkPath;
+			var ndkPath = AndroidNdkPath;
+
+			var symSdkPath = Path.Combine (SdkWithSpacesPath, "sdk");
+			var symNdkPath = Path.Combine (SdkWithSpacesPath, "ndk");
+
+			SymbolicLink.Create (symSdkPath, sdkPath);
+			SymbolicLink.Create (symNdkPath, ndkPath);
+
+			Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", symSdkPath);
+			Environment.SetEnvironmentVariable ("TEST_ANDROID_NDK_PATH", symNdkPath);
+		}
+
+		[OneTimeTearDown]
+		public void TearDown ()
+		{
+			if (!IsWindows)
+				return;
+			Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", "");
+			Environment.SetEnvironmentVariable ("TEST_ANDROID_NDK_PATH", "");
+			Directory.Delete (SdkWithSpacesPath, recursive: true);
+		}
+
 		[Test, Category ("SmokeTests")]
 		public void BuildBasicApplicationReleaseProfiledAot ()
 		{
