@@ -1284,7 +1284,6 @@ stages:
       artifactName: nuget-signed
       artifactPatterns: |
         !*Darwin*
-        !*Linux*
       propsArtifactName: nuget-unsigned
       signType: $(MicroBuildSignType)
       condition: eq(variables['MicroBuildSignType'], 'Real')
