@@ -15,6 +15,13 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "PRNL";
 
+		static readonly HashSet<string> DebugNativeLibraries = new HashSet<string> {
+			"libxamarin-debug-app-helper",
+			// TODO: eventually we should have a proper mechanism for including/excluding Mono components
+			"libmono-component-diagnostics_tracing",
+			"libmono-component-hot_reload",
+		};
+
 		/// <summary>
 		/// Assumed to be .so files only
 		/// </summary>
@@ -57,10 +64,11 @@ namespace Xamarin.Android.Tasks
 							continue;
 						library.SetMetadata ("ArchiveFileName", "libmonodroid.so");
 					}
-				} else if (fileName == "libxamarin-debug-app-helper") {
-					// libxamarin-debug-app-helper.so is only needed for Debug builds
-					if (!IncludeDebugSymbols)
+				} else if (DebugNativeLibraries.Contains (fileName)) {
+					if (!IncludeDebugSymbols) {
+						Log.LogDebugMessage ($"Excluding '{library.ItemSpec}' for release builds.");
 						continue;
+					}
 				}
 				output.Add (library);
 			}
