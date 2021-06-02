@@ -1285,6 +1285,8 @@ stages:
       artifactPatterns: |
         !*Darwin*
         !*Linux*
+      propsArtifactName: nuget-unsigned
+      signType: $(MicroBuildSignType)
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
   # Check - "Xamarin.Android (.NET 6 Preview Installers Create .pkg)"
