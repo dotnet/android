@@ -4,6 +4,18 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Build All Xamarin.Android",
+            "type": "shell",
+            "windows":{ "command": ".\\build.cmd ${input:buildtype}"},
+            "linux":{"command": "./build.sh ${input:buildtype}"},
+            "osx":{"command": "./build.sh ${input:buildtype}"},
+            "group": {
+              "kind": "build",
+              "isDefault": true
+            },
+            "problemMatcher": ["$msCompile", "$gcc"]
+        },
+        {
             "label": "Build Xamarin.Android Build Tasks",
             "type": "shell",
             "command": "msbuild src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj /restore /t:Build /p:Configuration=${input:configuration}",
@@ -198,6 +210,19 @@
             "Install",
             "SignAndroidPackage",
             "Clean"
+        ]
+      },
+      {
+        "id": "buildtype",
+        "type": "pickString",
+        "default": "Prepare",
+        "description": "Select Build Stage to Run.",
+        "options": [
+            "Prepare",
+            "PrepareExternal",
+            "Build",
+            "Pack",
+            "Everything",
         ]
       },
     ]

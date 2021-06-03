@@ -1,9 +1,9 @@
 {
-    "nxunitExplorer.nunit": "build-tools/scripts/nunit3-console",
     "nxunitExplorer.modules": [
         "bin/TestDebug/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll",
         "bin/TestDebug/net472/Xamarin.Android.Build.Tests.dll",
         "bin/TestRelease/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll",
     ],
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "dotnetCoreExplorer.searchpatterns": "bin/Test{Debug,Release}/**/net6.0/{Xamarin.Android.Build.Tests,MSBuildDeviceIntegration}.dll",
 }
