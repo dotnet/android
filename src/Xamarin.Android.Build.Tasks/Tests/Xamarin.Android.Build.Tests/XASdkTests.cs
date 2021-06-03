@@ -455,9 +455,10 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void DotNetBuildXamarinForms ()
+		public void DotNetBuildXamarinForms ([Values (true, false)] bool useInterpreter)
 		{
 			var proj = new XamarinFormsXASdkProject ();
+			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
