@@ -297,6 +297,10 @@ namespace Xamarin.Android.Build.Tests
 					nativeLib,
 				},
 			};
+			if (Builder.UseDotNet) {
+				//NOTE: in .NET 6 by default an x86_64 emulator would fall back to x86 if we don't set this.
+				proj.SetAndroidSupportedAbis (DeviceAbi);
+			}
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
