@@ -73,7 +73,7 @@
     <ReplaceFileContents
         SourceFile="xamarin-workload.in.props"
         DestinationFile="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\xamarin-workload.props"
-        Replacements="@WORKLOAD_BRANCH@=$(XAVersionBranch);@WORKLOAD_VERSION@=$(AndroidMSIVersion)"
+        Replacements="@WORKLOAD_VERSION@=$(AndroidMSIVersion)"
     />
   </Target>
 

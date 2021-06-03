@@ -1490,6 +1490,14 @@ stages:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - .NET 6 Preview .msi
 
+# .NET 6 VS Insertion Stage
+# Check - "Xamarin.Android (VS Insertion - Wait For Approval)"
+# Check - "Xamarin.Android (VS Insertion - Create VS Drop and Open PR)"
+- template: vs-insertion/stage/v1.yml@yaml
+  parameters:
+    dependsOn: dotnet_installers
+    condition: eq(variables['MicroBuildSignType'], 'Real')
+
 - stage: finalize_installers
   displayName: Finalize Installers
   dependsOn: mac_build
