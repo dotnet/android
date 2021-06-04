@@ -1292,6 +1292,22 @@ stages:
         artifactName: nuget-signed
         downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
 
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: specific
+        project: DevDiv
+        pipeline: 11410
+        runVersion: latestFromBranch
+        runBranch: refs/heads/main
+        allowFailedBuilds: true
+        artifact: nuget-signed
+        path: $(System.DefaultWorkingDirectory)\nuget-unsigned
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        artifactName: nuget-signed
+        downloadPath: $(System.DefaultWorkingDirectory)\nuget-unsigned
+
   # Check - "Xamarin.Android (.NET 6 Preview Installers Sign NuGets)"
   # - template: sign-artifacts/jobs/v2.yml@yaml
   #   parameters:
