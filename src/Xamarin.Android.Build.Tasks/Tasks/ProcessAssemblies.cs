@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks
 			var symbols = new Dictionary<string, ITaskItem> ();
 
 			if (ResolvedSymbols != null) {
-				foreach (var symbol in ResolvedSymbols) {
+				foreach (var symbol in ResolvedSymbols.Where (Filter)) {
 					symbols [symbol.ItemSpec] = symbol;
 				}
 			}
@@ -124,10 +124,10 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		bool Filter (ITaskItem assembly)
+		bool Filter (ITaskItem item)
 		{
-			if (!File.Exists (assembly.ItemSpec)) {
-				Log.LogDebugMessage ($"Skipping non-existent dependency '{assembly.ItemSpec}'.");
+			if (!File.Exists (item.ItemSpec)) {
+				Log.LogDebugMessage ($"Skipping non-existent file '{item.ItemSpec}'.");
 				return false;
 			}
 			return true;
