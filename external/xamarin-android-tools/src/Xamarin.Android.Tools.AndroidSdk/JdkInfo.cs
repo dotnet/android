@@ -350,7 +350,14 @@ namespace Xamarin.Android.Tools
 						return;
 					xml.Append (e.Data);
 			}, includeStderr: false);
-			var plist   = XElement.Parse (xml.ToString ());
+
+			XElement plist;
+			try {
+				plist = XElement.Parse (xml.ToString ());
+			} catch (XmlException e) {
+				logger (TraceLevel.Warning, string.Format (Resources.InvalidXmlLibExecJdk_path_args_message, jhp.FileName, jhp.Arguments, e.Message));
+				yield break;
+			}
 			foreach (var info in plist.Elements ("array").Elements ("dict")) {
 				var JVMHomePath = (XNode) info.Elements ("key").FirstOrDefault (e => e.Value == "JVMHomePath");
 				if (JVMHomePath == null)

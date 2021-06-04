@@ -77,5 +77,14 @@ namespace Xamarin.Android.Tools.AndroidSdk.Properties {
                 return ResourceManager.GetString("InvalidMonodroidConfigFile_path_message", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An exception occurred while reading the output of &apos;{0} {1}&apos;. Exception: {2}.
+        /// </summary>
+        internal static string InvalidXmlLibExecJdk_path_args_message {
+            get {
+                return ResourceManager.GetString("InvalidXmlLibExecJdk_path_args_message", resourceCulture);
+            }
+        }
     }
 }

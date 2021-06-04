@@ -17,6 +17,11 @@
 {0} - The path of the file being read.
 {1} - The exception message of the associated exception.</note>
       </trans-unit>
+      <trans-unit id="InvalidXmlLibExecJdk_path_args_message">
+        <source>An exception occurred while reading the output of '{0} {1}'. Exception: {2}</source>
+        <target state="new">An exception occurred while reading the output of '{0} {1}'. Exception: {2}</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
