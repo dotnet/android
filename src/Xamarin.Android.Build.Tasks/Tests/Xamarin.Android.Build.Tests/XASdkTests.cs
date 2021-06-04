@@ -626,6 +626,15 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 			appBuilder.AssertTargetIsSkipped ("CoreCompile");
 		}
 
+		[Test]
+		public void SignAndroidPackage ()
+		{
+			var proj = new XASdkProject ();
+			var builder = CreateDotNetBuilder (proj);
+			var parameters = new [] { "BuildingInsideVisualStudio=true" };
+			Assert.IsTrue (builder.Build ("SignAndroidPackage", parameters), $"{proj.ProjectName} should succeed");
+		}
+
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
 		{
 			if (string.IsNullOrEmpty (relativeProjectDir)) {
