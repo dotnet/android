@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ComponentResources Include="$(_FullWorkloadName)" Category=".NET" Title="Android SDK for .NET" Description="Build Tools and Bindings for the Android SDK."/>
-    <ComponentVersions Include="$(_FullWorkloadName)" Version="@WORKLOAD_VERSION@" />
+    <ComponentVersions Include="$(_FullWorkloadName)" Version="30.0.0.20" />
     <WorkloadPackages Include="$(NuGetPackagePath)\Microsoft.NET.Sdk.Android.Manifest*.nupkg" />
   </ItemGroup>
 </Project>
