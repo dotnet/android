@@ -1,0 +1,43 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.RuntimeConfig.targets
+
+MSBuild logic related to *.runtimeconfig.json files.
+
+See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f8805/src/mono/nuget/Microsoft.NET.Runtime.RuntimeConfigParser.Task/README.md
+
+***********************************************************************************************
+-->
+<Project>
+
+  <Import Sdk="Microsoft.NET.Runtime.RuntimeConfigParser.Task" Project="Sdk.props" />
+
+  <PropertyGroup>
+    <!-- HACK: workaround https://github.com/dotnet/runtime/issues/53811 -->
+    <RuntimeConfigParserTasksAssemblyPath>$([System.IO.Path]::GetDirectoryName($(RuntimeConfigParserTasksAssemblyPath)))/net6.0/$([System.IO.Path]::GetFileName($(RuntimeConfigParserTasksAssemblyPath)))</RuntimeConfigParserTasksAssemblyPath>
+    <_BinaryRuntimeConfigPath>$(IntermediateOutputPath)$(ProjectRuntimeConfigFileName).bin</_BinaryRuntimeConfigPath>
+  </PropertyGroup>
+
+  <!--
+    TODO:
+    * $(_BinaryRuntimeConfigPath) is in the root of $(IntermediateOutputPath).
+      I did not add this to the .apk yet.
+    * The @(_RuntimeConfigProperties) item group would be blank. Do we
+      need to add any defaults here?
+  -->
+
+  <Target Name="_ParseRuntimeConfigFiles"
+      AfterTargets="GenerateBuildRuntimeConfigurationFiles"
+      Inputs="$(ProjectRuntimeConfigFilePath)"
+      Outputs="$(_BinaryRuntimeConfigPath)">
+    <RuntimeConfigParserTask
+        RuntimeConfigFile="$(ProjectRuntimeConfigFilePath)"
+        OutputFile="$(_BinaryRuntimeConfigPath)"
+        RuntimeConfigReservedProperties="@(_RuntimeConfigProperties)"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_BinaryRuntimeConfigPath)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
