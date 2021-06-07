@@ -337,6 +337,7 @@
       <CodeSign>True</CodeSign>
       <HardenRuntime>True</HardenRuntime>
       <EntitlementsPath>$(DefaultRuntimeEntitlementsPath)</EntitlementsPath>
+      <Permission>755</Permission>
     </_MSBuildFilesUnixSignAndHarden>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -352,12 +353,12 @@
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-as" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-ld" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-strip" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\illinkanalyzer" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\jit-times" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aprofutil" />
-    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\mono" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\illinkanalyzer" Permission="755" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\jit-times" Permission="755" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aprofutil" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\mono" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono.config" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono-symbolicate" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono-symbolicate" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\aapt2" />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.debug.$(LibExtension)"    ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.release.$(LibExtension)"  ExcludeFromAndroidNETSdk="true" />
