@@ -6,7 +6,8 @@
   <PropertyGroup>
     <MSBuildReferenceVersion>15.1.0.0</MSBuildReferenceVersion>
     <MSBuildPackageReferenceVersion>16.5</MSBuildPackageReferenceVersion>
-    <LibZipSharpVersion>1.0.24</LibZipSharpVersion>
+    <LibZipSharpVersion>2.0.0-alpha4</LibZipSharpVersion>
+    <MonoUnixVersion>7.0.0-alpha8.21302.6</MonoUnixVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('windows'))" >
@@ -40,7 +41,7 @@
     <PackageReference Include="K4os.Compression.LZ4" Version="1.1.11" />
     <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.3.4" GeneratePathProperty="true" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" GeneratePathProperty="true" />
-    <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Mono.Unix" Version="$(MonoUnixVersion)" GeneratePathProperty="true" />
     <PackageReference Include="System.Buffers" Version="4.5.1" />
     <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
