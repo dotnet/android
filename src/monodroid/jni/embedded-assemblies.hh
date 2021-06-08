@@ -3,6 +3,7 @@
 #define INC_MONODROID_EMBEDDED_ASSEMBLIES_H
 
 #include <cstring>
+#include <limits>
 #include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
 
@@ -12,6 +13,7 @@
 
 #include "strings.hh"
 #include "xamarin-app.hh"
+#include "cpp-util.hh"
 
 struct TypeMapHeader;
 
@@ -70,6 +72,21 @@ namespace xamarin::android::internal {
 		}
 
 		void set_assemblies_prefix (const char *prefix);
+
+#if defined (NET6)
+		void get_runtime_config_blob (const char *& area, uint32_t& size) const
+		{
+			area = static_cast<char*>(runtime_config_blob_mmap.area);
+
+			abort_unless (runtime_config_blob_mmap.size < std::numeric_limits<uint32_t>::max (), "Runtime config binary blob size exceeds %u bytes", std::numeric_limits<uint32_t>::max ());
+			size = static_cast<uint32_t>(runtime_config_blob_mmap.size);
+		}
+
+		bool have_runtime_config_blob () const
+		{
+			return application_config.have_runtime_config_blob && runtime_config_blob_mmap.area != nullptr;
+		}
+#endif
 
 	private:
 		const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid);
@@ -140,6 +157,9 @@ namespace xamarin::android::internal {
 		size_t                 type_map_count;
 #endif // DEBUG || !ANDROID
 		const char            *assemblies_prefix_override = nullptr;
+#if defined (NET6)
+		md_mmap_info           runtime_config_blob_mmap{};
+#endif // def NET6
 	};
 }
 

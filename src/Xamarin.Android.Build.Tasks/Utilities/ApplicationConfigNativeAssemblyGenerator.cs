@@ -22,6 +22,7 @@ namespace Xamarin.Android.Tasks
 		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
 		public bool InstantRunEnabled { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
+		public bool HaveRuntimeConfigBlob { get; set; }
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
@@ -69,6 +70,9 @@ namespace Xamarin.Android.Tasks
 
 				WriteCommentLine (output, "jni_add_native_method_registration_attribute_present");
 				size += WriteData (output, JniAddNativeMethodRegistrationAttributePresent);
+
+				WriteCommentLine (output, "have_runtime_config_blob");
+				size += WriteData (output, HaveRuntimeConfigBlob);
 
 				WriteCommentLine (output, "bound_exception_type");
 				size += WriteData (output, (byte)BoundExceptionType);

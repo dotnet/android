@@ -40,6 +40,7 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
 
   <Target Name="_ParseRuntimeConfigFiles"
       AfterTargets="GenerateBuildRuntimeConfigurationFiles"
+      Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true' "
       Inputs="$(ProjectRuntimeConfigFilePath)"
       Outputs="$(_BinaryRuntimeConfigPath)">
     <RuntimeConfigParserTask

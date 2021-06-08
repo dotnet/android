@@ -412,6 +412,7 @@ namespace Xamarin.Android.Build.Tests
 				"es",
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
+				$"{proj.ProjectName}.runtimeconfig.json",
 				$"{proj.ProjectName}.xml",
 			};
 			CollectionAssert.AreEqual (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
@@ -574,7 +575,7 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 	where TNativeView : Android.Views.View
 #else
 	where TNativeView : class
-#endif  
+#endif
 {
 		protected Foo (PropertyMapper mapper) : base(mapper)
 		{

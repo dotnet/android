@@ -89,6 +89,8 @@ namespace Xamarin.Android.Tasks
 
 		public string CheckedBuild { get; set; }
 
+		public string RuntimeConfigBinFilePath { get; set; }
+
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -188,6 +190,10 @@ namespace Xamarin.Android.Tasks
 					foreach (ITaskItem typemap in TypeMappings) {
 						AddFileToArchiveIfNewer (apk, typemap.ItemSpec, RootPath + Path.GetFileName(typemap.ItemSpec), compressionMethod: UncompressedMethod);
 					}
+				}
+
+				if (!String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath)) {
+					AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, $"{AssembliesPath}rc.bin", compressionMethod: UncompressedMethod);
 				}
 
 				int count = 0;

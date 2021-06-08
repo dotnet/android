@@ -15,6 +15,10 @@ namespace xamarin::android::internal
 	class SharedConstants
 	{
 	public:
+#if defined (NET6)
+		static constexpr char RUNTIME_CONFIG_BLOB_NAME[] = "rc.bin";
+#endif // def NET6
+
 #if defined (ANDROID) || defined (__linux__) || defined (__linux)
 		static constexpr char MONO_SGEN_SO[]      = "libmonosgen-2.0.so";
 		static constexpr char MONO_SGEN_ARCH_SO[] = "libmonosgen-" __BITNESS__ "-2.0.so";

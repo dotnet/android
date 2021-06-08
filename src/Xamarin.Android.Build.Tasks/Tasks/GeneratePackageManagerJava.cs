@@ -59,6 +59,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool InstantRunEnabled { get; set; }
 
+		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
 
 		public string PackageNamingPolicy { get; set; }
@@ -261,6 +262,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
+			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 			foreach (string abi in SupportedAbis) {
 				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
@@ -279,6 +281,7 @@ namespace Xamarin.Android.Tasks
 					BoundExceptionType = boundExceptionType,
 					InstantRunEnabled = InstantRunEnabled,
 					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
+					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

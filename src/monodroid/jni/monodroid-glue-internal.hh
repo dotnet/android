@@ -204,6 +204,7 @@ namespace xamarin::android::internal
 		static const char* get_my_location (bool remove_file_name = true);
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)
 #if defined (NET6)
+		static void  cleanup_runtime_config (MonovmRuntimeConfigArguments *args, void *user_data);
 		static void* load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map);
 		static void* fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map, bool need_lock);
 		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
@@ -305,6 +306,7 @@ namespace xamarin::android::internal
 		static pinvoke_api_map        xa_pinvoke_map;
 		static pinvoke_library_map    other_pinvoke_map;
 		static MonoCoreRuntimeProperties monovm_core_properties;
+		MonovmRuntimeConfigArguments  runtime_config_args;
 #else // def NET6
 		static std::mutex   api_init_lock;
 		static void        *api_dso_handle;

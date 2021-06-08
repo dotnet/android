@@ -51,6 +51,9 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 	}
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
+#if defined (NET6)
+	bool runtime_config_blob_found = false;
+#endif // def NET6
 
 	// clang-tidy claims we have a leak in the loop:
 	//
@@ -86,6 +89,16 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 
 		if (strncmp (prefix, file_name, prefix_len) != 0)
 			continue;
+
+#if defined (NET6)
+		if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
+			if (utils.ends_with (file_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
+				runtime_config_blob_found = true;
+				runtime_config_blob_mmap = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
+				continue;
+			}
+		}
+#endif // def NET6
 
 		// assemblies must be 4-byte aligned, or Bad Things happen
 		if ((data_offset & 0x3) != 0) {
