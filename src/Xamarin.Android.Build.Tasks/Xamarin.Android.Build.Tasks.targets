@@ -351,16 +351,49 @@
     <_ExtraPackageTarget Include="$(OutputPath)\libZipSharp.pdb" />
     <_ExtraPackageSource Include="$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Xamarin.Build.AsyncTask.pdb" />
-    <_ExtraPackageSource Include="$(PkgMono_Posix_NETStandard)\ref\$(TargetFrameworkNETStandard)\Mono.Posix.NETStandard.pdb" />
-    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Posix.NETStandard.pdb" />
-    <_ExtraPackageSource Include="$(PkgMono_Posix_NETStandard)\ref\$(TargetFrameworkNETStandard)\Mono.Posix.NETStandard.dll" />
-    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Posix.NETStandard.dll" />
+    <_ExtraPackageSource Include="$(PkgMono_Unix)\lib\$(TargetFrameworkNETStandard)\Mono.Unix.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.pdb" />
+
+    <_ExtraPackageSource Include="$(MSBuildThisFileDirectory)\Resources\Mono.Unix.dll.config" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.dll.config" />
+
+    <_ExtraPackageSource Include="$(PkgMono_Unix)\lib\$(TargetFrameworkNETStandard)\Mono.Unix.dll" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.dll" />
+
+    <_ExtraPackageSource Include="$(PkgMono_Unix)\runtimes\linux-x64\native\libMono.Unix.so" />
+    <_ExtraPackageTarget Include="$(OutputPath)\libMono.Unix.so" />
   </ItemGroup>
+
+  <ItemGroup>
+    <_MonoUnixDylib Include="$(PkgMono_Unix)\runtimes\osx-arm64\native\libMono.Unix.dylib" Condition=" '$(HostOS)' == 'Darwin' " />
+    <_MonoUnixDylib Include="$(PkgMono_Unix)\runtimes\osx-x64\native\libMono.Unix.dylib" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_MonoUnixOutputDylib>$(OutputPath)\libMono.Unix.dylib</_MonoUnixOutputDylib>
+  </PropertyGroup>
+
+  <!--
+      On operating systems other than macOS we just need to copy a single .dylib, so that pack creation works
+  -->
+  <Target Name="_MakeMonoUnixFatBinariesOSX"
+      Inputs="@(_MonoUnixDylib)"
+      Outputs="$(_MonoUnixOutputDylib)">
+    <Exec
+        Command="lipo @(_MonoUnixDylib->'&quot;%(FullPath)&quot;', ' ') -create -output &quot;$(_MonoUnixOutputDylib)&quot;"
+        Condition=" '$(HostOS)' == 'Darwin' "
+    />
+    <Copy
+        SourceFiles="@(_MonoUnixDylib)"
+        DestinationFolder="$(OutputPath)"
+    />
+  </Target>
 
   <!-- Copy package ref symbols for our installers. '$(Pkg*)' props are set during NuGet restore when GeneratePathProperty="true" -->
   <Target Name="_CopyExtraPackageContent"
       Inputs="@(_ExtraPackageSource)"
-      Outputs="@(_ExtraPackageTarget)" >
+      Outputs="@(_ExtraPackageTarget)"
+      DependsOnTargets="_MakeMonoUnixFatBinariesOSX">
     <Copy
         SourceFiles="@(_ExtraPackageSource)"
         DestinationFolder="$(OutputPath)"
@@ -368,7 +401,7 @@
     />
   </Target>
 
-  <Target Name="_Remove32BitLinux" Condition="Exists ('$(OutputPath)lib32\libzip.so')" AfterTargets="CopyFilesToOutputDirectory">
-    <Delete Files="$(OutputPath)lib32\libzip.so" />
+  <Target Name="_Remove32BitLinux" Condition="Exists ('$(OutputPath)lib32\libZipSharpNative.so')" AfterTargets="CopyFilesToOutputDirectory">
+    <Delete Files="$(OutputPath)lib32\libZipSharpNative.so" />
   </Target>
 </Project>
