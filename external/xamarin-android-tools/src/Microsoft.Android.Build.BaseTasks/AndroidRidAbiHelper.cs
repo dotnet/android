@@ -18,6 +18,10 @@ namespace Microsoft.Android.Build.Tasks
 
 		public static string GetNativeLibraryAbi (string lib)
 		{
+			if (string.IsNullOrEmpty (lib))
+				return null;
+			lib = lib.Replace ('\\', Path.DirectorySeparatorChar);
+
 			// The topmost directory the .so file is contained within
 			var dir = Directory.GetParent (lib);
 			var dirName = dir.Name.ToLowerInvariant ();

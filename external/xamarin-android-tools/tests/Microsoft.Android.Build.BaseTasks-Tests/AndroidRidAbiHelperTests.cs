@@ -11,6 +11,14 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 	{
 		static object [] StringValueSource = new object [] {
 			new[] {
+				/* input */    default (string),
+				/* expected */ default (string)
+			},
+			new[] {
+				/* input */    "",
+				/* expected */ default
+			},
+			new[] {
 				/* input */    "armeabi-v7a/libfoo.so",
 				/* expected */ "armeabi-v7a"
 			},
@@ -65,7 +73,15 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			new[] {
 				/* input */    "packages/sqlitepclraw.lib.e_sqlite3.android/1.1.11/runtimes/android-arm64/native/libe_sqlite3.so",
 				/* expected */ "arm64-v8a"
-			}
+			},
+			new[] {
+				/* input */    "arm64-v8a\\libfoo.so",
+				/* expected */ "arm64-v8a"
+			},
+			new[] {
+				/* input */    "android-arm64\\libfoo.so",
+				/* expected */ "arm64-v8a"
+			},
 		};
 
 		[Test]
@@ -76,6 +92,12 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		static object [] ITaskItemValueSource = new object [] {
+			new object [] {
+				/* input */
+				new TaskItem(""),
+				/* expected */
+				default (string)
+			},
 			new object [] {
 				/* input */
 				new TaskItem("armeabi-v7a/libfoo.so"),
@@ -129,6 +151,22 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				}),
 				/* expected */
 				"armeabi-v7a"
+			},
+			new object [] {
+				/* input */
+				new TaskItem("liblinkwin.so", new Dictionary<string,string> {
+					{ "Link", "x86_64\\libfoo.so" }
+				}),
+				/* expected */
+				"x86_64"
+			},
+			new object [] {
+				/* input */
+				new TaskItem("liblinkwin.so", new Dictionary<string,string> {
+					{ "Link", "android-arm64\\libfoo.so" },
+				}),
+				/* expected */
+				"arm64-v8a",
 			},
 		};
 
