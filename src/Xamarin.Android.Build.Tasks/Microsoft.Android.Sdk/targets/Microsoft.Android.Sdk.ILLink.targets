@@ -83,13 +83,13 @@ This file contains the .NET 5-specific targets to customize ILLink
           Condition=" '$(AndroidLinkResources)' == 'true' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
           AfterStep="CleanStep"
-          Type="MonoDroid.Tuner.GetAssembliesStep"
+          Type="MonoDroid.Tuner.RemoveResourceDesignerStep"
       />
       <_TrimmerCustomSteps
           Condition=" '$(AndroidLinkResources)' == 'true' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
           AfterStep="CleanStep"
-          Type="MonoDroid.Tuner.RemoveResourceDesignerStep"
+          Type="MonoDroid.Tuner.GetAssembliesStep"
       />
 
       <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
