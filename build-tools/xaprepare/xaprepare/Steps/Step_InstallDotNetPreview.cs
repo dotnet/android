@@ -96,7 +96,7 @@ namespace Xamarin.Android.Prepare
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.Mono.ToolChain listed in package-download.proj
 			var destination = Path.Combine (dotnetPath, "sdk-manifests",
 				context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionBand),
-				"Microsoft.NET.Workload.Mono.ToolChain"
+				"microsoft.net.workload.mono.toolchain"
 			);
 			foreach (var file in Directory.GetFiles (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, "WorkloadManifest.*")) {
 				Utilities.CopyFileToDir (file, destination);
