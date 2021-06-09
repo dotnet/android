@@ -94,7 +94,20 @@ namespace Xamarin.ProjectTools
 
 		public virtual ProjectRootElement Construct ()
 		{
-			var root = ProjectRootElement.Create ();
+			// Workaround for https://github.com/dotnet/msbuild/issues/2554 when using Microsoft.Build.Construction.ProjectRootElement.Create
+			var msbuildExePathVarName = "MSBUILD_EXE_PATH";
+			if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
+				Environment.SetEnvironmentVariable (msbuildExePathVarName, typeof (DotNetXamarinProject).Assembly.Location);
+			}
+			ProjectRootElement root = null;
+			try {
+				root = ProjectRootElement.Create ();
+			} finally {
+				if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
+					Environment.SetEnvironmentVariable (msbuildExePathVarName, null);
+				}
+			}
+
 			if (Packages.Any ())
 				root.AddItemGroup ().AddItem (BuildActions.None, "packages.config");
 			foreach (var pkg in Packages.Where (p => p.AutoAddReferences))

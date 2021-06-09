@@ -53,6 +53,10 @@ namespace Xamarin.ProjectTools
 				p.StartInfo.UseShellExecute = false;
 				p.StartInfo.RedirectStandardOutput = true;
 				p.StartInfo.RedirectStandardError = true;
+				// Ensure any variable alteration from DotNetXamarinProject.Construct is cleared.
+				if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
+					p.StartInfo.EnvironmentVariables ["MSBUILD_EXE_PATH"] = null;
+				}
 
 				p.ErrorDataReceived += (sender, e) => {
 					if (e.Data != null) {
