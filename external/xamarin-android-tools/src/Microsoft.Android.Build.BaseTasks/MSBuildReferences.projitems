@@ -6,7 +6,7 @@
   <PropertyGroup>
     <MSBuildReferenceVersion>15.1.0.0</MSBuildReferenceVersion>
     <MSBuildPackageReferenceVersion>16.5</MSBuildPackageReferenceVersion>
-    <LibZipSharpVersion>2.0.0-alpha4</LibZipSharpVersion>
+    <LibZipSharpVersion>2.0.0-alpha6</LibZipSharpVersion>
     <MonoUnixVersion>7.0.0-alpha8.21302.6</MonoUnixVersion>
   </PropertyGroup>
 
