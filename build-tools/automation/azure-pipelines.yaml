@@ -1073,13 +1073,14 @@ stages:
     - powershell: |
         # Use the branch name of the source being built or the PR target branch name. Fall back to 'main' if the branch is unknown.
         $branchPrefix = "/refs/heads/"
-        $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
-        if ("$(Build.Reason)" -eq "PullRequest") {
-            $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
-        }
-        if (("$branchName" -ne "main") -and ("$branchName" -notlike "d16*")) {
-            $branchName = "main"
-        }
+        $branchName = "d16-10"
+        # $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
+        # if ("$(Build.Reason)" -eq "PullRequest") {
+        #     $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
+        # }
+        # if (("$branchName" -ne "main") -and ("$branchName" -notlike "d16*")) {
+        #     $branchName = "main"
+        # }
         Set-Location -Path $(System.DefaultWorkingDirectory)/UITools
         git checkout $branchName
         git submodule update -q --init --recursive
