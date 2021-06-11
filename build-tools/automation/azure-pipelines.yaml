@@ -1080,6 +1080,11 @@ stages:
         if (("$branchName" -ne "main") -and ("$branchName" -notlike "d16*")) {
             $branchName = "main"
         }
+        if ("$branchName" -eq "d16-11") {
+            # Building UITools/d16-11 on macOS results in 930+ CS0246 errors around AppKit.
+            # Use d16-10 branch instead.
+            $branchName = "d16-10"
+        }
         Set-Location -Path $(System.DefaultWorkingDirectory)/UITools
         git checkout $branchName
         git submodule update -q --init --recursive
