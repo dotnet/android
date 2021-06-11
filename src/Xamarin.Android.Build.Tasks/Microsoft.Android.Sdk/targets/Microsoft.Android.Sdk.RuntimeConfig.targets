@@ -32,12 +32,6 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     <_RuntimeConfigReservedProperties Include="PINVOKE_OVERRIDE"/>
   </ItemGroup>
 
-  <!--
-    TODO:
-    * $(_BinaryRuntimeConfigPath) is in the root of $(IntermediateOutputPath).
-      I did not add this to the .apk yet.
-  -->
-
   <Target Name="_ParseRuntimeConfigFiles"
       AfterTargets="GenerateBuildRuntimeConfigurationFiles"
       Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true' "
