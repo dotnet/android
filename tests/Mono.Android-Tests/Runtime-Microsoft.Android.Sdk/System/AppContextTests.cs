@@ -9,11 +9,11 @@ namespace SystemTests
 		static readonly object [] GetDataSource = new object [] {
 			new object [] {
 				/* name */     "test_bool",
-				/* expected */ true,
+				/* expected */ "true",
 			},
 			new object [] {
 				/* name */     "test_integer",
-				/* expected */ 42,
+				/* expected */ "42",
 			},
 			new object [] {
 				/* name */     "test_string",
@@ -23,7 +23,7 @@ namespace SystemTests
 
 		[Test]
 		[TestCaseSource (nameof (GetDataSource))]
-		public void GetData (string name, object expected)
+		public void GetData (string name, string expected)
 		{
 			Assert.AreEqual (expected, AppContext.GetData (name));
 		}
