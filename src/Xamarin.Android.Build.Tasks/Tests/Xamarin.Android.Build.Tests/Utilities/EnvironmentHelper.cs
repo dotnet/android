@@ -151,7 +151,7 @@ namespace Xamarin.Android.Build.Tests
 						ret.jni_add_native_method_registration_attribute_present = ConvertFieldToBool ("jni_add_native_method_registration_attribute_present", envFile, i, field [1]);
 						break;
 
-					case 7:
+					case 7: // have_runtime_config_blob: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.have_runtime_config_blob = ConvertFieldToBool ("have_runtime_config_blob", envFile, i, field [1]);
 						break;
