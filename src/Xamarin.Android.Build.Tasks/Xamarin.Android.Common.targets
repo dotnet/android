@@ -1567,6 +1567,7 @@ because xbuild doesn't support framework reference assemblies.
     PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
     BoundExceptionType="$(AndroidBoundExceptionType)"
     InstantRunEnabled="$(_InstantRunEnabled)"
+    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
@@ -2036,7 +2037,8 @@ because xbuild doesn't support framework reference assemblies.
     UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
     ProjectFullPath="$(MSBuildProjectFullPath)"
     IncludeWrapSh="$(AndroidIncludeWrapSh)"
-    CheckedBuild="$(_AndroidCheckedBuild)">
+    CheckedBuild="$(_AndroidCheckedBuild)"
+    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2067,7 +2069,8 @@ because xbuild doesn't support framework reference assemblies.
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
-      CheckedBuild="$(_AndroidCheckedBuild)">
+      CheckedBuild="$(_AndroidCheckedBuild)"
+      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle

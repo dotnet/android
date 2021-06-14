@@ -843,6 +843,20 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 #endif
 }
 
+#if defined (NET6)
+void
+MonodroidRuntime::cleanup_runtime_config (MonovmRuntimeConfigArguments *args, [[maybe_unused]] void *user_data)
+{
+	if (args == nullptr || args->kind != 1 || args->runtimeconfig.data.data == nullptr) {
+		return;
+	}
+
+#if !defined (WINDOWS)
+	munmap (static_cast<void*>(const_cast<char*>(args->runtimeconfig.data.data)), args->runtimeconfig.data.data_len);
+#endif // ndef WINDOWS
+}
+#endif // def NET6
+
 MonoDomain*
 MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain)
 {
@@ -854,6 +868,23 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 #endif // ndef NET6
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count);
+
+#if defined (NET6)
+	timing_period blob_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		blob_time.mark_start ();
+
+	if (embeddedAssemblies.have_runtime_config_blob ()) {
+		runtime_config_args.kind = 1;
+		embeddedAssemblies.get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
+		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
+	}
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		blob_time.mark_end ();
+		Timing::info (blob_time, "Register runtimeconfig binary blob");
+	}
+#endif // def NET6
 
 	if (!have_mono_mkbundle_init && user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",

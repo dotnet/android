@@ -42,6 +42,7 @@ ApplicationConfig application_config = {
 	/*.broken_exception_transitions =*/ false,
 	/*.instant_run_enabled =*/ false,
 	/*.jni_add_native_method_registration_attribute_present =*/ false,
+	/*.have_runtime_config_blob =*/ false,
 	/*.bound_exception_type =*/ 0, // System
 	/*.package_naming_policy =*/ 0,
 	/*.environment_variable_count =*/ 0,
