@@ -1,0 +1,53 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.NuGet.targets
+
+This file contains *temporary* workarounds for NuGet. This is required for Visual Studio 16.x.
+
+Not needed for versions of MSBuild that contain: https://github.com/NuGet/NuGet.Client/commit/10274281c37e9dd3626938757f7e947d649b821b
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.FixupNuGetReferences" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <PropertyGroup>
+    <_AndroidPlatformVersion>$(TargetPlatformVersion)</_AndroidPlatformVersion>
+    <_AndroidPlatformVersion Condition=" !$(_AndroidPlatformVersion.EndsWith ('.0')) ">$(_AndroidPlatformVersion).0</_AndroidPlatformVersion>
+    <!-- Clear $(AssetTargetFallback), so only $(PackageTargetFallback) is used. -->
+    <AssetTargetFallback></AssetTargetFallback>
+    <!--
+      Use $(PackageTargetFallback), even though it is deprecated.
+      It doesn't suffer from: https://github.com/NuGet/docs.microsoft.com-nuget/issues/1955
+    -->
+    <PackageTargetFallback>
+      net6.0-android$(_AndroidPlatformVersion);
+      monoandroid12.0;
+      monoandroid11.0;
+      monoandroid10.0;
+      monoandroid90;
+      monoandroid81;
+      monoandroid80;
+      monoandroid70;
+      monoandroid60;
+      monoandroid50;
+      $(PackageTargetFallback);
+    </PackageTargetFallback>
+  </PropertyGroup>
+
+  <Target Name="_FixupNuGetReferences" AfterTargets="ResolvePackageAssets">
+    <FixupNuGetReferences
+        PackageTargetFallback="$(PackageTargetFallback)"
+        CopyLocalItems="@(RuntimeCopyLocalItems)">
+      <Output TaskParameter="AssembliesToRemove" ItemName="_AssembliesToRemove" />
+      <Output TaskParameter="AssembliesToAdd"    ItemName="Reference" />
+    </FixupNuGetReferences>
+    <ItemGroup>
+      <RuntimeCopyLocalItems          Remove="@(_AssembliesToRemove)" />
+      <ResolvedCompileFileDefinitions Remove="@(_AssembliesToRemove)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
