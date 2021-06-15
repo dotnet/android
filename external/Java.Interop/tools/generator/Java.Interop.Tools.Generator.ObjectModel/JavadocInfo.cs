@@ -186,7 +186,7 @@ namespace MonoDroid.Generation
 		{
 			var lines   = GetLines (tree.SourceText);
 			foreach (var m in tree.ParserMessages) {
-				writer.WriteLine ($"{m.Level} {m.Location}: {m.Message}");
+				writer.WriteLine ($"JavadocImport-{m.Level} {m.Location}: {m.Message}");
 				writer.WriteLine (lines [m.Location.Line]);
 				writer.Write (new string (' ', m.Location.Column));
 				writer.WriteLine ("^");
