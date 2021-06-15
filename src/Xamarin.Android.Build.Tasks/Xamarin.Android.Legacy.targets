@@ -238,7 +238,7 @@ projects. .NET 5 projects will not import this file.
         Condition=" '%(Reference.Identity)' == 'Xamarin.Android.NUnitLite' "
         Code="XA4313"
         ResourceName="XA4313"
-        FormatArguments="Xamarin.Android.NUnitLite;Xamarin.Legacy.NUnitLit"
+        FormatArguments="Xamarin.Android.NUnitLite;Xamarin.Legacy.NUnitLite"
     />
   </Target>
 
