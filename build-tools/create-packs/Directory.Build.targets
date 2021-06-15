@@ -95,7 +95,7 @@
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE" />
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
     </ItemGroup>
-    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)Microsoft.NET.Sdk.Android" />
+    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
     <Unzip
         SourceFiles="@(_WLPacks)"
@@ -106,7 +106,7 @@
     <Copy SourceFiles="@(_WLTemplates)" DestinationFiles="@(_WLTemplates->'%(Filename)%(Extension)'->ToLower()->'$(DotNetPreviewPath)template-packs\%(Identity)')" />
     <ItemGroup>
       <_UnixExecutables Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.*\*\tools\$(HostOS)\**\*.*" />
-      <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Sdk.Android\**" />
+      <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.sdk.android\**" />
       <_FilesToTouch Include="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(_WLPackVersion)', ''))\$(_WLPackVersion)\**" />
     </ItemGroup>
     <Exec
@@ -119,8 +119,8 @@
 
   <Target Name="DeleteExtractedWorkloadPacks" >
     <ItemGroup>
-      <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Sdk.Android\**\*.*" />
-      <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**\*.*" />
+      <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.sdk.android\**\*.*" />
+      <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.workload.android\**\*.*" />
       <_PackFilesToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android*\**\*.*" />
       <_PackFilesToDelete Include="$(DotNetPreviewPath)template-packs\Microsoft.Android.Templates.*.nupkg" />
     </ItemGroup>
