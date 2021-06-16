@@ -3929,17 +3929,21 @@ namespace UnnamedProject
 		public void PackageNamingPolicy ([Values ("LowercaseMD5", "LowercaseCrc64")] string packageNamingPolicy)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("UseInterpreter", "true");
 			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
+				var values = new List<string> {
+					$"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}"
+				};
 				if (Builder.UseDotNet) {
-					Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}{Environment.NewLine}mono.enable_assembly_preload=0", File.ReadAllText (environment).Trim ());
-				} else {
-					Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}", File.ReadAllText (environment).Trim ());
+					values.Add ("mono.enable_assembly_preload=0");
+					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				}
+				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
 			}
 		}
 
