@@ -258,6 +258,11 @@ namespace Xamarin.Android.Tasks {
 			} else {
 				PackageName = manifest_package;
 			}
+			if (PackageName.Contains ("${")) {
+				// placeholder detected
+				PackageName = ReplacePlaceholders (Placeholders, PackageName);
+				manifest.SetAttributeValue ("package", PackageName);
+			}
 
 			manifest.SetAttributeValue (XNamespace.Xmlns + "android", "http://schemas.android.com/apk/res/android");
 
@@ -960,13 +965,7 @@ namespace Xamarin.Android.Tasks {
 			}
 			if (!string.IsNullOrEmpty (PackageName))
 				s = s.Replace ("${applicationId}", PackageName);
-			if (Placeholders != null)
-				foreach (var entry in Placeholders.Select (e => e.Split (new char [] {'='}, 2, StringSplitOptions.None))) {
-					if (entry.Length == 2)
-						s = s.Replace ("${" + entry [0] + "}", entry [1]);
-					else
-						logCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", Placeholders)));
-				}
+			s = ReplacePlaceholders (Placeholders, s, logCodedWarning);
 			stream.Write (s);
 		}
 
@@ -999,6 +998,22 @@ namespace Xamarin.Android.Tasks {
 			default:
 				throw new ArgumentOutOfRangeException ("abi", "unsupported ABI");
 			}
+		}
+
+		internal static string ReplacePlaceholders (string [] placeholders, string text, Action<string, string> logCodedWarning = null)
+		{
+			string result = text;
+			if (placeholders == null)
+				return result;
+			foreach (var entry in placeholders.Select (e => e.Split (new char [] {'='}, 2, StringSplitOptions.None))) {
+				if (entry.Length == 2)
+					result = result.Replace ("${" + entry [0] + "}", entry [1]);
+				else {
+					if (logCodedWarning != null)
+						logCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", placeholders)));
+				}
+			}
+			return result;
 		}
 
 		public void SetAbi (string abi)
