@@ -509,6 +509,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <GetAndroidPackageName
       ManifestFile="$(_AndroidManifestAbs)"
       AssemblyName="$(AssemblyName)"
+      ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       PackageName="$(_AndroidPackage)">
     <Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
   </GetAndroidPackageName>
@@ -904,6 +905,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="_NuGetAssetsTimestamp=$(_NuGetAssetsTimestamp)" />
 		<_PropertyCacheItems Include="TypeMapKind=$(_TypeMapKind)" />
 		<_PropertyCacheItems Include="AndroidSupportedAbis=$(AndroidSupportedAbis)" />
+		<_PropertyCacheItems Include="AndroidManifestPlaceholders=$(AndroidManifestPlaceholders)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
