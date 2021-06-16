@@ -3994,12 +3994,12 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // OpenTK not even shipped for .net 6.
-		public void XA4313 ()
+		[Category ("DotNetIgnore")]
+		public void XA4313 ([Values ("OpenTK-1.0", "Xamarin.Android.NUnitLite")] string reference)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				References = {
-					new BuildItem.Reference ("OpenTK-1.0")
+					new BuildItem.Reference (reference)
 				},
 			};
 			using (var builder = CreateApkBuilder ()) {
@@ -4017,6 +4017,17 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_OpenTK);
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void NUnitLiteNugetWorks ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_NUnitLite);
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
