@@ -1274,7 +1274,7 @@ stages:
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 120
     steps:
-    - checkout: self
+    - checkout: none
 
     - task: DownloadPipelineArtifact@2
       inputs:
