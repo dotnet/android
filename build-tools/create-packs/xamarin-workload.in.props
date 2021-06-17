@@ -5,7 +5,7 @@
     <_FullWorkloadName>microsoft-android-sdk-full</_FullWorkloadName>
   </PropertyGroup>
   <ItemGroup>
-    <ComponentResources Include="$(_FullWorkloadName)" Category=".NET" Title="Android SDK for .NET" Description="Build Tools and Bindings for the Android SDK."/>
-    <ComponentVersions Include="$(_FullWorkloadName)" Version="30.0.0.20" />
+    <ComponentResources Include="$(_FullWorkloadName)" Category=".NET" Title=".NET Android Workload" Description="Build Tools and Bindings for the Android SDK."/>
+    <ComponentVersions Include="$(_FullWorkloadName)" Version="@WORKLOAD_VERSION@" />
   </ItemGroup>
 </Project>
