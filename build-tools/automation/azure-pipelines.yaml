@@ -1267,38 +1267,15 @@ stages:
 
 - stage: dotnet_installers
   displayName: .NET 6 Preview Installers
-  dependsOn: []
+  dependsOn: mac_build
   jobs:
-  - job: signing
-    displayName: temp download-upload
-    pool: $(HostedWinVS2019)
-    timeoutInMinutes: 120
-    steps:
-    - checkout: none
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        source: specific
-        project: DevDiv
-        pipeline: 11410
-        runVersion: latestFromBranch
-        runBranch: refs/heads/main
-        allowFailedBuilds: true
-        artifact: nuget-signed
-        path: $(System.DefaultWorkingDirectory)\nuget-signed
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        artifactName: nuget-signed
-        downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
-
   # Check - "Xamarin.Android (.NET 6 Preview Installers Sign NuGets)"
-  # - template: sign-artifacts/jobs/v2.yml@yaml
-  #   parameters:
-  #     artifactName: $(NuGetArtifactName)
-  #     signType: $(MicroBuildSignType)
-  #     usePipelineArtifactTasks: true
-  #     condition: eq(variables['MicroBuildSignType'], 'Real')
+  - template: sign-artifacts/jobs/v2.yml@yaml
+    parameters:
+      artifactName: $(NuGetArtifactName)
+      signType: $(MicroBuildSignType)
+      usePipelineArtifactTasks: true
+      condition: eq(variables['MicroBuildSignType'], 'Real')
 
   # Check - "Xamarin.Android (.NET 6 Preview Installers Convert NuGet to MSI)"
   - template: nuget-msi-convert/job/v1.yml@yaml
@@ -1312,206 +1289,206 @@ stages:
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
   # Check - "Xamarin.Android (.NET 6 Preview Installers Create .pkg)"
-  # - job: dotnet_create_pkg
-  #   displayName: Create .pkg
-  #   ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-  #     dependsOn: signing
-  #   pool:
-  #     name: $(VSEngMacBuildPool)
-  #     demands:
-  #     - agent.osversionfamily -equals 10.15
-  #   workspace:
-  #     clean: all
-  #   steps:
-  #   - checkout: self
-  #     submodules: recursive
+  - job: dotnet_create_pkg
+    displayName: Create .pkg
+    ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+      dependsOn: signing
+    pool:
+      name: $(VSEngMacBuildPool)
+      demands:
+      - agent.osversionfamily -equals 10.15
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
 
-  #   - checkout: release_scripts
-  #     clean: true
+    - checkout: release_scripts
+      clean: true
 
-  #   - template: yaml-templates/use-dot-net.yaml
-  #     parameters:
-  #       remove_dotnet: true
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        remove_dotnet: true
 
-  #   - template: yaml-templates/use-dot-net.yaml
-  #     parameters:
-  #       version: $(DotNetCoreVersion)
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: $(DotNetCoreVersion)
 
-  #   - task: DownloadPipelineArtifact@2
-  #     inputs:
-  #       ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-  #         artifactName: nuget-signed
-  #       ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
-  #         artifactName: $(NuGetArtifactName)
-  #       downloadPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: nuget-signed
+        ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
-  #   - task: NuGetCommand@2
-  #     displayName: push nupkgs
-  #     inputs:
-  #       command: push
-  #       packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
-  #       nuGetFeedType: external
-  #       publishFeedCredentials: xamarin-impl public feed
-  #     condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+    - task: NuGetCommand@2
+      displayName: push nupkgs
+      inputs:
+        command: push
+        packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
+        nuGetFeedType: external
+        publishFeedCredentials: xamarin-impl public feed
+      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
-  #   - template: yaml-templates/install-microbuild-tooling.yaml
-  #     parameters:
-  #       condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+    - template: yaml-templates/install-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
-  #   - task: MSBuild@1
-  #     displayName: msbuild Xamarin.Android.BootstrapTasks
-  #     inputs:
-  #       solution: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.BootstrapTasks.sln
-  #       configuration: $(XA.Build.Configuration)
-  #       msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-bootstraptasks.binlog
+    - task: MSBuild@1
+      displayName: msbuild Xamarin.Android.BootstrapTasks
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.BootstrapTasks.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-bootstraptasks.binlog
 
-  #   - task: MSBuild@1
-  #     displayName: msbuild /t:Restore create-dotnet-pkg.proj
-  #     inputs:
-  #       solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-dotnet-pkg/create-dotnet-pkg.csproj
-  #       configuration: $(XA.Build.Configuration)
-  #       msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-create-pkg.binlog
+    - task: MSBuild@1
+      displayName: msbuild /t:Restore create-dotnet-pkg.proj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-dotnet-pkg/create-dotnet-pkg.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-create-pkg.binlog
 
-  #   - task: DotNetCoreCLI@2
-  #     displayName: create workload .pkg installer
-  #     inputs:
-  #       projects: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.sln
-  #       arguments: >-
-  #         -t:CreateWorkloadInstallers -c $(XA.Build.Configuration) -v:n
-  #         -p:SignType=$(MicroBuildSignType) -p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-  #         -bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-workload.binlog
+    - task: DotNetCoreCLI@2
+      displayName: create workload .pkg installer
+      inputs:
+        projects: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.sln
+        arguments: >-
+          -t:CreateWorkloadInstallers -c $(XA.Build.Configuration) -v:n
+          -p:SignType=$(MicroBuildSignType) -p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+          -bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-workload.binlog
 
-  #   - powershell: |
-  #       $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/*" -Include *.pkg -File
-  #       if (![System.IO.File]::Exists($pkg)) {
-  #           throw [System.IO.FileNotFoundException] "Pkg File not found in $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)"
-  #       }
-  #       Write-Host "##vso[task.setvariable variable=XA.NET6.Pkg]$pkg"
-  #     displayName: set variable to pkg path
+    - powershell: |
+        $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/*" -Include *.pkg -File
+        if (![System.IO.File]::Exists($pkg)) {
+            throw [System.IO.FileNotFoundException] "Pkg File not found in $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)"
+        }
+        Write-Host "##vso[task.setvariable variable=XA.NET6.Pkg]$pkg"
+      displayName: set variable to pkg path
 
-  #   - script: >
-  #       cd $(System.DefaultWorkingDirectory)/release-scripts &&
-  #       pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)
-  #     failOnStderr: true
-  #     displayName: Notarize PKG
-  #     condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+    - script: >
+        cd $(System.DefaultWorkingDirectory)/release-scripts &&
+        pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)
+      failOnStderr: true
+      displayName: Notarize PKG
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
-  #   - script: xcrun stapler validate $(XA.NET6.Pkg)
-  #     displayName: validate notarized pkg
-  #     condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+    - script: xcrun stapler validate $(XA.NET6.Pkg)
+      displayName: validate notarized pkg
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
-  #   - task: PublishPipelineArtifact@1
-  #     displayName: upload pkg
-  #     inputs:
-  #       ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-  #         artifactName: net6-pkg-signed
-  #       ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
-  #         artifactName: net6-pkg-unsigned
-  #       targetPath: $(XA.NET6.Pkg)
+    - task: PublishPipelineArtifact@1
+      displayName: upload pkg
+      inputs:
+        ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: net6-pkg-signed
+        ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: net6-pkg-unsigned
+        targetPath: $(XA.NET6.Pkg)
 
-  #   - template: yaml-templates/remove-microbuild-tooling.yaml
-  #     parameters:
-  #       condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+    - template: yaml-templates/remove-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
-  #   - template: yaml-templates/upload-results.yaml
-  #     parameters:
-  #       solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-  #       artifactName: Build Results - .NET 6 Preview .pkg
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Build Results - .NET 6 Preview .pkg
 
-  # # Check - "Xamarin.Android (.NET 6 Preview Installers Create .msi and Upload)"
-  # - job: dotnet_create_msi
-  #   displayName: Create .msi and Upload
-  #   dependsOn: dotnet_create_pkg
-  #   pool: VSEngSS-MicroBuild2019
-  #   workspace:
-  #     clean: all
-  #   variables:
-  #   - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-  #     - group: Publish-Build-Assets
-  #   steps:
-  #   - checkout: self
-  #     submodules: recursive
+  # Check - "Xamarin.Android (.NET 6 Preview Installers Create .msi and Upload)"
+  - job: dotnet_create_msi
+    displayName: Create .msi and Upload
+    dependsOn: dotnet_create_pkg
+    pool: VSEngSS-MicroBuild2019
+    workspace:
+      clean: all
+    variables:
+    - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+      - group: Publish-Build-Assets
+    steps:
+    - checkout: self
+      submodules: recursive
 
-  #   - template: yaml-templates/use-dot-net.yaml
+    - template: yaml-templates/use-dot-net.yaml
 
-  #   - task: DownloadPipelineArtifact@2
-  #     inputs:
-  #       ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-  #         artifactName: nuget-signed
-  #       ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
-  #         artifactName: $(NuGetArtifactName)
-  #       downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: nuget-signed
+        ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
 
-  #   - task: DownloadPipelineArtifact@2
-  #     inputs:
-  #       ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-  #         artifactName: net6-pkg-signed
-  #       ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
-  #         artifactName: net6-pkg-unsigned
-  #       downloadPath: $(System.DefaultWorkingDirectory)\installer-artifacts
-  #       patterns: Microsoft.*.pkg
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: net6-pkg-signed
+        ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: net6-pkg-unsigned
+        downloadPath: $(System.DefaultWorkingDirectory)\installer-artifacts
+        patterns: Microsoft.*.pkg
 
-  #   - template: yaml-templates\install-microbuild-tooling.yaml
-  #     parameters:
-  #       condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+    - template: yaml-templates\install-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
-  #   - task: MSBuild@1
-  #     displayName: msbuild Xamarin.Android.BootstrapTasks
-  #     inputs:
-  #       solution: Xamarin.Android.BootstrapTasks.sln
-  #       configuration: $(XA.Build.Configuration)
-  #       msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-bootstraptasks.binlog
+    - task: MSBuild@1
+      displayName: msbuild Xamarin.Android.BootstrapTasks
+      inputs:
+        solution: Xamarin.Android.BootstrapTasks.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-bootstraptasks.binlog
 
-  #   - task: MSBuild@1
-  #     displayName: msbuild /t:Restore create-dotnet-msi.csproj
-  #     inputs:
-  #       solution: $(System.DefaultWorkingDirectory)\build-tools\create-dotnet-msi\create-dotnet-msi.csproj
-  #       configuration: $(XA.Build.Configuration)
-  #       msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\restore-create-msi.binlog
+    - task: MSBuild@1
+      displayName: msbuild /t:Restore create-dotnet-msi.csproj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\create-dotnet-msi\create-dotnet-msi.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\restore-create-msi.binlog
 
-  #   - task: MSBuild@1
-  #     displayName: msbuild /t:CreateWorkloadInstallers
-  #     inputs:
-  #       solution: Xamarin.Android.sln
-  #       configuration: $(XA.Build.Configuration)
-  #       msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
+    - task: MSBuild@1
+      displayName: msbuild /t:CreateWorkloadInstallers
+      inputs:
+        solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
 
-  #   - script: copy /Y $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\*.msi $(System.DefaultWorkingDirectory)\installer-artifacts
-  #     displayName: copy .msi
+    - script: copy /Y $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\*.msi $(System.DefaultWorkingDirectory)\installer-artifacts
+      displayName: copy .msi
 
-  #   - template: upload-to-storage\win\v1.yml@yaml
-  #     parameters:
-  #       ArtifactsDirectory: $(System.DefaultWorkingDirectory)\installer-artifacts
-  #       Azure.ContainerName: $(Azure.Container.Name)
-  #       Azure.BlobPrefix: $(Build.DefinitionName)/public/net6/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
-  #       GitHub.Context: .NET 6 Preview Installers
+    - template: upload-to-storage\win\v1.yml@yaml
+      parameters:
+        ArtifactsDirectory: $(System.DefaultWorkingDirectory)\installer-artifacts
+        Azure.ContainerName: $(Azure.Container.Name)
+        Azure.BlobPrefix: $(Build.DefinitionName)/public/net6/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+        GitHub.Context: .NET 6 Preview Installers
 
-  #   - template: yaml-templates\remove-microbuild-tooling.yaml
-  #     parameters:
-  #       condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+    - template: yaml-templates\remove-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
-  #   - powershell: >-
-  #       & dotnet build -v:n -c $(XA.Build.Configuration)
-  #       -t:PushManifestToBuildAssetRegistry
-  #       -p:BuildAssetRegistryToken=$(MaestroAccessToken)
-  #       $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
-  #       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
-  #     displayName: generate and publish BAR manifest
-  #     condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+    - powershell: >-
+        & dotnet build -v:n -c $(XA.Build.Configuration)
+        -t:PushManifestToBuildAssetRegistry
+        -p:BuildAssetRegistryToken=$(MaestroAccessToken)
+        $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
+        -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
+      displayName: generate and publish BAR manifest
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
-  #   - powershell: |
-  #       $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
-  #       $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
-  #       $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
-  #       & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
-  #       & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
-  #     displayName: add build to default darc channel
-  #     condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+    - powershell: |
+        $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
+        $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
+        $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
+        & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
+        & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
+      displayName: add build to default darc channel
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
-  #   - template: yaml-templates/upload-results.yaml
-  #     parameters:
-  #       solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
-  #       artifactName: Build Results - .NET 6 Preview .msi
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Build Results - .NET 6 Preview .msi
 
 # .NET 6 VS Insertion Stage
 # Check - "Xamarin.Android (VS Insertion - Wait For Approval)"
