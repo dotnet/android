@@ -779,19 +779,23 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CheckForObsoleteFrameworkAssemblies">
+  <PropertyGroup>
+    <_TreatErrorAsWarning Condition="'$(UsingAndroidNETSdk)' != 'true' " >True</_TreatErrorAsWarning>
+    <_TreatErrorAsWarning Condition=" '$(_TreatErrorAsWarning)' == ''">False</_TreatErrorAsWarning>
+  </PropertyGroup>
   <AndroidError
     Condition=" '%(Reference.Identity)' == 'OpenTK-1.0' "
     Code="XA4313"
     ResourceName="XA4313"
     FormatArguments="OpenTK-1.0;Xamarin.Legacy.OpenTK"
-    ContinueOnError=" '$(UsingAndroidNETSdk)' != 'true' "
+    ContinueOnError="$(_TreatErrorAsWarning)"
   />
   <AndroidError
     Condition=" '%(Reference.Identity)' == 'Xamarin.Android.NUnitLite' "
     Code="XA4313"
     ResourceName="XA4313"
     FormatArguments="Xamarin.Android.NUnitLite;Xamarin.Legacy.NUnitLite"
-    ContinueOnError=" '$(UsingAndroidNETSdk)' != 'true' "
+    ContinueOnError="$(_TreatErrorAsWarning)"
   />
 </Target>
 
