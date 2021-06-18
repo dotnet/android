@@ -3998,7 +3998,6 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")]
 		public void XA4313 ([Values ("OpenTK-1.0", "Xamarin.Android.NUnitLite")] string reference)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -4006,11 +4005,13 @@ namespace UnnamedProject
 					new BuildItem.Reference (reference)
 				},
 			};
+			bool shouldSucceed = !Builder.UseDotNet;
+			string expectedText = shouldSucceed ? "succeeded" : "failed";
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				Assert.AreEqual (shouldSucceed, builder.Build (proj), $"Build should have {expectedText}.");
 				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build succeeded."))
+						.SkipWhile (x => !x.StartsWith ($"Build {expectedText}.", StringComparison.OrdinalIgnoreCase))
 						.FirstOrDefault (x => x.Contains ("warning XA4313"));
 				Assert.IsNotNull (error, "Build should have failed with XA4313.");
 			}
