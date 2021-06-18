@@ -47,7 +47,9 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				if (assemblies.ContainsKey (assembly.ItemSpec)) {
+				var assemblyKey = CompressedAssemblyInfo.GetDictionaryKey (assembly);
+				if (assemblies.ContainsKey (assemblyKey)) {
+					Log.LogDebugMessage ($"Skipping duplicate assembly: {assembly.ItemSpec}");
 					continue;
 				}
 
@@ -57,8 +59,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				assemblies.Add (CompressedAssemblyInfo.GetDictionaryKey (assembly),
-					new CompressedAssemblyInfo (checked((uint)fi.Length)));
+				assemblies.Add (assemblyKey, new CompressedAssemblyInfo (checked((uint)fi.Length)));
 			}
 
 			uint index = 0;
