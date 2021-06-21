@@ -345,6 +345,11 @@ namespace Xamarin.ProjectTools
 			psi.EnvironmentVariables ["ghprbPullLongDescription"] =
 				psi.EnvironmentVariables ["BUILD_SOURCEVERSIONMESSAGE"] = "";
 
+			// Ensure any variable alteration from DotNetXamarinProject.Construct is cleared.
+			if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
+				psi.EnvironmentVariables ["MSBUILD_EXE_PATH"] = null;
+			}
+
 			psi.Arguments = args.ToString ();
 			
 			psi.CreateNoWindow = true;
