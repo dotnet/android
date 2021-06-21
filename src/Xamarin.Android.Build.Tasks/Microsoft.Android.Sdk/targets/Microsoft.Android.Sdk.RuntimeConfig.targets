@@ -10,11 +10,7 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
 -->
 <Project>
 
-  <Import Sdk="Microsoft.NET.Runtime.RuntimeConfigParser.Task" Project="Sdk.props" />
-
   <PropertyGroup>
-    <!-- HACK: workaround https://github.com/dotnet/runtime/issues/53811 -->
-    <RuntimeConfigParserTasksAssemblyPath>$([System.IO.Path]::GetDirectoryName($(RuntimeConfigParserTasksAssemblyPath)))/net6.0/$([System.IO.Path]::GetFileName($(RuntimeConfigParserTasksAssemblyPath)))</RuntimeConfigParserTasksAssemblyPath>
     <_BinaryRuntimeConfigPath>$(IntermediateOutputPath)$(ProjectRuntimeConfigFileName).bin</_BinaryRuntimeConfigPath>
   </PropertyGroup>
 
