@@ -86,7 +86,7 @@
     <VSAndroidDesigner Condition="'$(VSAndroidDesigner)' == ''">false</VSAndroidDesigner>
 
     <!-- profiler won't work without internet permission, we must thus force it -->
-    <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' != '' And '$(AndroidEnableProfiler)' != 'false' ">True</AndroidNeedsInternetPermission>
+    <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
     <ApplicationVersion Condition=" '$(ApplicationVersion)' == '' ">1.0</ApplicationVersion>
