@@ -169,7 +169,7 @@ _ResolveAssemblies MSBuild target.
       <_ResolvedNativeLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.so' " />
     </ItemGroup>
     <ItemGroup>
-      <_MonoComponent Condition=" '$(AndroidEnableProfiler)' != '' And '$(AndroidEnableProfiler)' != 'false' " Include="diagnostics_tracing" />
+      <_MonoComponent Condition=" '$(AndroidEnableProfiler)' == 'true' " Include="diagnostics_tracing" />
       <_MonoComponent Condition=" '$(AndroidUseInterpreter)' == 'true' " Include="hot_reload" />
     </ItemGroup>
     <ProcessNativeLibraries
