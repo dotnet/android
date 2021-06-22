@@ -203,7 +203,7 @@ stages:
     - script: echo "##vso[task.setvariable variable=PATH]$PATH:$HOME/android-toolchain/$(XA.Jdk11.Folder)/bin"
       displayName: append jdk tools to PATH
 
-    - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+    - script: CC=/usr/bin/gcc-10 CXX=/usr/bin/g++-10 make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make jenkins
 
     - script: make create-nupkgs V=1 CONFIGURATION=$(XA.Build.Configuration)
