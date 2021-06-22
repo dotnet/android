@@ -26,7 +26,7 @@
 
   <!-- Common <PackageReference/> versions -->
   <PropertyGroup>
-    <LibZipSharpVersion>2.0.0-alpha6</LibZipSharpVersion>
+    <LibZipSharpVersion>2.0.0-alpha7</LibZipSharpVersion>
     <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
     <MonoCecilVersion>0.11.2</MonoCecilVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
