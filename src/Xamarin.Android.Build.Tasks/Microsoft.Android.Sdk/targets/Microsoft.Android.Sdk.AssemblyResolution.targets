@@ -168,8 +168,13 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup>
       <_ResolvedNativeLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.so' " />
     </ItemGroup>
+    <ItemGroup>
+      <_MonoComponent Condition=" '$(AndroidEnableProfiler)' == 'true' " Include="diagnostics_tracing" />
+      <_MonoComponent Condition=" '$(AndroidUseInterpreter)' == 'true' " Include="hot_reload" />
+    </ItemGroup>
     <ProcessNativeLibraries
         InputLibraries="@(_ResolvedNativeLibraries)"
+        Components="@(_MonoComponent->Distinct())"
         IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
