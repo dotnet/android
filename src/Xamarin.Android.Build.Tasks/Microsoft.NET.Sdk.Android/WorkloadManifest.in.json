@@ -1,7 +1,7 @@
 {
   "version": "@WORKLOAD_VERSION@",
   "workloads": {
-    "microsoft-android-sdk-full": {
+    "android": {
       "description": "Android SDK",
       "packs": [
         "Microsoft.Android.Sdk",
