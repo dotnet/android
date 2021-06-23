@@ -11,6 +11,13 @@
     "type": "project"
   },
   "sourceName": "AndroidApp1",
+  "sources": [
+      {
+        "source": "./",
+        "target": "./",
+        "copyOnly": "**/Resources/**/*.png"
+      }
+  ],
   "preferNameDirectory": true,
   "primaryOutputs": [
     { "path": "AndroidApp1.csproj" }
