@@ -1397,10 +1397,9 @@ stages:
     - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
       - group: Publish-Build-Assets
     steps:
-    - checkout: self
-      submodules: recursive
-
-    - template: yaml-templates/use-dot-net.yaml
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
 
     - task: DownloadPipelineArtifact@2
       inputs:

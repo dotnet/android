@@ -68,6 +68,12 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
+			// Delete the metadata folder, which contains old workload data
+			var metadataPath = Path.Combine (dotnetPath, "metadata");
+			if (Directory.Exists (metadataPath)) {
+				Utilities.DeleteDirectory (metadataPath);
+			}
+
 			if (File.Exists (dotnetTool)) {
 				if (!TestDotNetSdk (dotnetTool)) {
 					Log.WarningLine ($"Attempt to run `dotnet --version` failed, reinstalling the SDK.");
