@@ -420,6 +420,7 @@ $@"<Project>
 			var repoNuGetConfig = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
 			var projNugetConfig = Path.Combine (Root, relativeDirectory, "NuGet.config");
 			if (File.Exists (repoNuGetConfig) && !File.Exists (projNugetConfig)) {
+				Directory.CreateDirectory (Path.GetDirectoryName (projNugetConfig));
 				File.Copy (repoNuGetConfig, projNugetConfig, overwrite: true);
 				// Write additional sources to NuGet.config if needed
 				if (ExtraNuGetConfigSources != null) {
