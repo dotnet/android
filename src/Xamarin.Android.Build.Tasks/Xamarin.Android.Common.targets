@@ -1505,9 +1505,11 @@ because xbuild doesn't support framework reference assemblies.
       AndroidApiLevel="$(_AndroidApiLevel)">
     <Output TaskParameter="EmbeddedDSOsEnabled" PropertyName="_EmbeddedDSOsEnabled" />
     <Output TaskParameter="UsesLibraries"       ItemName="AndroidExternalJavaLibrary" />
+    <Output TaskParameter="UseEmbeddedDex"      PropertyName="_UseEmbeddedDex" />
   </ReadAndroidManifest>
   <PropertyGroup>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' ">.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
+    <AndroidStoreUncompressedFileExtensions Condition=" '$(_UseEmbeddedDex)' == 'True' ">.dex;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
   </PropertyGroup>
 </Target>
 

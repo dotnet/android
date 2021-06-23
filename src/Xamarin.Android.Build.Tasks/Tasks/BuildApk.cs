@@ -172,10 +172,11 @@ namespace Xamarin.Android.Tasks
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 
 				// Add classes.dx
+				CompressionMethod dexCompressionMethod = GetCompressionMethod (".dex");
 				foreach (var dex in DalvikClasses) {
 					string apkName = dex.GetMetadata ("ApkName");
 					string dexPath = string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName;
-					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath);
+					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath, compressionMethod: dexCompressionMethod);
 				}
 
 				if (EmbedAssemblies && !BundleAssemblies)

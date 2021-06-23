@@ -41,7 +41,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs)
+		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs, [Values (false, true)] bool useEmbeddedDex)
 		{
 			AssertHasDevices ();
 
@@ -54,7 +54,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" ");
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
 				Assert.True (b.Install (proj), "Project should have installed.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				AssertExtractNativeLibs (manifest, extractNativeLibs);
