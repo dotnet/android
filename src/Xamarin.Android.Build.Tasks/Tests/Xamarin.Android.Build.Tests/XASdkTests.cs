@@ -644,6 +644,7 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 			}
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] =
 				FullProjectDirectory = Path.Combine (Root, relativeProjectDir);
+			new XASdkProject ().CopyNuGetConfig (relativeProjectDir);
 			return new DotNetCLI (Path.Combine (FullProjectDirectory, $"{TestName}.csproj"));
 		}
 
