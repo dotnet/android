@@ -367,7 +367,11 @@ namespace Xamarin.Android.Build.Tests
 					"https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json"
 				},
 				PackageReferences = {
-					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.2.0.7-net6preview01" }
+					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.2.0.7-net6preview01" },
+					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "6.0.0-preview.5.21301.17" },
+					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "6.0.0-preview.6.21306.3" },
+					new Package { Id = "Microsoft.JSInterop", Version = "6.0.0-preview.6.21306.3" },
+					new Package { Id = "System.Text.Json", Version = "6.0.0-preview.7.21323.3" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
