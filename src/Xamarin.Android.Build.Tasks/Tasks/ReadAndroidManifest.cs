@@ -32,6 +32,9 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] UsesLibraries { get; set; }
 
+		[Output]
+		public bool UseEmbeddedDex { get; set; } = false;
+
 		public override bool RunTask ()
 		{
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
@@ -42,6 +45,11 @@ namespace Xamarin.Android.Tasks
 				string text = app.Attribute (androidNs + "extractNativeLibs")?.Value;
 				if (bool.TryParse (text, out bool value)) {
 					EmbeddedDSOsEnabled = !value;
+				}
+
+				text = app.Attribute (androidNs + "useEmbeddedDex")?.Value;
+				if (bool.TryParse (text, out value)) {
+					UseEmbeddedDex = value;
 				}
 
 				var libraries = new List<ITaskItem> ();

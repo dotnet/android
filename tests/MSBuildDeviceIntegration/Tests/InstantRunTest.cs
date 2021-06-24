@@ -322,5 +322,41 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("libtest.so")), "libtest.so should have been uploaded");
 			}
 		}
+
+		[Test]
+		public void InstantRunFastDevDexes ([Values ("dx", "d8")] string dexTool, [Values (false, true)] bool useEmbeddedDex)
+		{
+			AssertDexToolSupported (dexTool);
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			var proj = new XamarinAndroidApplicationProject () {
+				AndroidFastDeploymentType = "Assemblies:Dexes",
+				UseLatestPlatformSdk = true,
+				DexTool = dexTool,
+			};
+			proj.SetDefaultTargetDevice ();
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Install (proj), "packaging should have succeeded. 0");
+				var logLines = b.LastBuildOutput;
+				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
+					l.Contains ("Target _BuildApkFastDev needs to be built")),
+					"Apk should have been built");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("classes.dex")), "classes.dex should have been uploaded");
+				ClearAdbLogcat ();
+				b.BuildLogFile = "run.log";
+				if (CommercialBuildAvailable)
+					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
+				else
+					AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+				b.BuildLogFile = "uninstall.log";
+				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
+			}
+		}
 	}
 }
