@@ -33,6 +33,13 @@ _ResolveAssemblies MSBuild target.
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
       DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish"
       Returns="@(ResolvedFileToPublish)">
+      <ItemGroup>
+        <ResolvedFileToPublish
+            Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
+            Update="@(ResolvedFileToPublish)"
+            RuntimeIdentifier="$(RuntimeIdentifier)"
+        />
+      </ItemGroup>
   </Target>
 
   <Target Name="_FixupIntermediateAssembly" Condition=" '$(_OuterIntermediateAssembly)' != '' ">
