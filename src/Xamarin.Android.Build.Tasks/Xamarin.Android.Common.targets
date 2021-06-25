@@ -1706,12 +1706,10 @@ because xbuild doesn't support framework reference assemblies.
     Condition="Exists ('$(_ManifestOutput)')"
     DependsOnTargets="_CreateBaseApk">
   <GetManifestVersions
-    VersionCode="$(_AndroidVersionCode)"
-    VersionName="$(_AndroidVersionName)"
-    ManifestFile="$(_ManifestOutput)"
+    ManifestPath="$(IntermediateOutputPath)android"
+    PackageName="$(_AndroidPackage)"
   >
-    <Output TaskParameter="VersionCode" PropertyName="AndroidFinalVersionCode" />
-    <Output TaskParameter="VersionName" PropertyName="AndroidFinalVersionName" />
+    <Output TaskParameter="ManifestVersions" ItemName="AndroidManifestVersions" />
   </GetManifestVersions>
 </Target>
 

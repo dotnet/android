@@ -488,21 +488,30 @@ deprecated API's to work.
 
 **Experimental**. This property was added in Xamarin.Android 6.1.
 
-## AndroidFinalVersionCode
+## AndroidManifestVersions
 
-This is a string property which represents the final `android:versionCode` which
-was written to the `AndroidManifest.xml`.
-This is a read only property and is for information only.
+This is an ItemGroup which represents the final `android:versionCode` and
+'android:versionName' which were written to the `AndroidManifest.xml` files.
+
+This are read only and is for information only.
+
+Each item in the group will contain the path to the `AndroidManifest.xml` the
+data was retrieved from and two items of Metadata.
+
+* `VersionCode`: The final code used.
+* `VersionName`: The final name used.
+* `Abi`: The abi for this manifest.
+
+This is an item group because Xamarin.Android allows developers to generate
+multiple apk files per abi. Each Apk can have a slightly different `android:versionCode`.
+
+```xml
+<AndroidManifestVersions Include="com.foo.bar-x86.apk"
+  VersionCode="316241012" VersionName="1.0" Abi="x86" />
+```
 
 Added in Xamarin.Android 11.3.
 
-## AndroidFinalVersionName
-
-This is a string property which represents the final `android:versionName` which
-was written to the `AndroidManifest.xml`.
-This is a read only property and is for information only.
-
-Added in Xamarin.Android 11.3.
 
 ## AndroidGenerateJniMarshalMethods
 
