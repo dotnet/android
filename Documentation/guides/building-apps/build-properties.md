@@ -506,7 +506,11 @@ This is an item group because Xamarin.Android allows developers to generate
 multiple apk files per abi. Each Apk can have a slightly different `android:versionCode`.
 
 ```xml
-<AndroidManifestVersions Include="com.foo.bar-x86.apk"
+<AndroidManifestVersions Include="com.foo.bar"
+  VersionCode="316241012" VersionName="1.0" Abi="all" />
+<AndroidManifestVersions Include="com.foo.bar-armeabi-v7a"
+  VersionCode="316241012" VersionName="1.0" Abi="armeabi-v7a" />
+<AndroidManifestVersions Include="com.foo.bar-x86"
   VersionCode="316241012" VersionName="1.0" Abi="x86" />
 ```
 
