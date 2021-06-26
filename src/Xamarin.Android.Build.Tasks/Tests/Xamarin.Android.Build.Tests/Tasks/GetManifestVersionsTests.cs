@@ -18,14 +18,30 @@ namespace Xamarin.Android.Build.Tests {
 #pragma warning disable 414
 static object [] ReadManifestVersionsTestCases () => new object [] {
 	new object[] {
-		/* versionCode */		"55555",
-		/* versionName */		"33.4",
-		/* expectedVersionCode */	"55555" ,
-		/* expectedVersionName */	"33.4",
+		/* abi */                       "x86;arm64-v8a",
+		/* versionCode */		"55555;66666",
+		/* versionName */		"33.4;33.4",
+		/* expectedVersionCode */	"55555;66666" ,
+		/* expectedVersionName */	"33.4;33.4",
 	},
 	new object[] {
+		/* abi */                       "manifest;x86;arm64-v8a",
+		/* versionCode */		"1;55555;66666",
+		/* versionName */		"1.0;33.4;33.4",
+		/* expectedVersionCode */	"1;55555;66666" ,
+		/* expectedVersionName */	"1.0;33.4;33.4",
+	},
+	new object[] {
+		/* abi */                       "manifest",
 		/* versionCode */		"1",
 		/* versionName */		"1.0",
+		/* expectedVersionCode */	"1" ,
+		/* expectedVersionName */	"1.0",
+	},
+	new object[] {
+		/* abi */                       "manifest;fake",
+		/* versionCode */		"1;0",
+		/* versionName */		"1.0;0",
 		/* expectedVersionCode */	"1" ,
 		/* expectedVersionName */	"1.0",
 	},
@@ -34,23 +50,35 @@ static object [] ReadManifestVersionsTestCases () => new object [] {
 
 		[Test]
 		[TestCaseSource (nameof(ReadManifestVersionsTestCases))]
-		public void ReadManifestVersions (string versionCode, string versionName, string expectedVersionCode, string expectedVersionName)
+		public void ReadManifestVersions (string abi, string versionCode, string versionName, string expectedVersionCode, string expectedVersionName)
 		{
+			char[] splitChars = new char[] {';'};
 			var path = Path.Combine ("temp", TestName);
-			Directory.CreateDirectory (Path.Combine (path, "manifest"));
+			Directory.CreateDirectory (Path.Combine (path));
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new GetManifestVersions {
 				BuildEngine = engine
 			};
-			string versionBlock = $"android:versionCode='{versionCode}' android:versionName='{versionName}'";
-			File.WriteAllText (Path.Combine (path, "manifest", "AndroidManifest.xml"),
-				$@"<?xml version='1.0' ?>
-<manifest xmlns:android='http://schemas.android.com/apk/res/android' {versionBlock} android:package='Foo.Foo' />");
+			string[] abis = abi.Split (splitChars);
+			string[] versionCodes = versionCode.Split (splitChars);
+			string[] versionNames = versionName.Split (splitChars);
+			Assert.AreEqual (versionCodes.Length, versionNames.Length);
+			string[] expectedVersionCodes = expectedVersionCode.Split (splitChars, StringSplitOptions.RemoveEmptyEntries);
+			string[] expectedVersionNames = expectedVersionName.Split (splitChars, StringSplitOptions.RemoveEmptyEntries);
+			for (int i=0; i < abis.Length; i ++) {
+				string versionBlock = $"android:versionCode='{versionCodes[i]}' android:versionName='{versionNames[i]}'";
+				Directory.CreateDirectory (Path.Combine (path, abis[i]));
+				File.WriteAllText (Path.Combine (path, abis[i], "AndroidManifest.xml"),
+					$@"<?xml version='1.0' ?>
+	<manifest xmlns:android='http://schemas.android.com/apk/res/android' {versionBlock} android:package='Foo.Foo' />");
+			}
 			task.ManifestPath = path;
 			Assert.IsTrue (task.Execute ());
-			Assert.AreEqual (1, task.ManifestVersions.Count());
-			Assert.AreEqual (expectedVersionCode, task.ManifestVersions[0].GetMetadata ("VersionCode"));
-			Assert.AreEqual (expectedVersionName, task.ManifestVersions[0].GetMetadata ("VersionName"));
+			Assert.AreEqual (expectedVersionCodes.Length, task.ManifestVersions.Count());
+			for (int i=0; i < expectedVersionCodes.Length; i ++) {
+				Assert.AreEqual (expectedVersionCodes[i], task.ManifestVersions[i].GetMetadata ("VersionCode"));
+				Assert.AreEqual (expectedVersionNames[i], task.ManifestVersions[i].GetMetadata ("VersionName"));
+			}
 		}
 	}
 }
