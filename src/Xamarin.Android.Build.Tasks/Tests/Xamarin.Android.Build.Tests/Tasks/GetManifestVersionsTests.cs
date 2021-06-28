@@ -4,6 +4,8 @@ using Xamarin.ProjectTools;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Microsoft.Build.Framework;
 using System.Text;
 using Xamarin.Android.Tasks;
@@ -18,53 +20,62 @@ namespace Xamarin.Android.Build.Tests {
 #pragma warning disable 414
 static object [] ReadManifestVersionsTestCases () => new object [] {
 	new object[] {
-		/* abi */                       "x86;arm64-v8a",
-		/* versionCode */		"55555;66666",
-		/* versionName */		"33.4;33.4",
-		/* expectedVersionCode */	"55555;66666" ,
-		/* expectedVersionName */	"33.4;33.4",
+		/* abi */                       "x86:arm64-v8a",
+		/* versionCode */               "55555:66666",
+		/* versionName */               "33.4:33.4",
+		/* expectedResultsXml */       @"<?xml version='1.0'?>
+<output>
+	<result abi='x86' code='55555' name='33.4'/>
+	<result abi='arm64-v8a' code='66666' name='33.4'/>
+</output>",
 	},
 	new object[] {
-		/* abi */                       "manifest;x86;arm64-v8a",
-		/* versionCode */		"1;55555;66666",
-		/* versionName */		"1.0;33.4;33.4",
-		/* expectedVersionCode */	"1;55555;66666" ,
-		/* expectedVersionName */	"1.0;33.4;33.4",
+		/* abi */                       "manifest:x86:arm64-v8a",
+		/* versionCode */               "1:55555:66666",
+		/* versionName */               "1.0:33.4:33.4",
+		/* expectedResultsXml */        @"<?xml version='1.0'?>
+<output>
+	<result abi='all' code='1' name='1.0'/>
+	<result abi='x86' code='55555' name='33.4'/>
+	<result abi='arm64-v8a' code='66666' name='33.4'/>
+</output>",
 	},
 	new object[] {
 		/* abi */                       "manifest",
 		/* versionCode */		"1",
 		/* versionName */		"1.0",
-		/* expectedVersionCode */	"1" ,
-		/* expectedVersionName */	"1.0",
+		/* expectedResultsXml */        @"<?xml version='1.0'?>
+<output>
+	<result abi='all' code='1' name='1.0'/>
+</output>",
 	},
 	new object[] {
-		/* abi */                       "manifest;fake",
-		/* versionCode */		"1;0",
-		/* versionName */		"1.0;0",
-		/* expectedVersionCode */	"1" ,
-		/* expectedVersionName */	"1.0",
+		/* abi */                       "manifest:fake",
+		/* versionCode */               "1:0",
+		/* versionName */               "1.0:0",
+		/* expectedResultsXml */        @"<?xml version='1.0'?>
+<output>
+	<result abi='all' code='1' name='1.0'/>
+</output>",
 	},
 };
 #pragma warning restore 414
 
 		[Test]
 		[TestCaseSource (nameof(ReadManifestVersionsTestCases))]
-		public void ReadManifestVersions (string abi, string versionCode, string versionName, string expectedVersionCode, string expectedVersionName)
+		public void ReadManifestVersions (string abi, string versionCode, string versionName, string expectedResultsXml)
 		{
-			char[] splitChars = new char[] {';'};
+			char[] splitChars = new char[] {':'};
 			var path = Path.Combine ("temp", TestName);
 			Directory.CreateDirectory (Path.Combine (path));
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new GetManifestVersions {
 				BuildEngine = engine
 			};
-			string[] abis = abi.Split (splitChars);
-			string[] versionCodes = versionCode.Split (splitChars);
-			string[] versionNames = versionName.Split (splitChars);
+			string[] abis = abi.Split (splitChars, StringSplitOptions.RemoveEmptyEntries);
+			string[] versionCodes = versionCode.Split (splitChars, StringSplitOptions.RemoveEmptyEntries);
+			string[] versionNames = versionName.Split (splitChars, StringSplitOptions.RemoveEmptyEntries);
 			Assert.AreEqual (versionCodes.Length, versionNames.Length);
-			string[] expectedVersionCodes = expectedVersionCode.Split (splitChars, StringSplitOptions.RemoveEmptyEntries);
-			string[] expectedVersionNames = expectedVersionName.Split (splitChars, StringSplitOptions.RemoveEmptyEntries);
 			for (int i=0; i < abis.Length; i ++) {
 				string versionBlock = $"android:versionCode='{versionCodes[i]}' android:versionName='{versionNames[i]}'";
 				Directory.CreateDirectory (Path.Combine (path, abis[i]));
@@ -74,10 +85,20 @@ static object [] ReadManifestVersionsTestCases () => new object [] {
 			}
 			task.ManifestPath = path;
 			Assert.IsTrue (task.Execute ());
-			Assert.AreEqual (expectedVersionCodes.Length, task.ManifestVersions.Count());
-			for (int i=0; i < expectedVersionCodes.Length; i ++) {
-				Assert.AreEqual (expectedVersionCodes[i], task.ManifestVersions[i].GetMetadata ("VersionCode"));
-				Assert.AreEqual (expectedVersionNames[i], task.ManifestVersions[i].GetMetadata ("VersionName"));
+			var doc = XDocument.Parse (expectedResultsXml);
+			IEnumerable<XElement> elements = doc.XPathSelectElements ("//output/result");
+			Dictionary<string, (string code, string name)> results = new Dictionary<string, (string code, string name)> ();
+			foreach (var element in elements) {
+				string expectedAbi = element.Attribute("abi").Value;
+				string code = element.Attribute("code").Value;
+				string name = element.Attribute("name").Value;
+				results.Add (expectedAbi, (code: code, name: name));
+			}
+			Assert.AreEqual (results.Count, task.ManifestVersions.Count ());
+			foreach (var result in task.ManifestVersions) {
+				var expected = results[result.GetMetadata ("Abi")];
+				Assert.AreEqual (expected.code, result.GetMetadata ("VersionCode"));
+				Assert.AreEqual (expected.name, result.GetMetadata ("VersionName"));
 			}
 		}
 	}
