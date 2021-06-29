@@ -83,10 +83,13 @@ This item group populates the Build Action drop-down in IDEs.
     <ItemGroup Condition=" '$(AndroidApplication)' != 'true' ">
       <EmbeddedNativeLibrary Include="@(AndroidNativeLibrary)" />
     </ItemGroup>
+    <!-- Any .NET 6 project -->
+    <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'true' ">
+      <LibraryProjectZip  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' == 'true' " />
+    </ItemGroup>
     <!-- .NET 6 class libraries-->
     <ItemGroup Condition=" '$(AndroidApplication)' != 'true' and '$(UsingAndroidNETSdk)' == 'true' ">
       <AndroidAarLibrary  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' != 'true' " />
-      <LibraryProjectZip  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' == 'true' " />
       <AndroidJavaLibrary Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
       <EmbeddedJar        Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
       <!-- .aar files should be copied to $(OutputPath) in .NET 6-->
