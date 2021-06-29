@@ -93,8 +93,9 @@ namespace Xamarin.Android.Tasks
 				.Concat (MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies))
 				.ToList ();
 			var mainFileName = Path.GetFileName (MainAssembly);
+			var mainAssembly = new List<ITaskItem> () { new TaskItem (mainFileName) };
 			Func<string,string,bool> fileNameEq = (a,b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
-			assemblies = assemblies.Where (a => fileNameEq (a.ItemSpec, mainFileName)).Concat (assemblies.Where (a => !fileNameEq (a.ItemSpec, mainFileName))).ToList ();
+			assemblies = mainAssembly.Concat (assemblies.Where (a => !fileNameEq (Path.GetFileName (a.ItemSpec), mainFileName))).ToList ();
 
 			using (var pkgmgr = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				pkgmgr.WriteLine ("package mono;");
