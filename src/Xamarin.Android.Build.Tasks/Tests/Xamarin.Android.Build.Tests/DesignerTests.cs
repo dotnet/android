@@ -323,7 +323,7 @@ namespace UnnamedProject
 				var packageManagerPath = Path.Combine (Root, appb.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager_Resources.java");
 				var before = GetAssembliesFromPackageManager (packageManagerPath);
 				if (!Builder.UseDotNet) {
-					Assert.AreEqual ("", before, $"After first `{appb.Target}`, assemblies list would be empty.");
+					Assert.AreEqual ("\"App1.dll\",", before, $"After first `{appb.Target}`, assemblies list should only have main App dll.");
 				}
 
 				// NuGet restore, either with /t:Restore in a separate MSBuild call or /restore in a single call

@@ -13,8 +13,37 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("Node-2")]
 	public class GeneratePackageManagerJavaTests : BaseTest
 	{
+#pragma warning disable 414
+		static object [] CheckPackageManagerAssemblyOrderChecks () => new object [] {
+			new object[] {
+				/* resolvedUserAssemblies */ new string [] {
+					"linked/Xamarin.AndroidX.SavedState.dll",
+					"linked/HelloAndroid.dll",
+				},
+				/* resolvedAssemblies */     new string [] {
+					"linked/Xamarin.AndroidX.SavedState.dll",
+					"linked/HelloAndroid.dll",
+					"linked/System.Console.dll",
+					"linked/System.Linq.dll",
+				}
+			},
+			new object[] {
+				/* resolvedUserAssemblies */ new string [] {
+					"linked/HelloAndroid.dll",
+					"linked/Xamarin.AndroidX.SavedState.dll",
+				},
+				/* resolvedAssemblies */     new string [] {
+					"linked/Xamarin.AndroidX.SavedState.dll",
+					"linked/System.Console.dll",
+					"linked/System.Linq.dll",
+					"linked/HelloAndroid.dll",
+				}
+			},
+		};
+#pragma warning restore 414
 		[Test]
-		public void CheckPackageManagerAssemblyOrder ()
+		[TestCaseSource (nameof (CheckPackageManagerAssemblyOrderChecks))]
+		public void CheckPackageManagerAssemblyOrder (string[] resolvedUserAssemblies, string[] resolvedAssemblies)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
@@ -29,21 +58,16 @@ namespace Xamarin.Android.Build.Tests
 
 			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), $@"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.microsoft.net6.helloandroid' android:versionCode='1' />");
 
+			var resolvedUserAssembliesList = resolvedUserAssemblies.Select (x => new TaskItem (x));
+			var resolvedAssembliesList = resolvedAssemblies.Select (x => new TaskItem (x));
+
 			var task = new GeneratePackageManagerJava {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
-				ResolvedUserAssemblies = new ITaskItem []  {
-					new TaskItem ("obj/Release/net6.0-android/android-arm/linked/Xamarin.AndroidX.SavedState.dll"),
-					new TaskItem ("obj/Release/net6.0-android/android-arm/linked/HelloAndroid.dll"),
-				},
-				ResolvedAssemblies = new ITaskItem []  {
-					new TaskItem ("obj/Release/net6.0-android/android-arm/linked/Xamarin.AndroidX.SavedState.dll"),
-					new TaskItem ("obj/Release/net6.0-android/android-arm/linked/HelloAndroid.dll"),
-					new TaskItem ("obj/Release/net6.0-android/android-arm/linked/System.Console.dll"),
-					new TaskItem ("obj/Release/net6.0-android/android-arm/linked/System.Linq.dll"),
-				},
+				ResolvedUserAssemblies = resolvedUserAssembliesList.ToArray (),
+				ResolvedAssemblies = resolvedAssembliesList.ToArray (),
 				OutputDirectory = Path.Combine(path, "src", "mono"),
 				EnvironmentOutputDirectory = Path.Combine (path, "env"),
-				MainAssembly = "obj/Release/net6.0-android/android-arm/linked/HelloAndroid.dll",
+				MainAssembly = "linked/HelloAndroid.dll",
 				TargetFrameworkVersion = "v6.0",
 				Manifest = Path.Combine (path, "AndroidManifest.xml"),
 				IsBundledApplication = false,
