@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.Build.Framework;
@@ -89,13 +88,7 @@ namespace Xamarin.Android.Tasks
 			var doc = AndroidAppManifest.Load (Manifest, MonoAndroidHelper.SupportedVersions);
 			int minApiVersion = doc.MinSdkVersion == null ? 4 : (int) doc.MinSdkVersion;
 			// We need to include any special assemblies in the Assemblies list
-			var assemblies = ResolvedUserAssemblies
-				.Concat (MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies))
-				.ToList ();
 			var mainFileName = Path.GetFileName (MainAssembly);
-			var mainAssembly = new List<ITaskItem> () { new TaskItem (mainFileName) };
-			Func<string,string,bool> fileNameEq = (a,b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
-			assemblies = mainAssembly.Concat (assemblies.Where (a => !fileNameEq (Path.GetFileName (a.ItemSpec), mainFileName))).ToList ();
 
 			using (var pkgmgr = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				pkgmgr.WriteLine ("package mono;");
@@ -105,7 +98,15 @@ namespace Xamarin.Android.Tasks
 				pkgmgr.WriteLine ("\tpublic static String[] Assemblies = new String[]{");
 
 				pkgmgr.WriteLine ("\t\t/* We need to ensure that \"{0}\" comes first in this list. */", mainFileName);
-				foreach (var assembly in assemblies) {
+				pkgmgr.WriteLine ("\t\t\"" + mainFileName + "\",");
+				foreach (var assembly in ResolvedUserAssemblies) {
+					if (string.Compare (Path.GetFileName (assembly.ItemSpec), mainFileName, StringComparison.OrdinalIgnoreCase) == 0)
+						continue;
+					pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly.ItemSpec) + "\",");
+				}
+				foreach (var assembly in MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies)) {
+					if (string.Compare (Path.GetFileName (assembly.ItemSpec), mainFileName, StringComparison.OrdinalIgnoreCase) == 0)
+						continue;
 					pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly.ItemSpec) + "\",");
 				}
 
