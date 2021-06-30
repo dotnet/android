@@ -42,7 +42,7 @@ variables:
   DotNet6Version: 6.0.100-preview.3.21202.5
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
-  VSEngWinVS2019: Xamarin-Android-Win2019
+  VSEngWinVS2019: android-win-2019
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
@@ -171,8 +171,6 @@ stages:
 
     - template: yaml-templates\clean.yaml
 
-    - template: yaml-templates\update-vs.yaml
-
     - script: |
         echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)
       displayName: set JI_JAVA_HOME
@@ -292,8 +290,6 @@ stages:
     - template: yaml-templates\kill-processes.yaml
 
     - template: yaml-templates\clean.yaml
-
-    - template: yaml-templates\update-vs.yaml
 
     - script: |
         echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)

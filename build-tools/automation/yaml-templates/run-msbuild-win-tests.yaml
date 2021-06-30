@@ -26,7 +26,6 @@ jobs:
 
     - template: setup-test-environment.yaml
       parameters:
-        updateVS: true
         jdkTestFolder: ${{ parameters.jdkTestFolder }}
 
     - task: DownloadPipelineArtifact@1
