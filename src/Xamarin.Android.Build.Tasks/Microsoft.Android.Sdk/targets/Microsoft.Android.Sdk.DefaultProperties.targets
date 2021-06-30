@@ -32,9 +32,11 @@
 
   <!--  User-facing configuration-specific defaults -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <AndroidEnableDebugger Condition=" '$(AndroidEnableDebugger)' == ''">true</AndroidEnableDebugger>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <AndroidEnableDebugger Condition=" '$(AndroidEnableDebugger)' == ''">false</AndroidEnableDebugger>
     <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
   </PropertyGroup>
