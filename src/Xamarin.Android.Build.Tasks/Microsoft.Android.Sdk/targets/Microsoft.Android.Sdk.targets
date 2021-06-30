@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <MicrosoftAndroidSdkTargetsImported>true</MicrosoftAndroidSdkTargetsImported>
-    <!-- Normalize casing -->
-    <TargetPlatformIdentifier>Android</TargetPlatformIdentifier>
     <_XamarinAndroidBuildTasksAssembly>..\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
     <UsingAndroidNETSdk>true</UsingAndroidNETSdk>
     <!-- Enable nuget package conflict resolution -->
