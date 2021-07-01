@@ -47,7 +47,9 @@ namespace Xamarin.Android.Tasks
 
 		public string LangVersion { get; set; }
 
-		public bool EnableInterfaceMembersPreview { get; set; }
+		public bool EnableBindingStaticAndDefaultInterfaceMethods { get; set; }
+		public bool EnableBindingNestedInterfaceTypes { get; set; }
+		public bool EnableBindingInterfaceConstants { get; set; }
 		public string Nullable { get; set; }
 
 		public ITaskItem[] TransformFiles { get; set; }
@@ -172,10 +174,14 @@ namespace Xamarin.Android.Tasks
 				if (SupportsCSharp8) {
 					var features = new List<string> ();
 
-					if (EnableInterfaceMembersPreview) {
+					if (EnableBindingInterfaceConstants)
 						features.Add ("interface-constants");
+
+					if (EnableBindingNestedInterfaceTypes)
+						features.Add ("nested-interface-types");
+
+					if (EnableBindingStaticAndDefaultInterfaceMethods)
 						features.Add ("default-interface-methods");
-					}
 
 					if (string.Equals (Nullable, "enable", StringComparison.OrdinalIgnoreCase))
 						features.Add ("nullable-reference-types");
