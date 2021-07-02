@@ -64,8 +64,11 @@ namespace xamarin::android::internal
 			true
 		>;
 
+		using load_assemblies_context_type = MonoAssemblyLoadContextGCHandle;
 		static constexpr pinvoke_library_map::size_type LIBRARY_MAP_INITIAL_BUCKET_COUNT = 1;
-#endif // def NET6
+#else // def NET6
+		using load_assemblies_context_type = MonoDomain*;
+#endif // ndef NET6
 
 #if defined (DEBUG) && !defined (WINDOWS)
 		struct RuntimeOptions {
@@ -107,6 +110,9 @@ namespace xamarin::android::internal
 		};
 
 	private:
+		static constexpr char MONO_ANDROID_ASSEMBLY_NAME[] = "Mono.Android";
+		static constexpr char JAVA_INTEROP_ASSEMBLY_NAME[] = "Java.Interop";
+
 		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50;
 		static constexpr bool is_running_on_desktop =
 #if ANDROID
@@ -222,7 +228,11 @@ namespace xamarin::android::internal
 		void disable_external_signal_handlers ();
 		void lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info);
 		void load_assembly (MonoDomain *domain, jstring_wrapper &assembly);
-		void load_assemblies (MonoDomain *domain, bool preload, jstring_array_wrapper &assemblies);
+#if defined (NET6)
+		void load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly);
+#endif // ndef NET6
+		void load_assemblies (load_assemblies_context_type ctx, bool preload, jstring_array_wrapper &assemblies);
+
 		void set_debug_options ();
 		void parse_gdb_options ();
 		void mono_runtime_init (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args);
@@ -302,6 +312,8 @@ namespace xamarin::android::internal
 		int                 current_context_id = -1;
 
 #if defined (NET6)
+		MonoAssemblyLoadContextGCHandle default_alc = nullptr;
+
 		static std::mutex             pinvoke_map_write_lock;
 		static pinvoke_api_map        xa_pinvoke_map;
 		static pinvoke_library_map    other_pinvoke_map;

@@ -39,6 +39,10 @@ constexpr int FALSE = 0;
 #include "basic-utilities.hh"
 #endif
 
+#if defined (NET6)
+#include <mono/metadata/mono-private-unstable.h>
+#endif // def NET6
+
 #include "java-interop-util.h"
 #include "logger.hh"
 
@@ -81,6 +85,9 @@ namespace xamarin::android
 		int              monodroid_getpagesize ();
 		void             monodroid_store_package_name (const char *name);
 		MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
+#if defined (NET6)
+		MonoAssembly    *monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const char *basename);
+#endif
 		MonoObject      *monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);
 		MonoClass       *monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type);
 		MonoDomain      *monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendly_name, int shadow_copy, const char *shadow_directories);
