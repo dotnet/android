@@ -6,6 +6,7 @@ using System.Text;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -45,7 +46,9 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (CheckPackageManagerAssemblyOrderChecks))]
 		public void CheckPackageManagerAssemblyOrder (string[] resolvedUserAssemblies, string[] resolvedAssemblies)
 		{
-			var path = Path.Combine (Root, "temp", TestName);
+			// avoid a PathTooLongException because using the TestName will include ALL the arguments.
+			var testHash = Files.HashString (string.Join ("", resolvedUserAssemblies) + string.Join ("", resolvedAssemblies));
+			var path = Path.Combine (Root, "temp", $"CheckPackageManagerAssemblyOrder{testHash}");
 			Directory.CreateDirectory (path);
 
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new [] {
