@@ -310,24 +310,5 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.True (klass.Methods.Single (m => m.Name == "hitCount").AccessFlags.HasFlag (MethodAccessFlags.Public));
 			Assert.True (klass.Methods.Single (m => m.Name == "setType").AccessFlags.HasFlag (MethodAccessFlags.Public));
 		}
-
-		[Test]
-		public void HidePublicInterfaceInInternalClass ()
-		{
-			var klass = LoadClassFile ("InternalClassWithNestedInterface.class");
-			var inner_interface = LoadClassFile ("InternalClassWithNestedInterface$NestedInterface.class");
-			var inner_inner_interface = LoadClassFile ("InternalClassWithNestedInterface$NestedInterface$DoubleNestedInterface.class");
-
-			KotlinFixups.Fixup (new [] { klass, inner_interface, inner_inner_interface });
-
-			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
-			Assert.True (output.Contains ("visibility=\"public\""));
-
-			var output2 = new XmlClassDeclarationBuilder (inner_interface).ToXElement ().ToString ();
-			Assert.True (output2.Contains ("visibility=\"private\""));
-
-			var output3 = new XmlClassDeclarationBuilder (inner_inner_interface).ToXElement ().ToString ();
-			Assert.True (output3.Contains ("visibility=\"private\""));
-		}
 	}
 }

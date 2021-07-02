@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tools.Bytecode
 					var class_metadata = (metadata as KotlinClass);
 
 					if (class_metadata != null) {
-						FixupClassVisibility (c, class_metadata, classes);
+						FixupClassVisibility (c, class_metadata);
 
 						if (!c.AccessFlags.IsPubliclyVisible ())
 							continue;
@@ -62,7 +62,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			}
 		}
 
-		static void FixupClassVisibility (ClassFile klass, KotlinClass metadata, IList<ClassFile> classes)
+		static void FixupClassVisibility (ClassFile klass, KotlinClass metadata)
 		{
 			// Hide class if it isn't Public/Protected
 			if (klass.AccessFlags.IsPubliclyVisible () && !metadata.Visibility.IsPubliclyVisible ()) {
@@ -83,30 +83,12 @@ namespace Xamarin.Android.Tools.Bytecode
 				Log.Debug ($"Kotlin: Hiding internal class {klass.ThisClass.Name.Value}");
 				klass.AccessFlags = SetVisibility (klass.AccessFlags, ClassAccessFlags.Private);
 
-				foreach (var ic in klass.InnerClasses)
-					HideInternalInnerClass (ic, classes);
+				foreach (var ic in klass.InnerClasses) {
+					Log.Debug ($"Kotlin: Hiding nested internal type {ic.InnerClass.Name.Value}");
+					ic.InnerClassAccessFlags = SetVisibility (ic.InnerClassAccessFlags, ClassAccessFlags.Private);
+				}
 
 				return;
-			}
-		}
-
-		static void HideInternalInnerClass (InnerClassInfo klass, IList<ClassFile> classes)
-		{
-			var existing = klass.InnerClassAccessFlags;
-
-			klass.InnerClassAccessFlags = SetVisibility (existing, ClassAccessFlags.Private);
-			Log.Debug ($"Kotlin: Hiding nested internal type {klass.InnerClass.Name.Value}");
-
-			// Setting the inner class access flags above doesn't technically do anything, because we output
-			// from the inner class's ClassFile, so we need to find that and set it there.
-			var kf = classes.FirstOrDefault (c => c.ThisClass.Name.Value == klass.InnerClass.Name.Value);
-
-			if (kf != null) {
-				kf.AccessFlags = SetVisibility (kf.AccessFlags, ClassAccessFlags.Private);
-				kf.InnerClass.InnerClassAccessFlags = SetVisibility (kf.InnerClass.InnerClassAccessFlags, ClassAccessFlags.Private);
-
-				foreach (var inner_class in kf.InnerClasses.Where (c => c.OuterClass.Name.Value == kf.ThisClass.Name.Value))
-					HideInternalInnerClass (inner_class, classes);
 			}
 		}
 
