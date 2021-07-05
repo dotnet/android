@@ -1116,7 +1116,7 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	 * use GC API to allocate memory and thus can't be called from within the GC callback as it causes a deadlock
 	 * (the routine allocating the memory waits for the GC round to complete first)
 	 */
-	MonoClass *jnienv = utils.monodroid_get_class_from_name (domain, "Mono.Android", "Android.Runtime", "JNIEnv");;
+	MonoClass *jnienv = utils.monodroid_get_class_from_name (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);;
 	node->domain = domain;
 	node->bridge_processing_field = mono_class_get_field_from_name (jnienv, const_cast<char*> ("BridgeProcessing"));
 	node->jnienv_vtable = mono_class_vtable (domain, jnienv);
@@ -1125,6 +1125,7 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	domains_list = node;
 }
 
+#if !defined (NET6) && !defined (ANDROID)
 void
 OSBridge::remove_monodroid_domain (MonoDomain *domain)
 {
@@ -1164,3 +1165,4 @@ OSBridge::on_destroy_contexts ()
 	if (!domains_list)
 		osBridge.clear_mono_java_gc_bridge_info ();
 }
+#endif // ndef NET6 && ndef ANDROID

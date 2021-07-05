@@ -87,11 +87,14 @@ namespace xamarin::android
 		MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
 #if defined (NET6)
 		MonoAssembly    *monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const char *basename);
-#endif
+#else // def NET6
 		MonoObject      *monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);
+#endif // ndef NET6
 		MonoClass       *monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type);
+#if !defined (NET6)
 		MonoDomain      *monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendly_name, int shadow_copy, const char *shadow_directories);
 		MonoClass       *monodroid_get_class_from_image (MonoDomain *domain, MonoImage* image, const char *_namespace, const char *type);
+#endif
 		int              send_uninterrupted (int fd, void *buf, size_t len);
 		ssize_t          recv_uninterrupted (int fd, void *buf, size_t len);
 		jclass           get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref = false);
@@ -103,7 +106,9 @@ namespace xamarin::android
 
 	private:
 		//char *monodroid_strdup_printf (const char *format, va_list vargs);
+#if !defined (NET6)
 		void  monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc);
+#endif // ndef NET6
 
 		template<typename IdxType>
 		void package_hash_to_hex (IdxType idx);

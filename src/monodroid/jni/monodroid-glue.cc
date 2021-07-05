@@ -958,10 +958,10 @@ MonodroidRuntime::LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int ve
 	return 1;
 }
 
-inline void
-MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
+force_inline void
+MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
 {
-	info->klass             = utils.monodroid_get_class_from_image (domain, image, type->_namespace, type->_typename);
+	info->klass             = klass;
 	info->handle            = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle"));
 	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
 	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
@@ -974,12 +974,38 @@ MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, cons
 				info->handle_type,
 				info->refs_added,
 				info->weak_handle);
-		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+		abort ();
 	}
 }
 
+#if defined (NET6)
+force_inline void
+MonodroidRuntime::lookup_bridge_info (MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
+{
+	lookup_bridge_info (
+		mono_class_from_name (image, type->_namespace, type->_typename),
+		type,
+		info
+	);
+}
+#else // def NET6
+force_inline void
+MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
+{
+	lookup_bridge_info (
+		utils.monodroid_get_class_from_image (domain, image, type->_namespace, type->_typename),
+		type,
+		info
+	);
+}
+#endif // ndef NET6
+
 void
-MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader)
+MonodroidRuntime::init_android_runtime (
+#if !defined (NET6)
+	MonoDomain *domain,
+#endif // ndef NET6
+	JNIEnv *env, jclass runtimeClass, jobject loader)
 {
 	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
@@ -1008,20 +1034,32 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 
 	MonoAssembly *assm;
 #if defined (NET6)
-	assm = utils.monodroid_load_assembly (default_alc, MONO_ANDROID_ASSEMBLY_NAME);
+	assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 #else // def NET6
-	assm = utils.monodroid_load_assembly (domain, MONO_ANDROID_ASSEMBLY_NAME);
+	assm = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 #endif // ndef NET6
 	MonoImage *image = mono_assembly_get_image (assm);
 
 	uint32_t i = 0;
 
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES; ++i) {
-		lookup_bridge_info (domain, image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
+		lookup_bridge_info (
+#if !defined (NET6)
+			domain,
+#endif // ndef NET6
+			image,
+			&osBridge.get_java_gc_bridge_type (i),
+			&osBridge.get_java_gc_bridge_info (i)
+		);
 	}
 
 	// TODO: try looking up the method by its token
-	MonoClass *runtime = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "JNIEnv");
+	MonoClass *runtime;
+#if defined (NET6)
+	runtime = mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+#else
+	runtime = utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+#endif
 	MonoMethod *method = mono_class_get_method_from_name (runtime, "Initialize", 1);
 
 	if (method == nullptr) {
@@ -1031,14 +1069,21 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 
 	MonoAssembly *ji_assm;
 #if defined (NET6)
-	ji_assm = utils.monodroid_load_assembly (default_alc, JAVA_INTEROP_ASSEMBLY_NAME);
+	ji_assm = utils.monodroid_load_assembly (default_alc, SharedConstants::JAVA_INTEROP_ASSEMBLY_NAME);
 #else // def NET6
-	ji_assm = utils.monodroid_load_assembly (domain, JAVA_INTEROP_ASSEMBLY_NAME);
+	ji_assm = utils.monodroid_load_assembly (domain, SharedConstants::JAVA_INTEROP_ASSEMBLY_NAME);
 #endif // ndef NET6
 
 	MonoImage       *ji_image   = mono_assembly_get_image  (ji_assm);
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES + OSBridge::NUM_JI_GC_BRIDGE_TYPES; ++i) {
-		lookup_bridge_info (domain, ji_image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
+		lookup_bridge_info (
+#if !defined (NET6)
+			domain,
+#endif // ndef NET6
+			ji_image,
+			&osBridge.get_java_gc_bridge_type (i),
+			&osBridge.get_java_gc_bridge_info (i)
+		);
 	}
 
 	/* If running on desktop, we may be swapping in a new Mono.Android image when calling this
@@ -1076,7 +1121,11 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	void *args [] = {
 		&init,
 	};
+#if defined (NET6)
+	mono_runtime_invoke (method, nullptr, args, nullptr);
+#else // def NET6
 	utils.monodroid_runtime_invoke (domain, method, nullptr, args, nullptr);
+#endif // ndef NET6
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		partial_time.mark_end ();
@@ -1084,25 +1133,37 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	}
 }
 
+#if defined (NET6)
+MonoClass*
+MonodroidRuntime::get_android_runtime_class ()
+{
+	MonoAssembly *assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+	MonoImage *image   = mono_assembly_get_image (assm);
+	return mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+}
+#else // def NET6
 MonoClass*
 MonodroidRuntime::get_android_runtime_class (MonoDomain *domain)
 {
-	MonoAssembly *assm;
-#if defined (NET6)
-	assm = utils.monodroid_load_assembly (default_alc, MONO_ANDROID_ASSEMBLY_NAME);
-#else // def NET6
-	assm = utils.monodroid_load_assembly (domain, MONO_ANDROID_ASSEMBLY_NAME);
-#endif // ndef NET6
+	MonoAssembly *assm = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 	MonoImage *image   = mono_assembly_get_image (assm);
-	MonoClass *runtime = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "JNIEnv");
-
-	return runtime;
+	return utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
 }
+#endif // ndef NET6
 
 inline void
-MonodroidRuntime::propagate_uncaught_exception (MonoDomain *domain, JNIEnv *env, jobject javaThread, jthrowable javaException)
+MonodroidRuntime::propagate_uncaught_exception (
+#if !defined (NET6)
+	MonoDomain *domain,
+#endif // ndef NET6
+	JNIEnv *env, jobject javaThread, jthrowable javaException)
 {
-	MonoClass *runtime = get_android_runtime_class (domain);
+	MonoClass *runtime;
+#if defined (NET6)
+	runtime = get_android_runtime_class ();
+#else
+	runtime = get_android_runtime_class (domain);
+#endif
 	MonoMethod *method = mono_class_get_method_from_name (runtime, "PropagateUncaughtException", 3);
 
 	void* args[] = {
@@ -1110,7 +1171,11 @@ MonodroidRuntime::propagate_uncaught_exception (MonoDomain *domain, JNIEnv *env,
 		&javaThread,
 		&javaException,
 	};
+#if defined (NET6)
+	mono_runtime_invoke (method, nullptr, args, nullptr);
+#else // def NET6
 	utils.monodroid_runtime_invoke (domain, method, nullptr, args, nullptr);
+#endif // ndef NET6
 }
 
 #if DEBUG
@@ -1750,12 +1815,12 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	bool preload = (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
 
 #if defined (NET6)
-		load_assemblies (default_alc, preload, assemblies);
+	load_assemblies (default_alc, preload, assemblies);
+	init_android_runtime (env, runtimeClass, loader);
 #else // def NET6
-		load_assemblies (domain, preload, assemblies);
-#endif // ndef NET6
+	load_assemblies (domain, preload, assemblies);
 	init_android_runtime (domain, env, runtimeClass, loader);
-
+#endif // ndef NET6
 	osBridge.add_monodroid_domain (domain);
 
 	return domain;
@@ -2246,17 +2311,22 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		&methods_len,
 	};
 
+	MonoMethod *register_jni_natives = registerType;
+#if !defined (NET6)
 	MonoDomain *domain = mono_domain_get ();
 	mono_jit_thread_attach (domain);
 	// Refresh current domain as it might have been modified by the above call
 	domain = mono_domain_get ();
 
-	MonoMethod *register_jni_natives = registerType;
 	if constexpr (is_running_on_desktop) {
-		MonoClass *runtime = utils.monodroid_get_class_from_name (domain, MONO_ANDROID_ASSEMBLY_NAME, "Android.Runtime", "JNIEnv");
+		MonoClass *runtime = utils.monodroid_get_class_from_name (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
 		register_jni_natives = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
 	}
+
 	utils.monodroid_runtime_invoke (domain, register_jni_natives, nullptr, args, nullptr);
+#else // ndef NET6
+	mono_runtime_invoke (register_jni_natives, nullptr, args, nullptr);
+#endif // def NET6
 
 	env->ReleaseStringChars (methods, methods_ptr);
 	env->ReleaseStringChars (managedType, managedType_ptr);
@@ -2318,6 +2388,10 @@ get_jnienv (void)
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[maybe_unused]] jclass klass, jobject javaThread, jthrowable javaException)
 {
+#if defined (NET6)
+	monodroidRuntime.propagate_uncaught_exception (env, javaThread, javaException);
+#else // def NET6
 	MonoDomain *domain = mono_domain_get ();
 	monodroidRuntime.propagate_uncaught_exception (domain, env, javaThread, javaException);
+#endif // ndef NET6
 }
