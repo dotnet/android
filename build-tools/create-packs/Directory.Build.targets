@@ -94,7 +94,8 @@
 
     <!-- dotnet workload install android-aot -->
     <PropertyGroup>
-      <_NuGetConfig>$(AndroidToolchainCacheDirectory)\NuGet.config</_NuGetConfig>
+      <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
+      <_NuGetConfig>$(_TempDirectory)\NuGet.config</_NuGetConfig>
       <_NuGetContent>
 <![CDATA[
 <?xml version="1.0" encoding="utf-8"?>
@@ -110,10 +111,10 @@
     </PropertyGroup>
     <WriteLinesToFile File="$(_NuGetConfig)" Lines="$(_NuGetContent)" Overwrite="true" />
     <Exec
-        WorkingDirectory="$(AndroidToolchainCacheDirectory)"
-        Command="&quot;$(DotNetPreviewTool)&quot; workload install android-aot --skip-manifest-update --verbosity diag"
+        WorkingDirectory="$(_TempDirectory)"
+        Command="&quot;$(DotNetPreviewTool)&quot; workload install android-aot --skip-manifest-update --verbosity diag --temp-dir &quot;$(_TempDirectory)&quot;"
     />
-    <Delete Files="$(_NuGetConfig)" />
+    <RemoveDir Directories="$(_TempDirectory)" />
   </Target>
 
   <Target Name="DeleteExtractedWorkloadPacks" >
