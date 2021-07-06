@@ -28,9 +28,9 @@
     <AndroidClassParser>class-parse</AndroidClassParser>
     <!-- Anything other than XAJavaInterop1 is not supported -->
     <AndroidCodegenTarget>XAJavaInterop1</AndroidCodegenTarget>
-    <EnableBindingStaticAndDefaultInterfaceMethods Condition=" '$(EnableBindingStaticAndDefaultInterfaceMethods)' == '' ">true</EnableBindingStaticAndDefaultInterfaceMethods>
-    <EnableBindingNestedInterfaceTypes Condition=" '$(EnableBindingNestedInterfaceTypes)' == '' ">true</EnableBindingNestedInterfaceTypes>
-    <EnableBindingInterfaceConstants Condition=" '$(EnableBindingInterfaceConstants)' == '' ">true</EnableBindingInterfaceConstants>
+    <AndroidEnableBindingStaticAndDefaultInterfaceMethods Condition=" '$(AndroidEnableBindingStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidEnableBindingStaticAndDefaultInterfaceMethods>
+    <AndroidEnableBindingNestedInterfaceTypes Condition=" '$(AndroidEnableBindingNestedInterfaceTypes)' == '' ">true</AndroidEnableBindingNestedInterfaceTypes>
+    <AndroidEnableBindingInterfaceConstants Condition=" '$(AndroidEnableBindingInterfaceConstants)' == '' ">true</AndroidEnableBindingInterfaceConstants>
 
     <!-- Mono components -->
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">false</AndroidEnableProfiler>

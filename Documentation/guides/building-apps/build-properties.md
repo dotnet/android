@@ -263,6 +263,9 @@ The benefits of `XAJavaInterop1` include:
 
 The default value is `XAJavaInterop1`.
 
+Support for `XamarinAndroid` is obsolete, and support for `XamarinAndroid` will be removed
+as part of .NET 6.
+
 ## AndroidCreatePackagePerAbi
 
 A boolean property that determines if a *set* of files -- on per ABI
@@ -326,6 +329,32 @@ documentation on [D8 and R8][d8-r8].
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
 [d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
+
+## AndroidEnableBindingInterfaceConstants
+
+A boolean property that
+determines whether binding constants on interfaces will be supported, 
+or the workaround of creating an `IMyInterfaceConsts` class 
+will be used.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
+## AndroidEnableBindingNestedInterfaceTypes
+
+A boolean property that
+whether types nested in interfaces will be supported, or the workaround 
+of creating a non-nested type like `IMyInterfaceMyNestedClass`.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
+## AndroidEnableBindingStaticAndDefaultInterfaceMethods
+
+A boolean property that
+whether default and static members on interfaces will be supported, 
+or  old workaround of creating a sibling class containing static 
+members like `abstract class MyInterface`.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
 
 ## AndroidEnableDesugar
 

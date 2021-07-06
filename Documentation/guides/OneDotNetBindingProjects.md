@@ -107,7 +107,7 @@ public interface IFoo {
 
 However this means we no longer generate the alternative class that existing code may depend on.
 
-Setting `<EnableBindingInterfaceConstants>false</EnableBindingInterfaceConstants>` will revert to the legacy behavior.
+Setting `<AndroidEnableBindingInterfaceConstants>false</AndroidEnableBindingInterfaceConstants>` will revert to the legacy behavior.
 
 ### Nested Interface Types
 
@@ -139,7 +139,7 @@ public interface IFoo {
 
 However this means we no longer generate the top-level class that existing code may depend on.
 
-Setting `<EnableBindingNestedInterfaceTypes>false</EnableBindingNestedInterfaceTypes>` will globally 
+Setting `<AndroidEnableBindingNestedInterfaceTypes>false</AndroidEnableBindingNestedInterfaceTypes>` will globally 
 revert to the old behavior.
 
 If you wish to use a hybrid approach, for example, to keep existing nested types moved to a top-level
@@ -197,7 +197,7 @@ public interface IFoo {
 
 However this means the alternative sibling `class` containing `static` members will no longer be generated.
 
-Setting `<EnableBindingStaticAndDefaultInterfaceMethods>false</EnableBindingStaticAndDefaultInterfaceMethods>` will globally 
+Setting `<AndroidEnableBindingStaticAndDefaultInterfaceMethods>false</AndroidEnableBindingStaticAndDefaultInterfaceMethods>` will globally 
 revert to the old behavior.
 
 
