@@ -218,6 +218,7 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 	return assm;
 }
 
+#if !defined (NET6)
 MonoObject *
 Util::monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc)
 {
@@ -271,14 +272,17 @@ Util::monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendl
 
 	return mono_domain_from_appdomain (appdomain);
 }
+#endif // ndef NET6
 
 MonoClass*
-Util::monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type)
+Util::monodroid_get_class_from_name ([[maybe_unused]] MonoDomain *domain, const char* assembly, const char *_namespace, const char *type)
 {
+#if !defined (NET6)
 	MonoDomain *current = mono_domain_get ();
 
 	if (domain != current)
 		mono_domain_set (domain, FALSE);
+#endif // ndef NET6
 
 	MonoClass *result;
 	MonoAssemblyName *aname = mono_assembly_name_new (assembly);
@@ -289,14 +293,17 @@ Util::monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, c
 	} else
 		result = nullptr;
 
+#if !defined (NET6)
 	if (domain != current)
 		mono_domain_set (current, FALSE);
+#endif // ndef NET6
 
 	mono_assembly_name_free (aname);
 
 	return result;
 }
 
+#if !defined (NET6)
 MonoClass*
 Util::monodroid_get_class_from_image (MonoDomain *domain, MonoImage *image, const char *_namespace, const char *type)
 {
@@ -312,6 +319,7 @@ Util::monodroid_get_class_from_image (MonoDomain *domain, MonoImage *image, cons
 
 	return result;
 }
+#endif // ndef NET6
 
 jclass
 Util::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref)

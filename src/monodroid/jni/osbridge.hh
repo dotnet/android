@@ -117,7 +117,9 @@ namespace xamarin::android::internal
 		void initialize_on_onload (JavaVM *vm, JNIEnv *env);
 		void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass);
 		void add_monodroid_domain (MonoDomain *domain);
+#if !defined (NET6)
 		void remove_monodroid_domain (MonoDomain *domain);
+#endif // ndef NET6
 		void on_destroy_contexts ();
 
 	private:
