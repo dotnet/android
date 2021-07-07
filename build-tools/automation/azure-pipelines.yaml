@@ -1288,6 +1288,7 @@ stages:
       name: $(VSEngMacBuildPool)
       demands:
       - agent.osversionfamily -equals 10.15
+    timeoutInMinutes: 120
     workspace:
       clean: all
     steps:
@@ -1384,6 +1385,7 @@ stages:
     displayName: Create .msi and Upload
     dependsOn: dotnet_create_pkg
     pool: VSEngSS-MicroBuild2019
+    timeoutInMinutes: 120
     workspace:
       clean: all
     variables:
