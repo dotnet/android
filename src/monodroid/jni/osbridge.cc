@@ -1010,33 +1010,7 @@ OSBridge::platform_supports_weak_refs (void)
 			return use_weak_refs;
 	}
 
-	if (androidSystem.monodroid_get_system_property ("persist.sys.dalvik.vm.lib", &value) > 0) {
-		int art = 0;
-		if (!strcmp ("libart.so", value))
-			art = 1;
-		free (value);
-		if (art) {
-			int use_java = 0;
-			if (androidSystem.monodroid_get_system_property ("ro.build.version.release", &value) > 0) {
-				// Android 4.x ART is busted; see https://code.google.com/p/android/issues/detail?id=63929
-				if (value [0] != 0 && value [0] == '4' && value [1] != 0 && value [1] == '.') {
-					use_java = 1;
-				}
-				free (value);
-			}
-			if (use_java) {
-				log_warn (LOG_GC, "JNI weak global refs are broken on Android with the ART runtime.");
-				log_warn (LOG_GC, "Trying to use java.lang.WeakReference instead, but this may fail as well.");
-				log_warn (LOG_GC, "App stability may be compromised.");
-				log_warn (LOG_GC, "See: https://code.google.com/p/android/issues/detail?id=63929");
-				return 0;
-			}
-		}
-	}
-
-	if (api_level > 7)
-		return 1;
-	return 0;
+	return 1;
 }
 
 void
