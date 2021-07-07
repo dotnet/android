@@ -16,16 +16,23 @@ using Mono.Cecil;
 namespace Mono.Linker.Steps {
 	public class GenerateProguardConfiguration : BaseStep
 	{
+
+#if !NET5_LINKER
 		public GenerateProguardConfiguration (string outputFileName)
 		{
 			this.filename = outputFileName;
 		}
+#endif  // !NET5_LINKER
 
 		string filename;
 		TextWriter writer;
 
 		protected override void Process ()
 		{
+#if NET5_LINKER
+			if (Context.TryGetCustomData ("ProguardConfiguration", out string proguardPath))
+				filename = proguardPath;
+#endif  // NET5_LINKER
 			var dir = Path.GetDirectoryName (filename);
 			if (!Directory.Exists (dir))
 				Directory.CreateDirectory (dir);
@@ -88,4 +95,3 @@ namespace Mono.Linker.Steps {
 		}
 	}
 }
-

@@ -33,9 +33,9 @@ init ()
 	if (AndroidEnvironment_NotifyTimeZoneChanged)
 		return;
 
-	Mono_Android_dll                          = utils.monodroid_load_assembly (mono_domain_get (), "Mono.Android");
+	Mono_Android_dll                          = utils.monodroid_load_assembly (mono_domain_get (), SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 	Mono_Android_image                        = mono_assembly_get_image (Mono_Android_dll);
-	AndroidEnvironment                        = mono_class_from_name (Mono_Android_image,  "Android.Runtime",  "AndroidEnvironment");
+	AndroidEnvironment                        = mono_class_from_name (Mono_Android_image,  SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::ANDROID_ENVIRONMENT_CLASS_NAME);
 	AndroidEnvironment_NotifyTimeZoneChanged  = mono_class_get_method_from_name (AndroidEnvironment, "NotifyTimeZoneChanged", 0);
 
 	if (AndroidEnvironment_NotifyTimeZoneChanged == nullptr) {

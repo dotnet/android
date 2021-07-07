@@ -2,7 +2,6 @@
 <linker>
 	<assembly fullname="Mono.Android">
 		<type fullname="Android.Runtime.AnnotationAttribute" />
-		<type fullname="Android.Runtime.GeneratedDummyHost" />
 		<type fullname="Android.Runtime.IJavaObject" />
 		<type fullname="Android.Runtime.JNIEnv">
 			<method name="Exit" />
@@ -10,13 +9,9 @@
 			<method name="PropagateUncaughtException" />
 			<method name="RegisterJniNatives" />
 		</type>
-		<type fullname="Android.Runtime.JniNativeInterfaceStruct" />
-		<type fullname="Android.Runtime.JniNativeInterfaceInvoker" />
 		<type fullname="Android.Runtime.JNINativeWrapper" />
 		<type fullname="Android.Runtime.JObjectRefType" />
 		<type fullname="Android.Runtime.JValue" />
-		<!-- it seems that generics identifier `n is not taken into consideration though ... -->
-		<type fullname="Android.Runtime.JavaTypeConverter`1" />
 		<type fullname="Android.Runtime.JniHandleOwnership" />
 		<type fullname="Android.Runtime.Logger" />
 		<type fullname="Android.Runtime.LogLevel" />

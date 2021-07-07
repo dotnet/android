@@ -56,15 +56,18 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
 				}
 
-				//A list of properties we check exist in binding projects
-				var properties = new [] {
-					"AndroidSdkBuildToolsVersion",
-					"AndroidSdkPlatformToolsVersion",
-					"AndroidSdkToolsVersion",
-					"AndroidNdkVersion",
-				};
-				foreach (var property in properties) {
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, property + " = "), $"$({property}) should be set!");
+				//TODO: see https://github.com/dotnet/msbuild/issues/6609
+				if (!Builder.UseDotNet) {
+					//A list of properties we check exist in binding projects
+					var properties = new [] {
+						"AndroidSdkBuildToolsVersion",
+						"AndroidSdkPlatformToolsVersion",
+						"AndroidSdkToolsVersion",
+						"AndroidNdkVersion",
+					};
+					foreach (var property in properties) {
+						Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, property + " = "), $"$({property}) should be set!");
+					}
 				}
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");

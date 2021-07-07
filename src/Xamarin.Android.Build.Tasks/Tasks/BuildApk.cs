@@ -89,6 +89,8 @@ namespace Xamarin.Android.Tasks
 
 		public string CheckedBuild { get; set; }
 
+		public string RuntimeConfigBinFilePath { get; set; }
+
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -170,10 +172,11 @@ namespace Xamarin.Android.Tasks
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 
 				// Add classes.dx
+				CompressionMethod dexCompressionMethod = GetCompressionMethod (".dex");
 				foreach (var dex in DalvikClasses) {
 					string apkName = dex.GetMetadata ("ApkName");
 					string dexPath = string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName;
-					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath);
+					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath, compressionMethod: dexCompressionMethod);
 				}
 
 				if (EmbedAssemblies && !BundleAssemblies)
@@ -188,6 +191,10 @@ namespace Xamarin.Android.Tasks
 					foreach (ITaskItem typemap in TypeMappings) {
 						AddFileToArchiveIfNewer (apk, typemap.ItemSpec, RootPath + Path.GetFileName(typemap.ItemSpec), compressionMethod: UncompressedMethod);
 					}
+				}
+
+				if (!String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath)) {
+					AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, $"{AssembliesPath}rc.bin", compressionMethod: UncompressedMethod);
 				}
 
 				int count = 0;

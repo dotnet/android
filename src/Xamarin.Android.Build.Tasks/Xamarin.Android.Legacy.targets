@@ -227,15 +227,6 @@ projects. .NET 5 projects will not import this file.
     <Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/>
   </Target>
 
-  <Target Name="_CheckForObsoleteFrameworkAssemblies">
-    <AndroidWarning
-        Condition=" '%(Reference.Identity)' == 'OpenTK-1.0' "
-        Code="XA4313"
-        ResourceName="XA4313"
-        FormatArguments="OpenTK-1.0;Xamarin.Legacy.OpenTK"
-    />
-  </Target>
-
   <Target Name="_GetReferenceAssemblyPaths">
     <GetReferenceAssemblyPaths
         TargetFrameworkMoniker="$(TargetFrameworkIdentifier),Version=v1.0"

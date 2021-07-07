@@ -3922,9 +3922,6 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, Path.Combine ("armeabi", "libe_sqlite3.so")), "Build should not use `armeabi`.");
-				if (Builder.UseDotNet) {
-					StringAssertEx.Contains ("warning XA4301", b.LastBuildOutput, "Should get a XA4301 warning");
-				}
 			}
 		}
 
@@ -3932,17 +3929,21 @@ namespace UnnamedProject
 		public void PackageNamingPolicy ([Values ("LowercaseMD5", "LowercaseCrc64")] string packageNamingPolicy)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("UseInterpreter", "true");
 			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
+				var values = new List<string> {
+					$"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}"
+				};
 				if (Builder.UseDotNet) {
-					Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}{Environment.NewLine}mono.enable_assembly_preload=0", File.ReadAllText (environment).Trim ());
-				} else {
-					Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}", File.ReadAllText (environment).Trim ());
+					values.Add ("mono.enable_assembly_preload=0");
+					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				}
+				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
 			}
 		}
 
@@ -3997,21 +3998,23 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // OpenTK not even shipped for .net 6.
-		public void XA4313 ()
+		public void XA4313 ([Values ("OpenTK-1.0", "Xamarin.Android.NUnitLite")] string reference)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				References = {
-					new BuildItem.Reference ("OpenTK-1.0")
+					new BuildItem.Reference (reference)
 				},
 			};
+			bool shouldSucceed = !Builder.UseDotNet;
+			string expectedText = shouldSucceed ? "succeeded" : "FAILED";
+			string warnOrError = shouldSucceed ? "warning" : "error";
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				Assert.AreEqual (shouldSucceed, builder.Build (proj), $"Build should have {expectedText}.");
 				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build succeeded."))
-						.FirstOrDefault (x => x.Contains ("warning XA4313"));
-				Assert.IsNotNull (error, "Build should have failed with XA4313.");
+						.SkipWhile (x => !x.StartsWith ($"Build {expectedText}."))
+						.FirstOrDefault (x => x.Contains ($"{warnOrError} XA4313"));
+				Assert.IsNotNull (error, $"Build should have {expectedText} with XA4313 {warnOrError}.");
 			}
 		}
 
@@ -4020,6 +4023,17 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_OpenTK);
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void NUnitLiteNugetWorks ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_NUnitLite);
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");

@@ -86,6 +86,7 @@ namespace Xamarin.Android.Build.Tests
 				new [] {
 					"Java.Interop.dll",
 					"Mono.Android.dll",
+					"rc.bin",
 					"System.Private.CoreLib.dll",
 					"System.Runtime.dll",
 					"System.Linq.dll",
@@ -451,7 +452,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			//https://github.com/xamarin/xamarin-android/issues/3083
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				TargetFrameworkVersion = Versions.Oreo_27,
+				TargetFrameworkVersion = Xamarin.ProjectTools.Versions.Oreo_27,
 				UseLatestPlatformSdk = false,
 			};
 			proj.PackageReferences.Add (KnownPackages.XamarinForms_2_3_4_231);

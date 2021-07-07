@@ -367,7 +367,11 @@ namespace Xamarin.Android.Build.Tests
 					"https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json"
 				},
 				PackageReferences = {
-					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.2.0.7-net6preview01" }
+					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.2.0.7-net6preview01" },
+					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "6.0.0-preview.5.21301.17" },
+					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "6.0.0-preview.6.21306.3" },
+					new Package { Id = "Microsoft.JSInterop", Version = "6.0.0-preview.6.21306.3" },
+					new Package { Id = "System.Text.Json", Version = "6.0.0-preview.7.21323.3" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -375,6 +379,15 @@ namespace Xamarin.Android.Build.Tests
 					},
 					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+					},
+					new AndroidItem.TransformFile ("Transforms.xml") {
+						// Remove two methods that introduced warnings:
+						// Com.Balysv.Material.Drawable.Menu.MaterialMenuView.cs(214,30): warning CS0114: 'MaterialMenuView.OnRestoreInstanceState(IParcelable)' hides inherited member 'View.OnRestoreInstanceState(IParcelable?)'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword.
+						// Com.Balysv.Material.Drawable.Menu.MaterialMenuView.cs(244,56): warning CS0114: 'MaterialMenuView.OnSaveInstanceState()' hides inherited member 'View.OnSaveInstanceState()'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword.
+						TextContent = () => "<metadata><remove-node path=\"/api/package[@name='com.balysv.material.drawable.menu']/class[@name='MaterialMenuView']/method[@name='onRestoreInstanceState']\" /><remove-node path=\"/api/package[@name='com.balysv.material.drawable.menu']/class[@name='MaterialMenuView']/method[@name='onSaveInstanceState']\" /></metadata>",
+					},
+					new AndroidItem.AndroidLibrary ("material-menu-1.1.0.aar") {
+						WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 					},
 				}
 			};
@@ -412,6 +425,7 @@ namespace Xamarin.Android.Build.Tests
 				"es",
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
+				$"{proj.ProjectName}.runtimeconfig.json",
 				$"{proj.ProjectName}.xml",
 			};
 			CollectionAssert.AreEqual (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
@@ -420,8 +434,9 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (assemblyPath);
 			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 				var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
-				var type = assembly.MainModule.GetType (typeName);
-				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
+				Assert.IsNotNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should contain {typeName}");
+				typeName = "Com.Balysv.Material.Drawable.Menu.MaterialMenuView";
+				Assert.IsNotNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should contain {typeName}");
 			}
 
 			var rids = runtimeIdentifiers.Split (';');
@@ -455,9 +470,10 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void DotNetBuildXamarinForms ()
+		public void DotNetBuildXamarinForms ([Values (true, false)] bool useInterpreter)
 		{
 			var proj = new XamarinFormsXASdkProject ();
+			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
@@ -573,7 +589,7 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 	where TNativeView : Android.Views.View
 #else
 	where TNativeView : class
-#endif  
+#endif
 {
 		protected Foo (PropertyMapper mapper) : base(mapper)
 		{
@@ -626,6 +642,15 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 			appBuilder.AssertTargetIsSkipped ("CoreCompile");
 		}
 
+		[Test]
+		public void SignAndroidPackage ()
+		{
+			var proj = new XASdkProject ();
+			var builder = CreateDotNetBuilder (proj);
+			var parameters = new [] { "BuildingInsideVisualStudio=true" };
+			Assert.IsTrue (builder.Build ("SignAndroidPackage", parameters), $"{proj.ProjectName} should succeed");
+		}
+
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
 		{
 			if (string.IsNullOrEmpty (relativeProjectDir)) {
@@ -633,6 +658,7 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 			}
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] =
 				FullProjectDirectory = Path.Combine (Root, relativeProjectDir);
+			new XASdkProject ().CopyNuGetConfig (relativeProjectDir);
 			return new DotNetCLI (Path.Combine (FullProjectDirectory, $"{TestName}.csproj"));
 		}
 

@@ -11,7 +11,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Category ("Node-2")]
-	public class BundleToolTests : BaseTest
+	public class BundleToolTests : DeviceTest
 	{
 		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86" };
 		XamarinAndroidLibraryProject lib;

@@ -11,7 +11,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[NonParallelizable]
+	[TestFixture]
 	[Category ("UsesDevice")]
 	public class MonoAndroidExportTest : DeviceTest {
 #pragma warning disable 414

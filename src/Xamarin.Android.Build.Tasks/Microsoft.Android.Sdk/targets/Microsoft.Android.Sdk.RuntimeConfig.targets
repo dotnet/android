@@ -1,0 +1,46 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.RuntimeConfig.targets
+
+MSBuild logic related to *.runtimeconfig.json files.
+
+See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f8805/src/mono/nuget/Microsoft.NET.Runtime.RuntimeConfigParser.Task/README.md
+
+***********************************************************************************************
+-->
+<Project>
+
+  <PropertyGroup>
+    <_BinaryRuntimeConfigPath>$(IntermediateOutputPath)$(ProjectRuntimeConfigFileName).bin</_BinaryRuntimeConfigPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      See: https://docs.microsoft.com/en-us/dotnet/core/tutorials/netcore-hosting#step-3-%2D-prepare-runtime-properties
+      These properties shouldn't be used in Xamarin.Android apps as there are no directories the runtime can search,
+      everything related to assemblies or shared libraries must go through the Xamarin.Android native runtime.
+    -->
+    <_RuntimeConfigReservedProperties Include="TRUSTED_PLATFORM_ASSEMBLIES"/>
+    <_RuntimeConfigReservedProperties Include="APP_PATHS"/>
+    <_RuntimeConfigReservedProperties Include="APP_NI_PATHS"/>
+    <_RuntimeConfigReservedProperties Include="NATIVE_DLL_SEARCH_DIRECTORIES"/>
+    <_RuntimeConfigReservedProperties Include="PLATFORM_RESOURCE_ROOTS"/>
+    <_RuntimeConfigReservedProperties Include="PINVOKE_OVERRIDE"/>
+  </ItemGroup>
+
+  <Target Name="_ParseRuntimeConfigFiles"
+      AfterTargets="GenerateBuildRuntimeConfigurationFiles"
+      Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true' "
+      Inputs="$(ProjectRuntimeConfigFilePath)"
+      Outputs="$(_BinaryRuntimeConfigPath)">
+    <RuntimeConfigParserTask
+        RuntimeConfigFile="$(ProjectRuntimeConfigFilePath)"
+        OutputFile="$(_BinaryRuntimeConfigPath)"
+        RuntimeConfigReservedProperties="@(_RuntimeConfigReservedProperties)"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_BinaryRuntimeConfigPath)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -22,11 +22,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[SetUpFixture]
 		public class SetUp {
-			public static bool HasDevices {
-				get;
-				private set;
-			}
-
 			public static string DeviceAbi {
 				get;
 				private set;
@@ -49,7 +44,7 @@ namespace Xamarin.Android.Build.Tests
 
 			static SetUp ()
 			{
-#if NETCOREAPP3_1
+#if NETCOREAPP
 				Builder.UseDotNet = true;
 #else
 				Builder.UseDotNet = false;
@@ -66,7 +61,7 @@ namespace Xamarin.Android.Build.Tests
 			{
 				try {
 					DeviceSdkVersion = GetSdkVersion ();
-					if (HasDevices = DeviceSdkVersion != -1) {
+					if (DeviceSdkVersion != -1) {
 						if (DeviceSdkVersion >= 21)
 							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
 
@@ -84,8 +79,7 @@ namespace Xamarin.Android.Build.Tests
 
 			int GetSdkVersion ()
 			{
-				var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-				var command = $"{adbTarget} shell getprop ro.build.version.sdk";
+				var command = $"shell getprop ro.build.version.sdk";
 				var result = RunAdbCommand (command);
 				if (result.Contains ("*")) {
 					// Run the command again, we likely got:
@@ -123,29 +117,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 		}
-
-		protected bool HasDevices => SetUp.HasDevices;
-
-		/// <summary>
-		/// Checks if there is a device available
-		/// * Defaults to Assert.Fail ()
-		/// </summary>
-		public void AssertHasDevices (bool fail = true)
-		{
-			if (!HasDevices) {
-				var message = "This test requires an attached device or emulator.";
-				if (fail) {
-					Assert.Fail (message);
-				} else {
-					Assert.Ignore (message);
-				}
-			}
-		}
-
-		protected string DeviceAbi => SetUp.DeviceAbi;
-
-		protected int DeviceSdkVersion => SetUp.DeviceSdkVersion;
-
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
 		protected bool IsMacOS => TestEnvironment.IsMacOS;
@@ -232,6 +203,20 @@ namespace Xamarin.Android.Build.Tests
 			pause.WaitOne(milliseconds);
 		}
 
+		protected static void WaitFor (TimeSpan timeSpan, Func<bool> func, int intervalInMS = 10)
+		{
+			var pause = new ManualResetEvent (false);
+			TimeSpan total = timeSpan;
+			TimeSpan interval = TimeSpan.FromMilliseconds (intervalInMS);
+			while (total.TotalMilliseconds > 0) {
+				pause.WaitOne (interval);
+				total = total.Subtract (interval);
+				if (func ()) {
+					break;
+				}
+			}
+		}
+
 		protected static string RunAdbCommand (string command, bool ignoreErrors = true, int timeout = 30)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
@@ -261,7 +246,7 @@ namespace Xamarin.Android.Build.Tests
 			return stdOutput + stdError;
 		}
 
-		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args)
+		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args, int timeoutInSeconds = 30)
 		{
 			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
 			var info = new ProcessStartInfo (exe, args) {
@@ -287,7 +272,7 @@ namespace Xamarin.Android.Build.Tests
 				proc.BeginOutputReadLine ();
 				proc.BeginErrorReadLine ();
 
-				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
+				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (timeoutInSeconds).TotalMilliseconds)) {
 					proc.Kill ();
 					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
 					return (-1, null, null); //Don't try to read stdout/stderr

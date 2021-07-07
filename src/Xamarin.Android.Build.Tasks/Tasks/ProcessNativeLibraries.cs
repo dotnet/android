@@ -13,12 +13,19 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class ProcessNativeLibraries : AndroidTask
 	{
+		const string MonoComponentPrefix = "libmono-component-";
+
 		public override string TaskPrefix => "PRNL";
+
+		static readonly HashSet<string> DebugNativeLibraries = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
+			"libxamarin-debug-app-helper",
+		};
 
 		/// <summary>
 		/// Assumed to be .so files only
 		/// </summary>
 		public ITaskItem [] InputLibraries { get; set; }
+		public ITaskItem [] Components { get; set; }
 
 		public bool IncludeDebugSymbols { get; set; }
 
@@ -29,6 +36,13 @@ namespace Xamarin.Android.Tasks
 		{
 			if (InputLibraries == null || InputLibraries.Length == 0)
 				return true;
+
+			var wantedComponents = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			if (Components != null && Components.Length > 0) {
+				foreach (ITaskItem item in Components) { ;
+					wantedComponents.Add ($"{MonoComponentPrefix}{item.ItemSpec}");
+				}
+			}
 
 			var output = new List<ITaskItem> (InputLibraries.Length);
 
@@ -57,11 +71,17 @@ namespace Xamarin.Android.Tasks
 							continue;
 						library.SetMetadata ("ArchiveFileName", "libmonodroid.so");
 					}
-				} else if (fileName == "libxamarin-debug-app-helper") {
-					// libxamarin-debug-app-helper.so is only needed for Debug builds
-					if (!IncludeDebugSymbols)
+				} else if (DebugNativeLibraries.Contains (fileName)) {
+					if (!IncludeDebugSymbols) {
+						Log.LogDebugMessage ($"Excluding '{library.ItemSpec}' for release builds.");
 						continue;
+					}
+				} else if (fileName.StartsWith (MonoComponentPrefix, StringComparison.OrdinalIgnoreCase)) {
+					if (!wantedComponents.Contains (fileName)) {
+						continue;
+					}
 				}
+
 				output.Add (library);
 			}
 

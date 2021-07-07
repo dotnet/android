@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.Build.Framework;
@@ -59,6 +58,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool InstantRunEnabled { get; set; }
 
+		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
 
 		public string PackageNamingPolicy { get; set; }
@@ -88,12 +88,7 @@ namespace Xamarin.Android.Tasks
 			var doc = AndroidAppManifest.Load (Manifest, MonoAndroidHelper.SupportedVersions);
 			int minApiVersion = doc.MinSdkVersion == null ? 4 : (int) doc.MinSdkVersion;
 			// We need to include any special assemblies in the Assemblies list
-			var assemblies = ResolvedUserAssemblies
-				.Concat (MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies))
-				.ToList ();
 			var mainFileName = Path.GetFileName (MainAssembly);
-			Func<string,string,bool> fileNameEq = (a,b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
-			assemblies = assemblies.Where (a => fileNameEq (a.ItemSpec, mainFileName)).Concat (assemblies.Where (a => !fileNameEq (a.ItemSpec, mainFileName))).ToList ();
 
 			using (var pkgmgr = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				pkgmgr.WriteLine ("package mono;");
@@ -103,7 +98,15 @@ namespace Xamarin.Android.Tasks
 				pkgmgr.WriteLine ("\tpublic static String[] Assemblies = new String[]{");
 
 				pkgmgr.WriteLine ("\t\t/* We need to ensure that \"{0}\" comes first in this list. */", mainFileName);
-				foreach (var assembly in assemblies) {
+				pkgmgr.WriteLine ("\t\t\"" + mainFileName + "\",");
+				foreach (var assembly in ResolvedUserAssemblies) {
+					if (string.Compare (Path.GetFileName (assembly.ItemSpec), mainFileName, StringComparison.OrdinalIgnoreCase) == 0)
+						continue;
+					pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly.ItemSpec) + "\",");
+				}
+				foreach (var assembly in MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies)) {
+					if (string.Compare (Path.GetFileName (assembly.ItemSpec), mainFileName, StringComparison.OrdinalIgnoreCase) == 0)
+						continue;
 					pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly.ItemSpec) + "\",");
 				}
 
@@ -261,6 +264,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
+			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 			foreach (string abi in SupportedAbis) {
 				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
@@ -279,6 +283,7 @@ namespace Xamarin.Android.Tasks
 					BoundExceptionType = boundExceptionType,
 					InstantRunEnabled = InstantRunEnabled,
 					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
+					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

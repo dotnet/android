@@ -105,6 +105,7 @@ struct ApplicationConfig
 	bool broken_exception_transitions;
 	bool instant_run_enabled;
 	bool jni_add_native_method_registration_attribute_present;
+	bool have_runtime_config_blob;
 	uint8_t bound_exception_type;
 	uint32_t package_naming_policy;
 	uint32_t environment_variable_count;

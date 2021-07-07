@@ -7,7 +7,6 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[NonParallelizable] //These tests deploy to devices
 	[Category ("DotNetIgnore")] // .csproj files are legacy projects that won't build under dotnet
 	public class DeleteBinObjTest : DeviceTest
 	{

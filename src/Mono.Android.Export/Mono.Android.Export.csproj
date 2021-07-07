@@ -11,6 +11,7 @@
     <NoStdLib>true</NoStdLib>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">

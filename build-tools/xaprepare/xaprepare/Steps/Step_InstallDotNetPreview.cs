@@ -68,6 +68,12 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
+			// Delete the metadata folder, which contains old workload data
+			var metadataPath = Path.Combine (dotnetPath, "metadata");
+			if (Directory.Exists (metadataPath)) {
+				Utilities.DeleteDirectory (metadataPath);
+			}
+
 			if (File.Exists (dotnetTool)) {
 				if (!TestDotNetSdk (dotnetTool)) {
 					Log.WarningLine ($"Attempt to run `dotnet --version` failed, reinstalling the SDK.");
@@ -96,14 +102,14 @@ namespace Xamarin.Android.Prepare
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.Mono.ToolChain listed in package-download.proj
 			var destination = Path.Combine (dotnetPath, "sdk-manifests",
 				context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionBand),
-				"Microsoft.NET.Workload.Mono.ToolChain"
+				"microsoft.net.workload.mono.toolchain"
 			);
 			foreach (var file in Directory.GetFiles (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, "WorkloadManifest.*")) {
 				Utilities.CopyFileToDir (file, destination);
 			}
 
 			// Install the microsoft-net-runtime-android workload
-			if (!Utilities.RunCommand (dotnetTool, new [] { "workload", "install", "microsoft-net-runtime-android", "--skip-manifest-update", "--verbosity", "diag" })) {
+			if (!Utilities.RunCommand (dotnetTool, BuildPaths.XamarinAndroidSourceRoot, ignoreEmptyArguments: false, new [] { "workload", "install", "microsoft-net-runtime-android", "--skip-manifest-update", "--verbosity", "diag" })) {
 				Log.ErrorLine ($"dotnet workload install failed.");
 				return false;
 			}
