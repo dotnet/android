@@ -71,8 +71,8 @@
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj&quot;" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
     <ReplaceFileContents
-        SourceFile="xamarin-workload.in.props"
-        DestinationFile="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\xamarin-workload.props"
+        SourceFile="vs-workload.in.props"
+        DestinationFile="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\vs-workload.props"
         Replacements="@WORKLOAD_VERSION@=$(AndroidMSIVersion)"
     />
   </Target>
