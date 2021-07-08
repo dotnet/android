@@ -6,7 +6,10 @@
   <ItemGroup>
     <!-- Shorten package names to avoid long path caching issues in Visual Studio -->
     <ShortNames Include="microsoft.android.sdk.bundletool;Microsoft.Android.Sdk.BundleTool">
-      <Replacement>Microsoft.BundleTool</Replacement>
+      <Replacement>XABundleTool</Replacement>
+    </ShortNames>
+    <ShortNames Include="microsoft.android.runtime;Microsoft.Android.Runtime">
+      <Replacement>XARuntime</Replacement>
     </ShortNames>
     <ComponentResources Include="android" Category=".NET" Title=".NET Android Workload" Description="Microsoft Android SDK for .NET"/>
     <ComponentVersions Include="android" Version="@WORKLOAD_VERSION@" />
