@@ -1010,33 +1010,7 @@ OSBridge::platform_supports_weak_refs (void)
 			return use_weak_refs;
 	}
 
-	if (androidSystem.monodroid_get_system_property ("persist.sys.dalvik.vm.lib", &value) > 0) {
-		int art = 0;
-		if (!strcmp ("libart.so", value))
-			art = 1;
-		free (value);
-		if (art) {
-			int use_java = 0;
-			if (androidSystem.monodroid_get_system_property ("ro.build.version.release", &value) > 0) {
-				// Android 4.x ART is busted; see https://code.google.com/p/android/issues/detail?id=63929
-				if (value [0] != 0 && value [0] == '4' && value [1] != 0 && value [1] == '.') {
-					use_java = 1;
-				}
-				free (value);
-			}
-			if (use_java) {
-				log_warn (LOG_GC, "JNI weak global refs are broken on Android with the ART runtime.");
-				log_warn (LOG_GC, "Trying to use java.lang.WeakReference instead, but this may fail as well.");
-				log_warn (LOG_GC, "App stability may be compromised.");
-				log_warn (LOG_GC, "See: https://code.google.com/p/android/issues/detail?id=63929");
-				return 0;
-			}
-		}
-	}
-
-	if (api_level > 7)
-		return 1;
-	return 0;
+	return 1;
 }
 
 void
@@ -1116,7 +1090,7 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	 * use GC API to allocate memory and thus can't be called from within the GC callback as it causes a deadlock
 	 * (the routine allocating the memory waits for the GC round to complete first)
 	 */
-	MonoClass *jnienv = utils.monodroid_get_class_from_name (domain, "Mono.Android", "Android.Runtime", "JNIEnv");;
+	MonoClass *jnienv = utils.monodroid_get_class_from_name (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);;
 	node->domain = domain;
 	node->bridge_processing_field = mono_class_get_field_from_name (jnienv, const_cast<char*> ("BridgeProcessing"));
 	node->jnienv_vtable = mono_class_vtable (domain, jnienv);
@@ -1125,6 +1099,7 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	domains_list = node;
 }
 
+#if !defined (NET6) && !defined (ANDROID)
 void
 OSBridge::remove_monodroid_domain (MonoDomain *domain)
 {
@@ -1164,3 +1139,4 @@ OSBridge::on_destroy_contexts ()
 	if (!domains_list)
 		osBridge.clear_mono_java_gc_bridge_info ();
 }
+#endif // ndef NET6 && ndef ANDROID

@@ -178,6 +178,7 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup>
       <_MonoComponent Condition=" '$(AndroidEnableProfiler)' == 'true' " Include="diagnostics_tracing" />
       <_MonoComponent Condition=" '$(AndroidUseInterpreter)' == 'true' " Include="hot_reload" />
+      <_MonoComponent Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " Include="debugger" />
     </ItemGroup>
     <ProcessNativeLibraries
         InputLibraries="@(_ResolvedNativeLibraries)"

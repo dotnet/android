@@ -1288,22 +1288,16 @@ stages:
       name: $(VSEngMacBuildPool)
       demands:
       - agent.osversionfamily -equals 10.15
+    timeoutInMinutes: 120
     workspace:
       clean: all
     steps:
-    - checkout: self
-      submodules: recursive
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
 
     - checkout: release_scripts
       clean: true
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        remove_dotnet: true
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -1391,16 +1385,16 @@ stages:
     displayName: Create .msi and Upload
     dependsOn: dotnet_create_pkg
     pool: VSEngSS-MicroBuild2019
+    timeoutInMinutes: 120
     workspace:
       clean: all
     variables:
     - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
       - group: Publish-Build-Assets
     steps:
-    - checkout: self
-      submodules: recursive
-
-    - template: yaml-templates/use-dot-net.yaml
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
 
     - task: DownloadPipelineArtifact@2
       inputs:
