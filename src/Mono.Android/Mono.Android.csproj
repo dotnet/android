@@ -349,6 +349,7 @@
     <Compile Include="System.IO\AndroidExtensions.cs" />
     <Compile Include="System.Linq\Extensions.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidClientHandler.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandler.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidHttpResponseMessage.cs" />
     <Compile Include="Xamarin.Android.Net\AuthDigestHeaderParser.cs" />
     <Compile Include="Xamarin.Android.Net\AuthDigestSession.cs" />

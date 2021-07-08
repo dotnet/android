@@ -100,6 +100,8 @@ namespace Xamarin.Android.Net
 
 		public bool UseProxy { get; set; }
 
+		public IWebProxy? Proxy { get; set; }
+
 		public ICredentials? Credentials { get; set; }
 
 		public bool AllowAutoRedirect { get; set; }

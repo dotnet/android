@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,13 +66,7 @@ namespace Xamarin.Android.Net
 
 		public AndroidClientHandler ()
 		{
-			if (IsSocketHandler)
-			{
-				// maybe some other exception
-				throw new InvalidOperationException("SocketsHttpHandler is not supported as an underlying handler by AndroidClientHandler");
-			}
-
-			_underlyingHander = (AndroidMessageHandler) GetUnderlyingHandler ();
+			_underlyingHander = GetUnderlyingHandler () as AndroidMessageHandler ?? throw new InvalidOperationException ("Unknown underlying handler.  Only AndroidMessageHandler is supported for AndroidClientHandler");
 		}
 
 		/// <summary>
@@ -226,17 +221,17 @@ namespace Xamarin.Android.Net
 		protected override async Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
 			AssertSelf ();
-			base.SendAsync (request, cancellationToken);
+			return await base.SendAsync (request, cancellationToken);
 		}
 
 		protected virtual async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
 		{
-			return _underlyingHander.GetJavaProxy (destination, cancellationToken);
+			return await _underlyingHander.GetJavaProxy (destination, cancellationToken);
 		}
 
 		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
-			return _underlyingHander.WriteRequestContentToOutput (request, httpConnection, cancellationToken);
+			await _underlyingHander.WriteRequestContentToOutput (request, httpConnection, cancellationToken);
 		}
 
 		/// <summary>
@@ -313,6 +308,12 @@ namespace Xamarin.Android.Net
 		protected virtual SSLSocketFactory? ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
 		{
 			return _underlyingHander.ConfigureCustomSSLSocketFactory (connection);
+		}
+
+		object GetUnderlyingHandler ()
+		{
+			var handler = GetType().BaseType.GetField("_underlyingHandler", BindingFlags.Instance | BindingFlags.NonPublic);
+			return handler.GetValue(this);
 		}
 	}
 }
