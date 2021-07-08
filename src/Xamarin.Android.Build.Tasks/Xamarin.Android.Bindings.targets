@@ -53,9 +53,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
   <!-- Convert legacy DIM preview flag into new Enable* flags -->
   <PropertyGroup Condition="'$(_EnableInterfaceMembers)' == 'True'">
-    <AndroidEnableBindingStaticAndDefaultInterfaceMethods Condition=" '$(AndroidEnableBindingStaticAndDefaultInterfaceMethods)' == '' ">True</AndroidEnableBindingStaticAndDefaultInterfaceMethods>
-    <AndroidEnableBindingNestedInterfaceTypes Condition=" '$(AndroidEnableBindingNestedInterfaceTypes)' == '' ">True</AndroidEnableBindingNestedInterfaceTypes>
-    <AndroidEnableBindingInterfaceConstants Condition=" '$(AndroidEnableBindingInterfaceConstants)' == '' ">True</AndroidEnableBindingInterfaceConstants>
+    <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">True</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
+    <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">True</AndroidBoundInterfacesContainTypes>
+    <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">True</AndroidBoundInterfacesContainConstants>
   </PropertyGroup>
   
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

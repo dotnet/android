@@ -68,9 +68,9 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         ToolPath="$(MonoAndroidToolsDirectory)"
         ToolExe="$(BindingsGeneratorToolExe)"
         LangVersion="$(LangVersion)"
-        EnableBindingStaticAndDefaultInterfaceMethods="$(AndroidEnableBindingStaticAndDefaultInterfaceMethods)"
-        EnableBindingNestedInterfaceTypes="$(AndroidEnableBindingNestedInterfaceTypes)"
-        EnableBindingInterfaceConstants="$(AndroidEnableBindingInterfaceConstants)"
+        EnableBindingStaticAndDefaultInterfaceMethods="$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)"
+        EnableBindingNestedInterfaceTypes="$(AndroidBoundInterfacesContainTypes)"
+        EnableBindingInterfaceConstants="$(AndroidBoundInterfacesContainConstants)"
         Nullable="$(Nullable)"
     />
 

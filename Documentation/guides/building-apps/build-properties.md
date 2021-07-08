@@ -169,6 +169,32 @@ implements a .NET type or interface in terms of Java types, for example
 
 Added in Xamarin.Android 10.2.
 
+## AndroidBoundInterfacesContainConstants
+
+A boolean property that
+determines whether binding constants on interfaces will be supported, 
+or the workaround of creating an `IMyInterfaceConsts` class 
+will be used.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
+## AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods
+
+A boolean property that
+whether default and static members on interfaces will be supported, 
+or  old workaround of creating a sibling class containing static 
+members like `abstract class MyInterface`.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
+## AndroidBoundInterfacesContainTypes
+
+A boolean property that
+whether types nested in interfaces will be supported, or the workaround 
+of creating a non-nested type like `IMyInterfaceMyNestedClass`.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
 ## AndroidBuildApplicationPackage
 
 A boolean value that
@@ -329,32 +355,6 @@ documentation on [D8 and R8][d8-r8].
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
 [d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
-
-## AndroidEnableBindingInterfaceConstants
-
-A boolean property that
-determines whether binding constants on interfaces will be supported, 
-or the workaround of creating an `IMyInterfaceConsts` class 
-will be used.
-
-Defaults to `True` in .NET 6 and `False` for legacy.
-
-## AndroidEnableBindingNestedInterfaceTypes
-
-A boolean property that
-whether types nested in interfaces will be supported, or the workaround 
-of creating a non-nested type like `IMyInterfaceMyNestedClass`.
-
-Defaults to `True` in .NET 6 and `False` for legacy.
-
-## AndroidEnableBindingStaticAndDefaultInterfaceMethods
-
-A boolean property that
-whether default and static members on interfaces will be supported, 
-or  old workaround of creating a sibling class containing static 
-members like `abstract class MyInterface`.
-
-Defaults to `True` in .NET 6 and `False` for legacy.
 
 ## AndroidEnableDesugar
 

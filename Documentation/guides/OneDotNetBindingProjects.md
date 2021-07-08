@@ -107,7 +107,7 @@ public interface IFoo {
 
 However this means we no longer generate the alternative class that existing code may depend on.
 
-Setting `<AndroidEnableBindingInterfaceConstants>false</AndroidEnableBindingInterfaceConstants>` will revert to the legacy behavior.
+Setting `<AndroidBoundInterfacesContainConstants>false</AndroidBoundInterfacesContainConstants>` will revert to the legacy behavior.
 
 ### Nested Interface Types
 
@@ -139,7 +139,7 @@ public interface IFoo {
 
 However this means we no longer generate the top-level class that existing code may depend on.
 
-Setting `<AndroidEnableBindingNestedInterfaceTypes>false</AndroidEnableBindingNestedInterfaceTypes>` will globally 
+Setting `<AndroidBoundInterfacesContainTypes>false</AndroidBoundInterfacesContainTypes>` will globally 
 revert to the old behavior.
 
 If you wish to use a hybrid approach, for example, to keep existing nested types moved to a top-level
@@ -158,7 +158,7 @@ Setting it to `false` will result in nested types remaining nested in the `inter
 <attr path="/api/package[@name='my.package']/interface[@name='Foo']" name="unnest">false</attr>
 ```
 
-Using this approach, you could leave `<EnableBindingNestedInterfaceTypes>` as `true` and set `unnest` to
+Using this approach, you could leave `<AndroidBoundInterfacesContainTypes>` as `true` and set `unnest` to
 `true` for every `interface` with nested types you have **today**.  These will always remain top-level
 types, while any new nested types introduced later will be nested.
 
@@ -197,7 +197,7 @@ public interface IFoo {
 
 However this means the alternative sibling `class` containing `static` members will no longer be generated.
 
-Setting `<AndroidEnableBindingStaticAndDefaultInterfaceMethods>false</AndroidEnableBindingStaticAndDefaultInterfaceMethods>` will globally 
+Setting `<AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>false</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>` will globally 
 revert to the old behavior.
 
 
