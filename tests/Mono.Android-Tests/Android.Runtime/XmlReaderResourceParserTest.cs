@@ -13,7 +13,6 @@ namespace Android.RuntimeTests {
 	public class XmlReaderResourceParserTest {
 
 		[Test]
-		[Category ("dotnet-runtime-55375")]
 		public void ToLocalJniHandle ()
 		{
 			var p = Application.Context.Resources.GetXml (MyResource.Xml.XmlReaderResourceParser);
