@@ -74,6 +74,11 @@ namespace xamarin::android::internal
 			return gc_gref_count;
 		}
 
+		int get_gc_weak_gref_count () const
+		{
+			return gc_weak_gref_count;
+		}
+
 		const MonoJavaGCBridgeType& get_java_gc_bridge_type (uint32_t index)
 		{
 			if (index < NUM_XA_GC_BRIDGE_TYPES)
