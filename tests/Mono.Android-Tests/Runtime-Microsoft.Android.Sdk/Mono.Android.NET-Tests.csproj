@@ -21,8 +21,6 @@
     <PlotDataLabelSuffix>-$(TestsFlavor)NET6</PlotDataLabelSuffix>
     <!-- TODO: Fix excluded tests -->
     <ExcludeCategories>DotNetIgnore</ExcludeCategories>
-    <!-- TESTING for xamarin/xamarin-android#6072 -->
-    <AndroidLinkMode>None</AndroidLinkMode>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
