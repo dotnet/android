@@ -33,29 +33,32 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			using (var builder = new Builder ()) {
 				var ndkDir = AndroidNdkPath;
 				var sdkDir = AndroidSdkPath;
+				NdkTools ndk = NdkTools.Create (ndkDir, log);
 				MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => { }, sdkDir, ndkDir, AndroidSdkResolver.GetJavaSdkPath ());
-				NdkUtil.Init (log, ndkDir);
-				var platforms = NdkUtil.GetSupportedPlatforms (log, ndkDir);
+				var platforms = ndk.GetSupportedPlatforms ();
 				Assert.AreNotEqual (0, platforms.Count (), "No platforms found");
 				var arch = AndroidTargetArch.X86;
-				Assert.IsTrue (NdkUtil.ValidateNdkPlatform (log, ndkDir, arch, enableLLVM: false));
-				Assert.AreEqual (0, errors.Count, "NdkUtil.ValidateNdkPlatform should not have returned false.");
-				int level = NdkUtil.GetMinimumApiLevelFor (arch, ndkDir);
+				Assert.IsTrue (ndk.ValidateNdkPlatform (arch, enableLLVM: false));
+				Assert.AreEqual (0, errors.Count, "NdkTools.ValidateNdkPlatform should not have returned false.");
+				int level = ndk.GetMinimumApiLevelFor (arch);
 				int expected = 16;
 				Assert.AreEqual (expected, level, $"Min Api Level for {arch} should be {expected}.");
-				var compilerNoQuotes = NdkUtil.GetNdkTool (ndkDir, arch, "gcc", level);
-				Assert.AreEqual (0, errors.Count, "NdkUtil.GetNdkTool should not have errored.");
-				Assert.NotNull (compilerNoQuotes, "NdkUtil.GetNdkTool returned null.");
-				var gas = NdkUtil.GetNdkTool (ndkDir, arch, "as", level);
-				Assert.AreEqual (0, errors.Count, "NdkUtil.GetNdkTool should not have errored.");
-				Assert.NotNull (gas, "NdkUtil.GetNdkTool returned null.");
-				var inc = NdkUtil.GetNdkPlatformIncludePath (ndkDir, arch, level);
-				Assert.NotNull (inc, " NdkUtil.GetNdkPlatformIncludePath should not return null");
-				var libPath = NdkUtil.GetNdkPlatformLibPath (ndkDir, arch, level);
-				Assert.NotNull (libPath, "NdkUtil.GetNdkPlatformLibPath  should not return null");
-				string ld = NdkUtil.GetNdkTool (ndkDir, arch, "ld", level);
-				Assert.AreEqual (0, errors.Count, "NdkUtil.GetNdkTool should not have errored.");
-				Assert.NotNull (ld, "NdkUtil.GetNdkTool returned null.");
+				var compilerNoQuotes = ndk.GetToolPath (NdkToolKind.CompilerC, arch, level);
+				Assert.AreEqual (0, errors.Count, "NdkTools.GetToolPath should not have errored.");
+				Assert.NotNull (compilerNoQuotes, "NdkTools.GetToolPath returned null for NdkToolKind.CompilerC.");
+				compilerNoQuotes = ndk.GetToolPath (NdkToolKind.CompilerCPlusPlus, arch, level);
+				Assert.AreEqual (0, errors.Count, "NdkTools.GetToolPath should not have errored.");
+				Assert.NotNull (compilerNoQuotes, "NdkTools.GetToolPath returned null for NdkToolKind.CompilerCPlusPlus.");
+				var gas = ndk.GetToolPath (NdkToolKind.Assembler, arch, level);
+				Assert.AreEqual (0, errors.Count, "NdkTools.GetToolPath should not have errored.");
+				Assert.NotNull (gas, "NdkTools.GetToolPath returned null for NdkToolKind.Assembler.");
+				var inc = ndk.GetDirectoryPath (NdkToolchainDir.PlatformInclude, arch, level);
+				Assert.NotNull (inc, " NdkTools.GetToolPath should not return null for NdkToolchainDir.PlatformInclude");
+				var libPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
+				Assert.NotNull (libPath, "NdkTools.GetDirectoryPath should not return null for NdkToolchainDir.PlatformLib");
+				string ld = ndk.GetToolPath (NdkToolKind.Linker, arch, level);
+				Assert.AreEqual (0, errors.Count, "NdkTools.GetToolPath should not have errored.");
+				Assert.NotNull (ld, "NdkTools.GetToolPath returned null for NdkToolKind.Linker.");
 			}
 		}
 	}

@@ -84,15 +84,6 @@ namespace Xamarin.Android.Tasks
 		AotMode AotMode;
 		SequencePointsMode sequencePointsMode;
 
-		public override bool RunTask ()
-		{
-			// NdkUtil must always be initialized - once per thread
-			if (!NdkUtil.Init (LogCodedError, AndroidNdkDirectory))
-				return false;
-
-			return base.RunTask ();
-		}
-
 		public static bool GetAndroidAotMode(string androidAotMode, out AotMode aotMode)
 		{
 			aotMode = AotMode.Normal;
@@ -138,7 +129,7 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		static string GetNdkToolchainLibraryDir(string binDir, string archDir = null)
+		static string GetNdkToolchainLibraryDir (NdkTools ndk, string binDir, string archDir = null)
 		{
 			var baseDir = Path.GetFullPath(Path.Combine(binDir, ".."));
 
@@ -154,7 +145,7 @@ namespace Xamarin.Android.Tasks
 				goto no_toolchain_error;
 			}
 
-			if (NdkUtil.UsingClangNDK)
+			if (ndk.UsesClang)
 				return libPath;
 
 			gccLibDir = Directory.EnumerateDirectories(libPath).ToList();
@@ -171,9 +162,9 @@ namespace Xamarin.Android.Tasks
 			throw new Exception("Could not find a valid NDK compiler toolchain library path");
 		}
 
-		static string GetNdkToolchainLibraryDir (string binDir, AndroidTargetArch arch)
+		static string GetNdkToolchainLibraryDir (NdkTools ndk, string binDir, AndroidTargetArch arch)
 		{
-			return GetNdkToolchainLibraryDir (binDir, NdkUtil.GetArchDirName (arch));
+			return GetNdkToolchainLibraryDir (ndk, binDir, ndk.GetArchDirName (arch));
 		}
 
 		static string QuoteFileName(string fileName)
@@ -183,7 +174,7 @@ namespace Xamarin.Android.Tasks
 			return builder.ToString();
 		}
 
-		int GetNdkApiLevel(string androidNdkPath, string androidApiLevel, AndroidTargetArch arch)
+		int GetNdkApiLevel (NdkTools ndk, string androidApiLevel, AndroidTargetArch arch)
 		{
 			var manifest    = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
 
@@ -209,7 +200,7 @@ namespace Xamarin.Android.Tasks
 			else if (level == 23) level = 21;
 
 			// API levels below level 21 do not provide support for 64-bit architectures.
-			if (NdkUtil.IsNdk64BitArch(arch) && level < 21) {
+			if (ndk.IsNdk64BitArch (arch) && level < 21) {
 				level = 21;
 			}
 
@@ -217,7 +208,7 @@ namespace Xamarin.Android.Tasks
 			// mapping above and we do not want to crash needlessly.
 			for (; level >= 5; level--) {
 				try {
-					NdkUtil.GetNdkPlatformLibPath (androidNdkPath, arch, level);
+					ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
 					break;
 				} catch (InvalidOperationException ex) {
 					// Path not found, continue searching...
@@ -230,10 +221,9 @@ namespace Xamarin.Android.Tasks
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			// NdkUtil must always be initialized - once per thread
-			if (!NdkUtil.Init (LogCodedError, AndroidNdkDirectory)) {
-				LogDebugMessage ("Failed to initialize NdkUtil");
-				return;
+			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
+			if (ndk == null) {
+				return; // NdkTools.Create will log appropriate error
 			}
 
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
@@ -251,7 +241,7 @@ namespace Xamarin.Android.Tasks
 
 			var nativeLibs = new List<string> ();
 
-			await this.WhenAllWithLock (GetAotConfigs (),
+			await this.WhenAllWithLock (GetAotConfigs (ndk),
 				(config, lockObject) => {
 					if (!config.Valid) {
 						Cancel ();
@@ -277,7 +267,7 @@ namespace Xamarin.Android.Tasks
 			LogDebugTaskItems ("  NativeLibrariesReferences: ", NativeLibrariesReferences);
 		}
 
-		IEnumerable<Config> GetAotConfigs ()
+		IEnumerable<Config> GetAotConfigs (NdkTools ndk)
 		{
 			if (!Directory.Exists (AotOutputDirectory))
 				Directory.CreateDirectory (AotOutputDirectory);
@@ -325,7 +315,7 @@ namespace Xamarin.Android.Tasks
 					throw new Exception ("Unsupported Android target architecture ABI: " + abi);
 				}
 
-				if (EnableLLVM && !NdkUtil.ValidateNdkPlatform (LogMessage, LogCodedError, AndroidNdkDirectory, arch, enableLLVM:EnableLLVM)) {
+				if (EnableLLVM && !ndk.ValidateNdkPlatform (LogMessage, LogCodedError, arch, enableLLVM:EnableLLVM)) {
 					yield return Config.Invalid;
 					yield break;
 				}
@@ -341,8 +331,8 @@ namespace Xamarin.Android.Tasks
 
 				int level = 0;
 				string toolPrefix = EnableLLVM
-					? NdkUtil.GetNdkToolPrefix (AndroidNdkDirectory, arch, level = GetNdkApiLevel (AndroidNdkDirectory, AndroidApiLevel, arch))
-					: Path.Combine (AndroidBinUtilsDirectory, $"{NdkUtil.GetArchDirName (arch)}-");
+					? ndk.GetNdkToolPrefixForAOT (arch, level = GetNdkApiLevel (ndk, AndroidApiLevel, arch))
+					: Path.Combine (AndroidBinUtilsDirectory, $"{ndk.GetArchDirName (arch)}-");
 				var toolchainPath = toolPrefix.Substring(0, toolPrefix.LastIndexOf(Path.DirectorySeparatorChar));
 				var ldFlags = string.Empty;
 				if (EnableLLVM) {
@@ -353,25 +343,25 @@ namespace Xamarin.Android.Tasks
 
 					string androidLibPath = string.Empty;
 					try {
-						androidLibPath = NdkUtil.GetNdkPlatformLibPath(AndroidNdkDirectory, arch, level);
+						androidLibPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
 					} catch (InvalidOperationException ex) {
 						Diagnostic.Error (5101, ex.Message);
 					}
 
 					string toolchainLibDir;
-					if (NdkUtil.UsingClangNDK)
-						toolchainLibDir = GetNdkToolchainLibraryDir (toolchainPath, arch);
+					if (ndk.UsesClang)
+						toolchainLibDir = GetNdkToolchainLibraryDir (ndk, toolchainPath, arch);
 					else
-						toolchainLibDir = GetNdkToolchainLibraryDir (toolchainPath);
+						toolchainLibDir = GetNdkToolchainLibraryDir (ndk, toolchainPath);
 
 					var libs = new List<string>();
-					if (NdkUtil.UsingClangNDK) {
+					if (ndk.UsesClang) {
 						libs.Add ($"-L{toolchainLibDir.TrimEnd ('\\')}");
 						libs.Add ($"-L{androidLibPath.TrimEnd ('\\')}");
 
 						if (arch == AndroidTargetArch.Arm) {
 							// Needed for -lunwind to work
-							string compilerLibDir = Path.Combine (toolchainPath, "..", "sysroot", "usr", "lib", NdkUtil.GetArchDirName (arch));
+							string compilerLibDir = Path.Combine (toolchainPath, "..", "sysroot", "usr", "lib", ndk.GetArchDirName (arch));
 							libs.Add ($"-L{compilerLibDir.TrimEnd ('\\')}");
 						}
 					}
@@ -385,7 +375,7 @@ namespace Xamarin.Android.Tasks
 
 				string ldName = String.Empty;
 				if (EnableLLVM) {
-					ldName = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "ld", level);
+					ldName = ndk.GetToolPath (NdkToolKind.Linker, arch, level);
 					if (!String.IsNullOrEmpty (ldName)) {
 						ldName = Path.GetFileName (ldName);
 						if (ldName.IndexOf ('-') >= 0) {
