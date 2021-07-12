@@ -74,12 +74,12 @@ namespace Xamarin.Android.Prepare
 				Utilities.DeleteDirectory (metadataPath);
 			}
 
-			if (File.Exists (dotnetTool)) {
-				if (!TestDotNetSdk (dotnetTool)) {
-					Log.WarningLine ($"Attempt to run `dotnet --version` failed, reinstalling the SDK.");
+			//if (File.Exists (dotnetTool)) {
+			//	if (!TestDotNetSdk (dotnetTool)) {
+			//		Log.WarningLine ($"Attempt to run `dotnet --version` failed, reinstalling the SDK.");
 					Utilities.DeleteDirectory (dotnetPath);
-				}
-			}
+			//	}
+			//}
 
 			if (!await InstallDotNetAsync (context, dotnetPath, dotnetPreviewVersion)) {
 				Log.ErrorLine ($"Installation of dotnet SDK {dotnetPreviewVersion} failed.");
