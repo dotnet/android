@@ -5,15 +5,12 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Shorten package names to avoid long path caching issues in Visual Studio -->
-    <ShortNames Include="microsoft.android.sdk.bundletool;Microsoft.Android.Sdk.BundleTool">
-      <Replacement>XABundleTool</Replacement>
+    <ShortNames Include="@PACK_VERSION_LONG@">
+      <Replacement>@PACK_VERSION_SHORT@</Replacement>
     </ShortNames>
-    <ShortNames Include="microsoft.android.runtime;Microsoft.Android.Runtime">
-      <Replacement>XARuntime</Replacement>
-    </ShortNames>
-    <ComponentResources Include="android" Category=".NET" Title=".NET Android Workload" Description="Microsoft Android SDK for .NET"/>
+    <ComponentResources Include="android" Category=".NET" Title=".NET SDK for Android" Description=".NET SDK Workload for building Android applications."/>
     <ComponentVersions Include="android" Version="@WORKLOAD_VERSION@" />
-    <ComponentResources Include="android-aot" Category=".NET" Title=".NET Android AOT Workload" Description="Microsoft Android SDK for .NET with AOT support"/>
+    <ComponentResources Include="android-aot" Category=".NET" Title=".NET SDK for Android with AOT" Description=".NET SDK Workload for building Android applications with AOT support."/>
     <ComponentVersions Include="android-aot" Version="@WORKLOAD_VERSION@" />
   </ItemGroup>
 </Project>
