@@ -121,7 +121,7 @@ namespace generatortests
 
 			Assert.AreEqual ("public", method.Visibility);
 			Assert.AreEqual ("void", method.Return);
-			Assert.AreEqual ("System.Void", method.ReturnType);
+			Assert.AreEqual ("void", method.ReturnType);
 			Assert.AreEqual ("Bar", method.Name);
 			Assert.AreEqual ("bar", method.JavaName);
 			Assert.AreEqual ("()V", method.JniSignature);
@@ -165,7 +165,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			Assert.AreEqual ("(ZID)Ljava/lang/String;", method.JniSignature);
 			Assert.AreEqual ("java.lang.String", method.Return);
-			Assert.AreEqual ("System.String", method.ManagedReturn);
+			Assert.AreEqual ("string", method.ManagedReturn);
 
 			var parameter = method.Parameters [0];
 			Assert.AreEqual ("a", parameter.Name);

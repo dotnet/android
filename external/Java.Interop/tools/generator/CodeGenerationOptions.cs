@@ -141,21 +141,23 @@ namespace MonoDroid.Generation
 			switch (s) {
 				case "void":
 				case "int":
-				//case "int[]":
 				case "bool":
-				//case "bool[]":
 				case "float":
-				//case "float[]":
 				case "sbyte":
-				//case "sbyte[]":
 				case "long":
-				//case "long[]":
 				case "char":
-				//case "char[]":
 				case "double":
-				//case "double[]":
 				case "short":
-				//case "short[]":
+				case "System.Boolean":
+				case "System.Byte":
+				case "System.Char":
+				case "System.Double":
+				case "System.Int16":
+				case "System.Int32":
+				case "System.Int64":
+				case "System.Single":
+				case "System.SByte":
+				case "System.Void":
 				case "Android.Graphics.Color":
 					return string.Empty;
 			}

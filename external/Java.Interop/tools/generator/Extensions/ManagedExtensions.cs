@@ -65,6 +65,25 @@ namespace MonoDroid.Generation
 
 			return type;
 		}
+
+		// Convert a fully qualified type like "System.Void" to the primitive type "void" if applicable
+		public static string FilterPrimitive (this string type)
+		{
+			return type switch {
+				"System.Boolean" => "bool",
+				"System.Char" => "char",
+				"System.Byte" => "byte",
+				"System.SByte" => "byte",
+				"System.Int16" => "short",
+				"System.Int32" => "int",
+				"System.Int64" => "long",
+				"System.Single" => "float",
+				"System.Double" => "double",
+				"System.Void" => "void",
+				"System.String" => "string",
+				_ => type
+			};
+		}
 	}
 #endif
 }

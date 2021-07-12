@@ -51,5 +51,21 @@ namespace generatortests
 			Assert.AreEqual ("global::System.Collections.Generic.List<global::System.Collections.Generic.List<string>.Enumerator[]>",
 				opt.GetOutputName ("System.Collections.Generic.List<System.Collections.Generic.List<string>.Enumerator[]>"));
 		}
+
+		[Test]
+		public void GetTypeReferenceName_Nullable ()
+		{
+			var opt = new CodeGenerationOptions { SupportNullableReferenceTypes = true };
+
+			var system_void = new ReturnValue (null, "void", "System.Void", false, false);
+			system_void.Validate (opt, null, null);
+
+			Assert.AreEqual ("void", opt.GetTypeReferenceName (system_void));
+
+			var primitive_void = new ReturnValue (null, "void", "void", false, false);
+			primitive_void.Validate (opt, null, null);
+
+			Assert.AreEqual ("void", opt.GetTypeReferenceName (primitive_void));
+		}
 	}
 }

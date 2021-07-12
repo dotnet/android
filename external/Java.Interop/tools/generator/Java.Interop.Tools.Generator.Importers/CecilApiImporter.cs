@@ -196,8 +196,8 @@ namespace MonoDroid.Generation
 				IsStatic = m.IsStatic,
 				IsVirtual = m.IsVirtual,
 				JavaName = reg_attr != null ? ((string) reg_attr.ConstructorArguments [0].Value) : m.Name,
-				ManagedReturn = m.ReturnType.FullNameCorrected ().StripArity (),
-				Return = m.ReturnType.FullNameCorrected ().StripArity (),
+				ManagedReturn = m.ReturnType.FullNameCorrected ().StripArity ().FilterPrimitive (),
+				Return = m.ReturnType.FullNameCorrected ().StripArity ().FilterPrimitive (),
 				Visibility = m.Visibility ()
 			};
 
