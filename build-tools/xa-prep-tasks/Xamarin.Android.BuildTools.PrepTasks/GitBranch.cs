@@ -31,7 +31,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			var build_sourcebranchname = Environment.GetEnvironmentVariable ("BUILD_SOURCEBRANCH");
 			if (!string.IsNullOrEmpty (build_sourcebranchname) && build_sourcebranchname.IndexOf ("merge", StringComparison.OrdinalIgnoreCase) == -1) {
 				Branch = build_sourcebranchname.Replace ("refs/heads/", string.Empty);
-				Console.WriteLine ($"Using BUILD_SOURCEBRANCH value: {Branch}");
+				Log.LogMessage ($"Using BUILD_SOURCEBRANCH value: {Branch}");
 				return true;
 			}
 
