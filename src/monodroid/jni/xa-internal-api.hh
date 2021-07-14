@@ -38,6 +38,7 @@ namespace xamarin::android
 		virtual void monodroid_gref_log (const char *message) = 0;
 		virtual int monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) = 0;
 		virtual void monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) = 0;
+		virtual int monodroid_weak_gref_get () = 0;
 		virtual void monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) = 0;
 		virtual void monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) = 0;
 		virtual void monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) = 0;
