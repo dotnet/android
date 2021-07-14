@@ -244,6 +244,10 @@ namespace Xamarin.Android.Tasks
 								Log.LogDebugMessage ($"Skipping {path} as the archive file is up to date.");
 								continue;
 							}
+							if (string.Compare (Path.GetFileName (name), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0) {
+								Log.LogDebugMessage ("Ignoring jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
+								continue;
+							}
 							if (apk.Archive.Any (e => e.FullName == path)) {
 								Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
 								continue;
@@ -253,7 +257,7 @@ namespace Xamarin.Android.Tasks
 								jarItem.Extract (d);
 								data = d.ToArray ();
 							}
-							Log.LogDebugMessage ($"Adding {path} as the archive file is out of date.");
+							Log.LogDebugMessage ($"Adding {path} from {jarFile} as the archive file is out of date.");
 							apk.Archive.AddEntry (data, path);
 						}
 					}
