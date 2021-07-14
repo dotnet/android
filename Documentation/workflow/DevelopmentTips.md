@@ -373,3 +373,69 @@ steps rely on having the Android NDK installed.
         (gdb) set sysroot /tmp/gdb-symbols
         (gdb) set solib-search-path /tmp/gdb-symbols
         (gdb) target remote :50999
+
+# .NET 6 Tips
+
+## Finding Mono runtime packs
+
+`main` builds of the Mono runtime packs are on the following NuGet
+feed, such as this `nuget.config`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
+  </packageSources>
+</configuration>
+```
+
+Internal MS users can view packages on Azure DevOps here:
+
+* https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6
+
+To find the commit of a given package version, locate the `.nuspec`
+file inside the package, and look for:
+
+```xml
+<repository type="git" url="https://github.com/dotnet/runtime" commit="7bd472498e690e9421df86d5a9d728faa939742c" />
+```
+
+## Testing different Mono runtime pack versions
+
+One common scenario that comes up -- how does one test a specific
+dotnet/runtime build along with a .NET 6 Android application?
+
+The simplest way would be to copy individual files on top of the NuGet
+cache, such as:
+
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-arm/`
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-arm64/`
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-x86/`
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-x64/`
+
+A second way is to add this MSBuild target to your Android `.csproj` file:
+
+```xml
+<Target Name="UpdateMonoRuntimePacks" BeforeTargets="ProcessFrameworkReferences">
+  <ItemGroup>
+      <KnownRuntimePack 
+          Update="Microsoft.NETCore.App"
+          Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net6.0' "
+          LatestRuntimeFrameworkVersion="6.0.0-preview.7.21364.3"
+      />
+  </ItemGroup>
+</Target>
+```
+
+`6.0.0-preview.7.21364.3` is a version from the `dotnet6` feed above,
+and so you would also need an accompanying `nuget.config` file.
+
+This could also be used with local or CI builds of dotnet/runtime by
+copying `.nupkg` files to the `library-packs` directory:
+
+* `C:\Program Files\dotnet\library-packs`
+* `/usr/local/share/dotnet/library-packs`
+
+The `library-packs` directory is simply an implicit NuGet feed that is
+automatically picked up by the .NET SDK.
