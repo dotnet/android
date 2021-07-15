@@ -33,6 +33,8 @@ namespace Xamarin.Android.Tasks
 			{ NdkToolKind.Strip, "strip" },
 		};
 
+		string? osBinPath;
+
 		public NdkVersion Version { get; }
 		public string NdkRootDirectory { get; }
 		public bool UsesClang { get; protected set; }
@@ -47,6 +49,17 @@ namespace Xamarin.Android.Tasks
 
 		protected TaskLoggingHelper? Log { get; }
 
+		public string OSBinPath {
+			get => osBinPath ?? MonoAndroidHelper.GetOSBinPath ();
+			set {
+				if (String.IsNullOrEmpty (value)) {
+					osBinPath = null;
+				} else {
+					osBinPath = value;
+				}
+			}
+		}
+
 		protected NdkTools (string androidNdkPath, NdkVersion version, TaskLoggingHelper? log = null)
 		{
 			if (String.IsNullOrEmpty (androidNdkPath)) {
@@ -58,7 +71,7 @@ namespace Xamarin.Android.Tasks
 			Version = version;
 		}
 
-		public static NdkTools? Create (string androidNdkPath, TaskLoggingHelper? log = null)
+		public static NdkTools? Create (string androidNdkPath, TaskLoggingHelper? log = null, string? osBinPath = null)
 		{
 			if (String.IsNullOrEmpty (androidNdkPath)) {
 				log?.LogCodedError ("XA5104", Properties.Resources.XA5104);
