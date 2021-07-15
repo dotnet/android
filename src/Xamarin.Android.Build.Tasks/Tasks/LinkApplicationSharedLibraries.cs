@@ -168,7 +168,7 @@ namespace Xamarin.Android.Tasks
 					linkerArgs.Add (QuoteFileName (file));
 				}
 
-				string ld = MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, $"{NdkUtil.GetNdkToolchainPrefix (arch, false)}ld");
+				string ld = MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, $"{NdkTools.GetBinutilsToolchainPrefix (arch)}ld");
 				yield return new Config {
 					LinkerPath = Path.Combine (AndroidBinUtilsDirectory, ld),
 					LinkerOptions = String.Join (" ", linkerArgs),

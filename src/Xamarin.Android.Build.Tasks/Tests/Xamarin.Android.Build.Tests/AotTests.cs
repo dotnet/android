@@ -180,10 +180,8 @@ namespace Xamarin.Android.Build.Tests
 					return;
 				//NOTE: Windows has shortened paths such as: C:\Users\myuser\ANDROI~3\ndk\PLATFO~1\AN3971~1\arch-x86\usr\lib\libc.so
 				if (checkMinLlvmPath && !IsWindows) {
-					bool ndk22OrNewer = false;
-					if (Xamarin.Android.Tasks.NdkUtil.GetNdkToolchainRelease (AndroidNdkPath, out Xamarin.Android.Tasks.NdkUtilOld.NdkVersion ndkVersion)) {
-						ndk22OrNewer = ndkVersion.Version >= 22;
-					}
+					Xamarin.Android.Tasks.NdkTools ndk = Xamarin.Android.Tasks.NdkTools.Create (AndroidNdkPath);
+					bool ndk22OrNewer = ndk.Version.Main.Major >= 22;
 
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
