@@ -386,6 +386,7 @@
     <Copy
         SourceFiles="@(_MonoUnixDylib)"
         DestinationFolder="$(OutputPath)"
+        Condition=" '$(HostOS)' != 'Darwin' "
     />
   </Target>
 

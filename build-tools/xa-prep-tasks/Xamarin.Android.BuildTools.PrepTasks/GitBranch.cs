@@ -28,10 +28,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (GitBranch)}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (WorkingDirectory)}: {WorkingDirectory.ItemSpec}");
 
-			var build_sourcebranchname = Environment.GetEnvironmentVariable ("BUILD_SOURCEBRANCHNAME");
-			if (!string.IsNullOrEmpty (build_sourcebranchname) && build_sourcebranchname != "merge") {
-				Log.LogMessage ("Using $BUILD_SOURCEBRANCHNAME");
-				Branch = build_sourcebranchname;
+			var build_sourcebranchname = Environment.GetEnvironmentVariable ("BUILD_SOURCEBRANCH");
+			if (!string.IsNullOrEmpty (build_sourcebranchname) && build_sourcebranchname.IndexOf ("merge", StringComparison.OrdinalIgnoreCase) == -1) {
+				Branch = build_sourcebranchname.Replace ("refs/heads/", string.Empty);
+				Log.LogMessage ($"Using BUILD_SOURCEBRANCH value: {Branch}");
 				return true;
 			}
 

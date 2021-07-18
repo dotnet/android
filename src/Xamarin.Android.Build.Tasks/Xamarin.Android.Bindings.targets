@@ -51,6 +51,13 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <_AndroidIsBindingProject>True</_AndroidIsBindingProject>
   </PropertyGroup>
 
+  <!-- Convert legacy DIM preview flag into new Enable* flags -->
+  <PropertyGroup Condition="'$(_EnableInterfaceMembers)' == 'True'">
+    <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">True</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
+    <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">True</AndroidBoundInterfacesContainTypes>
+    <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">True</AndroidBoundInterfacesContainConstants>
+  </PropertyGroup>
+  
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 
   <PropertyGroup>

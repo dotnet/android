@@ -28,11 +28,11 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public ITaskItem[] Assemblies { get; set; }
-		
+
 		// Which ABIs to include native libs for
 		[Required]
 		public string [] SupportedAbis { get; set; }
-		
+
 		[Required]
 		public string TempOutputPath { get; set; }
 
@@ -57,11 +57,13 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (!NdkUtil.Init (Log, AndroidNdkDirectory))
-				return false;
+			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
+			if (ndk == null) {
+				return false; // NdkTools.Create will log appropriate error
+			}
 
 			try {
-				return DoExecute ();
+				return DoExecute (ndk);
 			} catch (XamarinAndroidException e) {
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);
 				if (MonoAndroidHelper.LogInternalExceptions)
@@ -72,7 +74,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		bool DoExecute ()
+		bool DoExecute (NdkTools ndk)
 		{
 			var results = new List<ITaskItem> ();
 			string bundlepath = Path.Combine (TempOutputPath, "bundles");
@@ -102,11 +104,11 @@ namespace Xamarin.Android.Tasks
 					break;
 				}
 
-				if (!NdkUtil.ValidateNdkPlatform (Log, AndroidNdkDirectory, arch, enableLLVM: false)) {
+				if (!ndk.ValidateNdkPlatform (arch, enableLLVM: false)) {
 					return false;
 				}
 
-				int level = NdkUtil.GetMinimumApiLevelFor (arch, AndroidNdkDirectory);
+				int level = ndk.GetMinimumApiLevelFor (arch);
 				var outpath = Path.Combine (bundlepath, abi);
 				if (!Directory.Exists (outpath))
 					Directory.CreateDirectory (outpath);
@@ -140,10 +142,10 @@ namespace Xamarin.Android.Tasks
 					CreateNoWindow = true,
 					WindowStyle = ProcessWindowStyle.Hidden,
 				};
-				string windowsCompilerSwitches = NdkUtil.GetCompilerTargetParameters (AndroidNdkDirectory, arch, level);
-				var compilerNoQuotes = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "gcc", level);
+				string windowsCompilerSwitches = ndk.GetCompilerTargetParameters (arch, level);
+				var compilerNoQuotes = ndk.GetToolPath (NdkToolKind.CompilerC, arch, level);
 				var compiler = $"\"{compilerNoQuotes}\" {windowsCompilerSwitches}".Trim ();
-				var gas = '"' + NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "as", level) + '"';
+				var gas = '"' + ndk.GetToolPath (NdkToolKind.Assembler, arch, level) + '"';
 				psi.EnvironmentVariables ["CC"] = compiler;
 				psi.EnvironmentVariables ["AS"] = gas;
 				Log.LogDebugMessage ("CC=" + compiler);
@@ -167,7 +169,7 @@ namespace Xamarin.Android.Tasks
 
 				clb = new CommandLineBuilder ();
 
-				// See NdkUtils.GetNdkTool for reasons why
+				// See NdkToolsWithClangWithPlatforms.ctor for reasons why
 				if (!String.IsNullOrEmpty (windowsCompilerSwitches))
 					clb.AppendTextUnquoted (windowsCompilerSwitches);
 
@@ -188,14 +190,14 @@ namespace Xamarin.Android.Tasks
 					clb.AppendFileNameIfNotNull (IncludePath);
 				}
 
-				string asmIncludePath = NdkUtil.GetNdkAsmIncludePath (AndroidNdkDirectory, arch, level);
+				string asmIncludePath = ndk.GetDirectoryPath (NdkToolchainDir.AsmInclude, arch, level);
 				if (!String.IsNullOrEmpty (asmIncludePath)) {
 					clb.AppendSwitch ("-I");
 					clb.AppendFileNameIfNotNull (asmIncludePath);
 				}
 
 				clb.AppendSwitch ("-I");
-				clb.AppendFileNameIfNotNull (NdkUtil.GetNdkPlatformIncludePath (AndroidNdkDirectory, arch, level));
+				clb.AppendFileNameIfNotNull (ndk.GetDirectoryPath (NdkToolchainDir.PlatformInclude, arch, level));
 				clb.AppendFileNameIfNotNull (Path.Combine (outpath, "temp.c"));
 				Log.LogDebugMessage ("[CC] " + compiler + " " + clb);
 				if (MonoAndroidHelper.RunProcess (compilerNoQuotes, clb.ToString (), OnCcOutputData,  OnCcErrorData) != 0) {
@@ -216,13 +218,13 @@ namespace Xamarin.Android.Tasks
 				clb.AppendSwitch ("-o");
 				clb.AppendFileNameIfNotNull (Path.Combine (outpath, BundleSharedLibraryName));
 				clb.AppendSwitch ("-L");
-				clb.AppendFileNameIfNotNull (NdkUtil.GetNdkPlatformLibPath (AndroidNdkDirectory, arch, level));
+				clb.AppendFileNameIfNotNull (ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level));
 				clb.AppendSwitch ("-lc");
 				clb.AppendSwitch ("-lm");
 				clb.AppendSwitch ("-ldl");
 				clb.AppendSwitch ("-llog");
 				clb.AppendSwitch ("-lz"); // Compress
-				string ld = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "ld", level);
+				string ld = ndk.GetToolPath (NdkToolKind.Linker, arch, level);
 				Log.LogMessage (MessageImportance.Normal, "[LD] " + ld + " " + clb);
 				if (MonoAndroidHelper.RunProcess (ld, clb.ToString (), OnLdOutputData,  OnLdErrorData) != 0) {
 					Log.LogCodedError ("XA5201", Properties.Resources.XA5201, proc.ExitCode);

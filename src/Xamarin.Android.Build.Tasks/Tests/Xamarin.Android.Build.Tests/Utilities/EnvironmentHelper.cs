@@ -345,7 +345,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public static void AssertValidEnvironmentSharedLibrary (string outputDirectoryRoot, string sdkDirectory, string ndkDirectory, string supportedAbis)
 		{
-			NdkUtil.Init (ndkDirectory);
+			NdkTools ndk = NdkTools.Create (ndkDirectory);
 			MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => {}, sdkDirectory, ndkDirectory, AndroidSdkResolver.GetJavaSdkPath ());
 
 			AndroidTargetArch arch;
@@ -378,7 +378,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (File.Exists (envSharedLibrary), $"Application environment SharedLibrary '{envSharedLibrary}' must exist");
 
 				// API level doesn't matter in this case
-				AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, NdkUtil.GetNdkTool (ndkDirectory, arch, "readelf", 0));
+				AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, ndk.GetToolPath ("readelf", arch, 0));
 			}
 		}
 

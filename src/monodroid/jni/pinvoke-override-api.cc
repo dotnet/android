@@ -116,6 +116,12 @@ _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, i
         osBridge._monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
 }
 
+static int
+_monodroid_weak_gref_get ()
+{
+	return osBridge.get_gc_weak_gref_count ();
+}
+
 static void
 _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
 {
@@ -571,6 +577,7 @@ MonodroidRuntime::pinvoke_api_map MonodroidRuntime::xa_pinvoke_map = {
 	PINVOKE_SYMBOL (monodroid_timing_stop),
 	PINVOKE_SYMBOL (monodroid_TypeManager_get_java_class_name),
 	PINVOKE_SYMBOL (_monodroid_weak_gref_delete),
+	PINVOKE_SYMBOL (_monodroid_weak_gref_get),
 	PINVOKE_SYMBOL (_monodroid_weak_gref_new),
 	PINVOKE_SYMBOL (path_combine),
 	PINVOKE_SYMBOL (recv_uninterrupted),
@@ -696,8 +703,11 @@ MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const ch
 	}
 	auto iter = xa_pinvoke_map.find (entrypoint_name);
 	if (iter == xa_pinvoke_map.end ()) {
-		// TODO: perhaps it should be fatal?
 		log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '%s @ %s' not found in compile-time map.", library_name, entrypoint_name);
+		log_fatal (LOG_ASSEMBLY, "compile-time map contents:");
+		for (iter = xa_pinvoke_map.begin (); iter != xa_pinvoke_map.end (); ++iter) {
+			log_fatal (LOG_ASSEMBLY, "\t'%s'=%p", iter->first.c_str (), iter->second);
+		}
 		abort ();
 		return nullptr;
 	}
