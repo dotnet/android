@@ -24,6 +24,8 @@
       Condition="Exists('$(_OutputPath)MonoInfo.props')"
   />
   <PropertyGroup>
+    <!-- Workaround: https://github.com/dotnet/sdk/issues/19050 -->
+    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
     <AppendTargetFrameworkToOutputPath Condition=" '$(AppendTargetFrameworkToOutputPath)' == '' ">False</AppendTargetFrameworkToOutputPath>
     <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
