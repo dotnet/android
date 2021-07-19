@@ -5,7 +5,7 @@
   <!--Import this file in projects needing to reference Microsoft.Build.*.dll -->
   <PropertyGroup>
     <MSBuildPackageReferenceVersion>16.10.0</MSBuildPackageReferenceVersion>
-    <LibZipSharpVersion>2.0.0-alpha7</LibZipSharpVersion>
+    <LibZipSharpVersion>2.0.0-alpha8</LibZipSharpVersion>
     <MonoUnixVersion>7.0.0-alpha8.21302.6</MonoUnixVersion>
   </PropertyGroup>
 
@@ -15,7 +15,7 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core"     Version="$(MSBuildPackageReferenceVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageReferenceVersion)" />
     <PackageReference Include="K4os.Compression.LZ4" Version="1.1.11" />
-    <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.3.4" GeneratePathProperty="true" />
+    <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.4.0" GeneratePathProperty="true" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" GeneratePathProperty="true" />
     <PackageReference Include="Mono.Unix" Version="$(MonoUnixVersion)" GeneratePathProperty="true" />
   </ItemGroup>
