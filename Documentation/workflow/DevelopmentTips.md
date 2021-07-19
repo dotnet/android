@@ -373,3 +373,92 @@ steps rely on having the Android NDK installed.
         (gdb) set sysroot /tmp/gdb-symbols
         (gdb) set solib-search-path /tmp/gdb-symbols
         (gdb) target remote :50999
+
+# .NET 6 Tips
+
+## Finding Mono runtime packs
+
+The Mono "runtime packs" for Android are:
+
+* https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.android-arm/
+* https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.android-arm64/
+* https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.android-x86/
+* https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.android-x64/
+
+`main` builds of the Mono runtime packs are on the following NuGet
+feed, such as this `nuget.config`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
+  </packageSources>
+</configuration>
+```
+
+You can view these packages on Azure DevOps here:
+
+* https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6
+
+You can search for a given pack such as
+`Microsoft.NETCore.App.Runtime.android-arm` and download the `.nupkg`
+for a given version if needed.
+
+To find the commit of a given package, locate the `.nuspec` file
+inside the `.nupkg`, and look for:
+
+```xml
+<repository type="git" url="https://github.com/dotnet/runtime" commit="7bd472498e690e9421df86d5a9d728faa939742c" />
+```
+
+This information is also visible on Windows if you have [NuGet Package
+Explorer][nuget-explorer].
+
+[nuget-explorer]: https://github.com/NuGetPackageExplorer/NuGetPackageExplorer
+
+## Testing different Mono runtime pack versions
+
+One common scenario that comes up -- how does one test a specific
+dotnet/runtime build along with a .NET 6 Android application?
+
+One way to do this would be to copy individual files on top of the
+NuGet cache, such as:
+
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-arm/`
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-arm64/`
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-x86/`
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-x64/`
+
+However, this is not the best idea, since there are many files in
+these packs. It would be an OK approach if you only need to update one
+file.
+
+A second (better) way is to add this MSBuild target to your Android
+`.csproj` file:
+
+```xml
+<Target Name="UpdateMonoRuntimePacks" BeforeTargets="ProcessFrameworkReferences">
+  <ItemGroup>
+      <KnownRuntimePack 
+          Update="Microsoft.NETCore.App"
+          Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net6.0' "
+          LatestRuntimeFrameworkVersion="6.0.0-preview.7.21364.3"
+      />
+  </ItemGroup>
+</Target>
+```
+
+`6.0.0-preview.7.21364.3` is a version from the `dotnet6` feed above,
+and so you would also need an accompanying `nuget.config` file.
+
+This could also be used with local or CI builds of dotnet/runtime by
+copying `.nupkg` files to the `library-packs` directory of a given
+.NET install:
+
+* `C:\Program Files\dotnet\library-packs`
+* `/usr/local/share/dotnet/library-packs`
+* `~/android-toolchain/dotnet/library-packs`
+
+The `library-packs` directory is simply an implicit NuGet feed that is
+automatically picked up by the .NET SDK.

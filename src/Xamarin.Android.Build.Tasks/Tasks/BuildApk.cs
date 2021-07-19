@@ -635,8 +635,12 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			NdkUtil.Init (AndroidNdkDirectory);
-			string clangDir = NdkUtil.GetClangDeviceLibraryPath (AndroidNdkDirectory);
+			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
+			if (ndk == null) {
+				return; // NdkTools.Create will log appropriate error
+			}
+
+			string clangDir = ndk.GetClangDeviceLibraryPath ();
 			if (String.IsNullOrEmpty (clangDir)) {
 				LogSanitizerError ($"Unable to find the clang compiler directory. Is NDK installed?");
 				return;

@@ -169,6 +169,32 @@ implements a .NET type or interface in terms of Java types, for example
 
 Added in Xamarin.Android 10.2.
 
+## AndroidBoundInterfacesContainConstants
+
+A boolean property that
+determines whether binding constants on interfaces will be supported, 
+or the workaround of creating an `IMyInterfaceConsts` class 
+will be used.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
+## AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods
+
+A boolean property that
+whether default and static members on interfaces will be supported, 
+or  old workaround of creating a sibling class containing static 
+members like `abstract class MyInterface`.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
+## AndroidBoundInterfacesContainTypes
+
+A boolean property that
+whether types nested in interfaces will be supported, or the workaround 
+of creating a non-nested type like `IMyInterfaceMyNestedClass`.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
 ## AndroidBuildApplicationPackage
 
 A boolean value that
@@ -262,6 +288,9 @@ The benefits of `XAJavaInterop1` include:
   managed subclasses.
 
 The default value is `XAJavaInterop1`.
+
+Support for `XamarinAndroid` is obsolete, and support for `XamarinAndroid` will be removed
+as part of .NET 6.
 
 ## AndroidCreatePackagePerAbi
 

@@ -109,8 +109,12 @@ namespace Android.Runtime {
 			get {return _monodroid_gref_get ();}
 		}
 
+
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		static extern int _monodroid_weak_gref_get ();
+
 		public override int WeakGlobalReferenceCount {
-			get {return -1;}
+			get {return _monodroid_weak_gref_get ();}
 		}
 
 		public override JniObjectReference CreateLocalReference (JniObjectReference value, ref int localReferenceCount)

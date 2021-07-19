@@ -123,6 +123,13 @@ _monodroid_gref_get (void)
 	return internal_calls->monodroid_gref_get ();
 }
 
+// Used by Mono.Android.dll!Java.Interop.Runtime.WeakGlobalReferenceCount
+MONO_API int
+_monodroid_weak_gref_get (void)
+{
+	return internal_calls->monodroid_weak_gref_get ();
+}
+
 // Used by Mono.Android.dll!Android.Runtime.JNIEnv
 MONO_API void
 _monodroid_gref_log (const char *message)

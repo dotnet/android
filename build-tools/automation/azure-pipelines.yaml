@@ -42,7 +42,7 @@ variables:
   DotNet6Version: 6.0.100-preview.3.21202.5
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
-  VSEngWinVS2019: Xamarin-Android-Win2019
+  VSEngWinVS2019: android-win-2019
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
@@ -171,8 +171,6 @@ stages:
 
     - template: yaml-templates\clean.yaml
 
-    - template: yaml-templates\update-vs.yaml
-
     - script: |
         echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)
       displayName: set JI_JAVA_HOME
@@ -293,8 +291,6 @@ stages:
 
     - template: yaml-templates\clean.yaml
 
-    - template: yaml-templates\update-vs.yaml
-
     - script: |
         echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)
       displayName: set JI_JAVA_HOME
@@ -405,7 +401,7 @@ stages:
   jobs:
   - job: linux_build_test
     displayName: Build and Smoke Test
-    pool: Xamarin-Android-Ubuntu20.04
+    pool: android-devdiv-ubuntu-vmss
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 2
     workspace:
@@ -425,29 +421,12 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: delete external xamarin-android submodule
 
-    - template: yaml-templates/use-dot-net.yaml
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
+    - template: yaml-templates/setup-ubuntu.yaml
 
     - task: NuGetAuthenticate@0
       displayName: authenticate with azure artifacts
       inputs:
         forceReinstallCredentialProvider: true
-
-    - script: >
-        sudo apt remove -y --purge --auto-remove mono-complete &&
-        sudo apt remove -y --purge --auto-remove mono-devel &&
-        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&
-        echo "deb https://download.mono-project.com/repo/ubuntu preview-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-preview.list &&
-        sudo apt update &&
-        sudo apt install -y mono-devel
-      displayName: install mono preview
-
-    - task: NuGetToolInstaller@0
-      inputs:
-        versionSpec: 5.x
 
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
@@ -1288,22 +1267,16 @@ stages:
       name: $(VSEngMacBuildPool)
       demands:
       - agent.osversionfamily -equals 10.15
+    timeoutInMinutes: 120
     workspace:
       clean: all
     steps:
-    - checkout: self
-      submodules: recursive
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
 
     - checkout: release_scripts
       clean: true
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        remove_dotnet: true
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -1391,16 +1364,16 @@ stages:
     displayName: Create .msi and Upload
     dependsOn: dotnet_create_pkg
     pool: VSEngSS-MicroBuild2019
+    timeoutInMinutes: 120
     workspace:
       clean: all
     variables:
     - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
       - group: Publish-Build-Assets
     steps:
-    - checkout: self
-      submodules: recursive
-
-    - template: yaml-templates/use-dot-net.yaml
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
 
     - task: DownloadPipelineArtifact@2
       inputs:

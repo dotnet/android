@@ -138,6 +138,12 @@ MonoAndroidInternalCalls_Impl::monodroid_gref_get ()
 	return osBridge.get_gc_gref_count ();
 }
 
+int
+MonoAndroidInternalCalls_Impl::monodroid_weak_gref_get ()
+{
+	return osBridge.get_gc_weak_gref_count ();
+}
+
 void
 MonoAndroidInternalCalls_Impl::monodroid_gref_log (const char *message)
 {

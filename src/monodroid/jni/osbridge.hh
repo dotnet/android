@@ -74,6 +74,11 @@ namespace xamarin::android::internal
 			return gc_gref_count;
 		}
 
+		int get_gc_weak_gref_count () const
+		{
+			return gc_weak_gref_count;
+		}
+
 		const MonoJavaGCBridgeType& get_java_gc_bridge_type (uint32_t index)
 		{
 			if (index < NUM_XA_GC_BRIDGE_TYPES)
@@ -117,7 +122,9 @@ namespace xamarin::android::internal
 		void initialize_on_onload (JavaVM *vm, JNIEnv *env);
 		void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass);
 		void add_monodroid_domain (MonoDomain *domain);
+#if !defined (NET6)
 		void remove_monodroid_domain (MonoDomain *domain);
+#endif // ndef NET6
 		void on_destroy_contexts ();
 
 	private:
