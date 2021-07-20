@@ -312,8 +312,13 @@ namespace Xamarin.Android.Net
 
 		object GetUnderlyingHandler ()
 		{
-			var handler = GetType().BaseType.GetField("_underlyingHandler", BindingFlags.Instance | BindingFlags.NonPublic);
-			return handler.GetValue(this);
+			var fieldName = "_nativeHandler";
+			var baseType = GetType ().BaseType;
+			var field = baseType.GetField (fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+			if (field == null) {
+				throw new InvalidOperationException ($"Field '{fieldName}' is missing from type '{baseType}'.");
+			}
+			return field.GetValue (this);
 		}
 	}
 }
