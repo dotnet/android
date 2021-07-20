@@ -96,17 +96,20 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		public bool PreAuthenticate { get; set; }
+		// NOTE: defaults here are based on:
+		// https://github.com/dotnet/runtime/blob/ccfe21882e4a2206ce49cd5b32d3eb3cab3e530f/src/libraries/Common/src/System/Net/Http/HttpHandlerDefaults.cs
 
-		public bool UseProxy { get; set; }
+		public bool PreAuthenticate { get; set; } = false;
+
+		public bool UseProxy { get; set; } = true;
 
 		public IWebProxy? Proxy { get; set; }
 
 		public ICredentials? Credentials { get; set; }
 
-		public bool AllowAutoRedirect { get; set; }
+		public bool AllowAutoRedirect { get; set; } = true;
 
-		public int MaxAutomaticRedirections { get; set; }
+		public int MaxAutomaticRedirections { get; set; } = 50;
 
 		/// <summary>
 		/// <para>
