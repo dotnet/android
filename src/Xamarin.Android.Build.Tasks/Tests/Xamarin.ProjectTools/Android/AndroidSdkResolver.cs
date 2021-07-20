@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
@@ -119,6 +122,10 @@ namespace Xamarin.ProjectTools
 		static int? maxInstalled;
 		static object maxInstalledLock = new object ();
 
+		/// <summary>
+		/// Searches the Android SDK 'platforms' folder for the latest version that we support and consider stable.
+		/// </summary>
+		/// <returns>The latest Android platform version that we support and consider stable.</returns>
 		public static int GetMaxInstalledPlatform ()
 		{
 			lock (maxInstalledLock) {
@@ -131,6 +138,8 @@ namespace Xamarin.ProjectTools
 			if (maxInstalled != null)
 				return maxInstalled.Value;
 
+			var supportedVersions = new AndroidVersions (GetAndroidApiInfoDirectories ());
+
 			string sdkPath = GetAndroidSdkPath ();
 			foreach (var dir in Directory.EnumerateDirectories (Path.Combine (sdkPath, "platforms"))) {
 				int version;
@@ -138,12 +147,32 @@ namespace Xamarin.ProjectTools
 				Console.WriteLine ($"GetMaxInstalledPlatform: Parsing {v}");
 				if (!int.TryParse (v, out version))
 					continue;
-				if (version < maxInstalled)
+				if (version < maxInstalled || version > supportedVersions.MaxStableVersion?.ApiLevel)
 					continue;
 				Console.WriteLine ($"GetMaxInstalledPlatform: Setting maxInstalled to {version}");
 				maxInstalled = version;
 			}
 			return maxInstalled ?? 0;
 		}
+
+		static IEnumerable<string> GetAndroidApiInfoDirectories ()
+		{
+			var frameworkDirs = new List<string> {
+				TestEnvironment.MonoAndroidFrameworkDirectory,
+			};
+
+			var sdkName = TestEnvironment.IsMacOS ? "Microsoft.Android.Sdk.Darwin"
+				: TestEnvironment.IsWindows ? "Microsoft.Android.Sdk.Windows"
+				: "Microsoft.Android.Sdk.Linux";
+
+			var searchDir = Path.Combine (GetDotNetPreviewPath (), "packs", sdkName);
+			if (Directory.Exists (searchDir)) {
+				var dataDirs = Directory.GetDirectories (searchDir, "data", SearchOption.AllDirectories);
+				frameworkDirs.AddRange (dataDirs.Where (d => Directory.EnumerateFiles (d, "AndroidApiInfo.xml", SearchOption.AllDirectories).Any ()));
+			}
+
+			return frameworkDirs.Where (d => Directory.Exists (d));
+		}
+
 	}
 }
