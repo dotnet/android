@@ -42,7 +42,7 @@
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(TargetFramework)\</OutputPath>
   </PropertyGroup>
 
@@ -348,8 +348,8 @@
     <Compile Include="System.Drawing/SizeFConverter.cs" />
     <Compile Include="System.IO\AndroidExtensions.cs" />
     <Compile Include="System.Linq\Extensions.cs" />
-    <Compile Condition=" '$(TargetFramework)' == 'net6.0' " Include="Xamarin.Android.Net\AndroidClientHandler.cs" />
-    <Compile Condition=" '$(TargetFramework)' != 'net6.0' " Include="Xamarin.Android.Net\AndroidClientHandler.Legacy.cs" />
+    <Compile Condition=" '$(TargetFramework)' != 'monoandroid10' " Include="Xamarin.Android.Net\AndroidClientHandler.cs" />
+    <Compile Condition=" '$(TargetFramework)' == 'monoandroid10' " Include="Xamarin.Android.Net\AndroidClientHandler.Legacy.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandler.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidHttpResponseMessage.cs" />
     <Compile Include="Xamarin.Android.Net\AuthDigestHeaderParser.cs" />
@@ -379,7 +379,7 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <!-- Only build the 'net6.0' version of 'Mono.Android.dll' once for the latest stable Android version. -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 
