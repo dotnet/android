@@ -247,8 +247,13 @@ namespace Android.Runtime {
 		static void Initialize ()
 		{
 			if (mono_unhandled_exception == null) {
+#if NETCOREAPP
 				var mono_UnhandledException = typeof (Android.Runtime.JNIEnv)
 					.GetMethod ("monodroid_debugger_unhandled_exception", BindingFlags.NonPublic | BindingFlags.Static);
+#else
+				var mono_UnhandledException = typeof (System.Diagnostics.Debugger)
+					.GetMethod ("Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
+#endif
 				if (mono_UnhandledException != null)
 					mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), mono_UnhandledException);
 			}
@@ -682,8 +687,10 @@ namespace Android.Runtime {
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvid);
 
+#if NETCOREAPP
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern unsafe void monodroid_debugger_unhandled_exception (Exception e);
+#endif
 
 		internal static void LogTypemapTrace (StackTrace st)
 		{

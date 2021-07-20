@@ -22,6 +22,7 @@
 #include <sys/types.h>
 
 #include <mono/jit/jit.h>
+#include <mono/jit/debugger-agent.h>
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/debug-helpers.h>
@@ -1000,6 +1001,14 @@ MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, cons
 }
 #endif // ndef NET6
 
+#if defined (NET6)
+void
+MonodroidRuntime::monodroid_debugger_unhandled_exception (MonoException *ex)
+{
+	mono_debugger_agent_unhandled_exception (ex);
+}
+#endif
+
 void
 MonodroidRuntime::init_android_runtime (
 #if !defined (NET6)
@@ -1009,7 +1018,9 @@ MonodroidRuntime::init_android_runtime (
 {
 	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
-	mono_add_internal_call ("System.Diagnostics.Debugger::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
+#if NET6
+	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
+#endif
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                 = osBridge.get_jvm ();
@@ -1784,12 +1795,6 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 monodroid_Mono_UnhandledException_internal ([[maybe_unused]] MonoException *ex)
 {
 	// Do nothing with it here, we let the exception naturally propagate on the managed side
-}
-
-static void
-monodroid_debugger_unhandled_exception (MonoException *ex)
-{
-	mono_debugger_agent_unhandled_exception (ex);
 }
 
 MonoDomain*
