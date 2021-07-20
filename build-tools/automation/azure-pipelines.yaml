@@ -1262,6 +1262,18 @@ stages:
       usePipelineArtifactTasks: true
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
+  # Check - "Xamarin.Android (.NET 6 Preview Installers Convert NuGet to MSI)"
+  - template: nuget-msi-convert/job/v1.yml@yaml
+    parameters:
+      yamlResourceName: yaml
+      dependsOn: signing
+      artifactName: nuget-signed
+      artifactPatterns: |
+        !*Darwin*
+      propsArtifactName: nuget-unsigned
+      signType: $(MicroBuildSignType)
+      condition: eq(variables['MicroBuildSignType'], 'Real')
+
   # Check - "Xamarin.Android (.NET 6 Preview Installers Create .pkg)"
   - job: dotnet_create_pkg
     displayName: Create .pkg
@@ -1457,6 +1469,14 @@ stages:
       parameters:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - .NET 6 Preview .msi
+
+# .NET 6 VS Insertion Stage
+# Check - "Xamarin.Android (VS Insertion - Wait For Approval)"
+# Check - "Xamarin.Android (VS Insertion - Create VS Drop and Open PR)"
+- template: vs-insertion/stage/v1.yml@yaml
+  parameters:
+    dependsOn: dotnet_installers
+    condition: eq(variables['MicroBuildSignType'], 'Real')
 
 - stage: finalize_installers
   displayName: Finalize Installers

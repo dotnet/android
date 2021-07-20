@@ -2,7 +2,7 @@
   "version": "@WORKLOAD_VERSION@",
   "workloads": {
     "android": {
-      "description": "Microsoft Android SDK for .NET",
+      "description": ".NET SDK Workload for building Android applications.",
       "packs": [
         "Microsoft.Android.Sdk",
         "Microsoft.Android.Sdk.BundleTool",
@@ -16,7 +16,7 @@
       "extends" : [ "microsoft-net-runtime-android" ]
     },
     "android-aot": {
-      "description": "Microsoft Android SDK for .NET with AOT support",
+      "description": ".NET SDK Workload for building Android applications with AOT support.",
       "extends" : [ "android", "microsoft-net-runtime-android-aot" ]
     }
   },
