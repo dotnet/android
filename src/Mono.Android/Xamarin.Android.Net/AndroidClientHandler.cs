@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -310,6 +311,7 @@ namespace Xamarin.Android.Net
 			return _underlyingHander.ConfigureCustomSSLSocketFactory (connection);
 		}
 
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (AndroidMessageHandler))]
 		object GetUnderlyingHandler ()
 		{
 			var fieldName = "_nativeHandler";
