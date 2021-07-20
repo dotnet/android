@@ -1009,6 +1009,7 @@ MonodroidRuntime::init_android_runtime (
 {
 	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
+	mono_add_internal_call ("System.Diagnostics.Debugger::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                 = osBridge.get_jvm ();
@@ -1783,6 +1784,12 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 monodroid_Mono_UnhandledException_internal ([[maybe_unused]] MonoException *ex)
 {
 	// Do nothing with it here, we let the exception naturally propagate on the managed side
+}
+
+static void
+monodroid_debugger_unhandled_exception (MonoException *ex)
+{
+	mono_debugger_agent_unhandled_exception (ex);
 }
 
 MonoDomain*
