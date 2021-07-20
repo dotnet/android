@@ -22,7 +22,6 @@
 #include <sys/types.h>
 
 #include <mono/jit/jit.h>
-#include <mono/jit/debugger-agent.h>
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/debug-helpers.h>
