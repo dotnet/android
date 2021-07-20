@@ -20,7 +20,7 @@ using Javax.Net.Ssl;
 
 namespace Xamarin.Android.Net
 {
-    public class AndroidMessageHandler : HttpMessageHandler
+	public class AndroidMessageHandler : HttpMessageHandler
 	{
 		sealed class RequestRedirectionState
 		{
@@ -313,12 +313,12 @@ namespace Xamarin.Android.Net
 			var proxy = Java.Net.Proxy.NoProxy;
 
 			if (destination == null || Proxy == null) {
-				goto done;
+				return proxy;
 			}
 
 			Uri puri = Proxy.GetProxy (destination);
 			if (puri == null) {
-				goto done;
+				return proxy;
 			}
 
 			proxy = await Task <Java.Net.Proxy>.Run (() => {
@@ -327,7 +327,6 @@ namespace Xamarin.Android.Net
 				return new Java.Net.Proxy (Java.Net.Proxy.Type.Http, addr);
 			}, cancellationToken);
 
-		  done:
 			return proxy;
 		}
 
