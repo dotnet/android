@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <TargetName>Microsoft.NET.Sdk.Android.Workload</TargetName>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Shorten package names to avoid long path caching issues in Visual Studio -->
+    <ShortNames Include="@PACK_VERSION_LONG@">
+      <Replacement>@PACK_VERSION_SHORT@</Replacement>
+    </ShortNames>
+    <ComponentResources Include="android" Category=".NET" Title=".NET SDK for Android" Description=".NET SDK Workload for building Android applications."/>
+    <ComponentVersions Include="android" Version="@WORKLOAD_VERSION@" />
+    <ComponentResources Include="android-aot" Category=".NET" Title=".NET SDK for Android with AOT" Description=".NET SDK Workload for building Android applications with AOT support."/>
+    <ComponentVersions Include="android-aot" Version="@WORKLOAD_VERSION@" />
+  </ItemGroup>
+</Project>
