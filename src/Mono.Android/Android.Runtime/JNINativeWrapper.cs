@@ -22,11 +22,8 @@ namespace Android.Runtime {
 				AndroidEnvironment.FailFast ("Cannot find System.Diagnostics.Debugger.Mono_UnhandledException");
 #endif
 #if NETCOREAPP
-			mono_unhandled_exception_method = typeof (Android.Runtime.JNIEnv).GetMethod (
-				"monodroid_debugger_unhandled_exception", BindingFlags.NonPublic | BindingFlags.Static);
-			if (mono_unhandled_exception_method == null)
-				AndroidEnvironment.FailFast ("Cannot find Android.Runtime.JNIEnv.monodroid_debugger_unhandled_exception");
-#endif
+			mono_unhandled_exception_method = JNIEnv.mono_unhandled_exception.Method;
+#endif  // NETCOREAPP
 			exception_handler_method = typeof (AndroidEnvironment).GetMethod (
 				"UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
 			if (exception_handler_method == null)

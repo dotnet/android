@@ -1017,7 +1017,7 @@ MonodroidRuntime::init_android_runtime (
 {
 	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
-#if NET6
+#if defined (NET6)
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
 #endif
 

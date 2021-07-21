@@ -241,19 +241,19 @@ namespace Android.Runtime {
 			GC.SuppressFinalize (obj);
 		}
 
-		static Action<Exception> mono_unhandled_exception = null!;
+#if NETCOREAPP
+		internal static Action<Exception> mono_unhandled_exception = monodroid_debugger_unhandled_exception;
+#else  // NETCOREAPP
+		internal static Action<Exception> mono_unhandled_exception = null!;
+#endif  // NETCOREAPP
+
 		static Action<AppDomain, UnhandledExceptionEventArgs> AppDomain_DoUnhandledException = null!;
 
 		static void Initialize ()
 		{
 			if (mono_unhandled_exception == null) {
-#if NETCOREAPP
-				var mono_UnhandledException = typeof (Android.Runtime.JNIEnv)
-					.GetMethod ("monodroid_debugger_unhandled_exception", BindingFlags.NonPublic | BindingFlags.Static);
-#else
 				var mono_UnhandledException = typeof (System.Diagnostics.Debugger)
 					.GetMethod ("Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
-#endif
 				if (mono_UnhandledException != null)
 					mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), mono_UnhandledException);
 			}
