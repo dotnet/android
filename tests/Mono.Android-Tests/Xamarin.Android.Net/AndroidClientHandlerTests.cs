@@ -88,7 +88,11 @@ namespace Xamarin.Android.NetTests {
 			Assert.IsTrue (h.UseCookies, "#12");
 			Assert.IsFalse (h.UseDefaultCredentials, "#13");
 			Assert.IsTrue (h.UseProxy, "#14");
-			Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
+			try {
+				Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
+			} catch (PlatformNotSupportedException) {
+				// https://github.com/dotnet/runtime/blob/07336810acf3b4e7bdd0fb7da87b54920ea9c382/src/libraries/System.Net.Http/src/System/Net/Http/HttpClientHandler.AnyMobile.cs#L310-L314
+			}
 		}
 
 		[Test]
@@ -99,12 +103,16 @@ namespace Xamarin.Android.NetTests {
 				h.MaxAutomaticRedirections = 0;
 				Assert.Fail ("#1");
 			} catch (ArgumentOutOfRangeException) {
+			} catch (TargetInvocationException) {
+				// See: https://github.com/dotnet/runtime/issues/56089
 			}
 
 			try {
 				h.MaxRequestContentBufferSize = -1;
 				Assert.Fail ("#2");
 			} catch (ArgumentOutOfRangeException) {
+			} catch (TargetInvocationException) {
+				// See: https://github.com/dotnet/runtime/issues/56089
 			}
 		}
 
