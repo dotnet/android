@@ -690,7 +690,7 @@ namespace Android.Runtime {
 #if NETCOREAPP
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern unsafe void monodroid_debugger_unhandled_exception (Exception e);
-#endif
+#endif  // NETCOREAPP
 
 		internal static void LogTypemapTrace (StackTrace st)
 		{
