@@ -74,8 +74,6 @@ namespace Xamarin.Android.Net
 		internal const bool SupportsProxy = true;
 		internal const bool SupportsRedirectConfiguration = true;
 
-		public bool UseCookies { get; set; }
-
 		public DecompressionMethods AutomaticDecompression
 		{
 			get => _decompressionMethods;
@@ -84,13 +82,11 @@ namespace Xamarin.Android.Net
 
 		public CookieContainer CookieContainer
 		{
-			get => _cookieContainer;
+			get => _cookieContainer ?? (_cookieContainer = new CookieContainer ());
 			set
 			{
 				if (value == null)
-				{
 					throw new ArgumentNullException(nameof(value));
-				}
 
 				_cookieContainer = value;
 			}
@@ -98,6 +94,8 @@ namespace Xamarin.Android.Net
 
 		// NOTE: defaults here are based on:
 		// https://github.com/dotnet/runtime/blob/ccfe21882e4a2206ce49cd5b32d3eb3cab3e530f/src/libraries/Common/src/System/Net/Http/HttpHandlerDefaults.cs
+
+		public bool UseCookies { get; set; } = true;
 
 		public bool PreAuthenticate { get; set; } = false;
 
@@ -109,7 +107,19 @@ namespace Xamarin.Android.Net
 
 		public bool AllowAutoRedirect { get; set; } = true;
 
-		public int MaxAutomaticRedirections { get; set; } = 50;
+		int maxAutomaticRedirections = 50;
+
+		public int MaxAutomaticRedirections
+		{
+			get => maxAutomaticRedirections;
+			set {
+				// https://github.com/dotnet/runtime/blob/913facdca8b04cc674163e31a7650ef6868a7d5b/src/libraries/System.Net.Http/src/System/Net/Http/SocketsHttpHandler/SocketsHttpHandler.cs#L142-L145
+				if (value <= 0)
+					throw new ArgumentOutOfRangeException(nameof(value), value, "The specified value must be greater than 0");
+
+				maxAutomaticRedirections = value;
+			}
+		}
 
 		/// <summary>
 		/// <para>
