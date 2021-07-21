@@ -138,7 +138,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			if (Builder.UseDotNet) {
 				expectedFiles.Add ("root/assemblies/System.Console.dll");
-				expectedFiles.Add ("root/assemblies/System.IO.FileSystem.dll");
 				expectedFiles.Add ("root/assemblies/System.Linq.dll");
 				expectedFiles.Add ("root/assemblies/System.Net.Http.dll");
 
@@ -202,7 +201,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			if (Builder.UseDotNet) {
 				expectedFiles.Add ("base/root/assemblies/System.Console.dll");
-				expectedFiles.Add ("base/root/assemblies/System.IO.FileSystem.dll");
 				expectedFiles.Add ("base/root/assemblies/System.Linq.dll");
 				expectedFiles.Add ("base/root/assemblies/System.Net.Http.dll");
 
