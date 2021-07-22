@@ -51,12 +51,6 @@ namespace Xamarin.Android.Prepare
 				Utilities.CopyFileToDir (file, destination);
 			}
 
-			// Install the microsoft-net-runtime-android workload
-			if (!Utilities.RunCommand (dotnetTool, BuildPaths.XamarinAndroidSourceRoot, ignoreEmptyArguments: false, new [] { "workload", "install", "microsoft-net-runtime-android", "--skip-manifest-update", "--verbosity", "diag" })) {
-				Log.ErrorLine ($"dotnet workload install failed.");
-				return false;
-			}
-
 			return true;
 		}
 
