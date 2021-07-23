@@ -1001,6 +1001,14 @@ MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, cons
 }
 #endif // ndef NET6
 
+#if defined (NET6)
+void
+MonodroidRuntime::monodroid_debugger_unhandled_exception (MonoException *ex)
+{
+	mono_debugger_agent_unhandled_exception (ex);
+}
+#endif
+
 void
 MonodroidRuntime::init_android_runtime (
 #if !defined (NET6)
@@ -1011,6 +1019,7 @@ MonodroidRuntime::init_android_runtime (
 	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
 #if defined (NET6)
+	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
 #endif // def NET6
 
