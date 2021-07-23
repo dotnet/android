@@ -12,12 +12,10 @@
         "Microsoft.Android.Runtime.android-x86",
         "Microsoft.Android.Runtime.android-x64",
         "Microsoft.Android.Templates"
-      ],
-      "extends" : [ "microsoft-net-runtime-android" ]
+      ]
     },
     "android-aot": {
-      "description": ".NET SDK Workload for building Android applications with AOT support.",
-      "extends" : [ "android", "microsoft-net-runtime-android-aot" ]
+      "description": ".NET SDK Workload for building Android applications with AOT support."
     }
   },
   "packs": {
