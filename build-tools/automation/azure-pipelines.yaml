@@ -13,7 +13,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/pjc/vsredist-manifest-packs
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -1263,7 +1263,7 @@ stages:
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
   # Check - "Xamarin.Android (.NET 6 Preview Installers Convert NuGet to MSI)"
-  - template: nuget-msi-convert/job/v1.yml@yaml
+  - template: nuget-msi-convert/job/v2.yml@yaml
     parameters:
       yamlResourceName: yaml
       dependsOn: signing
