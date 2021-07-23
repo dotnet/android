@@ -60,7 +60,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // TODO: UnhandledException not firing: https://github.com/dotnet/runtime/issues/44526
 		public void SubscribeToAppDomainUnhandledException ()
 		{
 			AssertHasDevices ();
