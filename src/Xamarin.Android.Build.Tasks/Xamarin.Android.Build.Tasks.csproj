@@ -18,6 +18,8 @@
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\monoandroid10\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
     <NoWarn>8632</NoWarn>
     <GenerateResxSource>true</GenerateResxSource>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
