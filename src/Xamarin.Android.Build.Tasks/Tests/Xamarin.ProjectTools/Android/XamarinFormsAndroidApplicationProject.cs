@@ -42,6 +42,8 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName, packageName)
 		{
 			if (Builder.UseDotNet) {
+				// Don't opt into ImplicitUsings
+				RemoveProperty (KnownProperties.ImplicitUsings);
 				PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
 			} else {
 				PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
@@ -75,6 +77,8 @@ namespace Xamarin.ProjectTools
 			MainActivity = default_main_activity_cs;
 			MainPage = MainPage_xaml_cs;
 		}
+
+		public override string DefaultMainActivity => default_main_activity_cs;
 
 		public string MainPage { get; set; }
 

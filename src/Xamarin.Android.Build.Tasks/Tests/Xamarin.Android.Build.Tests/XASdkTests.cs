@@ -205,6 +205,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			dotnet.AssertHasNoWarnings ();
 		}
 
 		[Test]
@@ -519,7 +520,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			// Call AccessibilityTraversalAfter from API level 22
 			// https://developer.android.com/reference/android/view/View#getAccessibilityTraversalAfter()
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("button.Click", "button.AccessibilityTraversalAfter.ToString ();\nbutton.Click");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("button!.Click", "button!.AccessibilityTraversalAfter.ToString ();\nbutton!.Click");
 
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
@@ -614,7 +615,7 @@ namespace Xamarin.Android.Build.Tests
 		public void XamarinLegacySdk ()
 		{
 			var proj = new XASdkProject (outputType: "Library") {
-				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha2",
+				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha4",
 				Sources = {
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,

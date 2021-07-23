@@ -11,72 +11,7 @@
   <Import Project="..\..\..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
-    <EmbeddedResource Include="Resources\AndroidX\Tabbar.xml">
-      <LogicalName>Xamarin.ProjectTools.Resources.AndroidX.Tabbar.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\AndroidX\Toolbar.xml">
-      <LogicalName>Xamarin.ProjectTools.Resources.AndroidX.Toolbar.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Wear\LayoutMain.axml">
-      <LogicalName>Xamarin.ProjectTools.Resources.Wear.LayoutMain.axml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Wear\LayoutRectMain.axml">
-      <LogicalName>Xamarin.ProjectTools.Resources.Wear.LayoutRectMain.axml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Wear\LayoutRoundMain.axml">
-      <LogicalName>Xamarin.ProjectTools.Resources.Wear.LayoutRoundMain.axml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Wear\MainActivity.cs">
-      <LogicalName>Xamarin.ProjectTools.Resources.Wear.MainActivity.cs</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Wear\Strings.xml">
-      <LogicalName>Xamarin.ProjectTools.Resources.Wear.Strings.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\AndroidManifest.xml">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\Icon.png">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.Icon.png</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\LayoutMain.axml">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.LayoutMain.axml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\MainActivity.cs">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.MainActivity.cs</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\MainActivity.fs">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.MainActivity.fs</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\AssemblyInfo.fs">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.AssemblyInfo.fs</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\Image.9.png">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.Image.9.png</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\Image2.9.png">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.Image2.9.png</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\test.keystore">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.test.keystore</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\classes.jar">
-      <LogicalName>Xamarin.ProjectTools.Resources.Base.classes.jar</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Base\custom.aotprofile" />
-    <EmbeddedResource Include="Resources\Base\BuildReleaseArm64SimpleDotNet.apkdesc" />
-    <EmbeddedResource Include="Resources\Base\BuildReleaseArm64SimpleLegacy.apkdesc" />
-    <EmbeddedResource Include="Resources\Base\BuildReleaseArm64XFormsDotNet.apkdesc" />
-    <EmbeddedResource Include="Resources\Base\BuildReleaseArm64XFormsLegacy.apkdesc" />
-    <EmbeddedResource Include="Resources\Forms\MainActivity.cs" />
-    <EmbeddedResource Include="Resources\Forms\App.xaml" />
-    <EmbeddedResource Include="Resources\Forms\App.xaml.cs" />
-    <EmbeddedResource Include="Resources\Forms\MainPage.xaml" />
-    <EmbeddedResource Include="Resources\Forms\MainPage.xaml.cs" />
-    <EmbeddedResource Include="Resources\Forms\MainPageMaps.xaml" />
-    <EmbeddedResource Include="Resources\Forms\Tabbar.axml" />
-    <EmbeddedResource Include="Resources\Forms\Toolbar.axml" />
-    <EmbeddedResource Include="Resources\Forms\colors.xml" />
-    <EmbeddedResource Include="Resources\Forms\styles.xml" />
+    <EmbeddedResource Include="Resources\**\*" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\..\..\.nuget\NuGet.exe">
