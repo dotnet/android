@@ -27,6 +27,7 @@
 #include <mono/metadata/debug-helpers.h>
 #include <mono/metadata/mono-config.h>
 #include <mono/metadata/mono-debug.h>
+#include <mono/metadata/object.h>
 #include <mono/utils/mono-dl-fallback.h>
 #include <mono/utils/mono-logger.h>
 
@@ -1019,7 +1020,8 @@ MonodroidRuntime::init_android_runtime (
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
 #if defined (NET6)
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
-#endif
+	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
+#endif // def NET6
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                 = osBridge.get_jvm ();
@@ -1836,6 +1838,14 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 
 	return domain;
 }
+
+#if defined (NET6)
+void
+MonodroidRuntime::monodroid_unhandled_exception (MonoObject *java_exception)
+{
+	mono_unhandled_exception (java_exception);
+}
+#endif // def NET6
 
 MonoReflectionType*
 MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name)
