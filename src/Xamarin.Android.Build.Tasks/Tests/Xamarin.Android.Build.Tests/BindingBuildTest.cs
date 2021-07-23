@@ -94,13 +94,6 @@ namespace Xamarin.Android.Build.Tests
 				};
 				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
 					.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i)));
-				var directories = Directory.GetDirectories (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
-					// designtime folder is left behind, so Intellisense continues to work after a Clean
-					.Where (x => Path.GetFileName (x) != "designtime")
-					// .NET 5+ sets $(ProduceReferenceAssembly) by default
-					// https://github.com/dotnet/sdk/blob/18ee4eac8b3abe6d554d2e0c39d8952da0f23ce5/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.TargetFrameworkInference.targets#L242-L244
-					.Where (x => Path.GetFileName (x) != "ref");
-				CollectionAssert.IsEmpty (directories, $"{proj.IntermediateOutputPath} should have no directories.");
 				CollectionAssert.IsEmpty (files, $"{proj.IntermediateOutputPath} should have no files.");
 			}
 		}
