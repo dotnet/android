@@ -15,7 +15,8 @@
       ]
     },
     "android-aot": {
-      "description": ".NET SDK Workload for building Android applications with AOT support."
+      "description": ".NET SDK Workload for building Android applications with AOT support.",
+      "extends" : [ "android" ]
     }
   },
   "packs": {
