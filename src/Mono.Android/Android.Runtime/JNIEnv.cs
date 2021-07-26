@@ -294,9 +294,9 @@ namespace Android.Runtime {
 
 			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
 
-			// Disabled until Linker error surfaced in https://github.com/xamarin/xamarin-android/pull/4302#issuecomment-596400025 is resolved
-			//System.Diagnostics.Debugger.Mono_UnhandledException (javaException);
-			mono_unhandled_exception?.Invoke (javaException);
+			if (Debugger.IsAttached) {
+				mono_unhandled_exception?.Invoke (javaException);
+			}
 
 			try {
 				var jltp = javaException as JavaProxyThrowable;
