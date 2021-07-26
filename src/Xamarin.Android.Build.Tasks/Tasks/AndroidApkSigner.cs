@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 		///   env:<PasswordEnvironentVariable>
 		///   file:<PasswordFile>
 		/// </summary>
-		public string KeyPass { get; set; }
+		public string KeyPass { get; set; } = string.Empty;
 
 		/// <summary>
 		/// The Password for the Keystore.
@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks
 		///   env:<PasswordEnvironentVariable>
 		///   file:<PasswordFile>
 		/// </summary>
-		public string StorePass { get; set; }
+		public string StorePass { get; set; } = string.Empty;
 
 		public string AdditionalArguments { get; set; }
 
@@ -136,6 +136,14 @@ namespace Xamarin.Android.Tasks
 			} else {
 				if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
 					Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningKeyStore)", KeyStore);
+					return false;
+				}
+				if (string.IsNullOrEmpty (KeyPass)) {
+					Log.LogCodedError ("XA4314", Properties.Resources.XA4310, "$(AndroidSigningKeyPass)");
+					return false;
+				}
+				if (string.IsNullOrEmpty (StorePass)) {
+					Log.LogCodedError ("XA4314", Properties.Resources.XA4310, "$(AndroidSigningStorePass)");
 					return false;
 				}
 			}
