@@ -633,13 +633,6 @@ MonodroidRuntime::fetch_or_create_pinvoke_map_entry (std::string const& library_
 void*
 MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name)
 {
-	log_warn (LOG_DEFAULT, "MonodroidRuntime::monodroid_pinvoke_override (\"%s\", \"%s\")", library_name, entrypoint_name);
-
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_start ();
-	}
-
 	if (library_name == nullptr || *library_name == '\0' || entrypoint_name == nullptr || *entrypoint_name == '\0') {
 		return nullptr;
 	}
@@ -688,19 +681,9 @@ MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const ch
 			handle = fetch_or_create_pinvoke_map_entry (lib_name, func_name, iter->second, /* need_lock */ true);
 		}
 
-		if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-			total_time.mark_end ();
-
-			TIMING_LOG_INFO (total_time, "p/invoke override for '%s' (foreign)", entrypoint_name);
-		}
-
 		return handle;
 	}
 
-	timing_period lookup_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		lookup_time.mark_start ();
-	}
 	auto iter = xa_pinvoke_map.find (entrypoint_name);
 	if (iter == xa_pinvoke_map.end ()) {
 		log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '%s @ %s' not found in compile-time map.", library_name, entrypoint_name);
@@ -712,13 +695,5 @@ MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const ch
 		return nullptr;
 	}
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		lookup_time.mark_end ();
-		total_time.mark_end ();
-
-		TIMING_LOG_INFO (lookup_time, "p/invoke cache lookup for '%s' (internal)", entrypoint_name);
-		TIMING_LOG_INFO (total_time, "p/invoke override for '%s' (internal)", entrypoint_name);
-	}
-	log_warn (LOG_DEFAULT, "Found %s@%s in internal p/invoke map (%p)", library_name, entrypoint_name, iter->second);
 	return iter->second;
 }

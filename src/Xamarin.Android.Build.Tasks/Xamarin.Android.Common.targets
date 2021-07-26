@@ -1574,6 +1574,7 @@ because xbuild doesn't support framework reference assemblies.
   <GeneratePackageManagerJava
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
+    SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
     MainAssembly="$(TargetPath)"
     OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
     EnvironmentOutputDirectory="$(IntermediateOutputPath)android"

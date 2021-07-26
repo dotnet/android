@@ -110,6 +110,7 @@ struct ApplicationConfig
 	uint32_t package_naming_policy;
 	uint32_t environment_variable_count;
 	uint32_t system_property_count;
+	uint32_t number_of_assemblies_in_apk;
 	const char *android_package_name;
 };
 

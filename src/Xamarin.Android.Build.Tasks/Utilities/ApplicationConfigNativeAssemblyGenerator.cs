@@ -23,6 +23,7 @@ namespace Xamarin.Android.Tasks
 		public bool InstantRunEnabled { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 		public bool HaveRuntimeConfigBlob { get; set; }
+		public int NumberOfAssembliesInApk { get; set; }
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
@@ -85,6 +86,9 @@ namespace Xamarin.Android.Tasks
 
 				WriteCommentLine (output, "system_property_count");
 				size += WriteData (output, systemProperties == null ? 0 : systemProperties.Count * 2);
+
+				WriteCommentLine (output, "number_of_assemblies_in_apk");
+				size += WriteData (output, NumberOfAssembliesInApk);
 
 				WriteCommentLine (output, "android_package_name");
 				size += WritePointer (output, MakeLocalLabel (stringLabel));

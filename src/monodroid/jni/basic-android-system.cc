@@ -16,9 +16,9 @@ void
 BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
 	// appDirs[2] points to the native library directory
-	simple_pointer_guard<char[]> libmonodroid_path = utils.path_combine (appDirs[2].get_cstr (), "libmonodroid.so");
+	std::unique_ptr<char> libmonodroid_path {utils.path_combine (appDirs[2].get_cstr (), "libmonodroid.so")};
 	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path.get ());
-	if (!utils.file_exists (libmonodroid_path)) {
+	if (!utils.file_exists (libmonodroid_path.get ())) {
 		log_debug (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path.get ());
 		set_embedded_dso_mode_enabled (true);
 	} else {

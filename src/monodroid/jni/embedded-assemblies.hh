@@ -2,9 +2,21 @@
 #ifndef INC_MONODROID_EMBEDDED_ASSEMBLIES_H
 #define INC_MONODROID_EMBEDDED_ASSEMBLIES_H
 
+#include <array>
+
+#undef HAVE_CONCEPTS
+
+// Xcode has supports for concepts only since 12.5
+#if __has_include (<concepts>)
+#define HAVE_CONCEPTS
+#include <concepts>
+#endif // __has_include
+
 #include <cstring>
 #include <limits>
 #include <functional>
+#include <vector>
+
 #include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
 
@@ -22,6 +34,18 @@ namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 	struct TypeMappingInfo;
 #endif
+
+#if defined (HAVE_CONCEPTS)
+	template<typename T>
+	concept ByteArrayContainer = requires (T a) {
+		a.size ();
+		a.data ();
+		requires std::same_as<typename T::value_type, uint8_t>;
+	};
+#else
+#define ByteArrayContainer class
+#endif
+
 	class EmbeddedAssemblies
 	{
 		struct md_mmap_info {
@@ -106,14 +130,15 @@ namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 		template<typename H>
 		bool typemap_read_header (int dir_fd, const char *file_type, const char *dir_path, const char *file_path, uint32_t expected_magic, H &header, size_t &file_size, int &fd);
-		uint8_t* typemap_load_index (int dir_fd, const char *dir_path, const char *index_path);
-		uint8_t* typemap_load_index (TypeMapIndexHeader &header, size_t file_size, int index_fd);
+		std::unique_ptr<uint8_t[]> typemap_load_index (int dir_fd, const char *dir_path, const char *index_path);
+		std::unique_ptr<uint8_t[]> typemap_load_index (TypeMapIndexHeader &header, size_t file_size, int index_fd);
 		bool typemap_load_file (int dir_fd, const char *dir_path, const char *file_path, TypeMap &module);
 		bool typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module);
 		static ssize_t do_read (int fd, void *buf, size_t count);
 		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name);
 #endif // DEBUG || !ANDROID
-		bool register_debug_symbols_for_assembly (const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size);
+		template<size_t BufferSize>
+		bool register_debug_symbols_for_assembly (dynamic_local_string<BufferSize> const& entry_name, MonoBundledAssembly const& assembly, const mono_byte *debug_contents, int debug_size);
 
 		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, const char* filename, const char* apk);
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
@@ -122,22 +147,51 @@ namespace xamarin::android::internal {
 #else // def NET6
 		static MonoAssembly* open_from_bundles_refonly (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 #endif // ndef NET6
-		static void get_assembly_data (const MonoBundledAssembly *e, char*& assembly_data, uint32_t& assembly_data_size);
+		static void get_assembly_data (MonoBundledAssembly const& e, char*& assembly_data, uint32_t& assembly_data_size);
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
 		bool zip_adjust_data_offset (int fd, size_t local_header_offset, uint32_t &data_start_offset);
-		bool zip_extract_cd_info (uint8_t* buf, size_t buf_len, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
-		bool zip_ensure_valid_params (uint8_t* buf, size_t buf_len, size_t index, size_t to_read);
-		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, uint16_t& u);
-		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, uint32_t& u);
-		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, uint8_t (&sig)[4]);
-		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters);
-		bool zip_read_entry_info (uint8_t* buf, size_t buf_len, size_t& buf_offset, uint16_t& compression_method, uint32_t& local_header_offset, uint32_t& file_size, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name);
+
+		template<size_t BufSize>
+		bool zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
+
+		template<class T>
+		bool zip_ensure_valid_params (T const& buf, size_t index, size_t to_read) const noexcept;
+
+		// template<size_t BufSize>
+		// bool zip_read_field (std::array<uint8_t, BufSize> const& buf, size_t index, uint16_t& u)
+		// {
+		// 	return zip_read_field_unchecked (buf, u, index);
+		// }
+
+		// bool zip_read_field (std::vector<uint8_t> const& buf, size_t index, uint16_t& u)
+		// {
+		// 	return zip_read_field_unchecked (buf, u, index);
+		// }
+
+		template<ByteArrayContainer T>
+		bool zip_read_field (T const& src, size_t source_index, uint16_t& dst) const noexcept;
+
+		template<ByteArrayContainer T>
+		bool zip_read_field (T const& src, size_t source_index, uint32_t& dst) const noexcept;
+
+		template<ByteArrayContainer T>
+		bool zip_read_field (T const& src, size_t source_index, std::array<uint8_t, 4>& dst_sig) const noexcept;
+
+		template<ByteArrayContainer T>
+		bool zip_read_field (T const& buf, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters) const noexcept;
+
+		bool zip_read_entry_info (std::vector<uint8_t> const& buf, size_t& buf_offset, uint16_t& compression_method, uint32_t& local_header_offset, uint32_t& file_size, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name);
 
 		const char* get_assemblies_prefix () const
 		{
 			return assemblies_prefix_override != nullptr ? assemblies_prefix_override : assemblies_prefix;
+		}
+
+		size_t get_assemblies_prefix_length () const noexcept
+		{
+			return assemblies_prefix_override != nullptr ? strlen (assemblies_prefix_override) : sizeof(assemblies_prefix) - 1;
 		}
 
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
@@ -153,8 +207,8 @@ namespace xamarin::android::internal {
 
 	private:
 		bool                   register_debug_symbols;
-		MonoBundledAssembly  **bundled_assemblies = nullptr;
-		size_t                 bundled_assemblies_count;
+		std::vector<MonoBundledAssembly> bundled_assemblies;
+		size_t                 bundled_assembly_index = 0;
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
 		TypeMappingInfo       *managed_to_java_maps;

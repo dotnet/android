@@ -1,5 +1,10 @@
 #include <stdlib.h>
-#include <new>
+
+namespace std
+{
+	struct nothrow_t {};
+	extern const nothrow_t nothrow;
+}
 
 #include "java-interop-util.h"
 
@@ -9,6 +14,7 @@ do_alloc (size_t size)
 	return ::malloc (size == 0 ? 1 : size);
 }
 
+__attribute__((__weak__))
 void*
 operator new (size_t size)
 {
@@ -27,6 +33,7 @@ operator new (size_t size, const std::nothrow_t&) noexcept
 	return do_alloc (size);
 }
 
+__attribute__((__weak__))
 void*
 operator new[] (size_t size)
 {
@@ -39,8 +46,9 @@ operator new[] (size_t size, const std::nothrow_t&) noexcept
 	return do_alloc (size);
 }
 
+__attribute__((__weak__))
 void
-operator delete (void* ptr)
+operator delete (void* ptr) noexcept
 {
 	if (ptr)
 		::free (ptr);
@@ -58,8 +66,9 @@ operator delete (void* ptr, size_t) noexcept
 	::operator delete (ptr);
 }
 
+__attribute__((__weak__))
 void
-operator delete[] (void* ptr)
+operator delete[] (void* ptr) noexcept
 {
 	::operator delete (ptr);
 }

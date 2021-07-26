@@ -307,9 +307,9 @@ AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] co
 #if defined (DEBUG) || !defined (ANDROID)
 	for (size_t oi = 0; oi < MAX_OVERRIDES; ++oi) {
 		if (override_dirs [oi]) {
-			simple_pointer_guard<char[]> override_file (utils.path_combine (override_dirs [oi], name));
+			std::unique_ptr<char[]> override_file {utils.path_combine (override_dirs [oi], name)};
 			log_info (LOG_DEFAULT, "Trying to get property from %s", override_file.get ());
-			size_t result = _monodroid_get_system_property_from_file (override_file, value);
+			size_t result = _monodroid_get_system_property_from_file (override_file.get (), value);
 			if (result == 0 || value == nullptr || (*value) == nullptr || **value == '\0') {
 				continue;
 			}
@@ -351,9 +351,9 @@ AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dy
 	if (base_dir == nullptr || utils.is_path_rooted (dso_path))
 		return const_cast<char*>(dso_path); // Absolute path or no base path, can't do much with it
 
-	path.assign (base_dir)
+	path.assign_c (base_dir)
 		.append (MONODROID_PATH_SEPARATOR)
-		.append (dso_path);
+		.append_c (dso_path);
 
 	return true;
 }
@@ -567,7 +567,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path)
 	auto     file_size = static_cast<size_t>(sbuf.st_size);
 	size_t   nread = 0;
 	ssize_t  r;
-	simple_pointer_guard<char[]> buf (new char [file_size]);
+	auto     buf = std::make_unique<char[]> (file_size);
 
 	do {
 		auto read_count = static_cast<read_count_type>(file_size - nread);
@@ -603,14 +603,14 @@ AndroidSystem::setup_environment_from_override_file (const char *path)
 	}
 
 	char *endptr;
-	unsigned long name_width = strtoul (buf, &endptr, 16);
-	if ((name_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (*buf != '\0' && *endptr != '\0')) {
+	unsigned long name_width = strtoul (buf.get (), &endptr, 16);
+	if ((name_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf[0] != '\0' && *endptr != '\0')) {
 		log_warn (LOG_DEFAULT, "Malformed header of the environment override file %s: name width has invalid format", path);
 		return;
 	}
 
 	unsigned long value_width = strtoul (buf.get () + 11, &endptr, 16);
-	if ((value_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (*buf != '\0' && *endptr != '\0')) {
+	if ((value_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf[0] != '\0' && *endptr != '\0')) {
 		log_warn (LOG_DEFAULT, "Malformed header of the environment override file %s: value width has invalid format", path);
 		return;
 	}
@@ -625,7 +625,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path)
 	char *name = buf.get () + OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE;
 	while (data_size > 0 && data_size >= data_width) {
 		if (*name == '\0') {
-			log_warn (LOG_DEFAULT, "Malformed environment override file %s: name at offset %lu is empty", path, name - buf);
+			log_warn (LOG_DEFAULT, "Malformed environment override file %s: name at offset %lu is empty", path, name - buf.get ());
 			return;
 		}
 
@@ -707,9 +707,9 @@ AndroidSystem::setup_environment ()
 #if defined (DEBUG) || !defined (ANDROID)
 	// TODO: for debug read from file in the override directory named `environment`
 	for (size_t oi = 0; oi < MAX_OVERRIDES; oi++) {
-		simple_pointer_guard<char[]> env_override_file (utils.path_combine (override_dirs [oi], OVERRIDE_ENVIRONMENT_FILE_NAME));
-		if (utils.file_exists (env_override_file)) {
-			setup_environment_from_override_file (env_override_file);
+		std::unique_ptr<char[]> env_override_file {utils.path_combine (override_dirs [oi], OVERRIDE_ENVIRONMENT_FILE_NAME)};
+		if (utils.file_exists (env_override_file.get ())) {
+			setup_environment_from_override_file (env_override_file.get ());
 		}
 	}
 #endif

@@ -14,15 +14,15 @@
 
 namespace xamarin::android::internal
 {
-	constexpr size_t SENSIBLE_TYPE_NAME_LENGTH = 128;
-	constexpr size_t SENSIBLE_PATH_MAX = 256;
+	static constexpr size_t SENSIBLE_TYPE_NAME_LENGTH = 128;
+	static constexpr size_t SENSIBLE_PATH_MAX = 256;
 	// 64-bit unsigned or 64-bit signed with sign
-	constexpr size_t MAX_INTEGER_DIGIT_COUNT_BASE10 = 21;
+	static constexpr size_t MAX_INTEGER_DIGIT_COUNT_BASE10 = 21;
 
 #if DEBUG
-	constexpr bool BoundsCheck = true;
+	static constexpr bool BoundsCheck = true;
 #else
-	constexpr bool BoundsCheck = false;
+	static constexpr bool BoundsCheck = false;
 #endif
 
 	class string_segment
@@ -100,7 +100,7 @@ namespace xamarin::android::internal
 		template<size_t Size>
 		force_inline bool starts_with (const char (&s)[Size]) const noexcept
 		{
-			return starts_with (s, Size);
+			return starts_with (s, Size - 1);
 		}
 
 		force_inline bool has_at (const char ch, size_t index) const noexcept
@@ -424,13 +424,19 @@ namespace xamarin::android::internal
 			return *this;
 		}
 
-		template<size_t Size>
-		force_inline string_base& append (const char (&s)[Size]) const noexcept
+		template<size_t LocalMaxStackSize, typename LocalTStorage, typename LocalTChar = char>
+		force_inline string_base& append (internal::string_base<LocalMaxStackSize, LocalTStorage, LocalTChar> const& str) noexcept
 		{
-			return append (s, Size);
+			return append (str.get (), str.length ());
 		}
 
-		force_inline string_base& append (const char *s) noexcept
+		template<size_t Size>
+		force_inline string_base& append (const char (&s)[Size]) noexcept
+		{
+			return append (s, Size - 1);
+		}
+
+		force_inline string_base& append_c (const char *s) noexcept
 		{
 			if (s == nullptr)
 				return *this;
@@ -486,7 +492,7 @@ namespace xamarin::android::internal
 			return append (s, length);
 		}
 
-		force_inline string_base& assign (const TChar* s) noexcept
+		force_inline string_base& assign_c (const TChar* s) noexcept
 		{
 			if (s == nullptr)
 				return *this;
@@ -497,7 +503,13 @@ namespace xamarin::android::internal
 		template<size_t Size>
 		force_inline string_base& assign (const char (&s)[Size]) const noexcept
 		{
-			return assign (s, Size);
+			return assign (s, Size - 1);
+		}
+
+		template<size_t LocalMaxStackSize, typename LocalTStorage, typename LocalTChar = char>
+		force_inline string_base& assign (internal::string_base<LocalMaxStackSize, LocalTStorage, LocalTChar> const& str) noexcept
+		{
+			return assign (str.get (), str.length ());
 		}
 
 		force_inline string_base& assign (const TChar* s, size_t offset, size_t count) noexcept
@@ -568,7 +580,7 @@ namespace xamarin::android::internal
 			return -1;
 		}
 
-		force_inline bool starts_with (const TChar *s, size_t s_length) noexcept
+		force_inline bool starts_with (const TChar *s, size_t s_length) const noexcept
 		{
 			if (s == nullptr || s_length == 0 || s_length > buffer.size ())
 				return false;
@@ -576,12 +588,18 @@ namespace xamarin::android::internal
 			return memcmp (buffer.get (), s, s_length) == 0;
 		}
 
-		force_inline bool starts_with (const char* s) const noexcept
+		force_inline bool starts_with_c (const char* s) noexcept
 		{
 			if (s == nullptr)
 				return false;
 
 			return starts_with (s, strlen (s));
+		}
+
+		template<size_t Size>
+		force_inline bool starts_with (const char (&s)[Size]) noexcept
+		{
+			return starts_with (s, Size - 1);
 		}
 
 		force_inline void set_length_after_direct_write (size_t new_length) noexcept
@@ -604,7 +622,7 @@ namespace xamarin::android::internal
 		force_inline const TChar get_at (size_t index) const noexcept
 		{
 			ensure_valid_index (index);
-			return buffer.get () + index;
+			return *(buffer.get () + index);
 		}
 
 		force_inline TChar& get_at (size_t index) noexcept

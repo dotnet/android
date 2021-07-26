@@ -108,13 +108,6 @@ void *MonodroidRuntime::api_dso_handle = nullptr;
 #else // ndef NET6
 std::mutex MonodroidRuntime::pinvoke_map_write_lock;
 
-// The pragmas will go away once we switch to C++20, where the designator becomes part of the language standard. Both
-// gcc and clang support it now as an extension, though.
-#if defined (__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc99-designator"
-#endif
-
 MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
 	.trusted_platform_assemblies = nullptr,
 	.app_paths = nullptr,
@@ -122,9 +115,6 @@ MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
 	.pinvoke_override = &MonodroidRuntime::monodroid_pinvoke_override
 };
 
-#if defined (__clang__)
-#pragma clang diagnostic pop
-#endif
 #endif // def NET6
 
 #ifdef WINDOWS
@@ -331,8 +321,10 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 	size_t name_len = strlen (name);
 
 	static_local_string<SENSIBLE_PATH_MAX> pname (name_len + culture_len);
-	if (culture_len > 0)
+	if (culture_len > 0) {
 		pname.append (culture, culture_len);
+		pname.append ("/");
+	}
 	pname.append (name, name_len);
 
 	constexpr char dll_extension[] = ".dll";
@@ -375,6 +367,10 @@ bool
 MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 {
 #ifndef RELEASE
+	if (filename == nullptr) {
+		return true;
+	}
+
 	size_t filename_len = strlen (filename) + 1; // includes space for path separator
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 		const char *odir = androidSystem.get_override_dir (i);
@@ -512,12 +508,15 @@ MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved)
 void
 MonodroidRuntime::parse_gdb_options ()
 {
-	char *val;
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> val;
 
-	if (!(androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_GDB_PROPERTY, &val) > 0))
+	if (!(androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_GDB_PROPERTY, val) > 0))
 		return;
 
-	if (strstr (val, "wait:") == val) {
+	constexpr char wait_param[] = "wait:";
+	constexpr size_t wait_param_length = sizeof(wait_param) - 1;
+
+	if (val.starts_with (wait_param)) {
 		/*
 		 * The form of the property should be: 'wait:<timestamp>', where <timestamp> should be
 		 * the output of date +%s in the android shell.
@@ -527,20 +526,18 @@ MonodroidRuntime::parse_gdb_options ()
 		 */
 		bool do_wait = true;
 
-		long long v = atoll (val + strlen ("wait:"));
+		long long v = atoll (val.get () + wait_param_length);
 		if (v > 100000) {
 			time_t secs = time (nullptr);
 
 			if (v + 10 < secs) {
-				log_warn (LOG_DEFAULT, "Found stale %s property with value '%s', not waiting.", Debug::DEBUG_MONO_GDB_PROPERTY, val);
+				log_warn (LOG_DEFAULT, "Found stale %s property with value '%s', not waiting.", Debug::DEBUG_MONO_GDB_PROPERTY, val.get ());
 				do_wait = false;
 			}
 		}
 
 		wait_for_gdb = do_wait;
 	}
-
-	delete[] val;
 }
 
 #if defined (DEBUG) && !defined (WINDOWS)
@@ -769,9 +766,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 
 	bool log_methods = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
 	if (XA_UNLIKELY (log_methods)) {
-		simple_pointer_guard<char[]> jit_log_path = utils.path_combine (androidSystem.get_override_dir (0), "methods.txt");
-		jit_log = utils.monodroid_fopen (jit_log_path, "a");
-		utils.set_world_accessable (jit_log_path);
+		std::unique_ptr<char> jit_log_path {utils.path_combine (androidSystem.get_override_dir (0), "methods.txt")};
+		jit_log = utils.monodroid_fopen (jit_log_path.get (), "a");
+		utils.set_world_accessable (jit_log_path.get ());
 	}
 
 	profiler_handle = mono_profiler_create (nullptr);
@@ -917,9 +914,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 	if constexpr (is_running_on_desktop) {
 		if (is_root_domain) {
-			// Check that our corlib is coherent with the version of Mono we loaded otherwise
-			// tell the IDE that the project likely need to be recompiled.
-			simple_pointer_guard<char, false> corlib_error_message_guard = const_cast<char*>(mono_check_corlib_version ());
+			c_unique_ptr<char> corlib_error_message_guard {const_cast<char*>(mono_check_corlib_version ())};
 			char *corlib_error_message = corlib_error_message_guard.get ();
 
 			if (corlib_error_message == nullptr) {
@@ -1309,7 +1304,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err)
 	size_t len = base_len + LIBAOT_PREFIX_SIZE; // includes the trailing \0
 	static_local_string<PATH_MAX> basename (len);
 
-	basename.append (LIBAOT_PREFIX).append (basename_part);
+	basename.append (LIBAOT_PREFIX).append_c (basename_part);
 
 	h = androidSystem.load_dso_from_any_directories (basename.get (), dl_flags);
 
@@ -1323,7 +1318,6 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err)
 void*
 MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[maybe_unused]] void *user_data)
 {
-	log_warn (LOG_DEFAULT, "MonodroidRuntime::monodroid_dlopen (\"%s\", 0x%x, %p, %p)", name, flags, err, user_data);
 	if (name == nullptr) {
 		log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET6+");
 		return nullptr;
@@ -1339,7 +1333,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 	size_t len = ADD_WITH_OVERFLOW_CHECK (size_t, strlen (name), DSO_EXTENSION_SIZE); // includes the trailing \0
 	static_local_string<PATH_MAX> full_name (len);
 
-	full_name.append (name).append (DSO_EXTENSION);
+	full_name.append_c (name).append (DSO_EXTENSION);
 	return monodroid_dlopen (full_name.get (), flags, err);
 }
 #else // def NET6 && def ANDROID
@@ -1449,7 +1443,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 	size_t len = base_len + LIBAOT_PREFIX_SIZE; // includes the trailing \0
 	static_local_string<PATH_MAX> basename (len);
 
-	basename.append (LIBAOT_PREFIX).append (basename_part);
+	basename.append (LIBAOT_PREFIX).append_c (basename_part);
 
 	h = androidSystem.load_dso_from_any_directories (basename.get (), dl_flags);
 
@@ -1585,7 +1579,7 @@ MonodroidRuntime::set_profile_options ()
 		if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, prop_value) == 0)
 			return;
 
-		value.assign (prop_value.get (), prop_value.length ());
+		value.assign (prop_value);
 	}
 
 	// setenv(3) makes copies of its arguments
@@ -1629,11 +1623,8 @@ MonodroidRuntime::set_profile_options ()
 
 	if (!have_output_arg) {
 		constexpr char   MLPD_EXT[] = "mlpd";
-		constexpr size_t MLPD_EXT_LEN = sizeof(MLPD_EXT) - 1;
 		constexpr char   AOT_EXT[] = "aotprofile";
-		constexpr size_t AOT_EXT_LEN = sizeof(AOT_EXT) - 1;
 		constexpr char   COV_EXT[] = "xml";
-		constexpr size_t COV_EXT_LEN = sizeof(COV_EXT) - 1;
 		constexpr char   LOG_PREFIX[] = "log:";
 		constexpr size_t LOG_PREFIX_LENGTH = sizeof(LOG_PREFIX) - 1;
 		constexpr char   AOT_PREFIX[] = "aot:";
@@ -1643,23 +1634,22 @@ MonodroidRuntime::set_profile_options ()
 		constexpr char   COVERAGE_PREFIX[] = "coverage:";
 		constexpr size_t COVERAGE_PREFIX_LENGTH = sizeof(COVERAGE_PREFIX) - 1;
 		constexpr char   PROFILE_FILE_NAME_PREFIX[] = "profile.";
-		constexpr size_t PROFILE_FILE_NAME_PREFIX_LEN = sizeof(PROFILE_FILE_NAME_PREFIX) - 1;
 
 		size_t length_adjust = colon_idx >= 1 ? 0 : 1;
 
 		output_path
-			.assign (androidSystem.get_override_dir (0))
+			.assign_c (androidSystem.get_override_dir (0))
 			.append (MONODROID_PATH_SEPARATOR)
-			.append (PROFILE_FILE_NAME_PREFIX, PROFILE_FILE_NAME_PREFIX_LEN);
+			.append (PROFILE_FILE_NAME_PREFIX);
 
 		if (value.starts_with (LOG_PREFIX, LOG_PREFIX_LENGTH - length_adjust)) {
-			output_path.append (MLPD_EXT, MLPD_EXT_LEN);
+			output_path.append (MLPD_EXT);
 		} else if (value.starts_with (AOT_PREFIX, AOT_PREFIX_LENGTH - length_adjust)) {
-			output_path.append (AOT_EXT, AOT_EXT_LEN);
+			output_path.append (AOT_EXT);
 		} else if (value.starts_with (DEFAULT_PREFIX, DEFAULT_PREFIX_LENGTH - length_adjust)) {
-			output_path.append (MLPD_EXT, MLPD_EXT_LEN);
+			output_path.append (MLPD_EXT);
 		} else if (value.starts_with (COVERAGE_PREFIX, COVERAGE_PREFIX_LENGTH - length_adjust)) {
-			output_path.append (COV_EXT, COV_EXT_LEN);
+			output_path.append (COV_EXT);
 		} else {
 			size_t len = colon_idx < 0 ? value.length () : static_cast<size_t>(colon_idx + 1);
 			output_path.append (value.get (), len);
@@ -1670,7 +1660,7 @@ MonodroidRuntime::set_profile_options ()
 		else
 			value.append (",");
 		value
-			.append (OUTPUT_ARG, OUTPUT_ARG_LEN)
+			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
 	}
 
@@ -1717,8 +1707,6 @@ MonodroidRuntime::disable_external_signal_handlers (void)
 inline void
 MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly)
 {
-	log_warn (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
-
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
 		total_time.mark_start ();
@@ -1913,18 +1901,19 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
 	constexpr size_t MASK_DLL_LEN = sizeof(MASK_DLL) - 1;
 	constexpr char   MASK_GC[] = "gc";
 	constexpr size_t MASK_GC_LEN = sizeof(MASK_GC) - 1;
+	constexpr char   COMMA[] = ",";
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> log_mask;
 	if (mono_log_mask == nullptr || *mono_log_mask == '\0') {
 		if (have_log_assembly) {
 			log_mask.append (MASK_ASM);
-			log_mask.append (",");
+			log_mask.append (COMMA);
 			log_mask.append (MASK_DLL);
 		}
 
 		if (have_log_gc) {
 			if (log_mask.length () > 0) {
-				log_mask.append (",");
+				log_mask.append (COMMA);
 			}
 			log_mask.append (MASK_GC);
 		}
@@ -1941,7 +1930,7 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
 
 	bool need_asm = have_log_assembly, need_dll = have_log_assembly, need_gc = have_log_gc;
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> input_log_mask;
-	input_log_mask.assign (mono_log_mask);
+	input_log_mask.assign_c (mono_log_mask);
 
 	string_segment token;
 	while (input_log_mask.next_token (',', token)) {
@@ -1960,17 +1949,17 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
 	}
 
 	if (need_asm) {
-		input_log_mask.append (",");
+		input_log_mask.append (COMMA);
 		input_log_mask.append (MASK_ASM);
 	}
 
 	if (need_dll) {
-		input_log_mask.append (",");
+		input_log_mask.append (COMMA);
 		input_log_mask.append (MASK_DLL);
 	}
 
 	if (need_gc) {
-		input_log_mask.append (",");
+		input_log_mask.append (COMMA);
 		input_log_mask.append (MASK_GC);
 	}
 
@@ -2092,11 +2081,12 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		utils.set_world_accessable (counters_path.get ());
 	}
 
+#if !defined (NET6)
 	void *dso_handle = nullptr;
 #if defined (WINDOWS) || defined (APPLE_OS_X)
 	const char *my_location = get_my_location ();
 	if (my_location != nullptr) {
-		simple_pointer_guard<char, false> dso_path (utils.path_combine (my_location, API_DSO_NAME));
+		std::unique_ptr<char[]> dso_path {utils.path_combine (my_location, API_DSO_NAME)};
 		log_info (LOG_DEFAULT, "Attempting to load %s", dso_path.get ());
 		dso_handle = java_interop_lib_load (dso_path.get (), JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
 #if defined (APPLE_OS_X)
@@ -2113,7 +2103,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)
 	if (dso_handle == nullptr)
 		dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY);
-#if !defined (NET6)
+
 	init_internal_api_dso (dso_handle);
 #endif // ndef NET6
 	mono_dl_fallback_register (monodroid_dlopen, monodroid_dlsym, nullptr, nullptr);
