@@ -512,6 +512,12 @@ namespace xamarin::android::internal
 			return assign (str.get (), str.length ());
 		}
 
+		template<size_t LocalMaxStackSize, typename LocalTStorage, typename LocalTChar = char>
+		force_inline string_base& assign (internal::string_base<LocalMaxStackSize, LocalTStorage, LocalTChar> const& str) noexcept
+		{
+			return assign (str.get (), str.length ());
+		}
+
 		force_inline string_base& assign (const TChar* s, size_t offset, size_t count) noexcept
 		{
 			if (s == nullptr)
