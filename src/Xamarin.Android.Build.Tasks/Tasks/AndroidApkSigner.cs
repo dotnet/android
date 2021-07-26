@@ -139,11 +139,11 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 				if (string.IsNullOrEmpty (KeyPass)) {
-					Log.LogCodedError ("XA4314", Properties.Resources.XA4310, "$(AndroidSigningKeyPass)");
+					Log.LogCodedError ("XA4314", Properties.Resources.XA4314, "$(AndroidSigningKeyPass)");
 					return false;
 				}
 				if (string.IsNullOrEmpty (StorePass)) {
-					Log.LogCodedError ("XA4314", Properties.Resources.XA4310, "$(AndroidSigningStorePass)");
+					Log.LogCodedError ("XA4314", Properties.Resources.XA4314, "$(AndroidSigningStorePass)");
 					return false;
 				}
 			}
