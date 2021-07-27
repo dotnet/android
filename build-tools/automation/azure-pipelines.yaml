@@ -803,9 +803,8 @@ stages:
         configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-Aot
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)-Aot.xml
-        # InetAccess excluded due to: https://github.com/dotnet/runtime/issues/56315
-        extraBuildArgs: /p:RunAOTCompilation=true /p:ExcludeCategories=InetAccess
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aot.xml
+        extraBuildArgs: /p:TestsFlavor=Aot /p:RunAOTCompilation=true
         artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: net6-aot
         useDotNet: true
