@@ -329,6 +329,7 @@
     <PropertyGroup>
       <_NetstandardDir>@(_NetstandardPath)</_NetstandardDir>
       <_ILRepackArgs>/out:&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot; /internalize</_ILRepackArgs>
+      <_ILRepackArgs>$(_ILRepackArgs) /keyfile:&quot;$(XamarinAndroidSourcePath)product.snk&quot;</_ILRepackArgs>
       <_ILRepackArgs>$(_ILRepackArgs) &quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot;</_ILRepackArgs>
       <_ILRepackArgs>$(_ILRepackArgs) @(_InputAssembliesThatExist->'&quot;%(Identity)&quot;', ' ')</_ILRepackArgs>
       <_ILRepackArgs>$(_ILRepackArgs) /lib:&quot;$(_NetstandardDir.TrimEnd('\'))&quot;</_ILRepackArgs> <!-- Path to netstandard.dll -->
@@ -404,5 +405,15 @@
 
   <Target Name="_Remove32BitLinux" Condition="Exists ('$(OutputPath)lib32\libZipSharpNative.so')" AfterTargets="CopyFilesToOutputDirectory">
     <Delete Files="$(OutputPath)lib32\libZipSharpNative.so" />
+  </Target>
+
+  <Target Name="_SetAssemblyVersion"
+      DependsOnTargets="GetXAVersionInfo"
+      BeforeTargets="GetAssemblyAttributes">
+    <PropertyGroup>
+      <AssemblyVersion>$(ProductVersion).$(PackVersionCommitCount)</AssemblyVersion>
+      <FileVersion>$(AssemblyVersion)</FileVersion>
+      <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+    </PropertyGroup>
   </Target>
 </Project>
