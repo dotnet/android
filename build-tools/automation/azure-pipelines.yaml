@@ -1263,7 +1263,7 @@ stages:
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
   # Check - "Xamarin.Android (.NET 6 Preview Installers Convert NuGet to MSI)"
-  - template: nuget-msi-convert/job/v1.yml@yaml
+  - template: nuget-msi-convert/job/v2.yml@yaml
     parameters:
       yamlResourceName: yaml
       dependsOn: signing
