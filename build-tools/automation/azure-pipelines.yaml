@@ -13,7 +13,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/pjc/vsredist-manifest-packs
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: monodroid
     type: github
