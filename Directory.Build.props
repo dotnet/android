@@ -28,7 +28,7 @@
   <PropertyGroup>
     <LibZipSharpVersion>2.0.0-alpha7</LibZipSharpVersion>
     <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
-    <MonoCecilVersion>0.11.2</MonoCecilVersion>
+    <MonoCecilVersion>0.11.4</MonoCecilVersion>
     <NewtonsoftJsonPackageVersion>13.0.1</NewtonsoftJsonPackageVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
     <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
