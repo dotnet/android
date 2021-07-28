@@ -64,6 +64,10 @@ Specifies the supported Android platform versions for this SDK.
 				writer.WriteAttributeString ("Condition", " '$(TargetPlatformVersion)' == '' ");
 				writer.WriteString (versions.MaxStableVersion.ApiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
 				writer.WriteEndElement (); // </TargetPlatformVersion>
+				writer.WriteStartElement ("AndroidMinimumSupportedApiLevel");
+				writer.WriteAttributeString ("Condition", " '$(AndroidMinimumSupportedApiLevel)' == '' ");
+				writer.WriteString (MinimumApiLevel.ToString ());
+				writer.WriteEndElement (); // </AndroidMinimumSupportedApiLevel>
 				writer.WriteEndElement (); // </PropertyGroup>
 
 				writer.WriteStartElement ("ItemGroup");

@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
 		[Required]
-		public ITaskItem ApkOutputPath { get; set; }
+		public string StampFile { get; set; }
 
 		public CilStrip ()
 		{
@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tasks
 			if (!Directory.Exists (nonstripDir))
 				Directory.CreateDirectory (nonstripDir);
 
-			var timestampFileDate = File.GetLastWriteTimeUtc (ApkOutputPath.ItemSpec);
+			var timestampFileDate = File.GetLastWriteTimeUtc (StampFile);
 
 			foreach (var assembly in ResolvedAssemblies) {
 				string assemblyPath = Path.GetFullPath (assembly.ItemSpec);

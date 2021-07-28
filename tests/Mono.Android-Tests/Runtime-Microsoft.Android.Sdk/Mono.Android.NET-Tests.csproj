@@ -19,8 +19,12 @@
     <EnableDefaultAndroidAssetItems>false</EnableDefaultAndroidAssetItems>
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <PlotDataLabelSuffix>-$(TestsFlavor)NET6</PlotDataLabelSuffix>
-    <!-- TODO: Fix excluded tests -->
+    <!--
+      TODO: Fix excluded tests
+      For AOT, InetAccess excluded due to: https://github.com/dotnet/runtime/issues/56315
+    -->
     <ExcludeCategories>DotNetIgnore</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(RunAOTCompilation)' == 'true' ">$(ExcludeCategories):InetAccess</ExcludeCategories>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
