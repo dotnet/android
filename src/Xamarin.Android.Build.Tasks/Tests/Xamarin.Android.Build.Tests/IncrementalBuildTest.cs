@@ -1053,6 +1053,8 @@ namespace Lib2
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildIncrementalAot (string supportedAbis, string androidAotMode, bool aotAssemblies, bool expectedResult)
 		{
+			AssertAotModeSupported (androidAotMode);
+
 			var targets = new string [] {
 				"_RemoveRegisterAttribute",
 				"_BuildApkEmbed",
