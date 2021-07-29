@@ -581,7 +581,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using var b = new Builder ();
 			var dotnetTargetFramework = "net6.0-android30.0";
-			var legacyTargetFrameworkVersion = b.LatestTargetFrameworkVersion ().TrimStart ('v');
+			var legacyTargetFrameworkVersion = "11.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
 			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
