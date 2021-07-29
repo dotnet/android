@@ -1318,6 +1318,7 @@ stages:
         & dotnet build -v:n -c $(XA.Build.Configuration)
         -t:PushManifestToBuildAssetRegistry
         -p:BuildAssetRegistryToken=$(MaestroAccessToken)
+        -p:OutputPath=$(System.DefaultWorkingDirectory)\nuget-signed\
         $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
         -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
       displayName: generate and publish BAR manifest
