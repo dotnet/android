@@ -26,6 +26,20 @@
     -->
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
     <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' ">true</UseMonoRuntime>
+    <!-- $(SupportedOSPlatformVersion) must be '21.0', but we should support integer values like '21' -->
+    <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' != '' and !$(SupportedOSPlatformVersion.Contains('.')) ">$(SupportedOSPlatformVersion).0</SupportedOSPlatformVersion>
+
+    <!-- Bindings properties -->
+    <!-- jar2xml is not supported -->
+    <AndroidClassParser>class-parse</AndroidClassParser>
+    <!-- Anything other than XAJavaInterop1 is not supported -->
+    <AndroidCodegenTarget>XAJavaInterop1</AndroidCodegenTarget>
+    <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
+    <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
+    <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
+
+    <!-- Mono components -->
+    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">false</AndroidEnableProfiler>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->
