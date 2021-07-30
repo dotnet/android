@@ -54,17 +54,26 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         AotOutputDirectory="$(_AndroidAotBinDirectory)"
         RuntimeIdentifier="$(RuntimeIdentifier)"
         EnableLLVM="$(EnableLLVM)"
+        UsingAndroidNETSdk="true"
         Profiles="@(_AotProfiles)">
       <Output PropertyName="_AotArguments" TaskParameter="Arguments" />
-      <Output PropertyName="_LLVMPath" TaskParameter="LLVMPath" />
+      <Output PropertyName="_AotOutputDirectory" TaskParameter="OutputDirectory" />
     </GetAotArguments>
+    <PropertyGroup>
+      <_MonoAOTCompilerPath>@(MonoAotCrossCompiler->WithMetadataValue('RuntimeIdentifier', '$(RuntimeIdentifier)'))</_MonoAOTCompilerPath>
+      <_LLVMPath Condition=" '$(EnableLLVM)' == 'true' ">$([System.IO.Path]::GetDirectoryName ('$(_MonoAOTCompilerPath)'))</_LLVMPath>
+    </PropertyGroup>
     <ItemGroup>
-      <_MonoAOTAssemblies Include="@(_AndroidAotInputs->'%(FullPath)')" AotArguments="$(_AotArguments)" />
+      <_MonoAOTAssemblies
+          Include="@(_AndroidAotInputs->'%(FullPath)')"
+          TempDirectory="$([MSBuild]::EnsureTrailingSlash($(_AotOutputDirectory)))%(FileName)"
+          AotArguments="$(_AotArguments),temp-path=$([System.IO.Path]::GetFullPath(%(_MonoAOTAssemblies.TempDirectory)))"
+      />
     </ItemGroup>
-    <MakeDir Directories="$(IntermediateOutputPath)aot\" />
+    <MakeDir Directories="$(IntermediateOutputPath)aot\;@(_MonoAOTAssemblies->'%(TempDirectory)')" />
     <MonoAOTCompiler
         Assemblies="@(_MonoAOTAssemblies)"
-        CompilerBinaryPath="@(MonoAotCrossCompiler->WithMetadataValue('RuntimeIdentifier', '$(RuntimeIdentifier)'))"
+        CompilerBinaryPath="$(_MonoAOTCompilerPath)"
         DisableParallelAot="$(_DisableParallelAot)"
         LibraryFormat="So"
         Mode="$(AndroidAotMode)"
