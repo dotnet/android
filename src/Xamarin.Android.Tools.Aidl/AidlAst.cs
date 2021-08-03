@@ -12,26 +12,26 @@ namespace Xamarin.Android.Tools.Aidl
 			Imports = imports;
 			Types = types;
 		}
-		
+
 		public TypeName Package { get; private set; }
 		public TypeName [] Imports { get; private set; }
 		public ITypeDeclaration [] Types { get; private set; }
 	}
-	
+
 	public interface ITypeDeclaration
 	{
 	}
-	
+
 	public class Parcelable : ITypeDeclaration
 	{
 		public Parcelable (TypeName name)
 		{
 			Name = name;
 		}
-		
+
 		public TypeName Name { get; private set; }
 	}
-	
+
 	public class Interface : ITypeDeclaration
 	{
 		public Interface (string modifier, string name, Method [] methods)
@@ -39,15 +39,15 @@ namespace Xamarin.Android.Tools.Aidl
 			Modifier = modifier;
 			JavaName = name;
 			Name = name [0] == 'I' ? name : 'I' + name;
-			Methods = methods ?? new Method [0];
+			Methods = methods ?? Array.Empty<Method> ();
 		}
-		
+
 		public string Modifier { get; private set; }
 		public string JavaName { get; private set; }
 		public string Name { get; private set; }
 		public Method [] Methods { get; private set; }
 	}
-	
+
 	public class Method
 	{
 		public Method (string modifier, TypeName returnType, string name, Argument [] args)
@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tools.Aidl
 			ReturnType = returnType;
 			JavaName = name;
 			Name = Util.ToPascalCase (name);
-			Arguments = args ?? new Argument [0];
+			Arguments = args ?? Array.Empty<Argument> ();
 		}
 
 		public string Modifier { get; private set; }
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tools.Aidl
 		public string Name { get; private set; }
 		public Argument [] Arguments { get; private set; }
 	}
-	
+
 	public class Argument
 	{
 		public Argument (string modifier, TypeName type, string name)
@@ -74,12 +74,12 @@ namespace Xamarin.Android.Tools.Aidl
 			Type = type;
 			Name = name;
 		}
-		
+
 		public string Modifier { get; private set; }
 		public TypeName Type { get; private set; }
 		public string Name { get; private set; }
 	}
-	
+
 	public class TypeName
 	{
 		public TypeName (string [] identifiers)
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tools.Aidl
 				throw new ArgumentException ("'identifiers' contain one or more null values: {0}", String.Concat (identifiers));
 			this.Identifiers = identifiers;
 		}
-		
+
 		public TypeName (string [] identifiers, TypeName [] genericArguments)
 		{
 			if (identifiers == null)
@@ -102,17 +102,17 @@ namespace Xamarin.Android.Tools.Aidl
 			this.Identifiers = identifiers;
 			this.GenericArguments = genericArguments;
 		}
-		
+
 		public string [] Identifiers { get; private set; }
 		//public TypeName ElementType { get; private set; }
 		public TypeName [] GenericArguments { get; private set; }
 		public int ArrayDimension { get; internal set; }
-		
+
 		public string GetNamespace ()
 		{
 			return GetFormattedIdentifiers (Identifiers.Length - 1);
 		}
-		
+
 		public string GetPackage ()
 		{
 			return GetJavaIdentifiers (Identifiers.Length - 1);
@@ -127,7 +127,7 @@ namespace Xamarin.Android.Tools.Aidl
 				baseName += " []";
 			return baseName;
 		}
-		
+
 		public string ToJavaString ()
 		{
 			string baseName = GetJavaIdentifiers (Identifiers.Length);
@@ -137,18 +137,18 @@ namespace Xamarin.Android.Tools.Aidl
 				baseName += " []";
 			return baseName;
 		}
-		
+
 		string GetJavaIdentifiers (int count)
 		{
 			return String.Join (".", Identifiers.Take (count));
 		}
-		
+
 		string GetFormattedIdentifiers (int count)
 		{
 			return String.Join (".", (from n in Identifiers.Take (count) select Util.ToPascalCase (n)).ToArray ());
 		}
 	}
-	
+
 	static class Util
 	{
 		public static string ToPascalCase (string s)

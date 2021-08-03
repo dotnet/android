@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public override bool Execute ()
 		{
-			InstrumentationArguments    = InstrumentationArguments ?? new string [0];
+			InstrumentationArguments    = InstrumentationArguments ?? Array.Empty<string> ();
 			if (string.IsNullOrEmpty (NUnit2TestResultsFile)) {
 				var n = new StringBuilder ("TestResult-").Append (Component);
 				foreach (var c in Path.GetInvalidFileNameChars ()) {
