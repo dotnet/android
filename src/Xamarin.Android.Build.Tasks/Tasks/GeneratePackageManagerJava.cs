@@ -188,7 +188,7 @@ namespace Xamarin.Android.Tasks
 			if (!Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode))
 				sequencePointsMode = SequencePointsMode.None;
 
-			foreach (ITaskItem env in Environments ?? new TaskItem[0]) {
+			foreach (ITaskItem env in Environments ?? Array.Empty<ITaskItem> ()) {
 				foreach (string line in File.ReadLines (env.ItemSpec)) {
 					var lineToWrite = line;
 					if (lineToWrite.StartsWith ("MONO_LOG_LEVEL=", StringComparison.Ordinal))

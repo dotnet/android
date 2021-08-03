@@ -372,7 +372,7 @@ namespace Xamarin.Android.Tasks
 								endLineNumber: 0,
 								endColumnNumber: 0,
 								message: xae.MessageWithoutCode,
-								messageArgs: new object [0]
+								messageArgs: Array.Empty<object> ()
 						);
 					} catch (DirectoryNotFoundException ex) {
 						ok = false;

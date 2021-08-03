@@ -88,7 +88,7 @@ namespace Android.App {
 					ToAttribute ("Priority",   Priority),
 					ToAttribute ("AutoVerify", _AutoVerify),
 					Actions.Select (a => new XElement ("action", new XAttribute (android + "name", ReplacePackage (a, packageName)))),
-					(Categories ?? new string[0]).Select (c => new XElement ("category", new XAttribute (android + "name", ReplacePackage (c, packageName)))),
+					(Categories ?? Array.Empty<string> ()).Select (c => new XElement ("category", new XAttribute (android + "name", ReplacePackage (c, packageName)))),
 					GetData (packageName));
 			AndroidResource.UpdateXmlResource (r);
 			return r;
