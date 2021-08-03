@@ -22,13 +22,12 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			var empty = Array.Empty<ITaskItem> ();
 			var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar")) : null;
 			if (jarFiles != null && JavaLibraries != null)
 				jarFiles = jarFiles.Concat (JavaLibraries);
 			else if (JavaLibraries != null)
 				jarFiles = JavaLibraries;
-			var jarFilePaths = (LibraryProjectJars ?? empty).Concat (jarFiles ?? empty).Select (j => j.ItemSpec);
+			var jarFilePaths = (LibraryProjectJars ?? Array.Empty<ITaskItem> ()).Concat (jarFiles ?? Array.Empty<ITaskItem> ()).Select (j => j.ItemSpec);
 
 			// Remove duplicate identical jars by name, size and content, and reject any jars that conflicts by name (i.e. different content).
 			var jars = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths).ToArray ();
