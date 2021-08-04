@@ -1,4 +1,5 @@
-﻿using Microsoft.Build.Framework;
+﻿using System;
+using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.IO;
@@ -35,7 +36,7 @@ namespace Xamarin.Android.Build.Tests {
 			var task1 = new MakeBundleNativeCodeExternal {
 				BuildEngine = engine,
 				AndroidNdkDirectory = androidNdkDirectory,
-				Assemblies = new ITaskItem [0],
+				Assemblies = Array.Empty<ITaskItem> (),
 				SupportedAbis = new [] { "armeabi-v7a" },
 				TempOutputPath = path,
 				ToolPath = "",
@@ -55,7 +56,7 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidAotMode = "normal",
 				AndroidApiLevel = "28",
 				EnableLLVM = true,
-				ResolvedAssemblies = new ITaskItem [0],
+				ResolvedAssemblies = Array.Empty<ITaskItem> (),
 				SupportedAbis = new [] { "armeabi-v7a" },
 				AotOutputDirectory = path,
 				IntermediateAssemblyDir = path

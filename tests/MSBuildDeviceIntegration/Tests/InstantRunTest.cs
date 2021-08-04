@@ -178,7 +178,7 @@ namespace Xamarin.Android.Build.Tests
 
 		#pragma warning disable 414
 		static object [] SkipFastDevAlreadyInstalledResourcesSource = new object [] {
-			new object[] { new Package [0], null },
+			new object[] { Array.Empty<Package> (), null },
 			new object[] { new Package [] { KnownPackages.AndroidSupportV4_27_0_2_1, KnownPackages.SupportV7AppCompat_27_0_2_1}, "Android.Support.V7.App.AppCompatActivity" },
 		};
 		#pragma warning restore 414

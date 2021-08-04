@@ -281,7 +281,7 @@ namespace Xamarin.Android.Tasks
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 
 			var outputFiles = new List<string> ();
-			uncompressedFileExtensions = UncompressedFileExtensions?.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
+			uncompressedFileExtensions = UncompressedFileExtensions?.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string> ();
 
 			existingEntries.Clear ();
 

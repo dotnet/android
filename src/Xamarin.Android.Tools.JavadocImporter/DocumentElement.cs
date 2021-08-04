@@ -372,10 +372,10 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 				.Elements ("div").Where (e => Application.HasHtmlClass (e, "description"))
 				.First ();
 			if (desc == null)
-				return new XNode [0];
+				return Array.Empty<XNode> ();
 			var div = desc.XPathSelectElement ("ul/li/div");
 			if (div == null)
-				return new XNode [0];
+				return Array.Empty<XNode> ();
 			return div.Nodes ();
 		}
 

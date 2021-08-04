@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			if (LogTaskMessages) {
 				Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Output)}:");
-				foreach (var line in (Output ?? new string [0]))
+				foreach (var line in (Output ?? Array.Empty<string> ()))
 					Log.LogMessage (MessageImportance.Low, $"    {line}");
 			}
 

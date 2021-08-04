@@ -6,10 +6,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -31,7 +31,7 @@ namespace Mono.CodeGeneration
 	{
 		public static CodeCustomAttribute Create (Type attributeType)
 		{
-			return Create (attributeType, Type.EmptyTypes, new object [0], new string [0], new object [0]);
+			return Create (attributeType, Type.EmptyTypes, Array.Empty<object> (), Array.Empty<string> (), Array.Empty<object> ());
 		}
 
 		public static CodeCustomAttribute Create (Type attributeType, Type [] ctorArgTypes, object [] ctorArgs, string [] namedArgNames, object [] namedArgValues)
@@ -120,7 +120,7 @@ namespace Mono.CodeGeneration
 			PrintCode (cw);
 			return sw.ToString ();
 		}
-		
+
 		public void PrintCode (CodeWriter cw)
 		{
 			cw.Write ("[").Write (type.Name).Write ("(");

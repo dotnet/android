@@ -11,7 +11,7 @@ using Xamarin.Android.Manifest;
 namespace Android.App {
 
 	partial class UsesPermissionAttribute {
-		
+
 		int   _MaxSdkVersion;
 
 		static ManifestDocumentElement<UsesPermissionAttribute> mapping = new ManifestDocumentElement<UsesPermissionAttribute> ("uses-permission") {
@@ -42,7 +42,7 @@ namespace Android.App {
 					extra = new[]{"Name"};
 				} else {
 					self = new UsesPermissionAttribute ();
-					extra = new string [0];
+					extra = Array.Empty<string> ();
 				}
 
 				self.specified = mapping.Load (self, attr);
