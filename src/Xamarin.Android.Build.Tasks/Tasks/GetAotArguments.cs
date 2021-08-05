@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Java.Interop.Tools.Diagnostics;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
@@ -48,13 +50,15 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] Profiles { get; set; }
 
+		public bool UsingAndroidNETSdk { get; set; }
+
 		public string AotAdditionalArguments { get; set; }
 
 		[Output]
 		public string Arguments { get; set; }
 
 		[Output]
-		public string LLVMPath { get; set; }
+		public string OutputDirectory { get; set; }
 
 		protected AotMode AotMode;
 		protected SequencePointsMode SequencePointsMode;
@@ -135,11 +139,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			(_, string outdir, string mtriple, AndroidTargetArch arch) = GetAbiSettings (abi);
-			string toolPrefix = GetToolPrefix (ndk, arch, out _);
+			string toolPrefix = GetToolPrefix (ndk, arch, out int level);
 
-			Arguments = string.Join (",", GetAotOptions (outdir, mtriple, toolPrefix));
-			if (EnableLLVM)
-				LLVMPath = Path.GetDirectoryName (toolPrefix);
+			Arguments = string.Join (",", GetAotOptions (ndk, arch, level, outdir, mtriple, toolPrefix));
+			OutputDirectory = outdir;
 			return Task.CompletedTask;
 		}
 
@@ -245,7 +248,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Returns a list of parameters to pass to the --aot switch
 		/// </summary>
-		protected List<string> GetAotOptions (string outdir, string mtriple, string toolPrefix)
+		protected List<string> GetAotOptions (NdkTools ndk, AndroidTargetArch arch, int level, string outdir, string mtriple, string toolPrefix)
 		{
 			List<string> aotOptions = new List<string> ();
 
@@ -266,7 +269,117 @@ namespace Xamarin.Android.Tasks
 			aotOptions.Add ("asmwriter");
 			aotOptions.Add ($"mtriple={mtriple}");
 			aotOptions.Add ($"tool-prefix={toolPrefix}");
+
+			string ldName;
+			if (EnableLLVM) {
+				ldName = ndk.GetToolPath (NdkToolKind.Linker, arch, level);
+				if (!string.IsNullOrEmpty (ldName)) {
+					ldName = Path.GetFileName (ldName);
+					if (ldName.IndexOf ('-') >= 0) {
+						ldName = ldName.Substring (ldName.LastIndexOf ("-") + 1);
+					}
+				}
+			} else {
+				ldName = "ld";
+			}
+			string ldFlags = GetLdFlags (ndk, arch, level, toolPrefix);
+
+			// MUST be before `ld-flags`, otherwise Mono fails to parse it on Windows
+			if (!string.IsNullOrEmpty (ldName)) {
+				aotOptions.Add ($"ld-name={ldName}");
+			}
+			if (!string.IsNullOrEmpty (ldFlags)) {
+				aotOptions.Add ($"ld-flags={ldFlags}");
+			}
+
 			return aotOptions;
+		}
+
+		string GetLdFlags(NdkTools ndk, AndroidTargetArch arch, int level, string toolPrefix)
+		{
+			var toolchainPath = toolPrefix.Substring (0, toolPrefix.LastIndexOf (Path.DirectorySeparatorChar));
+			var ldFlags = string.Empty;
+			if (EnableLLVM) {
+				if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
+					return null;
+				}
+
+				string androidLibPath = string.Empty;
+				try {
+					androidLibPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
+				} catch (InvalidOperationException ex) {
+					Diagnostic.Error (5101, ex.Message);
+				}
+
+				string toolchainLibDir;
+				if (ndk.UsesClang)
+					toolchainLibDir = GetNdkToolchainLibraryDir (ndk, toolchainPath, arch);
+				else
+					toolchainLibDir = GetNdkToolchainLibraryDir (ndk, toolchainPath);
+
+				var libs = new List<string> ();
+				if (ndk.UsesClang) {
+					libs.Add ($"-L{toolchainLibDir.TrimEnd ('\\')}");
+					libs.Add ($"-L{androidLibPath.TrimEnd ('\\')}");
+
+					if (arch == AndroidTargetArch.Arm) {
+						// Needed for -lunwind to work
+						string compilerLibDir = Path.Combine (toolchainPath, "..", "sysroot", "usr", "lib", ndk.GetArchDirName (arch));
+						libs.Add ($"-L{compilerLibDir.TrimEnd ('\\')}");
+					}
+				}
+
+				libs.Add (Path.Combine (toolchainLibDir, "libgcc.a"));
+				libs.Add (Path.Combine (androidLibPath, "libc.so"));
+				libs.Add (Path.Combine (androidLibPath, "libm.so"));
+
+				if (UsingAndroidNETSdk) {
+					// NOTE: in .NET 6+ use space for the delimiter and escape spaces in paths
+					var escaped = libs.Select (l => l.Replace (" ", "\\ "));
+					ldFlags = string.Join (" ", escaped);
+				} else {
+					ldFlags = $"\\\"{string.Join ("\\\";\\\"", libs)}\\\"";
+				}
+			}
+			return ldFlags;
+		}
+
+		static string GetNdkToolchainLibraryDir (NdkTools ndk, string binDir, string archDir = null)
+		{
+			var baseDir = Path.GetFullPath (Path.Combine (binDir, ".."));
+
+			string libDir = Path.Combine (baseDir, "lib", "gcc");
+			if (!String.IsNullOrEmpty (archDir))
+				libDir = Path.Combine (libDir, archDir);
+
+			var gccLibDir = Directory.EnumerateDirectories (libDir).ToList ();
+			gccLibDir.Sort ();
+
+			var libPath = gccLibDir.LastOrDefault ();
+			if (libPath == null) {
+				goto no_toolchain_error;
+			}
+
+			if (ndk.UsesClang)
+				return libPath;
+
+			gccLibDir = Directory.EnumerateDirectories (libPath).ToList ();
+			gccLibDir.Sort ();
+
+			libPath = gccLibDir.LastOrDefault ();
+			if (libPath == null) {
+				goto no_toolchain_error;
+			}
+
+			return libPath;
+
+		no_toolchain_error:
+			throw new Exception ("Could not find a valid NDK compiler toolchain library path");
+		}
+
+		static string GetNdkToolchainLibraryDir (NdkTools ndk, string binDir, AndroidTargetArch arch)
+		{
+			return GetNdkToolchainLibraryDir (ndk, binDir, ndk.GetArchDirName (arch));
 		}
 	}
 }

@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-using Java.Interop.Tools.Diagnostics;
 using Xamarin.Android.Tools;
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -53,44 +50,6 @@ namespace Xamarin.Android.Tasks
 
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
-
-		static string GetNdkToolchainLibraryDir (NdkTools ndk, string binDir, string archDir = null)
-		{
-			var baseDir = Path.GetFullPath(Path.Combine(binDir, ".."));
-
-			string libDir = Path.Combine (baseDir, "lib", "gcc");
-			if (!String.IsNullOrEmpty (archDir))
-				libDir = Path.Combine (libDir, archDir);
-
-			var gccLibDir = Directory.EnumerateDirectories (libDir).ToList();
-			gccLibDir.Sort();
-
-			var libPath = gccLibDir.LastOrDefault();
-			if (libPath == null) {
-				goto no_toolchain_error;
-			}
-
-			if (ndk.UsesClang)
-				return libPath;
-
-			gccLibDir = Directory.EnumerateDirectories(libPath).ToList();
-			gccLibDir.Sort();
-
-			libPath = gccLibDir.LastOrDefault();
-			if (libPath == null) {
-				goto no_toolchain_error;
-			}
-
-			return libPath;
-
-		  no_toolchain_error:
-			throw new Exception("Could not find a valid NDK compiler toolchain library path");
-		}
-
-		static string GetNdkToolchainLibraryDir (NdkTools ndk, string binDir, AndroidTargetArch arch)
-		{
-			return GetNdkToolchainLibraryDir (ndk, binDir, ndk.GetArchDirName (arch));
-		}
 
 		static string QuoteFileName(string fileName)
 		{
@@ -171,59 +130,6 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string toolPrefix = GetToolPrefix (ndk, arch, out int level);
-				var toolchainPath = toolPrefix.Substring(0, toolPrefix.LastIndexOf(Path.DirectorySeparatorChar));
-				var ldFlags = string.Empty;
-				if (EnableLLVM) {
-					if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
-						yield return Config.Invalid;
-						yield break;
-					}
-
-					string androidLibPath = string.Empty;
-					try {
-						androidLibPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
-					} catch (InvalidOperationException ex) {
-						Diagnostic.Error (5101, ex.Message);
-					}
-
-					string toolchainLibDir;
-					if (ndk.UsesClang)
-						toolchainLibDir = GetNdkToolchainLibraryDir (ndk, toolchainPath, arch);
-					else
-						toolchainLibDir = GetNdkToolchainLibraryDir (ndk, toolchainPath);
-
-					var libs = new List<string>();
-					if (ndk.UsesClang) {
-						libs.Add ($"-L{toolchainLibDir.TrimEnd ('\\')}");
-						libs.Add ($"-L{androidLibPath.TrimEnd ('\\')}");
-
-						if (arch == AndroidTargetArch.Arm) {
-							// Needed for -lunwind to work
-							string compilerLibDir = Path.Combine (toolchainPath, "..", "sysroot", "usr", "lib", ndk.GetArchDirName (arch));
-							libs.Add ($"-L{compilerLibDir.TrimEnd ('\\')}");
-						}
-					}
-
-					libs.Add (Path.Combine (toolchainLibDir, "libgcc.a"));
-					libs.Add (Path.Combine (androidLibPath, "libc.so"));
-					libs.Add (Path.Combine (androidLibPath, "libm.so"));
-
-					ldFlags = $"\\\"{string.Join("\\\";\\\"", libs)}\\\"";
-				}
-
-				string ldName = String.Empty;
-				if (EnableLLVM) {
-					ldName = ndk.GetToolPath (NdkToolKind.Linker, arch, level);
-					if (!String.IsNullOrEmpty (ldName)) {
-						ldName = Path.GetFileName (ldName);
-						if (ldName.IndexOf ('-') >= 0) {
-							ldName = ldName.Substring (ldName.LastIndexOf ("-") + 1);
-						}
-					}
-				} else {
-					ldName = "ld";
-				}
-
 				foreach (var assembly in ResolvedAssemblies) {
 					string outputFile = Path.Combine(outdir, string.Format ("libaot-{0}.so",
 						Path.GetFileName (assembly.ItemSpec)));
@@ -232,20 +138,13 @@ namespace Xamarin.Android.Tasks
 						Path.GetFileName (assembly.ItemSpec)));
 
 					string tempDir = Path.Combine (outdir, Path.GetFileName (assembly.ItemSpec));
-					if (!Directory.Exists (tempDir))
-						Directory.CreateDirectory (tempDir);
+					Directory.CreateDirectory (tempDir);
 
-					var aotOptions = GetAotOptions (outdir, mtriple, toolPrefix);
-					aotOptions.Add ($"outfile={outputFile}");
-					aotOptions.Add ($"llvm-path={SdkBinDirectory}");
-					aotOptions.Add ($"temp-path={tempDir}");
-
-					if (!String.IsNullOrEmpty (ldName)) {
-						// MUST be before `ld-flags`, otherwise Mono fails to parse it on Windows
-						aotOptions.Add ($"ld-name={ldName}");
-					}
-
-					aotOptions.Add ($"ld-flags={ldFlags}");
+					var aotOptions = GetAotOptions (ndk, arch, level, outdir, mtriple, toolPrefix);
+					// NOTE: ordering seems to matter on Windows
+					aotOptions.Insert (0, $"outfile={outputFile}");
+					aotOptions.Insert (0, $"llvm-path={SdkBinDirectory}");
+					aotOptions.Insert (0, $"temp-path={tempDir}");
 
 					// we need to quote the entire --aot arguments here to make sure it is parsed
 					// on windows as one argument. Otherwise it will be split up into multiple

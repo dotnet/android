@@ -26,6 +26,10 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (!IsWindows)
 				return;
+			// Use standard NDK directory for now
+			// See: https://github.com/dotnet/runtime/issues/56163
+			if (Builder.UseDotNet)
+				return;
 
 			var sdkPath = AndroidSdkPath;
 			var ndkPath = AndroidNdkPath;
@@ -44,6 +48,10 @@ namespace Xamarin.Android.Build.Tests
 		public void TearDown ()
 		{
 			if (!IsWindows)
+				return;
+			// Use standard NDK directory for now
+			// See: https://github.com/dotnet/runtime/issues/56163
+			if (Builder.UseDotNet)
 				return;
 			Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", "");
 			Environment.SetEnvironmentVariable ("TEST_ANDROID_NDK_PATH", "");
@@ -150,8 +158,6 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
 		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
-			AssertLLVMSupported (enableLLVM);
-
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -230,8 +236,6 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
 		public void BuildAotApplicationAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
-			AssertLLVMSupported (enableLLVM);
-
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplicationAndBundle AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
