@@ -76,7 +76,7 @@ namespace xamarin::android::internal
 			return memcmp (_start, s, length ()) == 0;
 		}
 
-		force_inline bool starts_with (const char *s) const noexcept
+		force_inline bool starts_with_c (const char *s) const noexcept
 		{
 			if (s == nullptr)
 				return false;
@@ -504,12 +504,6 @@ namespace xamarin::android::internal
 		force_inline string_base& assign (const char (&s)[Size]) const noexcept
 		{
 			return assign (s, Size - 1);
-		}
-
-		template<size_t LocalMaxStackSize, typename LocalTStorage, typename LocalTChar = char>
-		force_inline string_base& assign (internal::string_base<LocalMaxStackSize, LocalTStorage, LocalTChar> const& str) noexcept
-		{
-			return assign (str.get (), str.length ());
 		}
 
 		template<size_t LocalMaxStackSize, typename LocalTStorage, typename LocalTChar = char>

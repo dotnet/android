@@ -82,7 +82,13 @@ namespace xamarin::android
 		static constexpr uint32_t ms_in_nsec = 1000000ULL;
 
 	public:
-		int              monodroid_getpagesize ();
+		Util ();
+
+		int              monodroid_getpagesize () const noexcept
+		{
+			return page_size;
+		}
+
 		void             monodroid_store_package_name (const char *name);
 		MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
 #if defined (NET6)
@@ -118,6 +124,7 @@ namespace xamarin::android
 
 	private:
 		char package_property_suffix[9];
+		int page_size;
 	};
 }
 #endif // __cplusplus

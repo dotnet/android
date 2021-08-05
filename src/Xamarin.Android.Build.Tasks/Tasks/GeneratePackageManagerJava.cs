@@ -269,10 +269,38 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
+			int assemblyNameWidth = 0;
 			int assemblyCount = ResolvedAssemblies.Length;
+			Encoding assemblyNameEncoding = Encoding.UTF8;
+
+			Action<ITaskItem> updateNameWidth = (ITaskItem assembly) => {
+				string assemblyName = Path.GetFileName (assembly.ItemSpec);
+				int nameBytes = assemblyNameEncoding.GetBytes (assemblyName).Length;
+				if (nameBytes > assemblyNameWidth) {
+					assemblyNameWidth = nameBytes;
+				}
+			};
+
 			if (SatelliteAssemblies != null) {
 				assemblyCount += SatelliteAssemblies.Length;
+
+				foreach (ITaskItem assembly in SatelliteAssemblies) {
+					updateNameWidth (assembly);
+				}
 			}
+
+			foreach (var assembly in ResolvedAssemblies) {
+				updateNameWidth (assembly);
+			}
+
+			int abiNameLength = 0;
+			foreach (string abi in SupportedAbis) {
+				if (abi.Length <= abiNameLength) {
+					continue;
+				}
+				abiNameLength = abi.Length;
+			}
+			assemblyNameWidth += abiNameLength + 1; // room for '/'
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
@@ -295,6 +323,7 @@ namespace Xamarin.Android.Tasks
 					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
 					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
+					BundledAssemblyNameWidth = assemblyNameWidth + 1,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

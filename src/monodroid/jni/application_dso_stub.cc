@@ -54,3 +54,26 @@ ApplicationConfig application_config = {
 const char* mono_aot_mode_name = "";
 const char* app_environment_variables[] = {};
 const char* app_system_properties[] = {};
+
+static constexpr size_t AssemblyNameWidth = 128;
+
+static char first_assembly_name[AssemblyNameWidth];
+static char second_assembly_name[AssemblyNameWidth];
+
+XamarinAndroidBundledAssembly bundled_assemblies[] = {
+	{
+		.apk_fd = -1,
+		.data_offset = 0,
+		.data_size = 0,
+		.data = nullptr,
+		.name = first_assembly_name,
+	},
+
+	{
+		.apk_fd = -1,
+		.data_offset = 0,
+		.data_size = 0,
+		.data = nullptr,
+		.name = second_assembly_name,
+	},
+};

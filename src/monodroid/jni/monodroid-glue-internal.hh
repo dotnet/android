@@ -145,6 +145,11 @@ namespace xamarin::android::internal
 #endif
 		jint Java_JNI_OnLoad (JavaVM *vm, void *reserved);
 
+		bool is_startup_in_progress () const noexcept
+		{
+			return startup_in_progress;
+		}
+
 		int get_android_api_level () const
 		{
 			return android_api_level;
@@ -329,6 +334,7 @@ namespace xamarin::android::internal
 		 * able to switch our different contexts from different threads.
 		 */
 		int                 current_context_id = -1;
+		bool                startup_in_progress = true;
 
 #if defined (NET6)
 		MonoAssemblyLoadContextGCHandle default_alc = nullptr;
