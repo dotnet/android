@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <NeutralLanguage>en</NeutralLanguage>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,6 +5,8 @@
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
     <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <Import Project="..\..\build-tools\scripts\cecil.projitems" />
