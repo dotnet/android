@@ -462,3 +462,47 @@ copying `.nupkg` files to the `library-packs` directory of a given
 
 The `library-packs` directory is simply an implicit NuGet feed that is
 automatically picked up by the .NET SDK.
+
+## Enabling Mono Logging
+
+Since [6e58ce4][6e58ce4], logging from Mono is no longer enabled by
+default. You can set the `debug.mono.log` system property to answer
+questions like: Is AOT working? Is the Mono Interpreter enabled?
+
+If you wanted to enable logging for AOT, for example:
+
+```bash
+$ adb shell setprop debug.mono.log mono_log_level=debug,mono_log_mask=aot
+```
+
+You could use `mono_log_mask=all` to enable all logging. See the [Mono
+documentation][mono-logging] for more information about
+`MONO_LOG_LEVEL` and `MONO_LOG_MASK`.
+
+There is further logging produced by `libmonodroid.so` you can enable with:
+
+```bash
+$ adb shell setprop debug.mono.log=default,timing=bare,assembly,gc,debugger
+```
+
+You can combine both together. The following would log nearly everything:
+
+```bash
+$ adb shell setprop debug.mono.log=default,timing=bare,assembly,gc,debugger,mono_log_level=debug,mono_log_mask=aot
+```
+
+To unset `debug.mono.log`, you can do:
+
+```bash
+$ adb shell setprop debug.mono.log "''"
+```
+
+You could also reboot the device or emulator to completely clear all
+system properties.
+
+The `debug.mono.log` system property can also be set in an
+`@(AndroidEnvironment)` text file. However, the system property will
+be preferred if it is not blank.
+
+[mono-logging]: https://www.mono-project.com/docs/advanced/runtime/logging-runtime-events/
+[6e58ce4]: https://github.com/xamarin/xamarin-android/commit/6e58ce405d00a965f3c206e2d509f5a5343b16f7
