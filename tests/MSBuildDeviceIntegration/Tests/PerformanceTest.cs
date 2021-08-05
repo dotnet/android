@@ -68,21 +68,15 @@ namespace Xamarin.Android.Build.Tests
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, "msbuild.binlog");
 			FileAssert.Exists (binlog);
 
-			try {
-				var build = BinaryLog.ReadBuild (binlog);
-				var duration = build
-					.FindChildrenRecursive<Project> ()
-					.Aggregate (TimeSpan.Zero, (duration, project) => duration + project.Duration);
+			var build = BinaryLog.ReadBuild (binlog);
+			var duration = build
+				.FindChildrenRecursive<Project> ()
+				.Aggregate (TimeSpan.Zero, (duration, project) => duration + project.Duration);
 
-				if (duration == TimeSpan.Zero)
-					throw new InvalidDataException ($"No project build duration found in {binlog}");
+			if (duration == TimeSpan.Zero)
+				throw new InvalidDataException ($"No project build duration found in {binlog}");
 
-				return duration.TotalMilliseconds;
-			} catch (NotSupportedException) {
-				// See: https://github.com/dotnet/msbuild/issues/6225
-				Assert.Ignore ($"Test requires an updated MSBuild.StructuredLogger");
-				return 0;
-			}
+			return duration.TotalMilliseconds;
 		}
 
 		ProjectBuilder CreateBuilderWithoutLogFile (string directory = null, bool isApp = true)
