@@ -69,11 +69,13 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
           TempDirectory="$([MSBuild]::EnsureTrailingSlash($(_AotOutputDirectory)))%(FileName)"
           AotArguments="$(_AotArguments),temp-path=$([System.IO.Path]::GetFullPath(%(_MonoAOTAssemblies.TempDirectory)))"
       />
+      <AndroidAotProfile Include="$(MSBuildThisFileDirectory)dotnet.aotprofile" Condition=" '$(AndroidEnableProfiledAot)' == 'true' and '$(AndroidUseDefaultAotProfile)' != 'false' " />
     </ItemGroup>
     <MakeDir Directories="$(IntermediateOutputPath)aot\;@(_MonoAOTAssemblies->'%(TempDirectory)')" />
     <MonoAOTCompiler
         Assemblies="@(_MonoAOTAssemblies)"
         CompilerBinaryPath="$(_MonoAOTCompilerPath)"
+        AotProfilePath="@(AndroidAotProfile->'%(FullPath)')"
         DisableParallelAot="$(_DisableParallelAot)"
         LibraryFormat="So"
         Mode="$(AndroidAotMode)"

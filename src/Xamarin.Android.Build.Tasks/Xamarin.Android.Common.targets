@@ -727,6 +727,11 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
+	<!-- We should slowly port all the <CreateProperty/> calls to <PropertyGroup/> here -->
+	<PropertyGroup>
+		<AProfUtilToolPath Condition=" '$(AProfUtilToolPath)' == '' ">$(MonoAndroidBinDirectory)</AProfUtilToolPath>
+	</PropertyGroup>
+
 	<!-- Get the defined constants for this API Level -->
 	<GetAndroidDefineConstants AndroidApiLevel="$(_AndroidApiLevel)" ProductVersion="$(MonoAndroidVersion)">
 		<Output TaskParameter="AndroidDefineConstants" ItemName="AndroidDefineConstants" />

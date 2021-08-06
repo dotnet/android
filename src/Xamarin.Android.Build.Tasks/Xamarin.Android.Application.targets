@@ -48,8 +48,8 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
       DependsOnTargets="$(_BeginAotProfilingDependsOnTargets)">
   </Target>
   <Target Name="FinishAotProfiling"
-      DependsOnTargets="_ResolveSdks">
+      DependsOnTargets="_ResolveSdks;_ResolveMonoAndroidSdks">
     <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) forward tcp:$(AndroidAotProfilerPort) tcp:$(AndroidAotProfilerPort)" />
-    <Exec Command="&quot;$(MonoAndroidBinDirectory)aprofutil&quot; $(AProfUtilExtraOptions) -s -v -p $(AndroidAotProfilerPort) -o &quot;$(AndroidAotCustomProfilePath)&quot;" />
+    <Exec Command="&quot;$(AProfUtilToolPath)aprofutil&quot; $(AProfUtilExtraOptions) -s -v -p $(AndroidAotProfilerPort) -o &quot;$(AndroidAotCustomProfilePath)&quot;" />
   </Target>
 </Project>

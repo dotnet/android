@@ -1584,6 +1584,59 @@ MonodroidRuntime::set_profile_options ()
 
 	// setenv(3) makes copies of its arguments
 	setenv ("DOTNET_DiagnosticPorts", value.get (), 1);
+
+	constexpr char OUTPUT_ARG[] = "output=";
+	constexpr size_t OUTPUT_ARG_LEN = sizeof(OUTPUT_ARG) - 1;
+
+	ssize_t colon_idx = value.index_of (':');
+	size_t start_index = colon_idx < 0 ? 0 : static_cast<size_t>(colon_idx + 1);
+	dynamic_local_string<SENSIBLE_PATH_MAX> output_path;
+	bool have_output_arg = false;
+	string_segment param;
+
+	while (value.next_token (start_index, ',', param)) {
+		dynamic_local_string<SENSIBLE_PATH_MAX> temp;
+		temp.assign (param.start (), param.length ());
+		if (!param.starts_with (OUTPUT_ARG) || param.length () == OUTPUT_ARG_LEN) {
+			continue;
+		}
+
+		output_path.assign (param.start () + OUTPUT_ARG_LEN, param.length () - OUTPUT_ARG_LEN);
+		have_output_arg = true;
+		break;
+	}
+
+	if (!have_output_arg) {
+		constexpr char   AOT_EXT[] = "aotprofile";
+		constexpr char   AOT_PREFIX[] = "aot:";
+		constexpr size_t AOT_PREFIX_LENGTH = sizeof(AOT_PREFIX) - 1;
+		constexpr char   PROFILE_FILE_NAME_PREFIX[] = "profile.";
+
+		size_t length_adjust = colon_idx >= 1 ? 0 : 1;
+
+		output_path
+			.assign_c (androidSystem.get_override_dir (0))
+			.append (MONODROID_PATH_SEPARATOR)
+			.append (PROFILE_FILE_NAME_PREFIX);
+
+		if (value.starts_with (AOT_PREFIX, AOT_PREFIX_LENGTH - length_adjust)) {
+			output_path.append (AOT_EXT);
+		} else {
+			size_t len = colon_idx < 0 ? value.length () : static_cast<size_t>(colon_idx + 1);
+			output_path.append (value.get (), len);
+		}
+
+		if (colon_idx < 0)
+			value.append (":");
+		else
+			value.append (",");
+		value
+			.append (OUTPUT_ARG)
+			.append (output_path.get (), output_path.length ());
+	}
+
+	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value.get ());
+	debug.monodroid_profiler_load (androidSystem.get_runtime_libdir (), value.get (), output_path.get ());
 }
 #else // def NET6
 inline void
