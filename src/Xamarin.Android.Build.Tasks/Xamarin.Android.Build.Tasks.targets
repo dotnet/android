@@ -410,7 +410,7 @@
 
   <Target Name="_SetAssemblyVersion"
       DependsOnTargets="GetXAVersionInfo"
-      BeforeTargets="GetAssemblyAttributes">
+      BeforeTargets="GetAssemblyVersion">
     <PropertyGroup>
       <Version>$(ProductVersion).$(PackVersionCommitCount)</Version>
     </PropertyGroup>
