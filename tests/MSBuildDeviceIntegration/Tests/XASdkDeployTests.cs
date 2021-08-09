@@ -10,10 +10,11 @@ using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
+#if !NET472
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("SmokeTests"), Category ("DotNetIgnore")] // These don't need to run under `dotnet test`
+	[Category ("UsesDevice"), Category ("SmokeTests")]
 	public class XASdkDeployTests : DeviceTest
 	{
 		static object [] DotNetInstallAndRunSource = new object [] {
@@ -158,3 +159,4 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}
 }
+#endif

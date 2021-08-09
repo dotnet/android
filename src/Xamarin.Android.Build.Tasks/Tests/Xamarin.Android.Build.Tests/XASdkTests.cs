@@ -9,11 +9,12 @@ using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
+#if !NET472
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[NonParallelizable] // On MacOS, parallel /restore causes issues
-	[Category ("Node-2"), Category ("DotNetIgnore")] // These don't need to run under `dotnet test`
+	[Category ("Node-2")]
 	public class XASdkTests : BaseTest
 	{
 		/// <summary>
@@ -207,7 +208,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetPack ([Values ("net6.0-android", "net6.0-android30")] string targetFramework)
+		public void DotNetPack ([Values ("net6.0-android", "net6.0-android31")] string targetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
@@ -239,8 +240,8 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android30.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android30.0/{proj.ProjectName}.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.aar");
 			}
 		}
 
@@ -454,7 +455,7 @@ namespace Xamarin.Android.Build.Tests
 				$"{proj.ProjectName}.runtimeconfig.json",
 				$"{proj.ProjectName}.xml",
 			};
-			CollectionAssert.AreEqual (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
+			CollectionAssert.AreEquivalent (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
 
 			var assemblyPath = Path.Combine (outputPath, $"{proj.ProjectName}.dll");
 			FileAssert.Exists (assemblyPath);
@@ -481,7 +482,7 @@ namespace Xamarin.Android.Build.Tests
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
 			Assert.AreEqual ("21", uses_sdk.Attribute (ns + "minSdkVersion").Value);
-			Assert.AreEqual ("30", uses_sdk.Attribute (ns + "targetSdkVersion").Value);
+			Assert.AreEqual ("31", uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}.apk");
@@ -504,7 +505,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SupportedOSPlatformVersion ([Values (21, 30)] int minSdkVersion)
+		public void SupportedOSPlatformVersion ([Values (21, 31)] int minSdkVersion)
 		{
 			var proj = new XASdkProject {
 				SupportedOSPlatformVersion = minSdkVersion.ToString (),
@@ -615,7 +616,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			using var b = new Builder ();
-			var dotnetTargetFramework = "net6.0-android30.0";
+			var dotnetTargetFramework = "net6.0-android31.0";
 			var legacyTargetFrameworkVersion = "11.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
@@ -632,7 +633,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MauiTargetFramework ([Values ("net6.0-android", "net6.0-android30", "net6.0-android30.0")] string targetFramework)
+		public void MauiTargetFramework ([Values ("net6.0-android", "net6.0-android31", "net6.0-android31.0")] string targetFramework)
 		{
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
@@ -737,3 +738,4 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 		}
 	}
 }
+#endif

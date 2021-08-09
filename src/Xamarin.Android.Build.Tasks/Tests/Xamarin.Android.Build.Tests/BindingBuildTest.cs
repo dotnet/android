@@ -419,7 +419,7 @@ namespace Foo {
 		{
 			var binding = new XamarinAndroidBindingProject () {
 				IsRelease = true,
-				UseLatestPlatformSdk = true,
+				//UseLatestPlatformSdk = true,
 				Jars = {
 					new AndroidItem.LibraryProjectZip ("Jars\\ActionBarSherlock-4.3.1.zip") {
 						WebContent = "https://github.com/xamarin/monodroid-samples/blob/master/ActionBarSherlock/ActionBarSherlock/Jars/ActionBarSherlock-4.3.1.zip?raw=true"

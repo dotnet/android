@@ -6,11 +6,11 @@
       kept consistent with each other, lest Bad Things Happen™
       -->
     <!-- The default Android API level to bind in src/Mono.Android -->
-    <AndroidApiLevel>30</AndroidApiLevel>
+    <AndroidApiLevel>31</AndroidApiLevel>
     <!-- The Xamarin.Android $(TargetFrameworkVersion) value that corresponds to $(AndroidApiLevel) -->
-    <AndroidFrameworkVersion>v11.0</AndroidFrameworkVersion>
+    <AndroidFrameworkVersion>v12.0</AndroidFrameworkVersion>
     <!-- The default Android API "id" that corresponds to $(AndroidApiLevel) -->
-    <AndroidPlatformId>30</AndroidPlatformId>
+    <AndroidPlatformId>31</AndroidPlatformId>
 
     <!--
       Colon-separated list of ABIs to build the mono JIT for.
