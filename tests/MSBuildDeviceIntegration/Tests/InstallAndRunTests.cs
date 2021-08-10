@@ -84,9 +84,34 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
 			string expectedLogcatOutput = "# Unhandled Exception: sender=RootDomain; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
-			Assert.IsTrue (MonitorAdbLogcat ((line) => {
-				return line.Contains (expectedLogcatOutput);
-			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
+			Assert.IsTrue (
+				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
+					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
+				$"Output did not contain {expectedLogcatOutput}!");
+		}
+
+		static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
+		{
+			// On .NET 6, `adb logcat` output may be line-wrapped in unexpected ways.
+			// https://github.com/xamarin/xamarin-android/pull/6119#issuecomment-896246633
+			// Try to see if *successive* lines match expected output
+			int startIndex  = 0;
+			return line => {
+				int count   = expectedLogcatOutput.Length - startIndex;
+				if (line.IndexOf (expectedLogcatOutput, startIndex, count) >= 0) {
+					return true;
+				}
+				while (--count > 0) {
+					if (line.IndexOf (expectedLogcatOutput, startIndex, count) >= 0) {
+						TestContext.Out.WriteLine ($"# jonp: found partial line match! `{expectedLogcatOutput.Substring (startIndex, count)}`");
+						startIndex += count;
+						TestContext.Out.WriteLine ($"# jonp: next, looking for: `{expectedLogcatOutput.Substring (startIndex)}`");
+						return false;
+					}
+				}
+				startIndex = 0;
+				return false;
+			};
 		}
 
 		Regex ObfuscatedStackRegex = new Regex ("in <.*>:0", RegexOptions.Compiled);
