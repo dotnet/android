@@ -205,13 +205,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected static void AssertLLVMSupported (bool llvm)
-		{
-			if (Builder.UseDotNet && llvm) {
-				Assert.Ignore ($"EnableLLVM={llvm} is not yet supported in .NET 6+");
-			}
-		}
-
 		protected static void AssertTargetFrameworkVersionSupported (string targetFrameworkVersion)
 		{
 			if (Builder.UseDotNet)

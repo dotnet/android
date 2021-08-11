@@ -601,11 +601,11 @@ namespace Xamarin.Android.Tasks {
 				throw new InvalidOperationException ("Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
 
 			ApplicationAttribute appAttr = assemblyAttr.SingleOrDefault () ?? typeAttr.SingleOrDefault ();
-			var ull1 = usesLibraryAttr ?? new UsesLibraryAttribute [0];
-			var ull2 = typeUsesLibraryAttr.AsEnumerable () ?? new UsesLibraryAttribute [0];
+			var ull1 = usesLibraryAttr ?? Array.Empty<UsesLibraryAttribute> ();
+			var ull2 = typeUsesLibraryAttr.AsEnumerable () ?? Array.Empty<UsesLibraryAttribute> ();
 			var usesLibraryAttrs = ull1.Concat (ull2);
-			var ucl1 = usesConfigurationAttr ?? new UsesConfigurationAttribute [0];
-			var ucl2 = typeUsesConfigurationAttr.AsEnumerable () ?? new UsesConfigurationAttribute [0];
+			var ucl1 = usesConfigurationAttr ?? Array.Empty<UsesConfigurationAttribute>();
+			var ucl2 = typeUsesConfigurationAttr.AsEnumerable () ?? Array.Empty<UsesConfigurationAttribute> ();
 			var usesConfigurationattrs = ucl1.Concat (ucl2);
 			bool needManifestAdd = true;
 
@@ -1053,7 +1053,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			var regex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]");
 			var kvp = new Dictionary<string, int> ();
-			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? new string [0]) {
+			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? Array.Empty<string> ()) {
 				var keyValue = item.Split (new char [] { '=' });
 				int val;
 				if (!int.TryParse (keyValue [1], out val))

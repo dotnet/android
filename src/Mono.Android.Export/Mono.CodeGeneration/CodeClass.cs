@@ -6,10 +6,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -45,17 +45,17 @@ namespace Mono.CodeGeneration
 		CodeBuilder instanceInit;
 		CodeBuilder classInit;
 		int varId;
-		
+
 		public CodeClass (ModuleBuilder mb, string name)
 		: this (mb, name, TypeAttributes.Public, typeof(object))
 		{
 		}
-		
+
 		public CodeClass (ModuleBuilder mb, string name, Type baseType, params Type[] interfaces)
 		: this (mb, name, TypeAttributes.Public, baseType, interfaces)
 		{
 		}
-		
+
 		public CodeClass (ModuleBuilder mb, string name, TypeAttributes attr, Type baseType, params Type[] interfaces)
 		{
 			typeBuilder = mb.DefineType (name, attr, baseType, interfaces);
@@ -66,7 +66,7 @@ namespace Mono.CodeGeneration
 		public CodeCustomAttribute CreateCustomAttribute (Type attributeType)
 		{
 			return CreateCustomAttribute (attributeType,
-				Type.EmptyTypes, new object [0], new string [0], new object [0]);
+				Type.EmptyTypes, Array.Empty<object> (), Array.Empty<string> (), Array.Empty<object> ());
 		}
 
 		public CodeCustomAttribute CreateCustomAttribute (Type attributeType, Type [] ctorArgTypes, object [] ctorArgs, string [] namedArgFieldNames, object [] namedArgValues)
@@ -107,35 +107,35 @@ namespace Mono.CodeGeneration
 			methods.Add (met);
 			return met;
 		}
-		
+
 		public CodeMethod CreateVirtualMethod (string name, Type returnType, params Type[] parameterTypes)
 		{
 			CodeMethod met = new CodeMethod (this, GetMethodName (name), MethodAttributes.Public | MethodAttributes.Virtual, returnType, parameterTypes);
 			methods.Add (met);
 			return met;
 		}
-		
+
 		public CodeMethod CreateStaticMethod (string name, Type returnType, params Type[] parameterTypes)
 		{
 			CodeMethod met = new CodeMethod (this, GetMethodName (name), MethodAttributes.Public | MethodAttributes.Static, returnType, parameterTypes);
 			methods.Add (met);
 			return met;
 		}
-		
+
 		public CodeMethod CreateMethod (string name, MethodAttributes attributes, Type returnType, params Type[] parameterTypes)
 		{
 			CodeMethod met = new CodeMethod (this, GetMethodName (name), attributes, returnType, parameterTypes);
 			methods.Add (met);
 			return met;
 		}
-		
+
 		public CodeMethod GetDefaultConstructor ()
 		{
 			if (ctor != null) return ctor;
 			ctor = CreateConstructor (MethodAttributes.Public, Type.EmptyTypes);
 			return ctor;
 		}
-		
+
 		public CodeMethod CreateConstructor (params Type[] parameters)
 		{
 			return CreateConstructor (MethodAttributes.Private, parameters);
@@ -150,7 +150,7 @@ namespace Mono.CodeGeneration
 			ctor.CodeBuilder.CurrentBlock.Add (cb.CurrentBlock);
 			return ctor;
 		}
-		
+
 		public CodeMethod GetStaticConstructor ()
 		{
 			if (cctor != null) return cctor;
@@ -160,18 +160,18 @@ namespace Mono.CodeGeneration
 			cctor.CodeBuilder.CurrentBlock.Add (cb.CurrentBlock);
 			return cctor;
 		}
-		
+
 		public CodeMethod ImplementMethod (Type baseType, string methodName)
 		{
 			MethodInfo basem = baseType.GetMethod (methodName);
 			return ImplementMethod (baseType, basem);
 		}
-		
+
 		public CodeMethod ImplementMethod (MethodInfo basem)
 		{
 			return ImplementMethod (basem.DeclaringType, basem);
 		}
-		
+
 		public CodeMethod ImplementMethod (Type baseType, MethodInfo basem)
 		{
 			ParameterInfo[] pinfos = basem.GetParameters ();
@@ -184,22 +184,22 @@ namespace Mono.CodeGeneration
 			methods.Add (met);
 			return met;
 		}
-		
+
 		public CodeFieldReference DefineField (string name, Type type, params CodeCustomAttribute [] customAttributes)
 		{
 			return DefineField (GetFieldName (name), type, FieldAttributes.Public, null, customAttributes);
 		}
-		
+
 		public CodeFieldReference DefineStaticField (CodeExpression initialValue, params CodeCustomAttribute [] customAttributes)
 		{
 			return DefineField (GetFieldName (null), initialValue.GetResultType(), FieldAttributes.Public | FieldAttributes.Static, initialValue, customAttributes);
 		}
-		
+
 		public CodeFieldReference DefineStaticField (string name, Type type, CodeExpression initialValue, params CodeCustomAttribute [] customAttributes)
 		{
 			return DefineField (GetFieldName (name), type, FieldAttributes.Public | FieldAttributes.Static, initialValue, customAttributes);
 		}
-		
+
 		public CodeFieldReference DefineField (string name, Type type, FieldAttributes attrs, CodeExpression initialValue, params CodeCustomAttribute [] customAttributes)
 		{
 			FieldBuilder fb = typeBuilder.DefineField (GetFieldName (name), type, attrs);
@@ -212,51 +212,51 @@ namespace Mono.CodeGeneration
 				fr = new CodeFieldReference (fb);
 			else
 				fr = new CodeFieldReference (new CodeArgumentReference (TypeBuilder, 0, "this"), fb);
-			
+
 			if (null != (object) initialValue) {
-				CodeBuilder cb = (attrs & FieldAttributes.Static) == 0 ? GetInstanceInitBuilder () : GetClassInitBuilder (); 
+				CodeBuilder cb = (attrs & FieldAttributes.Static) == 0 ? GetInstanceInitBuilder () : GetClassInitBuilder ();
 				cb.Assign (fr, initialValue);
 			}
 			return fr;
 		}
-		
+
 		public TypeBuilder TypeBuilder
 		{
 			get { return typeBuilder; }
-		} 
-		
+		}
+
 		private CodeBuilder GetInstanceInitBuilder ()
 		{
 			if (instanceInit != null) return instanceInit;
 			instanceInit = new CodeBuilder (this);
 			return instanceInit;
 		}
-		
+
 		private CodeBuilder GetClassInitBuilder ()
 		{
 			if (classInit != null) return classInit;
 			classInit = new CodeBuilder (this);
 			return classInit;
 		}
-		
+
 		private string GetFieldName (string name)
 		{
 			if (name == null) return "__field_" + (varId++);
 			else return name;
 		}
-		
+
 		private string GetMethodName (string name)
 		{
 			if (name == null) return "__Method_" + (varId++);
 			else return name;
 		}
-		
+
 		private string GetPropertyName (string name)
 		{
 			if (name == null) return "__Property_" + (varId++);
 			else return name;
 		}
-		
+
 		public string PrintCode ()
 		{
 			StringWriter sw = new StringWriter ();
@@ -264,7 +264,7 @@ namespace Mono.CodeGeneration
 			PrintCode (cw);
 			return sw.ToString ();
 		}
-		
+
 		public void PrintCode (CodeWriter cw)
 		{
 			for (int n=0; n<customAttributes.Count; n++) {
@@ -278,13 +278,13 @@ namespace Mono.CodeGeneration
 			if ((typeBuilder.Attributes & TypeAttributes.NestedPrivate) != 0) cw.Write ("private ");
 */			if ((typeBuilder.Attributes & TypeAttributes.Public) != 0) cw.Write ("public ");
 			cw.Write ("class ").Write (typeBuilder.Name);
-			
+
 			bool dots = false;
 			if (baseType != null && baseType != typeof(object)) {
 				cw.Write (" : " + baseType);
 				dots = true;
 			}
-			
+
 			if (interfaces != null && interfaces.Length > 0) {
 				if (!dots) cw.Write (" : ");
 				else cw.Write (", ");
@@ -293,9 +293,9 @@ namespace Mono.CodeGeneration
 					cw.Write (interfaces[n].ToString ());
 				}
 			}
-			
+
 			cw.EndLine ().WriteLineInd ("{");
-			
+
 			foreach (FieldInfo f in fields) {
 				cw.BeginLine ();
 				ArrayList atts = (ArrayList) fieldAttributes [f];
@@ -306,9 +306,9 @@ namespace Mono.CodeGeneration
 				cw.Write (f.FieldType.Name + " ");
 				cw.Write (f.Name + ";");
 				cw.EndLine ();
-				cw.WriteLine (""); 
+				cw.WriteLine ("");
 			}
-			
+
 			for (int n=0; n<properties.Count; n++) {
 				CodeProperty prop = properties [n] as CodeProperty;
 				if (n > 0) cw.WriteLine ("");
@@ -322,23 +322,23 @@ namespace Mono.CodeGeneration
 			}
 			cw.WriteLineUnind ("}");
 		}
-		
+
 		public Type CreateType ()
 		{
 			if (ctor == null)
 				ctor = GetDefaultConstructor ();
-				
+
 			foreach (CodeProperty prop in properties)
 				prop.Generate ();
 
 			foreach (CodeMethod met in methods)
 				met.Generate ();
-				
+
 			Type t = typeBuilder.CreateType ();
-			
+
 			foreach (CodeMethod met in methods)
 				met.UpdateMethodBase (t);
-				
+
 			foreach (CodeProperty prop in properties)
 				prop.UpdatePropertyInfo (t);
 

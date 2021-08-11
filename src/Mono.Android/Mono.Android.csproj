@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IncludeAndroidJavadoc Condition=" '$(IncludeAndroidJavadoc)' == '' And '$(CONVERT_JAVADOC_TO_XMLDOC)' == 'true' And '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)'">True</IncludeAndroidJavadoc>
+    <IncludeAndroidJavadoc Condition=" '$(IncludeAndroidJavadoc)' == '' And '$(CONVERT_JAVADOC_TO_XMLDOC)' == 'true' And ('$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)' or '$(TargetFramework)' != 'monoandroid10')">True</IncludeAndroidJavadoc>
     <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
   </PropertyGroup>
 
@@ -93,7 +93,7 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
     <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml">
       <LogicalName>ILLink.LinkAttributes.xml</LogicalName>

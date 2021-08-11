@@ -101,25 +101,16 @@
     <!-- dotnet workload install android-aot -->
     <PropertyGroup>
       <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
-      <_NuGetConfig>$(_TempDirectory)\NuGet.config</_NuGetConfig>
-      <_NuGetContent>
-<![CDATA[
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <clear />
-    <add key="local" value="$(OutputPath)" />
-    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
-  </packageSources>
-</configuration>
-]]>
-      </_NuGetContent>
     </PropertyGroup>
-    <WriteLinesToFile File="$(_NuGetConfig)" Lines="$(_NuGetContent)" Overwrite="true" />
-    <Exec
-        WorkingDirectory="$(_TempDirectory)"
-        Command="&quot;$(DotNetPreviewTool)&quot; workload install android-aot --skip-manifest-update --verbosity diag --temp-dir &quot;$(_TempDirectory)&quot;"
-    />
+    <ItemGroup>
+      <_InstallArguments Include="--skip-manifest-update" />
+      <_InstallArguments Include="--verbosity diag" />
+      <_InstallArguments Include="--source &quot;$(OutputPath.TrimEnd('\'))&quot;" />
+      <_InstallArguments Include="--source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
+      <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
+    </ItemGroup>
+    <MakeDir Directories="$(_TempDirectory)" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; workload install android-aot @(_InstallArguments, ' ')" WorkingDirectory="$(_TempDirectory)" />
     <RemoveDir Directories="$(_TempDirectory)" />
   </Target>
 

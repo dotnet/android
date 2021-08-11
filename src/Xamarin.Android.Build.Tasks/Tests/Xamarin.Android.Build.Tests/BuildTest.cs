@@ -3900,7 +3900,7 @@ namespace UnnamedProject
 </network-security-config>"
 			});
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource (@"Resources\raw\my_ca") {
-				BinaryContent = () => new byte [0], // doesn't have to be real, just *exist*
+				BinaryContent = () => Array.Empty<byte> (), // doesn't have to be real, just *exist*
 			});
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {

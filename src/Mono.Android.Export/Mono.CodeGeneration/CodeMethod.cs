@@ -6,10 +6,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -41,18 +41,18 @@ namespace Mono.CodeGeneration
 		Type[] parameterTypes;
 		ArrayList customAttributes = new ArrayList ();
 		CodeClass cls;
-		
+
 		internal static CodeMethod DefineMethod (CodeClass cls, string name, MethodAttributes attributes, Type returnType, Type[] parameterTypes)
 		{
 			return new CodeMethod (cls, name, attributes, returnType, parameterTypes);
 		}
-		
+
 		public static CodeMethod DefineConstructor (CodeClass cls, MethodAttributes attributes, Type[] parameterTypes)
 		{
 			return new CodeMethod (cls, attributes, parameterTypes);
 		}
-		
-		internal CodeMethod (CodeClass cls, string name, MethodAttributes attributes, Type returnType, Type[] parameterTypes) 
+
+		internal CodeMethod (CodeClass cls, string name, MethodAttributes attributes, Type returnType, Type[] parameterTypes)
 		{
 			this.cls = cls;
 			this.typeBuilder = cls.TypeBuilder;
@@ -60,63 +60,63 @@ namespace Mono.CodeGeneration
 			this.attributes = attributes;
 			this.returnType = returnType;
 			this.parameterTypes = parameterTypes;
-		
+
 			methodBase = typeBuilder.DefineMethod (name, attributes, returnType, parameterTypes);
 			builder = new CodeBuilder (cls);
 		}
-		
-		CodeMethod (CodeClass cls, MethodAttributes attributes, Type[] parameterTypes) 
+
+		CodeMethod (CodeClass cls, MethodAttributes attributes, Type[] parameterTypes)
 		{
 			this.cls = cls;
 			this.typeBuilder = cls.TypeBuilder;
 			this.attributes = attributes;
 			this.parameterTypes = parameterTypes;
 			this.name = typeBuilder.Name;
-		
+
 			methodBase = typeBuilder.DefineConstructor (attributes, CallingConventions.Standard, parameterTypes);
 			builder = new CodeBuilder (cls);
 		}
-		
+
 		public TypeBuilder DeclaringType
 		{
 			get { return typeBuilder; }
 		}
-		
+
 		public MethodInfo MethodInfo
 		{
 			get { return methodBase as MethodInfo; }
 		}
-		
+
 		public MethodBase MethodBase
 		{
 			get { return methodBase; }
 		}
-		
+
 		public string Name
 		{
 			get { return name; }
 		}
-		
+
 		public MethodAttributes Attributes
 		{
 			get { return attributes; }
 		}
-		
+
 		public Type ReturnType
 		{
 			get { return returnType; }
 		}
-		
+
 		public Type[] ParameterTypes
 		{
 			get { return parameterTypes; }
 		}
-		
+
 		public CodeBuilder CodeBuilder
 		{
 			get { return builder; }
 		}
-		
+
 		public bool IsStatic
 		{
 			get { return (attributes & MethodAttributes.Static) != 0; }
@@ -125,13 +125,13 @@ namespace Mono.CodeGeneration
 		public CodeCustomAttribute CreateCustomAttribute (Type attributeType)
 		{
 			return CreateCustomAttribute (attributeType,
-				Type.EmptyTypes, new object [0]);
+				Type.EmptyTypes, Array.Empty<object> ());
 		}
 
 		public CodeCustomAttribute CreateCustomAttribute (Type attributeType, Type [] ctorArgTypes, object [] ctorArgs)
 		{
 			return CreateCustomAttribute (attributeType,
-				ctorArgTypes, ctorArgs, new string [0], new object [0]);
+				ctorArgTypes, ctorArgs, Array.Empty<string> (), Array.Empty<object> ());
 		}
 
 		public CodeCustomAttribute CreateCustomAttribute (Type attributeType, Type [] ctorArgTypes, object [] ctorArgs, string [] namedArgFieldNames, object [] namedArgValues)
@@ -166,7 +166,7 @@ namespace Mono.CodeGeneration
 			PrintCode (cw);
 			return sw.ToString ();
 		}
-		
+
 		public virtual void PrintCode (CodeWriter cp)
 		{
 			cp.BeginLine ();
@@ -185,12 +185,12 @@ namespace Mono.CodeGeneration
 			cp.Write (")");
 			cp.EndLine ();
 			cp.WriteLineInd ("{");
-			
+
 			builder.PrintCode (cp);
-			
+
 			cp.WriteLineUnind ("}");
 		}
-		
+
 		public CodeArgumentReference GetArg (int n)
 		{
 			if (n < 0 || n >= parameterTypes.Length)
@@ -199,21 +199,21 @@ namespace Mono.CodeGeneration
 			int narg = IsStatic ? n : n + 1;
 			return new CodeArgumentReference (parameterTypes[n], narg, "arg" + n);
 		}
-		
+
 		public CodeArgumentReference GetThis ()
 		{
 			if (IsStatic)
 				throw new InvalidOperationException ("'this' not available in static methods");
-				
+
 			return new CodeArgumentReference (DeclaringType, 0, "this");
 		}
-		
+
 		public void Generate ()
 		{
 			ILGenerator gen = methodBase is MethodInfo ? ((MethodBuilder)methodBase).GetILGenerator() : ((ConstructorBuilder)methodBase).GetILGenerator();
 			Generate (gen);
 		}
-		
+
 		internal void Generate (ILGenerator gen)
 		{
 			Label returnLabel = gen.DefineLabel ();
@@ -222,7 +222,7 @@ namespace Mono.CodeGeneration
 			gen.MarkLabel(returnLabel);
 			gen.Emit(OpCodes.Ret);
 		}
-		
+
 		public void UpdateMethodBase (Type type)
 		{
 			if (methodBase is MethodInfo)

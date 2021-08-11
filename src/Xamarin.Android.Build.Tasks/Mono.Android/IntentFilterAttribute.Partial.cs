@@ -88,7 +88,7 @@ namespace Android.App {
 					ToAttribute ("Priority",   Priority),
 					ToAttribute ("AutoVerify", _AutoVerify),
 					Actions.Select (a => new XElement ("action", new XAttribute (android + "name", ReplacePackage (a, packageName)))),
-					(Categories ?? new string[0]).Select (c => new XElement ("category", new XAttribute (android + "name", ReplacePackage (c, packageName)))),
+					(Categories ?? Array.Empty<string> ()).Select (c => new XElement ("category", new XAttribute (android + "name", ReplacePackage (c, packageName)))),
 					GetData (packageName));
 			AndroidResource.UpdateXmlResource (r);
 			return r;
@@ -127,7 +127,7 @@ namespace Android.App {
 			Func<string,XAttribute> toPort        = v => ToAttribute ("DataPort",        ReplacePackage (v, packageName));
 			Func<string,XAttribute> toScheme      = v => ToAttribute ("DataScheme",      ReplacePackage (v, packageName));
 			Func<Func<string,XAttribute>, string, XElement> toData = (f, s) => string.IsNullOrEmpty (s) ? null : new XElement ("data", f (s));
-			var empty = new string [0];
+			var empty = Array.Empty<string> ();
 			var dataList = Enumerable.Empty<XElement> ()
 				.Concat ((DataHosts ?? empty).Select (p => toData (toHost, p)))
 				.Concat ((DataMimeTypes ?? empty).Select (p => toData (toMimeType, p)))

@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tasks
 			}
 			Process p = new Process ();
 			p.StartInfo = psi;
-			
+
 			p.OutputDataReceived += onOutput;
 			p.ErrorDataReceived += onError;
 			p.Start ();
@@ -193,7 +193,7 @@ namespace Xamarin.Android.Tasks
 #if MSBUILD
 		public static IEnumerable<string> ExpandFiles (ITaskItem[] libraryProjectJars)
 		{
-			libraryProjectJars  = libraryProjectJars ?? new ITaskItem [0];
+			libraryProjectJars  = libraryProjectJars ?? Array.Empty<ITaskItem> ();
 			return (from path in libraryProjectJars
 					let     dir     = Path.GetDirectoryName (path.ItemSpec)
 					let     pattern = Path.GetFileName (path.ItemSpec)
@@ -212,7 +212,7 @@ namespace Xamarin.Android.Tasks
 		{
 			return filePaths.Select (p => new FileInfo (p)).ToArray ().Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
 		}
-		
+
 		public static IEnumerable<string> GetDuplicateFileNames (IEnumerable<string> fullPaths, string [] excluded)
 		{
 			var files = fullPaths.Select (full => Path.GetFileName (full)).Where (f => excluded == null || !excluded.Contains (f, StringComparer.OrdinalIgnoreCase)).ToArray ();
@@ -221,7 +221,7 @@ namespace Xamarin.Android.Tasks
 					if (String.Compare (files [i], files [j], StringComparison.OrdinalIgnoreCase) == 0)
 						yield return files [i];
 		}
-		
+
 		public static bool IsEmbeddedReferenceJar (string jar)
 		{
 			return jar.StartsWith ("__reference__");
@@ -335,7 +335,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		internal static IEnumerable<ITaskItem> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies) 
+		internal static IEnumerable<ITaskItem> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies)
 		{
 			var ret = new List<ITaskItem> ();
 			foreach (ITaskItem item in resolvedAssemblies) {

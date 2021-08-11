@@ -5,6 +5,8 @@
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\</OutputPath>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
@@ -25,7 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="2.4.5" />
-    <PackageReference Include="MSBuild.StructuredLogger" Version="2.1.303" />
+    <PackageReference Include="MSBuild.StructuredLogger" Version="2.1.500" />
   </ItemGroup>
 
   <ItemGroup>
