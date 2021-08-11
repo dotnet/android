@@ -340,6 +340,10 @@ int xml myxml 0x7f140000
 			var runtimeVersionRegex = new Regex (@"//\s*Runtime Version:.*");
 			content1 = runtimeVersionRegex.Replace (content1, Environment.NewLine);
 			content2 = runtimeVersionRegex.Replace (content2, Environment.NewLine);
+			var replaceText = "\t[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"Xamarin.Android.Build.Tasks\", \"1.0.0.0\")]";
+			var assemblyVersionRegex = new Regex (@"(.*)GeneratedCodeAttribute(.{2})Xamarin.Android.Build.Tasks(.*)");
+			content1 = assemblyVersionRegex.Replace (content1, replaceText);
+			content2 = assemblyVersionRegex.Replace (content2, replaceText);
 
 			using (var s1 = new MemoryStream (Encoding.UTF8.GetBytes (content1)))
 			using (var s2 = new MemoryStream (Encoding.UTF8.GetBytes (content2))) {

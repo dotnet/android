@@ -9,6 +9,8 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <_MSBuildExtension Condition=" '$(OS)' == 'Windows_NT' ">exe</_MSBuildExtension>
     <_MSBuildExtension Condition=" '$(OS)' != 'Windows_NT' ">dll</_MSBuildExtension>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <ItemGroup>
