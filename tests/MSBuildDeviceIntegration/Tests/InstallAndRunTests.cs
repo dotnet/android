@@ -90,28 +90,34 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				$"Output did not contain {expectedLogcatOutput}!");
 		}
 
-		static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
+
+		public static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
 		{
 			// On .NET 6, `adb logcat` output may be line-wrapped in unexpected ways.
 			// https://github.com/xamarin/xamarin-android/pull/6119#issuecomment-896246633
 			// Try to see if *successive* lines match expected output
-			int startIndex  = 0;
+			var remaining   = expectedLogcatOutput;
 			return line => {
-				int count   = expectedLogcatOutput.Length - startIndex;
-				if (line.IndexOf (expectedLogcatOutput, startIndex, count) >= 0) {
+				if (line.IndexOf (remaining) >= 0) {
+					Reset ();
 					return true;
 				}
-				while (--count > 0) {
-					if (line.IndexOf (expectedLogcatOutput, startIndex, count) >= 0) {
-						TestContext.Out.WriteLine ($"# jonp: found partial line match! `{expectedLogcatOutput.Substring (startIndex, count)}`");
-						startIndex += count;
-						TestContext.Out.WriteLine ($"# jonp: next, looking for: `{expectedLogcatOutput.Substring (startIndex)}`");
+				int count   = Math.Min (line.Length, remaining.Length);
+				for ( ; count > 0; count--) {
+					var startMatch = remaining.Substring (0, count);
+					if (line.IndexOf (startMatch) >= 0) {
+						remaining = remaining.Substring (count);
 						return false;
 					}
 				}
-				startIndex = 0;
+				Reset ();
 				return false;
 			};
+
+			void Reset ()
+			{
+				remaining   = expectedLogcatOutput;
+			}
 		}
 
 		Regex ObfuscatedStackRegex = new Regex ("in <.*>:0", RegexOptions.Compiled);
