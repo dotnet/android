@@ -506,3 +506,25 @@ be preferred if it is not blank.
 
 [mono-logging]: https://www.mono-project.com/docs/advanced/runtime/logging-runtime-events/
 [6e58ce4]: https://github.com/xamarin/xamarin-android/commit/6e58ce405d00a965f3c206e2d509f5a5343b16f7
+
+## Installing .NET MAUI
+
+`make pack-dotnet` or `msbuild Xamarin.Android.sln -t:PackDotNet`
+provisions a .NET SDK and locally built Android workload in:
+
+    ~/android-toolchain/dotnet/
+
+If you *also* want .NET MAUI, you don't want to `dotnet workload
+install maui`, because it will blow away your local build of the
+Android workload.
+
+To simplify things, we have an MSBuild target to install .NET MAUI:
+
+    msbuild Xamarin.Android.sln -t:InstallMaui -p:MauiVersion=6.0.100-rc.1.1351
+
+To find the version number of .NET MAUI you want to install, find the
+package on the [nightly Azure DevOps feed][maui-feed]. Or look for the
+`Microsoft.NET.Sdk.Maui.Manifest-6.0.100` package on NuGet.org for public
+releases.
+
+[maui-feed]: https://dev.azure.com/azure-public/vside/_packaging?_a=package&feed=xamarin-impl%40Local&package=Microsoft.NET.Sdk.Maui.Manifest-6.0.100&protocolType=NuGet&version=6.0.100-rc.1.1351%2Bsha.3fbb791e7-azdo.5078933
