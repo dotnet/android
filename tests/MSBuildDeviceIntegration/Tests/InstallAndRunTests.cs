@@ -60,7 +60,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // TODO: UnhandledException not firing: https://github.com/dotnet/runtime/issues/44526
 		public void SubscribeToAppDomainUnhandledException ()
 		{
 			AssertHasDevices ();
@@ -84,10 +83,45 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			else
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
+#if NETCOREAPP
+			string expectedLogcatOutput = "# Unhandled Exception: sender=System.Object; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
+#else   // NETCOREAPP
 			string expectedLogcatOutput = "# Unhandled Exception: sender=RootDomain; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
-			Assert.IsTrue (MonitorAdbLogcat ((line) => {
-				return line.Contains (expectedLogcatOutput);
-			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
+#endif  // NETCOREAPP
+			Assert.IsTrue (
+				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
+					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
+				$"Output did not contain {expectedLogcatOutput}!");
+		}
+
+
+		public static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
+		{
+			// On .NET 6, `adb logcat` output may be line-wrapped in unexpected ways.
+			// https://github.com/xamarin/xamarin-android/pull/6119#issuecomment-896246633
+			// Try to see if *successive* lines match expected output
+			var remaining   = expectedLogcatOutput;
+			return line => {
+				if (line.IndexOf (remaining) >= 0) {
+					Reset ();
+					return true;
+				}
+				int count   = Math.Min (line.Length, remaining.Length);
+				for ( ; count > 0; count--) {
+					var startMatch = remaining.Substring (0, count);
+					if (line.IndexOf (startMatch) >= 0) {
+						remaining = remaining.Substring (count);
+						return false;
+					}
+				}
+				Reset ();
+				return false;
+			};
+
+			void Reset ()
+			{
+				remaining   = expectedLogcatOutput;
+			}
 		}
 
 		Regex ObfuscatedStackRegex = new Regex ("in <.*>:0", RegexOptions.Compiled);
