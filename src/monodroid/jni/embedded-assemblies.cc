@@ -64,10 +64,10 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 }
 
 force_inline void
-EmbeddedAssemblies::get_assembly_data (const MonoBundledAssembly *e, char*& assembly_data, uint32_t& assembly_data_size)
+EmbeddedAssemblies::get_assembly_data (MonoBundledAssembly const& e, char*& assembly_data, uint32_t& assembly_data_size)
 {
 #if defined (ANDROID) && defined (HAVE_LZ4) && defined (RELEASE)
-	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e->data);
+	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		if (XA_UNLIKELY (compressed_assemblies.descriptors == nullptr)) {
 			log_fatal (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
@@ -79,43 +79,44 @@ EmbeddedAssemblies::get_assembly_data (const MonoBundledAssembly *e, char*& asse
 		}
 
 		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
-		assembly_data_size = e->size - sizeof(CompressedAssemblyHeader);
+		assembly_data_size = e.size - sizeof(CompressedAssemblyHeader);
 		if (!cad.loaded) {
 			if (XA_UNLIKELY (cad.data == nullptr)) {
 				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
 				exit (FATAL_EXIT_MISSING_ASSEMBLY);
 			}
 
+			bool log_timing = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
 			timing_period decompress_time;
-			if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+			if (XA_UNLIKELY (log_timing)) {
 				decompress_time.mark_start ();
 			}
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
 				if (header->uncompressed_length > cad.uncompressed_file_size) {
-					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", e->name, cad.uncompressed_file_size, header->uncompressed_length);
+					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", e.name, cad.uncompressed_file_size, header->uncompressed_length);
 					exit (FATAL_EXIT_MISSING_ASSEMBLY);
 				} else {
-					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", e->name);
+					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", e.name);
 				}
 				cad.uncompressed_file_size = header->uncompressed_length;
 			}
 
-			const char *data_start = reinterpret_cast<const char*>(e->data + sizeof(CompressedAssemblyHeader));
+			const char *data_start = reinterpret_cast<const char*>(e.data + sizeof(CompressedAssemblyHeader));
 			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
 
-			if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+			if (XA_UNLIKELY (log_timing)) {
 				decompress_time.mark_end ();
-				TIMING_LOG_INFO (decompress_time, "%s LZ4 decompression time", e->name);
+				TIMING_LOG_INFO (decompress_time, "%s LZ4 decompression time", e.name);
 			}
 
 			if (ret < 0) {
-				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", e->name, ret);
+				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", e.name, ret);
 				exit (FATAL_EXIT_MISSING_ASSEMBLY);
 			}
 
 			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
-				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", e->name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
+				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", e.name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
 				exit (FATAL_EXIT_MISSING_ASSEMBLY);
 			}
 			cad.loaded = true;
@@ -125,8 +126,8 @@ EmbeddedAssemblies::get_assembly_data (const MonoBundledAssembly *e, char*& asse
 	} else
 #endif
 	{
-		assembly_data = reinterpret_cast<char*>(const_cast<unsigned char*>(e->data));
-		assembly_data_size = e->size;
+		assembly_data = reinterpret_cast<char*>(const_cast<unsigned char*>(e.data));
+		assembly_data_size = e.size;
 	}
 }
 
@@ -172,43 +173,48 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
 
+	constexpr char path_separator[] = "/";
 	dynamic_local_string<SENSIBLE_PATH_MAX> name;
 	if (culture != nullptr && *culture != '\0') {
-		name.append (culture);
-		name.append ("/");
+		name.append_c (culture);
+		name.append (path_separator);
 	}
-	name.append (asmname);
-	if (!utils.ends_with (name.get (), ".dll")) {
-		name.append (".dll");
+	name.append_c (asmname);
+
+	constexpr char dll_extension[] = ".dll";
+	if (!utils.ends_with (name, dll_extension)) {
+		name.append (dll_extension);
 	}
 
-	MonoAssembly *a = nullptr;
-	MonoBundledAssembly **p;
-
-	log_info (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name.get ());
+	log_debug (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name.get ());
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> abi_name;
 	abi_name
-		.assign (BasicAndroidSystem::get_built_for_abi_name ())
-		.append ("/")
-		.append (name.get ());
+		.assign_c (BasicAndroidSystem::get_built_for_abi_name ())
+		.append (path_separator)
+		.append (name);
 
-	for (p = bundled_assemblies; p != nullptr && *p; ++p) {
-		MonoImage *image = nullptr;
-		MonoImageOpenStatus status;
-		const MonoBundledAssembly *e = *p;
-		char *assembly_data = nullptr;
-		uint32_t assembly_data_size;
+	MonoImage *image;
+	MonoImageOpenStatus status;
+	char *assembly_data;
+	uint32_t assembly_data_size;
+	MonoAssembly *a = nullptr;
 
-		if (strcmp (e->name, name.get ()) != 0) {
-			if (strcmp (e->name, abi_name.get ()) != 0) {
+	for (auto const& assembly : bundled_assemblies) {
+		if (assembly.name == nullptr) {
+			// There are no "empty" entries interleaved with "filled" ones
+			break;
+		}
+
+		if (strcmp (assembly.name, name.get ()) != 0) {
+			if (strcmp (assembly.name, abi_name.get ()) != 0) {
 				continue;
 			} else {
-				log_info (LOG_ASSEMBLY, "open_from_bundles: found architecture-specific: '%s'", abi_name.get ());
+				log_debug (LOG_ASSEMBLY, "open_from_bundles: found architecture-specific: '%s'", abi_name.get ());
 			}
 		}
 
-		get_assembly_data (e, assembly_data, assembly_data_size);
+		get_assembly_data (assembly, assembly_data, assembly_data_size);
 		image = loader (assembly_data, assembly_data_size, name.get ());
 		if (image == nullptr) {
 			continue;
@@ -219,12 +225,15 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 			continue;
 		}
 
+#if !defined (NET6)
+		// In dotnet the call is a no-op
 		mono_config_for_assembly (image);
+#endif
 		break;
 	}
 
-	if (a != nullptr && utils.should_log (LOG_ASSEMBLY)) {
-		log_info_nocheck (LOG_ASSEMBLY, "open_from_bundles: loaded assembly: %p\n", a);
+	if (a == nullptr) {
+		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
 	}
 
 	return a;
@@ -447,7 +456,7 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type)
 		return nullptr;
 	}
 
-	simple_pointer_guard<char[], false> java_type_name (mono_string_to_utf8 (java_type));
+	c_unique_ptr<char> java_type_name {mono_string_to_utf8 (java_type)};
 	if (XA_UNLIKELY (!java_type_name || *java_type_name == '\0')) {
 		log_warn (LOG_ASSEMBLY, "typemap: empty Java type name passed to 'typemap_java_to_managed'");
 		return nullptr;
@@ -488,7 +497,7 @@ EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name)
 inline const char*
 EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, [[maybe_unused]] const uint8_t *mvid)
 {
-	simple_pointer_guard<char[], false> type_name (mono_type_get_name_full (type, MONO_TYPE_NAME_FORMAT_FULL_NAME));
+	c_unique_ptr<char> type_name {mono_type_get_name_full (type, MONO_TYPE_NAME_FORMAT_FULL_NAME)};
 	MonoImage *image = mono_class_get_image (klass);
 	const char *image_name = mono_image_get_name (image);
 	size_t type_name_len = strlen (type_name.get ());
@@ -654,27 +663,6 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, co
 	return file_info;
 }
 
-bool
-EmbeddedAssemblies::register_debug_symbols_for_assembly (const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size)
-{
-	const char *entry_basename  = strrchr (entry_name, '/') + 1;
-	// System.dll, System.dll.mdb case
-	if (strncmp (assembly->name, entry_basename, strlen (assembly->name)) != 0) {
-		// That failed; try for System.dll, System.pdb case
-		const char *eb_ext  = strrchr (entry_basename, '.');
-		if (eb_ext == nullptr)
-			return false;
-		off_t basename_len    = static_cast<off_t>(eb_ext - entry_basename);
-		abort_unless (basename_len > 0, "basename must have a length!");
-		if (strncmp (assembly->name, entry_basename, static_cast<size_t>(basename_len)) != 0)
-			return false;
-	}
-
-	mono_register_symfile_for_assembly (assembly->name, debug_contents, debug_size);
-
-	return true;
-}
-
 void
 EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register)
 {
@@ -716,8 +704,8 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 	int res;
 
 #if __ANDROID_API__ < 21
-	simple_pointer_guard<char[]> full_file_path = utils.path_combine (dir_path, file_path);
-	res = stat (full_file_path, &sbuf);
+	std::unique_ptr<char> full_file_path {utils.path_combine (dir_path, file_path)};
+	res = stat (full_file_path.get (), &sbuf);
 #else
 	res = fstatat (dir_fd, file_path, &sbuf, 0);
 #endif
@@ -733,7 +721,7 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 	}
 
 #if __ANDROID_API__ < 21
-	fd = open (full_file_path, O_RDONLY);
+	fd = open (full_file_path.get (), O_RDONLY);
 #else
 	fd = openat (dir_fd, file_path, O_RDONLY);
 #endif
@@ -766,7 +754,7 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 	return true;
 }
 
-uint8_t*
+std::unique_ptr<uint8_t[]>
 EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_size, int index_fd)
 {
 	size_t entry_size = header.module_file_name_width;
@@ -776,14 +764,14 @@ EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_
 		return nullptr;
 	}
 
-	auto data = new uint8_t [data_size];
-	ssize_t nread = do_read (index_fd, data, data_size);
+	auto data = std::make_unique<uint8_t[]> (data_size);
+	ssize_t nread = do_read (index_fd, data.get (), data_size);
 	if (nread != static_cast<ssize_t>(data_size)) {
 		log_error (LOG_ASSEMBLY, "typemap: failed to read %u bytes from index file. %s", data_size, strerror (errno));
 		return nullptr;
 	}
 
-	uint8_t *p = data;
+	uint8_t *p = data.get ();
 	for (size_t i = 0; i < type_map_count; i++) {
 		type_maps[i].assembly_name = reinterpret_cast<char*>(p);
 		p += entry_size;
@@ -792,7 +780,7 @@ EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_
 	return data;
 }
 
-uint8_t*
+std::unique_ptr<uint8_t[]>
 EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const char *index_path)
 {
 	log_debug (LOG_ASSEMBLY, "typemap: loading TypeMap index file '%s/%s'", dir_path, index_path);
@@ -800,17 +788,14 @@ EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const 
 	TypeMapIndexHeader header;
 	size_t file_size;
 	int fd = -1;
-	uint8_t *data = nullptr;
+	std::unique_ptr<uint8_t[]> data;
 
-	if (!typemap_read_header (dir_fd, "TypeMap index", dir_path, index_path, MODULE_INDEX_MAGIC, header, file_size, fd)) {
-		goto cleanup;
+	if (typemap_read_header (dir_fd, "TypeMap index", dir_path, index_path, MODULE_INDEX_MAGIC, header, file_size, fd)) {
+		type_map_count = header.entry_count;
+		type_maps = new TypeMap[type_map_count]();
+		data = typemap_load_index (header, file_size, fd);
 	}
 
-	type_map_count = header.entry_count;
-	type_maps = new TypeMap[type_map_count]();
-	data = typemap_load_index (header, file_size, fd);
-
-  cleanup:
 	if (fd >= 0)
 		close (fd);
 
@@ -933,9 +918,9 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 		return;
 	}
 
-	simple_pointer_guard<char[]> dir_path (utils.path_combine (path, "typemaps"));
+	std::unique_ptr<char> dir_path {utils.path_combine (path, "typemaps")};
 	monodroid_dir_t *dir;
-	if ((dir = utils.monodroid_opendir (dir_path)) == nullptr) {
+	if ((dir = utils.monodroid_opendir (dir_path.get ())) == nullptr) {
 		log_warn (LOG_ASSEMBLY, "typemap: could not open directory: `%s`", dir_path.get ());
 		return;
 	}
@@ -951,7 +936,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 
 	// The pointer must be stored here because, after index is loaded, module.assembly_name points into the index data
 	// and must be valid until after the actual module file is loaded.
-	simple_pointer_guard<uint8_t[], true> index_data = typemap_load_index (dir_fd, dir_path, index_name);
+	std::unique_ptr<uint8_t[]> index_data = typemap_load_index (dir_fd, dir_path.get (), index_name);
 	if (!index_data) {
 		log_fatal (LOG_ASSEMBLY, "typemap: unable to load TypeMap data index from '%s/%s'", dir_path.get (), index_name);
 		exit (FATAL_EXIT_NO_ASSEMBLIES); // TODO: use a new error code here
@@ -959,7 +944,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 
 	for (size_t i = 0; i < type_map_count; i++) {
 		TypeMap *module = &type_maps[i];
-		if (!typemap_load_file (dir_fd, dir_path, module->assembly_name, *module)) {
+		if (!typemap_load_file (dir_fd, dir_path.get (), module->assembly_name, *module)) {
 			continue;
 		}
 	}
@@ -971,17 +956,11 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 size_t
 EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register)
 {
-	size_t prev  = bundled_assemblies_count;
+	size_t prev  = bundled_assembly_index;
 
 	gather_bundled_assemblies_from_apk (apk_file, should_register);
 
-	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, bundled_assemblies_count - prev);
+	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, bundled_assembly_index - prev);
 
-	if (bundled_assemblies) {
-		size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(void*), bundled_assemblies_count + 1);
-		bundled_assemblies  = reinterpret_cast <MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, alloc_size));
-		bundled_assemblies [bundled_assemblies_count] = nullptr;
-	}
-
-	return bundled_assemblies_count;
+	return bundled_assembly_index;
 }

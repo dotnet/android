@@ -30,9 +30,10 @@ namespace Xamarin.Android.Build.Tests
 			public uint   package_naming_policy;
 			public uint   environment_variable_count;
 			public uint   system_property_count;
+			public uint   number_of_assemblies_in_apk;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 13;
+		const uint ApplicationConfigFieldCount = 14;
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -176,7 +177,12 @@ namespace Xamarin.Android.Build.Tests
 						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile, i, field [1]);
 						break;
 
-					case 12: // android_package_name: string / [pointer type]
+					case 12: // number_of_assemblies_in_apk: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
+						ret.number_of_assemblies_in_apk = ConvertFieldToUInt32 ("number_of_assemblies_in_apk", envFile, i, field [1]);
+						break;
+
+					case 13: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;

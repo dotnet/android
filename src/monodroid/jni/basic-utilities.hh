@@ -58,17 +58,17 @@ namespace xamarin::android
 			abort_unless (path1 != nullptr || path2 != nullptr, "At least one path must be a valid pointer");
 
 			if (path1 == nullptr) {
-				buf.append (path2);
+				buf.append_c (path2);
 				return;
 			}
 
 			if (path2 == nullptr) {
-				buf.append (path1);
+				buf.append_c (path1);
 				return;
 			}
 
 			buf.append (path1, path1_len);
-			buf.append (MONODROID_PATH_SEPARATOR, MONODROID_PATH_SEPARATOR_LENGTH);
+			buf.append (MONODROID_PATH_SEPARATOR);
 			buf.append (path2, path2_len);
 		}
 
@@ -107,6 +107,35 @@ namespace xamarin::android
 		{
 			char *p = const_cast<char*> (strstr (str, end));
 			return p != nullptr && p [N - 1] == '\0';
+		}
+
+		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
+		bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, const char (&end)[N]) const noexcept
+		{
+			constexpr size_t end_length = N - 1;
+
+			size_t len = str.length ();
+			if (XA_UNLIKELY (len < end_length)) {
+				return false;
+			}
+
+			return memcmp (str.get () + len - end_length, end, end_length) == 0;
+		}
+
+		template<size_t MaxStackSize, typename TStorage, typename TChar = char>
+		const TChar* find_last (internal::string_base<MaxStackSize, TStorage, TChar> const& str, const char ch) const noexcept
+		{
+			if (str.empty ()) {
+				return nullptr;
+			}
+
+			for (size_t i = str.length () - 1; i >= 0; i--) {
+				if (str[i] == ch) {
+					return str.get () + i;
+				}
+			}
+
+			return nullptr;
 		}
 
 		void *xmalloc (size_t size)

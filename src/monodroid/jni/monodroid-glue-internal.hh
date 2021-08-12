@@ -118,6 +118,7 @@ namespace xamarin::android::internal
 		true;
 #endif
 
+#if !defined (NET6)
 #define MAKE_API_DSO_NAME(_ext_) "libxa-internal-api." # _ext_
 #if defined (WINDOWS)
 		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (dll);
@@ -126,6 +127,7 @@ namespace xamarin::android::internal
 #else   // !defined(WINDOWS) && !defined(APPLE_OS_X)
 		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (so);
 #endif  // defined(WINDOWS)
+#endif // ndef NET6
 	public:
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;
 

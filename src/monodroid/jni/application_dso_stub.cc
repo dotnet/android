@@ -35,19 +35,20 @@ CompressedAssemblies compressed_assemblies = {
 };
 
 ApplicationConfig application_config = {
-	/*.uses_mono_llvm =*/ false,
-	/*.uses_mono_aot =*/ false,
-	/*.uses_assembly_preload =*/ false,
-	/*.is_a_bundled_app =*/ false,
-	/*.broken_exception_transitions =*/ false,
-	/*.instant_run_enabled =*/ false,
-	/*.jni_add_native_method_registration_attribute_present =*/ false,
-	/*.have_runtime_config_blob =*/ false,
-	/*.bound_exception_type =*/ 0, // System
-	/*.package_naming_policy =*/ 0,
-	/*.environment_variable_count =*/ 0,
-	/*.system_property_count =*/ 0,
-	/*.android_package_name =*/ "com.xamarin.test",
+	.uses_mono_llvm = false,
+	.uses_mono_aot = false,
+	.uses_assembly_preload = false,
+	.is_a_bundled_app = false,
+	.broken_exception_transitions = false,
+	.instant_run_enabled = false,
+	.jni_add_native_method_registration_attribute_present = false,
+	.have_runtime_config_blob = false,
+	.bound_exception_type = 0, // System
+	.package_naming_policy = 0,
+	.environment_variable_count = 0,
+	.system_property_count = 0,
+	.number_of_assemblies_in_apk = 0,
+	.android_package_name = "com.xamarin.test",
 };
 
 const char* mono_aot_mode_name = "";

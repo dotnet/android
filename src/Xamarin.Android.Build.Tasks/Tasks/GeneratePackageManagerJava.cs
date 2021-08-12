@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResolvedUserAssemblies { get; set; }
 
+		public ITaskItem[] SatelliteAssemblies { get; set; }
+
 		[Required]
 		public string OutputDirectory { get; set; }
 
@@ -264,6 +266,11 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
+			int assemblyCount = ResolvedAssemblies.Length;
+			if (SatelliteAssemblies != null) {
+				assemblyCount += SatelliteAssemblies.Length;
+			}
+
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 			foreach (string abi in SupportedAbis) {
@@ -284,6 +291,7 @@ namespace Xamarin.Android.Tasks
 					InstantRunEnabled = InstantRunEnabled,
 					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
 					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
+					NumberOfAssembliesInApk = assemblyCount,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
