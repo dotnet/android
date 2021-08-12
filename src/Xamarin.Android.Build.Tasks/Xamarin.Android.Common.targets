@@ -1596,6 +1596,7 @@ because xbuild doesn't support framework reference assemblies.
     BoundExceptionType="$(AndroidBoundExceptionType)"
     InstantRunEnabled="$(_InstantRunEnabled)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+    UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
