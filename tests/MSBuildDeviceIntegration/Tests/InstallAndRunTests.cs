@@ -83,7 +83,11 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			else
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
+#if NETCOREAPP
 			string expectedLogcatOutput = "# Unhandled Exception: sender=RootDomain; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
+#else   // NETCOREAPP
+			string expectedLogcatOutput = "# Unhandled Exception: sender=System.Object; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
+#endif  // NETCOREAPP
 			Assert.IsTrue (
 				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
