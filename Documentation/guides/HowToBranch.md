@@ -12,27 +12,28 @@ sequence of events would be:
 3. `xamarin-android` branches `release/6.0.1xx-preview42`. GitHub Web
    UI is fine for this.
 
-4. Manually make a commit to `release/6.0.1xx-preview42` such as
-  [df122518][2], so that `$(_AndroidPackLabel)` is
-  `preview.42.$(PackVersionCommitCount)`.
-
-5. Subscribe to Maestro updates for [dotnet/installer][1] `release/6.0.1xx-preview42`:
+4. Subscribe to Maestro updates for [dotnet/installer][1] `release/6.0.1xx-preview42`:
 
 ```bash
 $ darc add-subscription --channel ".NET 6.0.1xx SDK Preview 42" --target-branch "release/6.0.1xx-preview42" --source-repo https://github.com/dotnet/installer --target-repo https://github.com/xamarin/xamarin-android
 ```
 
-6. Publish Maestro updates for `xamarin-android/release/6.0.1xx-preview42`:
+5. Publish Maestro updates for `xamarin-android/release/6.0.1xx-preview42`:
 
 ```bash
 $ darc add-default-channel --channel ".NET 6.0.1xx SDK Preview 42" --branch "release/6.0.1xx-preview42" --repo https://github.com/xamarin/xamarin-android
 ```
 
-See [eng/README.md][3] for details on `darc` commands.
+See [eng/README.md][2] for details on `darc` commands.
 
-This workflow might change slightly when previews become release candidates, such as RC1.
+6. Open a PR to `xamarin-android/main`, such that
+   `$(AndroidPackVersionSuffix)` in `Directory.Build.props` is
+   incremented to the *next* version: `preview.43`. You may also need
+   to update `$(AndroidPackVersion)` if `main` needs to target a new
+   .NET version band.
+
+Note that release candidates will use values such as `rc.1`, `rc.2`, etc.
 
 [0]: https://github.com/dotnet/maui/issues/598
 [1]: https://github.com/dotnet/installer
-[2]: https://github.com/xamarin/xamarin-android/commit/df12251856a172c7deefa9ee2a4b07a490dc9003
-[3]: ../../eng/README.md
+[2]: ../../eng/README.md
