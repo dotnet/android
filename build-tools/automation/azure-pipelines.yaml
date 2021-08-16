@@ -1299,9 +1299,18 @@ stages:
         artifactName: nuget-signed
         targetPath: $(System.DefaultWorkingDirectory)\nuget-signed
 
-    - pwsh: |
-        mkdir $(System.DefaultWorkingDirectory)\nuget-unsigned
-        cp build-tools\create-packs\xamarin-workload.in.props nuget-unsigned\xamarin-workload.props
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: specific
+        project: DevDiv
+        pipeline: 11410
+        runVersion: latestFromBranch
+        runBranch: refs/heads/main
+        allowFailedBuilds: true
+        artifact: nuget-unsigned
+        path: $(System.DefaultWorkingDirectory)\nuget-unsigned
+        patterns: |
+          **/vs-workload.props
 
     - task: PublishPipelineArtifact@1
       inputs:
