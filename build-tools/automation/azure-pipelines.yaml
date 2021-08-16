@@ -13,7 +13,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/pjc/vs-symbol-archive
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -1374,6 +1374,9 @@ stages:
 - template: vs-insertion/stage/v1.yml@yaml
   parameters:
     dependsOn: dotnet_prepare_release
+    symbolArtifactName: nuget-signed
+    symbolArtifactPatterns: |
+      **/*.nupkg
     condition: eq(variables['MicroBuildSignType'], 'Real')
 
 - stage: finalize_installers
