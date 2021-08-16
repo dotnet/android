@@ -1338,6 +1338,8 @@ stages:
     symbolArtifactName: nuget-signed
     symbolArtifactPatterns: |
       **/*.nupkg
+    archiveSymbols: false
+    createVSPR: false
     condition: eq(variables['MicroBuildSignType'], 'Real')
 
 - stage: finalize_installers
