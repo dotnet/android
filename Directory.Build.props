@@ -22,6 +22,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>30.0.100</AndroidPackVersion>
+    <AndroidPackVersionSuffix>rc.1</AndroidPackVersionSuffix>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->
