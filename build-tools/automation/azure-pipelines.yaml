@@ -1326,7 +1326,7 @@ stages:
       artifactPatterns: |
         !*Darwin*
       propsArtifactName: nuget-unsigned
-      signType: $(MicroBuildSignType)
+      signType: Test
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
 # .NET 6 VS Insertion Stage
