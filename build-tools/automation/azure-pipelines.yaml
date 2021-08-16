@@ -1274,6 +1274,7 @@ stages:
 
 - stage: dotnet_prepare_release
   displayName: .NET 6 Prepare Release
+  dependsOn: []
   jobs:
   - job: signing
     displayName: temp download-upload
