@@ -31,7 +31,7 @@ namespace Xamarin.ProjectTools
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
 		public string GlobalPackagesFolder { get; set; } = FileSystemUtils.FindNugetGlobalPackageFolder ();
-		public IList<string> ExtraNuGetConfigSources { get; set; }
+		public IList<string> ExtraNuGetConfigSources { get; set; } = new List<string> ();
 
 		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
 		/// <summary>
@@ -98,12 +98,6 @@ $@"<Project>
 	</PropertyGroup>
 </Project>"
 				});
-
-				// Feeds only needed for .NET 5+
-				ExtraNuGetConfigSources = new List<string> {
-					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				};
 			} else {
 				SetProperty (KnownProperties.Configuration, () => Configuration);
 			}

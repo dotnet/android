@@ -107,22 +107,7 @@ but this is only part of the story. Your local
 populated with a local Android "workload" in
 `Microsoft.Android.Sdk.$(HostOS)` matching your operating system.
 
-To use the Android workload, you will need a `NuGet.config`:
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
-    <add key="local-xa" value="C:\full\path\to\bin\BuildDebug\nuget-unsigned" />
-  </packageSources>
-</configuration>
-```
-
-The local package source in the `bin\BuildDebug\nuget-unsigned` directory is
-currently needed for the Android runtime packages.
-
-Then use a `.csproj` file such as:
+Create a new project with `dotnet new android`:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
