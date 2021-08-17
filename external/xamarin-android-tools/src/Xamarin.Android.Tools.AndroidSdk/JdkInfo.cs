@@ -289,7 +289,7 @@ namespace Xamarin.Android.Tools
 				.Concat (JdkLocations.GetPreferredJdks (logger))
 				.Concat (XAPrepareJdkLocations.GetXAPrepareJdks (logger))
 				.Concat (MicrosoftOpenJdkLocations.GetMicrosoftOpenJdks (logger))
-				.Concat (AdoptOpenJdkLocations.GetAdoptOpenJdks (logger))
+				.Concat (EclipseAdoptiumJdkLocations.GetEclipseAdoptiumJdks (logger))
 				.Concat (AzulJdkLocations.GetAzulJdks (logger))
 				.Concat (OracleJdkLocations.GetOracleJdks (logger))
 				.Concat (VSAndroidJdkLocations.GetVSAndroidJdks (logger))
@@ -305,6 +305,7 @@ namespace Xamarin.Android.Tools
 		internal static IEnumerable<JdkInfo> GetPreferredJdkInfos (Action<TraceLevel, string> logger)
 		{
 			return MicrosoftOpenJdkLocations.GetMicrosoftOpenJdks (logger)
+				.Concat (EclipseAdoptiumJdkLocations.GetEclipseAdoptiumJdks (logger))
 				.Concat (MicrosoftDistJdkLocations.GetMicrosoftDistJdks (logger))
 				;
 		}
