@@ -69,10 +69,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 	
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <ResolveNuGetPackageAssetsDependsOn>
-      _SetLatestTargetFrameworkVersion;
-      $(ResolveNuGetPackageAssetsDependsOn)
-    </ResolveNuGetPackageAssetsDependsOn>
     <GetReferenceAssemblyPathsDependsOn>_SetLatestTargetFrameworkVersion</GetReferenceAssemblyPathsDependsOn>
     <AndroidSequencePointsMode Condition=" '$(AndroidSequencePointsMode)' == ''">None</AndroidSequencePointsMode>
 		
