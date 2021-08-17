@@ -1337,7 +1337,7 @@ stages:
     dependsOn: dotnet_prepare_release
     symbolArtifactName: nuget-signed
     symbolArtifactPatterns: |
-      **/*.nupkg
+      !*Darwin*
     createVSPR: false
     condition: eq(variables['MicroBuildSignType'], 'Real')
 
