@@ -236,6 +236,17 @@ projects. .NET 5 projects will not import this file.
     </GetReferenceAssemblyPaths>
   </Target>
 
+  <!--
+    NOTE:
+    This target runs during Restore, and there is no $(RestoreDependsOn) property.
+    There appears to be no other way to do this other than use BeforeTargets.
+  -->
+  <Target Name="_SetLatestTargetFrameworkVersionForPackageReference"
+      Condition=" '$(AndroidUseLatestPlatformSdk)' == 'True' "
+      BeforeTargets="_GetRestoreTargetFrameworksOutput"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion">
+  </Target>
+
   <Target Name="_ResolveAndroidTooling">
     <ValidateJavaVersion
         Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseManagedDesignTimeResourceGenerator)' != 'True' "
