@@ -504,8 +504,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+
+		/// <summary>
+		/// NOTE: we cannot use SupportedOSPlatformVersion=31 yet, due to d8 2.2.64 emitting a warning for `--min-api 31`:
+		///       D8 An API level of 31 is not supported by this compiler. Please use an API level of 30 or earlier
+		/// </summary>
 		[Test]
-		public void SupportedOSPlatformVersion ([Values (21, 31)] int minSdkVersion)
+		public void SupportedOSPlatformVersion ([Values (21, 30)] int minSdkVersion)
 		{
 			var proj = new XASdkProject {
 				SupportedOSPlatformVersion = minSdkVersion.ToString (),
