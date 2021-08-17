@@ -21,7 +21,7 @@
          * Bump last two digits of the patch version for service releases.
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
-    <AndroidPackVersion>30.0.100</AndroidPackVersion>
+    <AndroidPackVersion>31.0.100</AndroidPackVersion>
     <AndroidPackVersionSuffix>rc.1</AndroidPackVersionSuffix>
   </PropertyGroup>
 
