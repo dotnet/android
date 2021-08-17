@@ -1274,48 +1274,15 @@ stages:
 
 - stage: dotnet_prepare_release
   displayName: .NET 6 Prepare Release
-  dependsOn: []
+  dependsOn: mac_build
   jobs:
-  - job: signing
-    displayName: temp download-upload
-    pool: $(HostedWinVS2019)
-    timeoutInMinutes: 120
-    steps:
-    - checkout: self
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        source: specific
-        project: DevDiv
-        pipeline: 11410
-        runVersion: latestFromBranch
-        runBranch: refs/heads/main
-        allowFailedBuilds: true
-        artifact: nuget-signed
-        path: $(System.DefaultWorkingDirectory)\nuget-signed
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        artifactName: nuget-signed
-        targetPath: $(System.DefaultWorkingDirectory)\nuget-signed
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        source: specific
-        project: DevDiv
-        pipeline: 11410
-        runVersion: latestFromBranch
-        runBranch: refs/heads/main
-        allowFailedBuilds: true
-        artifact: nuget-unsigned
-        path: $(System.DefaultWorkingDirectory)\nuget-unsigned
-        patterns: |
-          **/vs-workload.props
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        artifactName: nuget-unsigned
-        targetPath: $(System.DefaultWorkingDirectory)\nuget-unsigned
+  # Check - "Xamarin.Android (.NET 6 Prepare Release Sign NuGets)"
+  - template: sign-artifacts/jobs/v2.yml@yaml
+    parameters:
+      artifactName: $(NuGetArtifactName)
+      signType: $(MicroBuildSignType)
+      usePipelineArtifactTasks: true
+      condition: eq(variables['MicroBuildSignType'], 'Real')
 
   # Check - "Xamarin.Android (.NET 6 Prepare Release Convert NuGet to MSI)"
   - template: nuget-msi-convert/job/v2.yml@yaml
@@ -1326,8 +1293,56 @@ stages:
       artifactPatterns: |
         !*Darwin*
       propsArtifactName: nuget-unsigned
-      signType: Test
+      signType: $(MicroBuildSignType)
       condition: eq(variables['MicroBuildSignType'], 'Real')
+
+ # Check - "Xamarin.Android (.NET 6 Prepare Release Push NuGets)"
+  - job: push_signed_nugets
+    displayName: Push NuGets
+    dependsOn: signing
+    condition: and(eq(dependencies.signing.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+    timeoutInMinutes: 60
+    pool: VSEngSS-MicroBuild2019
+    workspace:
+      clean: all
+    variables:
+    - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+      - group: Publish-Build-Assets
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: nuget-signed
+        downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
+
+    - task: NuGetCommand@2
+      displayName: push nupkgs
+      inputs:
+        command: push
+        packagesToPush: $(System.DefaultWorkingDirectory)\nuget-signed\*.nupkg
+        nuGetFeedType: external
+        publishFeedCredentials: xamarin-impl public feed
+      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+
+    - powershell: >-
+        & dotnet build -v:n -c $(XA.Build.Configuration)
+        -t:PushManifestToBuildAssetRegistry
+        -p:BuildAssetRegistryToken=$(MaestroAccessToken)
+        -p:OutputPath=$(System.DefaultWorkingDirectory)\nuget-signed\
+        $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
+        -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
+      displayName: generate and publish BAR manifest
+      condition: eq(variables['PushXAPackageInfoToMaestro'], 'true')
+
+    - powershell: |
+        $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
+        $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
+        $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
+        & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
+        & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
+      displayName: add build to default darc channel
+      condition: eq(variables['PushXAPackageInfoToMaestro'], 'true')
 
 # .NET 6 VS Insertion Stage
 # Check - "Xamarin.Android (VS Insertion - Wait For Approval)"
