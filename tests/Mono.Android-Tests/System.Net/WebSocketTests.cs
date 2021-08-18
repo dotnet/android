@@ -10,6 +10,7 @@ namespace System.NetTests
 	public class WebSocketTests
 	{
 		[Test, Category ("InetAccess")]
+		[Ignore ("echo.websocket.org is not available anymore")]
 		public void TestSocketConnection()
 		{
 			string testMessage = "This is a test!";
