@@ -609,7 +609,7 @@ MonodroidRuntime::load_library_entry (std::string const& library_name, std::stri
 		return nullptr;
 	}
 
-	log_warn (LOG_ASSEMBLY, "Caching p/invoke entry %s @ %s", library_name.c_str (), entrypoint_name.c_str ());
+	log_debug (LOG_ASSEMBLY, "Caching p/invoke entry %s @ %s", library_name.c_str (), entrypoint_name.c_str ());
 	(*api_map)[entrypoint_name] = entry_handle;
 	return entry_handle;
 }

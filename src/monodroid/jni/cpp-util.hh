@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <memory>
 
+#include <semaphore.h>
+
 #if defined (ANDROID)
 #include <android/log.h>
 #else
@@ -52,5 +54,38 @@ namespace xamarin::android
 
 	template <typename T>
 	using c_unique_ptr = std::unique_ptr<T, CDeleter<T>>;
+
+	class PosixSemaphoreGuard final
+	{
+	public:
+		explicit PosixSemaphoreGuard (sem_t &semaphore)
+			: _semaphore (semaphore)
+		{
+			ret = sem_wait (&semaphore);
+		}
+
+		PosixSemaphoreGuard (PosixSemaphoreGuard const&) = delete;
+		PosixSemaphoreGuard (PosixSemaphoreGuard const&&) = delete;
+
+		PosixSemaphoreGuard& operator= (PosixSemaphoreGuard const&) = delete;
+
+		~PosixSemaphoreGuard ()
+		{
+			if (ret != 0) {
+				return;
+			}
+
+			sem_post (&_semaphore);
+		}
+
+		int result () const noexcept
+		{
+			return ret;
+		}
+
+	private:
+		sem_t &_semaphore;
+		int    ret;
+	};
 }
 #endif // !def __CPP_UTIL_HH

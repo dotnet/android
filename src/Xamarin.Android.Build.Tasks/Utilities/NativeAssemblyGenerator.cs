@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tasks
 		protected virtual void WriteFileFooter (StreamWriter output)
 		{}
 
-		protected virtual void WriteSection (StreamWriter output, string sectionName, bool hasStrings, bool writable)
+		protected virtual void WriteSection (StreamWriter output, string sectionName, bool hasStrings, bool writable, bool nobits = false)
 		{
 			output.Write (Indent);
 			output.Write (".section");
@@ -97,7 +97,11 @@ namespace Xamarin.Android.Tasks
 
 			output.Write ("\",");
 			output.Write (TargetProvider.TypePrefix);
-			output.Write ("progbits");
+			if (nobits) {
+				output.Write ("nobits");
+			} else {
+				output.Write ("progbits");
+			}
 			if (hasStrings)
 				output.Write (",1");
 			output.WriteLine ();
@@ -332,6 +336,28 @@ namespace Xamarin.Android.Tasks
 				size += WriteDataPadding (output, padToWidth - size);
 
 			return size;
+		}
+
+		protected void WriteBufferAllocation (StreamWriter output, string label, uint bufferSize, bool isGlobal = false)
+		{
+			string symbolName;
+			if (isGlobal) {
+				output.Write (Indent);
+				output.Write (".global");
+				output.Write (Indent);
+				output.WriteLine (label);
+				symbolName = label;
+			} else {
+				symbolName = MakeLocalLabel (label);
+			}
+
+			output.Write (symbolName);
+			output.WriteLine (':');
+
+			output.Write (Indent);
+			output.Write (".zero");
+			output.Write (Indent);
+			output.WriteLine (bufferSize);
 		}
 
 		protected string MakeLocalLabel (string label)

@@ -76,7 +76,7 @@ namespace xamarin::android::internal
 			return memcmp (_start, s, length ()) == 0;
 		}
 
-		force_inline bool starts_with (const char *s) const noexcept
+		force_inline bool starts_with_c (const char *s) const noexcept
 		{
 			if (s == nullptr)
 				return false;

@@ -1612,7 +1612,7 @@ MonodroidRuntime::set_profile_options ()
 	while (value.next_token (start_index, ',', param)) {
 		dynamic_local_string<SENSIBLE_PATH_MAX> temp;
 		temp.assign (param.start (), param.length ());
-		if (!param.starts_with (OUTPUT_ARG, OUTPUT_ARG_LEN) || param.length () == OUTPUT_ARG_LEN) {
+		if (!param.starts_with (OUTPUT_ARG) || param.length () == OUTPUT_ARG_LEN) {
 			continue;
 		}
 
@@ -2210,6 +2210,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		log_info_nocheck (LOG_DEFAULT, "MonoVM version: %s", mono_get_runtime_build_info ());
 #endif // def ANDROID
 	}
+
+	embeddedAssemblies.prepare_for_multiple_threads ();
+	startup_in_progress = false;
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
