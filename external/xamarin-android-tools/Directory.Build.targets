@@ -1,0 +1,16 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="2.1.2" PrivateAssets="all" />
+  </ItemGroup>
+  <PropertyGroup>
+    <GitThisAssembly>false</GitThisAssembly>
+    <GitDefaultBranch>main</GitDefaultBranch>
+  </PropertyGroup>
+
+  <Target Name="SetVersion" BeforeTargets="GetAssemblyVersion;GetPackageVersion" DependsOnTargets="GitVersion">
+    <PropertyGroup>
+      <Version>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
+      <InformationalVersion>$(Version); git-rev-head:$(GitCommit); git-branch:$(GitBranch)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+</Project>
