@@ -57,6 +57,10 @@ private:
 	char *guid = nullptr;
 };
 
+#if !defined (ANDROID)
+std::mutex EmbeddedAssemblies::assembly_mmap_mutex;
+#endif
+
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
 	if (assemblies_prefix_override != nullptr)
@@ -188,6 +192,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 		//
 		// POSIX semaphores should be perfectly fine for us here.
 		//
+#if defined (ANDROID)
 		PosixSemaphoreGuard sem (assembly_mmap_semaphore);
 
 		if constexpr (AbortOnFailure) {
@@ -198,7 +203,9 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 				return;
 			}
 		}
-
+#else
+		std::lock_guard<std::mutex> mmap_mutex (assembly_mmap_mutex);
+#endif
 		if (file.data == nullptr) {
 			file.data = static_cast<uint8_t*>(map_info.area);
 		} else {

@@ -85,8 +85,10 @@ namespace xamarin::android::internal {
 
 		void prepare_for_multiple_threads () noexcept
 		{
+#if defined (ANDROID)
 			int ret = sem_init (&assembly_mmap_semaphore, 0 /* pshared */, 1 /* value */);
 			abort_unless (ret == 0, "Failed to initialize assembly mapping semaphore. %s", strerror (errno));
+#endif
 		}
 
 		/* returns current number of *all* assemblies found from all invocations */
@@ -234,7 +236,11 @@ namespace xamarin::android::internal {
 
 		bool                   register_debug_symbols;
 		bool                   have_and_want_debug_symbols;
+#if defined (ANDROID)
 		sem_t                  assembly_mmap_semaphore;
+#else
+		static std::mutex      assembly_mmap_mutex;
+#endif
 		size_t                 bundled_assembly_index = 0;
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
