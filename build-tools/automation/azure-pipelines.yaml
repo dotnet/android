@@ -1309,8 +1309,8 @@ stages:
         runVersion: latestFromBranch
         runBranch: refs/heads/main
         allowFailedBuilds: true
-        artifact: msi-nupkgs
-        path: $(System.DefaultWorkingDirectory)\msi-nupkgs
+        artifact: vs-msi-nugets
+        path: $(System.DefaultWorkingDirectory)\vs-msi-nugets
 
     - task: NuGetCommand@2
       displayName: push nupkgs
@@ -1325,7 +1325,7 @@ stages:
       displayName: push msi nupkgs
       inputs:
         command: push
-        packagesToPush: $(System.DefaultWorkingDirectory)\msi-nupkgs\*.nupkg
+        packagesToPush: $(System.DefaultWorkingDirectory)\vs-msi-nugets\*.nupkg
         nuGetFeedType: external
         publishFeedCredentials: dnceng-dotnet6
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
