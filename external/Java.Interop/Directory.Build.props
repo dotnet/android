@@ -26,6 +26,8 @@
   <PropertyGroup>
     <!-- Workaround: https://github.com/dotnet/sdk/issues/19050 -->
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
+    <!-- Workaround: https://github.com/dotnet/runtime/issues/55992 -->
+    <UseAppHost>False</UseAppHost>
     <AppendTargetFrameworkToOutputPath Condition=" '$(AppendTargetFrameworkToOutputPath)' == '' ">False</AppendTargetFrameworkToOutputPath>
     <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
   </PropertyGroup>

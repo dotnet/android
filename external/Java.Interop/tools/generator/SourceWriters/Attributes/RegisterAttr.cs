@@ -32,12 +32,12 @@ namespace generator.SourceWriters
 			var sb = new StringBuilder ();
 
 			if (UseGlobal)
-				sb.Append ($"[global::Android.Runtime.Register (\"{Name}\"");
+				sb.Append ((string) $"[global::Android.Runtime.Register (\"{Name}\"");
 			else
-				sb.Append ($"[Register (\"{Name}\"");
+				sb.Append ((string) $"[Register (\"{Name}\"");
 
 			if ((Signature.HasValue () || Connector.HasValue ()) && !UseShortForm)
-				sb.Append ($", \"{Signature}\", \"{Connector}\"");
+				sb.Append ((string) $", \"{Signature}\", \"{Connector}\"");
 
 			if (DoNotGenerateAcw && !AcwLast)
 				sb.Append (", DoNotGenerateAcw=true");
