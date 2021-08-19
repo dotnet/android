@@ -1274,27 +1274,7 @@ stages:
 
 - stage: dotnet_prepare_release
   displayName: .NET 6 Prepare Release
-  dependsOn: mac_build
-  jobs:
-  # Check - "Xamarin.Android (.NET 6 Prepare Release Sign NuGets)"
-  - template: sign-artifacts/jobs/v2.yml@yaml
-    parameters:
-      artifactName: $(NuGetArtifactName)
-      signType: $(MicroBuildSignType)
-      usePipelineArtifactTasks: true
-      condition: eq(variables['MicroBuildSignType'], 'Real')
-
-  # Check - "Xamarin.Android (.NET 6 Prepare Release Convert NuGet to MSI)"
-  - template: nuget-msi-convert/job/v2.yml@yaml
-    parameters:
-      yamlResourceName: yaml
-      dependsOn: signing
-      artifactName: nuget-signed
-      artifactPatterns: |
-        !*Darwin*
-      propsArtifactName: nuget-unsigned
-      signType: $(MicroBuildSignType)
-      condition: eq(variables['MicroBuildSignType'], 'Real')
+  dependsOn: []
 
  # Check - "Xamarin.Android (.NET 6 Prepare Release Push NuGets)"
   - job: push_signed_nugets
@@ -1313,8 +1293,25 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: nuget-signed
-        downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
+        source: specific
+        project: DevDiv
+        pipeline: 11410
+        runVersion: latestFromBranch
+        runBranch: refs/heads/main
+        allowFailedBuilds: true
+        artifact: nuget-signed
+        path: $(System.DefaultWorkingDirectory)\nuget-signed
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: specific
+        project: DevDiv
+        pipeline: 11410
+        runVersion: latestFromBranch
+        runBranch: refs/heads/main
+        allowFailedBuilds: true
+        artifact: msi-nupkgs
+        path: $(System.DefaultWorkingDirectory)\msi-nupkgs
 
     - task: NuGetCommand@2
       displayName: push nupkgs
@@ -1324,11 +1321,6 @@ stages:
         nuGetFeedType: external
         publishFeedCredentials: dnceng-dotnet6
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: msi-nupkgs
-        downloadPath: $(System.DefaultWorkingDirectory)\msi-nupkgs
 
     - task: NuGetCommand@2
       displayName: push msi nupkgs
