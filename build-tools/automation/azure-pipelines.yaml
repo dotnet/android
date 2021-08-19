@@ -1275,12 +1275,11 @@ stages:
 - stage: dotnet_prepare_release
   displayName: .NET 6 Prepare Release
   dependsOn: []
-
+  condition: eq(variables['MicroBuildSignType'], 'Real')
+  jobs:
  # Check - "Xamarin.Android (.NET 6 Prepare Release Push NuGets)"
   - job: push_signed_nugets
     displayName: Push NuGets
-    dependsOn: nuget_convert
-    condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
     timeoutInMinutes: 60
     pool: VSEngSS-MicroBuild2019
     workspace:
