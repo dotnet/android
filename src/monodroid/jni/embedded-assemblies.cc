@@ -29,6 +29,7 @@
 #include "monodroid-glue.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
+#include "startup-aware-lock.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -56,10 +57,6 @@ public:
 private:
 	char *guid = nullptr;
 };
-
-#if !defined (ANDROID)
-std::mutex EmbeddedAssemblies::assembly_mmap_mutex;
-#endif
 
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
@@ -172,7 +169,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 	return open_from_bundles (aname, loader, ref_only);
 }
 
-template<bool AbortOnFailure, bool LogMapping>
+template<bool LogMapping>
 force_inline void
 EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
 {
@@ -180,35 +177,17 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 	if (monodroidRuntime.is_startup_in_progress ()) {
 		file.data = static_cast<uint8_t*>(map_info.area);
 	} else {
-		//
-		// We could use either standard std::atomic<> here, but it would cost us some performance during startup
-		// where we don't need synchronization but we would still need to use the atomic operations.
-		//
-		// Another option is the GCC/clang built-in atomic operations, but these can be compiler and compiler
-		// version specific, so it's better to use something standard.
-		//
-		// C++20 comes with a binary_semaphore, we could use that but it requires the std::chrono library and we
-		// should keep XA runtime slim unless absolutely necessary
-		//
-		// POSIX semaphores should be perfectly fine for us here.
-		//
-#if defined (ANDROID)
-		PosixSemaphoreGuard sem (assembly_mmap_semaphore);
+		uint8_t *expected_null = nullptr;
+		bool already_mapped = !__atomic_compare_exchange (
+			/* ptr */              &file.data,
+			/* expected */         &expected_null,
+			/* desired */           reinterpret_cast<uint8_t**>(&map_info.area),
+			/* weak */              false,
+			/* success_memorder */  __ATOMIC_ACQUIRE,
+			/* failure_memorder */  __ATOMIC_RELAXED
+		);
 
-		if constexpr (AbortOnFailure) {
-			abort_unless (sem.result () == 0, "Failed to acquire assembly mapping semaphore. %s", strerror (errno));
-		} else {
-			if (sem.result () != 0) {
-				log_warn (LOG_ASSEMBLY, "File '%s' will not be mapped, failed to acquire assembly mapping semaphore. %s", file.name, strerror (errno));
-				return;
-			}
-		}
-#else
-		std::lock_guard<std::mutex> mmap_mutex (assembly_mmap_mutex);
-#endif
-		if (file.data == nullptr) {
-			file.data = static_cast<uint8_t*>(map_info.area);
-		} else {
+		if (already_mapped) {
 			log_debug (LOG_ASSEMBLY, "Assembly %s already mmapped by another thread, unmapping our copy", file.name);
 			munmap (map_info.area, file.data_size);
 			map_info.area = nullptr;
@@ -233,13 +212,13 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 force_inline void
 EmbeddedAssemblies::map_assembly (XamarinAndroidBundledAssembly& file) noexcept
 {
-	map_runtime_file<true, true> (file);
+	map_runtime_file<true> (file);
 }
 
 force_inline void
 EmbeddedAssemblies::map_debug_data (XamarinAndroidBundledAssembly& file) noexcept
 {
-	map_runtime_file<false, false> (file);
+	map_runtime_file<false> (file);
 }
 
 force_inline MonoAssembly*

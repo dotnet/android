@@ -2213,7 +2213,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif // def ANDROID
 	}
 
-	embeddedAssemblies.prepare_for_multiple_threads ();
 	startup_in_progress = false;
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {

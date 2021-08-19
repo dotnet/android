@@ -7,6 +7,7 @@
 #include "android-system.hh"
 #include "osbridge.hh"
 #include "timing.hh"
+#include "xxhash.hh"
 
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
@@ -42,13 +43,28 @@
 
 namespace xamarin::android::internal
 {
+	struct PinvokeEntry
+	{
+		hash_t      hash;
+		const char *name;
+		void       *func;
+	};
+
+	struct string_hash
+	{
+		force_inline xamarin::android::hash_t operator() (std::string const& s) const noexcept
+		{
+			return xamarin::android::xxhash::hash (s.c_str (), s.length ());
+		}
+	};
+
 	class MonodroidRuntime
 	{
 #if defined (NET6)
 		using pinvoke_api_map = tsl::robin_map<
 			std::string,
 			void*,
-			std::hash<std::string>,
+			string_hash,
 			std::equal_to<std::string>,
 			std::allocator<std::pair<std::string, void*>>,
 			true
@@ -58,7 +74,7 @@ namespace xamarin::android::internal
 		using pinvoke_library_map = tsl::robin_map<
 			std::string,
 			pinvoke_api_map_ptr,
-			std::hash<std::string>,
+			string_hash,
 			std::equal_to<std::string>,
 			std::allocator<std::pair<std::string, pinvoke_api_map_ptr>>,
 			true
@@ -219,8 +235,12 @@ namespace xamarin::android::internal
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)
 #if defined (NET6)
 		static void  cleanup_runtime_config (MonovmRuntimeConfigArguments *args, void *user_data);
-		static void* load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map);
-		static void* fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map, bool need_lock);
+		static void* load_library_symbol (const char *library_name, const char *symbol_name, void **dso_handle = nullptr) noexcept;
+		static void* load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map) noexcept;
+		static void  load_library_entry (const char *library_name, const char *entrypoint_name, PinvokeEntry &entry, void **dso_handle) noexcept;
+		static void* fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, hash_t entrypoint_name_hash, pinvoke_api_map_ptr api_map, bool need_lock) noexcept;
+		static PinvokeEntry* find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept;
+		static void* handle_other_pinvoke_request (const char *library_name, hash_t library_name_hash, const char *entrypoint_name, hash_t entrypoint_name_hash) noexcept;
 		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
 		static void* monodroid_dlopen (const char *name, int flags, char **err);
 #endif // def NET6
@@ -340,10 +360,13 @@ namespace xamarin::android::internal
 		MonoAssemblyLoadContextGCHandle default_alc = nullptr;
 
 		static std::mutex             pinvoke_map_write_lock;
-		static pinvoke_api_map        xa_pinvoke_map;
 		static pinvoke_library_map    other_pinvoke_map;
 		static MonoCoreRuntimeProperties monovm_core_properties;
 		MonovmRuntimeConfigArguments  runtime_config_args;
+
+		static void *system_native_library_handle;
+		static void *system_security_cryptography_native_android_library_handle;
+		static void *system_io_compression_native_library_handle;
 #else // def NET6
 		static std::mutex   api_init_lock;
 		static void        *api_dso_handle;
