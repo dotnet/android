@@ -4,8 +4,9 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <XlfLanguages>cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant</XlfLanguages>
     <UpdateXlfOnBuild Condition="'$(RunningOnCI)' != 'true'">true</UpdateXlfOnBuild>
@@ -75,7 +76,7 @@
     <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">$(DotnetToolPath) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
     <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(Runtime) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
   </PropertyGroup>
-  
+
   <!-- Add Roslyn analyzers NuGet to all projects -->
   <ItemGroup Condition=" '$(DisableRoslynAnalyzers)' != 'True' ">
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
@@ -84,4 +85,21 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- GitInfo Package for Assembly Versioning -->
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="2.1.2" PrivateAssets="all" />
+  </ItemGroup>
+  <PropertyGroup>
+    <GitDefaultBranch>main</GitDefaultBranch>
+    <GitThisAssembly>false</GitThisAssembly>
+  </PropertyGroup>
+
+  <Target Name="SetVersion" BeforeTargets="GetAssemblyVersion;GetPackageVersion" DependsOnTargets="GitVersion">
+    <PropertyGroup>
+      <Version>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
+      <InformationalVersion>$(Version); git-rev-head:$(GitCommit); git-branch:$(GitBranch)</InformationalVersion>
+      <Company>Microsoft Corporation</Company>
+      <Copyright>Microsoft Corporation</Copyright>
+    </PropertyGroup>
+  </Target>
 </Project>

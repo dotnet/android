@@ -22,7 +22,6 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS;INTERNAL_NULLABLE_ATTRIBUTES;$(JavaInteropDefineConstants)</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
     <DocumentationFile>$(ToolOutputFullPath)Java.Interop.xml</DocumentationFile>

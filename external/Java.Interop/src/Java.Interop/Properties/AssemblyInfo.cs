@@ -4,15 +4,9 @@ using System.Runtime.InteropServices;
 
 [assembly: DefaultDllImportSearchPathsAttribute (DllImportSearchPath.SafeDirectories | DllImportSearchPath.AssemblyDirectory)]
 
-[assembly: AssemblyTitle ("Java.Interop")]
 [assembly: AssemblyDescription ("")]
 [assembly: AssemblyCulture ("")]
-[assembly: AssemblyConfiguration ("")]
-[assembly: AssemblyCompany ("Microsoft Corporation")]
-[assembly: AssemblyCopyright ("Microsoft Corporation")]
-[assembly: AssemblyProduct ("")]
-[assembly: AssemblyTrademark ("Microsoft Corporation")]
-[assembly: AssemblyVersion ("0.1.0.0")]
+
 [assembly: AssemblyMetadata ("IsTrimmable", "True")]
 
 [assembly: InternalsVisibleTo (
