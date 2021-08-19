@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,6 +107,10 @@ namespace Xamarin.Android.Net
 		public ICredentials? Credentials { get; set; }
 
 		public bool AllowAutoRedirect { get; set; } = true;
+
+		public ClientCertificateOption ClientCertificateOptions { get; set; }
+
+		public X509CertificateCollection ClientCertificates { get; set; }
 
 		int maxAutomaticRedirections = 50;
 
