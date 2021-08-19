@@ -1299,8 +1299,8 @@ stages:
  # Check - "Xamarin.Android (.NET 6 Prepare Release Push NuGets)"
   - job: push_signed_nugets
     displayName: Push NuGets
-    dependsOn: signing
-    condition: and(eq(dependencies.signing.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+    dependsOn: nuget_convert
+    condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
     timeoutInMinutes: 60
     pool: VSEngSS-MicroBuild2019
     workspace:
@@ -1322,7 +1322,21 @@ stages:
         command: push
         packagesToPush: $(System.DefaultWorkingDirectory)\nuget-signed\*.nupkg
         nuGetFeedType: external
-        publishFeedCredentials: xamarin-impl public feed
+        publishFeedCredentials: dnceng-dotnet6
+      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: msi-nupkgs
+        downloadPath: $(System.DefaultWorkingDirectory)\msi-nupkgs
+
+    - task: NuGetCommand@2
+      displayName: push msi nupkgs
+      inputs:
+        command: push
+        packagesToPush: $(System.DefaultWorkingDirectory)\msi-nupkgs\*.nupkg
+        nuGetFeedType: external
+        publishFeedCredentials: dnceng-dotnet6
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
     - powershell: >-
