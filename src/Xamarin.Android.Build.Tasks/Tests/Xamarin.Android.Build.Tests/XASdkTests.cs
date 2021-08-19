@@ -387,14 +387,16 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XASdkProject {
 				IsRelease = isRelease,
 				ExtraNuGetConfigSources = {
-					"https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json"
+					// Microsoft.AspNetCore.Components.WebView is not in dotnet-public
+					"https://api.nuget.org/v3/index.json",
 				},
 				PackageReferences = {
-					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.2.0.7-net6preview01" },
-					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "6.0.0-preview.5.21301.17" },
-					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "6.0.0-preview.6.21306.3" },
-					new Package { Id = "Microsoft.JSInterop", Version = "6.0.0-preview.6.21306.3" },
-					new Package { Id = "System.Text.Json", Version = "6.0.0-preview.7.21323.3" },
+					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.3.1.1" },
+					// Using * here, so we explicitly get newer packages
+					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "6.0.0-*" },
+					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "6.0.0-*" },
+					new Package { Id = "Microsoft.JSInterop", Version = "6.0.0-*" },
+					new Package { Id = "System.Text.Json", Version = "6.0.0-*" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -637,14 +639,14 @@ namespace Xamarin.Android.Build.Tests
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 			};
-			library.ExtraNuGetConfigSources.Add ("https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json");
 			library.Sources.Clear ();
 			library.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () =>
-@"using Microsoft.Maui;
-using Microsoft.Maui.Handlers;
+@"public abstract partial class ViewHandler<TVirtualView, TNativeView> { }
 
-public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirtualView, TNativeView>
+public interface IView { }
+
+public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView, TNativeView>
 	where TVirtualView : class, IView
 #if ANDROID
 	where TNativeView : Android.Views.View
@@ -652,16 +654,8 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 	where TNativeView : class
 #endif
 {
-		protected Foo (PropertyMapper mapper) : base(mapper)
-		{
-#if ANDROID
-			var t = this.Context;
-#endif
-		}
 }",
 			});
-
-			library.PackageReferences.Add (new Package { Id = "Microsoft.Maui.Core", Version = "6.0.100-preview.3.269" });
 
 			var dotnet = CreateDotNetBuilder (library);
 			Assert.IsTrue (dotnet.Build (), $"{library.ProjectName} should succeed");
