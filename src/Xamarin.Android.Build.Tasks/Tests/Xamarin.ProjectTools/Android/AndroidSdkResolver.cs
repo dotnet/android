@@ -135,7 +135,6 @@ namespace Xamarin.ProjectTools
 				Console.WriteLine ($"GetMaxInstalledPlatform: Setting maxInstalled to {version}");
 				maxInstalled = version;
 			}
-			Console.WriteLine ($"GetMaxInstalledPlatform: Returning maxInstalled as {version}");
 			return maxInstalled ?? 0;
 		}
 	}
