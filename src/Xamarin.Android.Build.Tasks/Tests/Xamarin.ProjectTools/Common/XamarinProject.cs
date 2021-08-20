@@ -416,15 +416,12 @@ $@"<Project>
 			if (File.Exists (repoNuGetConfig) && !File.Exists (projNugetConfig)) {
 				Directory.CreateDirectory (Path.GetDirectoryName (projNugetConfig));
 				File.Copy (repoNuGetConfig, projNugetConfig, overwrite: true);
-				// Write additional sources to NuGet.config if needed
-				if (ExtraNuGetConfigSources != null) {
-					var doc = XDocument.Load (projNugetConfig);
-					AddNuGetConfigSources (doc);
-					doc.Save (projNugetConfig);
-				}
+
+				var doc = XDocument.Load (projNugetConfig);
+				AddNuGetConfigSources (doc);
+
 				// Set a local PackageReference installation folder if specified
 				if (!string.IsNullOrEmpty (GlobalPackagesFolder)) {
-					var doc = XDocument.Load (projNugetConfig);
 					XElement gpfElement = doc.Descendants ().FirstOrDefault (c => c.Name.LocalName.ToLowerInvariant () == "add"
 						&& c.Attributes ().Any (a => a.Name.LocalName.ToLowerInvariant () == "key" && a.Value.ToLowerInvariant () == "globalpackagesfolder"));
 					if (gpfElement != default (XElement)) {
@@ -442,18 +439,37 @@ $@"<Project>
 							doc.Root.Add (configParentElement);
 						}
 					}
-					doc.Save (projNugetConfig);
 				}
+
+				doc.Save (projNugetConfig);
 			}
 		}
 
 		/// <summary>
 		/// Updates a NuGet.config based on sources in ExtraNuGetConfigSources
+		/// Removes the dotnet6 source, which should not be needed by tests
 		/// </summary>
 		protected void AddNuGetConfigSources (XDocument doc)
 		{
+			const string elementName = "packageSources";
+			XElement pkgSourcesElement = doc.Root.Elements ().FirstOrDefault (d => string.Equals (d.Name.LocalName, elementName, StringComparison.OrdinalIgnoreCase));
+			if (pkgSourcesElement == null) {
+				doc.Root.Add (pkgSourcesElement= new XElement (elementName));
+			}
+
+			// Remove dotnet6 feed
+			foreach (XElement element in pkgSourcesElement.Elements ()) {
+				XAttribute value = element.Attribute ("value");
+				if (value != null && value.Value == "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json") {
+					element.Remove ();
+					break;
+				}
+			}
+
+			// Add extra sources
+			if (ExtraNuGetConfigSources == null)
+				return;
 			int sourceIndex = 0;
-			XElement pkgSourcesElement = doc.Descendants ().FirstOrDefault (d => d.Name.LocalName.ToLowerInvariant () == "packagesources");
 			foreach (var source in ExtraNuGetConfigSources) {
 				var sourceElement = new XElement ("add");
 				sourceElement.SetAttributeValue ("key", $"testsource{++sourceIndex}");
