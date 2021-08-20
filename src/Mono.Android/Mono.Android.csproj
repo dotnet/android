@@ -172,6 +172,8 @@
     <Compile Include="Android.App\UsesLibraryAttribute.cs" />
     <Compile Include="Android.App\UsesPermissionAttribute.cs" />
     <Compile Include="Android.App.Admin\DevicePolicyManager.cs" />
+    <Compile Include="Android.Bluetooth\AdvertisingSetParametersBuilder.cs" />
+    <Compile Include="Android.Bluetooth\BluetoothDevice.cs" />
     <Compile Include="Android.Bluetooth\BluetoothGattServer.cs" />
     <Compile Include="Android.Bluetooth\BluetoothGattServerCallback.cs" />
     <Compile Include="Android.Content\ContentProvider.cs" />
