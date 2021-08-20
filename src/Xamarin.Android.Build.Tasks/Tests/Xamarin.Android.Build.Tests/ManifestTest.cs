@@ -141,12 +141,31 @@ namespace Bug12935
 				var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				XDocument doc = XDocument.Load (manifestFile);
 				var ns = doc.Root.GetNamespaceOfPrefix ("android");
-				var manifest = doc.Element ("manifest");
-				Assert.IsNotNull (manifest, "manifest element should not be null.");
-				var app = manifest.Element ("application");
-				Assert.IsNotNull (app, "application element should not be null.");
+				var manifest = GetElement (doc, "manifest");
+				var app = GetElement (manifest, "application");
 				Assert.AreEqual (0, app.ElementsAfterSelf ().Count (),
 					"There should be no elements after the application element");
+				var activity = GetElement (app, "activity");
+				AssertAttribute (activity, ns + "exported", "true");
+				var intent_filter = GetElement (activity, "intent-filter");
+				var action = GetElement (intent_filter, "action");
+				AssertAttribute (action, ns + "name", "android.intent.action.MAIN");
+				var category = GetElement (intent_filter, "category");
+				AssertAttribute (category, ns + "name", "android.intent.category.LAUNCHER");
+			}
+
+			static XElement GetElement (XContainer parent, XName name)
+			{
+				var e = parent.Element (name);
+				Assert.IsNotNull (e, $"{name} element should not be null.");
+				return e;
+			}
+
+			static void AssertAttribute (XElement parent, XName name, string expected)
+			{
+				var a = parent.Attribute (name);
+				Assert.IsNotNull (a, $"{name} attribute should not be null.");
+				Assert.AreEqual (expected, a.Value, $"{name} attribute value did not match.");
 			}
 		}
 
