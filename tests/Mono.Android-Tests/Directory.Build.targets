@@ -42,8 +42,6 @@
 <![CDATA[
 <configuration>
   <packageSources>
-    <add key="xamarin-impl" value="https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json" />
-    <add key="dotnet5" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json" />
     <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
     <add key="local-xa" value="$(LocalNupkgDirectory)" />
   </packageSources>

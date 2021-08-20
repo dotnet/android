@@ -527,4 +527,4 @@ package on the [nightly Azure DevOps feed][maui-feed]. Or look for the
 `Microsoft.NET.Sdk.Maui.Manifest-6.0.100` package on NuGet.org for public
 releases.
 
-[maui-feed]: https://dev.azure.com/azure-public/vside/_packaging?_a=package&feed=xamarin-impl%40Local&package=Microsoft.NET.Sdk.Maui.Manifest-6.0.100&protocolType=NuGet&version=6.0.100-rc.1.1351%2Bsha.3fbb791e7-azdo.5078933
+[maui-feed]: https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6%40Local
