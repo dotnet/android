@@ -72,9 +72,9 @@ namespace Xamarin.Android.Net
 		// uncompress it any longer, doh. And they don't support 'deflate' so we need to handle it ourselves.
 		bool decompress_here;
 
-		internal bool SupportsAutomaticDecompression => true;
-		internal bool SupportsProxy => true;
-		internal bool SupportsRedirectConfiguration => true;
+		public bool SupportsAutomaticDecompression => true;
+		public bool SupportsProxy => true;
+		public bool SupportsRedirectConfiguration => true;
 
 		public DecompressionMethods AutomaticDecompression
 		{
@@ -126,7 +126,7 @@ namespace Xamarin.Android.Net
 			(int)Build.VERSION.SdkInt >= 29 ?
 				SslProtocols.Tls13 | SslProtocols.Tls12 : SslProtocols.Tls12;
 
-		internal IDictionary<string, object?> Properties { get; set; }
+		public IDictionary<string, object?> Properties { get; set; }
 
 		int maxAutomaticRedirections = 50;
 
