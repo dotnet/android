@@ -59,7 +59,7 @@ jobs:
         testRunTitle: MSBuildDeviceIntegration On Device - macOS - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
-        dotNetTestExtraArgs: --filter "TestCategory != TimeZoneInfo & TestCategory != SmokeTests ${{ parameters.nunit_categories }}"
+        dotNetTestExtraArgs: --filter "TestCategory != TimeZoneInfo ${{ parameters.nunit_categories }}"
         testResultsFile: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1

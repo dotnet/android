@@ -361,11 +361,13 @@ namespace ${ROOT_NAMESPACE} {
 				Assert.True (appBuilder.Install (app, parameters: parameters.ToArray ()), "App should have installed.");
 
 				if (!embedAssemblies) {
-					// Check that we deployed .pdb files
+					// Check that we deployed app and framework .pdb files
 					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+{app.ProjectName}\.pdb", appBuilder.LastBuildOutput,
 						$"{app.ProjectName}.pdb should be deployed!");
 					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+{lib.ProjectName}\.pdb", appBuilder.LastBuildOutput,
 						$"{lib.ProjectName}.pdb should be deployed!");
+					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+Mono.Android\.pdb", appBuilder.LastBuildOutput,
+						$"Mono.Android.pdb should be deployed!");
 				}
 
 				int breakcountHitCount = 0;
