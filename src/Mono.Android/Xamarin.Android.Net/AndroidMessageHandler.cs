@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -120,7 +121,10 @@ namespace Xamarin.Android.Net
 
 		public bool CheckCertificateRevocationList { get; set; } = false;
 
-		public SslProtocols SslProtocols { get; set; } = SslProtocols.Tls13 | SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls;
+		// See: https://developer.android.com/reference/javax/net/ssl/SSLSocket#protocols
+		public SslProtocols SslProtocols { get; set; } =
+			(int)Build.VERSION.SdkInt >= 29 ?
+				SslProtocols.Tls13 | SslProtocols.Tls12 : SslProtocols.Tls12;
 
 		internal IDictionary<string, object?> Properties { get; set; }
 
