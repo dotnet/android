@@ -6,6 +6,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,9 +72,9 @@ namespace Xamarin.Android.Net
 		// uncompress it any longer, doh. And they don't support 'deflate' so we need to handle it ourselves.
 		bool decompress_here;
 
-		internal const bool SupportsAutomaticDecompression = true;
-		internal const bool SupportsProxy = true;
-		internal const bool SupportsRedirectConfiguration = true;
+		public bool SupportsAutomaticDecompression => true;
+		public bool SupportsProxy => true;
+		public bool SupportsRedirectConfiguration => true;
 
 		public DecompressionMethods AutomaticDecompression
 		{
@@ -93,7 +95,7 @@ namespace Xamarin.Android.Net
 		}
 
 		// NOTE: defaults here are based on:
-		// https://github.com/dotnet/runtime/blob/ccfe21882e4a2206ce49cd5b32d3eb3cab3e530f/src/libraries/Common/src/System/Net/Http/HttpHandlerDefaults.cs
+		// https://github.com/dotnet/runtime/blob/f3b77e64b87895aa7e697f321eb6d4151a4333df/src/libraries/Common/src/System/Net/Http/HttpHandlerDefaults.cs
 
 		public bool UseCookies { get; set; } = true;
 
@@ -106,6 +108,25 @@ namespace Xamarin.Android.Net
 		public ICredentials? Credentials { get; set; }
 
 		public bool AllowAutoRedirect { get; set; } = true;
+
+		public ClientCertificateOption ClientCertificateOptions { get; set; }
+
+		public X509CertificateCollection ClientCertificates { get; set; }
+
+		public ICredentials DefaultProxyCredentials { get; set; }
+
+		public int MaxConnectionsPerServer { get; set; } = int.MaxValue;
+
+		public int MaxResponseHeadersLength { get; set; } = 64; // Units in K (1024) bytes.
+
+		public bool CheckCertificateRevocationList { get; set; } = false;
+
+		// See: https://developer.android.com/reference/javax/net/ssl/SSLSocket#protocols
+		public SslProtocols SslProtocols { get; set; } =
+			(int)Build.VERSION.SdkInt >= 29 ?
+				SslProtocols.Tls13 | SslProtocols.Tls12 : SslProtocols.Tls12;
+
+		public IDictionary<string, object?> Properties { get; set; }
 
 		int maxAutomaticRedirections = 50;
 
