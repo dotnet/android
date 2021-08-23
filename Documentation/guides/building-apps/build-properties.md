@@ -569,6 +569,12 @@ Enables generation of [layout code-behind](https://github.com/xamarin/xamarin-an
 if set to `true` or disables it completely if set to `false`. The
 default value is `false`.
 
+## AndroidGenerateResourceDesigner
+
+Defaults to `true`. When set to `false`, disables the generation of `Resource.designer.cs`.
+
+Added in .NET 6 RC 1. Not supported in Xamarin.Android.
+
 ## AndroidHttpClientHandlerType
 
 Controls the default

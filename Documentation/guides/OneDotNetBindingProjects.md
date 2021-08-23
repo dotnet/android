@@ -217,5 +217,19 @@ As the default for .NET 6 is `disable`, the same applies for Xamarin Android pro
 
 Use `enable` as shown above to enable NRT support.
 
-
 [11-0-release-notes]: https://docs.microsoft.com/en-us/xamarin/android/release-notes/11/11.0
+
+### `Resource.designer.cs`
+
+In Xamarin.Android, Java binding projects did not support generating a `Resource.designer.cs` file.
+Since binding projects are just class libraries in .NET 6, this file will be generated. This could
+be a breaking change when migrating existing projects.
+
+To disable `Resource.designer.cs` generation, set `$(AndroidGenerateResourceDesigner)` to `false`
+in your `.csproj`:
+
+```xml
+<PropertyGroup>
+  <AndroidGenerateResourceDesigner>false</AndroidGenerateResourceDesigner>
+</PropertyGroup>
+```
