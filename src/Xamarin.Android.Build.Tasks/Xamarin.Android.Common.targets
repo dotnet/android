@@ -552,17 +552,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 </Target>
 
-<!--
-  NOTE:
-  This target runs during Restore, and there is no $(RestoreDependsOn) property.
-  There appears to be no other way to do this other than use BeforeTargets.
--->
-<Target Name="_SetLatestTargetFrameworkVersionForPackageReference"
-    Condition=" '$(AndroidUseLatestPlatformSdk)' == 'True' "
-    BeforeTargets="_GetRestoreTargetFrameworksOutput"
-    DependsOnTargets="_SetLatestTargetFrameworkVersion">
-</Target>
-
 <PropertyGroup>
 	<_OnResolveMonoAndroidSdks>
 		_ResolveMonoAndroidSdks

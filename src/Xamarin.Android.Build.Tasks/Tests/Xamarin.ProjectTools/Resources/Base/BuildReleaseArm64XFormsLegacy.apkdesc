@@ -4,6 +4,264 @@
     "AndroidManifest.xml": {
       "Size": 3120
     },
+    "assemblies/FormsViewGroup.dll": {
+      "Size": 7200
+    },
+    "assemblies/Java.Interop.dll": {
+      "Size": 68711
+    },
+    "assemblies/Mono.Android.dll": {
+      "Size": 562181
+    },
+    "assemblies/Mono.Security.dll": {
+      "Size": 68422
+    },
+    "assemblies/mscorlib.dll": {
+      "Size": 915407
+    },
+    "assemblies/System.Core.dll": {
+      "Size": 164038
+    },
+    "assemblies/System.dll": {
+      "Size": 388853
+    },
+    "assemblies/System.Drawing.Common.dll": {
+      "Size": 12354
+    },
+    "assemblies/System.Net.Http.dll": {
+      "Size": 110631
+    },
+    "assemblies/System.Numerics.dll": {
+      "Size": 15680
+    },
+    "assemblies/System.Runtime.Serialization.dll": {
+      "Size": 186652
+    },
+    "assemblies/System.ServiceModel.Internals.dll": {
+      "Size": 26578
+    },
+    "assemblies/System.Xml.dll": {
+      "Size": 395644
+    },
+    "assemblies/UnnamedProject.dll": {
+      "Size": 116883
+    },
+    "assemblies/Xamarin.AndroidX.Activity.dll": {
+      "Size": 7686
+    },
+    "assemblies/Xamarin.AndroidX.AppCompat.AppCompatResources.dll": {
+      "Size": 6635
+    },
+    "assemblies/Xamarin.AndroidX.AppCompat.dll": {
+      "Size": 125318
+    },
+    "assemblies/Xamarin.AndroidX.CardView.dll": {
+      "Size": 7354
+    },
+    "assemblies/Xamarin.AndroidX.CoordinatorLayout.dll": {
+      "Size": 18259
+    },
+    "assemblies/Xamarin.AndroidX.Core.dll": {
+      "Size": 131919
+    },
+    "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
+      "Size": 15417
+    },
+    "assemblies/Xamarin.AndroidX.Fragment.dll": {
+      "Size": 43119
+    },
+    "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
+      "Size": 6704
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.Common.dll": {
+      "Size": 7050
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.Core.dll": {
+      "Size": 7179
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.ViewModel.dll": {
+      "Size": 4859
+    },
+    "assemblies/Xamarin.AndroidX.Loader.dll": {
+      "Size": 13574
+    },
+    "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
+      "Size": 102317
+    },
+    "assemblies/Xamarin.AndroidX.SavedState.dll": {
+      "Size": 6262
+    },
+    "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
+      "Size": 11261
+    },
+    "assemblies/Xamarin.AndroidX.ViewPager.dll": {
+      "Size": 19409
+    },
+    "assemblies/Xamarin.Forms.Core.dll": {
+      "Size": 524723
+    },
+    "assemblies/Xamarin.Forms.Platform.Android.dll": {
+      "Size": 384855
+    },
+    "assemblies/Xamarin.Forms.Platform.dll": {
+      "Size": 56878
+    },
+    "assemblies/Xamarin.Forms.Xaml.dll": {
+      "Size": 55786
+    },
+    "assemblies/Xamarin.Google.Android.Material.dll": {
+      "Size": 43488
+    },
+    "classes.dex": {
+      "Size": 3483748
+    },
+    "lib/arm64-v8a/libmono-btls-shared.so": {
+      "Size": 1613872
+    },
+    "lib/arm64-v8a/libmono-native.so": {
+      "Size": 707024
+    },
+    "lib/arm64-v8a/libmonodroid.so": {
+      "Size": 282936
+    },
+    "lib/arm64-v8a/libmonosgen-2.0.so": {
+      "Size": 4037584
+    },
+    "lib/arm64-v8a/libxa-internal-api.so": {
+      "Size": 65496
+    },
+    "lib/arm64-v8a/libxamarin-app.so": {
+      "Size": 142104
+    },
+    "META-INF/android.support.design_material.version": {
+      "Size": 12
+    },
+    "META-INF/ANDROIDD.RSA": {
+      "Size": 1213
+    },
+    "META-INF/ANDROIDD.SF": {
+      "Size": 75858
+    },
+    "META-INF/androidx.activity_activity.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat-resources.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.arch.core_core-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.browser_browser.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.cardview_cardview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.coordinatorlayout_coordinatorlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.core_core.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.cursoradapter_cursoradapter.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.customview_customview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.documentfile_documentfile.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.drawerlayout_drawerlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.fragment_fragment.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.interpolator_interpolator.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-ui.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-utils.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-v4.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata-core.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.loader_loader.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.media_media.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.print_print.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.recyclerview_recyclerview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.savedstate_savedstate.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.transition_transition.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable-animated.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.versionedparcelable_versionedparcelable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.viewpager_viewpager.version": {
+      "Size": 6
+    },
+    "META-INF/com.google.android.material_material.version": {
+      "Size": 10
+    },
+    "META-INF/MANIFEST.MF": {
+      "Size": 75731
+    },
+    "META-INF/proguard/androidx-annotations.pro": {
+      "Size": 339
+    },
+    "res/anim-v21/design_bottom_sheet_slide_in.xml": {
+      "Size": 616
+    },
+    "res/anim-v21/design_bottom_sheet_slide_out.xml": {
+      "Size": 616
+    },
     "res/anim/abc_fade_in.xml": {
       "Size": 388
     },
@@ -1883,5 +2141,5 @@
       "Size": 75731
     }
   },
-  "PackageSize": 9476254
+  "PackageSize": 9496734
 }
