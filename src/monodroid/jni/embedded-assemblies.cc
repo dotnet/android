@@ -494,7 +494,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 		return nullptr;
 	}
 
-	MonoReflectionType *ret = mono_type_get_object (mono_domain_get (), type);
+	MonoReflectionType *ret = mono_type_get_object (utils.get_current_domain (), type);
 	if (XA_UNLIKELY (ret == nullptr)) {
 		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type '%s'", managed_type_name);
 		return nullptr;
@@ -552,7 +552,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	// calls `mono_get_root_domain`. Thus, we can save on a one function call here by passing `nullptr`
 	constexpr MonoDomain *domain = nullptr;
 #else
-	MonoDomain *domain = mono_domain_get ();
+	MonoDomain *domain = utils.get_current_domain ();
 #endif
 	MonoReflectionType *ret = mono_type_get_object (domain, mono_class_get_type (klass));
 	if (ret == nullptr) {
