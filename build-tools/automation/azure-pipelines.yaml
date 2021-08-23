@@ -927,7 +927,6 @@ stages:
       job_name: mac_msbuild_tests_1
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -936,7 +935,6 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -944,7 +942,6 @@ stages:
       job_name: mac_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   # Xamarin.Android (Test MSBuild Legacy - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -953,7 +950,6 @@ stages:
       job_name: win_msbuild_tests_1
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -962,7 +958,6 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -970,7 +965,6 @@ stages:
       job_name: win_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
 - stage: msbuild_dotnet
   displayName: One .NET Tests

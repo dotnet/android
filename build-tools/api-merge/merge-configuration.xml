@@ -19,7 +19,7 @@
     <File Path="api-28.xml.in" Level="28" />
     <File Path="api-29.xml.in" Level="29" />
     <File Path="api-30.xml.in" Level="30" />
-    <File Path="api-S.xml.in" Level="S" />
+    <File Path="api-31.xml.in" Level="31" />
   </Inputs>
   <Outputs>
     <File Path="android-19\mcw\api.xml" LastLevel="19" />
@@ -34,6 +34,6 @@
     <File Path="android-28\mcw\api.xml" LastLevel="28" />
     <File Path="android-29\mcw\api.xml" LastLevel="29" />
     <File Path="android-30\mcw\api.xml" LastLevel="30" />
-    <File Path="android-S\mcw\api.xml" LastLevel="S" />
+    <File Path="android-31\mcw\api.xml" LastLevel="31" />
   </Outputs>
 </Configuration>
