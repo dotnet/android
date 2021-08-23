@@ -87,7 +87,11 @@ namespace Xamarin.Android.Tools
 			if (!string.IsNullOrEmpty (AndroidNdkPath)) {
 				// It would be nice if .NET had real globbing support in System.IO...
 				string toolchainsDir = Path.Combine (AndroidNdkPath, "toolchains");
-				if (Directory.Exists (toolchainsDir)) {
+				string llvmNdkToolchainDir = Path.Combine (toolchainsDir, "llvm", "prebuilt", NdkHostPlatform64Bit);
+
+				if (Directory.Exists (llvmNdkToolchainDir)) {
+					IsNdk64Bit = true;
+				} else if (Directory.Exists (toolchainsDir)) {
 					IsNdk64Bit = Directory.EnumerateDirectories (toolchainsDir, "arm-linux-androideabi-*")
 						.Any (dir => Directory.Exists (Path.Combine (dir, "prebuilt", NdkHostPlatform64Bit)));
 				}
