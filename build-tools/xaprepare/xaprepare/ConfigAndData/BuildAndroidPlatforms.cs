@@ -39,7 +39,7 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "Pie",                    apiLevel: 28, platformID: "28",  include: "v9.0",    framework: "v9.0"),
 			new AndroidPlatform (apiName: "Q",                      apiLevel: 29, platformID: "29",  include: "v10.0",   framework: "v10.0"),
 			new AndroidPlatform (apiName: "R",                      apiLevel: 30, platformID: "30",  include: "v11.0",   framework: "v11.0"),
-			new AndroidPlatform (apiName: "S",                      apiLevel: 31, platformID: "S",   include: "v11.0.99",   framework: "v11.0.99", stable: false),
+			new AndroidPlatform (apiName: "S",                      apiLevel: 31, platformID: "31",  include: "v12.0",   framework: "v12.0"),
 		};
 
 		// These are here until we can drop "legacy" targets and use only .NET6+
