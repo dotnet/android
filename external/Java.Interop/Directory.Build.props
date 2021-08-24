@@ -17,6 +17,10 @@
       Condition="Exists('$(MSBuildThisFileDirectory)Configuration.Override.props')"
   />
   <Import
+      Project="$(MSBuildProjectDirectory).override.props"
+      Condition="Exists('$(MSBuildProjectDirectory).override.props')"
+  />
+  <Import
       Project="$(_OutputPath)JdkInfo.props"
       Condition="Exists('$(_OutputPath)JdkInfo.props')"
   />
