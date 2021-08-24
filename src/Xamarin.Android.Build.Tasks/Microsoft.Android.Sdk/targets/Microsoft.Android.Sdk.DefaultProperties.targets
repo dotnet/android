@@ -2,7 +2,7 @@
 
   <!-- User-facing configuration-agnostic defaults -->
   <PropertyGroup>
-    <MinimumSupportedJavaVersion Condition=" '$(MinimumSupportedJavaVersion)' == '' ">1.8.0</MinimumSupportedJavaVersion>
+    <MinimumSupportedJavaVersion Condition=" '$(MinimumSupportedJavaVersion)' == '' ">11.0</MinimumSupportedJavaVersion>
     <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">System</AndroidBoundExceptionType>
     <MonoAndroidResourcePrefix Condition=" '$(MonoAndroidResourcePrefix)' == '' ">Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
