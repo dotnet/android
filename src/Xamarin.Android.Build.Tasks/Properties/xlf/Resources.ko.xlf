@@ -27,6 +27,12 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
 This error is likely caused by an issue with the AndroidManifest.xml file or an Android manifest generation attribute in a source code file.</target>
         <note>{0} - The error message returned by the AAPT or AAPT2 tool</note>
       </trans-unit>
+      <trans-unit id="XA0031_NET">
+        <source>Java SDK {0} or above is required when using .NET 6 or higher.</source>
+        <target state="new">Java SDK {0} or above is required when using .NET 6 or higher.</target>
+        <note>
+{0} - The Java SDK version number</note>
+      </trans-unit>
       <trans-unit id="XA0125">
         <source>'{0}' is using a deprecated debug information level.
 Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the 'DebugType' MSBuild property to 'portable' to use the newer, cross-platform debug information level.
@@ -157,10 +163,10 @@ In this message, the phrase "should not be reached" means that this error messag
       </trans-unit>
       <trans-unit id="XA0031">
         <source>Java SDK {0} or above is required when using {1}.</source>
-        <target state="translated">{1}을(를) 사용하는 경우 Java SDK {0} 이상이 필요합니다.</target>
+        <target state="needs-review-translation">{1}을(를) 사용하는 경우 Java SDK {0} 이상이 필요합니다.</target>
         <note>
 {0} - The Java SDK version number
-{1} - The feature being used: `$(TargetFrameworkVersion) v10.0` or `&lt;Project Sdk="Xamarin.Android.Sdk"&gt;`</note>
+{1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</note>
       </trans-unit>
       <trans-unit id="XA0032">
         <source>Java SDK {0} or above is required when using Android SDK Build-Tools {1}.</source>
