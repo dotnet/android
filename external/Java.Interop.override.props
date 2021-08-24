@@ -1,0 +1,7 @@
+<Project>
+
+  <PropertyGroup>
+    <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>
+  </PropertyGroup>
+
+</Project>
