@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Java.Interop {
@@ -27,6 +28,11 @@ namespace Java.Interop {
 		}
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Design", "CA1031:Do not catch general exception types", Justification = "the *.Export assemblies are optional, so we don't care when they cannot be loaded (they are presumably missing)")]
+#if NET
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, "Java.Interop.MarshalMemberBuilder", "Java.Interop.Export")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "DynamicDependency should preserve the constructor.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2035", Justification = "Java.Interop.Export.dll is not always present.")]
+#endif
 		partial void SetMarshalMemberBuilder (CreationOptions options)
 		{
 			if (!options.UseMarshalMemberBuilder) {
