@@ -44,6 +44,8 @@ namespace Xamarin.ProjectTools
 		public XamarinFormsXASdkProject (string outputType = "Exe", [CallerMemberName] string packageName = "")
 			: base (outputType, packageName)
 		{
+			// Don't opt into ImplicitUsings
+			RemoveProperty (KnownProperties.ImplicitUsings);
 			PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
 
 			// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239

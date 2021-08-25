@@ -89,9 +89,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
-			XASdkProject proj;
-			proj = new XASdkProject () {
-			};
+			var proj = new XASdkProject ();
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 
@@ -110,7 +108,7 @@ namespace Xamarin.Android.Build.Tests
 			// setup the debugger
 			var session = new SoftDebuggerSession ();
 			session.Breakpoints = new BreakpointStore {
-				{ Path.Combine (Root, dotnet.ProjectDirectory, "MainActivity.cs"),  19 },
+				{ Path.Combine (Root, dotnet.ProjectDirectory, "MainActivity.cs"), 10 },
 			};
 			session.TargetHitBreakpoint += (sender, e) => {
 				Console.WriteLine ($"BREAK {e.Type}");
