@@ -2189,8 +2189,8 @@
 26, android.bluetooth, BluetoothGatt, setPreferredPhy, phyOptions, Android.Bluetooth.BluetoothPhyOption
 26, android.bluetooth.le, ScanSettings.Builder, setPhy, phy, Android.Bluetooth.BluetoothPhy
 26, android.bluetooth.le, ScanSettings, getPhy, return, Android.Bluetooth.LE.ScanSettingsPhy
-26, android.bluetooth.le, AdvertisingSetParameters.Builder, setPrimaryPhy, primaryPhy,  Android.Bluetooth.LE.ScanSettingsPhy
-26, android.bluetooth.le, AdvertisingSetParameters.Builder, setSecondaryPhy, secondaryPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth.le, AdvertisingSetParameters.Builder, setPrimaryPhy, primaryPhy,  Android.Bluetooth.BluetoothPhy
+26, android.bluetooth.le, AdvertisingSetParameters.Builder, setSecondaryPhy, secondaryPhy,  Android.Bluetooth.BluetoothPhy
 26, android.bluetooth.le, AdvertisingSetParameters.Builder, setTxPowerLevel, txPowerLevel,  Android.Bluetooth.LE.AdvertiseTxPower
 26, android.bluetooth.le, ScanResult, ctor, primaryPhy, Android.Bluetooth.LE.ScanSettingsPhy
 26, android.bluetooth.le, ScanResult, ctor, secondaryPhy, Android.Bluetooth.LE.ScanSettingsPhy
@@ -2205,7 +2205,7 @@
 26, android.bluetooth, BluetoothGattServerCallback, onPhyUpdate, txPhy,  Android.Bluetooth.LE.ScanSettingsPhy
 26, android.bluetooth, BluetoothGattServerCallback, onPhyUpdate, rxPhy,  Android.Bluetooth.LE.ScanSettingsPhy
 26, android.bluetooth, BluetoothGattServerCallback, onPhyUpdate, status, Android.Bluetooth.GattStatus
-26, android.bluetooth, BluetoothDevice, connectGatt, phy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothDevice, connectGatt, phy,  Android.Bluetooth.BluetoothPhy
 26, android.bluetooth, BluetoothDevice, connectGatt, transport,  Android.Bluetooth.BluetoothTransports
 26, android.bluetooth, BluetoothGattCallback, onPhyRead, txPhy,  Android.Bluetooth.LE.ScanSettingsPhy
 26, android.bluetooth, BluetoothGattCallback, onPhyRead, rxPhy,  Android.Bluetooth.LE.ScanSettingsPhy
