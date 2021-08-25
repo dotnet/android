@@ -225,6 +225,23 @@ In Xamarin.Android, Java binding projects did not support generating a `Resource
 Since binding projects are just class libraries in .NET 6, this file will be generated. This could
 be a breaking change when migrating existing projects.
 
+One example of a failure from this change, is if your binding generates a class named `Resource`
+in the root namespace:
+
+```
+error CS0101: The namespace 'MyBinding' already contains a definition for 'Resource'
+```
+
+Or in the case of AndroidX, we have project files with `-` in the name such as
+`androidx.window/window-extensions.csproj`. This results in the root namespace `window-extensions`
+and invalid C# in `Resource.designer.cs`:
+
+```
+error CS0116: A namespace cannot directly contain members such as fields, methods or statements
+error CS1514: { expected 
+error CS1022: Type or namespace definition, or end-of-file expected
+```
+
 To disable `Resource.designer.cs` generation, set `$(AndroidGenerateResourceDesigner)` to `false`
 in your `.csproj`:
 
