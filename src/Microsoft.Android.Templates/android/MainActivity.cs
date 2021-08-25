@@ -1,14 +1,9 @@
-using Android.App;
-using Android.OS;
-using Android.Runtime;
-using Android.Widget;
-
 namespace AndroidApp1
 {
     [Activity(Label = "@string/app_name", MainLauncher = true)]
     public class MainActivity : Activity
     {
-        protected override void OnCreate(Bundle savedInstanceState)
+        protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
 

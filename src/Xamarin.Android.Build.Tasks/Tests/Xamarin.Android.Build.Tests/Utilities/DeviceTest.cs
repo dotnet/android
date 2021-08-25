@@ -67,6 +67,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (HasDevices && TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed &&
 					TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir)) {
+				Directory.CreateDirectory (outputDir);
 				string local = Path.Combine (outputDir, "screenshot.png");
 				string deviceLog = Path.Combine (outputDir, "logcat-failed.log");
 				string remote = "/data/local/tmp/screenshot.png";

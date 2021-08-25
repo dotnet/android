@@ -24,7 +24,8 @@ namespace Xamarin.ProjectTools
 
 		static XamarinAndroidApplicationProject ()
 		{
-			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.MainActivity.cs")))
+			var folder = Builder.UseDotNet ? "DotNet" : "Base";
+			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.{folder}.MainActivity.cs")))
 				default_main_activity_cs = sr.ReadToEnd ();
 			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.MainActivity.fs")))
 				default_main_activity_fs = sr.ReadToEnd ();
@@ -40,6 +41,8 @@ namespace Xamarin.ProjectTools
 		{
 			if (Builder.UseDotNet) {
 				SetProperty (KnownProperties.OutputType, "Exe");
+				SetProperty (KnownProperties.Nullable, "enable");
+				SetProperty (KnownProperties.ImplicitUsings, "enable");
 				SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
 				SetProperty ("_FastDeploymentDiagnosticLogging", "True");
 
@@ -81,7 +84,7 @@ namespace Xamarin.ProjectTools
 		}
 
 		// it is exposed as public because we may want to slightly modify this.
-		public string DefaultMainActivity {
+		public virtual string DefaultMainActivity {
 			get { return Language == XamarinAndroidProjectLanguage.FSharp ? default_main_activity_fs : default_main_activity_cs; }
 		}
 

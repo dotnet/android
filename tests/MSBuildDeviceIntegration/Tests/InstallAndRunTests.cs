@@ -217,7 +217,7 @@ namespace Library1 {
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_FORMS_INIT}",
 @"			var cl = new Library1.Class1(null);
 			cl.GetData();
 ");
@@ -245,7 +245,7 @@ namespace Library1 {
 				Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
 				SymbolicateAndAssert (archivePath, logcatPath, new string [] {
 					Path.Combine (Root, lb.ProjectDirectory, "Class1.cs:12"),
-					Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:33"),
+					Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:23"),
 					Directory.Exists (builder.BuildOutputDirectory)
 						? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
 						: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
@@ -559,11 +559,16 @@ namespace Library1 {
 				return null;
 			}
 		}
-	}").Replace ("using System;", @"using System;
-using System.IO;
+	}");
+
+			string usings =
+@"using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization.Json;");
+using System.Runtime.Serialization.Json;
+";
+			proj.MainActivity = usings + proj.MainActivity;
+
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			ClearAdbLogcat ();
