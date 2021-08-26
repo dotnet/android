@@ -1358,6 +1358,9 @@ stages:
 - template: vs-insertion/stage/v1.yml@yaml
   parameters:
     dependsOn: dotnet_prepare_release
+    symbolArtifactName: nuget-signed
+    symbolArtifactPatterns: |
+      !*Darwin*
     condition: eq(variables['MicroBuildSignType'], 'Real')
 
 - stage: finalize_installers
