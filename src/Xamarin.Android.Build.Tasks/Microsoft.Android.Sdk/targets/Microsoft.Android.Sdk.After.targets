@@ -11,6 +11,10 @@ This file is imported *after* the Microsoft.NET.Sdk/Sdk.targets.
     <EnableDefaultAndroidItems Condition=" '$(EnableDefaultAndroidItems)' == '' ">$(EnableDefaultItems)</EnableDefaultAndroidItems>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(XamarinAndroidDesignTimeTargetsPath)' == ''">
+    <XamarinAndroidDesignTimeTargetsPath>$(MSBuildEXtensionsPath)\Microsoft\VisualStudio\Xamarin\Android\Xamarin.Android.DesignTime.targets</XamarinAndroidDesignTimeTargetsPath>
+  </PropertyGroup>
+
   <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
   <Import Project="Microsoft.Android.Sdk.BuildOrder.targets" Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' " />
 
@@ -28,4 +32,7 @@ This file is imported *after* the Microsoft.NET.Sdk/Sdk.targets.
   <Import Project="Microsoft.Android.Sdk.Publish.targets" />
   <Import Project="Microsoft.Android.Sdk.RuntimeConfig.targets" />
   <Import Project="Microsoft.Android.Sdk.Tooling.targets" />
+
+  <Import Project="$(XamarinAndroidDesignTimeTargetsPath)"
+          Condition="Exists('$(XamarinAndroidDesignTimeTargetsPath)')" />
 </Project>
