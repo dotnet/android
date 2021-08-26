@@ -83,6 +83,17 @@ timing_diff::timing_diff (const timing_period &period)
 	ns = static_cast<uint32_t>(nsec % ms_in_nsec);
 }
 
+Util::Util ()
+{
+#ifndef WINDOWS
+	page_size = getpagesize ();
+#else   // defined(WINDOWS)
+	SYSTEM_INFO info;
+	GetSystemInfo (&info);
+	page_size = info.dwPageSize;
+#endif  // defined(WINDOWS)
+}
+
 int
 Util::send_uninterrupted (int fd, void *buf, size_t len)
 {
@@ -335,16 +346,4 @@ Util::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *nam
 		return nullptr;
 
 	return reinterpret_cast<jclass> (make_gref ? osBridge.lref_to_gref (env, field) : field);
-}
-
-int
-Util::monodroid_getpagesize (void)
-{
-#ifndef WINDOWS
-	return getpagesize ();
-#else   // defined(WINDOWS)
-	SYSTEM_INFO info;
-	GetSystemInfo (&info);
-	return info.dwPageSize;
-#endif  // defined(WINDOWS)
 }

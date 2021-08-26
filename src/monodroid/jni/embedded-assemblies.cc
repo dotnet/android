@@ -18,6 +18,7 @@
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/image.h>
 #include <mono/metadata/mono-config.h>
+#include <mono/metadata/mono-debug.h>
 
 #include "java-interop-util.h"
 
@@ -34,7 +35,7 @@ using namespace xamarin::android::internal;
 
 // A utility class which allows us to manage memory allocated by `mono_guid_to_string` in an elegant way. We can create
 // temporary instances of this class in calls to e.g. `log_debug` which are executed ONLY when debug logging is enabled
-class MonoGuidString
+class MonoGuidString final
 {
 public:
 	explicit MonoGuidString (const uint8_t *id) noexcept
@@ -56,6 +57,10 @@ private:
 	char *guid = nullptr;
 };
 
+#if !defined (ANDROID)
+std::mutex EmbeddedAssemblies::assembly_mmap_mutex;
+#endif
+
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
 	if (assemblies_prefix_override != nullptr)
@@ -64,7 +69,7 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 }
 
 force_inline void
-EmbeddedAssemblies::get_assembly_data (MonoBundledAssembly const& e, char*& assembly_data, uint32_t& assembly_data_size)
+EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size)
 {
 #if defined (ANDROID) && defined (HAVE_LZ4) && defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.data);
@@ -79,7 +84,7 @@ EmbeddedAssemblies::get_assembly_data (MonoBundledAssembly const& e, char*& asse
 		}
 
 		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
-		assembly_data_size = e.size - sizeof(CompressedAssemblyHeader);
+		assembly_data_size = e.data_size - sizeof(CompressedAssemblyHeader);
 		if (!cad.loaded) {
 			if (XA_UNLIKELY (cad.data == nullptr)) {
 				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
@@ -121,13 +126,13 @@ EmbeddedAssemblies::get_assembly_data (MonoBundledAssembly const& e, char*& asse
 			}
 			cad.loaded = true;
 		}
-		assembly_data = reinterpret_cast<char*>(cad.data);
+		assembly_data = reinterpret_cast<uint8_t*>(cad.data);
 		assembly_data_size = cad.uncompressed_file_size;
 	} else
 #endif
 	{
-		assembly_data = reinterpret_cast<char*>(const_cast<unsigned char*>(e.data));
-		assembly_data_size = e.size;
+		assembly_data = e.data;
+		assembly_data_size = e.data_size;
 	}
 }
 
@@ -135,10 +140,10 @@ EmbeddedAssemblies::get_assembly_data (MonoBundledAssembly const& e, char*& asse
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, [[maybe_unused]] MonoError *error)
 {
-	auto loader = [&] (char *assembly_data, uint32_t assembly_data_size, const char *name) -> MonoImage* {
+	auto loader = [&] (uint8_t *assembly_data, uint32_t assembly_data_size, const char *name) -> MonoImage* {
 		return mono_image_open_from_data_alc (
 			alc_gchandle,
-			assembly_data,
+			reinterpret_cast<char*>(assembly_data),
 			assembly_data_size,
 			0 /* need_copy */,
 			nullptr /* status */,
@@ -153,9 +158,9 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoad
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 {
-	auto loader = [&] (char *assembly_data, uint32_t assembly_data_size, const char *name) -> MonoImage* {
+	auto loader = [&] (uint8_t *assembly_data, uint32_t assembly_data_size, const char *name) -> MonoImage* {
 		return mono_image_open_from_data_with_name (
-			assembly_data,
+			reinterpret_cast<char*>(assembly_data),
 			assembly_data_size,
 			0,
 			nullptr,
@@ -167,8 +172,150 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 	return open_from_bundles (aname, loader, ref_only);
 }
 
+template<bool AbortOnFailure, bool LogMapping>
+force_inline void
+EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
+{
+	md_mmap_info map_info = md_mmap_apk_file (file.apk_fd, file.data_offset, file.data_size, file.name);
+	if (monodroidRuntime.is_startup_in_progress ()) {
+		file.data = static_cast<uint8_t*>(map_info.area);
+	} else {
+		//
+		// We could use either standard std::atomic<> here, but it would cost us some performance during startup
+		// where we don't need synchronization but we would still need to use the atomic operations.
+		//
+		// Another option is the GCC/clang built-in atomic operations, but these can be compiler and compiler
+		// version specific, so it's better to use something standard.
+		//
+		// C++20 comes with a binary_semaphore, we could use that but it requires the std::chrono library and we
+		// should keep XA runtime slim unless absolutely necessary
+		//
+		// POSIX semaphores should be perfectly fine for us here.
+		//
+#if defined (ANDROID)
+		PosixSemaphoreGuard sem (assembly_mmap_semaphore);
+
+		if constexpr (AbortOnFailure) {
+			abort_unless (sem.result () == 0, "Failed to acquire assembly mapping semaphore. %s", strerror (errno));
+		} else {
+			if (sem.result () != 0) {
+				log_warn (LOG_ASSEMBLY, "File '%s' will not be mapped, failed to acquire assembly mapping semaphore. %s", file.name, strerror (errno));
+				return;
+			}
+		}
+#else
+		std::lock_guard<std::mutex> mmap_mutex (assembly_mmap_mutex);
+#endif
+		if (file.data == nullptr) {
+			file.data = static_cast<uint8_t*>(map_info.area);
+		} else {
+			log_debug (LOG_ASSEMBLY, "Assembly %s already mmapped by another thread, unmapping our copy", file.name);
+			munmap (map_info.area, file.data_size);
+			map_info.area = nullptr;
+		}
+	}
+
+	if constexpr (LogMapping) {
+		if (XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY) && map_info.area != nullptr)) {
+			const char *p = (const char*) file.data;
+
+			std::array<char, 9> header;
+			for (size_t j = 0; j < header.size () - 1; ++j)
+				header[j] = isprint (p [j]) ? p [j] : '.';
+			header [header.size () - 1] = '\0';
+
+			log_info_nocheck (LOG_ASSEMBLY, "file-offset: % 8x  start: %08p  end: %08p  len: % 12i  zip-entry:  %s name: %s [%s]",
+			                  (int) file.data_offset, file.data, file.data + file.data_size, (int) file.data_size, file.name, file.name, header.data ());
+		}
+	}
+}
+
+force_inline void
+EmbeddedAssemblies::map_assembly (XamarinAndroidBundledAssembly& file) noexcept
+{
+	map_runtime_file<true, true> (file);
+}
+
+force_inline void
+EmbeddedAssemblies::map_debug_data (XamarinAndroidBundledAssembly& file) noexcept
+{
+	map_runtime_file<false, false> (file);
+}
+
+force_inline MonoAssembly*
+EmbeddedAssemblies::load_bundled_assembly (
+	XamarinAndroidBundledAssembly& assembly,
+	dynamic_local_string<SENSIBLE_PATH_MAX> const& name,
+	dynamic_local_string<SENSIBLE_PATH_MAX> const& abi_name,
+	std::function<MonoImage*(uint8_t*, uint32_t, const char*)> loader,
+	bool ref_only) noexcept
+{
+	if (assembly.name == nullptr || assembly.name[0] == '\0') {
+		return nullptr;
+	}
+
+	if (strcmp (assembly.name, name.get ()) != 0) {
+		if (strcmp (assembly.name, abi_name.get ()) != 0) {
+			return nullptr;
+		} else {
+			log_debug (LOG_ASSEMBLY, "open_from_bundles: found architecture-specific: '%s'", abi_name.get ());
+		}
+	}
+
+	if (assembly.data == nullptr) {
+		map_assembly (assembly);
+	}
+
+	uint8_t *assembly_data;
+	uint32_t assembly_data_size;
+
+	get_assembly_data (assembly, assembly_data, assembly_data_size);
+	MonoImage *image = loader (assembly_data, assembly_data_size, name.get ());
+	if (image == nullptr) {
+		return nullptr;
+	}
+
+	if (have_and_want_debug_symbols) {
+		uint32_t base_name_length = assembly.name_length - 3; // we need the trailing dot
+		for (XamarinAndroidBundledAssembly& debug_file : *bundled_debug_data) {
+			if (debug_file.name_length < base_name_length) {
+				continue;
+			}
+
+			if (strncmp (debug_file.name, assembly.name, base_name_length) != 0) {
+				continue;
+			}
+
+			if (debug_file.data == nullptr) {
+				map_debug_data (debug_file);
+			}
+
+			if (debug_file.data != nullptr) {
+				if (debug_file.data_size > std::numeric_limits<int>::max ()) {
+					log_warn (LOG_ASSEMBLY, "Debug info file '%s' is too big for Mono to consume", debug_file.name);
+				} else {
+					mono_debug_open_image_from_memory (image, reinterpret_cast<const mono_byte*>(debug_file.data), static_cast<int>(debug_file.data_size));
+				}
+			}
+			break;
+		}
+	}
+
+	MonoImageOpenStatus status;
+	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
+	if (a == nullptr) {
+		return nullptr;
+	}
+
+#if !defined (NET6)
+	// In dotnet the call is a no-op
+	mono_config_for_assembly (image);
+#endif
+	return a;
+}
+
 MonoAssembly*
-EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(char*, uint32_t, const char*)> loader, bool ref_only)
+EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only)
 {
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
@@ -194,49 +341,26 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 		.append (path_separator)
 		.append (name);
 
-	MonoImage *image;
-	MonoImageOpenStatus status;
-	char *assembly_data;
-	uint32_t assembly_data_size;
 	MonoAssembly *a = nullptr;
 
-	for (auto const& assembly : bundled_assemblies) {
-		if (assembly.name == nullptr) {
-			// There are no "empty" entries interleaved with "filled" ones
-			break;
+	for (size_t i = 0; i < application_config.number_of_assemblies_in_apk; i++) {
+		a = load_bundled_assembly (bundled_assemblies [i], name, abi_name, loader, ref_only);
+		if (a != nullptr) {
+			return a;
 		}
+	}
 
-		if (strcmp (assembly.name, name.get ()) != 0) {
-			if (strcmp (assembly.name, abi_name.get ()) != 0) {
-				continue;
-			} else {
-				log_debug (LOG_ASSEMBLY, "open_from_bundles: found architecture-specific: '%s'", abi_name.get ());
+	if (extra_bundled_assemblies != nullptr) {
+		for (XamarinAndroidBundledAssembly& assembly : *extra_bundled_assemblies) {
+			a = load_bundled_assembly (assembly, name, abi_name, loader, ref_only);
+			if (a != nullptr) {
+				return a;
 			}
 		}
-
-		get_assembly_data (assembly, assembly_data, assembly_data_size);
-		image = loader (assembly_data, assembly_data_size, name.get ());
-		if (image == nullptr) {
-			continue;
-		}
-
-		a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
-		if (a == nullptr) {
-			continue;
-		}
-
-#if !defined (NET6)
-		// In dotnet the call is a no-op
-		mono_config_for_assembly (image);
-#endif
-		break;
 	}
 
-	if (a == nullptr) {
-		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
-	}
-
-	return a;
+	log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
+	return nullptr;
 }
 
 #if defined (NET6)
@@ -422,7 +546,15 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 		return nullptr;
 	}
 
-	MonoReflectionType *ret = mono_type_get_object (mono_domain_get (), mono_class_get_type (klass));
+#if defined (NET6)
+	// MonoVM in dotnet runtime doesn't use the `domain` parameter passed to `mono_type_get_object` (since AppDomains
+	// are gone in NET6+), in fact, the function `mono_type_get_object` calls (`mono_type_get_object_checked`) itself
+	// calls `mono_get_root_domain`. Thus, we can save on a one function call here by passing `nullptr`
+	constexpr MonoDomain *domain = nullptr;
+#else
+	MonoDomain *domain = mono_domain_get ();
+#endif
+	MonoReflectionType *ret = mono_type_get_object (domain, mono_class_get_type (klass));
 	if (ret == nullptr) {
 		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type with token ID %u in assembly '%s', corresponding to Java type '%s'", type_token_id, module->assembly_name, java_type_name);
 		return nullptr;
@@ -547,7 +679,6 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		return nullptr;
 	}
 
-	uint32_t token = mono_class_get_type_token (klass);
 	const TypeMapModule *map;
 	size_t map_entry_count;
 	map = map_modules;
@@ -564,6 +695,7 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		return nullptr;
 	}
 
+	uint32_t token = mono_class_get_type_token (klass);
 	log_debug (LOG_ASSEMBLY, "typemap: MVID [%s] maps to assembly %s, looking for token %d (0x%x), table index %d", MonoGuidString (mvid).get (), match->assembly_name, token, token, token & 0x00FFFFFF);
 	// Each map entry is a pair of 32-bit integers: [TypeTokenID][JavaMapArrayIndex]
 	const TypeMapModuleEntry *entry = binary_search <uint32_t, TypeMapModuleEntry, compare_type_token> (&token, match->map, match->entry_count);
@@ -635,20 +767,20 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 }
 
 EmbeddedAssemblies::md_mmap_info
-EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, const char* filename, const char* apk)
+EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename)
 {
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;
 
-	size_t pageSize       = static_cast<size_t>(utils.monodroid_getpagesize ());
-	uint32_t offsetFromPage  = static_cast<uint32_t>(offset % pageSize);
-	uint32_t offsetPage      = offset - offsetFromPage;
-	uint32_t offsetSize      = size + offsetFromPage;
+	size_t pageSize        = static_cast<size_t>(utils.monodroid_getpagesize ());
+	size_t offsetFromPage  = offset % pageSize;
+	size_t offsetPage      = offset - offsetFromPage;
+	size_t offsetSize      = size + offsetFromPage;
 
 	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
 
 	if (mmap_info.area == MAP_FAILED) {
-		log_fatal (LOG_DEFAULT, "Could not `mmap` apk `%s` entry `%s`: %s", apk, filename, strerror (errno));
+		log_fatal (LOG_DEFAULT, "Could not `mmap` apk fd %d entry `%s`: %s", fd, filename, strerror (errno));
 		exit (FATAL_EXIT_CANNOT_FIND_APK);
 	}
 
@@ -656,9 +788,9 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, co
 	file_info.area  = (void*)((const char*)mmap_info.area + offsetFromPage);
 	file_info.size  = size;
 
-	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk: %s  file: %s",
-	          mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, (unsigned int) mmap_info.size,
-	          file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, (unsigned int) file_info.size, apk, filename);
+	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk descriptor: %d  file: %s",
+	          mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, mmap_info.size,
+	          file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, file_info.size, fd, filename);
 
 	return file_info;
 }
@@ -672,9 +804,9 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 		log_error (LOG_DEFAULT, "ERROR: Unable to load application package %s.", apk);
 		exit (FATAL_EXIT_NO_ASSEMBLIES);
 	}
+	log_info (LOG_ASSEMBLY, "APK %s FD: %d", apk, fd);
 
-	zip_load_entries (fd, utils.strdup_new (apk), should_register);
-	close(fd);
+	zip_load_entries (fd, apk, should_register);
 }
 
 #if defined (DEBUG) || !defined (ANDROID)

@@ -28,7 +28,7 @@ namespace Xamarin.ProjectTools
 			var assembly = typeof (XASdkProject).Assembly;
 			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))
 				default_android_manifest = sr.ReadToEnd ();
-			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.MainActivity.cs")))
+			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.DotNet.MainActivity.cs")))
 				default_main_activity_cs = sr.ReadToEnd ();
 			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.LayoutMain.axml")))
 				default_layout_main = sr.ReadToEnd ();
@@ -61,6 +61,8 @@ namespace Xamarin.ProjectTools
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 			GlobalPackagesFolder = FileSystemUtils.FindNugetGlobalPackageFolder ();
 			SetProperty (KnownProperties.OutputType, outputType);
+			SetProperty (KnownProperties.Nullable, "enable");
+			SetProperty (KnownProperties.ImplicitUsings, "enable");
 
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {

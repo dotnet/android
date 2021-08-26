@@ -4,6 +4,7 @@ namespace Xamarin.ProjectTools
 {
 	public static class Versions
 	{
+		public const string Android12 = "v12.0";
 		public const string Android11 = "v11.0";
 		/// <summary>
 		/// Previously known as Q

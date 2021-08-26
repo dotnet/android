@@ -932,7 +932,6 @@ stages:
       job_name: mac_msbuild_tests_1
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -941,7 +940,6 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -949,7 +947,6 @@ stages:
       job_name: mac_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   # Xamarin.Android (Test MSBuild Legacy - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -958,7 +955,6 @@ stages:
       job_name: win_msbuild_tests_1
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -967,7 +963,6 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -975,7 +970,6 @@ stages:
       job_name: win_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      jdkTestFolder: $(XA.Jdk8.Folder)
 
 - stage: msbuild_dotnet
   displayName: One .NET Tests
@@ -1299,8 +1293,8 @@ stages:
  # Check - "Xamarin.Android (.NET 6 Prepare Release Push NuGets)"
   - job: push_signed_nugets
     displayName: Push NuGets
-    dependsOn: signing
-    condition: and(eq(dependencies.signing.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+    dependsOn: nuget_convert
+    condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
     timeoutInMinutes: 60
     pool: VSEngSS-MicroBuild2019
     workspace:
@@ -1322,7 +1316,21 @@ stages:
         command: push
         packagesToPush: $(System.DefaultWorkingDirectory)\nuget-signed\*.nupkg
         nuGetFeedType: external
-        publishFeedCredentials: xamarin-impl public feed
+        publishFeedCredentials: dnceng-dotnet6
+      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vs-msi-nugets
+        downloadPath: $(System.DefaultWorkingDirectory)\vs-msi-nugets
+
+    - task: NuGetCommand@2
+      displayName: push msi nupkgs
+      inputs:
+        command: push
+        packagesToPush: $(System.DefaultWorkingDirectory)\vs-msi-nugets\*.nupkg
+        nuGetFeedType: external
+        publishFeedCredentials: dnceng-dotnet6
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
     - powershell: >-

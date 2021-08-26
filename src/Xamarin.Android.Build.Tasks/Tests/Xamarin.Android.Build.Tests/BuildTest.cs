@@ -1436,6 +1436,9 @@ namespace App1
 					var assetsPdb = Path.Combine (intermediate, "android", "assets", "Library1.pdb");
 					var binSrc = Path.Combine (outputPath, "Library1.pdb");
 					Assert.IsTrue (
+						File.Exists (Path.Combine (intermediate, "android", "assets", "Mono.Android.pdb")),
+						"Mono.Android.pdb must be copied to Intermediate directory");
+					Assert.IsTrue (
 						File.Exists (assetsPdb),
 						"Library1.pdb must be copied to Intermediate directory");
 					Assert.IsTrue (

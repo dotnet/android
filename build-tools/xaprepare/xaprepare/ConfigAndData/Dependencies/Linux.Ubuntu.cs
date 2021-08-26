@@ -38,7 +38,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		protected override bool InitOS ()
+		protected override bool EnsureVersionInformation (Context context)
 		{
 			Version ubuntuRelease;
 			if (!Version.TryParse (Release, out ubuntuRelease)) {
@@ -51,7 +51,7 @@ namespace Xamarin.Android.Prepare
 			}
 			UbuntuRelease = ubuntuRelease;
 
-			return base.InitOS ();
+			return true;
 		}
 	};
 }

@@ -9,11 +9,12 @@ using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
+#if !NET472
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[NonParallelizable] // On MacOS, parallel /restore causes issues
-	[Category ("Node-2"), Category ("DotNetIgnore")] // These don't need to run under `dotnet test`
+	[Category ("Node-2")]
 	public class XASdkTests : BaseTest
 	{
 		/// <summary>
@@ -204,10 +205,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			dotnet.AssertHasNoWarnings ();
 		}
 
 		[Test]
-		public void DotNetPack ([Values ("net6.0-android", "net6.0-android30")] string targetFramework)
+		public void DotNetPack ([Values ("net6.0-android", "net6.0-android31")] string targetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
@@ -239,8 +241,8 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android30.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android30.0/{proj.ProjectName}.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.aar");
 			}
 		}
 
@@ -283,6 +285,37 @@ namespace Xamarin.Android.Build.Tests
 				aar.AssertEntryContents (aarPath, "res/raw/foo.txt", contents: "foo");
 				aar.AssertDoesNotContainEntry (aarPath, "res/raw/bar.txt");
 			}
+		}
+
+		[Test]
+		public void GenerateResourceDesigner_false()
+		{
+			var proj = new XASdkProject (outputType: "Library") {
+				Sources = {
+					new AndroidItem.AndroidResource (() => "Resources\\drawable\\foo.png") {
+						BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
+					},
+				}
+			};
+			// Turn off Resource.designer.cs and remove usage of it
+			proj.SetProperty ("AndroidGenerateResourceDesigner", "false");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("Resource.Layout.Main", "0")
+				.Replace ("Resource.Id.myButton", "0");
+
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Build (), "build should succeed");
+
+			var intermediate = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
+			var resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
+			FileAssert.DoesNotExist (resource_designer_cs);
+
+			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+			FileAssert.Exists (assemblyPath);
+			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+			var typeName = $"{proj.ProjectName}.Resource";
+			var type = assembly.MainModule.GetType (typeName);
+			Assert.IsNull (type, $"{assemblyPath} should *not* contain {typeName}");
 		}
 
 		[Test]
@@ -387,14 +420,16 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XASdkProject {
 				IsRelease = isRelease,
 				ExtraNuGetConfigSources = {
-					"https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json"
+					// Microsoft.AspNetCore.Components.WebView is not in dotnet-public
+					"https://api.nuget.org/v3/index.json",
 				},
 				PackageReferences = {
-					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.2.0.7-net6preview01" },
-					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "6.0.0-preview.5.21301.17" },
-					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "6.0.0-preview.6.21306.3" },
-					new Package { Id = "Microsoft.JSInterop", Version = "6.0.0-preview.6.21306.3" },
-					new Package { Id = "System.Text.Json", Version = "6.0.0-preview.7.21323.3" },
+					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.3.1.1" },
+					// Using * here, so we explicitly get newer packages
+					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "6.0.0-*" },
+					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "6.0.0-*" },
+					new Package { Id = "Microsoft.JSInterop", Version = "6.0.0-*" },
+					new Package { Id = "System.Text.Json", Version = "6.0.0-*" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -454,7 +489,7 @@ namespace Xamarin.Android.Build.Tests
 				$"{proj.ProjectName}.runtimeconfig.json",
 				$"{proj.ProjectName}.xml",
 			};
-			CollectionAssert.AreEqual (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
+			CollectionAssert.AreEquivalent (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
 
 			var assemblyPath = Path.Combine (outputPath, $"{proj.ProjectName}.dll");
 			FileAssert.Exists (assemblyPath);
@@ -481,7 +516,7 @@ namespace Xamarin.Android.Build.Tests
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
 			Assert.AreEqual ("21", uses_sdk.Attribute (ns + "minSdkVersion").Value);
-			Assert.AreEqual ("30", uses_sdk.Attribute (ns + "targetSdkVersion").Value);
+			Assert.AreEqual ("31", uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}.apk");
@@ -503,6 +538,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+
+		/// <summary>
+		/// NOTE: we cannot use SupportedOSPlatformVersion=31 yet, due to d8 2.2.64 emitting a warning for `--min-api 31`:
+		///       D8 An API level of 31 is not supported by this compiler. Please use an API level of 30 or earlier
+		/// </summary>
 		[Test]
 		public void SupportedOSPlatformVersion ([Values (21, 30)] int minSdkVersion)
 		{
@@ -511,7 +551,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			// Call AccessibilityTraversalAfter from API level 22
 			// https://developer.android.com/reference/android/view/View#getAccessibilityTraversalAfter()
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("button.Click", "button.AccessibilityTraversalAfter.ToString ();\nbutton.Click");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("button!.Click", "button!.AccessibilityTraversalAfter.ToString ();\nbutton!.Click");
 
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
@@ -606,7 +646,7 @@ namespace Xamarin.Android.Build.Tests
 		public void XamarinLegacySdk ()
 		{
 			var proj = new XASdkProject (outputType: "Library") {
-				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha2",
+				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha4",
 				Sources = {
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
@@ -615,7 +655,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			using var b = new Builder ();
-			var dotnetTargetFramework = "net6.0-android30.0";
+			var dotnetTargetFramework = "net6.0-android31.0";
 			var legacyTargetFrameworkVersion = "11.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
@@ -632,19 +672,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MauiTargetFramework ([Values ("net6.0-android", "net6.0-android30", "net6.0-android30.0")] string targetFramework)
+		public void MauiTargetFramework ([Values ("net6.0-android", "net6.0-android31", "net6.0-android31.0")] string targetFramework)
 		{
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 			};
-			library.ExtraNuGetConfigSources.Add ("https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json");
 			library.Sources.Clear ();
 			library.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () =>
-@"using Microsoft.Maui;
-using Microsoft.Maui.Handlers;
+@"public abstract partial class ViewHandler<TVirtualView, TNativeView> { }
 
-public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirtualView, TNativeView>
+public interface IView { }
+
+public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView, TNativeView>
 	where TVirtualView : class, IView
 #if ANDROID
 	where TNativeView : Android.Views.View
@@ -652,16 +692,8 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 	where TNativeView : class
 #endif
 {
-		protected Foo (PropertyMapper mapper) : base(mapper)
-		{
-#if ANDROID
-			var t = this.Context;
-#endif
-		}
 }",
 			});
-
-			library.PackageReferences.Add (new Package { Id = "Microsoft.Maui.Core", Version = "6.0.100-preview.3.269" });
 
 			var dotnet = CreateDotNetBuilder (library);
 			Assert.IsTrue (dotnet.Build (), $"{library.ProjectName} should succeed");
@@ -737,3 +769,4 @@ public abstract class Foo<TVirtualView, TNativeView> : AbstractViewHandler<TVirt
 		}
 	}
 }
+#endif

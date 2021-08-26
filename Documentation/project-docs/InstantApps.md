@@ -7,7 +7,7 @@ Synopsis
 Support for Android Instant Apps in Xamarin Android is currently impossible/impractical.
 
 
-Introductiona
+Introduction
 ------------
 
 [Android Instant Apps](https://developer.android.com/topic/instant-apps/index.html) is a new Android

@@ -12,10 +12,12 @@
 #include <concepts>
 #endif // __has_include
 
+#include <cerrno>
 #include <cstring>
 #include <limits>
 #include <functional>
 #include <vector>
+#include <semaphore.h>
 
 #include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
@@ -46,7 +48,7 @@ namespace xamarin::android::internal {
 #define ByteArrayContainer class
 #endif
 
-	class EmbeddedAssemblies
+	class EmbeddedAssemblies final
 	{
 		struct md_mmap_info {
 			void   *area;
@@ -80,6 +82,14 @@ namespace xamarin::android::internal {
 		void install_preload_hooks_for_alc ();
 #endif // def NET6
 		MonoReflectionType* typemap_java_to_managed (MonoString *java_type);
+
+		void prepare_for_multiple_threads () noexcept
+		{
+#if defined (ANDROID)
+			int ret = sem_init (&assembly_mmap_semaphore, 0 /* pshared */, 1 /* value */);
+			abort_unless (ret == 0, "Failed to initialize assembly mapping semaphore. %s", strerror (errno));
+#endif
+		}
 
 		/* returns current number of *all* assemblies found from all invocations */
 		template<bool (*should_register_fn)(const char*)>
@@ -125,7 +135,18 @@ namespace xamarin::android::internal {
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, MonoError *error);
 #endif // def NET6
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
-		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(char*, uint32_t, const char*)> loader, bool ref_only);
+		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only);
+
+		template<bool AbortOnFailure, bool LogMapping>
+		void map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept;
+		void map_assembly (XamarinAndroidBundledAssembly& file) noexcept;
+		void map_debug_data (XamarinAndroidBundledAssembly& file) noexcept;
+		MonoAssembly* load_bundled_assembly (
+			XamarinAndroidBundledAssembly& assembly,
+			dynamic_local_string<SENSIBLE_PATH_MAX> const& name,
+			dynamic_local_string<SENSIBLE_PATH_MAX> const& abi_name,
+			std::function<MonoImage*(uint8_t*, uint32_t, const char*)> loader,
+			bool ref_only) noexcept;
 
 #if defined (DEBUG) || !defined (ANDROID)
 		template<typename H>
@@ -137,17 +158,15 @@ namespace xamarin::android::internal {
 		static ssize_t do_read (int fd, void *buf, size_t count);
 		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name);
 #endif // DEBUG || !ANDROID
-		template<size_t BufferSize>
-		bool register_debug_symbols_for_assembly (dynamic_local_string<BufferSize> const& entry_name, MonoBundledAssembly const& assembly, const mono_byte *debug_contents, int debug_size);
 
-		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, const char* filename, const char* apk);
+		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename);
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 #if defined (NET6)
 		static MonoAssembly* open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, char **assemblies_path, void *user_data, MonoError *error);
 #else // def NET6
 		static MonoAssembly* open_from_bundles_refonly (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 #endif // ndef NET6
-		static void get_assembly_data (MonoBundledAssembly const& e, char*& assembly_data, uint32_t& assembly_data_size);
+		static void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size);
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
@@ -189,10 +208,12 @@ namespace xamarin::android::internal {
 			return assemblies_prefix_override != nullptr ? assemblies_prefix_override : assemblies_prefix;
 		}
 
-		size_t get_assemblies_prefix_length () const noexcept
+		uint32_t get_assemblies_prefix_length () const noexcept
 		{
-			return assemblies_prefix_override != nullptr ? strlen (assemblies_prefix_override) : sizeof(assemblies_prefix) - 1;
+			return assemblies_prefix_override != nullptr ? static_cast<uint32_t>(strlen (assemblies_prefix_override)) : sizeof(assemblies_prefix) - 1;
 		}
+
+		bool is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept;
 
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
 		const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0);
@@ -204,10 +225,22 @@ namespace xamarin::android::internal {
 		static int compare_type_token (const uint32_t *token, const TypeMapModuleEntry *entry);
 		static int compare_java_name (const char *java_name, const TypeMapJava *entry);
 #endif
+		template<bool NeedsNameAlloc>
+		void set_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 
 	private:
+		std::vector<XamarinAndroidBundledAssembly> *bundled_debug_data = nullptr;
+		std::vector<XamarinAndroidBundledAssembly> *extra_bundled_assemblies = nullptr;
+
 		bool                   register_debug_symbols;
-		std::vector<MonoBundledAssembly> bundled_assemblies;
+		bool                   have_and_want_debug_symbols;
+#if defined (ANDROID)
+		sem_t                  assembly_mmap_semaphore;
+#else
+		static std::mutex      assembly_mmap_mutex;
+#endif
 		size_t                 bundled_assembly_index = 0;
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;

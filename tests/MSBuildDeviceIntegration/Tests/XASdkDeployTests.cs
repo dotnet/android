@@ -10,10 +10,11 @@ using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
+#if !NET472
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("SmokeTests"), Category ("DotNetIgnore")] // These don't need to run under `dotnet test`
+	[Category ("UsesDevice"), Category ("SmokeTests")]
 	public class XASdkDeployTests : DeviceTest
 	{
 		static object [] DotNetInstallAndRunSource = new object [] {
@@ -88,9 +89,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
-			XASdkProject proj;
-			proj = new XASdkProject () {
-			};
+			var proj = new XASdkProject ();
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 
@@ -109,7 +108,7 @@ namespace Xamarin.Android.Build.Tests
 			// setup the debugger
 			var session = new SoftDebuggerSession ();
 			session.Breakpoints = new BreakpointStore {
-				{ Path.Combine (Root, dotnet.ProjectDirectory, "MainActivity.cs"),  19 },
+				{ Path.Combine (Root, dotnet.ProjectDirectory, "MainActivity.cs"), 10 },
 			};
 			session.TargetHitBreakpoint += (sender, e) => {
 				Console.WriteLine ($"BREAK {e.Type}");
@@ -158,3 +157,4 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}
 }
+#endif

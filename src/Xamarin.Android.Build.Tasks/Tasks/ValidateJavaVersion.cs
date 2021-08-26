@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tasks
 				if (versionNumber != null) {
 					Log.LogMessage (MessageImportance.Normal, $"Found Java SDK version {versionNumber}.");
 					if (versionNumber < required) {
-						Log.LogCodedError ("XA0031", Properties.Resources.XA0031, required, "`<Project Sdk=\"Xamarin.Android.Sdk\">`");
+						Log.LogCodedError ("XA0031", Properties.Resources.XA0031_NET, required);
 					}
 					var latest = Version.Parse (LatestSupportedJavaVersion);
 					if (versionNumber > latest) {
