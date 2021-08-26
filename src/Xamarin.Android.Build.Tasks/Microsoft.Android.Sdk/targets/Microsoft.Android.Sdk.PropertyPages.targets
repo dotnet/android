@@ -2,7 +2,7 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.PropertyPages.targets
 
-This file contains targets for importing .NET project system property pages.
+This file contains targets for importing .NET project system property pages for Android.
 
 ***********************************************************************************************
 -->
