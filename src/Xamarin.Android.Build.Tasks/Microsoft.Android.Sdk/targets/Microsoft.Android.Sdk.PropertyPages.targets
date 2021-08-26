@@ -1,0 +1,17 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.PropertyPages.targets
+
+This file contains targets for importing .NET project system property pages for Android.
+
+***********************************************************************************************
+-->
+<Project>
+
+  <PropertyGroup Condition="'$(XamarinAndroidDesignTimeTargetsPath)' == ''">
+    <XamarinAndroidDesignTimeTargetsPath>$(MSBuildEXtensionsPath)\Microsoft\VisualStudio\Xamarin\Android\Xamarin.Android.DesignTime.targets</XamarinAndroidDesignTimeTargetsPath>
+  </PropertyGroup>
+
+  <Import Project="$(XamarinAndroidDesignTimeTargetsPath)" Condition="Exists('$(XamarinAndroidDesignTimeTargetsPath)')" />
+
+</Project>
