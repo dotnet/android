@@ -13,7 +13,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/pjc/vs-symbol-archive
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -1361,7 +1361,6 @@ stages:
     symbolArtifactName: nuget-signed
     symbolArtifactPatterns: |
       !*Darwin*
-    createVSPR: false
     condition: eq(variables['MicroBuildSignType'], 'Real')
 
 - stage: finalize_installers
