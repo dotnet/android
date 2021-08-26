@@ -7,6 +7,9 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AssemblyTitle>Java.Interop.GenericMarshaler</AssemblyTitle>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>Microsoft Corporation</Copyright>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
   </PropertyGroup>
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>

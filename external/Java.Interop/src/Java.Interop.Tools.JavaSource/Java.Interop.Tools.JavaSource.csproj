@@ -7,6 +7,9 @@
     <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <ProjectGuid>{5C0B3562-8DA0-4726-9762-75B9709ED6B7}</ProjectGuid>
     <AssemblyTitle>Java.Interop.Tools.JavaSource</AssemblyTitle>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>Microsoft Corporation</Copyright>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
   </PropertyGroup>
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>

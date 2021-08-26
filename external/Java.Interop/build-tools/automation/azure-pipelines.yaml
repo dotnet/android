@@ -58,7 +58,7 @@ jobs:
       solution: Java.Interop.sln
       configuration: $(Build.Configuration)
       msbuildArguments: /restore
-
+    
   - task: MSBuild@1
     displayName: MSBuild RunNUnitTests.targets
     inputs:
@@ -93,7 +93,7 @@ jobs:
       runNativeDotnetTests: true
 
   - template: templates\fail-on-issue.yaml
-
+    
 - job: mac_build
   displayName: Mac - Mono
   pool:
@@ -114,10 +114,10 @@ jobs:
 
   - script: make prepare CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion)
     displayName: make prepare
-
+    
   - script: make all CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion)
     displayName: make all
-
+    
   - script: |
       r=0
       make run-all-tests CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion) || r=$?
@@ -139,7 +139,7 @@ jobs:
       SourceFolder: $(System.DefaultWorkingDirectory)
       Contents: |
         xatb.jar
-        bin.zip
+        bin.zip 
       TargetFolder: $(Build.ArtifactStagingDirectory)
     condition: succeededOrFailed()
 
@@ -148,7 +148,7 @@ jobs:
     inputs:
       ArtifactName: debug
     condition: succeededOrFailed()
-
+    
 - job: mac_dotnet_build
   displayName: Mac - .NET Core
   pool:
@@ -161,12 +161,12 @@ jobs:
     submodules: recursive
 
   - template: templates\install-dependencies.yaml
-
+    
   - script: make prepare-core CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion)
     displayName: make prepare-core
-
+      
   - template: templates\core-build.yaml
-
+      
   - template: templates\core-tests.yaml
     parameters:
       runNativeTests: true
