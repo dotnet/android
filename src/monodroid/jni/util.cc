@@ -210,7 +210,7 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 	MonoImageOpenStatus   status;
 
 	aname = mono_assembly_name_new (basename);
-	MonoDomain *current = mono_domain_get ();
+	MonoDomain *current = get_current_domain ();
 
 	if (domain != current) {
 		mono_domain_set (domain, FALSE);
@@ -233,7 +233,7 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 MonoObject *
 Util::monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc)
 {
-	MonoDomain *current = mono_domain_get ();
+	MonoDomain *current = get_current_domain ();
 	if (domain == current) {
 		return mono_runtime_invoke (method, obj, params, exc);
 	}
@@ -247,7 +247,7 @@ Util::monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *ob
 void
 Util::monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc)
 {
-	MonoDomain *current = mono_domain_get ();
+	MonoDomain *current = get_current_domain ();
 	if (domain == current) {
 		mono_property_set_value (property, obj, params, exc);
 		return;
@@ -289,7 +289,7 @@ MonoClass*
 Util::monodroid_get_class_from_name ([[maybe_unused]] MonoDomain *domain, const char* assembly, const char *_namespace, const char *type)
 {
 #if !defined (NET6)
-	MonoDomain *current = mono_domain_get ();
+	MonoDomain *current = get_current_domain ();
 
 	if (domain != current)
 		mono_domain_set (domain, FALSE);
@@ -318,7 +318,7 @@ Util::monodroid_get_class_from_name ([[maybe_unused]] MonoDomain *domain, const 
 MonoClass*
 Util::monodroid_get_class_from_image (MonoDomain *domain, MonoImage *image, const char *_namespace, const char *type)
 {
-	MonoDomain *current = mono_domain_get ();
+	MonoDomain *current = get_current_domain ();
 
 	if (domain != current)
 		mono_domain_set (domain, FALSE);

@@ -1741,14 +1741,16 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 		log_debug (LOG_ASSEMBLY, "Dynamically opened assembly %s", mono_assembly_name_get_name (aname));
 	} else
 #endif
-		if (domain != mono_domain_get ()) {
-			MonoDomain *current = mono_domain_get ();
+	{
+		MonoDomain *current = utils.get_current_domain ();
+		if (domain != current) {
 			mono_domain_set (domain, FALSE);
 			mono_assembly_load_full (aname, NULL, NULL, 0);
 			mono_domain_set (current, FALSE);
 		} else {
 			mono_assembly_load_full (aname, NULL, NULL, 0);
 		}
+	}
 
 	mono_assembly_name_free (aname);
 
@@ -2327,7 +2329,7 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 
 	MonoMethod *register_jni_natives = registerType;
 #if !defined (NET6)
-	MonoDomain *domain = mono_domain_get ();
+	MonoDomain *domain = utils.get_current_domain (/* attach_thread_if_needed */ false);
 	mono_jit_thread_attach (domain);
 	// Refresh current domain as it might have been modified by the above call
 	domain = mono_domain_get ();
@@ -2405,7 +2407,7 @@ JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[may
 #if defined (NET6)
 	monodroidRuntime.propagate_uncaught_exception (env, javaThread, javaException);
 #else // def NET6
-	MonoDomain *domain = mono_domain_get ();
+	MonoDomain *domain = utils.get_current_domain ();
 	monodroidRuntime.propagate_uncaught_exception (domain, env, javaThread, javaException);
 #endif // ndef NET6
 }

@@ -32,6 +32,7 @@ constexpr int FALSE = 0;
 #include <jni.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/appdomain.h>
+#include <mono/metadata/threads.h>
 
 #include "monodroid.h"
 #include "jni-wrappers.hh"
@@ -108,6 +109,24 @@ namespace xamarin::android
 		bool should_log (LogCategories category) const
 		{
 			return (log_categories & category) != 0;
+		}
+
+		MonoDomain *get_current_domain (bool attach_thread_if_needed = true) const noexcept
+		{
+			MonoDomain *ret = mono_domain_get ();
+			if (ret != nullptr) {
+				return ret;
+			}
+
+			// It's likely that we got a nullptr because the current thread isn't attached (see
+			// https://github.com/xamarin/xamarin-android/issues/6211), so we need to attach the thread to the root
+			// domain
+			ret = mono_get_root_domain ();
+			if (attach_thread_if_needed) {
+				mono_thread_attach (ret);
+			}
+
+			return ret;
 		}
 
 	private:
