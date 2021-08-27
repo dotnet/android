@@ -19,35 +19,45 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
+				/* isRelease */          false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
+				/* isRelease */          false,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies:Dexes",
+				/* isRelease */          false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
+				/* isRelease */          false,
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "",
+				/* isRelease */          true,
 			},
 		};
 #pragma warning restore 414
 
 		[Test]
 		[TestCaseSource (nameof (MonoAndroidExportTestCases))]
-		public void MonoAndroidExportReferencedAppStarts (bool embedAssemblies, string fastDevType)
+		public void MonoAndroidExportReferencedAppStarts (bool embedAssemblies, string fastDevType, bool isRelease)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = false,
-				AndroidFastDeploymentType = fastDevType,
+				IsRelease = isRelease,
 				References = {
 					new BuildItem.Reference ("Mono.Android.Export"),
 				},
 			};
+			if (!string.IsNullOrEmpty (fastDevType))
+				proj.AndroidFastDeploymentType = fastDevType;
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
 				TextContent = () => @"using System;
 using Java.Interop;
@@ -94,19 +104,12 @@ namespace UnnamedProject
 			}
 		}
 	}";
-			//TODO: x86_64 is a workaround in .NET 6 for: https://github.com/xamarin/monodroid/issues/1136
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				string apiLevel;
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-
-				// TODO: We aren't sure how to support preview bindings in .NET6 yet.
-				if (Builder.UseDotNet && apiLevel == "31") {
-					apiLevel = "30";
-					proj.TargetFrameworkVersion = "v11.0";
-				}
 
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""${proj.PackageName}"">
