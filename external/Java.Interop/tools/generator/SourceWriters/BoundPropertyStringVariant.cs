@@ -24,6 +24,8 @@ namespace generator.SourceWriters
 
 			SetVisibility ((property.Setter ?? property.Getter).Visibility);
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
+
 			HasGet = true;
 
 			if (is_array)

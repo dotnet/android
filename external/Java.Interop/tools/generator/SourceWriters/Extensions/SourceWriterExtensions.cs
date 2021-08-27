@@ -85,7 +85,7 @@ namespace generator.SourceWriters
 
 					AddInterfaceListenerEventsAndProperties (tw, iface, target, name, setter,
 						string.Format ("__v => {0} = __v", prop.Name),
-						string.Format ("__v => {0} = null", prop.Name), opt);
+						string.Format ("__v => {0} = null", prop.Name), opt, prop.Getter);
 				} else {
 					refs.Add (method.Name);
 					string rm = null;
@@ -103,7 +103,7 @@ namespace generator.SourceWriters
 
 					AddInterfaceListenerEventsAndProperties (tw, iface, target, name, method.Name,
 						method.Name,
-						remove, opt);
+						remove, opt, method);
 				}
 			}
 
@@ -113,7 +113,9 @@ namespace generator.SourceWriters
 			tw.Methods.Add (new CreateImplementorMethod (iface, opt));
 		}
 
-		public static void AddInterfaceListenerEventsAndProperties (TypeWriter tw, InterfaceGen iface, ClassGen target, string name, string connector_fmt, string add, string remove, CodeGenerationOptions opt)
+		// Parameter 'setListenerMethod' refers to the method used to set the listener, like 'addOnRoutingChangedListener'/'setOnRoutingChangedListener'.
+		// This is used to determine what API level the listener setter is available on.
+		public static void AddInterfaceListenerEventsAndProperties (TypeWriter tw, InterfaceGen iface, ClassGen target, string name, string connector_fmt, string add, string remove, CodeGenerationOptions opt, Method setListenerMethod)
 		{
 			if (!iface.IsValid)
 				return;
@@ -128,11 +130,11 @@ namespace generator.SourceWriters
 				if (target.ContainsName (nameUnique))
 					nameUnique += "Event";
 
-				AddInterfaceListenerEventOrProperty (tw, iface, method, target, nameUnique, connector_fmt, add, remove, opt);
+				AddInterfaceListenerEventOrProperty (tw, iface, method, target, nameUnique, connector_fmt, add, remove, opt, setListenerMethod);
 			}
 		}
 
-		public static void AddInterfaceListenerEventOrProperty (TypeWriter tw, InterfaceGen iface, Method method, ClassGen target, string name, string connector_fmt, string add, string remove, CodeGenerationOptions opt)
+		public static void AddInterfaceListenerEventOrProperty (TypeWriter tw, InterfaceGen iface, Method method, ClassGen target, string name, string connector_fmt, string add, string remove, CodeGenerationOptions opt, Method setListenerMethod)
 		{
 			if (method.EventName == string.Empty)
 				return;
@@ -157,7 +159,7 @@ namespace generator.SourceWriters
 					var mt = target.Methods.Where (method => string.Compare (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) == 0 && method.IsListenerConnector).FirstOrDefault ();
 					var hasHandlerArgument = mt != null && mt.IsListenerConnector && mt.Parameters.Count == 2 && mt.Parameters [1].Type == "Android.OS.Handler";
 
-					tw.Events.Add (new InterfaceListenerEvent (iface, name, nameSpec, full_delegate_name, connector_fmt, add, remove, hasHandlerArgument, opt));
+					tw.Events.Add (new InterfaceListenerEvent (iface, setListenerMethod, name, nameSpec, full_delegate_name, connector_fmt, add, remove, hasHandlerArgument, opt));
 				}
 			} else {
 				if (opt.GetSafeIdentifier (name) != name) {

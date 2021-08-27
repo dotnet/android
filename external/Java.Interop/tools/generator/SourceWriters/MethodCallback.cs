@@ -46,6 +46,8 @@ namespace generator.SourceWriters
 			if (!string.IsNullOrWhiteSpace (method.Deprecated))
 				Attributes.Add (new ObsoleteAttr ());
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+
 			Parameters.Add (new MethodParameterWriter ("jnienv", TypeReferenceWriter.IntPtr));
 			Parameters.Add (new MethodParameterWriter ("native__this", TypeReferenceWriter.IntPtr));
 
@@ -136,6 +138,8 @@ namespace generator.SourceWriters
 
 			if (!string.IsNullOrWhiteSpace (method.Deprecated))
 				Attributes.Add (new ObsoleteAttr ());
+
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 		}
 
 		protected override void WriteBody (CodeWriter writer)

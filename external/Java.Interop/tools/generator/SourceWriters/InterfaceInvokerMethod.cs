@@ -30,6 +30,8 @@ namespace generator.SourceWriters
 			method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence);
 			context_this = context.ContextType.GetObjectHandleProperty ("this");
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+
 			this.AddMethodParameters (method.Parameters, opt);
 		}
 

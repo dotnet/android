@@ -69,12 +69,12 @@ namespace generator.SourceWriters
 			if (property.Getter.Deprecated != null && (property.Setter == null || property.Setter.Deprecated != null))
 				Attributes.Add (new ObsoleteAttr (property.Getter.Deprecated.Replace ("\"", "\"\"").Trim () + (property.Setter != null && property.Setter.Deprecated != property.Getter.Deprecated ? " " + property.Setter.Deprecated.Replace ("\"", "\"\"").Trim () : null)));
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
+
 			SourceWriterExtensions.AddMethodCustomAttributes (GetterAttributes, property.Getter);
 
 			if (gen.IsGeneratable)
 				GetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Getter.JavaName}'{property.Getter.Parameters.GetMethodXPathPredicate ()}]\"");
-
-			SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
 
 			GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.IsVirtual ? property.Getter.GetConnectorNameFull (opt) : string.Empty, additionalProperties: property.Getter.AdditionalAttributeString ()));
 

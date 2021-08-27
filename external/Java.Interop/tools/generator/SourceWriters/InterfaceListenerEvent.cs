@@ -12,12 +12,14 @@ namespace generator.SourceWriters
 	{
 		readonly InterfaceListenerEventHandlerHelper helper_method;
 
-		public InterfaceListenerEvent (InterfaceGen iface, string name, string nameSpec, string fullDelegateName, string wrefSuffix, string add, string remove, bool hasHandlerArgument, CodeGenerationOptions opt)
+		public InterfaceListenerEvent (InterfaceGen iface, Method method, string name, string nameSpec, string fullDelegateName, string wrefSuffix, string add, string remove, bool hasHandlerArgument, CodeGenerationOptions opt)
 		{
 			Name = name;
 			EventType = new TypeReferenceWriter (opt.GetOutputName (fullDelegateName));
 
 			IsPublic = true;
+
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
 			HasAdd = true;
 
@@ -36,7 +38,7 @@ namespace generator.SourceWriters
 			RemoveBody.Add ($"__h => __h.{nameSpec}Handler -= value);");
 
 			if (hasHandlerArgument)
-				helper_method = new InterfaceListenerEventHandlerHelper (iface, add, opt);
+				helper_method = new InterfaceListenerEventHandlerHelper (iface, method, add, opt);
 		}
 
 		public override void Write (CodeWriter writer)
@@ -49,11 +51,13 @@ namespace generator.SourceWriters
 
 	public class InterfaceListenerEventHandlerHelper : MethodWriter
 	{
-		public InterfaceListenerEventHandlerHelper (InterfaceGen iface, string add, CodeGenerationOptions opt)
+		public InterfaceListenerEventHandlerHelper (InterfaceGen iface, Method method, string add, CodeGenerationOptions opt)
 		{
 			Name = add + "_Event_With_Handler_Helper";
 			Parameters.Add (new MethodParameterWriter ("value", new TypeReferenceWriter (opt.GetOutputName (iface.FullName))));
 			ReturnType = TypeReferenceWriter.Void;
+
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
 			Body.Add ($"{add} (value, null);");
 		}

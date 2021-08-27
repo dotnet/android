@@ -26,6 +26,8 @@ namespace generator.SourceWriters
 
 			Attributes.Add (new RegisterAttr (klass.RawJniName, noAcw: true, additionalProperties: klass.AdditionalAttributeString ()) { UseGlobal = true });
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
+
 			var ctor = new ConstructorWriter {
 				Name = Name,
 				IsPublic = true,

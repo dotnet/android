@@ -29,6 +29,8 @@ namespace generator.SourceWriters
 			if (method.Deprecated != null)
 				Attributes.Add (new ObsoleteAttr (method.Deprecated.Replace ("\"", "\"\"").Trim ()));
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+
 			Parameters.Add (new MethodParameterWriter ("self", new TypeReferenceWriter (selfType)) { IsExtension = true });
 			this.AddMethodParametersStringOverloads (method.Parameters, opt);
 		}

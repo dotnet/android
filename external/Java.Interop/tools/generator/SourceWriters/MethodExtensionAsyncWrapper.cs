@@ -22,6 +22,8 @@ namespace generator.SourceWriters
 			if (!method.IsVoid)
 				ReturnType.Name += "<" + opt.GetTypeReferenceName (method.RetVal) + ">";
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+
 			Body.Add ($"return global::System.Threading.Tasks.Task.Run (() => self.{method.AdjustedName} ({method.Parameters.GetCall (opt)}));");
 
 			Parameters.Add (new MethodParameterWriter ("self", new TypeReferenceWriter (selfType)) { IsExtension = true });

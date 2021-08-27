@@ -27,6 +27,8 @@ namespace generator.SourceWriters
 			IsPublic = true;
 			IsUnsafe = true;
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
+
 			HasGet = property.Getter != null;
 
 			if (property.Getter != null) {
