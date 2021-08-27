@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+	<!-- This preserves type forwards for Java stub generation -->
+	<assembly fullname="System.Runtime">
+		<type fullname="System.Boolean">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.Byte">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.Char">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.Decimal">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.Double">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.Int16">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.Int32">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.Int64">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.IntPtr">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.Object">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.SByte">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.Single">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.String">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.UInt16">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.UInt32">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.UInt64">
+			<method name="ToString" />
+		</type>
+		<type fullname="System.UIntPtr">
+			<method name="ToString" />
+		</type>
+		<!-- System.Void has no methods -->
+		<type fullname="System.Void" />
+	</assembly>
+</linker>
