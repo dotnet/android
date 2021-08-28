@@ -771,6 +771,7 @@ stages:
         testName: Mono.Android.NET_Tests
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration).xml
+        extraBuildArgs: /p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: net6-Default
         useDotNet: true
@@ -793,7 +794,7 @@ stages:
         testName: Mono.Android.NET_Tests-Interpreter
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Interpreter.xml
-        extraBuildArgs: /p:TestsFlavor=Interpreter /p:UseInterpreter=True
+        extraBuildArgs: /p:TestsFlavor=Interpreter /p:UseInterpreter=True /p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: net6-Interpreter
         useDotNet: true
@@ -804,7 +805,7 @@ stages:
         testName: Mono.Android.NET_Tests-Aot
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aot.xml
-        extraBuildArgs: /p:TestsFlavor=Aot /p:RunAOTCompilation=true
+        extraBuildArgs: /p:TestsFlavor=Aot /p:RunAOTCompilation=true /p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: net6-aot
         useDotNet: true
@@ -815,7 +816,7 @@ stages:
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)AotLlvm.xml
-        extraBuildArgs: /p:TestsFlavor=AotLlvm /p:RunAOTCompilation=true /p:EnableLlvm=true
+        extraBuildArgs: /p:TestsFlavor=AotLlvm /p:RunAOTCompilation=true /p:EnableLlvm=true /p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: net6-aotllvm
         useDotNet: true

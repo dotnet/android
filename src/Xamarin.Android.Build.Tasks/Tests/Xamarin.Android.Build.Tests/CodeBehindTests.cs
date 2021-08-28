@@ -273,8 +273,14 @@ namespace Xamarin.Android.Build.Tests
 				$"{ProjectName}.dll",
 				"CommonSampleLibrary.dll",
 				$"{PackageName}-Signed.apk",
-				$"{PackageName}.apk",
 			};
+
+			if (!Builder.UseDotNet) {
+				produced_binaries.Add ($"{PackageName}.apk");
+			} else {
+				produced_binaries.Add ($"{PackageName}.aab");
+				produced_binaries.Add ($"{PackageName}-Signed.aab");
+			}
 		}
 
 		[Test]

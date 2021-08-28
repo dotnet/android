@@ -537,7 +537,7 @@ namespace Bug12935
 				Assert.IsTrue (manifest.Contains (" android:label=\"val1\""), "#1");
 				Assert.IsTrue (manifest.Contains (" x=\"a=b\\c\"".Replace ('\\', Path.DirectorySeparatorChar)), "#2");
 				Assert.IsTrue (manifest.Contains ("package=\"com.foo.bar\""), "PackageName should have been replaced with 'com.foo.bar'");
-				var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"com.foo.bar.apk");
+				var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"com.foo.bar-Signed.apk");
 				FileAssert.Exists (apk, $"'{apk}' should have been created.");
 			}
 		}

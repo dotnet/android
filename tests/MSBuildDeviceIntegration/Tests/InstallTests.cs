@@ -133,6 +133,7 @@ namespace Xamarin.Android.Build.Tests
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
@@ -180,6 +181,7 @@ namespace Xamarin.Android.Build.Tests
 			if (Builder.UseDotNet) {
 				// NOTE: in .NET 6, EmbedAssembliesIntoApk=true by default for Release builds
 				proj.SetProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk", "false");
+				proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", "apk");
 			} else {
 				proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
 			}
@@ -191,7 +193,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Install (proj));
 				var runtimeInfo = builder.GetSupportedRuntimes ();
 				var apkPath = Path.Combine (Root, builder.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					foreach (var abi in abis) {
 						string runtimeAbiName;
@@ -346,6 +348,7 @@ namespace Xamarin.Android.Build.Tests
 			new object[] { true,  true  , "apk"     , "True"         , "env:android",  "--ks test.keystore"     , true},
 			new object[] { true,  false , "apk"     , "True"         , "file:android", "--ks test.keystore"     , true},
 			new object[] { true,  true  , "apk"     , "True"         , "file:android", "--ks test.keystore"     , true},
+			new object[] { true,  true  , "apk"     , "True"         , "pass:android", "--ks test.keystore"     , true},
 			// dont use apksigner
 			new object[] { false, false , "apk"     , "False"        , "android",      "debug.keystore"         , true},
 			new object[] { false, true  , "apk"     , "False"        , "android",      "debug.keystore"         , true},
@@ -361,6 +364,7 @@ namespace Xamarin.Android.Build.Tests
 			new object[] { true,  true  , "aab"     , "True"         , "android",      "-ks test.keystore"      , true},
 			new object[] { true,  true  , "aab"     , "True"         , "file:android", "-ks test.keystore"      , true},
 			new object[] { true,  true  , "aab"     , "True"         , "env:android",  "-ks test.keystore"      , false},
+			new object[] { true,  true  , "aab"     , "True"         , "pass:android", "-ks test.keystore"      , true},
 		};
 #pragma warning restore 414
 
