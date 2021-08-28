@@ -316,7 +316,7 @@ namespace Xamarin.Android.Build.Tests
 			string aapt2 = Path.Combine (task.Aapt2ToolPath, task.Aapt2ToolExe);
 			string adb = Path.Combine (task.AdbToolPath, task.AdbToolExe);
 			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ($"build-apks --connected-device --bundle foo.aab --output foo.apks --mode default --adb \"{adb}\" --device-id emulator-5554 --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
+			Assert.AreEqual ($"build-apks --connected-device --mode default --adb \"{adb}\" --device-id emulator-5554 --bundle foo.aab --output foo.apks --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
 		}
 
 		[Test]

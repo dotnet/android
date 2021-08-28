@@ -54,13 +54,16 @@ namespace Xamarin.Android.Tasks
 
 		void AddStorePass (CommandLineBuilder cmd, string cmdLineSwitch, string value)
 		{
+			string pass = value.Replace ("env:", string.Empty)
+				.Replace ("file:", string.Empty)
+				.Replace ("pass:", string.Empty);
 			if (value.StartsWith ("env:", StringComparison.Ordinal)) {
-				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} ", value);
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} env:", pass);
 			}
 			else if (value.StartsWith ("file:", StringComparison.Ordinal)) {
-				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} file:", value.Replace ("file:", string.Empty));
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} file:", pass);
 			} else {
-				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} pass:", value);
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} pass:", pass);
 			}
 		}
 

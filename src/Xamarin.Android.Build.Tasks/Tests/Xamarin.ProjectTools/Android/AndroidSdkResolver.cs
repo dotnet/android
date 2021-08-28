@@ -127,10 +127,12 @@ namespace Xamarin.ProjectTools
 			foreach (var dir in Directory.EnumerateDirectories (Path.Combine (sdkPath, "platforms"))) {
 				int version;
 				string v = Path.GetFileName (dir).Replace ("android-", "");
+				Console.WriteLine ($"GetMaxInstalledPlatform: Parsing {v}");
 				if (!int.TryParse (v, out version))
 					continue;
 				if (version < maxInstalled)
 					continue;
+				Console.WriteLine ($"GetMaxInstalledPlatform: Setting maxInstalled to {version}");
 				maxInstalled = version;
 			}
 			return maxInstalled ?? 0;
