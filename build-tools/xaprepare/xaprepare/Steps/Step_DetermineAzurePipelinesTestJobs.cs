@@ -101,6 +101,7 @@ namespace Xamarin.Android.Prepare
 
 				if (file.Contains ("src/Microsoft.Android.Sdk.ILLink")) {
 					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
 				}
 
 				if (file.Contains ("src/Mono.Android")) {
