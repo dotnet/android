@@ -42,6 +42,11 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
+			public static string OSBinDirectory {
+				get;
+				private set;
+			}
+
 			static SetUp ()
 			{
 #if NETCOREAPP
@@ -54,6 +59,16 @@ namespace Xamarin.Android.Build.Tests
 					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
 					AndroidMSBuildDirectory = builder.AndroidMSBuildDirectory;
 				}
+
+				string osSubdirName;
+				if (TestEnvironment.IsLinux) {
+					osSubdirName = "Linux";
+				} else if (TestEnvironment.IsMacOS) {
+					osSubdirName = "Darwin";
+				} else {
+					osSubdirName = String.Empty;
+				}
+				OSBinDirectory = Path.Combine (AndroidMSBuildDirectory, osSubdirName);
 			}
 
 			[OneTimeSetUp]
