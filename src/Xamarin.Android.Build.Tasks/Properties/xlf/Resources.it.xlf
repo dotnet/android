@@ -162,7 +162,7 @@ In this message, the phrase "should not be reached" means that this error messag
         <note>The abbreviation "JDK" should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA0031">
-        <source>Java SDK {0} or above is required when using {1}.</source>
+        <source>Java SDK {0} or above is required when using {1}.  Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11</source>
         <target state="needs-review-translation">Quando si usa {1}, è richiesto Java SDK {0} o versione successiva.</target>
         <note>
 {0} - The Java SDK version number
