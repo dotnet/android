@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -54,7 +55,9 @@ namespace Xamarin.Android.Build.Tests
 				MinimumSupportedJavaVersion = "1.7.0",
 			};
 			Assert.False (validateJavaVersion.Execute (), "Execute should *not* succeed!");
-			Assert.IsTrue (errors.Any (e => e.Message == $"Java SDK 1.8 or above is required when using $(TargetFrameworkVersion) {validateJavaVersion.TargetFrameworkVersion}."), "Should get error about TargetFrameworkVersion=v8.1");
+			Assert.IsTrue (
+					errors.Any (e => e.Message.StartsWith ($"Java SDK 1.8 or above is required when using $(TargetFrameworkVersion) {validateJavaVersion.TargetFrameworkVersion}.", StringComparison.OrdinalIgnoreCase)),
+					"Should get error about TargetFrameworkVersion=v8.1");
 		}
 
 		[Test]
@@ -71,7 +74,9 @@ namespace Xamarin.Android.Build.Tests
 				MinimumSupportedJavaVersion = "1.7.0",
 			};
 			Assert.False (validateJavaVersion.Execute (), "Execute should *not* succeed!");
-			Assert.IsTrue (errors.Any (e => e.Message == $"Java SDK 1.8 or above is required when using Android SDK Build-Tools {validateJavaVersion.AndroidSdkBuildToolsVersion}."), "Should get error about build-tools=27.0.0");
+			Assert.IsTrue (
+					errors.Any (e => e.Message.StartsWith ($"Java SDK 1.8 or above is required when using Android SDK Build-Tools {validateJavaVersion.AndroidSdkBuildToolsVersion}.", StringComparison.OrdinalIgnoreCase)),
+					"Should get error about build-tools=27.0.0");
 		}
 
 		[Test]
