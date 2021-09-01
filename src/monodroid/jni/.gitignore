@@ -1,3 +1,7 @@
 Application.mk
 config.include
 machine.config.include
+pinvoke-tables.include.generated
+pinvoke-tables.include.diff
+generate-pinvoke-tables
+generate-pinvoke-tables.exe

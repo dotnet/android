@@ -1,3 +1,4 @@
+#include <compare>
 #include <unistd.h>
 #include <stdarg.h>
 #include <mono/utils/mono-publib.h>
@@ -13,6 +14,8 @@ extern "C" {
 #include "timing.hh"
 #include "java-interop.h"
 #include "cpu-arch.hh"
+#include "xxhash.hh"
+#include "startup-aware-lock.hh"
 
 extern "C" {
 	int _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap);
@@ -25,6 +28,10 @@ int _monodroid_get_dns_servers (void **dns_servers_array);
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
+
+void* MonodroidRuntime::system_native_library_handle = nullptr;
+void* MonodroidRuntime::system_security_cryptography_native_android_library_handle = nullptr;
+void* MonodroidRuntime::system_io_compression_native_library_handle = nullptr;
 
 static unsigned int
 monodroid_get_log_categories ()
@@ -345,251 +352,42 @@ monodroid_get_dylib (void)
 	return nullptr;
 }
 
-#define PINVOKE_SYMBOL(_sym_) { #_sym_, reinterpret_cast<void*>(&_sym_) }
-
-MonodroidRuntime::pinvoke_api_map MonodroidRuntime::xa_pinvoke_map = {
-	PINVOKE_SYMBOL (create_public_directory),
-	PINVOKE_SYMBOL (java_interop_free),
-	PINVOKE_SYMBOL (java_interop_jnienv_alloc_object),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_boolean_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_boolean_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_byte_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_byte_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_char_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_char_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_double_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_double_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_float_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_float_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_int_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_int_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_long_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_long_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_boolean_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_boolean_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_byte_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_byte_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_char_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_char_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_double_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_double_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_float_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_float_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_int_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_int_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_long_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_long_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_object_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_object_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_short_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_short_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_void_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_nonvirtual_void_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_object_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_object_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_short_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_short_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_boolean_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_boolean_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_byte_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_byte_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_char_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_char_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_double_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_double_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_float_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_float_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_int_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_int_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_long_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_long_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_object_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_object_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_short_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_short_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_void_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_static_void_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_void_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_call_void_method_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_define_class),
-	PINVOKE_SYMBOL (java_interop_jnienv_delete_global_ref),
-	PINVOKE_SYMBOL (java_interop_jnienv_delete_local_ref),
-	PINVOKE_SYMBOL (java_interop_jnienv_delete_weak_global_ref),
-	PINVOKE_SYMBOL (java_interop_jnienv_ensure_local_capacity),
-	PINVOKE_SYMBOL (java_interop_jnienv_exception_check),
-	PINVOKE_SYMBOL (java_interop_jnienv_exception_clear),
-	PINVOKE_SYMBOL (java_interop_jnienv_exception_describe),
-	PINVOKE_SYMBOL (java_interop_jnienv_exception_occurred),
-	PINVOKE_SYMBOL (java_interop_jnienv_fatal_error),
-	PINVOKE_SYMBOL (java_interop_jnienv_find_class),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_array_length),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_boolean_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_boolean_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_boolean_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_byte_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_byte_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_byte_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_char_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_char_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_char_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_direct_buffer_address),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_direct_buffer_capacity),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_double_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_double_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_double_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_field_id),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_float_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_float_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_float_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_int_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_int_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_int_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_java_vm),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_long_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_long_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_long_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_method_id),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_object_array_element),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_object_class),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_object_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_object_ref_type),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_primitive_array_critical),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_short_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_short_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_short_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_boolean_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_byte_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_char_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_double_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_field_id),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_float_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_int_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_long_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_method_id),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_object_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_static_short_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_string_chars),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_string_length),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_superclass),
-	PINVOKE_SYMBOL (java_interop_jnienv_get_version),
-	PINVOKE_SYMBOL (java_interop_jnienv_is_assignable_from),
-	PINVOKE_SYMBOL (java_interop_jnienv_is_instance_of),
-	PINVOKE_SYMBOL (java_interop_jnienv_is_same_object),
-	PINVOKE_SYMBOL (java_interop_jnienv_monitor_enter),
-	PINVOKE_SYMBOL (java_interop_jnienv_monitor_exit),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_boolean_array),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_byte_array),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_char_array),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_direct_byte_buffer),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_double_array),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_float_array),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_global_ref),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_int_array),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_local_ref),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_long_array),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_object),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_object_a),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_object_array),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_short_array),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_string),
-	PINVOKE_SYMBOL (java_interop_jnienv_new_weak_global_ref),
-	PINVOKE_SYMBOL (java_interop_jnienv_pop_local_frame),
-	PINVOKE_SYMBOL (java_interop_jnienv_push_local_frame),
-	PINVOKE_SYMBOL (java_interop_jnienv_register_natives),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_boolean_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_byte_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_char_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_double_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_float_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_int_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_long_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_primitive_array_critical),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_short_array_elements),
-	PINVOKE_SYMBOL (java_interop_jnienv_release_string_chars),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_boolean_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_boolean_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_byte_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_byte_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_char_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_char_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_double_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_double_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_float_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_float_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_int_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_int_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_long_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_long_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_object_array_element),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_object_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_short_array_region),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_short_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_static_boolean_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_static_byte_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_static_char_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_static_double_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_static_float_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_static_int_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_static_long_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_static_object_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_set_static_short_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_throw),
-	PINVOKE_SYMBOL (java_interop_jnienv_throw_new),
-	PINVOKE_SYMBOL (java_interop_jnienv_to_reflected_field),
-	PINVOKE_SYMBOL (java_interop_jnienv_to_reflected_method),
-	PINVOKE_SYMBOL (java_interop_jnienv_unregister_natives),
-	PINVOKE_SYMBOL (java_interop_strdup),
-	PINVOKE_SYMBOL (monodroid_clear_gdb_wait),
-	PINVOKE_SYMBOL (_monodroid_counters_dump),
-	PINVOKE_SYMBOL (_monodroid_detect_cpu_and_architecture),
-	PINVOKE_SYMBOL (monodroid_dylib_mono_free),
-	PINVOKE_SYMBOL (monodroid_dylib_mono_init),
-	PINVOKE_SYMBOL (monodroid_dylib_mono_new),
-	PINVOKE_SYMBOL (monodroid_embedded_assemblies_set_assemblies_prefix),
-	PINVOKE_SYMBOL (monodroid_fopen),
-	PINVOKE_SYMBOL (monodroid_free),
-	PINVOKE_SYMBOL (_monodroid_freeifaddrs),
-	PINVOKE_SYMBOL (_monodroid_gc_wait_for_bridge_processing),
-	PINVOKE_SYMBOL (_monodroid_get_android_api_level),
-	PINVOKE_SYMBOL (_monodroid_get_dns_servers),
-	PINVOKE_SYMBOL (monodroid_get_dylib),
-	PINVOKE_SYMBOL (_monodroid_get_identity_hash_code),
-	PINVOKE_SYMBOL (_monodroid_getifaddrs),
-	PINVOKE_SYMBOL (monodroid_get_log_categories),
-	PINVOKE_SYMBOL (monodroid_get_namespaced_system_property),
-	PINVOKE_SYMBOL (_monodroid_get_network_interface_supports_multicast),
-	PINVOKE_SYMBOL (_monodroid_get_network_interface_up_state),
-	PINVOKE_SYMBOL (monodroid_get_system_property),
-	PINVOKE_SYMBOL (_monodroid_gref_get),
-	PINVOKE_SYMBOL (_monodroid_gref_log),
-	PINVOKE_SYMBOL (_monodroid_gref_log_delete),
-	PINVOKE_SYMBOL (_monodroid_gref_log_new),
-	PINVOKE_SYMBOL (monodroid_log),
-	PINVOKE_SYMBOL (_monodroid_lref_log_delete),
-	PINVOKE_SYMBOL (_monodroid_lref_log_new),
-	PINVOKE_SYMBOL (_monodroid_max_gref_get),
-	PINVOKE_SYMBOL (monodroid_store_package_name),
-	PINVOKE_SYMBOL (monodroid_strdup_printf),
-	PINVOKE_SYMBOL (monodroid_strfreev),
-	PINVOKE_SYMBOL (monodroid_strsplit),
-	PINVOKE_SYMBOL (_monodroid_timezone_get_default_id),
-	PINVOKE_SYMBOL (monodroid_timing_start),
-	PINVOKE_SYMBOL (monodroid_timing_stop),
-	PINVOKE_SYMBOL (monodroid_TypeManager_get_java_class_name),
-	PINVOKE_SYMBOL (_monodroid_weak_gref_delete),
-	PINVOKE_SYMBOL (_monodroid_weak_gref_get),
-	PINVOKE_SYMBOL (_monodroid_weak_gref_new),
-	PINVOKE_SYMBOL (path_combine),
-	PINVOKE_SYMBOL (recv_uninterrupted),
-	PINVOKE_SYMBOL (send_uninterrupted),
-	PINVOKE_SYMBOL (set_world_accessable),
-};
+#include "pinvoke-tables.include"
 
 MonodroidRuntime::pinvoke_library_map MonodroidRuntime::other_pinvoke_map (MonodroidRuntime::LIBRARY_MAP_INITIAL_BUCKET_COUNT);
 
+force_inline void*
+MonodroidRuntime::load_library_symbol (const char *library_name, const char *symbol_name, void **dso_handle) noexcept
+{
+	void *lib_handle = dso_handle == nullptr ? nullptr : *dso_handle;
+
+	if (lib_handle == nullptr) {
+		lib_handle = monodroid_dlopen (library_name, MONO_DL_LOCAL, nullptr, nullptr);
+		if (lib_handle == nullptr) {
+			log_warn (LOG_ASSEMBLY, "Shared library '%s' not loaded, p/invoke '%s' may fail", library_name, symbol_name);
+			return nullptr;
+		}
+
+		if (dso_handle != nullptr) {
+			void *expected_null = nullptr;
+			if (!__atomic_compare_exchange (dso_handle, &expected_null, &lib_handle, false /* weak */, __ATOMIC_ACQUIRE /* success_memorder */, __ATOMIC_RELAXED /* xxxfailure_memorder */)) {
+				log_debug (LOG_ASSEMBLY, "Library '%s' handle already cached by another thread", library_name);
+			}
+		}
+	}
+
+	void *entry_handle = monodroid_dlsym (lib_handle, symbol_name, nullptr, nullptr);
+	if (entry_handle == nullptr) {
+		log_warn (LOG_ASSEMBLY, "Symbol '%s' not found in shared library '%s', p/invoke may fail", symbol_name, library_name);
+		return nullptr;
+	}
+
+	return entry_handle;
+}
+
 // `pinvoke_map_write_lock` MUST be held when calling this method
 force_inline void*
-MonodroidRuntime::load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map)
+MonodroidRuntime::load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map) noexcept
 {
 	// Make sure some other thread hasn't just added the entry
 	auto iter = api_map->find (entrypoint_name);
@@ -597,15 +395,9 @@ MonodroidRuntime::load_library_entry (std::string const& library_name, std::stri
 		return iter->second;
 	}
 
-	void *lib_handle = monodroid_dlopen (library_name.c_str (), MONO_DL_LOCAL, nullptr, nullptr);
-	if (lib_handle == nullptr) {
-		log_warn (LOG_ASSEMBLY, "Shared library '%s' not loaded, p/invoke '%s' may fail", library_name.c_str (), entrypoint_name.c_str ());
-		return nullptr;
-	}
-
-	void *entry_handle = monodroid_dlsym (lib_handle, entrypoint_name.c_str (), nullptr, nullptr);
+	void *entry_handle = load_library_symbol (library_name.c_str (), entrypoint_name.c_str ());
 	if (entry_handle == nullptr) {
-		log_warn (LOG_ASSEMBLY, "Symbol '%s' not found in shared library '%s', p/invoke may fail", entrypoint_name.c_str (), library_name.c_str ());
+		// error already logged
 		return nullptr;
 	}
 
@@ -614,10 +406,30 @@ MonodroidRuntime::load_library_entry (std::string const& library_name, std::stri
 	return entry_handle;
 }
 
-force_inline void*
-MonodroidRuntime::fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map, bool need_lock)
+force_inline void
+MonodroidRuntime::load_library_entry (const char *library_name, const char *entrypoint_name, PinvokeEntry &entry, void **dso_handle) noexcept
 {
-	auto iter = api_map->find (entrypoint_name);
+	void *entry_handle = load_library_symbol (library_name, entrypoint_name, dso_handle);
+	void *expected_null = nullptr;
+
+	bool already_loaded = !__atomic_compare_exchange (
+		/* ptr */              &entry.func,
+		/* expected */         &expected_null,
+		/* desired */          &entry_handle,
+		/* weak */              false,
+		/* success_memorder */  __ATOMIC_ACQUIRE,
+		/* failure_memorder */  __ATOMIC_RELAXED
+	);
+
+	if (already_loaded) {
+		log_debug (LOG_ASSEMBLY, "Entry '%s' from library '%s' already loaded by another thread", entrypoint_name, library_name);
+	}
+}
+
+force_inline void*
+MonodroidRuntime::fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, hash_t entrypoint_name_hash, pinvoke_api_map_ptr api_map, bool need_lock) noexcept
+{
+	auto iter = api_map->find (entrypoint_name, entrypoint_name_hash);
 	if (iter != api_map->end () && iter->second != nullptr) {
 		return iter->second;
 	}
@@ -626,74 +438,124 @@ MonodroidRuntime::fetch_or_create_pinvoke_map_entry (std::string const& library_
 		return load_library_entry (library_name, entrypoint_name, api_map);
 	}
 
-	std::lock_guard<std::mutex> lock (pinvoke_map_write_lock);
+	StartupAwareLock lock (pinvoke_map_write_lock);
 	return load_library_entry (library_name, entrypoint_name, api_map);
+}
+
+force_inline PinvokeEntry*
+MonodroidRuntime::find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept
+{
+	while (entry_count > 0) {
+		const PinvokeEntry *ret = entries + (entry_count / 2);
+
+		std::strong_ordering result = hash <=> ret->hash;
+		if (result < 0) {
+			entry_count /= 2;
+		} else if (result > 0) {
+			entries = ret + 1;
+			entry_count -= entry_count / 2 + 1;
+		} else {
+			return const_cast<PinvokeEntry*>(ret);
+		}
+	}
+
+	return nullptr;
+}
+
+force_inline void*
+MonodroidRuntime::handle_other_pinvoke_request (const char *library_name, hash_t library_name_hash, const char *entrypoint_name, hash_t entrypoint_name_hash) noexcept
+{
+	std::string lib_name {library_name};
+	std::string entry_name {entrypoint_name};
+
+	auto iter = other_pinvoke_map.find (lib_name, library_name_hash);
+	void *handle = nullptr;
+	if (iter == other_pinvoke_map.end ()) {
+		StartupAwareLock lock (pinvoke_map_write_lock);
+
+		pinvoke_api_map_ptr lib_map;
+		// Make sure some other thread hasn't just added the map
+		iter = other_pinvoke_map.find (lib_name, library_name_hash);
+		if (iter == other_pinvoke_map.end () || iter->second == nullptr) {
+			lib_map = new pinvoke_api_map (1);
+			other_pinvoke_map[lib_name] = lib_map;
+		} else {
+			lib_map = iter->second;
+		}
+
+		handle = fetch_or_create_pinvoke_map_entry (lib_name, entry_name, entrypoint_name_hash, lib_map, /* need_lock */ false);
+	} else {
+		if (XA_UNLIKELY (iter->second == nullptr)) {
+			log_warn (LOG_ASSEMBLY, "Internal error: null entry in p/invoke map for key '%s'", library_name);
+			return nullptr; // fall back to `monodroid_dlopen`
+		}
+
+		handle = fetch_or_create_pinvoke_map_entry (lib_name, entry_name, entrypoint_name_hash, iter->second, /* need_lock */ true);
+	}
+
+	return handle;
 }
 
 void*
 MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name)
 {
-	if (library_name == nullptr || *library_name == '\0' || entrypoint_name == nullptr || *entrypoint_name == '\0') {
+	if (library_name == nullptr || entrypoint_name == nullptr) {
 		return nullptr;
 	}
 
-	bool is_internal;
-	switch (library_name[0]) {
-		case 'j':
-			is_internal = strcmp ("java-interop", library_name) == 0;
-			break;
+	hash_t library_name_hash = xxhash::hash (library_name, strlen (library_name));
+	hash_t entrypoint_hash = xxhash::hash (entrypoint_name, strlen (entrypoint_name));
 
-		case 'x':
-			is_internal = strcmp ("xa-internal-api", library_name) == 0;
-			break;
+	if (library_name_hash == java_interop_library_hash || library_name_hash == xa_internal_api_library_hash) {
+		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, internal_pinvokes, internal_pinvokes_count);
 
-		default:
-			is_internal = false;
-			break;
-	}
-
-	if (!is_internal) {
-		std::string lib_name (library_name);
-		std::string func_name (entrypoint_name);
-
-		auto iter = other_pinvoke_map.find (lib_name);
-		void *handle = nullptr;
-		if (iter == other_pinvoke_map.end ()) {
-			std::lock_guard<std::mutex> lock (pinvoke_map_write_lock);
-
-			pinvoke_api_map_ptr lib_map;
-			// Make sure some other thread hasn't just added the map
-			iter = other_pinvoke_map.find (lib_name);
-			if (iter == other_pinvoke_map.end () || iter->second == nullptr) {
-				lib_map = new pinvoke_api_map (1);
-				other_pinvoke_map[lib_name] = lib_map;
-			} else {
-				lib_map = iter->second;
+		if (XA_UNLIKELY (entry == nullptr)) {
+			log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '%s @ %s' (hash: 0x%zx) not found in compile-time map.", library_name, entrypoint_name, entrypoint_hash);
+			log_fatal (LOG_ASSEMBLY, "compile-time map contents:");
+			for (size_t i = 0; i < internal_pinvokes_count; i++) {
+				PinvokeEntry const& e = internal_pinvokes[i];
+				log_fatal (LOG_ASSEMBLY, "\t'%s'=%p (hash: 0x%zx)", e.name, e.func, e.hash);
 			}
-
-			handle = fetch_or_create_pinvoke_map_entry (lib_name, func_name, lib_map, /* need_lock */ false);
-		} else {
-			if (XA_UNLIKELY (iter->second == nullptr)) {
-				log_warn (LOG_ASSEMBLY, "Internal error: null entry in p/invoke map for key '%s'", library_name);
-				return nullptr; // fall back to `monodroid_dlopen`
-			}
-
-			handle = fetch_or_create_pinvoke_map_entry (lib_name, func_name, iter->second, /* need_lock */ true);
+			abort ();
 		}
 
-		return handle;
+		return entry->func;
 	}
 
-	auto iter = xa_pinvoke_map.find (entrypoint_name);
-	if (iter == xa_pinvoke_map.end ()) {
-		log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '%s @ %s' not found in compile-time map.", library_name, entrypoint_name);
-		log_fatal (LOG_ASSEMBLY, "compile-time map contents:");
-		for (iter = xa_pinvoke_map.begin (); iter != xa_pinvoke_map.end (); ++iter) {
-			log_fatal (LOG_ASSEMBLY, "\t'%s'=%p", iter->first.c_str (), iter->second);
+	// The order of statements below should be kept in the descending probability of occurrence order (as much as
+	// possible, of course). `libSystem.Native` is requested during early startup for each MAUI app, so its
+	// probability is higher, just as it's more likely that `libSystem.Security.Cryptography.Android` will be used
+	// in an app rather than `libSystem.IO.Compression.Native`
+	void **dotnet_dso_handle; // Set to a non-null value only for dotnet shared libraries
+	if (library_name_hash == system_native_library_hash) {
+		dotnet_dso_handle = &system_native_library_handle;
+	} else if (library_name_hash == system_security_cryptography_native_android_library_hash) {
+		dotnet_dso_handle = &system_security_cryptography_native_android_library_handle;
+	} else if (library_name_hash == system_io_compression_native_library_hash) {
+		dotnet_dso_handle = &system_io_compression_native_library_handle;
+	} else {
+		dotnet_dso_handle = nullptr;
+	}
+
+	if (dotnet_dso_handle != nullptr) {
+		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, dotnet_pinvokes, dotnet_pinvokes_count);
+		if (entry != nullptr) {
+			if (entry->func != nullptr) {
+				return entry->func;
+			}
+
+			load_library_entry (library_name, entrypoint_name, *entry, dotnet_dso_handle);
+			if (entry->func == nullptr) {
+				log_fatal (LOG_ASSEMBLY, "Failed to load symbol '%s' from shared library '%s'", entrypoint_name, library_name);
+				return nullptr; // let Mono deal with the fallout
+			}
+
+			return entry->func;
 		}
-		abort ();
-		return nullptr;
+
+		// It's possible we don't have an entry for some `dotnet` p/invoke, fall back to the slow path below
+		log_debug (LOG_ASSEMBLY, "Symbol '%s' in library '%s' not found in the generated tables, falling back to slow path", entrypoint_name, library_name);
 	}
 
-	return iter->second;
+	return handle_other_pinvoke_request (library_name, library_name_hash, entrypoint_name, entrypoint_hash);
 }

@@ -30,6 +30,8 @@
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\.ninja_log" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\android-*.config.cache" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)\bin\Build$(Configuration)\clang-tidy*.log" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)\src\monodroid\jni\*.include.generated" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)\src\monodroid\jni\*.include.diff" />
   </ItemGroup>
   <ItemGroup>
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)TestResult-*.xml" />

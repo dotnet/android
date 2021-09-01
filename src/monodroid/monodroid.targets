@@ -13,12 +13,26 @@
     <_EmbeddedBlobSource Include="machine.config.xml" />
     <_EmbeddedBlobDestination Include="jni\machine.config.include" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <PinvokeGeneratorSource>jni\generate-pinvoke-tables.cc</PinvokeGeneratorSource>
+    <PinvokeTablesFile>jni\pinvoke-tables.include</PinvokeTablesFile>
+  </PropertyGroup>
+
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
       DependsOnTargets="_GenerateIncludeFiles;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildHostRuntimes">
   </Target>
+  <Target Name="_TestPinvokeTables" Condition=" '$(HostOS)' == 'Linux' And '$(RunningOnCI)' == 'true' ">
+    <Exec
+        Command="..\..\build-tools\scripts\generate-pinvoke-tables.sh --test-only --ci"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
   <Target Name="_GenerateIncludeFiles"
       Inputs="@(_EmbeddedBlobSource);jni\config.h"
-      Outputs="@(_EmbeddedBlobDestination);$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h">
+      Outputs="@(_EmbeddedBlobDestination);$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h"
+      DependsOnTargets="_TestPinvokeTables">
     <Copy SourceFiles="jni/config.h" DestinationFiles="$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h" />
     <GenerateMonoDroidIncludes SourceFiles="@(_EmbeddedBlobSource)" DestinationFiles="@(_EmbeddedBlobDestination)" />
   </Target>
