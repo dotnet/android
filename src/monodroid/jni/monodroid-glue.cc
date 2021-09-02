@@ -1582,14 +1582,19 @@ MonodroidRuntime::set_profile_options ()
 		value.assign (prop_value);
 	}
 
-	// setenv(3) makes copies of its arguments
-	setenv ("DOTNET_DiagnosticPorts", value.get (), 1);
+	// NET6+ supports only the AOT Mono profiler, if the prefix is absent or different than 'aot:' we consider the
+	// property to contain value for the dotnet tracing profiler.
+	constexpr char AOT_PREFIX[] = "aot:";
+	if (!value.starts_with (AOT_PREFIX)) {
+		// setenv(3) makes copies of its arguments
+		setenv ("DOTNET_DiagnosticPorts", value.get (), 1);
+		return;
+	}
 
 	constexpr char OUTPUT_ARG[] = "output=";
 	constexpr size_t OUTPUT_ARG_LEN = sizeof(OUTPUT_ARG) - 1;
+	constexpr size_t start_index = sizeof(AOT_PREFIX); // one char past ':'
 
-	ssize_t colon_idx = value.index_of (':');
-	size_t start_index = colon_idx < 0 ? 0 : static_cast<size_t>(colon_idx + 1);
 	dynamic_local_string<SENSIBLE_PATH_MAX> output_path;
 	bool have_output_arg = false;
 	string_segment param;
@@ -1597,7 +1602,7 @@ MonodroidRuntime::set_profile_options ()
 	while (value.next_token (start_index, ',', param)) {
 		dynamic_local_string<SENSIBLE_PATH_MAX> temp;
 		temp.assign (param.start (), param.length ());
-		if (!param.starts_with (OUTPUT_ARG) || param.length () == OUTPUT_ARG_LEN) {
+		if (!param.starts_with (OUTPUT_ARG)) {
 			continue;
 		}
 
@@ -1607,29 +1612,15 @@ MonodroidRuntime::set_profile_options ()
 	}
 
 	if (!have_output_arg) {
-		constexpr char   AOT_EXT[] = "aotprofile";
-		constexpr char   AOT_PREFIX[] = "aot:";
-		constexpr size_t AOT_PREFIX_LENGTH = sizeof(AOT_PREFIX) - 1;
-		constexpr char   PROFILE_FILE_NAME_PREFIX[] = "profile.";
-
-		size_t length_adjust = colon_idx >= 1 ? 0 : 1;
+		constexpr char PROFILE_FILE_NAME_PREFIX[] = "profile.";
+		constexpr char AOT_EXT[] = "aotprofile";
 
 		output_path
 			.assign_c (androidSystem.get_override_dir (0))
 			.append (MONODROID_PATH_SEPARATOR)
-			.append (PROFILE_FILE_NAME_PREFIX);
+			.append (PROFILE_FILE_NAME_PREFIX)
+			.append (AOT_EXT);
 
-		if (value.starts_with (AOT_PREFIX, AOT_PREFIX_LENGTH - length_adjust)) {
-			output_path.append (AOT_EXT);
-		} else {
-			size_t len = colon_idx < 0 ? value.length () : static_cast<size_t>(colon_idx + 1);
-			output_path.append (value.get (), len);
-		}
-
-		if (colon_idx < 0)
-			value.append (":");
-		else
-			value.append (",");
 		value
 			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
