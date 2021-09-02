@@ -1,6 +1,7 @@
 #ifndef __CPP_UTIL_HH
 #define __CPP_UTIL_HH
 
+#include <array>
 #include <cstdarg>
 #include <cstdlib>
 #include <memory>
@@ -54,5 +55,26 @@ namespace xamarin::android
 
 	template <typename T>
 	using c_unique_ptr = std::unique_ptr<T, CDeleter<T>>;
+
+	template<size_t ...Length>
+	constexpr auto concat_const (const char (&...parts)[Length])
+	{
+		// `parts` being constant string arrays, Length for each of them includes the trailing NUL byte, thus the
+		// `sizeof... (Length)` part which subtracts the number of template parameters - the amount of NUL bytes so that
+		// we don't waste space.
+		constexpr size_t total_length = (... + Length) - sizeof... (Length);
+		std::array<char, total_length + 1> ret;
+		ret[total_length] = 0;
+
+		size_t i = 0;
+		for (char const* from : {parts...}) {
+			for (; *from != '\0'; i++) {
+				ret[i] = *from++;
+			}
+		}
+
+		return ret;
+	};
+
 }
 #endif // !def __CPP_UTIL_HH

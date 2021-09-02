@@ -10,6 +10,7 @@
 
 static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
+static constexpr uint32_t BUNDLED_ASSEMBLIES_INDEX_MAGIC = 0x41424158; // 'XABA', little-endian
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
@@ -106,6 +107,54 @@ struct XamarinAndroidBundledAssembly final
 	char    *name;
 };
 
+struct BlobHashEntry final
+{
+	union {
+		uint64_t hash64;
+		uint32_t hash32;
+	};
+
+	uint32_t index;
+};
+
+struct BlobBundledAssembly final
+{
+	uint32_t name_index;
+
+	uint32_t data_offset;
+	uint32_t data_size;
+
+	uint32_t debug_data_offset;
+	uint32_t debug_data_size;
+
+	uint32_t config_data_offset;
+	uint32_t config_data_size;
+};
+
+//
+// Blob format
+//
+// The separate hash indices for 32 and 64-bit hashes are required because they will be sorted differently.
+// The 'index' field of each of the hashes{32,64} entry points not only into the `assemblies` array in the
+// blob but also into the `uint8_t*` `blob_bundled_assemblies*` arrays.
+//
+// This way the `assemblies` array in the blob can remain read only, because we write the "mapped" assembly
+// pointer somewhere else. Otherwise we'd have to copy the `assemblies` array to a writable area of memory.
+//
+//   BundledAssemblyBlobHeader header;
+//   BlobHashEntry hashes32[header.entry_count];
+//   BlobHashEntry hashes64[header.entry_count];
+//   XamarinAndroidBundledAssembly assemblies[header.entry_count];
+//   char assembly_names[header.entry_count][header.name_width];
+//   [DATA]
+//
+struct BundledAssemblyBlobHeader final
+{
+	uint32_t magic;
+	uint32_t entry_count;
+	uint32_t name_width;
+};
+
 struct ApplicationConfig
 {
 	bool uses_mono_llvm;
@@ -116,11 +165,14 @@ struct ApplicationConfig
 	bool instant_run_enabled;
 	bool jni_add_native_method_registration_attribute_present;
 	bool have_runtime_config_blob;
+	bool have_assemblies_blob;
 	uint8_t bound_exception_type;
 	uint32_t package_naming_policy;
 	uint32_t environment_variable_count;
 	uint32_t system_property_count;
 	uint32_t number_of_assemblies_in_apk;
+	uint32_t number_of_common_blob_assemblies;
+	uint32_t number_of_arch_blob_assemblies;
 	uint32_t bundled_assembly_name_width;
 	const char *android_package_name;
 };
@@ -145,5 +197,7 @@ MONO_API const char* app_system_properties[];
 MONO_API const char* mono_aot_mode_name;
 
 MONO_API XamarinAndroidBundledAssembly bundled_assemblies[];
+MONO_API uint8_t* blob_bundled_assemblies_arch[];
+MONO_API uint8_t* blob_bundled_assemblies_common[];
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

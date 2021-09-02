@@ -55,6 +55,22 @@ namespace xamarin::android::internal {
 			size_t  size;
 		};
 
+		struct ZipEntryLoadState
+		{
+			int                   apk_fd;
+			const char * const    apk_name;
+			const char * const    prefix;
+			uint32_t              prefix_len;
+			size_t                buf_offset;
+			uint16_t              compression_method;
+			uint32_t              local_header_offset;
+			uint32_t              data_offset;
+			uint32_t              file_size;
+#if defined (NET6)
+			bool                  runtime_config_blob_found;
+#endif
+		};
+
 	private:
 		static constexpr char  ZIP_CENTRAL_MAGIC[] = "PK\1\2";
 		static constexpr char  ZIP_LOCAL_MAGIC[]   = "PK\3\4";
@@ -63,6 +79,22 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
 		static constexpr char assemblies_prefix[] = "assemblies/";
+
+		static constexpr char bundled_assemblies_blob_prefix[] = "assemblies";
+		static constexpr char bundled_assemblies_blob_ext[] = ".blob";
+#if __arm__
+		static constexpr char bundled_assemblies_blob_arch[] = "armeabi-v7a";
+#elif __aarch64__
+		static constexpr char bundled_assemblies_blob_arch[] = "arm64-v8a";
+#elif __x86_64__
+		static constexpr char bundled_assemblies_blob_arch[] = "x86_64";
+#elif __i386__
+		static constexpr char bundled_assemblies_blob_arch[] = "x86";
+#endif
+		static constexpr auto bundled_assemblies_common_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, bundled_assemblies_blob_ext);
+		static constexpr auto bundled_assemblies_arch_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, "_", bundled_assemblies_blob_arch, bundled_assemblies_blob_ext);
+
+
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";
 #endif
@@ -161,8 +193,11 @@ namespace xamarin::android::internal {
 		static void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size);
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
+		void zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
+		void zip_load_blob_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
+		bool zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
-		bool zip_adjust_data_offset (int fd, size_t local_header_offset, uint32_t &data_start_offset);
+		bool zip_adjust_data_offset (int fd, ZipEntryLoadState &state);
 
 		template<size_t BufSize>
 		bool zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
@@ -193,7 +228,7 @@ namespace xamarin::android::internal {
 		template<ByteArrayContainer T>
 		bool zip_read_field (T const& buf, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters) const noexcept;
 
-		bool zip_read_entry_info (std::vector<uint8_t> const& buf, size_t& buf_offset, uint16_t& compression_method, uint32_t& local_header_offset, uint32_t& file_size, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name);
+		bool zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
 
 		const char* get_assemblies_prefix () const
 		{
@@ -229,6 +264,8 @@ namespace xamarin::android::internal {
 		bool                   register_debug_symbols;
 		bool                   have_and_want_debug_symbols;
 		size_t                 bundled_assembly_index = 0;
+		size_t                 bundled_assembly_blob_common_count = 0;
+		size_t                 bundled_assembly_blob_arch_count = 0;
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
 		TypeMappingInfo       *managed_to_java_maps;

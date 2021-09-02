@@ -24,7 +24,10 @@ namespace Xamarin.Android.Tasks
 		public bool InstantRunEnabled { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 		public bool HaveRuntimeConfigBlob { get; set; }
+		public bool HaveAssembliesBlob { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
+		public int NumberOfCommonBlobAssemblies { get; set; }
+		public int NumberOfArchBlobAssemblies { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
@@ -52,7 +55,7 @@ namespace Xamarin.Android.Tasks
 			WriteDataSection (output, "application_config");
 			WriteSymbol (output, "application_config", TargetProvider.GetStructureAlignment (true), packed: false, isGlobal: true, alwaysWriteSize: true, structureWriter: () => {
 				// Order of fields and their type must correspond *exactly* to that in
-				// src/monodroid/jni/xamarin-app.h ApplicationConfig structure
+				// src/monodroid/jni/xamarin-app.hh ApplicationConfig structure
 				WriteCommentLine (output, "uses_mono_llvm");
 				uint size = WriteData (output, UsesMonoLLVM);
 
@@ -77,6 +80,9 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "have_runtime_config_blob");
 				size += WriteData (output, HaveRuntimeConfigBlob);
 
+				WriteCommentLine (output, "have_assemblies_blob");
+				size += WriteData (output, HaveAssembliesBlob);
+
 				WriteCommentLine (output, "bound_exception_type");
 				size += WriteData (output, (byte)BoundExceptionType);
 
@@ -91,6 +97,12 @@ namespace Xamarin.Android.Tasks
 
 				WriteCommentLine (output, "number_of_assemblies_in_apk");
 				size += WriteData (output, NumberOfAssembliesInApk);
+
+				WriteCommentLine (output, "number_of_common_blob_assemblies");
+				size += WriteData (output, NumberOfCommonBlobAssemblies);
+
+				WriteCommentLine (output, "number_of_arch_blob_assemblies");
+				size += WriteData (output, NumberOfArchBlobAssemblies);
 
 				WriteCommentLine (output, "bundled_assembly_name_width");
 				size += WriteData (output, BundledAssemblyNameWidth);
@@ -110,6 +122,36 @@ namespace Xamarin.Android.Tasks
 			WriteNameValueStringArray (output, "app_system_properties", systemProperties);
 
 			WriteBundledAssemblies (output);
+			WriteBlobAssemblies (output);
+		}
+
+		void WriteBlobAssemblies (StreamWriter output)
+		{
+			WriteBlobs ("Blob assemblies data, architecture specific", "blob_bundled_assemblies_arch", NumberOfArchBlobAssemblies);
+			WriteBlobs ("Blob assemblies data, archiecture agnostic", "blob_bundled_assemblies_common", NumberOfCommonBlobAssemblies);
+
+			void WriteBlobs (string comment, string label, int count)
+			{
+				WriteCommentLine (output, comment);
+				WriteDataSection (output, label);
+				WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
+
+				uint size = 0;
+				for (int i = 0; i < count; i++) {
+					size += WriteStructure (output, packed: false, structureWriter: () => WriteBlobAssembly (output));
+				}
+				WriteStructureSize (output, label, size);
+			}
+		}
+
+		uint WriteBlobAssembly (StreamWriter output)
+		{
+			WriteCommentLine (output, "mapped assembly pointer");
+			uint size = WritePointer (output);
+
+			output.WriteLine ();
+
+			return size;
 		}
 
 		void WriteBundledAssemblies (StreamWriter output)
@@ -138,6 +180,9 @@ namespace Xamarin.Android.Tasks
 
 		uint WriteBundledAssembly (StreamWriter output, string nameLabel)
 		{
+			// Order of fields and their type must correspond *exactly* to that in
+			// src/monodroid/jni/xamarin-app.hh XamarinAndroidBundledAssembly structure
+
 			WriteCommentLine (output, "apk_fd");
 			uint size = WriteData (output, (int)-1);
 

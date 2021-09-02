@@ -30,6 +30,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] SatelliteAssemblies { get; set; }
 
+		public bool UseAssembliesBlob { get; set; }
+
 		[Required]
 		public string OutputDirectory { get; set; }
 
@@ -269,15 +271,46 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
+			UseAssembliesBlob = true; // TODO: remove after testing!
 			int assemblyNameWidth = 0;
-			int assemblyCount = ResolvedAssemblies.Length;
 			Encoding assemblyNameEncoding = Encoding.UTF8;
 
 			Action<ITaskItem> updateNameWidth = (ITaskItem assembly) => {
+				if (UseAssembliesBlob) {
+					return;
+				}
+
 				string assemblyName = Path.GetFileName (assembly.ItemSpec);
 				int nameBytes = assemblyNameEncoding.GetBytes (assemblyName).Length;
 				if (nameBytes > assemblyNameWidth) {
 					assemblyNameWidth = nameBytes;
+				}
+			};
+
+			int assemblyCount = 0;
+			int blobCommonAssemblyCount = 0;
+			int blobArchAssemblyCount = 0;
+			HashSet<string> archAssemblyNames = null;
+
+			Action<ITaskItem> updateBlobCounts = (ITaskItem assembly) => {
+				if (!UseAssembliesBlob) {
+					assemblyCount++;
+					return;
+				}
+
+				string abi = assembly.GetMetadata ("Abi");
+				if (String.IsNullOrEmpty (abi)) {
+					blobCommonAssemblyCount++;
+				} else {
+					if (archAssemblyNames == null) {
+						archAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+					}
+
+					string assemblyName = Path.GetFileName (assembly.ItemSpec);
+					if (!archAssemblyNames.Contains (assemblyName)) {
+						blobArchAssemblyCount++;
+						archAssemblyNames.Add (assemblyName);
+					}
 				}
 			};
 
@@ -286,24 +319,32 @@ namespace Xamarin.Android.Tasks
 
 				foreach (ITaskItem assembly in SatelliteAssemblies) {
 					updateNameWidth (assembly);
+					updateBlobCounts (assembly);
 				}
 			}
 
 			foreach (var assembly in ResolvedAssemblies) {
 				updateNameWidth (assembly);
+				updateBlobCounts (assembly);
 			}
 
-			int abiNameLength = 0;
-			foreach (string abi in SupportedAbis) {
-				if (abi.Length <= abiNameLength) {
-					continue;
+			if (!UseAssembliesBlob) {
+				int abiNameLength = 0;
+				foreach (string abi in SupportedAbis) {
+					if (abi.Length <= abiNameLength) {
+						continue;
+					}
+					abiNameLength = abi.Length;
 				}
-				abiNameLength = abi.Length;
+				assemblyNameWidth += abiNameLength + 2; // room for '/' and the terminating NUL
 			}
-			assemblyNameWidth += abiNameLength + 1; // room for '/'
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
+			if (appConfState != null) {
+				appConfState.UseAssembliesBlob = UseAssembliesBlob;
+			};
+
 			foreach (string abi in SupportedAbis) {
 				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
@@ -323,7 +364,10 @@ namespace Xamarin.Android.Tasks
 					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
 					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
-					BundledAssemblyNameWidth = assemblyNameWidth + 1,
+					BundledAssemblyNameWidth = assemblyNameWidth,
+					HaveAssembliesBlob = UseAssembliesBlob,
+					NumberOfCommonBlobAssemblies = blobCommonAssemblyCount,
+					NumberOfArchBlobAssemblies = blobArchAssemblyCount,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

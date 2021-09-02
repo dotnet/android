@@ -180,10 +180,12 @@ namespace Xamarin.Android.Tasks
 				string destination = Path.Combine (assembly.GetMetadata ("DestinationSubDirectory"), abi);
 				assembly.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
 				assembly.SetMetadata ("DestinationSubPath", Path.Combine (destination, fileName));
+				assembly.SetMetadata ("Abi", abi);
 				if (symbol != null) {
 					destination = Path.Combine (symbol.GetMetadata ("DestinationSubDirectory"), abi);
 					symbol.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
 					symbol.SetMetadata ("DestinationSubPath", Path.Combine (destination, Path.GetFileName (symbol.ItemSpec)));
+					symbol.SetMetadata ("Abi", abi);
 				}
 			} else {
 				Log.LogDebugMessage ($"Android ABI not found for: {assembly.ItemSpec}");

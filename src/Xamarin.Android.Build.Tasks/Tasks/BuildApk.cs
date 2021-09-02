@@ -324,82 +324,96 @@ namespace Xamarin.Android.Tasks
 
 		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo)
 		{
+			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
+			bool useAssembliesBlob = appConfState != null ? appConfState.UseAssembliesBlob : false;
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
 			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
+			AssemblyBlobGenerator blobGenerator;
 
-			int count = 0;
-			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
-				if (bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
-					Log.LogDebugMessage ($"Skipping {assembly.ItemSpec} due to 'AndroidSkipAddToPackage' == 'true' ");
-					continue;
-				}
-				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
-					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
-				}
-
-				sourcePath = CompressAssembly (assembly);
-
-				// Add assembly
-				var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: false);
-				AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
-
-				// Try to add config if exists
-				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-				AddAssemblyConfigEntry (apk, assemblyPath, config);
-
-				// Try to add symbols if Debug
-				if (debug) {
-					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
-
-					if (File.Exists (symbols))
-						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
-
-					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
-
-					if (File.Exists (symbols))
-						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
-				}
-				count++;
-				if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
-					apk.Flush();
-					count = 0;
-				}
+			if (useAssembliesBlob) {
+				blobGenerator = new AssemblyBlobGenerator (AssembliesPath, Log);
+			} else {
+				blobGenerator = null;
 			}
 
-			count = 0;
+			int count = 0;
+			BlobAssemblyInfo blobAssembly = null;
+
+			// Add user assemblies
+			AddAssembliesFromCollection (ResolvedUserAssemblies);
+
 			// Add framework assemblies
-			foreach (ITaskItem assembly in ResolvedFrameworkAssemblies) {
-				if (bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
-					Log.LogDebugMessage ($"Skipping {assembly.ItemSpec} due to 'AndroidSkipAddToPackage' == 'true' ");
-					continue;
-				}
+			count = 0;
+			AddAssembliesFromCollection (ResolvedFrameworkAssemblies);
 
-				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
-					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
-				}
+			if (useAssembliesBlob) {
+				blobGenerator.Generate (Path.GetDirectoryName (ApkOutputPath));
+			}
 
-				sourcePath = CompressAssembly (assembly);
-				var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: true);
-				AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
-				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-				AddAssemblyConfigEntry (apk, assemblyPath, config);
-				// Try to add symbols if Debug
-				if (debug) {
-					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
+			void AddAssembliesFromCollection (ITaskItem[] assemblies)
+			{
+				foreach (ITaskItem assembly in assemblies) {
+					if (bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
+						Log.LogDebugMessage ($"Skipping {assembly.ItemSpec} due to 'AndroidSkipAddToPackage' == 'true' ");
+						continue;
+					}
 
-					if (File.Exists (symbols))
-						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+					if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
+						Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
+					}
 
-					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
+					sourcePath = CompressAssembly (assembly);
 
-					if (File.Exists (symbols))
-						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
-				}
-				count++;
-				if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
-					apk.Flush();
-					count = 0;
+					// Add assembly
+					var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: false);
+					if (useAssembliesBlob) {
+						blobAssembly = new BlobAssemblyInfo (sourcePath, assemblyPath, assembly.GetMetadata ("Abi"));
+					} else {
+						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
+					}
+
+					// Try to add config if exists
+					var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
+					if (useAssembliesBlob) {
+						blobAssembly.SetConfigPath (config);
+					} else {
+						AddAssemblyConfigEntry (apk, assemblyPath, config);
+					}
+
+					// Try to add symbols if Debug
+					if (debug) {
+						var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
+						string symbolsPath = null;
+
+						if (File.Exists (symbols)) {
+							symbolsPath = symbols;
+						} else {
+							symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
+
+							if (File.Exists (symbols)) {
+								symbolsPath = symbols;
+							}
+						}
+
+						if (!String.IsNullOrEmpty (symbolsPath)) {
+							if (useAssembliesBlob) {
+								blobAssembly.SetDebugInfoPath (symbolsPath);
+							} else {
+								AddFileToArchiveIfNewer (apk, symbolsPath, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+							}
+						}
+					}
+
+					if (useAssembliesBlob) {
+						blobGenerator.Add (blobAssembly);
+					} else {
+						count++;
+						if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
+							apk.Flush();
+							count = 0;
+						}
+					}
 				}
 			}
 

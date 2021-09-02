@@ -47,8 +47,9 @@ ApplicationConfig application_config = {
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,
-	.number_of_assemblies_in_apk = 0,
-	.bundled_assembly_name_width = 0,
+	.number_of_assemblies_in_apk = 2,
+	.number_of_common_blob_assemblies = 2,
+	.number_of_arch_blob_assemblies = 2,
 	.android_package_name = "com.xamarin.test",
 };
 
@@ -79,4 +80,14 @@ XamarinAndroidBundledAssembly bundled_assemblies[] = {
 		.name_length = 0,
 		.name = second_assembly_name,
 	},
+};
+
+uint8_t* blob_bundled_assemblies_arch[] = {
+	nullptr,
+	nullptr,
+};
+
+uint8_t* blob_bundled_assemblies_common[] = {
+	nullptr,
+	nullptr,
 };
