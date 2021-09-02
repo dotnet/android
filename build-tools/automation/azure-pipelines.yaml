@@ -1289,6 +1289,7 @@ stages:
         !*Darwin*
       propsArtifactName: nuget-unsigned
       signType: $(MicroBuildSignType)
+      arcadePackageVersion: 6.0.0-beta.21452.2
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
  # Check - "Xamarin.Android (.NET 6 Prepare Release Push NuGets)"
