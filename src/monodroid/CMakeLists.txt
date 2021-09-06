@@ -369,7 +369,7 @@ if(WIN32 OR MINGW)
   message(STATUS "Win32 or MinGW")
   add_compile_options(-fomit-frame-pointer)
   list(APPEND LOCAL_COMMON_LINKER_ARGS -static -pthread -dynamic)
-  list(APPEND LINK_LIBS -lmman -lmincore -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm)
+  list(APPEND LINK_LIBS -lmman -lkernel32 -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm)
 endif()
 
 if(UNIX)
