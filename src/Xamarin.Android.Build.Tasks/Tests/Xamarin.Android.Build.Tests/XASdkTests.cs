@@ -200,12 +200,25 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib")] string template)
 		{
+			var parameters = new List<string> {
+				// NOTE: still remaining warnings left to fix, see:
+				// https://github.com/xamarin/xamarin-android/issues/5652
+				// "SuppressTrimAnalysisWarnings=false",
+				// "TrimmerSingleWarn=false",
+			};
 			var dotnet = CreateDotNetBuilder ();
 			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
 			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			// Debug build
+			Assert.IsTrue (dotnet.Build (parameters: parameters.ToArray ()), "`dotnet build` should succeed");
+			dotnet.AssertHasNoWarnings ();
+
+			// Release build
+			parameters.Add ("Configuration=Release");
+			Assert.IsTrue (dotnet.Build (parameters: parameters.ToArray ()), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 		}
 

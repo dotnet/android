@@ -92,7 +92,7 @@ namespace Java.Interop {
 
 			if (resultType.IsAbstract) {
 				// TODO: keep in sync with TypeManager.CreateInstance() algorithm
-				var invokerType = GetHelperType (resultType, "Invoker");
+				var invokerType = GetInvokerType (resultType);
 				if (invokerType == null)
 					throw new ArgumentException ("Unable to get Invoker for abstract type '" + resultType.FullName + "'.", "TResult");
 				resultType = invokerType;
@@ -122,10 +122,12 @@ namespace Java.Interop {
 							instance.GetType ().FullName, resultType.FullName));
 		}
 
-		// typeof(Foo) -> FooSuffix
-		// typeof(Foo<>) -> FooSuffix`1
-		internal static Type? GetHelperType (Type type, string suffix)
+		// typeof(Foo) -> FooInvoker
+		// typeof(Foo<>) -> FooInvoker`1
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "*Invoker types are preserved by the MarkJavaObjects linker step.")]
+		internal static Type? GetInvokerType (Type type)
 		{
+			const string suffix = "Invoker";
 			Type[] arguments = type.GetGenericArguments ();
 			if (arguments.Length == 0)
 				return type.Assembly.GetType (type + suffix);

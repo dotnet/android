@@ -292,7 +292,7 @@ namespace Java.Interop {
 				type = targetType;
 
 			if (type.IsInterface || type.IsAbstract) {
-				var invokerType = JavaObjectExtensions.GetHelperType (type, "Invoker");
+				var invokerType = JavaObjectExtensions.GetInvokerType (type);
 				if (invokerType == null)
 					throw new NotSupportedException ("Unable to find Invoker for type '" + type.FullName + "'. Was it linked away?",
 							CreateJavaLocationException ());
