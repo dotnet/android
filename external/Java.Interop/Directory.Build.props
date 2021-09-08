@@ -4,8 +4,9 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <XlfLanguages>cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant</XlfLanguages>
     <UpdateXlfOnBuild Condition="'$(RunningOnCI)' != 'true'">true</UpdateXlfOnBuild>
@@ -18,6 +19,10 @@
   <Import
       Project="$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory))).override.props"
       Condition=" Exists('$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory))).override.props') "
+  />
+  <Import
+      Project="$(MSBuildThisFileDirectory)bin\Build$(Configuration)\Version.props"
+      Condition=" Exists('$(MSBuildThisFileDirectory)bin\Build$(Configuration)\Version.props') "
   />
   <Import
       Project="$(_OutputPath)JdkInfo.props"
@@ -79,7 +84,7 @@
     <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">$(DotnetToolPath) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
     <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(Runtime) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
   </PropertyGroup>
-  
+
   <!-- Add Roslyn analyzers NuGet to all projects -->
   <ItemGroup Condition=" '$(DisableRoslynAnalyzers)' != 'True' ">
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">

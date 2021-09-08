@@ -6,7 +6,10 @@
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.JdkInfo" />
   <Target Name="Prepare">
     <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\..\build-tools\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.csproj" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\..\build-tools\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.csproj"
+        Targets="Build;GenerateVersionInfo"
+        RunEachTargetSeparately="true"
+    />
     <PropertyGroup>
       <_MaxJdk>$(MaxJdkVersion)</_MaxJdk>
       <_MaxJdk Condition=" '$(_MaxJdk)' == '' ">$(JI_MAX_JDK)</_MaxJdk>

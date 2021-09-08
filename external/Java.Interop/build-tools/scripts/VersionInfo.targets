@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll"
+      TaskName="Java.Interop.BootstrapTasks.GenerateVersionFile" />
+  <PropertyGroup>
+    <GitDefaultBranch>main</GitDefaultBranch>
+    <GitThisAssembly>false</GitThisAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="2.1.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="GenerateVersionInfo"
+      AfterTargets="Build"
+      DependsOnTargets="GitVersion"
+      Condition="!Exists ('$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Version.props')">
+    <ItemGroup>
+      <Replacements Include="@VERSION@" Replacement="$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)"/>
+      <Replacements Include="@COMMIT@" Replacement="$(GitCommit)"/>
+      <Replacements Include="@BRANCH@" Replacement="$(GitBranch)"/>
+    </ItemGroup>
+    <GenerateVersionFile
+        InputFile="$(MSBuildThisFileDirectory)Version.props.in"
+        OutputFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Version.props"
+        Replacements="@(Replacements)"
+    />
+  </Target>
+</Project>

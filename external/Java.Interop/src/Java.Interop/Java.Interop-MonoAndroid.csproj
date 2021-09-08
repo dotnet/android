@@ -16,6 +16,7 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <LangVersion>8.0</LangVersion>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
   <Import Project="..\..\Directory.Build.props" />
   <PropertyGroup>
@@ -85,6 +86,7 @@
   <Import Project="Directory.Build.targets" />
   <PropertyGroup>
     <BuildDependsOn>
+      BuildVersionInfo_g_cs;
       BuildJniEnvironment_g_cs;
       BuildInteropJar;
       $(BuildDependsOn)
