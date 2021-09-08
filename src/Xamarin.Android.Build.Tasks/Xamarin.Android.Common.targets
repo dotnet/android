@@ -2237,7 +2237,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_JarSignerSuffix Condition=" '$(AndroidPackageFormat)' == 'aab' ">-Signed</_JarSignerSuffix>
 	</PropertyGroup>
 	<AndroidSignPackage Condition=" '$(AndroidUseApkSigner)' != 'true' "
-		UnsignedApk="%(ApkAbiFilesIntermediate.FullPath)"
+		UnsignedApk="%(ApkAbiFilesIntermediate.Identity)"
 		SignedApkDirectory="$(OutDir)"
 		FileSuffix="$(_JarSignerSuffix)"
 		KeyStore="$(_ApkKeyStore)"
@@ -2257,7 +2257,7 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 	<Delete Files="%(ApkAbiFilesSigned.FullPath)" Condition=" '$(AndroidUseApkSigner)' == 'true' "/>
 	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' == 'true' "
-		Source="%(ApkAbiFilesIntermediate.FullPath)"
+		Source="%(ApkAbiFilesIntermediate.Identity)"
 		DestinationDirectory="$(OutDir)"
 		ToolPath="$(ZipAlignToolPath)"
 		ToolExe="$(ZipalignToolExe)"
@@ -2268,7 +2268,7 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 	<AndroidApkSigner Condition=" '$(AndroidUseApkSigner)' == 'true' "
 		ApkSignerJar="$(ApkSignerJar)"
-		ApkToSign="%(ApkAbiFilesAligned.FullPath)"
+		ApkToSign="%(ApkAbiFilesAligned.Identity)"
 		KeyStore="$(_ApkKeyStore)"
 		KeyAlias="$(_ApkKeyAlias)"
 		KeyPass="$(_ApkKeyPass)"
@@ -2292,7 +2292,7 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'"  Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "/>
 	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "
-		Source="%(ApkAbiFilesUnaligned.FullPath)"
+		Source="%(ApkAbiFilesUnaligned.Identity)"
 		DestinationDirectory="$(OutDir)"
 		ToolPath="$(ZipAlignToolPath)"
 		ToolExe="$(ZipalignToolExe)"

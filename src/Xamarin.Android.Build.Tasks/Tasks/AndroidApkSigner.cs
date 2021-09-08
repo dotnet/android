@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (AdditionalArguments))
 				cmd.AppendSwitch (AdditionalArguments);
 
-			cmd.AppendSwitchIfNotNull (" ", Path.GetFullPath (ApkToSign));
+			cmd.AppendSwitchIfNotNull (" ", ApkToSign);
 
 			return cmd.ToString ();
 		}

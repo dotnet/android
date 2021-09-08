@@ -23,6 +23,27 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest : BaseTest
 	{
+		[Test]
+		[Category ("SmokeTests")]
+		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms)
+		{
+			var testName = "テスト";
+
+			var rootPath = Path.Combine (Root, "temp", TestName);
+			var proj = forms ?
+				new XamarinFormsAndroidApplicationProject () :
+				new XamarinAndroidApplicationProject ();
+			proj.ProjectName = testName;
+			proj.IsRelease = true;
+			if (forms) {
+				proj.PackageReferences.Clear ();
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
+			}
+			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			}
+		}
+
 		public static string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
 		{
 			return Builder.UseDotNet && isRelease ?

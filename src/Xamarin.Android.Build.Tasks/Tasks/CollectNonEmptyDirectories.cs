@@ -107,6 +107,7 @@ namespace Xamarin.Android.Tasks {
 						}
 						var fileTaskItem = new TaskItem (file, new Dictionary<string, string> () {
 							{ "ResourceDirectory", directory.ItemSpec },
+							{ ResolveLibraryProjectImports.ResourceDirectoryArchive, directory.GetMetadata (ResolveLibraryProjectImports.ResourceDirectoryArchive) },
 							{ "StampFile", generateArchive ? stampFile : file },
 							{ "FilesCache", filesCache},
 							{ "Hash", stampFile },
