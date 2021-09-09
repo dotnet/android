@@ -194,7 +194,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			// like "$this$toByteString", we change it to "obj" to be a bit nicer.
 			var param = method.GetParameters ();
 
-			if (param.Length > 0 && param [0].Name.StartsWith ("$this$")) {
+			if (param.Length > 0 && param [0].Name.StartsWith ("$this$", StringComparison.Ordinal)) {
 				Log.Debug ($"Kotlin: Renaming extension parameter {method.DeclaringType?.ThisClass.Name.Value} - {method.Name} - {param [0].Name} -> obj");
 				param [0].Name = "obj";
 			}
@@ -288,7 +288,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		static MethodInfo FindJavaPropertyGetter (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
 		{
-			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"get{property.Name}", true) == 0 &&
+			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"get{property.Name}", StringComparison.OrdinalIgnoreCase) == 0 &&
 									      method.GetParameters ().Length == 0 &&
 									      TypesMatch (method.ReturnType, property.ReturnType, kotlinClass));
 
@@ -297,7 +297,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		static MethodInfo FindJavaPropertySetter (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
 		{
-			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"set{property.Name}", true) == 0 &&
+			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"set{property.Name}", StringComparison.OrdinalIgnoreCase) == 0 &&
 									      property.ReturnType != null &&
 									      method.GetParameters ().Length == 1 &&
 									      method.ReturnType.BinaryName == "V" &&

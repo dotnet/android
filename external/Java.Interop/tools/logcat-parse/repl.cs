@@ -177,7 +177,7 @@ namespace Mono {
 							ReadEvalPrintLoopWith (p => {
 								var line = r.ReadLine ();
 								if (first){
-									if (line.StartsWith ("#!"))
+									if (line.StartsWith ("#!", StringComparison.Ordinal))
 										line = r.ReadLine ();
 									first = false;
 								}
@@ -209,9 +209,9 @@ namespace Mono {
 			foreach (string file in System.IO.Directory.GetFiles (dir)){
 				string l = file.ToLower ();
 
-				if (l.EndsWith (".cs"))
+				if (l.EndsWith (".cs", StringComparison.OrdinalIgnoreCase))
 					sources.Add (file);
-				else if (l.EndsWith (".dll"))
+				else if (l.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
 					libraries.Add (file);
 			}
 

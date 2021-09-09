@@ -16,7 +16,7 @@ namespace Xamarin.SourceWriter
 
 		public virtual void Write (CodeWriter writer)
 		{
-			if (Value.StartsWith ("#pragma"))
+			if (Value.StartsWith ("#pragma", StringComparison.Ordinal))
 				writer.WriteLineNoIndent (Value);
 			else
 				writer.WriteLine (Value);

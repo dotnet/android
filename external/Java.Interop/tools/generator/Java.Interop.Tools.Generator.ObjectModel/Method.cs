@@ -67,7 +67,7 @@ namespace MonoDroid.Generation
 
 		public bool CanAdd {
 			get {
-				return Name.Length > 3 && Name.StartsWith ("Add") && Name.EndsWith ("Listener") &&  IsVoid &&
+				return Name.Length > 3 && Name.StartsWith ("Add", StringComparison.Ordinal) && Name.EndsWith ("Listener", StringComparison.Ordinal) &&  IsVoid &&
 					(Parameters.Count == 1 || (Parameters.Count == 2 && Parameters [1].Type == "Android.OS.Handler")) &&
 					!(Parameters [0].IsArray);
 			}
@@ -77,15 +77,15 @@ namespace MonoDroid.Generation
 			get {
 				return Parameters.Count == 0 &&
 					!IsVoid && !RetVal.IsArray &&
-					((Name.Length > 4 && Name.StartsWith ("Get") && char.IsUpper (Name [3])) ||
-					((Name.Length > 4 && Name.StartsWith ("Has") && char.IsUpper (Name [3]) && RetVal.JavaName == "boolean") ||
-					 (Name.Length > 3 && Name.StartsWith ("Is") && char.IsUpper (Name [2]) && RetVal.JavaName == "boolean")));
+					((Name.Length > 4 && Name.StartsWith ("Get", StringComparison.Ordinal) && char.IsUpper (Name [3])) ||
+					((Name.Length > 4 && Name.StartsWith ("Has", StringComparison.Ordinal) && char.IsUpper (Name [3]) && RetVal.JavaName == "boolean") ||
+					 (Name.Length > 3 && Name.StartsWith ("Is", StringComparison.Ordinal) && char.IsUpper (Name [2]) && RetVal.JavaName == "boolean")));
 			}
 		}
 
 		public bool CanSet {
 			get {
-				return Name.Length > 3 && Name.StartsWith ("Set") && Parameters.Count == 1 && IsVoid &&
+				return Name.Length > 3 && Name.StartsWith ("Set", StringComparison.Ordinal) && Parameters.Count == 1 && IsVoid &&
 					!(Parameters [0].IsArray);
 			}
 		}
@@ -96,7 +96,7 @@ namespace MonoDroid.Generation
 			if (event_name == null) {
 				var trimSize = Name.EndsWith ("Listener", StringComparison.Ordinal) ? 8 : 0;
 				event_name = Name.Substring (0, Name.Length - trimSize).Substring (3);
-				if (event_name.StartsWith ("On"))
+				if (event_name.StartsWith ("On", StringComparison.Ordinal))
 					event_name = event_name.Substring (2);
 				if (checkNameDuplicate (event_name))
 					event_name += "Event";
@@ -149,7 +149,7 @@ namespace MonoDroid.Generation
 
 		public bool IsPropertyAccessor => CanGet || CanSet;
 
-		public bool IsReturnCharSequence => RetVal.FullName.StartsWith ("Java.Lang.ICharSequence");
+		public bool IsReturnCharSequence => RetVal.FullName.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal);
 
 		public bool IsSimpleEventHandler => RetVal.IsVoid && (Parameters.Count == 0 || (Parameters.HasSender && Parameters.Count == 1));
 
@@ -183,7 +183,7 @@ namespace MonoDroid.Generation
 				if (pn != null)
 					return pn;
 				var nameBase = Name;
-				if (CanAdd || CanSet || Name.StartsWith ("Get"))
+				if (CanAdd || CanSet || Name.StartsWith ("Get", StringComparison.Ordinal))
 					nameBase = Name.Substring (3);
 				if (IsAbstract && (CanGet && RetVal.IsGeneric || CanSet && Parameters [0].IsGeneric) &&
 				    DeclaringType is ClassGen) // Interface methods cannot be RawXxx (because they are not generic so far...)

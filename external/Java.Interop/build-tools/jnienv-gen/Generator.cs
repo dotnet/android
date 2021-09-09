@@ -773,7 +773,7 @@ namespace Xamarin.Java.Interop
 		{
 			if (managed != "IntPtr")
 				return new string [0];
-			var variableName = variable.StartsWith ("@")
+			var variableName = variable.StartsWith ("@", StringComparison.Ordinal)
 				? variable.Substring (1)
 				: variable;
 			return new[] {
@@ -851,7 +851,7 @@ namespace Xamarin.Java.Interop
 
 		public override string[] VerifyParameter (HandleStyle style, string variable)
 		{
-			var variableName = variable.StartsWith ("@")
+			var variableName = variable.StartsWith ("@", StringComparison.Ordinal)
 				? variable.Substring (1)
 				: variable;
 			return new[] {
@@ -940,7 +940,7 @@ namespace Xamarin.Java.Interop
 
 		public override string[] VerifyParameter (HandleStyle style, string variable)
 		{
-			var variableName = variable.StartsWith ("@")
+			var variableName = variable.StartsWith ("@", StringComparison.Ordinal)
 				? variable.Substring (1)
 				: variable;
 			switch (style) {
@@ -1097,7 +1097,7 @@ namespace Xamarin.Java.Interop
 
 		public override string[] VerifyParameter (HandleStyle style, string variable)
 		{
-			var variableName = variable.StartsWith ("@")
+			var variableName = variable.StartsWith ("@", StringComparison.Ordinal)
 				? variable.Substring (1)
 				: variable;
 			switch (style) {

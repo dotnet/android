@@ -204,7 +204,7 @@ namespace MonoDroid.Generation
 
 			var jni_name = symbol.JniName;
 
-			if (jni_name.StartsWith ("L") || jni_name.StartsWith ("["))
+			if (jni_name.StartsWith ("L", StringComparison.Ordinal) || jni_name.StartsWith ("[", StringComparison.Ordinal))
 				return "L";
 
 			return symbol.JniName;
@@ -221,9 +221,9 @@ namespace MonoDroid.Generation
 			// Handle a few special cases
 			if (type == "System.Void")
 				return "void";
-			if (type.StartsWith ("params "))
+			if (type.StartsWith ("params ", StringComparison.Ordinal))
 				return "params " + GetOutputName (type.Substring ("params ".Length));
-			if (type.StartsWith ("global::"))
+			if (type.StartsWith ("global::", StringComparison.Ordinal))
 				Report.LogCodedErrorAndExit (Report.ErrorUnexpectedGlobal);
 			if (!UseGlobal)
 				return type;
@@ -249,7 +249,7 @@ namespace MonoDroid.Generation
 			// Sadly that is not true in reality, so we need to exclude non-symbols
 			// when replacing the argument name with a valid identifier.
 			// (ReturnValue.ToNative() takes an argument which could be either an expression or mere symbol.)
-			if (name [name.Length-1] != ')' && !name.Contains ('.') && !name.StartsWith ("@")) {
+			if (name [name.Length-1] != ')' && !name.Contains ('.') && !name.StartsWith ("@", StringComparison.Ordinal)) {
 				if (!IdentifierValidator.IsValidIdentifier (name) ||
 						Array.BinarySearch (TypeNameUtilities.reserved_keywords, name) >= 0) {
 					name = name + "_";

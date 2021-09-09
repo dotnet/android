@@ -112,10 +112,10 @@ namespace Java.Interop.Tools.JavaSource {
 						int len = 0;
 						int n   = -1;
 
-						if ((n = s.IndexOf (UnixParagraph, i)) >= 0) {
+						if ((n = s.IndexOf (UnixParagraph, i, StringComparison.Ordinal)) >= 0) {
 							len = UnixParagraph.Length;
 						}
-						else if ((n = s.IndexOf (DosParagraph, i)) >= 0) {
+						else if ((n = s.IndexOf (DosParagraph, i, StringComparison.Ordinal)) >= 0) {
 							len = DosParagraph.Length;
 						}
 

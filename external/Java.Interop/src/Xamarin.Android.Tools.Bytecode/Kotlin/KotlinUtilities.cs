@@ -57,7 +57,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			// Kotlin adds this to some constructors but I cannot tell which ones,
 			// so we'll just ignore them if we see them on the Java side
-			return method.GetParameters ().Where (p => p.Type.BinaryName != "Lkotlin/jvm/internal/DefaultConstructorMarker;" && !p.Name.StartsWith ("$")).ToArray ();
+			return method.GetParameters ().Where (p => p.Type.BinaryName != "Lkotlin/jvm/internal/DefaultConstructorMarker;" && !p.Name.StartsWith ("$", StringComparison.Ordinal)).ToArray ();
 		}
 
 		public static string GetMethodNameWithoutSuffix (this MethodInfo method)
@@ -102,9 +102,9 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		public static bool IsPubliclyVisible (this KotlinPropertyFlags flags) => flags.HasFlag (KotlinPropertyFlags.Public) || flags.HasFlag (KotlinPropertyFlags.Protected);
 
-		public static bool IsUnnamedParameter (this ParameterInfo parameter) => parameter.Name.Length > 1 && parameter.Name.StartsWith ("p") && int.TryParse (parameter.Name.Substring (1), out var _);
+		public static bool IsUnnamedParameter (this ParameterInfo parameter) => parameter.Name.Length > 1 && parameter.Name.StartsWith ("p", StringComparison.Ordinal) && int.TryParse (parameter.Name.Substring (1), out var _);
 
-		public static bool IsUnnamedParameter (this KotlinValueParameter parameter) => parameter.Name.Length > 1 && parameter.Name.StartsWith ("p") && int.TryParse (parameter.Name.Substring (1), out var _);
+		public static bool IsUnnamedParameter (this KotlinValueParameter parameter) => parameter.Name.Length > 1 && parameter.Name.StartsWith ("p", StringComparison.Ordinal) && int.TryParse (parameter.Name.Substring (1), out var _);
 
 		static Dictionary<string, string> type_map = new Dictionary<string, string> {
 			{ "kotlin/Int", "I" },

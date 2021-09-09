@@ -87,7 +87,7 @@ namespace MonoDroid.Utils {
 			
 			try {
 				// Find the root, by stripping off \obj and beyond
-				string root = filename.Substring (0, filename.IndexOf (string.Format ("{0}obj{0}", Path.DirectorySeparatorChar)));
+				string root = filename.Substring (0, filename.IndexOf (string.Format ("{0}obj{0}", Path.DirectorySeparatorChar), StringComparison.Ordinal));
 				
 				var files = FindFileInDirectory (root, Path.GetFileName (filename));
 

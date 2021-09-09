@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 			// Read the enum csv file
 			while ((s = reader.ReadLine ()) != null) {
 				// Skip empty lines and comments
-				if (string.IsNullOrEmpty (s) || s.StartsWith ("//"))
+				if (string.IsNullOrEmpty (s) || s.StartsWith ("//", StringComparison.Ordinal))
 					continue;
 
 				// Transient mode means remove the original field

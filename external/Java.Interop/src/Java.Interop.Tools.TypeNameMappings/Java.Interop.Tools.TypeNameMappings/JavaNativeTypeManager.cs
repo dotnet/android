@@ -58,8 +58,8 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		public static IEnumerable<JniTypeName> FromSignature (string signature)
 		{
-			if (signature.StartsWith ("(")) {
-				int e = signature.IndexOf (")");
+			if (signature.StartsWith ("(", StringComparison.Ordinal)) {
+				int e = signature.IndexOf (')');
 				signature = signature.Substring (1, e >= 0 ? e-1 : signature.Length-1);
 			}
 			int i = 0;
@@ -102,7 +102,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 				case 'J':
 					return new JniTypeName { Type = "long", IsKeyword = true };
 				case 'L': {
-					var e = signature.IndexOf (";", index);
+					var e = signature.IndexOf (';', index);
 					if (e <= 0)
 						throw new InvalidOperationException ("Missing reference type after 'L' at index " + i + "in: " + signature);
 					var s = index;

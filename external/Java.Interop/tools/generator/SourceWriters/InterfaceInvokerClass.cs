@@ -50,7 +50,7 @@ namespace generator.SourceWriters
 
 			foreach (var i in iface.GetAllDerivedInterfaces ()) {
 				AddPropertyInvokers (iface, i.Properties.Where (p => !p.Getter.IsStatic && !p.Getter.IsInterfaceDefaultMethod), members, opt, context);
-				AddMethodInvokers (iface, i.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod && !iface.IsCovariantMethod (m) && !(i.FullName.StartsWith ("Java.Lang.ICharSequence") && m.Name.EndsWith ("Formatted"))), members, opt, context);
+				AddMethodInvokers (iface, i.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod && !iface.IsCovariantMethod (m) && !(i.FullName.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && m.Name.EndsWith ("Formatted", StringComparison.Ordinal))), members, opt, context);
 				AddCharSequenceEnumerators (i);
 			}
 		}

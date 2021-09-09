@@ -40,7 +40,7 @@
     <AppendTargetFrameworkToOutputPath Condition=" '$(AppendTargetFrameworkToOutputPath)' == '' ">False</AppendTargetFrameworkToOutputPath>
     <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+  <PropertyGroup Condition=" ( '$(TargetFramework)' != '' AND !$(TargetFramework.StartsWith('nets'))) AND (!$(TargetFramework.StartsWith('net4'))) "> 
     <JIBuildingForNetCoreApp>True</JIBuildingForNetCoreApp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">
@@ -83,6 +83,15 @@
     <_JNIEnvGenPath Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(BuildToolOutputFullPath)jnienv-gen.exe</_JNIEnvGenPath>
     <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">$(DotnetToolPath) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
     <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(Runtime) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
+  </PropertyGroup>
+
+  <!-- The net6.0 versions of these are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
+  <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <WarningsAsErrors>$(WarningsAsErrors);CA1307;CA1309;CA1310</WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">
+    <NoWarn>$(NoWarn);CA1307;CA1309;CA1310</NoWarn>
   </PropertyGroup>
 
   <!-- Add Roslyn analyzers NuGet to all projects -->

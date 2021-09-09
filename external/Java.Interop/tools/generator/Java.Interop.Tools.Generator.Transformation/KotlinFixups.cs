@@ -49,7 +49,7 @@ namespace Java.Interop.Tools.Generator.Transformation
 				// We want to remove the hyphen and anything afterwards to fix mangled names,
 				// but a previous step converted it to an underscore. Remove the final
 				// underscore and anything after it.
-				var index = method.Name.IndexOf ("_impl");
+				var index = method.Name.IndexOf ("_impl", StringComparison.Ordinal);
 
 				if (index >= 0)
 					method.Name = method.Name.Substring (0, index);

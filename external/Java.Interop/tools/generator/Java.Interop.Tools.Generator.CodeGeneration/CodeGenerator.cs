@@ -877,7 +877,7 @@ namespace MonoDroid.Generation
 
 			foreach (InterfaceGen iface in @interface.GetAllDerivedInterfaces ()) {
 				WriteInterfacePropertyInvokers (@interface, iface.Properties.Where (p => !p.Getter.IsStatic && !p.Getter.IsInterfaceDefaultMethod), indent + "\t", members);
-				WriteInterfaceMethodInvokers (@interface, iface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod && !@interface.IsCovariantMethod (m) && !(iface.FullName.StartsWith ("Java.Lang.ICharSequence") && m.Name.EndsWith ("Formatted"))), indent + "\t", members);
+				WriteInterfaceMethodInvokers (@interface, iface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod && !@interface.IsCovariantMethod (m) && !(iface.FullName.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && m.Name.EndsWith ("Formatted", StringComparison.Ordinal))), indent + "\t", members);
 				if (iface.FullName == "Java.Lang.ICharSequence")
 					WriteCharSequenceEnumerator (indent + "\t");
 			}
@@ -923,7 +923,7 @@ namespace MonoDroid.Generation
 			foreach (var m in @interface.Methods) {
 				string nameSpec = @interface.Methods.Count > 1 ? m.EventName ?? m.AdjustedName : String.Empty;
 				string nameUnique = String.IsNullOrEmpty (nameSpec) ? name : nameSpec;
-				if (nameUnique.StartsWith ("On"))
+				if (nameUnique.StartsWith ("On", StringComparison.Ordinal))
 					nameUnique = nameUnique.Substring (2);
 				if (target.ContainsName (nameUnique))
 					nameUnique += "Event";
@@ -959,9 +959,9 @@ namespace MonoDroid.Generation
 					refs.Add (method.Name);
 					string rm = null;
 					string remove;
-					if (method.Name.StartsWith ("Set"))
+					if (method.Name.StartsWith ("Set", StringComparison.Ordinal))
 						remove = string.Format ("__v => {0} (null)", method.Name);
-					else if (method.Name.StartsWith ("Add") &&
+					else if (method.Name.StartsWith ("Add", StringComparison.Ordinal) &&
 						 (rm = "Remove" + method.Name.Substring ("Add".Length)) != null &&
 						 methods.Where (m => m.Name == rm).Any ())
 						remove = string.Format ("__v => {0} (__v)", rm);
@@ -990,8 +990,8 @@ namespace MonoDroid.Generation
 			if (m.EventName == string.Empty)
 				return;
 			string nameSpec = @interface.Methods.Count > 1 ? m.AdjustedName : String.Empty;
-			int idx = @interface.FullName.LastIndexOf (".");
-			int start = @interface.Name.StartsWith ("IOn") ? 3 : 1;
+			int idx = @interface.FullName.LastIndexOf ('.');
+			int start = @interface.Name.StartsWith ("IOn", StringComparison.Ordinal) ? 3 : 1;
 			string full_delegate_name = @interface.FullName.Substring (0, idx + 1) + @interface.Name.Substring (start, @interface.Name.Length - start - 8) + nameSpec;
 			if (m.IsSimpleEventHandler)
 				full_delegate_name = "EventHandler";
@@ -1586,7 +1586,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ("{0}}}", indent);
 			writer.WriteLine ();
 
-			if (property.Type.StartsWith ("Java.Lang.ICharSequence") && virtual_override != " override")
+			if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && virtual_override != " override")
 				WritePropertyStringVariant (property, indent);
 		}
 
@@ -1631,7 +1631,7 @@ namespace MonoDroid.Generation
 			}
 			writer.WriteLine ("{0}}}", indent);
 			writer.WriteLine ();
-			if (property.Type.StartsWith ("Java.Lang.ICharSequence"))
+			if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal))
 				WritePropertyStringVariant (property, indent);
 		}
 

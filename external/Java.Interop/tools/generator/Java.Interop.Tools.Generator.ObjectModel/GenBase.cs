@@ -66,7 +66,7 @@ namespace MonoDroid.Generation
 		public virtual void AddNestedType (GenBase gen)
 		{
 			foreach (var nest in NestedTypes) {
-				if (gen.JavaName.StartsWith (nest.JavaName + ".")) {
+				if (gen.JavaName.StartsWith (nest.JavaName + ".", StringComparison.Ordinal)) {
 					nest.AddNestedType (gen);
 					return;
 				}
@@ -75,7 +75,7 @@ namespace MonoDroid.Generation
 			var removes = new List<GenBase> ();
 
 			foreach (var nest in NestedTypes) {
-				if (nest.JavaName.StartsWith (gen.JavaName + ".")) {
+				if (nest.JavaName.StartsWith (gen.JavaName + ".", StringComparison.Ordinal)) {
 					gen.AddNestedType (nest);
 					removes.Add (nest);
 				}
@@ -112,7 +112,7 @@ namespace MonoDroid.Generation
 						unmatched.Add (m);
 					else {
 						if (prop_hash.ContainsKey (prop_name)) {
-							if (m.Name.StartsWith ("Get"))
+							if (m.Name.StartsWith ("Get", StringComparison.Ordinal))
 								unmatched.Add (m);
 							else {
 								unmatched.Add (prop_hash [prop_name].Getter);

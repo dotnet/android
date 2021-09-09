@@ -293,7 +293,7 @@ namespace Java.Interop.PerformanceTests {
 		static string FormatFraction (double value, int width, int fractionWidth)
 		{
 			var v = value.ToString ("0.0" + new string ('#', fractionWidth - 1));
-			var i = v.IndexOf (NumberFormatInfo.CurrentInfo.NumberDecimalSeparator);
+			var i = v.IndexOf (NumberFormatInfo.CurrentInfo.NumberDecimalSeparator, StringComparison.Ordinal);
 			var p = new string (' ', width - fractionWidth - i - 1);
 			return p + v + new string (' ', width - p.Length - v.Length);
 		}

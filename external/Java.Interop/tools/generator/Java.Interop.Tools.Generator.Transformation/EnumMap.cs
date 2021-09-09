@@ -28,11 +28,11 @@ namespace MonoDroid.Generation
 		internal Dictionary<string, EnumDescription> Process (string fieldMap, string flagsFile, string methodMap)
 		{
 			remove_nodes = new List<KeyValuePair<string, string>> ();
-			var enums = (fieldMap ?? "").EndsWith (".csv")
+			var enums = (fieldMap ?? "").EndsWith (".csv", StringComparison.OrdinalIgnoreCase)
 				? ParseFieldMappings (fieldMap, flagsFile, version, remove_nodes)
 				: ParseXmlFieldMappings (fieldMap, version, remove_nodes);
 
-			var methods = (methodMap ?? "").EndsWith (".csv")
+			var methods = (methodMap ?? "").EndsWith (".csv", StringComparison.OrdinalIgnoreCase)
 				? ParseMethodMappings (methodMap, version)
 				: ParseXmlMethodMappings (methodMap, version);
 
@@ -64,7 +64,7 @@ namespace MonoDroid.Generation
 				ParseJniMember (enu, out package, out type, out member);
 				try {
 					sw.WriteLine ("  <remove-node path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" />",
-							package, type, member, enu.StartsWith ("I:") ? "interface" : "class");
+							package, type, member, enu.StartsWith ("I:", StringComparison.Ordinal) ? "interface" : "class");
 				} catch (Exception ex) {
 					Report.LogCodedErrorAndExit (Report.ErrorFailedToRemoveConstants, ex, enu);
 					throw;
@@ -82,16 +82,16 @@ namespace MonoDroid.Generation
 
 				if (pair.Value != null) {
 					sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" name=\"type\">{4}</attr>",
-						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class", pair.Value);
+						      package, type, member, enu.StartsWith ("I:", StringComparison.Ordinal) ? "interface" : "class", pair.Value);
 					sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" name=\"deprecated\">This constant will be removed in the future version. Use {4} enum directly instead of this field.</attr>",
-						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class", pair.Value);
+						      package, type, member, enu.StartsWith ("I:", StringComparison.Ordinal) ? "interface" : "class", pair.Value);
 					sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" name=\"deprecated-error\">true</attr>",
-						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class", pair.Value);
+						      package, type, member, enu.StartsWith ("I:", StringComparison.Ordinal) ? "interface" : "class", pair.Value);
 					continue;
 				}
 				try {
 					sw.WriteLine ("  <remove-node path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" />",
-						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class");
+						      package, type, member, enu.StartsWith ("I:", StringComparison.Ordinal) ? "interface" : "class");
 				} catch (Exception ex) {
 					Report.LogCodedErrorAndExit (Report.ErrorFailedToRemoveConstants, ex, enu);
 					throw;

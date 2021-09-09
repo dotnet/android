@@ -129,7 +129,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		bool IsGeneratedName (string parameterName)
 		{
-			return parameterName.StartsWith ("p") && parameterName.Length > 1 && Char.IsDigit (parameterName [1]);
+			return parameterName.StartsWith ("p", StringComparison.Ordinal) && parameterName.Length > 1 && Char.IsDigit (parameterName [1]);
 		}
 
 		IEnumerable<ClassFile> GetDescendants (ClassFile theClass, IList<ClassFile> classFiles)

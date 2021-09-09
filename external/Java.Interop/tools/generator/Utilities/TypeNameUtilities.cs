@@ -71,7 +71,7 @@ namespace MonoDroid.Generation
 
 		public static string GetNativeName (string name)
 		{
-			if (name.StartsWith ("@"))
+			if (name.StartsWith ("@", StringComparison.Ordinal))
 				return "native__" + name.Substring (1);
 			return "native_" + name;
 		}

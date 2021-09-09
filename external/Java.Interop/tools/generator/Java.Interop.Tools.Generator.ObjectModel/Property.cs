@@ -35,7 +35,7 @@ namespace MonoDroid.Generation
 		public bool GenerateDispatchingSetter { get; set; }
 
 		internal string AdjustedName =>
-			Getter.ReturnType.StartsWith ("Java.Lang.ICharSequence") ? Name + "Formatted" : Name;
+			Getter.ReturnType.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) ? Name + "Formatted" : Name;
 
 		public string Name { get; set; }
 

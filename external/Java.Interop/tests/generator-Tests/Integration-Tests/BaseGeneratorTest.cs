@@ -96,7 +96,7 @@ namespace generatortests
 				using (var hash = new Crc64 ()) {
 					var f1hash = Convert.ToBase64String (hash.ComputeHash (f1));
 					var f2hash = Convert.ToBase64String (hash.ComputeHash (f2));
-					result = f1hash.Equals (f2hash);
+					result = string.Equals (f1hash, f2hash, StringComparison.Ordinal);
 				}
 			}
 

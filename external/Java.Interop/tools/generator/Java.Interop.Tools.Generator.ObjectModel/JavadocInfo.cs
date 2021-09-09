@@ -233,7 +233,7 @@ namespace MonoDroid.Generation
 				.Replace ("/", ".")
 				.Replace ("$", ".");
 			var url     = new StringBuilder (prefix);
-			if (!prefix.EndsWith ("/")) {
+			if (!prefix.EndsWith ("/", StringComparison.Ordinal)) {
 				url.Append ("/");
 			}
 			url.Append (declaringJniType);

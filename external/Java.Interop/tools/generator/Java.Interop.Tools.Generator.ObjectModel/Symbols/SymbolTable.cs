@@ -309,7 +309,7 @@ namespace MonoDroid.Generation {
 
 		private string AddArity (string key, string typeParams)
 		{
-			if (string.IsNullOrWhiteSpace (typeParams) || !typeParams.StartsWith ("<") || !typeParams.EndsWith (">"))
+			if (string.IsNullOrWhiteSpace (typeParams) || !typeParams.StartsWith ("<", StringComparison.Ordinal) || !typeParams.EndsWith (">", StringComparison.Ordinal))
 				return key;
 
 			var nested_count = 0;
@@ -335,7 +335,7 @@ namespace MonoDroid.Generation {
 		public void Dump ()
 		{
 			foreach (var p in symbols) {
-				if (p.Key.StartsWith ("System"))
+				if (p.Key.StartsWith ("System", StringComparison.Ordinal))
 					continue;
 				foreach (var s in p.Value) {
 					Console.Error.WriteLine ("[{0}]: {1} {2}", p.Key, s.GetType (), s.FullName);

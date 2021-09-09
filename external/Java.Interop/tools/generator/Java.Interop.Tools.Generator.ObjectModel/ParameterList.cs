@@ -149,7 +149,7 @@ namespace MonoDroid.Generation {
 		public bool HasCharSequence {
 			get {
 				foreach (Parameter p in items)
-					if (p.JavaType.StartsWith("java.lang.CharSequence"))
+					if (p.JavaType.StartsWith ("java.lang.CharSequence", StringComparison.Ordinal))
 						return true;
 				return false;
 			}

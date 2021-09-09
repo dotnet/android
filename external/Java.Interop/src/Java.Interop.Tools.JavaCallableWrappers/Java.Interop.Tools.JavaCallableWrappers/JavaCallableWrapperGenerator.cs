@@ -693,7 +693,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Name      = name;
 
 				var jnisig = signature;
-				int closer = jnisig.IndexOf (")");
+				int closer = jnisig.IndexOf (')');
 				string ret = jnisig.Substring (closer + 1);
 				retval = JavaNativeTypeManager.Parse (ret).Type;
 				string jniparms = jnisig.Substring (1, closer - 1);

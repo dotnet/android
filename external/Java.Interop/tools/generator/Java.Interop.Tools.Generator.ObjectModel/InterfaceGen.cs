@@ -20,7 +20,7 @@ namespace MonoDroid.Generation
 
 			var nest_name = gen.JavaName.Substring (JavaName.Length + 1);
 
-			if (nest_name.IndexOf (".") < 0) {
+			if (nest_name.IndexOf ('.') < 0) {
 				// We don't need to mangle the name if we support nested interface types
 				// ex: my.namespace.IParent.IChild
 				if (!gen.Unnest) {
@@ -116,14 +116,14 @@ namespace MonoDroid.Generation
 				if (m.IsSimpleEventHandler)
 					return "EventArgs";
 				nameBase = m.AdjustedName;
-				start = nameBase.StartsWith ("On") ? 2 : 0;
+				start = nameBase.StartsWith ("On", StringComparison.Ordinal) ? 2 : 0;
 			} else {
 				if (!string.IsNullOrEmpty (ArgsType))
 					return ArgsType;
 				if (m.IsSimpleEventHandler)
 					return "EventArgs";
 				nameBase = Name;
-				start = Name.StartsWith ("IOn") ? 3 : 1;
+				start = Name.StartsWith ("IOn", StringComparison.Ordinal) ? 3 : 1;
 				trim = 8; // "Listener"
 			}
 			return nameBase.Substring (start, nameBase.Length - start - trim) + "EventArgs";
@@ -131,7 +131,7 @@ namespace MonoDroid.Generation
 
 		internal string GetEventDelegateName (Method m)
 		{
-			int start = Name.StartsWith ("IOn") ? 3 : 1;
+			int start = Name.StartsWith ("IOn", StringComparison.Ordinal) ? 3 : 1;
 			if (m.RetVal.IsVoid) {
 				if (m.IsSimpleEventHandler)
 					return "EventHandler";
@@ -189,7 +189,7 @@ namespace MonoDroid.Generation
 		}
 
 		// If there is a property it cannot generate valid implementor, so reject this at least so far.
-		public bool IsListener => Name.EndsWith ("Listener") && Properties.Count == 0 && Interfaces.Count == 0;
+		public bool IsListener => Name.EndsWith ("Listener", StringComparison.Ordinal) && Properties.Count == 0 && Interfaces.Count == 0;
 
 		public bool HasManagedName { get; set; }
 

@@ -49,7 +49,7 @@ namespace MonoDroid.Generation
 				return false;
 			}
 
-			if (!string.IsNullOrEmpty (Value) && Symbol != null && Symbol.FullName == "char" && !Value.StartsWith ("(char)"))
+			if (!string.IsNullOrEmpty (Value) && Symbol != null && Symbol.FullName == "char" && !Value.StartsWith ("(char)", StringComparison.Ordinal))
 				Value = "(char)" + Value;
 
 			SetParameters = new ParameterList {

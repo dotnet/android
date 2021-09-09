@@ -11,7 +11,7 @@ namespace MonoDroid.Generation
 		
 		public GeneratedEnumSymbol (string enumType)
 		{
-			if (enumType.EndsWith ("[]")) {
+			if (enumType.EndsWith ("[]", StringComparison.Ordinal)) {
 				enum_type = enumType.Substring (0, enumType.Length - 2);
 				is_array = true;
 			}

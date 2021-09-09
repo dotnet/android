@@ -270,7 +270,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				if (atd.HasOverrides ^ btd.HasOverrides)
 					return btd.HasOverrides ? -1 : 1;
 
-				return string.Compare (a.Name, b.Name);
+				return string.Compare (a.Name, b.Name, StringComparison.Ordinal);
 			}
 		}
 

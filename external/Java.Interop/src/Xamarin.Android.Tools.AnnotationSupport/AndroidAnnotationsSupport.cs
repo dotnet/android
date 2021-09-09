@@ -67,7 +67,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			// them up before loading with a validating XML parser.
 			var doc = new HtmlDocument ();
 			doc.Load (s);
-			if (doc.DocumentNode.FirstChild.InnerHtml.StartsWith ("<?xml"))
+			if (doc.DocumentNode.FirstChild.InnerHtml.StartsWith ("<?xml", StringComparison.Ordinal))
 				doc.DocumentNode.FirstChild.Remove ();
 
 			var ms = new MemoryStream ();

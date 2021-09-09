@@ -126,7 +126,7 @@ namespace MonoDroid.Generation {
 
 		public string JavaName {
 			get {
-				if (Name.StartsWith ("@"))
+				if (Name.StartsWith ("@", StringComparison.Ordinal))
 					return Name.Substring (1);
 				return Name;
 			}
@@ -253,7 +253,7 @@ namespace MonoDroid.Generation {
 				return name;
 			if (targetType == "string")
 				return string.Format ("{0}.ToString ()", name);
-			if (targetType.EndsWith ("[]")) {
+			if (targetType.EndsWith ("[]", StringComparison.Ordinal)) {
 				return string.Format ("{0}.ToArray<{1}> ()", name, targetType.Replace ("[]",""));
 			}
 			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;

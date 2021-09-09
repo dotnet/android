@@ -311,7 +311,7 @@ namespace Xamarin.Android.Binder
 				return;
 
 			// We want to exclude "IBlahInvoker" types from this type registration.
-			if (td.Name.EndsWith ("Invoker")) {
+			if (td.Name.EndsWith ("Invoker", StringComparison.Ordinal)) {
 				string n = td.FullName;
 				n = n.Substring (0, n.Length - 7);
 				var types = td.DeclaringType != null ? td.DeclaringType.Resolve ().NestedTypes : td.Module.Types;
@@ -319,7 +319,7 @@ namespace Xamarin.Android.Binder
 					return;
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");
 			}
-			if (td.Name.EndsWith ("Implementor")) {
+			if (td.Name.EndsWith ("Implementor", StringComparison.Ordinal)) {
 				string n = td.FullName;
 				n = n.Substring (0, n.Length - 11);
 				var types = td.DeclaringType != null ? td.DeclaringType.Resolve ().NestedTypes : td.Module.Types;

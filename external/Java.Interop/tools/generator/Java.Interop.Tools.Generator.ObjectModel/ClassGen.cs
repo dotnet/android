@@ -223,7 +223,7 @@ namespace MonoDroid.Generation
 					sw.WriteLine ("\t\t{");
 					sw.WriteLine ("\t\t\tif (package_{0}_mappings == null) {{", package);
 					sw.WriteLine ("\t\t\t\tpackage_{0}_mappings = new string[]{{", package);
-					map.Value.Sort ((a, b) => a.Key.CompareTo (b.Key));
+					map.Value.Sort ((a, b) => string.Compare (a.Key, b.Key, StringComparison.Ordinal));
 					foreach (KeyValuePair<string, string> t in map.Value) {
 						sw.WriteLine ("\t\t\t\t\t\"{0}:{1}\",", t.Key, t.Value);
 					}

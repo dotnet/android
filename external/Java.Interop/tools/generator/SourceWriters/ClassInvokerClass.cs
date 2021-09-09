@@ -75,7 +75,7 @@ namespace generator.SourceWriters
 				var bound_property = new BoundProperty (klass, prop, opt, false, true);
 				Properties.Add (bound_property);
 
-				if (prop.Type.StartsWith ("Java.Lang.ICharSequence") && !bound_property.IsOverride)
+				if (prop.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
 					Properties.Add (new BoundPropertyStringVariant (prop, opt));
 			}
 		}

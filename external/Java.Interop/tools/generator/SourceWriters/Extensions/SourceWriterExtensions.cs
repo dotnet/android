@@ -91,9 +91,9 @@ namespace generator.SourceWriters
 					string rm = null;
 					string remove;
 
-					if (method.Name.StartsWith ("Set"))
+					if (method.Name.StartsWith ("Set", StringComparison.Ordinal))
 						remove = string.Format ("__v => {0} (null)", method.Name);
-					else if (method.Name.StartsWith ("Add") &&
+					else if (method.Name.StartsWith ("Add", StringComparison.Ordinal) &&
 						 (rm = "Remove" + method.Name.Substring ("Add".Length)) != null &&
 						 methods.Where (m => m.Name == rm).Any ())
 						remove = string.Format ("__v => {0} (__v)", rm);
@@ -124,7 +124,7 @@ namespace generator.SourceWriters
 				var nameSpec = iface.Methods.Count > 1 ? method.EventName ?? method.AdjustedName : string.Empty;
 				var nameUnique = string.IsNullOrEmpty (nameSpec) ? name : nameSpec;
 
-				if (nameUnique.StartsWith ("On"))
+				if (nameUnique.StartsWith ("On", StringComparison.Ordinal))
 					nameUnique = nameUnique.Substring (2);
 
 				if (target.ContainsName (nameUnique))
@@ -140,8 +140,8 @@ namespace generator.SourceWriters
 				return;
 
 			var nameSpec = iface.Methods.Count > 1 ? method.AdjustedName : string.Empty;
-			var idx = iface.FullName.LastIndexOf (".");
-			var start = iface.Name.StartsWith ("IOn") ? 3 : 1;
+			var idx = iface.FullName.LastIndexOf (".", StringComparison.Ordinal);
+			var start = iface.Name.StartsWith ("IOn", StringComparison.Ordinal) ? 3 : 1;
 			var full_delegate_name = iface.FullName.Substring (0, idx + 1) + iface.Name.Substring (start, iface.Name.Length - start - 8) + nameSpec;
 
 			if (method.IsSimpleEventHandler)

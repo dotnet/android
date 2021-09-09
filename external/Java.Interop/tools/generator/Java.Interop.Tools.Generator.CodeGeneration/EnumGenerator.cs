@@ -87,7 +87,7 @@ namespace MonoDroid.Generation
 			int endClass = jniMember.LastIndexOf ('.');
 
 			package = jniMember.Substring (0, endPackage).Replace ('/', '.');
-			if (package.StartsWith ("I:"))
+			if (package.StartsWith ("I:", StringComparison.Ordinal))
 				package = package.Substring (2);
 
 			if (endClass >= 0) {

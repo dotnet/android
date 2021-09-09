@@ -91,7 +91,7 @@ namespace MonoDroid.Generation
 				// Kotlin generates methods that cannot be referenced in Java,
 				// like `add-impl` and `add-V5j3Lk8`. We will need to fix those later.
 				if (this is Method method) {
-					if (method.JavaName.IndexOf ("-impl") >= 0)
+					if (method.JavaName.IndexOf ("-impl", StringComparison.Ordinal) >= 0)
 						return true;
 
 					return method.JavaName.Length >= 8 && method.JavaName [method.JavaName.Length - 8] == '-';
