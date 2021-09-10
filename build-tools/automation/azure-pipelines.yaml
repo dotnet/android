@@ -43,6 +43,7 @@ variables:
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: android-win-2019
+  VSEngMicroBuild2019: VSEngSS-MicroBuild2019
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
@@ -1298,7 +1299,7 @@ stages:
     dependsOn: nuget_convert
     condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
     timeoutInMinutes: 60
-    pool: VSEngSS-MicroBuild2019
+    pool: $(VSEngMicroBuild2019)
     workspace:
       clean: all
     variables:
@@ -1367,6 +1368,57 @@ stages:
     nupkgArtifactName: nuget-signed
     msiNupkgArtifactName: vs-msi-nugets
     condition: eq(variables['MicroBuildSignType'], 'Real')
+
+- stage: push_nugets_to_nuget_org
+  displayName: Push to NuGet.org
+  dependsOn: dotnet_prepare_release
+  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'))
+  jobs:
+  - job: wait_for_nuget_org_approval
+    displayName: Wait For NuGet.org Approval
+    timeoutInMinutes: 4320 # The job timeout should be longer than the approval task timeout.
+    pool: server
+    steps:
+    - task: ManualValidation@0
+      timeoutInMinutes: 2880 # Approval times out in 2 days, but the stage can be re-ran if needed.
+      inputs:
+        instructions: 'Press "Resume" to push .NET 6 packages to NuGet.org.'
+        onTimeout: reject
+      continueOnError: true
+
+  - job: push_to_nuget_org
+    displayName: Push to NuGet.org
+    pool: $(VSEngMicroBuild2019)
+    dependsOn: wait_for_nuget_org_approval
+    condition: eq(dependencies.wait_for_nuget_org_approval.result, 'Succeeded')
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: nuget-signed
+        downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
+
+    - task: NuGetCommand@2
+      displayName: push nupkgs
+      inputs:
+        command: push
+        packagesToPush: $(System.DefaultWorkingDirectory)\nuget-signed\*.nupkg
+        nuGetFeedType: external
+        # TODO: Change this to NuGet.org after testing
+        publishFeedCredentials: maui-net6-shipping public feed
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vs-msi-nugets
+        downloadPath: $(System.DefaultWorkingDirectory)\vs-msi-nugets
+
+    - task: NuGetCommand@2
+      displayName: push msi nupkgs
+      inputs:
+        command: push
+        packagesToPush: $(System.DefaultWorkingDirectory)\vs-msi-nugets\*.nupkg
+        nuGetFeedType: external
+        # TODO: Change this to NuGet.org after testing
+        publishFeedCredentials: maui-net6-shipping public feed
 
 - stage: finalize_installers
   displayName: Finalize Installers
@@ -1462,7 +1514,7 @@ stages:
   - job: queue_vsix_signing
     displayName: Queue Vsix Signing
     dependsOn: notarize_pkg_upload_storage
-    pool: VSEngSS-MicroBuild2019
+    pool: $(VSEngMicroBuild2019)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
