@@ -13,7 +13,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/pjc/msi-parallel-option
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -1366,8 +1366,6 @@ stages:
     pushToShippingFeed: true
     nupkgArtifactName: nuget-signed
     msiNupkgArtifactName: vs-msi-nugets
-    archiveSymbols: false
-    createVSPR: false
     condition: eq(variables['MicroBuildSignType'], 'Real')
 
 - stage: finalize_installers
