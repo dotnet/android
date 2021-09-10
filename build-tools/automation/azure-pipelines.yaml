@@ -1289,6 +1289,7 @@ stages:
         !*Darwin*
       propsArtifactName: nuget-unsigned
       signType: $(MicroBuildSignType)
+      runInParallel: false
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
  # Check - "Xamarin.Android (.NET 6 Prepare Release Push NuGets)"
@@ -1362,6 +1363,9 @@ stages:
     symbolArtifactName: nuget-signed
     symbolArtifactPatterns: |
       !*Darwin*
+    pushToShippingFeed: true
+    nupkgArtifactName: nuget-signed
+    msiNupkgArtifactName: vs-msi-nugets
     condition: eq(variables['MicroBuildSignType'], 'Real')
 
 - stage: finalize_installers
