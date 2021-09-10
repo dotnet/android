@@ -238,8 +238,7 @@ A string property which controls how
 `.jar` files are parsed. Possible values include:
 
 - **class-parse**: Uses `class-parse.exe` to parse Java bytecode
-  directly, without assistance of a JVM. This value is
-  experimental.
+  directly, without assistance of a JVM.
 
 - **jar2xml**: Use `jar2xml.jar` to use Java reflection to extract
   types and members from a `.jar` file.
@@ -253,12 +252,12 @@ The advantages of `class-parse` over `jar2xml` are:
 - `class-parse` doesn't "skip" classes which inherit from or
   contain members of unresolvable types.
 
-**Experimental**. Added in Xamarin.Android 6.0.
+Added in Xamarin.Android 6.0.
 
-The default value is `jar2xml`.
+The default value is `jar2xml` in "legacy" Xamarin.Android and
+`class-parse` in .NET 6 and higher.
 
-Support for `jar2xml` is obsolete, and support for `jar2xml` will be removed
-as part of .NET 6.
+Support for `jar2xml` is obsolete, and `jar2xml` is removed in .NET 6.
 
 ## AndroidCodegenTarget
 
