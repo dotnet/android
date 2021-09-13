@@ -1376,11 +1376,11 @@ stages:
   jobs:
   - job: wait_for_nuget_org_approval
     displayName: Wait For NuGet.org Approval
-    timeoutInMinutes: 4320 # The job timeout should be longer than the approval task timeout.
+    timeoutInMinutes: 60 # The job timeout should be longer than the task timeout.
     pool: server
     steps:
     - task: ManualValidation@0
-      timeoutInMinutes: 2880 # Approval times out in 2 days, but the stage can be re-ran if needed.
+      timeoutInMinutes: 30 # The stage can be re-ran if needed.
       inputs:
         instructions: 'Press "Resume" to push .NET 6 packages to NuGet.org.'
         onTimeout: reject
