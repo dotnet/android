@@ -12,9 +12,9 @@ namespace Xamarin.Android.Prepare
 {
 	static partial class Utilities
 	{
-		static readonly TimeSpan ExceptionRetryInitialDelay = TimeSpan.FromSeconds (30);
-		static readonly TimeSpan WebRequestTimeout = TimeSpan.FromMinutes (60);
-		static readonly int ExceptionRetries = 5;
+		public static readonly TimeSpan ExceptionRetryInitialDelay = TimeSpan.FromSeconds (30);
+		public static readonly TimeSpan WebRequestTimeout = TimeSpan.FromMinutes (60);
+		public static readonly int ExceptionRetries = 5;
 
 		const string MSBuildPropertyListSeparator = ":";
 
@@ -470,7 +470,7 @@ namespace Xamarin.Android.Prepare
 					}
 				} catch (Exception ex) {
 					if (i < ExceptionRetries - 1) {
-						WaitAWhile ($"GetDownloadSize {url}", i, ref ex, ref delay);
+						WaitAWhile ($"GetDownloadSize {url}", i, ex.Message, ref delay);
 					}
 				}
 			}
@@ -495,7 +495,7 @@ namespace Xamarin.Android.Prepare
 					break;
 				} catch (Exception ex) {
 					if (i < ExceptionRetries - 1) {
-						WaitAWhile ($"Download {url}", i, ref ex, ref delay);
+						WaitAWhile ($"Download {url}", i, ex.Message, ref delay);
 					}
 				}
 			}
@@ -621,7 +621,7 @@ namespace Xamarin.Android.Prepare
 				} catch (Exception e) {
 					ex = e;
 				}
-				WaitAWhile ($"Reset timestamp for {filePath}", i, ref ex, ref delay);
+				WaitAWhile ($"Reset timestamp for {filePath}", i, ex.Message, ref delay);
 			}
 
 			if (ex != null) {
@@ -644,7 +644,7 @@ namespace Xamarin.Android.Prepare
 				} catch (Exception e) {
 					ex = e;
 				}
-				WaitAWhile ($"File move ({source} -> {destination})", i, ref ex, ref delay);
+				WaitAWhile ($"File move ({source} -> {destination})", i, ex.Message, ref delay);
 			}
 
 			if (ex != null)
@@ -690,18 +690,18 @@ namespace Xamarin.Android.Prepare
 					tryResetFilePermissions = true;
 				}
 
-				WaitAWhile ($"Directory {directoryPath} deletion", i, ref ex, ref delay);
+				WaitAWhile ($"Directory {directoryPath} deletion", i, ex.Message, ref delay);
 			}
 
 			if (ex != null)
 				throw ex;
 		}
 
-		static void WaitAWhile (string what, int which, ref Exception ex, ref TimeSpan delay)
+		public static void WaitAWhile (string what, int which, string error, ref TimeSpan delay)
 		{
 			Log.DebugLine ($"{what} attempt no. {which + 1} failed, retrying after delay of {delay}");
-			if (ex != null)
-				Log.DebugLine ($"Failure cause: {ex.Message}");
+			if (!string.IsNullOrEmpty (error))
+				Log.DebugLine ($"Failure cause: {error}");
 			Thread.Sleep (delay);
 			delay = TimeSpan.FromMilliseconds (delay.TotalMilliseconds * 2);
 		}

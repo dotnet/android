@@ -87,7 +87,16 @@ namespace Xamarin.Android.Prepare
 		async Task<bool> ConjureXamarinCecilAndRemapRef (Context context, bool haveManagedRuntime, string managedRuntime)
 		{
 			StatusStep (context, "Building remap-assembly-ref");
-			bool result = await Utilities.BuildRemapRef (context, haveManagedRuntime, managedRuntime, quiet: true);
+			var delay = Utilities.ExceptionRetryInitialDelay;
+			bool result = false;
+			for (int i = 0; i < Utilities.ExceptionRetries; i++) {
+				result = await Utilities.BuildRemapRef (context, haveManagedRuntime, managedRuntime, quiet: true);
+				if (!result) {
+					Utilities.WaitAWhile ("Building remap-assembly-ref", i, error: "", delay: ref delay);
+				} else {
+					break;
+				}
+			}
 			if (!result)
 				return false;
 
