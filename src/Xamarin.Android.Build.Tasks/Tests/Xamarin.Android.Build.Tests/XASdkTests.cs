@@ -300,13 +300,23 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			var dotnet = CreateDotNetBuilder (proj);
-			Assert.IsTrue (dotnet.Build (), "build should succeed");
+			Assert.IsTrue (dotnet.Build (), "first build should succeed");
 
 			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+			var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
 			FileAssert.Exists (assemblyPath);
 			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
-				var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
 				Assert.IsNotNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should contain {typeName}");
+			}
+
+			// Remove the @(AndroidLibrary) & build again
+			proj.Sources.RemoveAt (proj.Sources.Count - 1);
+			Directory.Delete (Path.Combine (FullProjectDirectory, "Jars"), recursive: true);
+			Assert.IsTrue (dotnet.Build (), "second build should succeed");
+
+			FileAssert.Exists (assemblyPath);
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				Assert.IsNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should *not* contain {typeName}");
 			}
 		}
 

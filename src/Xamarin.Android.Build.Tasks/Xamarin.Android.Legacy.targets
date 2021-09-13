@@ -187,6 +187,7 @@ projects. .NET 5 projects will not import this file.
 
     <ResolveReferencesDependsOn>
       $(ResolveReferencesDependsOn);
+      _SetAndroidGenerateManagedBindings;
       AddBindingsToCompile;
       AddEmbeddedJarsAsResources;
       AddEmbeddedReferenceJarsAsResources;

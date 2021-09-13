@@ -28,16 +28,24 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <NoWarn Condition=" '$(DocumentationFile)' != '' ">$(NoWarn);CS1573;CS1591</NoWarn>
   </PropertyGroup>
 
-  <Target Name="ExportJarToXml"
-      DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
+  <Target Name="_SetAndroidGenerateManagedBindings"
       Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' ">
+    <PropertyGroup>
+      <!-- Used throughout to determine if C# binding-related targets should skip -->
+      <_AndroidGenerateManagedBindings>true</_AndroidGenerateManagedBindings>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="ExportJarToXml"
+      Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' "
+      DependsOnTargets="$(ExportJarToXmlDependsOnTargets)">
     <PropertyGroup>
       <AllowUnsafeBlocks Condition=" '$(AllowUnsafeBlocks)' != 'true' ">true</AllowUnsafeBlocks>
     </PropertyGroup>
   </Target>
 
   <Target Name="GenerateBindings"
-      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' "
+      Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' "
       DependsOnTargets="ExportJarToXml;_ResolveMonoAndroidSdks"
       Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_GeneratorStampFile)">
@@ -79,7 +87,9 @@ It is shared between "legacy" binding projects and .NET 5 projects.
 
   </Target>
 
-  <Target Name="AddBindingsToCompile" DependsOnTargets="GenerateBindings">
+  <Target Name="AddBindingsToCompile"
+      Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' "
+      DependsOnTargets="GenerateBindings">
     <!-- Add the files to list of things to be compiled -->
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)generated\*\*.cs" />
