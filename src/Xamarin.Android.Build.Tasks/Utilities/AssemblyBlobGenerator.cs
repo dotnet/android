@@ -10,33 +10,19 @@ namespace Xamarin.Android.Tasks
 {
 	class AssemblyBlobGenerator
 	{
-		const uint BlobMagic = 0x41424158; // 'XABA', little-endian
-
-		sealed class BlobIndexEntry
+		sealed class Blob
 		{
-			public int Index;
-
-			public ulong NameHash64;
-			public uint NameHash32;
-
-			public uint DataOffset;
-			public uint DataSize;
-
-			public uint DebugDataOffset;
-			public uint DebugDataSize;
-
-			public uint ConfigDataOffset;
-			public uint ConfigDataSize;
-		};
-
-		const string BlobPrefix = "assemblies";
-		const string BlobExtension = ".blob";
+			public AssemblyBlob Common;
+			public AssemblyBlob Arch;
+		}
 
 		readonly string archiveAssembliesPrefix;
 		readonly TaskLoggingHelper log;
 
-		readonly List<BlobAssemblyInfo> commonAssemblies;
-		readonly Dictionary<string, List<BlobAssemblyInfo>> archAssemblies;
+		// NOTE: when/if we have parallel BuildApk this should become a ConcurrentDictionary
+		readonly Dictionary<string, Blob> blobs;
+
+		AssemblyBlob indexBlob;
 
 		public AssemblyBlobGenerator (string archiveAssembliesPrefix, TaskLoggingHelper log)
 		{
@@ -47,147 +33,85 @@ namespace Xamarin.Android.Tasks
 			this.archiveAssembliesPrefix = archiveAssembliesPrefix;
 			this.log = log;
 
-			commonAssemblies = new List <BlobAssemblyInfo> ();
-			archAssemblies = new Dictionary<string, List<BlobAssemblyInfo>> (StringComparer.OrdinalIgnoreCase);
+			blobs = new Dictionary<string, Blob> (StringComparer.Ordinal);
 		}
 
 		public void Add (BlobAssemblyInfo blobAssembly)
 		{
+			Add ("base", blobAssembly);
+		}
+
+		public void Add (string apkName, BlobAssemblyInfo blobAssembly)
+		{
+			if (String.IsNullOrEmpty (apkName)) {
+				throw new ArgumentException ("must not be null or empty", nameof (apkName));
+			}
+
+			Blob blob;
+			if (!blobs.ContainsKey (apkName)) {
+				blob = new Blob {
+					Common = new CommonAssemblyBlob (apkName, archiveAssembliesPrefix, log),
+					Arch = new ArchAssemblyBlob (apkName, archiveAssembliesPrefix, log)
+				};
+
+				blobs.Add (apkName, blob);
+				SetIndexBlob (blob.Common);
+				SetIndexBlob (blob.Arch);
+			}
+
+			blob = blobs[apkName];
 			if (String.IsNullOrEmpty (blobAssembly.Abi)) {
-				log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: adding common assembly {blobAssembly.FilesystemAssemblyPath}");
-				commonAssemblies.Add (blobAssembly);
-				return;
+				blob.Common.Add (blobAssembly);
+			} else {
+				blob.Arch.Add (blobAssembly);
 			}
 
-			if (!archAssemblies.ContainsKey (blobAssembly.Abi)) {
-				archAssemblies.Add (blobAssembly.Abi, new List<BlobAssemblyInfo> ());
-			}
-
-			log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: adding arch '{blobAssembly.Abi}' assembly {blobAssembly.FilesystemAssemblyPath}");
-			archAssemblies[blobAssembly.Abi].Add (blobAssembly);
-		}
-
-		public void Generate (string outputDirectory)
-		{
-			if (commonAssemblies.Count > 0) {
-				Generate (Path.Combine (outputDirectory, $"{BlobPrefix}{BlobExtension}"), commonAssemblies);
-			}
-
-			if (archAssemblies.Count == 0) {
-				return;
-			}
-
-			foreach (var kvp in archAssemblies) {
-				string abi = kvp.Key;
-				List<BlobAssemblyInfo> assemblies = kvp.Value;
-
-				if (assemblies.Count == 0) {
-					continue;
+			void SetIndexBlob (AssemblyBlob b)
+			{
+				if (!b.IsIndexBlob) {
+					return;
 				}
 
-				Generate (Path.Combine (outputDirectory, $"{BlobPrefix}_{abi}{BlobExtension}"), assemblies);
+				if (indexBlob != null) {
+					throw new InvalidOperationException ("Index blob already set!");
+				}
+
+				indexBlob = b;
 			}
 		}
 
-		void Generate (string outputFilePath, List<BlobAssemblyInfo> assemblies)
+		public Dictionary<string, List<string>> Generate (string outputDirectory)
 		{
-			log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: generating blob: {outputFilePath}");
-			// TODO: test with satellite assemblies, their name must include the culture prefix
-
-			using (var fs = File.Open (outputFilePath, FileMode.Create, FileAccess.Write, FileShare.Read)) {
-				using (var writer = new BinaryWriter (fs, Encoding.UTF8)) {
-					Generate (writer, assemblies);
-					writer.Flush ();
-				}
-			}
-		}
-
-		void Generate (BinaryWriter writer, List<BlobAssemblyInfo> assemblies)
-		{
-			Encoding assemblyNameEncoding = Encoding.UTF8;
-			int assemblyNameWidth = 0;
-			var names = new List<string> ();
-
-			Action<string> updateNameWidth = (string assemblyName) => {
-				int nameBytes = assemblyNameEncoding.GetBytes (assemblyName).Length;
-				if (nameBytes > assemblyNameWidth) {
-					assemblyNameWidth = nameBytes;
-				}
-			};
-
-			var index = new List<BlobIndexEntry> ();
-			foreach (BlobAssemblyInfo assembly in assemblies) {
-				log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: assembly fs path == '{assembly.FilesystemAssemblyPath}'; assembly archive path == '{assembly.ArchiveAssemblyPath}'");
-				string assemblyName = Path.GetFileNameWithoutExtension (assembly.FilesystemAssemblyPath);
-				if (assemblyName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
-					assemblyName = Path.GetFileNameWithoutExtension (assemblyName);
-				}
-
-				string archivePath = assembly.ArchiveAssemblyPath;
-				if (archivePath.StartsWith (archiveAssembliesPrefix, StringComparison.OrdinalIgnoreCase)) {
-					archivePath = archivePath.Substring (archiveAssembliesPrefix.Length);
-				}
-
-				if (!String.IsNullOrEmpty (assembly.Abi)) {
-					string abiPath = $"{assembly.Abi}/";
-					if (archivePath.StartsWith (abiPath, StringComparison.Ordinal)) {
-						archivePath = archivePath.Substring (abiPath.Length);
-					}
-				}
-
-				if (!String.IsNullOrEmpty (archivePath)) {
-					assemblyName = $"{archivePath}/{assemblyName}";
-				}
-
-				log.LogMessage (MessageImportance.Low, $"   => assemblyName == '{assemblyName}'; archivePath == '{archivePath}'");
-				updateNameWidth (assemblyName);
-
-				names.Add (assemblyName);
-				assembly.NameIndex = names.Count - 1;
-
-				BlobIndexEntry entry = WriteAssembly (writer, assembly, assemblyName);
-				index.Add (entry);
-				entry.Index = index.Count - 1;
+			if (blobs.Count == 0) {
+				return null;
 			}
 
-			writer.Flush ();
-			writer.Seek (0, SeekOrigin.Begin);
-
-			// Header, must be identical to the BundledAssemblyBlobHeader structure in src/monodroid/jni/xamarin-app.hh
-			writer.Write (BlobMagic);               // magic
-			writer.Write ((uint)index.Count);       // entry_count
-			writer.Write ((uint)assemblyNameWidth); // name_width
-
-			var sortedIndex = new List<BlobIndexEntry> (index);
-			sortedIndex.Sort ((BlobIndexEntry a, BlobIndexEntry b) => a.NameHash32.CompareTo (b.NameHash32));
-			foreach (BlobIndexEntry entry in sortedIndex) {
-				writer.Write (entry.NameHash32);
-				writer.Write (entry.Index);
+			if (indexBlob == null) {
+				throw new InvalidOperationException ("Index blob not found");
 			}
 
-			sortedIndex.Sort ((BlobIndexEntry a, BlobIndexEntry b) => a.NameHash64.CompareTo (b.NameHash64));
-			foreach (BlobIndexEntry entry in sortedIndex) {
-				writer.Write (entry.NameHash64);
-				writer.Write (entry.Index);
+			var globalIndex = new List<AssemblyBlobIndexEntry> ();
+			var ret = new Dictionary<string, List<string>> (StringComparer.Ordinal);
+			foreach (var kvp in blobs) {
+				string apkName = kvp.Key;
+				Blob blob = kvp.Value;
+
+				if (!ret.ContainsKey (apkName)) {
+					ret.Add (apkName, new List<string> ());
+				}
+
+				List<string> blobPaths = ret[apkName];
+				GenerateBlob (blob.Common, blobPaths);
+				GenerateBlob (blob.Arch, blobPaths);
 			}
 
-			foreach (BlobIndexEntry entry in index) {
-				writer.Write (entry.DataOffset);
-				writer.Write (entry.DataSize);
-				writer.Write (entry.DebugDataOffset);
-				writer.Write (entry.DebugDataSize);
-				writer.Write (entry.ConfigDataOffset);
-				writer.Write (entry.ConfigDataSize);
-			}
-
-			// TODO: write the names array
-		}
-
-		BlobIndexEntry WriteAssembly (BinaryWriter writer, BlobAssemblyInfo assembly, string assemblyName)
-		{
-			var ret = new BlobIndexEntry ();
-
+			indexBlob.WriteIndex (globalIndex);
 			return ret;
+
+			void GenerateBlob (AssemblyBlob blob, List<string> blobPaths)
+			{
+				blob.Generate (outputDirectory, globalIndex, blobPaths);
+			}
 		}
 	}
 }

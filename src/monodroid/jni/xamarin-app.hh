@@ -114,13 +114,15 @@ struct BlobHashEntry final
 		uint32_t hash32;
 	};
 
+	// ID/index into the array with pointers to assemblies from a single blob
+	uint32_t blob_id;
+
+	// Index into the array with pointers to actual assembly data
 	uint32_t index;
 };
 
 struct BlobBundledAssembly final
 {
-	uint32_t name_index;
-
 	uint32_t data_offset;
 	uint32_t data_size;
 
@@ -141,18 +143,23 @@ struct BlobBundledAssembly final
 // This way the `assemblies` array in the blob can remain read only, because we write the "mapped" assembly
 // pointer somewhere else. Otherwise we'd have to copy the `assemblies` array to a writable area of memory.
 //
+// Each blob has a unique ID assigned, which is an index into an array of pointers to arrays which store
+// individual assembly addresses. Only blob with ID 0 comes with the hashes32 and hashes64 arrays. This is
+// done to make it possible to use a single sorted array to find assemblies insted of each blob having its
+// own sorted array of hashes, which would require several binary searches instead of just one.
+//
 //   BundledAssemblyBlobHeader header;
-//   BlobHashEntry hashes32[header.entry_count];
-//   BlobHashEntry hashes64[header.entry_count];
-//   XamarinAndroidBundledAssembly assemblies[header.entry_count];
-//   char assembly_names[header.entry_count][header.name_width];
+//   BlobBundledAssembly assemblies[header.local_entry_count];
+//   BlobHashEntry hashes32[header.global_entry_count]; // only in blob with ID 0
+//   BlobHashEntry hashes64[header.global_entry_count]; // only in blob with ID 0
 //   [DATA]
 //
 struct BundledAssemblyBlobHeader final
 {
 	uint32_t magic;
-	uint32_t entry_count;
-	uint32_t name_width;
+	uint32_t local_entry_count;
+	uint32_t global_entry_count;
+	uint32_t blob_id;
 };
 
 struct ApplicationConfig
@@ -197,7 +204,6 @@ MONO_API const char* app_system_properties[];
 MONO_API const char* mono_aot_mode_name;
 
 MONO_API XamarinAndroidBundledAssembly bundled_assemblies[];
-MONO_API uint8_t* blob_bundled_assemblies_arch[];
-MONO_API uint8_t* blob_bundled_assemblies_common[];
+MONO_API uint8_t** blob_bundled_assemblies[];
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

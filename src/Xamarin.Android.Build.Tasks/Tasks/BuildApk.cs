@@ -340,6 +340,13 @@ namespace Xamarin.Android.Tasks
 			int count = 0;
 			BlobAssemblyInfo blobAssembly = null;
 
+			//
+			// NOTE
+			//
+			// The very first blob (ID 0) **must** contain an index of all the assemblies included in the application, even if they
+			// are included in other APKs than the base one. The ID 0 blob **must** be placed in the base assembly
+			//
+
 			// Add user assemblies
 			AddAssembliesFromCollection (ResolvedUserAssemblies);
 
@@ -348,7 +355,7 @@ namespace Xamarin.Android.Tasks
 			AddAssembliesFromCollection (ResolvedFrameworkAssemblies);
 
 			if (useAssembliesBlob) {
-				blobGenerator.Generate (Path.GetDirectoryName (ApkOutputPath));
+				Dictionary<string, List<string>> blobPaths = blobGenerator.Generate (Path.GetDirectoryName (ApkOutputPath));
 			}
 
 			void AddAssembliesFromCollection (ITaskItem[] assemblies)
@@ -655,7 +662,7 @@ namespace Xamarin.Android.Tasks
 
 			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
 			if (ndk == null) {
-				return; // NdkTools.Create will log appropriate error
+				return; // NdkTools.Create will Log appropriate error
 			}
 
 			string clangDir = ndk.GetClangDeviceLibraryPath ();

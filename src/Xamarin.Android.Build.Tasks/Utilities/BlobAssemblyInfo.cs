@@ -10,7 +10,6 @@ namespace Xamarin.Android.Tasks
 		public string DebugInfoPath { get; private set; }
 		public string ConfigPath { get; private set; }
 		public string Abi { get; }
-		public int NameIndex { get; set; }
 
 		public BlobAssemblyInfo (string filesystemAssemblyPath, string archiveAssemblyPath, string abi)
 		{
