@@ -289,6 +289,28 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void AppWithSingleJar ()
+		{
+			var proj = new XASdkProject {
+				Sources = {
+					new AndroidItem.AndroidLibrary ("Jars\\javaclasses.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					}
+				}
+			};
+
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Build (), "build should succeed");
+
+			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+			FileAssert.Exists (assemblyPath);
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
+				Assert.IsNotNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should contain {typeName}");
+			}
+		}
+
+		[Test]
 		public void GenerateResourceDesigner_false()
 		{
 			var proj = new XASdkProject (outputType: "Library") {
