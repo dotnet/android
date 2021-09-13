@@ -1403,8 +1403,7 @@ stages:
         command: push
         packagesToPush: $(System.DefaultWorkingDirectory)\nuget-signed\*.nupkg
         nuGetFeedType: external
-        # TODO: Change this to NuGet.org after testing
-        publishFeedCredentials: maui-net6-shipping public feed
+        publishFeedCredentials: Xamarin nuget.org - xamarinc
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -1417,8 +1416,7 @@ stages:
         command: push
         packagesToPush: $(System.DefaultWorkingDirectory)\vs-msi-nugets\*.nupkg
         nuGetFeedType: external
-        # TODO: Change this to NuGet.org after testing
-        publishFeedCredentials: maui-net6-shipping public feed
+        publishFeedCredentials: Xamarin nuget.org - xamarinc
 
 - stage: finalize_installers
   displayName: Finalize Installers
