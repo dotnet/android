@@ -19,25 +19,27 @@ Xamarin.Android and Xamarin.iOS/Mac SDKs:
 
 * `$(ApplicationId)` maps to `/manifest/@package` and
   `CFBundleIdentifier`
-* `$(ApplicationVersion)` maps to `android:versionName` or
-  `CFBundleVersion`. This is a version string that must be incremented
-  for each iOS App Store or TestFlight submission.
-* `$(AndroidVersionCode)` maps to `android:versionCode` (_Android
-  only)_. This is unfortunately an integer and must be incremented for
-  each Google Play submission.
-* `$(AppleShortVersion)` maps to `CFBundleShortVersionString` (_iOS
-  only)_. This can default to `$(ApplicationVersion)` when blank.
+* `$(ApplicationVersion)` maps to `android:versionCode` or
+  [`CFBundleVersion`][CFBundleVersion]. This is required to be an integer on Android and
+  less than 10000 on iOS. This value must be incremented for each
+  Google Play or App Store / TestFlight submission.
+* `$(ApplicationDisplayVersion)` maps to `android:versionName` or
+  [`CFBundleShortVersionString`][CFBundleShortVersionString]. This can
+  default to `$(ApplicationVersion)` when blank.
 * `$(ApplicationTitle)` maps to `/application/@android:title` or
   `CFBundleDisplayName`
+
+[CFBundleVersion]: https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html#//apple_ref/doc/uid/20001431-102364
+[CFBundleShortVersionString]: https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html#//apple_ref/doc/uid/20001431-111349
 
 The final value that is generated in the `Info.plist` or
 `AndroidManifest.xml` can be overridden at different times. The final
 source of truth is determined in order of:
 
-1. `Info.plist` or `AndroidManifest.xml` in the iOS/Android head project.
-2. iOS/Android head `.csproj` defines the MSBuild properties
-3. _(To be implemented in MAUI/Forms)_ set in a shared `.csproj`.
-4. The properties set by MSBuild via other means such as
+1. `Info.plist` or `AndroidManifest.xml` in the iOS/Android project.
+2. iOS/Android `.csproj` defines the MSBuild properties. This could
+   also be done in a .NET MAUI "Single Project".
+3. The properties set by MSBuild via other means such as
    `Directory.Build.props`, etc.
 
 Even if we did not complete the goal of complete removal of
@@ -57,7 +59,7 @@ property to disable the behavior.
 In most cases, developers would only use `$(GenerateApplicationManifest)`
 if they want to try the new features in "legacy" Xamarin.
 
-## AssemblyVersion and FileVersion
+## Version, AssemblyVersion, FileVersion, and InformationalVersion
 
 Since we are adding *more* version properties, we should consider
 adding defaults to consolidate the assembly-level attributes when
@@ -67,15 +69,21 @@ The full list of defaults might be something like:
 
 ```xml
 <PropertyGroup>
-  <ApplicationVersion Condition=" '$(ApplicationVersion)' == '' ">1.0</ApplicationVersion>
-  <!-- Android only -->
-  <AndroidVersionCode Condition=" '$(AndroidVersionCode)' == '' ">1</AndroidVersionCode>
-  <!-- Apple platforms only -->
-  <AppleShortVersion Condition=" '$(AppleShortVersion)' == '' ">$(ApplicationVersion)</ApplicationVersion>
-  <AssemblyVersion Condition=" '$(AssemblyVersion)' == '' ">$(ApplicationVersion)</AssemblyVersion>
-  <FileVersion Condition=" '$(FileVersion)' == '' ">$(ApplicationVersion)</FileVersion>
+  <ApplicationVersion Condition=" '$(ApplicationVersion)' == '' ">1</ApplicationVersion>
+  <Version Condition=" '$(ApplicationDisplayVersion)' != '' ">$(ApplicationDisplayVersion)</Version>
+  <ApplicationDisplayVersion Condition=" '$(ApplicationDisplayVersion)' == '' ">$(Version)</ApplicationDisplayVersion>
 </PropertyGroup>
 ```
+
+The dotnet/sdk defaults `$(Version)` to 1.0.0 and uses it to set:
+
+* `$(AssemblyVersion)`
+* `$(FileVersion)`
+* `$(InformationalVersion)`
+
+If we expect users to set `$(ApplicationVersion)` and
+`$(ApplicationDisplayVersion)` in mobile apps, we can use the value of
+`$(ApplicationDisplayVersion)` for `$(Version)` as well.
 
 ## Android Template
 
@@ -88,8 +96,8 @@ The default Android project template would include:
     <TargetFramework>net6.0-android</TargetFramework>
     <ApplicationTitle>@string/application_title</ApplicationTitle>
     <ApplicationId>com.companyname.myapp</ApplicationId>
-    <ApplicationVersion>1.0</ApplicationVersion>
-    <AndroidVersionCode>1</AndroidVersionCode>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
 </Project>
 
@@ -119,13 +127,11 @@ The default iOS project template would include:
     <TargetFramework>net6.0-ios</TargetFramework>
     <ApplicationTitle>MyApp</ApplicationTitle>
     <ApplicationId>com.companyname.myapp</ApplicationId>
-    <ApplicationVersion>1.0</ApplicationVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
 </Project>
 ```
-
-`$(AppleShortVersion)` can default to `$(ApplicationVersion)` when
-blank.
 
 Removed from `Info.plist` in the project template:
 
@@ -139,45 +145,26 @@ MSBuild properties.
 
 ## Example
 
-You could setup a cross-platform solution in .NET 6 with:
+The .NET MAUI project template (`dotnet new maui`):
 
-* `Hello/Hello.csproj` - `net6.0` shared code
-* `HelloAndroid/HelloAndroid.csproj` - `net6.0-android`
-* `HelloiOS/HelloiOS.csproj` - `net6.0-ios`
-* `Hello.sln`
-* `Directory.Build.props`
+* `HelloMaui/HelloMaui.csproj` - multi-targeted for `net6.0-android`,
+  `net6.0-ios`, `net6.0-maccatalyst`, etc.
 
-Where `Directory.Build.props` can be setup for both platforms at once
-with:
+Where the versions can be setup for both platforms at once with:
 
 ```xml
 <Project>
   <PropertyGroup>
     <ApplicationTitle>Hello!</ApplicationTitle>
     <ApplicationId>com.companyname.hello</ApplicationId>
-    <ApplicationVersion>1.0.0</ApplicationVersion>
-    <AndroidVersionCode>1</AndroidVersionCode>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
 </Project>
 ```
 
 In this project, a developer would increment `$(ApplicationVersion)`
-and `$(AndroidVersionCode)` for each public release.
-
-For our long-term vision, we could one day have a single project that
-multi-targets:
-
-```xml
-<Project>
-  <PropertyGroup>
-    <TargetFrameworks>net6.0-android;net6.0-ios</TargetFrameworks>
-    <ApplicationTitle>Hello!</ApplicationTitle>
-    <ApplicationId>com.companyname.hello</ApplicationId>
-    <ApplicationVersion>1.0.0</ApplicationVersion>
-    <AndroidVersionCode>1</AndroidVersionCode>
-  </PropertyGroup>
-</Project>
-```
+and `$(ApplicationDisplayVersion)` for each public release.
 
 ## Localization
 
@@ -203,8 +190,7 @@ and Android. This is a consideration for the future.
 
 In future iterations, we can consider additional MSBuild properties
 beyond `$(ApplicationTitle)`, `$(ApplicationId)`,
-`$(ApplicationVersion)`, `$(AndroidVersionCode)`, and
-`$(AppleShortVersion)`.
+`$(ApplicationVersion)`, and `$(ApplicationDisplayVersion)`.
 
 This is a list of additional properties that cover most of the
 property pages in Visual Studio:
