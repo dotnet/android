@@ -134,10 +134,9 @@ namespace Bug12935
 			};
 			proj.MainActivity = ScreenOrientationActivity;
 			proj.AndroidUseAapt2 = useAapt2;
-			var directory = $"temp/CheckElementReOrdering_{useAapt2}";
-			using (var builder = CreateApkBuilder (directory)) {
+			using (var builder = CreateApkBuilder ()) {
 				proj.AndroidManifest = ElementOrderManifest;
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				Assert.IsTrue (builder.Build (proj), "first build should have succeeded");
 				var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				XDocument doc = XDocument.Load (manifestFile);
 				var ns = doc.Root.GetNamespaceOfPrefix ("android");
@@ -152,6 +151,11 @@ namespace Bug12935
 				AssertAttribute (action, ns + "name", "android.intent.action.MAIN");
 				var category = GetElement (intent_filter, "category");
 				AssertAttribute (category, ns + "name", "android.intent.category.LAUNCHER");
+
+				// Add Exported=true and build again
+				proj.MainActivity = proj.MainActivity.Replace ("MainLauncher = true,", "MainLauncher = true, Exported = true,");
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (builder.Build (proj), "second build should have succeeded");
 			}
 
 			static XElement GetElement (XContainer parent, XName name)
