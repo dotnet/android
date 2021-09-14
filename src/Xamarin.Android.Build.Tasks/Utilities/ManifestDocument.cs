@@ -798,7 +798,13 @@ namespace Xamarin.Android.Tasks {
 				return;
 
 			var filter = new XElement ("intent-filter");
-			activity.Add (new XAttribute (androidNs + "exported", "true"));
+
+			// Add android:exported="true" if not already present
+			XName exported = androidNs + "exported";
+			if (activity.Attribute (exported) == null) {
+				activity.Add (new XAttribute (exported, "true"));
+			}
+
 			activity.AddFirst (filter);
 			foreach (KeyValuePair<string, string> e in LauncherIntentElements) {
 				if (!filter.Elements (e.Key).Any (x => ((string) x.Attribute (attName)) == e.Value))
