@@ -292,7 +292,7 @@ namespace Xamarin.Android.Tasks
 			int blobArchAssemblyCount = 0;
 			HashSet<string> archAssemblyNames = null;
 
-			Action<ITaskItem> updateBlobCounts = (ITaskItem assembly) => {
+			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
 				if (!UseAssembliesBlob) {
 					assemblyCount++;
 					return;
@@ -300,7 +300,7 @@ namespace Xamarin.Android.Tasks
 
 				string abi = assembly.GetMetadata ("Abi");
 				if (String.IsNullOrEmpty (abi)) {
-					blobCommonAssemblyCount++;
+					assemblyCount++;
 				} else {
 					if (archAssemblyNames == null) {
 						archAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
@@ -308,24 +308,22 @@ namespace Xamarin.Android.Tasks
 
 					string assemblyName = Path.GetFileName (assembly.ItemSpec);
 					if (!archAssemblyNames.Contains (assemblyName)) {
-						blobArchAssemblyCount++;
+						assemblyCount++;
 						archAssemblyNames.Add (assemblyName);
 					}
 				}
 			};
 
 			if (SatelliteAssemblies != null) {
-				assemblyCount += SatelliteAssemblies.Length;
-
 				foreach (ITaskItem assembly in SatelliteAssemblies) {
 					updateNameWidth (assembly);
-					updateBlobCounts (assembly);
+					updateAssemblyCount (assembly);
 				}
 			}
 
 			foreach (var assembly in ResolvedAssemblies) {
 				updateNameWidth (assembly);
-				updateBlobCounts (assembly);
+				updateAssemblyCount (assembly);
 			}
 
 			if (!UseAssembliesBlob) {
@@ -366,8 +364,6 @@ namespace Xamarin.Android.Tasks
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					HaveAssembliesBlob = UseAssembliesBlob,
-					NumberOfCommonBlobAssemblies = blobCommonAssemblyCount,
-					NumberOfArchBlobAssemblies = blobArchAssemblyCount,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

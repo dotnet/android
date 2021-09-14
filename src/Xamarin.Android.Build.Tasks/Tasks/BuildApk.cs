@@ -354,8 +354,31 @@ namespace Xamarin.Android.Tasks
 			count = 0;
 			AddAssembliesFromCollection (ResolvedFrameworkAssemblies);
 
-			if (useAssembliesBlob) {
-				Dictionary<string, List<string>> blobPaths = blobGenerator.Generate (Path.GetDirectoryName (ApkOutputPath));
+			if (!useAssembliesBlob) {
+				return;
+			}
+
+			// Currently, all the assembly blobs end up in the "base" apk (the APK name is the key in the dictionary below) but the code is ready for the time when we
+			// partition assemblies into "feature" APKs
+			const string BaseApkName = "base";
+
+			Dictionary<string, List<string>> blobPaths = blobGenerator.Generate (Path.GetDirectoryName (ApkOutputPath));
+			if (blobPaths == null) {
+				throw new InvalidOperationException ("Blob generator did not generate any blobs");
+			}
+
+			if (!blobPaths.TryGetValue (BaseApkName, out List<string> baseBlobs) || baseBlobs == null || baseBlobs.Count == 0) {
+				throw new InvalidOperationException ("Blob generator didn't generate the required base blobs");
+			}
+
+			string blobPrefix = $"{BaseApkName}_";
+			foreach (string blobPath in baseBlobs) {
+				string inArchiveName = Path.GetFileName (blobPath);
+
+				if (inArchiveName.StartsWith (blobPrefix, StringComparison.Ordinal)) {
+					inArchiveName = inArchiveName.Substring (blobPrefix.Length);
+				}
+				AddFileToArchiveIfNewer (apk, blobPath, AssembliesPath + inArchiveName, compressionMethod: UncompressedMethod);
 			}
 
 			void AddAssembliesFromCollection (ITaskItem[] assemblies)
@@ -413,7 +436,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					if (useAssembliesBlob) {
-						blobGenerator.Add (blobAssembly);
+						blobGenerator.Add (BaseApkName, blobAssembly);
 					} else {
 						count++;
 						if (count >= ZipArchiveEx.ZipFlushFilesLimit) {

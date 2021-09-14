@@ -36,11 +36,6 @@ namespace Xamarin.Android.Tasks
 			blobs = new Dictionary<string, Blob> (StringComparer.Ordinal);
 		}
 
-		public void Add (BlobAssemblyInfo blobAssembly)
-		{
-			Add ("base", blobAssembly);
-		}
-
 		public void Add (string apkName, BlobAssemblyInfo blobAssembly)
 		{
 			if (String.IsNullOrEmpty (apkName)) {
@@ -100,17 +95,16 @@ namespace Xamarin.Android.Tasks
 					ret.Add (apkName, new List<string> ());
 				}
 
-				List<string> blobPaths = ret[apkName];
-				GenerateBlob (blob.Common, blobPaths);
-				GenerateBlob (blob.Arch, blobPaths);
+				GenerateBlob (blob.Common, apkName);
+				GenerateBlob (blob.Arch, apkName);
 			}
 
 			indexBlob.WriteIndex (globalIndex);
 			return ret;
 
-			void GenerateBlob (AssemblyBlob blob, List<string> blobPaths)
+			void GenerateBlob (AssemblyBlob blob, string apkName)
 			{
-				blob.Generate (outputDirectory, globalIndex, blobPaths);
+				blob.Generate (outputDirectory, globalIndex, ret[apkName]);
 			}
 		}
 	}

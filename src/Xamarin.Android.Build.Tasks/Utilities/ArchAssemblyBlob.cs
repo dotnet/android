@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			seenArchAssemblyNames.Add (assemblyName);
-			AssemblyIndex.Add (new AssemblyBlobIndexEntry (assemblyName, ID, (uint)blobAssemblies.Count - 1));
+			AssemblyIndex.Add (new AssemblyBlobIndexEntry (assemblyName, ID));
 		}
 
 		public override void Generate (string outputDirectory, List<AssemblyBlobIndexEntry> globalIndex, List<string> blobPaths)

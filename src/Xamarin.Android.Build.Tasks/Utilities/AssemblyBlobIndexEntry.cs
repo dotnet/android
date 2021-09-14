@@ -7,6 +7,8 @@ namespace Xamarin.Android.Tasks
 {
 	class AssemblyBlobIndexEntry
 	{
+		static uint globalAssemblyIndex = 0;
+
 		public string Name { get; }
 		public uint BlobID { get; }
 		public uint Index { get; }
@@ -24,7 +26,7 @@ namespace Xamarin.Android.Tasks
 		public uint ConfigDataOffset { get; set; }
 		public uint ConfigDataSize { get; set; }
 
-		public AssemblyBlobIndexEntry (string name, uint blobID, uint index)
+		public AssemblyBlobIndexEntry (string name, uint blobID)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -32,7 +34,9 @@ namespace Xamarin.Android.Tasks
 
 			Name = name;
 			BlobID = blobID;
-			Index = index;
+
+			// NOTE: NOT thread safe, if we ever have parallel runs of BuildApk this operation must either be atomic or protected with a lock
+			Index = globalAssemblyIndex++;
 
 			byte[] nameBytes = Encoding.UTF8.GetBytes (name);
 			NameHash32 = XXH32.DigestOf (nameBytes, 0, nameBytes.Length);

@@ -48,8 +48,6 @@ ApplicationConfig application_config = {
 	.environment_variable_count = 0,
 	.system_property_count = 0,
 	.number_of_assemblies_in_apk = 2,
-	.number_of_common_blob_assemblies = 2,
-	.number_of_arch_blob_assemblies = 2,
 	.android_package_name = "com.xamarin.test",
 };
 
@@ -82,12 +80,7 @@ XamarinAndroidBundledAssembly bundled_assemblies[] = {
 	},
 };
 
-uint8_t* blob_bundled_assemblies_arch[] = {
-	nullptr,
-	nullptr,
-};
-
-uint8_t* blob_bundled_assemblies_common[] = {
+uint8_t* blob_bundled_assemblies[] = {
 	nullptr,
 	nullptr,
 };

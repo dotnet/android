@@ -114,10 +114,8 @@ struct BlobHashEntry final
 		uint32_t hash32;
 	};
 
-	// ID/index into the array with pointers to assemblies from a single blob
-	uint32_t blob_id;
-
-	// Index into the array with pointers to actual assembly data
+	// Index into the array with pointers to assembly data.
+	// It **must** be unique across all the blobs from all the apks
 	uint32_t index;
 };
 
@@ -178,8 +176,6 @@ struct ApplicationConfig
 	uint32_t environment_variable_count;
 	uint32_t system_property_count;
 	uint32_t number_of_assemblies_in_apk;
-	uint32_t number_of_common_blob_assemblies;
-	uint32_t number_of_arch_blob_assemblies;
 	uint32_t bundled_assembly_name_width;
 	const char *android_package_name;
 };
@@ -204,6 +200,6 @@ MONO_API const char* app_system_properties[];
 MONO_API const char* mono_aot_mode_name;
 
 MONO_API XamarinAndroidBundledAssembly bundled_assemblies[];
-MONO_API uint8_t** blob_bundled_assemblies[];
+MONO_API uint8_t* blob_bundled_assemblies[];
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

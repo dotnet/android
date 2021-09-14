@@ -32,12 +32,10 @@ namespace Xamarin.Android.Build.Tests
 			public uint   environment_variable_count;
 			public uint   system_property_count;
 			public uint   number_of_assemblies_in_apk;
-			public uint   number_of_common_blob_assemblies;
-			public uint   number_of_arch_blob_assemblies;
 			public uint   bundled_assembly_name_width;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 18;
+		const uint ApplicationConfigFieldCount = 16;
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -191,22 +189,12 @@ namespace Xamarin.Android.Build.Tests
 						ret.number_of_assemblies_in_apk = ConvertFieldToUInt32 ("number_of_assemblies_in_apk", envFile, i, field [1]);
 						break;
 
-					case 14: // number_of_common_blob_assemblies: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.number_of_common_blob_assemblies = ConvertFieldToUInt32 ("number_of_common_blob_assemblies", envFile, i, field [1]);
-						break;
-
-					case 15: // number_of_arch_blob_assemblies: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.number_of_arch_blob_assemblies = ConvertFieldToUInt32 ("number_of_arch_blob_assemblies", envFile, i, field [1]);
-						break;
-
-					case 16: // bundled_assembly_name_width: uint32_t / .word | .long
+					case 14: // bundled_assembly_name_width: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile, i, field [1]);
 						break;
 
-					case 17: // android_package_name: string / [pointer type]
+					case 15: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;

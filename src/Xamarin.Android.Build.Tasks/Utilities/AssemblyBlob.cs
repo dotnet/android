@@ -11,7 +11,6 @@ namespace Xamarin.Android.Tasks
 {
 	abstract class AssemblyBlob
 	{
-
 		const uint BlobMagic = 0x41424158; // 'XABA', little-endian
 
 		// MUST be equal to the size of the BlobBundledAssembly struct in src/monodroid/jni/xamarin-app.hh
@@ -134,7 +133,6 @@ namespace Xamarin.Android.Tasks
 			void WriteHash (AssemblyBlobIndexEntry entry, ulong hash)
 			{
 				writer.Write (hash);
-				writer.Write (entry.BlobID);
 				writer.Write (entry.Index);
 			}
 		}
@@ -207,7 +205,7 @@ namespace Xamarin.Android.Tasks
 					assemblyName = $"{archivePath}/{assemblyName}";
 				}
 
-				AssemblyBlobIndexEntry entry = WriteAssembly (writer, assembly, assemblyName, (uint)localAssemblies.Count);
+				AssemblyBlobIndexEntry entry = WriteAssembly (writer, assembly, assemblyName);
 				Log.LogMessage (MessageImportance.Low, $"   => assemblyName == '{entry.Name}'; dataOffset == {entry.DataOffset}");
 				globalIndex.Add (entry);
 				localAssemblies.Add (entry);
@@ -278,13 +276,13 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		AssemblyBlobIndexEntry WriteAssembly (BinaryWriter writer, BlobAssemblyInfo assembly, string assemblyName, uint index)
+		AssemblyBlobIndexEntry WriteAssembly (BinaryWriter writer, BlobAssemblyInfo assembly, string assemblyName)
 		{
 			uint offset;
 			uint size;
 
 			(offset, size) = WriteFile (assembly.FilesystemAssemblyPath, true);
-			var ret = new AssemblyBlobIndexEntry (assemblyName, ID, index) {
+			var ret = new AssemblyBlobIndexEntry (assemblyName, ID) {
 				DataOffset = offset,
 				DataSize = size,
 			};

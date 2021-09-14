@@ -26,8 +26,6 @@ namespace Xamarin.Android.Tasks
 		public bool HaveRuntimeConfigBlob { get; set; }
 		public bool HaveAssembliesBlob { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
-		public int NumberOfCommonBlobAssemblies { get; set; }
-		public int NumberOfArchBlobAssemblies { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
@@ -98,12 +96,6 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "number_of_assemblies_in_apk");
 				size += WriteData (output, NumberOfAssembliesInApk);
 
-				WriteCommentLine (output, "number_of_common_blob_assemblies");
-				size += WriteData (output, NumberOfCommonBlobAssemblies);
-
-				WriteCommentLine (output, "number_of_arch_blob_assemblies");
-				size += WriteData (output, NumberOfArchBlobAssemblies);
-
 				WriteCommentLine (output, "bundled_assembly_name_width");
 				size += WriteData (output, BundledAssemblyNameWidth);
 
@@ -127,44 +119,45 @@ namespace Xamarin.Android.Tasks
 
 		void WriteBlobAssemblies (StreamWriter output)
 		{
-			WriteBlobs ("Blob assemblies data, architecture specific", "blob_bundled_assemblies_arch", NumberOfArchBlobAssemblies);
-			WriteBlobs ("Blob assemblies data, archiecture agnostic", "blob_bundled_assemblies_common", NumberOfCommonBlobAssemblies);
+			output.WriteLine ();
 
-			void WriteBlobs (string comment, string label, int count)
-			{
-				WriteCommentLine (output, comment);
-				WriteDataSection (output, label);
-				WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
+			string label = "blob_bundled_assemblies";
+			WriteCommentLine (output, "Blob assemblies data");
+			WriteDataSection (output, label);
+			WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
 
-				uint size = 0;
-				for (int i = 0; i < count; i++) {
+			uint size = 0;
+			if (HaveAssembliesBlob) {
+				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
 					size += WriteStructure (output, packed: false, structureWriter: () => WriteBlobAssembly (output));
 				}
-				WriteStructureSize (output, label, size);
 			}
+			WriteStructureSize (output, label, size);
 		}
 
 		uint WriteBlobAssembly (StreamWriter output)
 		{
-			WriteCommentLine (output, "mapped assembly pointer");
-			uint size = WritePointer (output);
-
-			output.WriteLine ();
-
-			return size;
+			return WritePointer (output);
 		}
 
 		void WriteBundledAssemblies (StreamWriter output)
 		{
+			output.WriteLine ();
+
 			WriteCommentLine (output, $"Bundled assembly name buffers, all {BundledAssemblyNameWidth} bytes long");
 			WriteSection (output, ".bss.bundled_assembly_names", hasStrings: false, writable: true, nobits: true);
 
-			var name_labels = new List<string> ();
-			for (int i = 0; i < NumberOfAssembliesInApk; i++) {
-				string bufferLabel = GetBufferLabel ();
-				WriteBufferAllocation (output, bufferLabel, (uint)BundledAssemblyNameWidth);
-				name_labels.Add (bufferLabel);
+			List<string> name_labels = null;
+			if (!HaveAssembliesBlob) {
+				name_labels = new List<string> ();
+				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+					string bufferLabel = GetBufferLabel ();
+					WriteBufferAllocation (output, bufferLabel, (uint)BundledAssemblyNameWidth);
+					name_labels.Add (bufferLabel);
+				}
 			}
+
+			output.WriteLine ();
 
 			string label = "bundled_assemblies";
 			WriteCommentLine (output, "Bundled assemblies data");
@@ -172,11 +165,16 @@ namespace Xamarin.Android.Tasks
 			WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
 
 			uint size = 0;
-			for (int i = 0; i < NumberOfAssembliesInApk; i++) {
-				size += WriteStructure (output, packed: false, structureWriter: () => WriteBundledAssembly (output, MakeLocalLabel (name_labels[i])));
+			if (!HaveAssembliesBlob) {
+				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+					size += WriteStructure (output, packed: false, structureWriter: () => WriteBundledAssembly (output, MakeLocalLabel (name_labels[i])));
+				}
 			}
 			WriteStructureSize (output, label, size);
+
+			output.WriteLine ();
 		}
+
 
 		uint WriteBundledAssembly (StreamWriter output, string nameLabel)
 		{
