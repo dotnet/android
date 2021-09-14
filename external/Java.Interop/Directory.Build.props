@@ -40,7 +40,7 @@
     <AppendTargetFrameworkToOutputPath Condition=" '$(AppendTargetFrameworkToOutputPath)' == '' ">False</AppendTargetFrameworkToOutputPath>
     <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" ( '$(TargetFramework)' != '' AND !$(TargetFramework.StartsWith('nets'))) AND (!$(TargetFramework.StartsWith('net4'))) "> 
+  <PropertyGroup Condition=" '$(TargetFramework)' != '' And (!$(TargetFramework.StartsWith('nets')) And !$(TargetFramework.StartsWith('net4')) And !$(TargetFramework.StartsWith('monoandroid'))) ">
     <JIBuildingForNetCoreApp>True</JIBuildingForNetCoreApp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">

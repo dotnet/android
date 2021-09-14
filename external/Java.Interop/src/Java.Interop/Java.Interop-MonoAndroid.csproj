@@ -86,8 +86,8 @@
   <Import Project="Directory.Build.targets" />
   <PropertyGroup>
     <BuildDependsOn>
-      BuildVersionInfo_g_cs;
       BuildJniEnvironment_g_cs;
+      BuildVersionInfo_g_cs;
       BuildInteropJar;
       $(BuildDependsOn)
     </BuildDependsOn>
