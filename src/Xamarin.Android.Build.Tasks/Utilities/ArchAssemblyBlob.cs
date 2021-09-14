@@ -47,7 +47,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			seenArchAssemblyNames.Add (assemblyName);
-			AssemblyIndex.Add (new AssemblyBlobIndexEntry (assemblyName, ID));
 		}
 
 		public override void Generate (string outputDirectory, List<AssemblyBlobIndexEntry> globalIndex, List<string> blobPaths)
@@ -56,7 +55,36 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			// TODO: make sure all the lists are identical
+			var assemblyNames = new Dictionary<int, string> ();
+			foreach (var kvp in assemblies) {
+				string abi = kvp.Key;
+				List<BlobAssemblyInfo> archAssemblies = kvp.Value;
+
+				// All the architecture blobs must have assemblies in exactly the same order
+				archAssemblies.Sort ((BlobAssemblyInfo a, BlobAssemblyInfo b) => Path.GetFileName (a.FilesystemAssemblyPath).CompareTo (Path.GetFileName (b.FilesystemAssemblyPath)));
+				if (assemblyNames.Count == 0) {
+					for (int i = 0; i < archAssemblies.Count; i++) {
+						BlobAssemblyInfo info = archAssemblies[i];
+						assemblyNames.Add (i, Path.GetFileName (info.FilesystemAssemblyPath));
+					}
+					continue;
+				}
+
+				if (archAssemblies.Count != assemblyNames.Count) {
+					throw new InvalidOperationException ($"Assembly list for ABI '{abi}' has a different number of assemblies than other ABI lists");
+				}
+
+				for (int i = 0; i < archAssemblies.Count; i++) {
+					BlobAssemblyInfo info = archAssemblies[i];
+					string fileName = Path.GetFileName (info.FilesystemAssemblyPath);
+
+					if (assemblyNames[i] != fileName) {
+						throw new InvalidOperationException ($"Assembly list for ABI '{abi}' differs from other lists at index {i}. Expected '{assemblyNames[i]}', found '{fileName}'");
+					}
+				}
+			}
+
+			bool addToGlobalIndex = true;
 			foreach (var kvp in assemblies) {
 				string abi = kvp.Key;
 				List<BlobAssemblyInfo> archAssemblies = kvp.Value;
@@ -65,7 +93,17 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				Generate (Path.Combine (outputDirectory, $"{ApkName}_{BlobPrefix}_{abi}{BlobExtension}"), archAssemblies, globalIndex, blobPaths);
+				Generate (Path.Combine (outputDirectory, $"{ApkName}_{BlobPrefix}_{abi}{BlobExtension}"), archAssemblies, globalIndex, blobPaths, addToGlobalIndex);
+
+				// NOTE: not thread safe! The counter must grow monotonically but we also don't want to use different index values for the architecture-specific
+				// assemblies with the same names, that would only waste space in the generated `libxamarin-app.so`.  To use the same index values for the same
+				// assemblies in different architectures we need to move the counter back here.
+				globalAssemblyIndex -= (uint)archAssemblies.Count;
+
+				if (addToGlobalIndex) {
+					// We want the architecture-specific assemblies to be added to the global index only once
+					addToGlobalIndex = false;
+				}
 			}
 
 		}

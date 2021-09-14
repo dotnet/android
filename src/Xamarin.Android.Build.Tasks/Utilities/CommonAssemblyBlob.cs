@@ -26,7 +26,6 @@ namespace Xamarin.Android.Tasks
 
 			Log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: adding Common assembly {blobAssembly.FilesystemAssemblyPath}");
 			assemblies.Add (blobAssembly);
-			AssemblyIndex.Add (new AssemblyBlobIndexEntry (GetAssemblyName (blobAssembly), ID));
 		}
 
 		public override void Generate (string outputDirectory, List<AssemblyBlobIndexEntry> globalIndex, List<string> blobPaths)
