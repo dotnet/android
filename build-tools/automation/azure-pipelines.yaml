@@ -925,8 +925,7 @@ stages:
   # Check - "Xamarin.Android (Smoke Tests MSBuild Emulator - Windows)"
   - job: win_msbuilddevice_smoketests
     displayName: MSBuild Emulator - Windows
-    pool:
-      vmImage: $(VSEngWinVS2019)
+    pool: $(VSEngWinVS2019)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
