@@ -78,16 +78,11 @@ namespace Xamarin.Android.Tasks
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
 
-			var commandLineToolsDir = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion)
-				.FirstOrDefault () ?? "";
-
-			var lintPaths = new string [] {
-				LintToolPath ?? string.Empty,
-				commandLineToolsDir,
-				Path.Combine (commandLineToolsDir, "bin"),
-				Path.Combine (AndroidSdkPath, "tools"),
-				Path.Combine (AndroidSdkPath, "tools", "bin"),
-			};
+			var lintPaths = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion)
+				.SelectMany (p => new[]{
+					p,
+					Path.Combine (p, "bin"),
+				});
 
 			LintToolPath = null;
 			foreach (var path in lintPaths) {

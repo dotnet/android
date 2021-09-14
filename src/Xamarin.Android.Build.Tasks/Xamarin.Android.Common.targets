@@ -626,12 +626,6 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(_AndroidToolsDirectory)" Condition="Exists ('$(_AndroidToolsDirectory)')">
-		<Output TaskParameter="Value" PropertyName="LintToolPath"
-				Condition="'$(LintToolPath)' == ''"
-		/>
-	</CreateProperty>
-
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)\proguard\">
 		<Output TaskParameter="Value" PropertyName="ProguardToolPath"
 				Condition="'$(ProguardToolPath)' == ''"
@@ -730,6 +724,8 @@ because xbuild doesn't support framework reference assemblies.
 	<!-- We should slowly port all the <CreateProperty/> calls to <PropertyGroup/> here -->
 	<PropertyGroup>
 		<AProfUtilToolPath Condition=" '$(AProfUtilToolPath)' == '' ">$(MonoAndroidBinDirectory)</AProfUtilToolPath>
+		<_DefaultLintToolPath>$(_AndroidSdkDirectory)\cmdline-tools\$(AndroidCommandLineToolsVersion)\bin</_DefaultLintToolPath>
+		<LintToolPath Condition=" '$(LintToolPath)' == '' And Exists ($(_DefaultLintToolPath)) ">$(_DefaultLintToolPath)</LintToolPath>
 	</PropertyGroup>
 
 	<!-- Get the defined constants for this API Level -->
