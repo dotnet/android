@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Xamarin.Android.Tasks;
+using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
@@ -15,7 +15,6 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("Node-2")]
 	public class FilterAssembliesTests : BaseTest
 	{
-		HttpClient httpClient = new HttpClient ();
 		string tempDirectory;
 
 		[SetUp]
@@ -31,17 +30,8 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (tempDirectory, recursive: true);
 		}
 
-		async Task<string> DownloadFromNuGet (string url)
-		{
-			var response = await httpClient.GetAsync (url);
-			response.EnsureSuccessStatusCode ();
-			var temp = Path.Combine (tempDirectory, Path.GetRandomFileName ());
-			using (var httpStream = await response.Content.ReadAsStreamAsync ())
-			using (var fileStream = File.Create (temp)) {
-				await httpStream.CopyToAsync (fileStream);
-			}
-			return temp;
-		}
+		Task<string> DownloadFromNuGet (string url) =>
+			Task.Factory.StartNew (() => new DownloadedCache ().GetAsFile (url));
 
 		async Task<string []> GetAssembliesFromNuGet (string url, string path)
 		{
