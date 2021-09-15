@@ -78,9 +78,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var p = new Process () {
 				StartInfo = psi,
 			};
-			psi.EnvironmentVariables ["ANDROID_HOME"]       = AvdManagerHome;
+			var sdkHome = Path.Combine (AvdManagerHome, "sdk");
+			psi.EnvironmentVariables ["ANDROID_HOME"]       = sdkHome;
 			psi.EnvironmentVariables ["ANDROID_PREFS_ROOT"] = AvdManagerHome;
-			psi.EnvironmentVariables ["ANDROID_SDK_ROOT"]   = Path.Combine (AvdManagerHome, "sdk");
+			psi.EnvironmentVariables ["ANDROID_SDK_ROOT"]   = sdkHome;
 			Log.LogMessage (MessageImportance.Low, $"\tANDROID_HOME=\"{psi.EnvironmentVariables ["ANDROID_HOME"]}\"");
 			Log.LogMessage (MessageImportance.Low, $"\tANDROID_PREFS_ROOT=\"{psi.EnvironmentVariables ["ANDROID_PREFS_ROOT"]}\"");
 			Log.LogMessage (MessageImportance.Low, $"\tANDROID_SDK_ROOT=\"{psi.EnvironmentVariables ["ANDROID_SDK_ROOT"]}\"");
