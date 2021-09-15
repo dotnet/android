@@ -178,13 +178,15 @@ In this message, the phrase "should not be reached" means that this error messag
     <comment>The abbreviation "JDK" should not be translated.</comment>
   </data>
   <data name="XA0031" xml:space="preserve">
-    <value>Java SDK {0} or above is required when using {1}.  Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11</value>
+    <value>Java SDK {0} or above is required when using {1}.
+Download the latest JDK at: https://aka.ms/msopenjdk
+Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11</value>
     <comment>
 {0} - The Java SDK version number
 {1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</comment>
   </data>
   <data name="XA0031_NET" xml:space="preserve">
-    <value>Java SDK {0} or above is required when using .NET 6 or higher.</value>
+    <value>Java SDK {0} or above is required when using .NET 6 or higher. Download the latest JDK at: https://aka.ms/msopenjdk</value>
     <comment>
 {0} - The Java SDK version number</comment>
   </data>
