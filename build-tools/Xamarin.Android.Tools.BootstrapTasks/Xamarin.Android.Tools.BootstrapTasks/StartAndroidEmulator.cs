@@ -79,6 +79,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				StartInfo = psi,
 			};
 			psi.EnvironmentVariables ["ANDROID_PREFS_ROOT"] = AvdManagerHome;
+			psi.EnvironmentVariables ["ANDROID_SDK_ROOT"] = Path.Combine (AvdManagerHome, "sdk");
 			Log.LogMessage (MessageImportance.Low, $"\tANDROID_PREFS_ROOT=\"{AvdManagerHome}\"");
 
 			var sawError        = new AutoResetEvent (false);
