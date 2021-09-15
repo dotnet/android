@@ -127,7 +127,7 @@
   </Target>
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
-      Inputs="metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api.xml"
+      Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api.xml"
       Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems">
     <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
@@ -143,6 +143,16 @@
           Include="$(_PlatformIdVersions)"
       />
     </ItemGroup>
+    <ItemGroup>
+      <_Annotation
+          Condition=" Exists('$(AndroidSdkDirectory)\platform-tools\api\annotations.zip') "
+          Include="$(AndroidSdkDirectory)\platform-tools\api\annotations.zip"
+      />
+      <_Annotation
+          Condition=" Exists('$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\data\annotations.zip') "
+          Include="$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\data\annotations.zip"
+      />
+    </ItemGroup>
     <PropertyGroup>
       <Generator>"$(XAInstallPrefix)xbuild\Xamarin\Android\generator.exe"</Generator>
       <_GenFlags>--public --product-version=7</_GenFlags>
@@ -152,7 +162,7 @@
       <_Fixup>--fixup=metadata</_Fixup>
       <_Enums1>--preserve-enums --enumflags=enumflags --enumfields=map.csv --enummethods=methodmap.csv</_Enums1>
       <_Enums2>--enummetadata=$(IntermediateOutputPath)mcw\enummetadata</_Enums2>
-      <_Annotations>--annotations="$(AndroidSdkDirectory)\platform-tools\api\annotations.zip"</_Annotations>
+      <_Annotations>@(_Annotation->'"--annotations=%(Identity)"', ' ')</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
       <_Api>$(IntermediateOutputPath)mcw\api.xml</_Api>
