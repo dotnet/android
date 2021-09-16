@@ -98,5 +98,37 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 						yield return x;
 			}
 		}
+
+		public override string ToString ()
+		{
+			var s = new System.Text.StringBuilder ();
+			foreach (var a in Annotations) {
+				s.Append ("@").Append (a.Name);
+				if (a.Values.Count > 0) {
+					s.Append ("(");
+					AppendAnnotationValue (a.Values [0]);
+					for (int i = 1; i < a.Values.Count; ++i) {
+						s.Append (", ");
+						AppendAnnotationValue (a.Values [i]);
+					}
+					s.Append (")");
+				}
+				s.Append (" ");
+			}
+			s.Append (TypeName).Append (".").Append (MemberName);
+			if (Arguments?.Length > 0) {
+				s.Append ("(").Append (Arguments [0]);
+				for (int i = 1; i < Arguments.Length; ++i) {
+					s.Append (", ").Append (Arguments [i]);
+				}
+				s.Append (")");
+			}
+			return s.ToString ();
+
+			void AppendAnnotationValue (AnnotationValue d)
+			{
+				s.Append (d.Name).Append("=").Append (d.ValueAsArray);
+			}
+		}
 	}	
 }
