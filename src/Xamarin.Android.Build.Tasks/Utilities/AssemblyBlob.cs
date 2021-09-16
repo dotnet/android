@@ -17,7 +17,7 @@ namespace Xamarin.Android.Tasks
 		const uint BlobBundledAssemblyNativeStructSize = 6 * sizeof (uint);
 
 		// MUST be equal to the size of the BlobHashEntry struct in src/monodroid/jni/xamarin-app.hh
-		const uint BlobHashEntryNativeStructSize = sizeof (ulong) + (2 * sizeof (uint));
+		const uint BlobHashEntryNativeStructSize = sizeof (ulong) + (3 * sizeof (uint));
 
 		// MUST be equal to the size of the BundledAssemblyBlobHeader struct in src/monodroid/jni/xamarin-app.hh
 		const uint BlobHeaderNativeStructSize = sizeof (uint) * 4;
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				manifestWriter.WriteLine ($"{assembly.Name}");
-				manifestWriter.WriteLine ($"\thash32: 0x{assembly.NameHash32:x08}\thash64: 0x{assembly.NameHash64:x016}\tglobal index: {assembly.Index:d04}\tblob ID: {assembly.BlobID:d03}");
+				manifestWriter.WriteLine ($"\thash32: 0x{assembly.NameHash32:x08}\thash64: 0x{assembly.NameHash64:x016}\tglobal index: {assembly.MappingIndex:d04}\tblob ID: {assembly.BlobID:d03}; local blob index: {assembly.LocalBlobIndex:d04}");
 				manifestWriter.WriteLine ();
 			}
 
@@ -147,7 +147,8 @@ namespace Xamarin.Android.Tasks
 			void WriteHash (AssemblyBlobIndexEntry entry, ulong hash)
 			{
 				blobWriter.Write (hash);
-				blobWriter.Write (entry.Index);
+				blobWriter.Write (entry.MappingIndex);
+				blobWriter.Write (entry.LocalBlobIndex);
 				blobWriter.Write (entry.BlobID);
 			}
 		}
@@ -220,7 +221,7 @@ namespace Xamarin.Android.Tasks
 					assemblyName = $"{archivePath}/{assemblyName}";
 				}
 
-				AssemblyBlobIndexEntry entry = WriteAssembly (writer, assembly, assemblyName);
+				AssemblyBlobIndexEntry entry = WriteAssembly (writer, assembly, assemblyName, (uint)localAssemblies.Count);
 				Log.LogMessage (MessageImportance.Low, $"   => assemblyName == '{entry.Name}'; dataOffset == {entry.DataOffset}");
 				if (addToGlobalIndex) {
 					globalIndex.Add (entry);
@@ -293,7 +294,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		AssemblyBlobIndexEntry WriteAssembly (BinaryWriter writer, BlobAssemblyInfo assembly, string assemblyName)
+		AssemblyBlobIndexEntry WriteAssembly (BinaryWriter writer, BlobAssemblyInfo assembly, string assemblyName, uint localBlobIndex)
 		{
 			uint offset;
 			uint size;
@@ -301,7 +302,7 @@ namespace Xamarin.Android.Tasks
 			(offset, size) = WriteFile (assembly.FilesystemAssemblyPath, true);
 
 			// NOTE: globalAssemblIndex++ is not thread safe but it **must** increase monotonically (see also ArchAssemblyBlob.Generate for a special case)
-			var ret = new AssemblyBlobIndexEntry (assemblyName, ID, globalAssemblyIndex++) {
+			var ret = new AssemblyBlobIndexEntry (assemblyName, ID, globalAssemblyIndex++, localBlobIndex) {
 				DataOffset = offset,
 				DataSize = size,
 			};

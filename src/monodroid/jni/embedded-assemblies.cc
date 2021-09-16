@@ -67,10 +67,10 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 }
 
 force_inline void
-EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size)
+EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
 #if defined (ANDROID) && defined (HAVE_LZ4) && defined (RELEASE)
-	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.data);
+	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		if (XA_UNLIKELY (compressed_assemblies.descriptors == nullptr)) {
 			log_fatal (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
@@ -82,7 +82,7 @@ EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, u
 		}
 
 		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
-		assembly_data_size = e.data_size - sizeof(CompressedAssemblyHeader);
+		assembly_data_size = data_size - sizeof(CompressedAssemblyHeader);
 		if (!cad.loaded) {
 			if (XA_UNLIKELY (cad.data == nullptr)) {
 				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
@@ -97,29 +97,29 @@ EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, u
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
 				if (header->uncompressed_length > cad.uncompressed_file_size) {
-					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", e.name, cad.uncompressed_file_size, header->uncompressed_length);
+					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", name, cad.uncompressed_file_size, header->uncompressed_length);
 					exit (FATAL_EXIT_MISSING_ASSEMBLY);
 				} else {
-					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", e.name);
+					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", name);
 				}
 				cad.uncompressed_file_size = header->uncompressed_length;
 			}
 
-			const char *data_start = reinterpret_cast<const char*>(e.data + sizeof(CompressedAssemblyHeader));
+			const char *data_start = reinterpret_cast<const char*>(data + sizeof(CompressedAssemblyHeader));
 			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
 
 			if (XA_UNLIKELY (log_timing)) {
 				decompress_time.mark_end ();
-				TIMING_LOG_INFO (decompress_time, "%s LZ4 decompression time", e.name);
+				TIMING_LOG_INFO (decompress_time, "%s LZ4 decompression time", name);
 			}
 
 			if (ret < 0) {
-				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", e.name, ret);
+				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", name, ret);
 				exit (FATAL_EXIT_MISSING_ASSEMBLY);
 			}
 
 			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
-				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", e.name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
+				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
 				exit (FATAL_EXIT_MISSING_ASSEMBLY);
 			}
 			cad.loaded = true;
@@ -129,9 +129,21 @@ EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, u
 	} else
 #endif
 	{
-		assembly_data = e.data;
-		assembly_data_size = e.data_size;
+		assembly_data = data;
+		assembly_data_size = data_size;
 	}
+}
+
+force_inline void
+EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
+{
+	get_assembly_data (e.data, e.data_size, e.name, assembly_data, assembly_data_size);
+}
+
+force_inline void
+EmbeddedAssemblies::get_assembly_data (BlobAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
+{
+	get_assembly_data (e.image_data, e.descriptor->data_size, "<blob>", assembly_data, assembly_data_size);
 }
 
 #if defined (NET6)
@@ -341,7 +353,7 @@ EmbeddedAssemblies::find_blob_assembly_entry (hash_t hash, const BlobHashEntry *
 
 	while (entry_count > 0) {
 		ret = entries + (entry_count / 2);
-		if constexpr (std::is_same_v<hash_t, uint64_t) {
+		if constexpr (std::is_same_v<hash_t, uint64_t>) {
 			entry_hash = ret->hash64;
 		} else {
 			entry_hash = ret->hash32;
@@ -368,31 +380,58 @@ EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENS
 	hash_t name_hash = xxhash::hash (name.get (), name.length ());
 	log_warn (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
 
-	const BlobHashEntry *bae = find_blob_assembly_entry (name_hash, blob_assembly_hashes, application_config.number_of_assemblies_in_apk);
-	if (bae == nullptr) {
+	const BlobHashEntry *hash_entry = find_blob_assembly_entry (name_hash, blob_assembly_hashes, application_config.number_of_assemblies_in_apk);
+	if (hash_entry == nullptr) {
+		log_warn (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
 		return nullptr;
 	}
 
-	log_debug (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: found index entry (blob id: %u; index: %u)", bae->blob_id, bae->index);
-	if (bae->index >= application_config.number_of_assemblies_in_apk) {
-		log_fatal (LOG_ASSEMBLY, "Invalid assembly index %u, exceeds the maximum index of %u", bae->index, application_config.number_of_assemblies_in_apk - 1);
+	log_debug (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: found index entry (blob id: %u; index: %u)", hash_entry->blob_id, hash_entry->mapping_index);
+	if (hash_entry->mapping_index >= application_config.number_of_assemblies_in_apk) {
+		log_fatal (LOG_ASSEMBLY, "Invalid assembly index %u, exceeds the maximum index of %u", hash_entry->mapping_index, application_config.number_of_assemblies_in_apk - 1);
 		abort ();
 	}
 
-	uint8_t *assembly_data = blob_bundled_assemblies[bae->index];
-	if (assembly_data != nullptr) {
-		log_warn (LOG_ASSEMBLY, "Assembly already mapped");
-	} else {
+	BlobAssemblyRuntimeData &assembly_data = blob_bundled_assemblies[hash_entry->mapping_index];
+	if (assembly_data.image_data == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Assembly not mapped yet");
-		if (bae->blob_id >= application_config.number_of_assembly_blobs) {
-			log_fatal (LOG_ASSEMBLY, "Invalid assembly blob ID %u, exceeds the maximum of %u", bae->blob_id, application_config.number_of_assembly_blobs - 1);
+		if (hash_entry->blob_id >= application_config.number_of_assembly_blobs) {
+			log_fatal (LOG_ASSEMBLY, "Invalid assembly blob ID %u, exceeds the maximum of %u", hash_entry->blob_id, application_config.number_of_assembly_blobs - 1);
 			abort ();
 		}
 
-		AssemblyBlobRuntimeData &rd = assembly_blobs[bae->blob_id];
-		// TODO: add index into blob's **local** array of assemblies to BlobBundledAssembly
+		AssemblyBlobRuntimeData &rd = assembly_blobs[hash_entry->blob_id];
+		if (hash_entry->local_blob_index >= rd.assembly_count) {
+			log_fatal (LOG_ASSEMBLY, "Invalid index %u into local blob descriptor array", hash_entry->local_blob_index);
+		}
+
+		BlobBundledAssembly *bba = &rd.assemblies[hash_entry->local_blob_index];
+		assembly_data.image_data = rd.data_start + bba->data_offset;
+		assembly_data.descriptor = bba;
+
+		if (bba->debug_data_offset != 0) {
+			assembly_data.debug_info_data = rd.data_start + bba->debug_data_offset;
+		}
+#if !defined (NET6)
+		if (bba->config_data_size != 0) {
+			assembly_data.debug_info_data = rd.data_start + bba->config_data_offset;
+		}
+#endif // NET6
+	} else {
+		log_warn (LOG_ASSEMBLY, "Assembly already mapped");
 	}
 
+	log_warn (
+		LOG_ASSEMBLY,
+		"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u",
+		assembly_data.image_data,
+		assembly_data.debug_info_data,
+		assembly_data.config_data,
+		assembly_data.descriptor,
+		assembly_data.descriptor->data_size,
+		assembly_data.descriptor->debug_data_size,
+		assembly_data.descriptor->config_data_size
+	);
 	return nullptr;
 }
 

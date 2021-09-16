@@ -9,7 +9,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public string Name { get; }
 		public uint BlobID { get; }
-		public uint Index { get; }
+		public uint MappingIndex { get; }
+		public uint LocalBlobIndex { get; }
 
 		// Hash values must have the same type as they are inside a union in the native code
 		public ulong NameHash64 { get; }
@@ -24,7 +25,7 @@ namespace Xamarin.Android.Tasks
 		public uint ConfigDataOffset { get; set; }
 		public uint ConfigDataSize { get; set; }
 
-		public AssemblyBlobIndexEntry (string name, uint blobID, uint index)
+		public AssemblyBlobIndexEntry (string name, uint blobID, uint mappingIndex, uint localBlobIndex)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -32,7 +33,8 @@ namespace Xamarin.Android.Tasks
 
 			Name = name;
 			BlobID = blobID;
-			Index = index;
+			MappingIndex = mappingIndex;
+			LocalBlobIndex = localBlobIndex;
 
 			byte[] nameBytes = Encoding.UTF8.GetBytes (name);
 			NameHash32 = XXH32.DigestOf (nameBytes, 0, nameBytes.Length);

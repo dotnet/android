@@ -83,20 +83,29 @@ XamarinAndroidBundledAssembly bundled_assemblies[] = {
 	},
 };
 
-uint8_t* blob_bundled_assemblies[] = {
-	nullptr,
-	nullptr,
+BlobAssemblyRuntimeData blob_bundled_assemblies[] = {
+	{
+		.image_data = nullptr,
+		.debug_info_data = nullptr,
+		.config_data = nullptr,
+	},
+
+	{
+		.image_data = nullptr,
+		.debug_info_data = nullptr,
+		.config_data = nullptr,
+	}
 };
 
 AssemblyBlobRuntimeData assembly_blobs[] = {
 	{
-		.image_data_start = nullptr,
+		.data_start = nullptr,
 		.assembly_count = 0,
 		.assemblies = nullptr,
 	},
 
 	{
-		.image_data_start = nullptr,
+		.data_start = nullptr,
 		.assembly_count = 0,
 		.assemblies = nullptr,
 	},

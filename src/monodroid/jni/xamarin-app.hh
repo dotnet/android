@@ -107,33 +107,6 @@ struct XamarinAndroidBundledAssembly final
 	char    *name;
 };
 
-struct BlobHashEntry final
-{
-	union {
-		uint64_t hash64;
-		uint32_t hash32;
-	};
-
-	// Index into the array with pointers to assembly data.
-	// It **must** be unique across all the blobs from all the apks
-	uint32_t index;
-
-	// Index into the array with blob mmap addresses
-	uint32_t blob_id;
-};
-
-struct BlobBundledAssembly final
-{
-	uint32_t data_offset;
-	uint32_t data_size;
-
-	uint32_t debug_data_offset;
-	uint32_t debug_data_size;
-
-	uint32_t config_data_offset;
-	uint32_t config_data_size;
-};
-
 //
 // Blob format
 //
@@ -155,12 +128,47 @@ struct BlobBundledAssembly final
 //   BlobHashEntry hashes64[header.global_entry_count]; // only in blob with ID 0
 //   [DATA]
 //
-struct BundledAssemblyBlobHeader final
+
+//
+// The structures which are found in the blob files must be packed, to avoid problems when calculating offsets (runtime
+// size of a structure can be different than the real data size)
+//
+struct [[gnu::packed]] BundledAssemblyBlobHeader final
 {
 	uint32_t magic;
 	uint32_t local_entry_count;
 	uint32_t global_entry_count;
 	uint32_t blob_id;
+};
+
+struct [[gnu::packed]] BlobHashEntry final
+{
+	union {
+		uint64_t hash64;
+		uint32_t hash32;
+	};
+
+	// Index into the array with pointers to assembly data.
+	// It **must** be unique across all the blobs from all the apks
+	uint32_t mapping_index;
+
+	// Index into the array with assembly descriptors inside a blob
+	uint32_t local_blob_index;
+
+	// Index into the array with blob mmap addresses
+	uint32_t blob_id;
+};
+
+struct [[gnu::packed]] BlobBundledAssembly final
+{
+	uint32_t data_offset;
+	uint32_t data_size;
+
+	uint32_t debug_data_offset;
+	uint32_t debug_data_size;
+
+	uint32_t config_data_offset;
+	uint32_t config_data_size;
 };
 
 struct AssemblyBlobRuntimeData final
@@ -172,9 +180,10 @@ struct AssemblyBlobRuntimeData final
 
 struct BlobAssemblyRuntimeData final
 {
-	uint8_t *image_data;
-	uint8_t *debug_info_data;
-	uint8_t *config_data;
+	uint8_t             *image_data;
+	uint8_t             *debug_info_data;
+	uint8_t             *config_data;
+	BlobBundledAssembly *descriptor;
 };
 
 struct ApplicationConfig

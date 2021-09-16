@@ -156,7 +156,23 @@ namespace Xamarin.Android.Tasks
 
 		uint WriteBlobAssembly (StreamWriter output)
 		{
-			return WritePointer (output);
+			// Order of fields and their type must correspond *exactly* to that in
+			// src/monodroid/jni/xamarin-app.hh BlobAssemblyRuntimeData structure
+			WriteCommentLine (output, "image_data");
+			uint size = WritePointer (output);
+
+			WriteCommentLine (output, "debug_info_data");
+			size += WritePointer (output);
+
+			WriteCommentLine (output, "config_data");
+			size += WritePointer (output);
+
+			WriteCommentLine (output, "descriptor");
+			size += WritePointer (output);
+
+			output.WriteLine ();
+
+			return size;
 		}
 
 		uint WriteAssemblyBlob (StreamWriter output)
