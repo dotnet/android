@@ -148,6 +148,7 @@ namespace Xamarin.Android.Tasks
 			{
 				blobWriter.Write (hash);
 				blobWriter.Write (entry.Index);
+				blobWriter.Write (entry.BlobID);
 			}
 		}
 

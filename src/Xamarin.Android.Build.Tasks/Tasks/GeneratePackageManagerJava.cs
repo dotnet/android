@@ -363,6 +363,7 @@ namespace Xamarin.Android.Tasks
 					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
+					NumberOfAssemblyBlobsInApk = 2, // Until feature APKs are a thing, we're going to have just two blobs in each app
 					HaveAssembliesBlob = UseAssembliesBlob,
 				};
 

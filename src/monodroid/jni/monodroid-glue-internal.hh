@@ -7,6 +7,7 @@
 #include "android-system.hh"
 #include "osbridge.hh"
 #include "timing.hh"
+#include "cpp-util.hh"
 #include "xxhash.hh"
 
 #include <mono/utils/mono-counters.h>
@@ -126,6 +127,8 @@ namespace xamarin::android::internal
 		};
 
 	private:
+		static constexpr auto split_config_abi_apk_name = concat_const ("/split_config.", SharedConstants::android_abi, ".apk");
+		static constexpr char base_apk_name[] = "/base.apk";
 		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50;
 		static constexpr bool is_running_on_desktop =
 #if ANDROID

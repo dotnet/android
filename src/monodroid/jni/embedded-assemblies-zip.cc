@@ -2,6 +2,7 @@
 #include <cerrno>
 #include <cctype>
 #include <vector>
+#include <type_traits>
 #include <libgen.h>
 
 #include <mono/metadata/assembly.h>
@@ -65,9 +66,9 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	}
 
 #if defined (NET6)
-	if (application_config.have_runtime_config_blob && !state.runtime_config_blob_found) {
+	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
 		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
-			state.runtime_config_blob_found = true;
+			runtime_config_blob_found = true;
 			runtime_config_blob_mmap = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
 			return false;
 		}
@@ -162,41 +163,106 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 
 		set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
 		bundled_assembly_index++;
+		number_of_found_assemblies = bundled_assembly_index;
 	}
 
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
 }
 
 force_inline void
+EmbeddedAssemblies::map_assembly_blob (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept
+{
+	if (number_of_mapped_blobs >= application_config.number_of_assembly_blobs) {
+		log_fatal (LOG_ASSEMBLY, "Too many assembly blobs. Expected at most %u", application_config.number_of_assembly_blobs);
+		abort ();
+	}
+
+	md_mmap_info blob_map = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
+	auto header = static_cast<BundledAssemblyBlobHeader*>(blob_map.area);
+
+	if (header->magic != BUNDLED_ASSEMBLIES_BLOB_MAGIC) {
+		log_fatal (LOG_ASSEMBLY, "Blob '%s' is not a valid Xamarin.Android assembly blob file", entry_name.get ());
+		abort ();
+	}
+
+	if (header->blob_id >= application_config.number_of_assembly_blobs) {
+		log_fatal (
+			LOG_ASSEMBLY,
+			"Blob '%s' index %u exceeds the number of blobs known at application build time, %u",
+			entry_name.get (),
+			header->blob_id,
+			application_config.number_of_assembly_blobs
+		);
+		abort ();
+	}
+
+	AssemblyBlobRuntimeData &rd = assembly_blobs[header->blob_id];
+	if (rd.data_start != nullptr) {
+		log_fatal (LOG_ASSEMBLY, "Blob '%s' has a duplicate ID (%u)", entry_name.get (), header->blob_id);
+		abort ();
+	}
+
+	constexpr size_t header_size = sizeof(BundledAssemblyBlobHeader);
+
+	rd.data_start = static_cast<uint8_t*>(blob_map.area);
+	rd.assembly_count = header->local_entry_count;
+	rd.assemblies = reinterpret_cast<BlobBundledAssembly*>(rd.data_start + header_size);
+
+	number_of_found_assemblies += rd.assembly_count;
+
+	if (header->blob_id == 0) {
+		log_warn (LOG_ASSEMBLY, "Found index blob ('%s')", entry_name.get ());
+
+		index_blob_header = header;
+
+		constexpr size_t bundled_assembly_size = sizeof(BlobBundledAssembly);
+		constexpr size_t hash_entry_size = sizeof(BlobHashEntry);
+
+		size_t bytes_before_hashes = header_size + (bundled_assembly_size * header->local_entry_count);
+		if constexpr (std::is_same_v<hash_t, uint64_t>) {
+			blob_assembly_hashes = static_cast<BlobHashEntry*>(blob_map.area) + bytes_before_hashes + (hash_entry_size * header->global_entry_count);
+			log_warn (LOG_ASSEMBLY, "64-bit hashes at %p", blob_assembly_hashes);
+		} else {
+			blob_assembly_hashes = static_cast<BlobHashEntry*>(blob_map.area) + bytes_before_hashes;
+			log_warn (LOG_ASSEMBLY, "32-bit hashes at %p", blob_assembly_hashes);
+		}
+	}
+
+	number_of_mapped_blobs++;
+}
+
+force_inline void
 EmbeddedAssemblies::zip_load_blob_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
-	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	bool common_blob_found = false;
-	bool arch_blob_found = false;
+	if (all_blobs_found ()) {
+		log_warn (LOG_ASSEMBLY, "All blobs already found, further scanning not needed");
+	}
 
+	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
+	bool common_assembly_blob_found = false;
+	bool arch_assembly_blob_found = false;
+
+	log_warn (LOG_ASSEMBLY, "Looking for blobs in APK (common: '%s'; arch-specific: '%s')", bundled_assemblies_common_blob_name.data (), bundled_assemblies_arch_blob_name.data ());
 	for (size_t i = 0; i < num_entries; i++) {
+		if (all_blobs_found ()) {
+			need_to_scan_more_apks = false;
+			log_warn (LOG_ASSEMBLY, "All blobs found, done scanning (at entry %u)", i);
+			break;
+		}
+
 		bool interesting_entry = zip_load_entry_common (i, buf, entry_name, state);
 		if (!interesting_entry) {
 			continue;
 		}
 
-		if (!common_blob_found && utils.ends_with (entry_name, bundled_assemblies_common_blob_name)) {
-			common_blob_found = true;
-			// TODO: mmap
+		if (!common_assembly_blob_found && utils.ends_with (entry_name, bundled_assemblies_common_blob_name)) {
+			common_assembly_blob_found = true;
+			map_assembly_blob (entry_name, state);
 		}
 
-		if (!arch_blob_found && utils.ends_with (entry_name, bundled_assemblies_arch_blob_name)) {
-			arch_blob_found = true;
-			// TODO: mmap
-		}
-
-		if (common_blob_found && arch_blob_found) {
-#if NET6
-			if ((application_config.have_runtime_config_blob && state.runtime_config_blob_found) || !application_config.have_runtime_config_blob)
-#endif
-			{
-				break;
-			}
+		if (!arch_assembly_blob_found && utils.ends_with (entry_name, bundled_assemblies_arch_blob_name)) {
+			arch_assembly_blob_found = true;
+			map_assembly_blob (entry_name, state);
 		}
 	}
 }
@@ -230,9 +296,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		.prefix     = get_assemblies_prefix (),
 		.prefix_len = get_assemblies_prefix_length (),
 		.buf_offset = 0,
-#if defined (NET6)
-		.runtime_config_blob_found = false,
-#endif // def NET6
 	};
 
 	ssize_t nread = read (fd, buf.data (), static_cast<read_count_type>(buf.size ()));
@@ -242,9 +305,9 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	}
 
 	if (application_config.have_assemblies_blob) {
-		zip_load_blob_assembly_entries (buf, cd_size, state);
+		zip_load_blob_assembly_entries (buf, cd_entries, state);
 	} else {
-		zip_load_individual_assembly_entries (buf, cd_size, should_register, state);
+		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
 	}
 }
 

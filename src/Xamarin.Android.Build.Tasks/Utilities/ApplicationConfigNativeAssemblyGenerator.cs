@@ -26,6 +26,7 @@ namespace Xamarin.Android.Tasks
 		public bool HaveRuntimeConfigBlob { get; set; }
 		public bool HaveAssembliesBlob { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
+		public int NumberOfAssemblyBlobsInApk { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
@@ -99,6 +100,9 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "bundled_assembly_name_width");
 				size += WriteData (output, BundledAssemblyNameWidth);
 
+				WriteCommentLine (output, "number_of_assembly_blobs");
+				size += WriteData (output, NumberOfAssemblyBlobsInApk);
+
 				WriteCommentLine (output, "android_package_name");
 				size += WritePointer (output, MakeLocalLabel (stringLabel));
 
@@ -122,7 +126,7 @@ namespace Xamarin.Android.Tasks
 			output.WriteLine ();
 
 			string label = "blob_bundled_assemblies";
-			WriteCommentLine (output, "Blob assemblies data");
+			WriteCommentLine (output, "Individual blob assembly data");
 			WriteDataSection (output, label);
 			WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
 
@@ -133,11 +137,44 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			WriteStructureSize (output, label, size);
+
+			output.WriteLine ();
+
+			label = "assembly_blobs";
+			WriteCommentLine (output, "Assembly blob data");
+			WriteDataSection (output, label);
+			WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
+
+			size = 0;
+			if (HaveAssembliesBlob) {
+				for (int i = 0; i < NumberOfAssemblyBlobsInApk; i++) {
+					size += WriteStructure (output, packed: false, structureWriter: () => WriteAssemblyBlob (output));
+				}
+			}
+			WriteStructureSize (output, label, size);
 		}
 
 		uint WriteBlobAssembly (StreamWriter output)
 		{
 			return WritePointer (output);
+		}
+
+		uint WriteAssemblyBlob (StreamWriter output)
+		{
+			// Order of fields and their type must correspond *exactly* to that in
+			// src/monodroid/jni/xamarin-app.hh AssemblyBlobRuntimeData structure
+			WriteCommentLine (output, "data_start");
+			uint size = WritePointer (output);
+
+			WriteCommentLine (output, "assembly_count");
+			size += WriteData (output, (uint)0);
+
+			WriteCommentLine (output, "assemblies");
+			size += WritePointer (output);
+
+			output.WriteLine ();
+
+			return size;
 		}
 
 		void WriteBundledAssemblies (StreamWriter output)

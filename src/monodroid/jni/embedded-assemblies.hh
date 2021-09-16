@@ -29,6 +29,8 @@
 #include "strings.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
+#include "shared-constants.hh"
+#include "xxhash.hh"
 
 struct TypeMapHeader;
 
@@ -66,9 +68,6 @@ namespace xamarin::android::internal {
 			uint32_t              local_header_offset;
 			uint32_t              data_offset;
 			uint32_t              file_size;
-#if defined (NET6)
-			bool                  runtime_config_blob_found;
-#endif
 		};
 
 	private:
@@ -82,17 +81,8 @@ namespace xamarin::android::internal {
 
 		static constexpr char bundled_assemblies_blob_prefix[] = "assemblies";
 		static constexpr char bundled_assemblies_blob_ext[] = ".blob";
-#if __arm__
-		static constexpr char bundled_assemblies_blob_arch[] = "armeabi-v7a";
-#elif __aarch64__
-		static constexpr char bundled_assemblies_blob_arch[] = "arm64-v8a";
-#elif __x86_64__
-		static constexpr char bundled_assemblies_blob_arch[] = "x86_64";
-#elif __i386__
-		static constexpr char bundled_assemblies_blob_arch[] = "x86";
-#endif
 		static constexpr auto bundled_assemblies_common_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, bundled_assemblies_blob_ext);
-		static constexpr auto bundled_assemblies_arch_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, "_", bundled_assemblies_blob_arch, bundled_assemblies_blob_ext);
+		static constexpr auto bundled_assemblies_arch_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, "_", SharedConstants::android_abi, bundled_assemblies_blob_ext);
 
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -144,11 +134,16 @@ namespace xamarin::android::internal {
 			size = static_cast<uint32_t>(runtime_config_blob_mmap.size);
 		}
 
-		bool have_runtime_config_blob () const
+		bool have_runtime_config_blob () const noexcept
 		{
 			return application_config.have_runtime_config_blob && runtime_config_blob_mmap.area != nullptr;
 		}
 #endif
+
+		bool keep_scanning () const noexcept
+		{
+			return need_to_scan_more_apks;
+		}
 
 	private:
 		const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid);
@@ -159,6 +154,8 @@ namespace xamarin::android::internal {
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, MonoError *error);
 #endif // def NET6
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
+		MonoAssembly* individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept;
+		MonoAssembly* blob_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept;
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only);
 
 		template<bool LogMapping>
@@ -240,6 +237,16 @@ namespace xamarin::android::internal {
 			return assemblies_prefix_override != nullptr ? static_cast<uint32_t>(strlen (assemblies_prefix_override)) : sizeof(assemblies_prefix) - 1;
 		}
 
+		bool all_blobs_found () const noexcept
+		{
+			return
+				number_of_mapped_blobs == application_config.number_of_assembly_blobs
+#if defined (NET6)
+				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob)
+#endif // NET6
+				;
+		}
+
 		bool is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept;
 
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
@@ -256,6 +263,8 @@ namespace xamarin::android::internal {
 		void set_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		void map_assembly_blob (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
+		const BlobHashEntry* find_blob_assembly_entry (hash_t hash, const BlobHashEntry *entries, size_t entry_count) noexcept;
 
 	private:
 		std::vector<XamarinAndroidBundledAssembly> *bundled_debug_data = nullptr;
@@ -264,8 +273,8 @@ namespace xamarin::android::internal {
 		bool                   register_debug_symbols;
 		bool                   have_and_want_debug_symbols;
 		size_t                 bundled_assembly_index = 0;
-		size_t                 bundled_assembly_blob_common_count = 0;
-		size_t                 bundled_assembly_blob_arch_count = 0;
+		size_t                 number_of_found_assemblies = 0;
+
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
 		TypeMappingInfo       *managed_to_java_maps;
@@ -275,7 +284,13 @@ namespace xamarin::android::internal {
 		const char            *assemblies_prefix_override = nullptr;
 #if defined (NET6)
 		md_mmap_info           runtime_config_blob_mmap{};
+		bool                   runtime_config_blob_found = false;
 #endif // def NET6
+		uint32_t               number_of_mapped_blobs = 0;
+		bool                   need_to_scan_more_apks = true;
+
+		BundledAssemblyBlobHeader *index_blob_header = nullptr;
+		BlobHashEntry             *blob_assembly_hashes;
 	};
 }
 

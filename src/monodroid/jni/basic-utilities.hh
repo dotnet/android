@@ -110,6 +110,13 @@ namespace xamarin::android
 			return p != nullptr && p [N - 1] == '\0';
 		}
 
+		template<size_t N>
+		bool ends_with (const char *str, std::array<char, N> const& end) const noexcept
+		{
+			char *p = const_cast<char*> (strstr (str, end.data ()));
+			return p != nullptr && p [N - 1] == '\0';
+		}
+
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
 		bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, const char (&end)[N]) const noexcept
 		{

@@ -93,7 +93,9 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				Generate (Path.Combine (outputDirectory, $"{ApkName}_{BlobPrefix}_{abi}{BlobExtension}"), archAssemblies, globalIndex, blobPaths, addToGlobalIndex);
+				// Android uses underscores in place of dashes in ABI names, let's follow the convention
+				string androidAbi = abi.Replace ('-', '_');
+				Generate (Path.Combine (outputDirectory, $"{ApkName}_{BlobPrefix}_{androidAbi}{BlobExtension}"), archAssemblies, globalIndex, blobPaths, addToGlobalIndex);
 
 				// NOTE: not thread safe! The counter must grow monotonically but we also don't want to use different index values for the architecture-specific
 				// assemblies with the same names, that would only waste space in the generated `libxamarin-app.so`.  To use the same index values for the same

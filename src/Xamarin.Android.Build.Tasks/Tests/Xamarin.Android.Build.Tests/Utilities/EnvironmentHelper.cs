@@ -33,9 +33,10 @@ namespace Xamarin.Android.Build.Tests
 			public uint   system_property_count;
 			public uint   number_of_assemblies_in_apk;
 			public uint   bundled_assembly_name_width;
+			public uint   number_of_assembly_blobs;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 16;
+		const uint ApplicationConfigFieldCount = 17;
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -194,7 +195,12 @@ namespace Xamarin.Android.Build.Tests
 						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile, i, field [1]);
 						break;
 
-					case 15: // android_package_name: string / [pointer type]
+					case 15: // number_of_assembly_blobs: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
+						ret.number_of_assembly_blobs = ConvertFieldToUInt32 ("number_of_assembly_blobs", envFile, i, field [1]);
+						break;
+
+					case 16: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;

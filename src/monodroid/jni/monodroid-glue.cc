@@ -408,14 +408,42 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
 	size_t prev_num_assemblies = 0;
-	for (int64_t i = apk_count - 1; i >= 0; --i) {
+	// bool got_base_apk = false;
+	// bool got_split_config_abi_apk = false;
+	// bool scan_apk;
+
+	for (int64_t i = 0; i < apk_count; i++) {
 		jstring_wrapper &apk_file = runtimeApks [static_cast<size_t>(i)];
+		//
+		// Code below can be enabled only when we can reliably detect that we're running with split APKs.
+		// The best check appears to involve https://developer.android.com/reference/android/content/pm/ApplicationInfo#splitSourceDirs
+		// However, the above works only if we can compile our Java code against at least API21, but we compile against
+		// API19 atm
+		//
+
+		// scan_apk = false;
+
+		// if (!got_base_apk && utils.ends_with (apk_file.get_cstr (), base_apk_name)) {
+		// 	got_base_apk = scan_apk = true;
+		// } else if (!got_split_config_abi_apk && utils.ends_with (apk_file.get_cstr (), split_config_abi_apk_name)) {
+		// 	got_split_config_abi_apk = scan_apk = true;
+		// }
+
+		// if (!scan_apk) {
+		// 	continue;
+		// }
 
 		size_t cur_num_assemblies  = embeddedAssemblies.register_from<should_register_file> (apk_file.get_cstr ());
 
 		*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
+
+		if (!embeddedAssemblies.keep_scanning ()) {
+			break;
+		}
 	}
+
+	// TODO: ensure that we have all we need (blob indexes etc)
 }
 
 #if defined (DEBUG) && !defined (WINDOWS)
@@ -888,7 +916,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
 		           androidSystem.get_override_dir (0),
 		           (AndroidSystem::MAX_OVERRIDES > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
-		exit (FATAL_EXIT_NO_ASSEMBLIES);
+		abort ();
 	}
 
 	MonoDomain *domain;

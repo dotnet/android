@@ -39,6 +39,16 @@ namespace xamarin::android::internal
 		static constexpr char MONO_SGEN_SO[]      = "monosgen-2.0";
 		static constexpr char MONO_SGEN_ARCH_SO[] = "monosgen-" __BITNESS__ "-2.0";
 #endif
+
+#if __arm__
+		static constexpr char android_abi[] = "armeabi_v7a";
+#elif __aarch64__
+		static constexpr char android_abi[] = "arm64_v8a";
+#elif __x86_64__
+		static constexpr char android_abi[] = "x86_64";
+#elif __i386__
+		static constexpr char android_abi[] = "x86";
+#endif
 	};
 }
 #endif // __SHARED_CONSTANTS_HH

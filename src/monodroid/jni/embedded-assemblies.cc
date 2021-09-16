@@ -1,5 +1,6 @@
 #include <host-config.h>
 
+#include <compare>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -293,26 +294,17 @@ EmbeddedAssemblies::load_bundled_assembly (
 	return a;
 }
 
-MonoAssembly*
-EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only)
+constexpr char path_separator[] = "/";
+
+force_inline MonoAssembly*
+EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
 {
-	const char *culture = mono_assembly_name_get_culture (aname);
-	const char *asmname = mono_assembly_name_get_name (aname);
-
-	constexpr char path_separator[] = "/";
-	dynamic_local_string<SENSIBLE_PATH_MAX> name;
-	if (culture != nullptr && *culture != '\0') {
-		name.append_c (culture);
-		name.append (path_separator);
-	}
-	name.append_c (asmname);
-
 	constexpr char dll_extension[] = ".dll";
 	if (!utils.ends_with (name, dll_extension)) {
 		name.append (dll_extension);
 	}
 
-	log_debug (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name.get ());
+	log_debug (LOG_ASSEMBLY, "individual_assemblies_open_from_bundles: looking for bundled name: '%s'", name.get ());
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> abi_name;
 	abi_name
@@ -338,8 +330,97 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 		}
 	}
 
-	log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
 	return nullptr;
+}
+
+force_inline const BlobHashEntry*
+EmbeddedAssemblies::find_blob_assembly_entry (hash_t hash, const BlobHashEntry *entries, size_t entry_count) noexcept
+{
+	hash_t entry_hash;
+	const BlobHashEntry *ret;
+
+	while (entry_count > 0) {
+		ret = entries + (entry_count / 2);
+		if constexpr (std::is_same_v<hash_t, uint64_t) {
+			entry_hash = ret->hash64;
+		} else {
+			entry_hash = ret->hash32;
+		}
+
+		std::strong_ordering result = hash <=> entry_hash;
+
+		if (result < 0) {
+			entry_count /= 2;
+		} else if (result > 0) {
+			entries = ret + 1;
+			entry_count -= entry_count / 2 + 1;
+		} else {
+			return ret;
+		}
+	}
+
+	return nullptr;
+}
+
+force_inline MonoAssembly*
+EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
+{
+	hash_t name_hash = xxhash::hash (name.get (), name.length ());
+	log_warn (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
+
+	const BlobHashEntry *bae = find_blob_assembly_entry (name_hash, blob_assembly_hashes, application_config.number_of_assemblies_in_apk);
+	if (bae == nullptr) {
+		return nullptr;
+	}
+
+	log_debug (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: found index entry (blob id: %u; index: %u)", bae->blob_id, bae->index);
+	if (bae->index >= application_config.number_of_assemblies_in_apk) {
+		log_fatal (LOG_ASSEMBLY, "Invalid assembly index %u, exceeds the maximum index of %u", bae->index, application_config.number_of_assemblies_in_apk - 1);
+		abort ();
+	}
+
+	uint8_t *assembly_data = blob_bundled_assemblies[bae->index];
+	if (assembly_data != nullptr) {
+		log_warn (LOG_ASSEMBLY, "Assembly already mapped");
+	} else {
+		log_warn (LOG_ASSEMBLY, "Assembly not mapped yet");
+		if (bae->blob_id >= application_config.number_of_assembly_blobs) {
+			log_fatal (LOG_ASSEMBLY, "Invalid assembly blob ID %u, exceeds the maximum of %u", bae->blob_id, application_config.number_of_assembly_blobs - 1);
+			abort ();
+		}
+
+		AssemblyBlobRuntimeData &rd = assembly_blobs[bae->blob_id];
+		// TODO: add index into blob's **local** array of assemblies to BlobBundledAssembly
+	}
+
+	return nullptr;
+}
+
+MonoAssembly*
+EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only)
+{
+	const char *culture = mono_assembly_name_get_culture (aname);
+	const char *asmname = mono_assembly_name_get_name (aname);
+
+	dynamic_local_string<SENSIBLE_PATH_MAX> name;
+	if (culture != nullptr && *culture != '\0') {
+		name.append_c (culture);
+		name.append (path_separator);
+	}
+	name.append_c (asmname);
+
+	MonoAssembly *a;
+	if (application_config.have_assemblies_blob) {
+		a = blob_assemblies_open_from_bundles (name, loader, ref_only);
+	} else {
+		a = individual_assemblies_open_from_bundles (name, loader, ref_only);
+	}
+
+	if (a == nullptr) {
+		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
+	}
+
+	return a;
 }
 
 #if defined (NET6)
@@ -1067,11 +1148,11 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 size_t
 EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register)
 {
-	size_t prev  = bundled_assembly_index;
+	size_t prev  = number_of_found_assemblies;
 
 	gather_bundled_assemblies_from_apk (apk_file, should_register);
 
-	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, bundled_assembly_index - prev);
+	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, number_of_found_assemblies - prev);
 
-	return bundled_assembly_index;
+	return number_of_found_assemblies;
 }

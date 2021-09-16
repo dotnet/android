@@ -10,7 +10,7 @@
 
 static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
-static constexpr uint32_t BUNDLED_ASSEMBLIES_INDEX_MAGIC = 0x41424158; // 'XABA', little-endian
+static constexpr uint32_t BUNDLED_ASSEMBLIES_BLOB_MAGIC = 0x41424158; // 'XABA', little-endian
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
@@ -117,6 +117,9 @@ struct BlobHashEntry final
 	// Index into the array with pointers to assembly data.
 	// It **must** be unique across all the blobs from all the apks
 	uint32_t index;
+
+	// Index into the array with blob mmap addresses
+	uint32_t blob_id;
 };
 
 struct BlobBundledAssembly final
@@ -160,6 +163,20 @@ struct BundledAssemblyBlobHeader final
 	uint32_t blob_id;
 };
 
+struct AssemblyBlobRuntimeData final
+{
+	uint8_t             *data_start;
+	uint32_t             assembly_count;
+	BlobBundledAssembly *assemblies;
+};
+
+struct BlobAssemblyRuntimeData final
+{
+	uint8_t *image_data;
+	uint8_t *debug_info_data;
+	uint8_t *config_data;
+};
+
 struct ApplicationConfig
 {
 	bool uses_mono_llvm;
@@ -177,6 +194,7 @@ struct ApplicationConfig
 	uint32_t system_property_count;
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
+	uint32_t number_of_assembly_blobs;
 	const char *android_package_name;
 };
 
@@ -201,5 +219,6 @@ MONO_API const char* mono_aot_mode_name;
 
 MONO_API XamarinAndroidBundledAssembly bundled_assemblies[];
 MONO_API uint8_t* blob_bundled_assemblies[];
+MONO_API AssemblyBlobRuntimeData assembly_blobs[];
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H
