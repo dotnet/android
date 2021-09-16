@@ -985,6 +985,7 @@ because xbuild doesn't support framework reference assemblies.
 		DesignTimeBuild="$(DesignTimeBuild)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
 		ResourceFlagFile="$(_AndroidResFlagFile)"
+		AndroidResourceIds="@(AndroidResourceId)"
 		Condition="Exists ('$(MonoAndroidResourcePrefix)')"
 	/>
 	<ItemGroup>
@@ -1228,6 +1229,7 @@ because xbuild doesn't support framework reference assemblies.
 		UseManagedResourceGenerator="$(_UseManagedResourceGenerator)"
 		DesignTimeBuild="$(DesignTimeBuild)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
+		AndroidResourceIds="@(AndroidResourceId)"
 	/>
 
   <!-- Delete our temporary directory -->

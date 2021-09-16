@@ -15,6 +15,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public TaskLoggingHelper Log { get; set; }
 
+		public HashSet<string> AndroidResourceIds { get; set; }
+
 		internal int ToInt32 (string value, int @base)
 		{
 			try {
@@ -48,10 +50,21 @@ namespace Xamarin.Android.Tasks
 				return ResourceIdentifier.CreateValidIdentifier (mappedValue.Substring (mappedValue.LastIndexOf (Path.DirectorySeparatorChar) + 1));
 			}
 
-			Log.LogDebugMessage ("  - Not remapping resource: {0}.{1}", type, name);
-
 			return ResourceIdentifier.CreateValidIdentifier (name);
 		}
 
+		internal bool IncludeField (string className, string fieldName)
+		{
+			if (AndroidResourceIds != null) {
+				string name = className + "." + fieldName;
+				if (AndroidResourceIds.Contains (name)) {
+					Log.LogDebugMessage ($"Including @(AndroidResourceId): {name}");
+				} else {
+					// Don't log here, or we'd log way too much
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 }

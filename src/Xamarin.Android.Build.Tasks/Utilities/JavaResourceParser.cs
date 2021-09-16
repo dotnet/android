@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
@@ -84,7 +84,11 @@ namespace Xamarin.Android.Tasks
 			Parse (@"^        public static final int ([^ =]+)\s*=\s*([^;]+);$",
 					(m, app, g, map) => {
 						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int), GetResourceName (name, m.Groups[1].Value, map)) {
+						var fieldName = GetResourceName (name, m.Groups[1].Value, map);
+						if (!IncludeField (name, fieldName)) {
+							return g;
+						}
+						var f = new CodeMemberField (typeof (int), fieldName) {
 								Attributes      = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
 								InitExpression  = new CodePrimitiveExpression (ToInt32 (m.Groups [2].Value, m.Groups [2].Value.IndexOf ("0x") == 0 ? 16 : 10)),
 								Comments = {
@@ -97,7 +101,11 @@ namespace Xamarin.Android.Tasks
 			Parse (@"^        public static final int\[\] ([^ =]+) = {",
 					(m, app, g, map) => {
 						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int[]), GetResourceName (name, m.Groups[1].Value, map)) {
+						var fieldName = GetResourceName (name, m.Groups[1].Value, map);
+						if (!IncludeField (name, fieldName)) {
+							return g;
+						}
+						var f = new CodeMemberField (typeof (int[]), fieldName) {
 								// pity I can't make the member readonly...
 								Attributes      = MemberAttributes.Public | MemberAttributes.Static,
 						};
@@ -107,7 +115,10 @@ namespace Xamarin.Android.Tasks
 			Parse (@"^            (0x[xa-fA-F0-9, ]+)$",
 					(m, app, g, map) => {
 						var t = (CodeTypeDeclaration) g.Members [g.Members.Count-1];
-						var f = (CodeMemberField) t.Members [t.Members.Count-1];
+						var f = t.Members [t.Members.Count-1] as CodeMemberField;
+						if (f == null) {
+							return g;
+						}
 						string[] values = m.Groups [1].Value.Split (new[]{','}, StringSplitOptions.RemoveEmptyEntries);
 						CodeArrayCreateExpression c = (CodeArrayCreateExpression) f.InitExpression;
 						if (c == null) {

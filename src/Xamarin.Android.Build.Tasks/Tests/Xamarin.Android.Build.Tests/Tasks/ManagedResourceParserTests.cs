@@ -425,6 +425,34 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
+		public void GenerateDesigner_AndroidResourceIds ()
+		{
+			var path = Path.Combine ("temp", TestName + " Some Space");
+			CreateResourceDirectory (path);
+			var task = CreateTask (path);
+			// A list of Android Ids to limit output to
+			task.AndroidResourceIds = new [] {
+				// Include Resource.
+				"Resource.Animation.some_animation",
+				"Resource.Array.alphabet",
+				"Resource.Styleable.CustomFonts",
+				"Resource.Styleable.CustomFonts_android_scrollX",
+				// Don't include Resource.
+				"Attribute.entryValues",
+				"Boolean.a_bool",
+				"Id.Føø_Bar",
+				"String.fixed",
+				// Casing is wrong
+				"Color.Selector1",
+			};
+			task.RTxtFile = Path.Combine (Root, path, "R.txt");
+			File.WriteAllText (task.RTxtFile, Rtxt);
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
+			AssertResourceDesigner (task, "GenerateDesignerFileTrimmedExpected.cs");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		[Test]
 		public void UpdateLayoutIdIsIncludedInDesigner ([Values(true, false)] bool useRtxt)
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");

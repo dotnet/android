@@ -447,21 +447,14 @@ namespace Xamarin.Android.Tasks
 			return t;
 		}
 
-		void CreateField (CodeTypeDeclaration parentType, string name, Type type)
-		{
-			var f = new CodeMemberField (type, name) {
-				// pity I can't make the member readonly...
-				Attributes = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
-			};
-			parentType.Members.Add (f);
-		}
-
 		CodeMemberField CreateIntField (CodeTypeDeclaration parentType, string name, int value = -1)
 		{
 			string mappedName = GetResourceName (parentType.Name, name, map);
 			CodeMemberField f = (CodeMemberField)parentType.Members.OfType<CodeTypeMember> ().FirstOrDefault (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0);
 			if (f != null)
 				return f;
+			if (!IncludeField (parentType.Name, mappedName))
+				return null;
 			f = new CodeMemberField (typeof (int), mappedName) {
 				// pity I can't make the member readonly...
 				Attributes = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
@@ -482,6 +475,8 @@ namespace Xamarin.Android.Tasks
 			CodeMemberField f = (CodeMemberField)parentType.Members.OfType<CodeTypeMember> ().FirstOrDefault (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0);
 			if (f != null)
 				return f;
+			if (!IncludeField (parentType.Name, name))
+				return null;
 			f = new CodeMemberField (typeof (int []), name) {
 				// pity I can't make the member readonly...
 				Attributes = MemberAttributes.Static | MemberAttributes.Public,
@@ -602,7 +597,6 @@ namespace Xamarin.Android.Tasks
 		void ProcessStyleable (XmlReader reader)
 		{
 			string topName = null;
-			int fieldCount = 0;
 			List<CodeMemberField> fields = new List<CodeMemberField> ();
 			List<string> attribs = new List<string> ();
 			while (reader.Read ()) {
@@ -634,13 +628,15 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			CodeMemberField field = CreateIntArrayField (styleable, topName, attribs.Count);
-			if (!arrayMapping.ContainsKey (field)) {
+			if (field != null && !arrayMapping.ContainsKey (field)) {
 				attribs.Sort (StringComparer.OrdinalIgnoreCase);
 				for (int i = 0; i < attribs.Count; i++) {
 					string name = attribs [i];
-					if (!name.StartsWith ("android:", StringComparison.OrdinalIgnoreCase))
-						fields.Add (CreateIntField (attrib, name));
-					else {
+					if (!name.StartsWith ("android:", StringComparison.OrdinalIgnoreCase)) {
+						var f = CreateIntField (attrib, name);
+						if (f != null)
+							fields.Add (f);
+					} else {
 						// this is an android:xxx resource, we should not calcuate the id
 						// we should get it from "somewhere" maybe the pubic.xml
 						var f = new CodeMemberField (typeof (int), name);

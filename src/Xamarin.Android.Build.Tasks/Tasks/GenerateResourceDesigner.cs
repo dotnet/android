@@ -53,6 +53,8 @@ namespace Xamarin.Android.Tasks
 
 		public string ResourceFlagFile { get; set; }
 
+		public string [] AndroidResourceIds { get; set; }
+
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
 		public override bool RunTask ()
@@ -106,10 +108,18 @@ namespace Xamarin.Android.Tasks
 			// Parse out the resources from the R.java file
 			CodeTypeDeclaration resources;
 			if (UseManagedResourceGenerator) {
-				var parser = new ManagedResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile };
+				var parser = new ManagedResourceParser {
+					Log = Log,
+					JavaPlatformDirectory = javaPlatformDirectory,
+					ResourceFlagFile = ResourceFlagFile,
+					AndroidResourceIds = CreateResourceIdsHashSet (),
+				};
 				resources = parser.Parse (ResourceDirectory, RTxtFile ?? string.Empty, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
-				var parser = new JavaResourceParser () { Log = Log };
+				var parser = new JavaResourceParser {
+					Log = Log,
+					AndroidResourceIds = CreateResourceIdsHashSet (),
+				};
 				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
 			}
 
@@ -183,6 +193,21 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		HashSet<string> CreateResourceIdsHashSet ()
+		{
+			if (AndroidResourceIds == null || AndroidResourceIds.Length == 0)
+				return null;
+
+			// If users supply Resource., we can strip that off
+			return new HashSet<string> (AndroidResourceIds.Select (r => {
+				const string prefix = "Resource.";
+				if (r.StartsWith (prefix, StringComparison.OrdinalIgnoreCase)) {
+					return r.Substring (prefix.Length);
+				}
+				return r;
+			}), StringComparer.OrdinalIgnoreCase);
 		}
 
 		// Remove private constructor in F#.

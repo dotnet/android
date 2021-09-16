@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
@@ -1349,6 +1350,42 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
 
 				Assert.IsTrue (sb.Build (), "Solution should have built.");
 			}
+		}
+
+		[Test]
+		public void AndroidResourceId ([Values (false, true)] bool useAapt2)
+		{
+			AssertAaptSupported (useAapt2);
+
+			var proj = new XamarinAndroidLibraryProject {
+				AndroidUseAapt2 = useAapt2,
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "class Foo { AndroidX.AppCompat.App.AppCompatActivity a; }",
+					},
+					new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
+						TextContent = () => "<resources><style name=\"MyStyle\" parent=\"Theme.MaterialComponents.Light.DarkActionBar\"/></resources>",
+					},
+				},
+				OtherBuildItems = {
+					new BuildItem ("AndroidResourceId", "Resource.Drawable.Icon"),
+					new BuildItem ("AndroidResourceId", "Resource.String.library_name"),
+				}
+			};
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
+			using var b = CreateDllBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+			FileAssert.Exists (assemblyPath);
+			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+			var typeName = $"{proj.ProjectName}.Resource";
+			var type = assembly.MainModule.GetType (typeName);
+			Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
+			int expected = proj.OtherBuildItems.Count (i => i.BuildAction == "AndroidResourceId");
+			Assert.AreEqual (expected, type.NestedTypes.SelectMany (t => t.Fields).Count (),
+				$"There should only be {expected} fields.");
 		}
 	}
 }
