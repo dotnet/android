@@ -218,7 +218,7 @@ MONO_API const char* app_system_properties[];
 MONO_API const char* mono_aot_mode_name;
 
 MONO_API XamarinAndroidBundledAssembly bundled_assemblies[];
-MONO_API uint8_t* blob_bundled_assemblies[];
+MONO_API BlobAssemblyRuntimeData blob_bundled_assemblies[];
 MONO_API AssemblyBlobRuntimeData assembly_blobs[];
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H
