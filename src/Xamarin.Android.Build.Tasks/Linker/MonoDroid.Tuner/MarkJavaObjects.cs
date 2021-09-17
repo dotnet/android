@@ -59,7 +59,6 @@ namespace MonoDroid.Tuner {
 		{
 			PreserveIntPtrConstructor (type);
 			PreserveAttributeSetConstructor (type);
-			PreserveAdapter (type);
 			PreserveInvoker (type);
 		}
 
@@ -151,24 +150,6 @@ namespace MonoDroid.Tuner {
 			Annotations.AddPreservedMethod (type, method);
 		}
 
-		void PreserveAdapter (TypeDefinition type)
-		{
-			var adapter = PreserveHelperType (type, "Adapter");
-
-			if (adapter == null || !adapter.HasMethods)
-				return;
-
-			foreach (MethodDefinition method in adapter.Methods) {
-				if (method.Name != "GetObject")
-					continue;
-
-				if (method.Parameters.Count != 2)
-					continue;
-
-				PreserveMethod (type, method);
-			}
-		}
-
 		string TypeNameWithoutKey (string name)
 		{
 			var idx = name.IndexOf (", PublicKeyToken=");
@@ -208,25 +189,18 @@ namespace MonoDroid.Tuner {
 
 		void PreserveInvoker (TypeDefinition type)
 		{
-			var invoker = PreserveHelperType (type, "Invoker");
+			var invoker = GetInvokerType (type);
 			if (invoker == null)
 				return;
 
+			PreserveConstructors (type, invoker);
 			PreserveIntPtrConstructor (invoker);
 			PreserveInterfaceMethods (type, invoker);
 		}
 
-		TypeDefinition PreserveHelperType (TypeDefinition type, string suffix)
+		TypeDefinition GetInvokerType (TypeDefinition type)
 		{
-			var helper = GetHelperType (type, suffix);
-			if (helper != null)
-				PreserveConstructors (type, helper);
-
-			return helper;
-		}
-
-		TypeDefinition GetHelperType (TypeDefinition type, string suffix)
-		{
+			const string suffix = "Invoker";
 			string fullname = type.FullName;
 
 			if (type.HasGenericParameters) {

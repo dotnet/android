@@ -205,7 +205,13 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
+
+			// Debug build
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			dotnet.AssertHasNoWarnings ();
+
+			// Release build
+			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release" }), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 		}
 
