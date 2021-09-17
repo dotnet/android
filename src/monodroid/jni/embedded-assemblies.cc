@@ -67,7 +67,7 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 }
 
 force_inline void
-EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
+EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[maybe_unused]] const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
 #if defined (ANDROID) && defined (HAVE_LZ4) && defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(data);
@@ -311,9 +311,8 @@ constexpr char path_separator[] = "/";
 force_inline MonoAssembly*
 EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
 {
-	constexpr char dll_extension[] = ".dll";
-	if (!utils.ends_with (name, dll_extension)) {
-		name.append (dll_extension);
+	if (!utils.ends_with (name, SharedConstants::DLL_EXTENSION)) {
+		name.append (SharedConstants::DLL_EXTENSION);
 	}
 
 	log_debug (LOG_ASSEMBLY, "individual_assemblies_open_from_bundles: looking for bundled name: '%s'", name.get ());
@@ -377,24 +376,29 @@ EmbeddedAssemblies::find_blob_assembly_entry (hash_t hash, const BlobHashEntry *
 force_inline MonoAssembly*
 EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
 {
-	hash_t name_hash = xxhash::hash (name.get (), name.length ());
-	log_warn (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
+	size_t len = name.length ();
+
+	if (utils.ends_with (name, SharedConstants::DLL_EXTENSION)) {
+		len -= sizeof(SharedConstants::DLL_EXTENSION) - 1;
+	}
+
+	hash_t name_hash = xxhash::hash (name.get (), len);
+	log_debug (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
 
 	const BlobHashEntry *hash_entry = find_blob_assembly_entry (name_hash, blob_assembly_hashes, application_config.number_of_assemblies_in_apk);
 	if (hash_entry == nullptr) {
-		log_warn (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
+		log_debug (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
 		return nullptr;
 	}
 
-	log_debug (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: found index entry (blob id: %u; index: %u)", hash_entry->blob_id, hash_entry->mapping_index);
+	// log_debug (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: found index entry (blob id: %u; index: %u)", hash_entry->blob_id, hash_entry->mapping_index);
 	if (hash_entry->mapping_index >= application_config.number_of_assemblies_in_apk) {
 		log_fatal (LOG_ASSEMBLY, "Invalid assembly index %u, exceeds the maximum index of %u", hash_entry->mapping_index, application_config.number_of_assemblies_in_apk - 1);
 		abort ();
 	}
 
-	BlobAssemblyRuntimeData &assembly_data = blob_bundled_assemblies[hash_entry->mapping_index];
-	if (assembly_data.image_data == nullptr) {
-		log_warn (LOG_ASSEMBLY, "Assembly not mapped yet");
+	BlobAssemblyRuntimeData &assembly_runtime_info = blob_bundled_assemblies[hash_entry->mapping_index];
+	if (assembly_runtime_info.image_data == nullptr) {
 		if (hash_entry->blob_id >= application_config.number_of_assembly_blobs) {
 			log_fatal (LOG_ASSEMBLY, "Invalid assembly blob ID %u, exceeds the maximum of %u", hash_entry->blob_id, application_config.number_of_assembly_blobs - 1);
 			abort ();
@@ -406,33 +410,61 @@ EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENS
 		}
 
 		BlobBundledAssembly *bba = &rd.assemblies[hash_entry->local_blob_index];
-		assembly_data.image_data = rd.data_start + bba->data_offset;
-		assembly_data.descriptor = bba;
+
+		// The assignments here don't need to be atomic, the value will always be the same, so even if two threads
+		// arrive here at the same time, nothing bad will happen.
+		assembly_runtime_info.image_data = rd.data_start + bba->data_offset;
+		assembly_runtime_info.descriptor = bba;
 
 		if (bba->debug_data_offset != 0) {
-			assembly_data.debug_info_data = rd.data_start + bba->debug_data_offset;
+			assembly_runtime_info.debug_info_data = rd.data_start + bba->debug_data_offset;
 		}
 #if !defined (NET6)
 		if (bba->config_data_size != 0) {
-			assembly_data.debug_info_data = rd.data_start + bba->config_data_offset;
+			assembly_runtime_info.config_data = rd.data_start + bba->config_data_offset;
+
+			mono_register_config_for_assembly (name.get (), reinterpret_cast<const char*>(assembly_runtime_info.config_data));
 		}
 #endif // NET6
-	} else {
-		log_warn (LOG_ASSEMBLY, "Assembly already mapped");
+
+		log_debug (
+			LOG_ASSEMBLY,
+			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u",
+			assembly_runtime_info.image_data,
+			assembly_runtime_info.debug_info_data,
+			assembly_runtime_info.config_data,
+			assembly_runtime_info.descriptor,
+			assembly_runtime_info.descriptor->data_size,
+			assembly_runtime_info.descriptor->debug_data_size,
+			assembly_runtime_info.descriptor->config_data_size
+		);
 	}
 
-	log_warn (
-		LOG_ASSEMBLY,
-		"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u",
-		assembly_data.image_data,
-		assembly_data.debug_info_data,
-		assembly_data.config_data,
-		assembly_data.descriptor,
-		assembly_data.descriptor->data_size,
-		assembly_data.descriptor->debug_data_size,
-		assembly_data.descriptor->config_data_size
-	);
-	return nullptr;
+	uint8_t *assembly_data;
+	uint32_t assembly_data_size;
+
+	get_assembly_data (assembly_runtime_info, assembly_data, assembly_data_size);
+	MonoImage *image = loader (assembly_data, assembly_data_size, name.get ());
+	if (image == nullptr) {
+		log_warn (LOG_ASSEMBLY, "Failed to load MonoImage of '%s'", name.get ());
+		return nullptr;
+	}
+
+	if (have_and_want_debug_symbols && assembly_runtime_info.debug_info_data != nullptr) {
+		log_debug (LOG_ASSEMBLY, "Registering debug data for assembly '%s'", name.get ());
+		mono_debug_open_image_from_memory (image, reinterpret_cast<const mono_byte*> (assembly_runtime_info.debug_info_data), static_cast<int>(assembly_runtime_info.descriptor->debug_data_size));
+	}
+
+	MonoImageOpenStatus status;
+	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
+	if (a == nullptr) {
+		return nullptr;
+	}
+
+#if !defined (NET6)
+	mono_config_for_assembly (image);
+#endif
+	return a;
 }
 
 MonoAssembly*

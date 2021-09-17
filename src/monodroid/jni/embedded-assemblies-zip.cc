@@ -137,7 +137,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 		}
 #endif // ndef NET6
 
-		if (!utils.ends_with (entry_name, ".dll"))
+		if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION))
 			continue;
 
 #if defined (DEBUG)
@@ -214,58 +214,58 @@ EmbeddedAssemblies::map_assembly_blob (dynamic_local_string<SENSIBLE_PATH_MAX> c
 		constexpr size_t bundled_assembly_size = sizeof(BlobBundledAssembly);
 		constexpr size_t hash_entry_size = sizeof(BlobHashEntry);
 
-		log_warn (LOG_ASSEMBLY, "header_size == %u; bundled_assembly_size == %u; hash_entry_size == %u", header_size, bundled_assembly_size, hash_entry_size);
-		log_warn (LOG_ASSEMBLY, "local_entry_count == %u; global_entry_count == %u", header->local_entry_count, header->global_entry_count);
-		log_warn (LOG_ASSEMBLY, "Found index blob ('%s');", entry_name.get ());
-		log_warn (LOG_ASSEMBLY, "Local assemblies array starts at offset %zu (%p)", reinterpret_cast<uint8_t*>(rd.assemblies) - rd.data_start, rd.assemblies);
-		log_warn (LOG_ASSEMBLY, "Local assemblies array is %zu bytes long", bundled_assembly_size * rd.assembly_count);
-		log_warn (LOG_ASSEMBLY, "Global hashes start at offset %zu", (reinterpret_cast<uint8_t*>(rd.assemblies) + (bundled_assembly_size * rd.assembly_count)) - rd.data_start);
+		// log_warn (LOG_ASSEMBLY, "header_size == %u; bundled_assembly_size == %u; hash_entry_size == %u", header_size, bundled_assembly_size, hash_entry_size);
+		// log_warn (LOG_ASSEMBLY, "local_entry_count == %u; global_entry_count == %u", header->local_entry_count, header->global_entry_count);
+		// log_warn (LOG_ASSEMBLY, "Found index blob ('%s');", entry_name.get ());
+		// log_warn (LOG_ASSEMBLY, "Local assemblies array starts at offset %zu (%p)", reinterpret_cast<uint8_t*>(rd.assemblies) - rd.data_start, rd.assemblies);
+		// log_warn (LOG_ASSEMBLY, "Local assemblies array is %zu bytes long", bundled_assembly_size * rd.assembly_count);
+		// log_warn (LOG_ASSEMBLY, "Global hashes start at offset %zu", (reinterpret_cast<uint8_t*>(rd.assemblies) + (bundled_assembly_size * rd.assembly_count)) - rd.data_start);
 
 		index_blob_header = header;
 
 		size_t bytes_before_hashes = header_size + (bundled_assembly_size * header->local_entry_count);
 		if constexpr (std::is_same_v<hash_t, uint64_t>) {
 			blob_assembly_hashes = reinterpret_cast<BlobHashEntry*>(rd.data_start + bytes_before_hashes + (hash_entry_size * header->global_entry_count));
-			log_warn (LOG_ASSEMBLY, "64-bit hashes at %p", blob_assembly_hashes);
+			// log_warn (LOG_ASSEMBLY, "64-bit hashes at %p", blob_assembly_hashes);
 		} else {
 			blob_assembly_hashes = reinterpret_cast<BlobHashEntry*>(rd.data_start + bytes_before_hashes);
-			log_warn (LOG_ASSEMBLY, "32-bit hashes at %p", blob_assembly_hashes);
+			// log_warn (LOG_ASSEMBLY, "32-bit hashes at %p", blob_assembly_hashes);
 		}
 
-		log_warn (LOG_ASSEMBLY, "Global hash index contents:");
-		hash_t entry_hash;
-		for (size_t i = 0; i < header->global_entry_count; i++) {
-			BlobHashEntry &he = blob_assembly_hashes[i];
+		// log_warn (LOG_ASSEMBLY, "Global hash index contents:");
+		// hash_t entry_hash;
+		// for (size_t i = 0; i < header->global_entry_count; i++) {
+		// 	BlobHashEntry &he = blob_assembly_hashes[i];
 
-			if constexpr (std::is_same_v<hash_t, uint64_t>) {
-				entry_hash = he.hash64;
-			} else {
-				entry_hash = he.hash32;
-			}
+		// 	if constexpr (std::is_same_v<hash_t, uint64_t>) {
+		// 		entry_hash = he.hash64;
+		// 	} else {
+		// 		entry_hash = he.hash32;
+		// 	}
 
-			log_warn (LOG_ASSEMBLY, "  [%u]: hash == 0x%zx; mapping index == %u; local blob index == %u; blob ID == %u", i, entry_hash, he.mapping_index, he.local_blob_index, he.blob_id);
-		}
+		// 	log_warn (LOG_ASSEMBLY, "  [%u]: hash == 0x%zx; mapping index == %u; local blob index == %u; blob ID == %u", i, entry_hash, he.mapping_index, he.local_blob_index, he.blob_id);
+		// }
 	}
 
 	number_of_mapped_blobs++;
+	have_and_want_debug_symbols = register_debug_symbols;
 }
 
 force_inline void
 EmbeddedAssemblies::zip_load_blob_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
 	if (all_blobs_found ()) {
-		log_warn (LOG_ASSEMBLY, "All blobs already found, further scanning not needed");
+		return;
 	}
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	bool common_assembly_blob_found = false;
 	bool arch_assembly_blob_found = false;
 
-	log_warn (LOG_ASSEMBLY, "Looking for blobs in APK (common: '%s'; arch-specific: '%s')", bundled_assemblies_common_blob_name.data (), bundled_assemblies_arch_blob_name.data ());
+	log_debug (LOG_ASSEMBLY, "Looking for blobs in APK (common: '%s'; arch-specific: '%s')", bundled_assemblies_common_blob_name.data (), bundled_assemblies_arch_blob_name.data ());
 	for (size_t i = 0; i < num_entries; i++) {
 		if (all_blobs_found ()) {
 			need_to_scan_more_apks = false;
-			log_warn (LOG_ASSEMBLY, "All blobs found, done scanning (at entry %u)", i);
 			break;
 		}
 

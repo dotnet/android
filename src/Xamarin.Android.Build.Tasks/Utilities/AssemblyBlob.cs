@@ -117,6 +117,7 @@ namespace Xamarin.Android.Tasks
 
 				manifestWriter.WriteLine ($"{assembly.Name}");
 				manifestWriter.WriteLine ($"\thash32: 0x{assembly.NameHash32:x08}\thash64: 0x{assembly.NameHash64:x016}\tglobal index: {assembly.MappingIndex:d04}\tblob ID: {assembly.BlobID:d03}; local blob index: {assembly.LocalBlobIndex:d04}");
+				manifestWriter.WriteLine ($"\tdebug data offset: {assembly.DebugDataOffset}; debug data size: {assembly.DebugDataSize}; config data offset: {assembly.ConfigDataOffset}; config data size: {assembly.ConfigDataSize}");
 				manifestWriter.WriteLine ();
 			}
 

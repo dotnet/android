@@ -22,6 +22,8 @@ namespace xamarin::android::internal
 		static constexpr char JNIENV_CLASS_NAME[] = "JNIEnv";
 		static constexpr char ANDROID_ENVIRONMENT_CLASS_NAME[] = "AndroidEnvironment";
 
+		static constexpr char DLL_EXTENSION[] = ".dll";
+
 #if defined (NET6)
 		static constexpr char RUNTIME_CONFIG_BLOB_NAME[] = "rc.bin";
 #endif // def NET6
