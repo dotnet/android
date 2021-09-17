@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -120,6 +121,8 @@ namespace Xamarin.Android.Net
 		public int MaxResponseHeadersLength { get; set; } = 64; // Units in K (1024) bytes.
 
 		public bool CheckCertificateRevocationList { get; set; } = false;
+
+		public Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { get; set; }
 
 		// See: https://developer.android.com/reference/javax/net/ssl/SSLSocket#protocols
 		public SslProtocols SslProtocols { get; set; } =
