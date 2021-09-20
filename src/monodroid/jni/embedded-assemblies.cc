@@ -306,8 +306,6 @@ EmbeddedAssemblies::load_bundled_assembly (
 	return a;
 }
 
-constexpr char path_separator[] = "/";
-
 force_inline MonoAssembly*
 EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
 {
@@ -320,7 +318,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 	dynamic_local_string<SENSIBLE_PATH_MAX> abi_name;
 	abi_name
 		.assign_c (BasicAndroidSystem::get_built_for_abi_name ())
-		.append (path_separator)
+		.append (zip_path_separator)
 		.append (name);
 
 	MonoAssembly *a = nullptr;
@@ -476,7 +474,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 	dynamic_local_string<SENSIBLE_PATH_MAX> name;
 	if (culture != nullptr && *culture != '\0') {
 		name.append_c (culture);
-		name.append (path_separator);
+		name.append (zip_path_separator);
 	}
 	name.append_c (asmname);
 

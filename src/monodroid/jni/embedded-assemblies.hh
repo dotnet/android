@@ -77,7 +77,8 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_EOCD_LEN        = 22;
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
-		static constexpr char assemblies_prefix[] = "assemblies/";
+		static constexpr char  assemblies_prefix[] = "assemblies/";
+		static constexpr char  zip_path_separator[] = "/";
 
 		static constexpr char bundled_assemblies_blob_prefix[] = "assemblies";
 		static constexpr char bundled_assemblies_blob_ext[] = ".blob";

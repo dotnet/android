@@ -127,7 +127,6 @@ namespace xamarin::android::internal
 		};
 
 	private:
-		static constexpr auto split_config_abi_apk_name = concat_const ("/split_config.", SharedConstants::android_abi, ".apk");
 		static constexpr char base_apk_name[] = "/base.apk";
 		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50;
 		static constexpr bool is_running_on_desktop =
@@ -154,7 +153,8 @@ namespace xamarin::android::internal
 		void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods);
 		void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-		                                             jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator);
+		                                             jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+		                                             jboolean haveSplitApks);
 #if !defined (ANDROID)
 		jint Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
 		                                                         jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies);
@@ -297,12 +297,13 @@ namespace xamarin::android::internal
 #else // def NET6
 		MonoClass* get_android_runtime_class (MonoDomain *domain);
 #endif
-		MonoDomain*	create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain);
+		MonoDomain*	create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks);
 		MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
 		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
-		                                          jobject loader, bool is_root_domain, bool force_preload_assemblies);
+		                                          jobject loader, bool is_root_domain, bool force_preload_assemblies,
+		                                          bool have_split_apks);
 
-		void gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count);
+		void gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks);
 		static bool should_register_file (const char *filename);
 		void set_trace_options ();
 		void set_profile_options ();

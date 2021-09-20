@@ -392,7 +392,7 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 }
 
 inline void
-MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count)
+MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks)
 {
 #if defined(DEBUG) || !defined (ANDROID)
 	if (application_config.instant_run_enabled) {
@@ -408,30 +408,25 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
 	size_t prev_num_assemblies = 0;
-	// bool got_base_apk = false;
-	// bool got_split_config_abi_apk = false;
-	// bool scan_apk;
+	bool got_split_config_abi_apk = false;
+	bool got_base_apk = false;
 
 	for (int64_t i = 0; i < apk_count; i++) {
 		jstring_wrapper &apk_file = runtimeApks [static_cast<size_t>(i)];
-		//
-		// Code below can be enabled only when we can reliably detect that we're running with split APKs.
-		// The best check appears to involve https://developer.android.com/reference/android/content/pm/ApplicationInfo#splitSourceDirs
-		// However, the above works only if we can compile our Java code against at least API21, but we compile against
-		// API19 atm
-		//
 
-		// scan_apk = false;
+		if (have_split_apks) {
+			bool scan_apk = false;
 
-		// if (!got_base_apk && utils.ends_with (apk_file.get_cstr (), base_apk_name)) {
-		// 	got_base_apk = scan_apk = true;
-		// } else if (!got_split_config_abi_apk && utils.ends_with (apk_file.get_cstr (), split_config_abi_apk_name)) {
-		// 	got_split_config_abi_apk = scan_apk = true;
-		// }
+			if (!got_split_config_abi_apk && utils.ends_with (apk_file.get_cstr (), SharedConstants::split_config_abi_apk_name)) {
+				got_split_config_abi_apk = scan_apk = true;
+			} else if (!got_base_apk && utils.ends_with (apk_file.get_cstr (), base_apk_name)) {
+				got_base_apk = scan_apk = true;
+			}
 
-		// if (!scan_apk) {
-		// 	continue;
-		// }
+			if (!scan_apk) {
+				continue;
+			}
+		}
 
 		size_t cur_num_assemblies  = embeddedAssemblies.register_from<should_register_file> (apk_file.get_cstr ());
 
@@ -884,7 +879,7 @@ MonodroidRuntime::cleanup_runtime_config (MonovmRuntimeConfigArguments *args, [[
 #endif // def NET6
 
 MonoDomain*
-MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain)
+MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks)
 {
 	size_t user_assemblies_count   = 0;
 #if defined (NET6)
@@ -893,7 +888,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	bool have_mono_mkbundle_init = mono_mkbundle_init != nullptr;
 #endif // ndef NET6
 
-	gather_bundled_assemblies (runtimeApks, &user_assemblies_count);
+	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
 #if defined (NET6)
 	timing_period blob_time;
@@ -1864,9 +1859,9 @@ MonoDomain*
 MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
                                                 jstring_array_wrapper &assemblies, [[maybe_unused]] jobjectArray assembliesBytes,
 												[[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, bool is_root_domain,
-												bool force_preload_assemblies)
+                                                bool force_preload_assemblies, bool have_split_apks)
 {
-	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain);
+	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if constexpr (is_running_on_desktop) {
@@ -2053,7 +2048,8 @@ MonodroidRuntime::install_logging_handlers ()
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                                          jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator)
+                                                          jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+                                                          jboolean haveSplitApks)
 {
 	char *mono_log_mask = nullptr;
 	char *mono_log_level = nullptr;
@@ -2108,7 +2104,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	disable_external_signal_handlers ();
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
-	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs);
+	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
 
 	init_reference_logging (androidSystem.get_primary_override_dir ());
 	androidSystem.create_update_dir (androidSystem.get_primary_override_dir ());
@@ -2256,7 +2252,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_array_wrapper assemblies (env, assembliesJava);
 	jstring_array_wrapper assembliesPaths (env);
 	/* the first assembly is used to initialize the AppDomain name */
-	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false);
+	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
 
 #if defined (ANDROID) && !defined (NET6)
 	// Mono from mono/mono has a bug which requires us to install the handlers after `mono_init_jit_version` is called
@@ -2343,14 +2339,16 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		loader,
 		assembliesJava,
 		apiLevel,
-		/* isEmulator */ JNI_FALSE
+		/* isEmulator */ JNI_FALSE,
+		/* haveSplitApks */ JNI_FALSE
 	);
 }
 
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator)
+                                jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+                                jboolean haveSplitApks)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
 		env,
@@ -2362,7 +2360,8 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		loader,
 		assembliesJava,
 		apiLevel,
-		isEmulator
+		isEmulator,
+		haveSplitApks
 	);
 }
 

@@ -1,6 +1,8 @@
 #ifndef __SHARED_CONSTANTS_HH
 #define __SHARED_CONSTANTS_HH
 
+#include "cpp-util.hh"
+
 namespace xamarin::android::internal
 {
 // _WIN32 is defined with _WIN64 so _WIN64 must be checked first.
@@ -51,6 +53,8 @@ namespace xamarin::android::internal
 #elif __i386__
 		static constexpr char android_abi[] = "x86";
 #endif
+
+		static constexpr auto split_config_abi_apk_name = concat_const ("/split_config.", android_abi, ".apk");
 	};
 }
 #endif // __SHARED_CONSTANTS_HH

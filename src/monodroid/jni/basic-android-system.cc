@@ -28,7 +28,7 @@ BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) no
 }
 
 void
-BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs)
+BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks)
 {
 	if (!is_embedded_dso_mode_enabled ()) {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
@@ -44,7 +44,7 @@ BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtim
 		unsigned short built_for_cpu = 0, running_on_cpu = 0;
 		unsigned char is64bit = 0;
 		_monodroid_detect_cpu_and_architecture (&built_for_cpu, &running_on_cpu, &is64bit);
-		setup_apk_directories (running_on_cpu, runtimeApks);
+		setup_apk_directories (running_on_cpu, runtimeApks, have_split_apks);
 	}
 }
 
@@ -59,20 +59,36 @@ BasicAndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApk
 	}
 }
 
-void
-BasicAndroidSystem::add_apk_libdir (const char *apk, size_t index, [[maybe_unused]] size_t apk_count, void *user_data)
+force_inline void
+BasicAndroidSystem::add_apk_libdir (const char *apk, size_t &index, const char *abi) noexcept
 {
-	abort_if_invalid_pointer_argument (user_data);
 	abort_unless (index < app_lib_directories_size, "Index out of range");
-	app_lib_directories [index] = utils.string_concat (apk, "!/lib/", static_cast<const char*>(user_data));
+	app_lib_directories [index] = utils.string_concat (apk, "!/lib/", abi);
 	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", app_lib_directories[index]);
+	index++;
 }
 
-void
-BasicAndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks)
+force_inline void
+BasicAndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept
 {
-	// Man, the cast is ugly...
-	for_each_apk (runtimeApks, &BasicAndroidSystem::add_apk_libdir, const_cast <void*> (static_cast<const void*> (android_abi_names [running_on_cpu])));
+	const char *abi = android_abi_names [running_on_cpu];
+	size_t number_of_added_directories = 0;
+
+	for (size_t i = 0; i < runtimeApks.get_length (); ++i) {
+		jstring_wrapper &e = runtimeApks [i];
+		const char *apk = e.get_cstr ();
+
+		if (have_split_apks) {
+			if (utils.ends_with (apk, SharedConstants::split_config_abi_apk_name)) {
+				add_apk_libdir (apk, number_of_added_directories, abi);
+				break;
+			}
+		} else {
+			add_apk_libdir (apk, number_of_added_directories, abi);
+		}
+	}
+
+	app_lib_directories_size = number_of_added_directories;
 }
 
 char*
