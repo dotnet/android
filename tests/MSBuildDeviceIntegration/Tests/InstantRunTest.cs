@@ -160,7 +160,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": Android.Support.V7.App.AppCompatActivity");
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
-			File.WriteAllLines (Path.Combine (Root, b.ProjectDirectory, b.BuildLogFile + ".bak"), b.LastBuildOutput);
 
 			// slightly (but significantly) modify the sources that causes dll changes.
 			proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
@@ -346,7 +345,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("classes.dex")), "classes.dex should have been uploaded");
 				ClearAdbLogcat ();
-				b.BuildLogFile = "run.log";
+				b.BuildLogFile = "run.binlog";
 				if (CommercialBuildAvailable)
 					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
 				else
@@ -354,7 +353,7 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
-				b.BuildLogFile = "uninstall.log";
+				b.BuildLogFile = "uninstall.binlog";
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}

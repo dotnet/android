@@ -139,9 +139,9 @@ namespace Xamarin.Android.Build.Tests
 </manifest> ";
 				Assert.IsTrue (l1.Build (library, doNotCleanupOnUpdate: true), $"Build of {library.ProjectName} should have suceeded.");
 				Assert.IsTrue (l2.Build (library2, doNotCleanupOnUpdate: true), $"Build of {library2.ProjectName} should have suceeded.");
-				b.BuildLogFile = "build1.log";
+				b.BuildLogFile = "build1.binlog";
 				Assert.IsTrue (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have suceeded.");
-				b.BuildLogFile = "install1.log";
+				b.BuildLogFile = "install1.binlog";
 				Assert.IsTrue (b.Install (app, doNotCleanupOnUpdate: true), "Install should have suceeded.");
 				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
 				WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
@@ -150,7 +150,7 @@ namespace Xamarin.Android.Build.Tests
 				XDocument ui = GetUI ();
 				XElement node = ui.XPathSelectElement ($"//node[contains(@resource-id,'myButton')]");
 				StringAssert.AreEqualIgnoringCase ("Click Me! One", node.Attribute ("text").Value, "Text of Button myButton should have been \"Click Me! One\"");
-				b.BuildLogFile = "clean.log";
+				b.BuildLogFile = "clean.binlog";
 				Assert.IsTrue (b.Clean (app, doNotCleanupOnUpdate: true), "Clean should have suceeded.");
 
 				app = new XamarinAndroidApplicationProject () {
@@ -178,9 +178,9 @@ namespace Xamarin.Android.Build.Tests
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest> ";
-				b.BuildLogFile = "build.log";
+				b.BuildLogFile = "build.binlog";
 				Assert.IsTrue (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have suceeded.");
-				b.BuildLogFile = "install.log";
+				b.BuildLogFile = "install.binlog";
 				Assert.IsTrue (b.Install (app, doNotCleanupOnUpdate: true), "Install should have suceeded.");
 				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
 				WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));

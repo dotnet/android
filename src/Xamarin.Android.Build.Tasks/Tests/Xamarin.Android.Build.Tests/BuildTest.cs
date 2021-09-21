@@ -416,8 +416,9 @@ class MemTest {
 			if (multidex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			using (var b = CreateApkBuilder ()) {
+				b.BuildLogFile = "build1.binlog";
 				Assert.IsTrue (b.Build (proj), "first should have succeeded.");
-				b.BuildLogFile = "build2.log";
+				b.BuildLogFile = "build2.binlog";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second should have succeeded.");
 				var targets = new [] {
 					"_CompileResources",
@@ -427,13 +428,13 @@ class MemTest {
 					b.Output.AssertTargetIsSkipped (target);
 				}
 				proj.Touch ("MainPage.xaml");
-				b.BuildLogFile = "build3.log";
+				b.BuildLogFile = "build3.binlog";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third should have succeeded.");
 				foreach (var target in targets) {
 					b.Output.AssertTargetIsSkipped (target);
 				}
 				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
-				b.BuildLogFile = "build4.log";
+				b.BuildLogFile = "build4.binlog";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "forth should have succeeded.");
 				foreach (var target in targets) {
 					b.Output.AssertTargetIsSkipped (target);
@@ -548,7 +549,7 @@ class MemTest {
 				});
 
 				//The key here, is a build afterward should work
-				b.BuildLogFile = "after.log";
+				b.BuildLogFile = "after.binlog";
 				Assert.IsTrue (b.Build (proj), "The build after a parallel failed build should succeed!");
 			}
 		}
@@ -903,7 +904,7 @@ namespace UnamedProject
 				var expectedAcwMap = File.ReadAllText (acwmapPath);
 
 				b.Target = "Rebuild";
-				b.BuildLogFile = "rebuild.log";
+				b.BuildLogFile = "rebuild.binlog";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Rebuild should have succeeded.");
 
 				var secondAssemblyVersion = AssemblyName.GetAssemblyName (assemblyPath).Version;
@@ -2826,9 +2827,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 							"assemblies/PdbTestLibrary.pdb"),
 							"assemblies/PdbTestLibrary.pdb should not exist in the apk.");
 				}
-				b.BuildLogFile = "build1.log";
+				b.BuildLogFile = "build1.binlog";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
-				b.BuildLogFile = "build2.log";
+				b.BuildLogFile = "build2.binlog";
 				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
 				pdb.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");

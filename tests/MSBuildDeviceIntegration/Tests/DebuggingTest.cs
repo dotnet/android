@@ -65,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				AssertExtractNativeLibs (manifest, extractNativeLibs);
 				ClearAdbLogcat ();
-				b.BuildLogFile = "run.log";
+				b.BuildLogFile = "run.binlog";
 				if (CommercialBuildAvailable)
 					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
 				else
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
-				b.BuildLogFile = "uninstall.log";
+				b.BuildLogFile = "uninstall.binlog";
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
@@ -126,7 +126,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
 				Assert.True (appBuilder.Install (app), "app should have installed.");
 				ClearAdbLogcat ();
-				appBuilder.BuildLogFile = "run.log";
+				appBuilder.BuildLogFile = "run.binlog";
 				if (CommercialBuildAvailable)
 					Assert.True (appBuilder.RunTarget (app, "_Run"), "Project should have run.");
 				else
@@ -230,7 +230,7 @@ namespace ${ROOT_NAMESPACE} {
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
 				ClearAdbLogcat ();
-				b.BuildLogFile = "run.log";
+				b.BuildLogFile = "run.binlog";
 				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true, parameters: new string [] {
 					$"AndroidSdbTargetPort={port}",
 					$"AndroidSdbHostPort={port}",
@@ -261,7 +261,7 @@ namespace ${ROOT_NAMESPACE} {
 				WaitFor (2000);
 				int expected = 2;
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
-				b.BuildLogFile = "uninstall.log";
+				b.BuildLogFile = "uninstall.binlog";
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 				session.Exit ();
 			}
@@ -405,7 +405,7 @@ namespace ${ROOT_NAMESPACE} {
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
 				ClearAdbLogcat ();
-				appBuilder.BuildLogFile = "run.log";
+				appBuilder.BuildLogFile = "run.binlog";
 
 				parameters.Add ($"AndroidSdbTargetPort={port}");
 				parameters.Add ($"AndroidSdbHostPort={port}");
@@ -442,7 +442,7 @@ namespace ${ROOT_NAMESPACE} {
 				}
 				expected = 1;
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
-				appBuilder.BuildLogFile = "uninstall.log";
+				appBuilder.BuildLogFile = "uninstall.binlog";
 				Assert.True (appBuilder.Uninstall (app), "Project should have uninstalled.");
 				session.Exit ();
 			}

@@ -286,7 +286,7 @@ namespace Xamarin.Android.Build.Tests
 		LocalBuilder GetBuilder (string baseLogFileName, string projectDir)
 		{
 			return new LocalBuilder (projectDir) {
-				BuildLogFile = $"{baseLogFileName}.log"
+				BuildLogFile = $"{baseLogFileName}.binlog"
 			};
 		}
 	}

@@ -79,14 +79,6 @@ namespace Xamarin.Android.Build.Tests
 			return duration.TotalMilliseconds;
 		}
 
-		ProjectBuilder CreateBuilderWithoutLogFile (string directory = null, bool isApp = true)
-		{
-			var builder = isApp ? CreateApkBuilder (directory) : CreateDllBuilder (directory);
-			builder.BuildLogFile = null;
-			builder.Verbosity = LoggerVerbosity.Quiet;
-			return builder;
-		}
-
 		XamarinAndroidApplicationProject CreateApplicationProject ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -100,7 +92,7 @@ namespace Xamarin.Android.Build.Tests
 		public void Build_From_Clean_DontIncludeRestore ()
 		{
 			var proj = CreateApplicationProject ();
-			using (var builder = CreateBuilderWithoutLogFile ()) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.AutomaticNuGetRestore = false;
 				builder.Target = "Build";
 				builder.Restore (proj);
@@ -114,7 +106,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = CreateApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
-			using (var builder = CreateBuilderWithoutLogFile ()) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 				builder.AutomaticNuGetRestore = false;
@@ -138,7 +130,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = CreateApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
-			using (var builder = CreateBuilderWithoutLogFile ()) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 				builder.AutomaticNuGetRestore = false;
@@ -155,7 +147,7 @@ namespace Xamarin.Android.Build.Tests
 		public void Build_AndroidResource_Change ()
 		{
 			var proj = CreateApplicationProject ();
-			using (var builder = CreateBuilderWithoutLogFile ()) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 				builder.AutomaticNuGetRestore = false;
@@ -187,8 +179,8 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\foo.bar") {
 				BinaryContent = () => bytes,
 			});
-			using (var libBuilder = CreateBuilderWithoutLogFile (Path.Combine ("temp", TestName, lib.ProjectName), isApp: false))
-			using (var builder = CreateBuilderWithoutLogFile (Path.Combine ("temp", TestName, proj.ProjectName))) {
+			using (var libBuilder = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName))) {
 				builder.Target = "Build";
 				libBuilder.Build (lib);
 				builder.Build (proj);
@@ -209,7 +201,7 @@ namespace Xamarin.Android.Build.Tests
 		public void Build_Designer_Change ()
 		{
 			var proj = CreateApplicationProject ();
-			using (var builder = CreateBuilderWithoutLogFile ()) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 				builder.AutomaticNuGetRestore = false;
@@ -234,7 +226,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () => $"class {className} : Java.Lang.Object {{}}"
 			});
-			using (var builder = CreateBuilderWithoutLogFile ()) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 				builder.AutomaticNuGetRestore = false;
@@ -251,7 +243,7 @@ namespace Xamarin.Android.Build.Tests
 		public void Build_AndroidManifest_Change ()
 		{
 			var proj = CreateApplicationProject ();
-			using (var builder = CreateBuilderWithoutLogFile ()) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 				builder.AutomaticNuGetRestore = false;
@@ -268,7 +260,7 @@ namespace Xamarin.Android.Build.Tests
 		public void Build_CSProj_Change ()
 		{
 			var proj = CreateApplicationProject ();
-			using (var builder = CreateBuilderWithoutLogFile ()) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 				builder.AutomaticNuGetRestore = false;
@@ -348,8 +340,8 @@ namespace Xamarin.Android.Build.Tests
 			lib.SetProperty ("ProduceReferenceAssembly", produceReferenceAssembly.ToString ());
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
-			using (var libBuilder = CreateBuilderWithoutLogFile (Path.Combine (path, lib.ProjectName), isApp: false))
-			using (var appBuilder = CreateBuilderWithoutLogFile (Path.Combine (path, app.ProjectName))) {
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				libBuilder.Build (lib);
 				appBuilder.Target = "Build";
 				if (install) {
@@ -384,7 +376,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = CreateApplicationProject ();
 			proj.PackageName = "com.xamarin.install_csharp_change";
 			proj.MainActivity = proj.DefaultMainActivity;
-			using (var builder = CreateBuilderWithoutLogFile ()) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Install (proj);
 				builder.AutomaticNuGetRestore = false;
 

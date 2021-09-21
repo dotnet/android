@@ -256,7 +256,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.Touch ("Properties\\AndroidManifest.xml");
 				proj.SetProperty ("AndroidStoreUncompressedFileExtensions", ".bar");
 
-				b.BuildLogFile = "build2.log";
+				b.BuildLogFile = "build2.binlog";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
 
 				FileAssert.Exists (apk);

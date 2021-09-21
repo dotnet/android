@@ -845,7 +845,7 @@ namespace Lib1 {
 					foo.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
 					libBuilder.Output.AssertTargetIsSkipped (target);
-					appBuilder.BuildLogFile = "build1.log";
+					appBuilder.BuildLogFile = "build1.binlog";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					appBuilder.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
 					// Check Contents of the file in the apk are correct.
@@ -867,7 +867,7 @@ namespace Lib1 {
 					raw.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
 					libBuilder.Output.AssertTargetIsNotSkipped (target);
-					appBuilder.BuildLogFile = "build2.log";
+					appBuilder.BuildLogFile = "build2.binlog";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					string resource_designer_cs = GetResourceDesignerPath (appBuilder, appProj);
 					string text = File.ReadAllText (resource_designer_cs);
@@ -894,7 +894,7 @@ namespace Lib1 {
 						archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
 					}
 					Assert.IsNull (ZipHelper.ReadFileFromZip (archive, "res/values/theme.xml"), "res/values/theme.xml should have been removed from __AndroidLibraryProjects__.zip");
-					appBuilder.BuildLogFile = "build3.log";
+					appBuilder.BuildLogFile = "build3.binlog";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					Assert.IsNull (ZipHelper.ReadFileFromZip (apk, "res/raw/test2.txt"), "res/raw/test2.txt should have been removed from the apk.");
 				}
@@ -923,12 +923,12 @@ namespace Lib1 {
 				StringAssert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
 				StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
 				StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
-				appBuilder.BuildLogFile = "build.log";
+				appBuilder.BuildLogFile = "build.binlog";
 				Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true),
 					"Normal Application Build should have succeeded.");
 				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should not have run.");
-				appBuilder.BuildLogFile = "designtimebuild.log";
+				appBuilder.BuildLogFile = "designtimebuild.binlog";
 				Assert.IsTrue (appBuilder.DesignTimeBuild (appProj, doNotCleanupOnUpdate: true), "DesignTime Application Build should have succeeded.");
 				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should not have run.");

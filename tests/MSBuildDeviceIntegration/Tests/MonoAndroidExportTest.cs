@@ -119,7 +119,7 @@ namespace UnnamedProject
 </manifest>";
 				Assert.True (b.Install (proj), "Project should have installed.");
 				ClearAdbLogcat ();
-				b.BuildLogFile = "run.log";
+				b.BuildLogFile = "run.binlog";
 				Assert.True (b.RunTarget (proj, "StartAndroidActivity", doNotCleanupOnUpdate: true), "Project should have run.");
 
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",

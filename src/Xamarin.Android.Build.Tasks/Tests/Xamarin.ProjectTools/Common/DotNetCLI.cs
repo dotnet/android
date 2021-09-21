@@ -4,14 +4,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace Xamarin.ProjectTools
 {
 	public class DotNetCLI
 	{
-		public string BuildLogFile { get; set; }
-		public string ProcessLogFile { get; set; }
-		public string Verbosity { get; set; } = "diag";
+		public string BuildLogFile { get; set; } = "msbuild.binlog";
+		public string ProcessLogFile { get; set; } = "process.log";
 		public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
 		public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
 		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
@@ -20,6 +20,7 @@ namespace Xamarin.ProjectTools
 
 		readonly XASdkProject project;
 		readonly string projectOrSolution;
+		string buildLogFullPath;
 
 		public DotNetCLI (string projectOrSolution)
 		{
@@ -40,8 +41,9 @@ namespace Xamarin.ProjectTools
 		/// <returns>Whether or not the command succeeded.</returns>
 		protected bool Execute (params string [] args)
 		{
-			if (string.IsNullOrEmpty (ProcessLogFile))
-				ProcessLogFile = Path.Combine (XABuildPaths.TestOutputDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
+			string processLogFile = null;
+			if (!string.IsNullOrEmpty (ProcessLogFile))
+				processLogFile = Path.Combine (XABuildPaths.TestOutputDirectory, ProcessLogFile);
 
 			var procOutput = new StringBuilder ();
 			bool succeeded;
@@ -78,7 +80,7 @@ namespace Xamarin.ProjectTools
 				procOutput.AppendLine ($"Exit Code: {p.ExitCode}");
 			}
 
-			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
+			File.WriteAllText (processLogFile, procOutput.ToString ());
 			return succeeded;
 		}
 
@@ -112,42 +114,51 @@ namespace Xamarin.ProjectTools
 
 		public bool Run ()
 		{
-			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "msbuild.binlog");
 			var arguments = new List<string> {
 				"run",
 				"--project", $"\"{projectOrSolution}\"",
-				$"/bl:\"{binlog}\""
+				
 			};
+			if (!string.IsNullOrEmpty (BuildLogFile)) {
+				buildLogFullPath = Path.Combine (Path.GetDirectoryName (projectOrSolution), BuildLogFile);
+				arguments.Add ($"/bl:\"{buildLogFullPath}\"");
+			} else {
+				buildLogFullPath = null;
+			}
 			return Execute (arguments.ToArray ());
 		}
 
 		public IEnumerable<string> LastBuildOutput {
 			get {
-				if (!string.IsNullOrEmpty (BuildLogFile) && File.Exists (BuildLogFile)) {
-					return File.ReadLines (BuildLogFile, Encoding.UTF8);
+				foreach (var node in Log?.FindChildrenRecursive<TreeNode> ()) {
+					File.AppendAllText (@"C:\src\xamarin-android\bin\TestDebug\temp\DotNetBuildXamarinFormsFalse\foo.log", node.ToString ());
+					yield return node.ToString ();
 				}
-				return Enumerable.Empty<string> ();
 			}
 		}
+
+		public Microsoft.Build.Logging.StructuredLogger.Build Log =>
+			!string.IsNullOrEmpty (buildLogFullPath) && File.Exists (buildLogFullPath) ?
+				BinaryLog.ReadBuild (buildLogFullPath) : null;
 
 		public bool IsTargetSkipped (string target) => BuildOutput.IsTargetSkipped (LastBuildOutput, target);
 
 		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string [] parameters = null)
 		{
 			string testDir = Path.GetDirectoryName (projectOrSolution);
-			if (string.IsNullOrEmpty (ProcessLogFile))
-				ProcessLogFile = Path.Combine (testDir, "process.log");
-
-			if (string.IsNullOrEmpty (BuildLogFile))
-				BuildLogFile = Path.Combine (testDir, "build.log");
 
 			var arguments = new List<string> {
 				verb,
 				$"\"{projectOrSolution}\"",
 				"/noconsolelogger",
-				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
-				$"/bl:\"{Path.Combine (testDir, "msbuild.binlog")}\""
+				$"/v:quiet",
 			};
+			if (!string.IsNullOrEmpty (BuildLogFile)) {
+				buildLogFullPath = Path.Combine (testDir, BuildLogFile);
+				arguments.Add ($"/bl:\"{buildLogFullPath}\"");
+			} else {
+				buildLogFullPath = null;
+			}
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");
 			}

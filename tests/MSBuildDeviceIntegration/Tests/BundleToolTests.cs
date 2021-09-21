@@ -252,7 +252,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			AssertHasDevices ();
 
-			appBuilder.BuildLogFile = "install.log";
+			appBuilder.BuildLogFile = "install.binlog";
 			Assert.IsTrue (appBuilder.RunTarget (app, "Install"), "App should have installed.");
 
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.apks");

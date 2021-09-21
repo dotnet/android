@@ -129,7 +129,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			options.EvaluationOptions.UseExternalTypeResolver = true;
 			ClearAdbLogcat ();
-			dotnet.BuildLogFile = Path.Combine (Root, dotnet.ProjectDirectory, "run.log");
+			dotnet.BuildLogFile = Path.Combine (Root, dotnet.ProjectDirectory, "run.binlog");
 			Assert.True (dotnet.Build ("Run", new string [] {
 				$"AndroidSdbTargetPort={port}",
 				$"AndroidSdbHostPort={port}",

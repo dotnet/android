@@ -421,7 +421,7 @@ namespace Xamarin.Android.Build.Tests
 					StringAssertEx.Contains (expected, b.LastBuildOutput,
 					"The Wrong keystore was used to sign the apk");
 				}
-				b.BuildLogFile = "install.log";
+				b.BuildLogFile = "install.binlog";
 				Assert.AreEqual (shouldInstall, b.Install (proj, doNotCleanupOnUpdate: true), $"Install should have {(shouldInstall ? "succeeded" : "failed")}.");
 				if (packageFormat == "aab") {
 					StringAssertEx.Contains (expected, b.LastBuildOutput,
@@ -429,7 +429,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 				if (!shouldInstall)
 					return;
-				b.BuildLogFile = "uninstall.log";
+				b.BuildLogFile = "uninstall.binlog";
 				Assert.IsTrue (b.Uninstall (proj, doNotCleanupOnUpdate: true), "Uninstall should have succeeded.");
 			}
 		}
@@ -469,7 +469,7 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var res in resourceFilesFromDisk) {
 					StringAssert.Contains (res, overrideContents, $"{res} did not exist in the .__override__ directory.\nFound:{overrideContents}");
 				}
-				appBuilder.BuildLogFile = "uninstall.log";
+				appBuilder.BuildLogFile = "uninstall.binlog";
 				appBuilder.Uninstall (app);
 			}
 		}
@@ -521,14 +521,14 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
 				builder.ThrowOnBuildFailure = false;
-				builder.BuildLogFile = "install.log";
+				builder.BuildLogFile = "install.binlog";
 				Assert.IsTrue (builder.Install (app), "First install should have succeeded.");
 				var logLines = builder.LastBuildOutput;
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("UnnamedProject.dll")), "UnnamedProject.dll should have been uploaded");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library1.dll")), "Library1.dll should have been uploaded");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library2.dll")), "Library2.dll should have been uploaded");
 				var firstInstallTime = builder.LastBuildTime;
-				builder.BuildLogFile = "install2.log";
+				builder.BuildLogFile = "install2.binlog";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Second install should have succeeded.");
 				var secondInstallTime = builder.LastBuildTime;
 
@@ -549,14 +549,14 @@ namespace Xamarin.Android.Build.Tests
 				long lib1SecondBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
 				Assert.AreEqual (lib1FirstBuildSize, lib1SecondBuildSize, "Library2.dll was not the same size.");
 
-				builder.BuildLogFile = "install3.log";
+				builder.BuildLogFile = "install3.binlog";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Third install should have succeeded.");
 				logLines = builder.LastBuildOutput;
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("UnnamedProject.dll")), "UnnamedProject.dll should have been uploaded");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library1.dll")), "Library1.dll should have been uploaded");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync SkipCopyFile") && l.Contains ("Library2.dll")), "Library2.dll should not have been uploaded");
 				var thirdInstallTime = builder.LastBuildTime;
-				builder.BuildLogFile = "install4.log";
+				builder.BuildLogFile = "install4.binlog";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Fourth install should have succeeded.");
 				var fourthInstalTime = builder.LastBuildTime;
 

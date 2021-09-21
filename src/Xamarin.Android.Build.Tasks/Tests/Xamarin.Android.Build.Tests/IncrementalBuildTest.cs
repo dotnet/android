@@ -749,9 +749,9 @@ namespace Lib2
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				libBuilder.BuildLogFile = "build.log";
+				libBuilder.BuildLogFile = "build.binlog";
 				Assert.IsTrue (libBuilder.Build (lib), "first library build should have succeeded.");
-				appBuilder.BuildLogFile = "build.log";
+				appBuilder.BuildLogFile = "build.binlog";
 				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
 
 				if (useAapt2) {
@@ -766,9 +766,9 @@ namespace Lib2
 
 				lib.Touch ("Bar.cs");
 
-				libBuilder.BuildLogFile = "build2.log";
+				libBuilder.BuildLogFile = "build2.binlog";
 				Assert.IsTrue (libBuilder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
-				appBuilder.BuildLogFile = "build2.log";
+				appBuilder.BuildLogFile = "build2.binlog";
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
 				var targetsShouldSkip = new [] {
@@ -1073,7 +1073,7 @@ namespace Lib2
 					Assert.Ignore ($"Cross compiler for {supportedAbis} was not available");
 				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
 					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
-				b.BuildLogFile = "first.log";
+				b.BuildLogFile = "first.binlog";
 				b.CleanupAfterSuccessfulBuild = false;
 				b.CleanupOnDispose = false;
 				b.ThrowOnBuildFailure = false;
@@ -1084,7 +1084,7 @@ namespace Lib2
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on first build!");
 				}
 
-				b.BuildLogFile = "second.log";
+				b.BuildLogFile = "second.binlog";
 				b.CleanupAfterSuccessfulBuild = false;
 				b.CleanupOnDispose = false;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
@@ -1094,7 +1094,7 @@ namespace Lib2
 
 				proj.Touch ("MainActivity.cs");
 
-				b.BuildLogFile = "third.log";
+				b.BuildLogFile = "third.binlog";
 				b.CleanupAfterSuccessfulBuild = false;
 				b.CleanupOnDispose = false;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Third build should have succeeded.");

@@ -2,13 +2,13 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Diagnostics;
-using Microsoft.Build.Framework;
 using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.XPath;
 using System.Xml.Linq;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace Xamarin.ProjectTools
 {
@@ -35,17 +35,20 @@ namespace Xamarin.ProjectTools
 		/// Passes /m:N to MSBuild, defaults to null to omit the /m parameter completely.
 		/// </summary>
 		public int? MaxCpuCount { get; set; }
-		public LoggerVerbosity Verbosity { get; set; } = LoggerVerbosity.Diagnostic;
 		public IEnumerable<string> LastBuildOutput {
 			get {
-				if (!string.IsNullOrEmpty (buildLogFullPath) && File.Exists (buildLogFullPath)) {
-					return File.ReadLines (buildLogFullPath, Encoding.UTF8);
+				foreach (var node in Log?.FindChildrenRecursive<TreeNode> ()) {
+					yield return node.ToString ();
 				}
-				return Enumerable.Empty<string> ();
 			}
 		}
+
+		public Microsoft.Build.Logging.StructuredLogger.Build Log =>
+			!string.IsNullOrEmpty (buildLogFullPath) && File.Exists (buildLogFullPath) ?
+				BinaryLog.ReadBuild (buildLogFullPath) : null;
+
 		public TimeSpan LastBuildTime { get; protected set; }
-		public string BuildLogFile { get; set; }
+		public string BuildLogFile { get; set; } = "msbuild.binlog";
 		public bool ThrowOnBuildFailure { get; set; }
 		/// <summary>
 		/// True if NuGet restore occurs automatically (default)
@@ -244,7 +247,6 @@ namespace Xamarin.ProjectTools
 		public Builder ()
 		{
 			IsUnix = Environment.OSVersion.Platform != PlatformID.Win32NT;
-			BuildLogFile = "build.log";
 		}
 
 		public void Dispose ()
@@ -273,8 +275,7 @@ namespace Xamarin.ProjectTools
 
 			var logger = buildLogFullPath == null
 				? string.Empty
-				: string.Format ("/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
-					buildLogFullPath, Verbosity.ToString ().ToLower ());
+				: $"/noconsolelogger /v:quiet \"/bl:{buildLogFullPath}\"";
 
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();

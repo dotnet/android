@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using Microsoft.Build.Logging.StructuredLogger;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -93,13 +94,15 @@ namespace Xamarin.Android.Build.Tests
 		[DebuggerHidden]
 		public static void AssertHasNoWarnings (this ProjectBuilder builder)
 		{
-			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
+			Assert.IsTrue (builder.Log?.FindFirstChild<Warning> () == null,
+				$"{builder.BuildLogFile} should have no MSBuild warnings.");
 		}
 
 		[DebuggerHidden]
 		public static void AssertHasNoWarnings (this DotNetCLI dotnet)
 		{
-			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), $"{dotnet.BuildLogFile} should have no MSBuild warnings.");
+			Assert.IsTrue (dotnet.Log?.FindFirstChild<Warning> () == null,
+				$"{dotnet.BuildLogFile} should have no MSBuild warnings.");
 		}
 	}
 }
