@@ -77,6 +77,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         CompilerBinaryPath="$(_MonoAOTCompilerPath)"
         AotProfilePath="@(AndroidAotProfile->'%(FullPath)')"
         DisableParallelAot="$(_DisableParallelAot)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
         LibraryFormat="So"
         Mode="$(AndroidAotMode)"
         OutputDir="$(IntermediateOutputPath)aot\"
