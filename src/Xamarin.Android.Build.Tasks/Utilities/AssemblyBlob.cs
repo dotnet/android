@@ -11,7 +11,9 @@ namespace Xamarin.Android.Tasks
 {
 	abstract class AssemblyBlob
 	{
-		const uint BlobMagic = 0x41424158; // 'XABA', little-endian
+		// The two constants below must match their counterparts in src/monodroid/jni/xamarin-app.hh
+		const uint BlobMagic = 0x41424158; // 'XABA', little-endian, must match the BUNDLED_ASSEMBLIES_BLOB_MAGIC native constant
+		const uint BlobVersion = 1; // Must match the BUNDLED_ASSEMBLIES_BLOB_VERSION native constant
 
 		// MUST be equal to the size of the BlobBundledAssembly struct in src/monodroid/jni/xamarin-app.hh
 		const uint BlobBundledAssemblyNativeStructSize = 6 * sizeof (uint);
@@ -60,7 +62,7 @@ namespace Xamarin.Android.Tasks
 		public abstract void Add (BlobAssemblyInfo blobAssembly);
 		public abstract void Generate (string outputDirectory, List<AssemblyBlobIndexEntry> globalIndex, List<string> blobPaths);
 
-		public virtual void WriteIndex (List<AssemblyBlobIndexEntry> globalIndex)
+		public virtual string WriteIndex (List<AssemblyBlobIndexEntry> globalIndex)
 		{
 			if (!IsIndexBlob) {
 				throw new InvalidOperationException ("Assembly index may be written only to blob with index 0");
@@ -91,6 +93,8 @@ namespace Xamarin.Android.Tasks
 
 			File.Delete (indexBlobPath);
 			File.Move (indexBlobHeaderPath, indexBlobPath);
+
+			return indexBlobManifestPath;
 		}
 
 		void WriteIndex (BinaryWriter blobWriter, string manifestPath, List<AssemblyBlobIndexEntry> globalIndex)
@@ -108,6 +112,7 @@ namespace Xamarin.Android.Tasks
 			uint localEntryCount = 0;
 			var localAssemblies = new List<AssemblyBlobIndexEntry> ();
 
+			manifestWriter.WriteLine ("Hash 32     Hash 64             Blob ID  Blob idx  Name");
 			// TODO: check if there are no duplicates here
 			foreach (AssemblyBlobIndexEntry assembly in globalIndex) {
 				if (assembly.BlobID == ID) {
@@ -115,10 +120,7 @@ namespace Xamarin.Android.Tasks
 					localAssemblies.Add (assembly);
 				}
 
-				manifestWriter.WriteLine ($"{assembly.Name}");
-				manifestWriter.WriteLine ($"\thash32: 0x{assembly.NameHash32:x08}\thash64: 0x{assembly.NameHash64:x016}\tglobal index: {assembly.MappingIndex:d04}\tblob ID: {assembly.BlobID:d03}; local blob index: {assembly.LocalBlobIndex:d04}");
-				manifestWriter.WriteLine ($"\tdebug data offset: {assembly.DebugDataOffset}; debug data size: {assembly.DebugDataSize}; config data offset: {assembly.ConfigDataOffset}; config data size: {assembly.ConfigDataSize}");
-				manifestWriter.WriteLine ();
+				manifestWriter.WriteLine ($"0x{assembly.NameHash32:x08}  0x{assembly.NameHash64:x016}  {assembly.BlobID:d03}      {assembly.LocalBlobIndex:d04}      {assembly.Name}");
 			}
 
 			uint globalAssemblyCount = (uint)globalIndex.Count;
@@ -253,6 +255,7 @@ namespace Xamarin.Android.Tasks
 		{
 			// Header, must be identical to the BundledAssemblyBlobHeader structure in src/monodroid/jni/xamarin-app.hh
 			writer.Write (BlobMagic);               // magic
+			writer.Write (BlobVersion);             // version
 			writer.Write (localEntryCount);         // local_entry_count
 			writer.Write (globalEntryCount);        // global_entry_count
 			writer.Write ((uint)ID);                // blob_id

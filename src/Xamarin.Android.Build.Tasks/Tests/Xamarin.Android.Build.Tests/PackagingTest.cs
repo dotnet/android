@@ -67,11 +67,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckIncludedAssemblies ()
+		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssembliesBlob)
 		{
+			if (usesAssembliesBlob) {
+				Assert.Ignore ("Assembly blob not implemented yet");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
+			proj.SetProperty ("AndroidUseAssembliesBlob", usesAssembliesBlob.ToString ());
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			if (!Builder.UseDotNet) {
 				proj.PackageReferences.Add (new Package {

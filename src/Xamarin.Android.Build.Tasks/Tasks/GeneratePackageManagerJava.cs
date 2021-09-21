@@ -271,7 +271,6 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
-			UseAssembliesBlob = true; // TODO: remove after testing!
 			int assemblyNameWidth = 0;
 			Encoding assemblyNameEncoding = Encoding.UTF8;
 

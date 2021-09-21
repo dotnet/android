@@ -185,6 +185,11 @@ EmbeddedAssemblies::map_assembly_blob (dynamic_local_string<SENSIBLE_PATH_MAX> c
 		abort ();
 	}
 
+	if (header->version > BUNDLED_ASSEMBLIES_BLOB_VERSION) {
+		log_fatal (LOG_ASSEMBLY, "Blob '%s' uses format v%u which is not understood by this version of Xamarin.Android", entry_name.get (), header->version);
+		abort ();
+	}
+
 	if (header->blob_id >= application_config.number_of_assembly_blobs) {
 		log_fatal (
 			LOG_ASSEMBLY,

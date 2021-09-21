@@ -1,24 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup>
     <Company>Microsoft Corporation</Company>
     <Copyright>2020 Microsoft Corporation</Copyright>
     <Version>0.0.1</Version>
-    <TargetFrameworks>net6.0</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>../../bin/$(Configuration)/bin/typemap-tool</OutputPath>
+    <OutputPath>../../bin/$(Configuration)/bin/assembly-blob-reader</OutputPath>
     <OutputType>Exe</OutputType>
-    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>Xamarin.Android.AssemblyBlobReader</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
-    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
-    <PackageReference Include="ELFSharp" Version="2.12.0" />
     <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
   </ItemGroup>
+
   <Import Project="$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets" Condition="Exists('$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets')" />
 </Project>

@@ -378,7 +378,15 @@ namespace Xamarin.Android.Tasks
 				if (inArchiveName.StartsWith (blobPrefix, StringComparison.Ordinal)) {
 					inArchiveName = inArchiveName.Substring (blobPrefix.Length);
 				}
-				AddFileToArchiveIfNewer (apk, blobPath, AssembliesPath + inArchiveName, compressionMethod: UncompressedMethod);
+
+				CompressionMethod compressionMethod;
+				if (inArchiveName.EndsWith (".manifest", StringComparison.Ordinal)) {
+					compressionMethod = CompressionMethod.Default;
+				} else {
+					compressionMethod = UncompressedMethod;
+				}
+
+				AddFileToArchiveIfNewer (apk, blobPath, AssembliesPath + inArchiveName, compressionMethod);
 			}
 
 			void AddAssembliesFromCollection (ITaskItem[] assemblies)

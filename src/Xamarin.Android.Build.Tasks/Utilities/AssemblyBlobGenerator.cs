@@ -87,6 +87,7 @@ namespace Xamarin.Android.Tasks
 
 			var globalIndex = new List<AssemblyBlobIndexEntry> ();
 			var ret = new Dictionary<string, List<string>> (StringComparer.Ordinal);
+			string indexBlobApkName = null;
 			foreach (var kvp in blobs) {
 				string apkName = kvp.Key;
 				Blob blob = kvp.Value;
@@ -95,11 +96,17 @@ namespace Xamarin.Android.Tasks
 					ret.Add (apkName, new List<string> ());
 				}
 
+				if (blob.Common == indexBlob || blob.Arch == indexBlob) {
+					indexBlobApkName = apkName;
+				}
+
 				GenerateBlob (blob.Common, apkName);
 				GenerateBlob (blob.Arch, apkName);
 			}
 
-			indexBlob.WriteIndex (globalIndex);
+			string manifestPath = indexBlob.WriteIndex (globalIndex);
+			ret[indexBlobApkName].Add (manifestPath);
+
 			return ret;
 
 			void GenerateBlob (AssemblyBlob blob, string apkName)

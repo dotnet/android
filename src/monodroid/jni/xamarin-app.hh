@@ -11,6 +11,7 @@
 static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t BUNDLED_ASSEMBLIES_BLOB_MAGIC = 0x41424158; // 'XABA', little-endian
+static constexpr uint32_t BUNDLED_ASSEMBLIES_BLOB_VERSION = 1; // Increase whenever an incompatible change is made to the blob format
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
@@ -136,6 +137,7 @@ struct XamarinAndroidBundledAssembly final
 struct [[gnu::packed]] BundledAssemblyBlobHeader final
 {
 	uint32_t magic;
+	uint32_t version;
 	uint32_t local_entry_count;
 	uint32_t global_entry_count;
 	uint32_t blob_id;

@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tasks
 			assemblies = new Dictionary<string, List<BlobAssemblyInfo>> (StringComparer.OrdinalIgnoreCase);
 		}
 
-		public override void WriteIndex (List<AssemblyBlobIndexEntry> globalIndex)
+		public override string WriteIndex (List<AssemblyBlobIndexEntry> globalIndex)
 		{
 			throw new InvalidOperationException ("Architecture-specific assembly blob cannot contain global assembly index");
 		}

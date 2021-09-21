@@ -148,6 +148,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "decompress-assemblies", "to
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tmt", "tools\tmt\tmt.csproj", "{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "assembly-blob-reader", "tools\assembly-blob-reader\assembly-blob-reader.csproj", "{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{3f1f2f50-af1a-4a5a-bedb-193372f068d7}*SharedItemsImports = 5
@@ -408,6 +410,10 @@ Global
 		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}.Debug|AnyCPU.ActiveCfg = Debug|anycpu
+		{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}.Debug|AnyCPU.Build.0 = Debug|anycpu
+		{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}.Release|AnyCPU.ActiveCfg = Release|anycpu
+		{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}.Release|AnyCPU.Build.0 = Release|anycpu
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -474,6 +480,7 @@ Global
 		{37FCD325-1077-4603-98E7-4509CAD648D6} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{88B746FF-8D6E-464D-9D66-FF2ECCF148E0} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34} = {864062D3-A415-4A6F-9324-5820237BA058}
+		{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
