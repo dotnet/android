@@ -1133,9 +1133,7 @@ stages:
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
 
   # Check - "Xamarin.Android (Designer Tests Windows)"
-  # TODO: Enable once Windows test issues are fixed.
   - job: designer_integration_win
-    condition: false
     displayName: Windows
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 120
