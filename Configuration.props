@@ -113,16 +113,16 @@
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
     <!--
-      For some reason, the URL for platform-tools/build-tools 30.0.2 is prefixed with what appears to be a GIT commit hash or some other checksum...
+      For some reason, the URL for platform-tools/build-tools 30.0.3 is prefixed with what appears to be a GIT commit hash or some other checksum...
       Linux packages don't have any prefix, but this forces us to have *some* mechanism to handle this...
     -->
-    <XABuildToolsPackagePrefixMacOS>5a6ceea22103d8dec989aefcef309949c0c42f1d.</XABuildToolsPackagePrefixMacOS>
-    <XABuildToolsPackagePrefixWindows>efbaa277338195608aa4e3dbd43927e97f60218c.</XABuildToolsPackagePrefixWindows>
+    <XABuildToolsPackagePrefixMacOS>f6d24b187cc6bd534c6c37604205171784ac5621.</XABuildToolsPackagePrefixMacOS>
+    <XABuildToolsPackagePrefixWindows>91936d4ee3ccc839f0addd53c9ebf087b1e39251.</XABuildToolsPackagePrefixWindows>
     <XABuildToolsPackagePrefixLinux></XABuildToolsPackagePrefixLinux>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildToolsPackagePrefixMacOS)</XABuildToolsPackagePrefix>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
-    <XABuildToolsVersion>30.0.2</XABuildToolsVersion>
-    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">30.0.2</XABuildToolsFolder>
+    <XABuildToolsVersion>30.0.3</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">30.0.3</XABuildToolsFolder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">b2be9c80582174e645d3736daa0d44d8610b38a8.</XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>30.0.2</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
