@@ -91,26 +91,26 @@ stages:
 
     # Prepare and build everything
     - script: >
-        echo "make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
-        make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+        echo "make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
+        make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare-update-mono
 
     - script: >
-        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
-        make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
+        make prepare CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare
 
     - script: >
-        echo "make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1" &&
-        make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+        echo "make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1" &&
+        make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make jenkins
 
     - script: >
-        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
-        make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+        echo "make create-installers CONFIGURATION=$(XA.Build.Configuration)" &&
+        make create-installers CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: create installers
 
@@ -134,20 +134,20 @@ stages:
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - script: >
-        echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
-        make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
+        echo "all-tests CONFIGURATION=$(XA.Build.Configuration)" &&
+        make all-tests CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make all-tests
 
     - script: >
-        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1" &&
-        make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1
+        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration)" &&
+        make package-build-status CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package build status
 
     - script: >
-        echo "make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
-        make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1
+        echo "make run-performance-tests CONFIGURATION=$(XA.Build.Configuration)" &&
+        make run-performance-tests CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: run performance tests
       condition: and(succeeded(), eq(variables['EnableTestExecution'], 'true'))   # The variable is defined on the pipeline definition
@@ -174,16 +174,16 @@ stages:
 
     - template: yaml-templates/setup-ubuntu.yaml
 
-    - script: make prepare V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+    - script: make prepare PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make prepare
 
-    - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+    - script: make jenkins PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make jenkins
 
-    - script: make create-nupkgs V=1 CONFIGURATION=$(XA.Build.Configuration)
+    - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-nupkgs
 
-    - script: make package-deb V=1 CONFIGURATION=$(XA.Build.Configuration)
+    - script: make package-deb CONFIGURATION=$(XA.Build.Configuration)
       displayName: make package-deb
 
     - script: >
