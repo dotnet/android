@@ -117,8 +117,16 @@ namespace Xamarin.ProjectTools
 		}
 
 		static int? maxInstalled;
+		static object maxInstalledLock = new object ();
 
 		public static int GetMaxInstalledPlatform ()
+		{
+			lock (maxInstalledLock) {
+				return GetMaxInstalledPlatformInternal ();
+			}
+		}
+
+		static int GetMaxInstalledPlatformInternal ()
 		{
 			if (maxInstalled != null)
 				return maxInstalled.Value;
