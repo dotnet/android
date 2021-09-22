@@ -49,23 +49,23 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (!string.IsNullOrEmpty (PackageName)) {
-				PackageName = AndroidAppManifest.CanonicalizePackageName (PackageName);
-			} else if (!string.IsNullOrEmpty (ManifestFile) && File.Exists (ManifestFile)) {
+			if (!string.IsNullOrEmpty (ManifestFile) && File.Exists (ManifestFile)) {
 				using var stream = File.OpenRead (ManifestFile);
 				using var reader = XmlReader.Create (stream);
 				if (reader.MoveToContent () == XmlNodeType.Element) {
 					var package = reader.GetAttribute ("package");
 					if (!string.IsNullOrEmpty (package)) {
-						package = ManifestDocument.ReplacePlaceholders (ManifestPlaceholders, package);
-						PackageName = AndroidAppManifest.CanonicalizePackageName (package);
+						PackageName = ManifestDocument.ReplacePlaceholders (ManifestPlaceholders, package);
 					}
 				}
 			}
 
-			// If we don't have a manifest, default to using the assembly name
-			// If the assembly doesn't have a period in it, duplicate it so it does
-			if (string.IsNullOrEmpty (PackageName)) {
+			if (!string.IsNullOrEmpty (PackageName)) {
+				// PackageName may be passed in via $(ApplicationId) and missing from AndroidManifest.xml
+				PackageName = AndroidAppManifest.CanonicalizePackageName (PackageName);
+			} else {
+				// If we don't have a manifest, default to using the assembly name
+				// If the assembly doesn't have a period in it, duplicate it so it does
 				PackageName = AndroidAppManifest.CanonicalizePackageName (AssemblyName);
 			}
 
