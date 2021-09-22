@@ -5,6 +5,7 @@ name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 trigger:
   - main
   - d16-*
+  - d17-*
   - release/*
 
 # External sources, scripts, tests, and yaml template files.
