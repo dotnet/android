@@ -78,9 +78,6 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		/// <summary>
-		/// Called when RuntimeIdentifiers has one item
-		/// </summary>
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
 			foreach (var assembly in InputAssemblies) {
@@ -93,9 +90,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		/// <summary>
-		/// Called when RuntimeIdentifiers has more than one item
-		/// </summary>
 		void DeduplicateAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
 			// Group by assembly file name
@@ -124,7 +118,7 @@ namespace Xamarin.Android.Tasks
 				// If we end up with more than 1 unique mvid, we need *all* assemblies
 				if (mvids.Count > 1) {
 					foreach (var assembly in group) {
-						var symbol = GetOrCreateSymbolItem(symbols, assembly);
+						var symbol = GetOrCreateSymbolItem (symbols, assembly);
 						SetDestinationSubDirectory (assembly, group.Key, symbol);
 						output.Add (assembly);
 					}
