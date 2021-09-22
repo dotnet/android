@@ -30,7 +30,8 @@ See [eng/README.md][2] for details on `darc` commands.
    `$(AndroidPackVersionSuffix)` in `Directory.Build.props` is
    incremented to the *next* version: `preview.43`. You may also need
    to update `$(AndroidPackVersion)` if `main` needs to target a new
-   .NET version band.
+   .NET version band. In the same PR, update `azure-pipelines-nightly.yaml`
+   to build the new release branch.
 
 Note that release candidates will use values such as `rc.1`, `rc.2`, etc.
 
