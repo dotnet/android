@@ -1373,8 +1373,10 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
+      TargetName="$(TargetName)"
       AddKeepAlives="$(AndroidAddKeepAlives)"
       Deterministic="$(Deterministic)"
+      UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
   />
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />

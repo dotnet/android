@@ -179,16 +179,34 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // n/a on .NET 5+
 		public void WarnAboutAppDomains ([Values (true, false)] bool isRelease)
 		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease };
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nvar appDomain = System.AppDomain.CreateDomain (\"myDomain\");");
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "2 Warning(s)"), "MSBuild should count 2 warnings.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "warning CS0618: 'AppDomain.CreateDomain(string)' is obsolete: 'AppDomain.CreateDomain will no longer be supported in .NET 5 and later."), "Should warn CS0618 about creating AppDomain.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "warning XA2000: Use of AppDomain.CreateDomain()"), "Should warn XA2000 about creating AppDomain.");
+			var path = Path.Combine (Root, "temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
+				ProjectName = "Library",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "class Foo { System.AppDomain Bar => System.AppDomain.CreateDomain (\"myDomain\"); }",
+					}
+				}
+			};
+
+			var app = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			app.AddReference (lib);
+			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName));
+			Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
+			// AppDomain.CreateDomain() is [Obsolete]
+			Assert.IsTrue (StringAssertEx.ContainsText (libBuilder.LastBuildOutput, "1 Warning(s)"), "MSBuild should count 1 warnings.");
+
+			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
+			Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
+
+			if (Builder.UseDotNet) {
+				appBuilder.AssertHasNoWarnings ();
+			} else {
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "1 Warning(s)"), "MSBuild should count 1 warnings.");
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "warning XA2000: Use of AppDomain.CreateDomain()"), "Should warn XA2000 about creating AppDomain.");
 			}
 		}
 
