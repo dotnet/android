@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,18 +23,21 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "PRAS";
 
+		[Required]
+		public string [] RuntimeIdentifiers { get; set; } = Array.Empty<string>();
+
 		public bool PublishTrimmed { get; set; }
 
-		public ITaskItem [] InputAssemblies { get; set; }
+		public ITaskItem [] InputAssemblies { get; set; } = Array.Empty<ITaskItem> ();
 
 		[Output]
-		public ITaskItem [] OutputAssemblies { get; set; }
+		public ITaskItem []? OutputAssemblies { get; set; }
 
 		[Output]
-		public ITaskItem [] ShrunkAssemblies { get; set; }
+		public ITaskItem []? ShrunkAssemblies { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedSymbols { get; set; }
+		public ITaskItem []? ResolvedSymbols { get; set; }
 
 		public override bool RunTask ()
 		{
@@ -46,65 +50,13 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			// Group by assembly file name
-			foreach (var group in InputAssemblies.Where (Filter).GroupBy (a => Path.GetFileName (a.ItemSpec))) {
-				// Get the unique list of MVIDs
-				var mvids = new HashSet<Guid> ();
-				bool? frameworkAssembly = null, hasMonoAndroidReference = null;
-				foreach (var assembly in group) {
-					using (var pe = new PEReader (File.OpenRead (assembly.ItemSpec))) {
-						var reader = pe.GetMetadataReader ();
-						var module = reader.GetModuleDefinition ();
-						var mvid = reader.GetGuid (module.Mvid);
-						mvids.Add (mvid);
-
-						// Calculate %(FrameworkAssembly) and %(HasMonoAndroidReference) for the first
-						if (frameworkAssembly == null) {
-							string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
-							frameworkAssembly = packageId.StartsWith ("Microsoft.NETCore.App.Runtime.") ||
-								packageId.StartsWith ("Microsoft.Android.Runtime.");
-						}
-						if (hasMonoAndroidReference == null) {
-							hasMonoAndroidReference = MonoAndroidHelper.HasMonoAndroidReference (reader);
-						}
-						assembly.SetMetadata ("FrameworkAssembly", frameworkAssembly.ToString ());
-						assembly.SetMetadata ("HasMonoAndroidReference", hasMonoAndroidReference.ToString ());
-					}
-				}
-				// If we end up with more than 1 unique mvid, we need *all* assemblies
-				if (mvids.Count > 1) {
-					foreach (var assembly in group) {
-						var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
-						if (!symbols.TryGetValue (symbolPath, out var symbol)) {
-							// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
-							if (File.Exists (symbolPath)) {
-								symbols [symbolPath] = symbol = new TaskItem (symbolPath);
-							}
-						}
-						SetDestinationSubDirectory (assembly, group.Key, symbol);
-						output.Add (assembly);
-					}
-				} else {
-					// Otherwise only include the first assembly
-					bool first = true;
-					foreach (var assembly in group) {
-						var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
-						if (first) {
-							first = false;
-							if (!symbols.TryGetValue (symbolPath, out var symbol)) {
-								// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
-								if (File.Exists (symbolPath)) {
-									symbols [symbolPath] = symbol = new TaskItem (symbolPath);
-								}
-							}
-							symbol?.SetDestinationSubPath ();
-							assembly.SetDestinationSubPath ();
-							output.Add (assembly);
-						} else {
-							symbols.Remove (symbolPath);
-						}
-					}
-				}
+			// We only need to "dedup" assemblies when there is more than one RID
+			if (RuntimeIdentifiers.Length > 1) {
+				Log.LogDebugMessage ("Deduplicating assemblies per RuntimeIdentifier");
+				DeduplicateAssemblies (output, symbols);
+			} else {
+				Log.LogDebugMessage ("Found a single RuntimeIdentifier");
+				SetMetadataForAssemblies (output, symbols);
 			}
 
 			OutputAssemblies = output.ToArray ();
@@ -112,16 +64,100 @@ namespace Xamarin.Android.Tasks
 
 			// Set ShrunkAssemblies for _RemoveRegisterAttribute and <BuildApk/>
 			if (PublishTrimmed) {
-				ShrunkAssemblies = OutputAssemblies.Select (a => {
-					var dir = Path.GetDirectoryName (a.ItemSpec);
-					var file = Path.GetFileName (a.ItemSpec);
-					return new TaskItem (a) {
+				var shrunkAssemblies = new List<ITaskItem> (OutputAssemblies.Length);
+				foreach (var assembly in OutputAssemblies) {
+					var dir = Path.GetDirectoryName (assembly.ItemSpec);
+					var file = Path.GetFileName (assembly.ItemSpec);
+					shrunkAssemblies.Add (new TaskItem (assembly) {
 						ItemSpec = Path.Combine (dir, "shrunk", file),
-					};
-				}).ToArray ();
+					});
+				}
+				ShrunkAssemblies = shrunkAssemblies.ToArray ();
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
+		{
+			foreach (var assembly in InputAssemblies) {
+				var symbol = GetOrCreateSymbolItem (symbols, assembly);
+				symbol?.SetDestinationSubPath ();
+				assembly.SetDestinationSubPath ();
+				assembly.SetMetadata ("FrameworkAssembly", IsFrameworkAssembly (assembly).ToString ());
+				assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
+				output.Add (assembly);
+			}
+		}
+
+		void DeduplicateAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
+		{
+			// Group by assembly file name
+			foreach (var group in InputAssemblies.Where (Filter).GroupBy (a => Path.GetFileName (a.ItemSpec))) {
+				// Get the unique list of MVIDs
+				var mvids = new HashSet<Guid> ();
+				bool? frameworkAssembly = null, hasMonoAndroidReference = null;
+				foreach (var assembly in group) {
+					using var pe = new PEReader (File.OpenRead (assembly.ItemSpec));
+					var reader = pe.GetMetadataReader ();
+					var module = reader.GetModuleDefinition ();
+					var mvid = reader.GetGuid (module.Mvid);
+					mvids.Add (mvid);
+
+					// Calculate %(FrameworkAssembly) and %(HasMonoAndroidReference) for the first
+					if (frameworkAssembly == null) {
+						frameworkAssembly = IsFrameworkAssembly (assembly);
+					}
+					if (hasMonoAndroidReference == null) {
+						hasMonoAndroidReference = MonoAndroidHelper.IsMonoAndroidAssembly (assembly) ||
+							MonoAndroidHelper.HasMonoAndroidReference (reader);
+					}
+					assembly.SetMetadata ("FrameworkAssembly", frameworkAssembly.ToString ());
+					assembly.SetMetadata ("HasMonoAndroidReference", hasMonoAndroidReference.ToString ());
+				}
+				// If we end up with more than 1 unique mvid, we need *all* assemblies
+				if (mvids.Count > 1) {
+					foreach (var assembly in group) {
+						var symbol = GetOrCreateSymbolItem (symbols, assembly);
+						SetDestinationSubDirectory (assembly, group.Key, symbol);
+						output.Add (assembly);
+					}
+				} else {
+					// Otherwise only include the first assembly
+					bool first = true;
+					foreach (var assembly in group) {
+						if (first) {
+							first = false;
+
+							var symbol = GetOrCreateSymbolItem (symbols, assembly);
+							symbol?.SetDestinationSubPath ();
+							assembly.SetDestinationSubPath ();
+							output.Add (assembly);
+						} else {
+							symbols.Remove (Path.ChangeExtension (assembly.ItemSpec, ".pdb"));
+						}
+					}
+				}
+			}
+		}
+
+		static bool IsFrameworkAssembly (ITaskItem assembly)
+		{
+			string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
+			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.") ||
+				packageId.StartsWith ("Microsoft.Android.Runtime.");
+		}
+
+		static ITaskItem? GetOrCreateSymbolItem (Dictionary<string, ITaskItem> symbols, ITaskItem assembly)
+		{
+			var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
+			if (!symbols.TryGetValue (symbolPath, out var symbol)) {
+				// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
+				if (File.Exists (symbolPath)) {
+					symbols [symbolPath] = symbol = new TaskItem (symbolPath);
+				}
+			}
+			return symbol;
 		}
 
 		bool Filter (ITaskItem item)
@@ -136,7 +172,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Sets %(DestinationSubDirectory) and %(DestinationSubPath) based on %(RuntimeIdentifier)
 		/// </summary>
-		void SetDestinationSubDirectory (ITaskItem assembly, string fileName, ITaskItem symbol)
+		void SetDestinationSubDirectory (ITaskItem assembly, string fileName, ITaskItem? symbol)
 		{
 			var rid = assembly.GetMetadata ("RuntimeIdentifier");
 			var abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);

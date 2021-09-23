@@ -98,6 +98,7 @@ _ResolveAssemblies MSBuild target.
         Condition=" '%(Identity)' != '' "
     />
     <ProcessAssemblies
+        RuntimeIdentifiers="@(_RIDs)"
         InputAssemblies="@(_ResolvedAssemblyFiles->Distinct())"
         ResolvedSymbols="@(_ResolvedSymbolFiles->Distinct())"
         PublishTrimmed="$(PublishTrimmed)">
