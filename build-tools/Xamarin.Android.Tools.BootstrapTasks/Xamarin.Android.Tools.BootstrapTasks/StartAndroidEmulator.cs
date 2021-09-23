@@ -18,6 +18,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  int             EmulatorProcessId       {get; set;}
 
 		/// <summary>
+		/// Specifies $ANDROID_HOME and $ANDROID_SDK_ROOT. This is the path to the Android SDK.
+		/// </summary>
+		[Required]
+		public                  string          AndroidSdkDirectory     {get; set;}
+
+		/// <summary>
 		/// Specifies $ANDROID_PREFS_ROOT. This is not the path to the Android SDK, but a root folder that contains the `.android` folder.
 		/// </summary>
 		[Required]
@@ -78,8 +84,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var p = new Process () {
 				StartInfo = psi,
 			};
+			psi.EnvironmentVariables ["ANDROID_HOME"]       = AndroidSdkDirectory;
 			psi.EnvironmentVariables ["ANDROID_PREFS_ROOT"] = AvdManagerHome;
-			Log.LogMessage (MessageImportance.Low, $"\tANDROID_PREFS_ROOT=\"{AvdManagerHome}\"");
+			psi.EnvironmentVariables ["ANDROID_SDK_ROOT"]   = AndroidSdkDirectory;
+			Log.LogMessage (MessageImportance.Low, $"\tANDROID_HOME=\"{psi.EnvironmentVariables ["ANDROID_HOME"]}\"");
+			Log.LogMessage (MessageImportance.Low, $"\tANDROID_PREFS_ROOT=\"{psi.EnvironmentVariables ["ANDROID_PREFS_ROOT"]}\"");
+			Log.LogMessage (MessageImportance.Low, $"\tANDROID_SDK_ROOT=\"{psi.EnvironmentVariables ["ANDROID_SDK_ROOT"]}\"");
 
 			var sawError        = new AutoResetEvent (false);
 
