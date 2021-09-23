@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;

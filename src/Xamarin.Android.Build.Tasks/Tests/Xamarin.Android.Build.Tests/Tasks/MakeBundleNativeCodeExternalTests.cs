@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using Xamarin.Android.Tasks;
 namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
-	[Category ("Node-2")]
+	[Category ("Node-5")]
 	public class MakeBundleNativeCodeExternalTests : BaseTest {
 		List<BuildErrorEventArgs> errors;
 		List<BuildWarningEventArgs> warnings;

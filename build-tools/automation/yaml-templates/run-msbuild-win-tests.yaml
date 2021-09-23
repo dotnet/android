@@ -1,7 +1,8 @@
 # Runs MSBuild tests against a device running on Windows
 
 parameters:
-  node_id: 0
+  node_id: 0                           # Corresponds to [Category ("Node-X")] test attribute
+  additional_node_id: 0                # Additional "Node-X" to run
   job_name: ''
   job_suffix: ''
   nunit_categories: ''
@@ -11,7 +12,7 @@ parameters:
 
 jobs:
   - job: ${{ parameters.job_name }}
-    displayName: MSBuild ${{ parameters.job_suffix }} - Windows-${{ parameters.node_id }}
+    displayName: MSBuild ${{ parameters.job_suffix }} - Windows-${{ parameters.node_id }}/${{ parameters.additional_node_id }}
     pool: $(VSEngWinVS2019)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
@@ -38,21 +39,21 @@ jobs:
     - template: run-nunit-tests.yaml
       parameters:
         useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
-        testRunTitle: Xamarin.Android.Build.Tests - Windows-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
+        testRunTitle: Xamarin.Android.Build.Tests - Windows-${{ parameters.node_id }}/${{ parameters.additional_node_id }} - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Build.Tests.dll
-        nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
-        dotNetTestExtraArgs: --filter "TestCategory = Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
+        nunitConsoleExtraArgs: --where "(cat == Node-${{ parameters.node_id }} or cat == Node-${{ parameters.additional_node_id }}) ${{ parameters.nunit_categories }}"
+        dotNetTestExtraArgs: --filter "(TestCategory = Node-${{ parameters.node_id }} | TestCategory = Node-${{ parameters.additional_node_id }}) ${{ parameters.nunit_categories }}"
         testResultsFile: TestResult-MSBuildTests-${{ parameters.job_name }}-$(XA.Build.Configuration).xml
 
-    # Only run these tests on node 2
+    # Tests with no "Node" category. This should be empty, but just in case! Only run these tests on node 2
     - ${{ if eq(parameters.run_extra_tests, true) }}:
       - template: run-nunit-tests.yaml
         parameters:
           useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
           testRunTitle: Xamarin.Android.Build.Tests - Windows - No Node
           testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Build.Tests.dll
-          nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
-          dotNetTestExtraArgs: --filter "TestCategory != Node-1 & TestCategory != Node-2 & TestCategory != Node-3"
+          nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3 && cat != Node-4 && cat != Node-5 && cat != Node-6"
+          dotNetTestExtraArgs: --filter "TestCategory != Node-1 & TestCategory != Node-2 & TestCategory != Node-3 & TestCategory != Node-4 & TestCategory != Node-5 & TestCategory != Node-6"
           testResultsFile: TestResult-MSBuildTests-Windows-NoNode-$(XA.Build.Configuration).xml
 
     # Only run these tests on node 2
