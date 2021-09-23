@@ -16,21 +16,23 @@ namespace Xamarin.Android.AssemblyBlobReader
 		public uint GlobalEntryCount             { get; private set; }
 		public uint BlobID                       { get; private set; }
 		public List<BlobAssembly> Assemblies     { get; }
-		public List<BlobHashEntry> GlobalIndex32 { get; }
-		public List<BlobHashEntry> GlobalIndex64 { get; }
+		public List<BlobHashEntry> GlobalIndex32 { get; } = new List<BlobHashEntry> ();
+		public List<BlobHashEntry> GlobalIndex64 { get; } = new List<BlobHashEntry> ();
+		public string Arch                       { get; }
 
 		public bool HasGlobalIndex => BlobID == 0;
 
-		public BlobReader (Stream blob)
+		public BlobReader (Stream blob, string? arch = null)
 		{
+			Arch = arch ?? String.Empty;
+
+			blob.Seek (0, SeekOrigin.Begin);
 			using (var reader = new BinaryReader (blob, Encoding.UTF8, leaveOpen: true)) {
 				ReadHeader (reader);
 
 				Assemblies = new List<BlobAssembly> ();
 				ReadLocalEntries (reader, Assemblies);
 				if (HasGlobalIndex) {
-					GlobalIndex32 = new List<BlobHashEntry> ();
-					GlobalIndex64 = new List<BlobHashEntry> ();
 					ReadGlobalIndex (reader, GlobalIndex32, GlobalIndex64);
 				}
 			}
@@ -60,7 +62,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 		void ReadLocalEntries (BinaryReader reader, List<BlobAssembly> assemblies)
 		{
 			for (uint i = 0; i < LocalEntryCount; i++) {
-				assemblies.Add (new BlobAssembly (reader));
+				assemblies.Add (new BlobAssembly (reader, this));
 			}
 		}
 

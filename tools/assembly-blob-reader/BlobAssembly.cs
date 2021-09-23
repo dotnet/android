@@ -12,8 +12,17 @@ namespace Xamarin.Android.AssemblyBlobReader
 		public uint ConfigDataOffset { get; }
 		public uint ConfigDataSize   { get; }
 
-		internal BlobAssembly (BinaryReader reader)
+		public uint Hash32           { get; set; }
+		public ulong Hash64          { get; set; }
+		public string Name           { get; set; } = String.Empty;
+		public uint RuntimeIndex     { get; set; }
+
+		public BlobReader Blob       { get; }
+
+		internal BlobAssembly (BinaryReader reader, BlobReader blob)
 		{
+			Blob = blob;
+
 			DataOffset = reader.ReadUInt32 ();
 			DataSize = reader.ReadUInt32 ();
 			DebugDataOffset = reader.ReadUInt32 ();

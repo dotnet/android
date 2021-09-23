@@ -83,7 +83,7 @@ namespace xamarin::android::internal {
 		static constexpr char bundled_assemblies_blob_prefix[] = "assemblies";
 		static constexpr char bundled_assemblies_blob_ext[] = ".blob";
 		static constexpr auto bundled_assemblies_common_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, bundled_assemblies_blob_ext);
-		static constexpr auto bundled_assemblies_arch_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, "_", SharedConstants::android_abi, bundled_assemblies_blob_ext);
+		static constexpr auto bundled_assemblies_arch_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, ".", SharedConstants::android_abi, bundled_assemblies_blob_ext);
 
 
 #if defined (DEBUG) || !defined (ANDROID)

@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks
 		const uint BlobHashEntryNativeStructSize = sizeof (ulong) + (3 * sizeof (uint));
 
 		// MUST be equal to the size of the BundledAssemblyBlobHeader struct in src/monodroid/jni/xamarin-app.hh
-		const uint BlobHeaderNativeStructSize = sizeof (uint) * 4;
+		const uint BlobHeaderNativeStructSize = sizeof (uint) * 5;
 
 		protected const string BlobPrefix = "assemblies";
 		protected const string BlobExtension = ".blob";
