@@ -21,7 +21,6 @@ namespace Xamarin.Android.Prepare
 				workingDirectory: javaInteropDir,
 				arguments: new List <string> {
 					"prepare",
-					"V=1",
 					$"CONFIGURATION={context.Configuration}",
 					$"JI_JAVA_HOME={context.OS.JavaHome}",
 					$"JAVA_HOME={context.OS.JavaHome}",
