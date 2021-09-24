@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Xamarin.Tools.Zip;
+
 namespace Xamarin.Android.AssemblyBlobReader
 {
 	class BlobExplorer
@@ -18,10 +20,11 @@ namespace Xamarin.Android.AssemblyBlobReader
 		public IDictionary<uint, List<BlobReader>> Blobs           { get; } = new SortedDictionary<uint, List<BlobReader>> ();
 		public string BlobPath                                     { get; }
 		public string BlobSetName                                  { get; }
+		public bool HasErrors                                      { get; private set; }
+		public bool HasWarnings                                    { get; private set; }
 
 		public bool IsCompleteSet                          => indexBlob != null && manifest != null;
 		public int NumberOfBlobs                           => numberOfBlobs;
-		public Action<BlobExplorerLogLevel, string> Logger => logger;
 
 		// blobPath can point to:
 		//
@@ -75,10 +78,25 @@ namespace Xamarin.Android.AssemblyBlobReader
 
 				ReadBlobSetFromFilesystem (baseName, directoryName);
 			} else {
-				ReadBlobSetFromArchive (baseName, blobPath);
+				ReadBlobSetFromArchive (baseName, blobPath, extension);
 			}
 
 			ProcessBlobs ();
+		}
+
+		void Logger (BlobExplorerLogLevel level, string message)
+		{
+			if (level == BlobExplorerLogLevel.Error) {
+				HasErrors = true;
+			} else if (level == BlobExplorerLogLevel.Warning) {
+				HasWarnings = true;
+			}
+
+			if (logger != null) {
+				logger (level, message);
+			} else {
+				DefaultLogger (level, message);
+			}
 		}
 
 		void DefaultLogger (BlobExplorerLogLevel level, string message)
@@ -115,6 +133,9 @@ namespace Xamarin.Android.AssemblyBlobReader
 					if (String.IsNullOrEmpty (assembly.Name)) {
 						Logger (BlobExplorerLogLevel.Warning, $"32-bit hash 0x{assembly.Hash32:x} did not match any assembly name in the manifest");
 						assembly.Name = me.Name;
+						if (String.IsNullOrEmpty (assembly.Name)) {
+							Logger (BlobExplorerLogLevel.Warning, $"64-bit hash 0x{assembly.Hash64:x} did not match any assembly name in the manifest");
+						}
 					} else if (String.Compare (assembly.Name, me.Name, StringComparison.Ordinal) != 0) {
 						Logger (BlobExplorerLogLevel.Warning, $"32-bit hash 0x{assembly.Hash32:x} maps to assembly name '{assembly.Name}', however 64-bit hash 0x{assembly.Hash64:x} for the same entry matches assembly name '{me.Name}'");
 					}
@@ -125,7 +146,20 @@ namespace Xamarin.Android.AssemblyBlobReader
 				}
 			});
 
-			// TODO: compare arch-specific blogs and warn if they differ
+			foreach (var kvp in Blobs) {
+				List<BlobReader> list = kvp.Value;
+				if (list.Count < 2) {
+					continue;
+				}
+
+				BlobReader template = list[0];
+				for (int i = 1; i < list.Count; i++) {
+					BlobReader other = list[i];
+					if (!template.HasIdenticalContent (other)) {
+						Logger (BlobExplorerLogLevel.Error, $"Blob ID {template.BlobID} for architecture {other.Arch} is not identical to other blobs with the same ID");
+					}
+				}
+			}
 
 			void ProcessIndex (List<BlobHashEntry> index, string bitness, Action<BlobHashEntry, BlobAssembly> assemblyHandler)
 			{
@@ -152,8 +186,70 @@ namespace Xamarin.Android.AssemblyBlobReader
 			}
 		}
 
-		void ReadBlobSetFromArchive (string baseName, string archivePath)
+		void ReadBlobSetFromArchive (string baseName, string archivePath, string extension)
 		{
+			string basePathInArchive;
+
+			if (String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+				basePathInArchive = "base/root/assemblies";
+			} else if (String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+				basePathInArchive = "assemblies";
+			} else {
+				throw new InvalidOperationException ($"Unrecognized archive extension '{extension}'");
+			}
+
+			basePathInArchive = $"{basePathInArchive}/{baseName}.";
+			using (ZipArchive archive = ZipArchive.Open (archivePath, FileMode.Open)) {
+				ReadBlobSetFromArchive (archive, basePathInArchive);
+			}
+		}
+
+		void ReadBlobSetFromArchive (ZipArchive archive, string basePathInArchive)
+		{
+			foreach (ZipEntry entry in archive) {
+				if (!entry.FullName.StartsWith (basePathInArchive, StringComparison.Ordinal)) {
+					continue;
+				}
+
+				using (var stream = new MemoryStream ()) {
+					entry.Extract (stream);
+
+					if (entry.FullName.EndsWith (".blob", StringComparison.Ordinal)) {
+						AddBlob (new BlobReader (stream, GetBlobArch (entry.FullName)));
+					} else if (entry.FullName.EndsWith (".manifest", StringComparison.Ordinal)) {
+						manifest = new BlobManifestReader (stream);
+					}
+				}
+			}
+		}
+
+		void AddBlob (BlobReader reader)
+		{
+			if (reader.HasGlobalIndex) {
+				indexBlob = reader;
+			}
+
+			List<BlobReader>? blobList;
+			if (!Blobs.TryGetValue (reader.BlobID, out blobList)) {
+				blobList = new List<BlobReader> ();
+				Blobs.Add (reader.BlobID, blobList);
+			}
+			blobList.Add (reader);
+
+			Assemblies.AddRange (reader.Assemblies);
+		}
+
+		string? GetBlobArch (string path)
+		{
+			string? arch = Path.GetFileNameWithoutExtension (path);
+			if (!String.IsNullOrEmpty (arch)) {
+				arch = Path.GetExtension (arch);
+				if (!String.IsNullOrEmpty (arch)) {
+					arch = arch.Substring (1);
+				}
+			}
+
+			return arch;
 		}
 
 		void ReadBlobSetFromFilesystem (string baseName, string setPath)
@@ -165,19 +261,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 				}
 
 				if (String.Compare (".blob", extension, StringComparison.OrdinalIgnoreCase) == 0) {
-					BlobReader reader = ReadBlob (de);
-					if (reader.HasGlobalIndex) {
-						indexBlob = reader;
-					}
-
-					List<BlobReader>? blobList;
-					if (!Blobs.TryGetValue (reader.BlobID, out blobList)) {
-						blobList = new List<BlobReader> ();
-						Blobs.Add (reader.BlobID, blobList);
-					}
-					blobList.Add (reader);
-
-					Assemblies.AddRange (reader.Assemblies);
+					AddBlob (ReadBlob (de));
 				} else if (String.Compare (".manifest", extension, StringComparison.OrdinalIgnoreCase) == 0) {
 					manifest = ReadManifest (de);
 				}
@@ -185,14 +269,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 
 			BlobReader ReadBlob (string filePath)
 			{
-				string? arch = Path.GetFileNameWithoutExtension (filePath);
-				if (!String.IsNullOrEmpty (arch)) {
-					arch = Path.GetExtension (arch);
-					if (!String.IsNullOrEmpty (arch)) {
-						arch = arch.Substring (1);
-					}
-				}
-
+				string? arch = GetBlobArch (filePath);
 				using (var fs = File.OpenRead (filePath)) {
 					return CreateBlobReader (fs, arch);
 				}
@@ -206,7 +283,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 			}
 		}
 
-		BlobReader CreateBlobReader (Stream input, string arch)
+		BlobReader CreateBlobReader (Stream input, string? arch)
 		{
 			numberOfBlobs++;
 			return new BlobReader (input, arch);

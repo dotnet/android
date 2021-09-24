@@ -38,6 +38,18 @@ namespace Xamarin.Android.AssemblyBlobReader
 			}
 		}
 
+		public bool HasIdenticalContent (BlobReader other)
+		{
+			return
+				other.Version == Version &&
+				other.LocalEntryCount == LocalEntryCount &&
+				other.GlobalEntryCount == GlobalEntryCount &&
+				other.BlobID == BlobID &&
+				other.Assemblies.Count == Assemblies.Count &&
+				other.GlobalIndex32.Count == GlobalIndex32.Count &&
+				other.GlobalIndex64.Count == GlobalIndex64.Count;
+		}
+
 		void ReadHeader (BinaryReader reader)
 		{
 			uint magic = reader.ReadUInt32 ();
