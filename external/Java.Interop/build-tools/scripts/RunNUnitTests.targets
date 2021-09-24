@@ -5,7 +5,7 @@
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_Runtime Condition=" '$(RUNTIME)' != '' ">$(RUNTIME)</_Runtime>
     <_Runtime Condition=" '$(RUNTIME)' == '' And '$(OS)' != 'Windows_NT' ">mono --debug</_Runtime>
-    <_NUnit>$(_Runtime) packages\nunit.consolerunner\3.11.1\tools\nunit3-console.exe</_NUnit>
+    <_NUnit>$(_Runtime) packages\nunit.consolerunner\3.12.0\tools\nunit3-console.exe</_NUnit>
     <_Run Condition=" '$(RUN)' != '' ">--run=&quot;$(RUN)&quot;</_Run>
   </PropertyGroup>
   <Import

@@ -10,10 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mono.Options" Version="6.6.0.161" />
-    <PackageReference Include="Mono.Terminal" Version="5.4.2" GeneratePathProperty="True" />
-    <PackageReference Include="Mono.CSharp" Version="4.0.0.143" NoWarn="NU1701" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" />
+    <PackageReference Include="Mono.Options" />
+    <PackageReference Include="Mono.Terminal" GeneratePathProperty="True" />
+    <PackageReference Include="Mono.CSharp" NoWarn="NU1701" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,5 +21,7 @@
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
   </ItemGroup>
+
+  <Import Project="logcat-parse.targets" />
 
 </Project>

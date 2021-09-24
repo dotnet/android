@@ -17,10 +17,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>  
+
+  <Import Project="java-interop.targets" />
+
 </Project>

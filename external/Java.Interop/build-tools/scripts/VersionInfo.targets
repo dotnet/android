@@ -8,7 +8,7 @@
     <GitThisAssembly>false</GitThisAssembly>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="GitInfo" Version="2.1.2" PrivateAssets="all" />
+    <PackageReference Include="GitInfo" PrivateAssets="all" />
   </ItemGroup>
 
   <Target Name="GenerateVersionInfo"

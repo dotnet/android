@@ -8,4 +8,6 @@
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>
 
+  <Import Project="NativeTiming.targets" />
+
 </Project>

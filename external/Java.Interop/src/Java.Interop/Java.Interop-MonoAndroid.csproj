@@ -83,7 +83,7 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="Directory.Build.targets" />
+  <Import Project="Java.Interop.targets" />
   <PropertyGroup>
     <BuildDependsOn>
       BuildJniEnvironment_g_cs;

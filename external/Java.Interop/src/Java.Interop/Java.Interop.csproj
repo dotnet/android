@@ -96,4 +96,5 @@
       </Properties>
     </MonoDevelop>
   </ProjectExtensions>
+  <Import Project="Java.Interop.targets" />
 </Project>

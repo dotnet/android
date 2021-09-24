@@ -94,12 +94,4 @@
     <NoWarn>$(NoWarn);CA1307;CA1309;CA1310</NoWarn>
   </PropertyGroup>
 
-  <!-- Add Roslyn analyzers NuGet to all projects -->
-  <ItemGroup Condition=" '$(DisableRoslynAnalyzers)' != 'True' ">
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
 </Project>

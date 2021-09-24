@@ -15,7 +15,7 @@
     <Compile Include="..\utils\NullableAttributes.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Irony" Version="1.1.0" />
+    <PackageReference Include="Irony" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />

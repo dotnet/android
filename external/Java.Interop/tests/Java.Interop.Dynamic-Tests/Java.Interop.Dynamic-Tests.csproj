@@ -15,14 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="nunit" Version="3.12.0" />
-    <PackageReference Include="NUnit.ConsoleRunner" Version="3.11.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+    <PackageReference Include="nunit" />
+    <PackageReference Include="NUnit.ConsoleRunner" />
+    <PackageReference Include="NUnit3TestAdapter" />
   </ItemGroup>
 
   <ItemGroup>
