@@ -132,6 +132,26 @@ stages:
     - checkout: self
       submodules: recursive
 
+    - script: |
+        echo "# Who am I"
+        whoami
+        echo "# Where am I"
+        pwd
+        echo "# Default working-dir?"
+        echo "$(System.DefaultWorkingDirectory)"
+        ls -lh $(System.DefaultWorkingDirectory)
+        echo "# checkout dir?"
+        ls -lh $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: jonp- Where am I
+
+    - script: |
+        echo "# Microsoft symlink points to?"
+        ls -l bin/Release/lib/xamarin.android/xbuild/Microsoft
+        echo "# VisualStudio files?"
+        find /Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild/Microsoft/VisualStudio -type f | xargs ls -lF
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: jonp- symlinks after checkout?
+
     - template: yaml-templates/install-microbuild-tooling.yaml
       parameters:
         condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
@@ -151,6 +171,16 @@ stages:
       displayName: determine which test stages to run
       name: TestConditions
       condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
+
+    - script: |
+        echo "# Microsoft symlink points to?"
+        ls -l bin/Release/lib/xamarin.android/xbuild/Microsoft
+        ls -l bin/Release/lib/xamarin.android/xbuild/Microsoft/VisualStudio
+        echo "# Does NodeJS exist?"
+        ls -lh bin/Release/lib/xamarin.android/xbuild/Microsoft/VisualStudio/NodeJs
+        find bin/Release/lib/xamarin.android/xbuild/Microsoft/VisualStudio/NodeJs/ -type f | xargs ls -lF
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: jonp- symlinks before end?
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
@@ -244,6 +274,14 @@ stages:
       inputs:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
         arguments: Xamarin.Android-Tests.sln /restore /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
+
+    - script: |
+        echo Microsoft symlink points to?
+        dir /Q /R bin\Release\lib\xamarin.android\xbuild\Microsoft
+        echo VisualStudio files?
+        tree /f /a bin\Release\lib\xamarin.android\xbuild\Microsoft\VisualStudio\NodeJs
+      workingDirectory: $(System.DefaultWorkingDirectory)
+      displayName: jonp- symlinks after xabuild?
 
     - task: MSBuild@1
       displayName: nunit Java.Interop Tests
