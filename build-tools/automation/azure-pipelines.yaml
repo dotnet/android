@@ -13,7 +13,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dotnet-internal
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -210,6 +210,15 @@ stages:
       ignoreLASTEXITCODE: true
 
     - task: MSBuild@1
+      displayName: msbuild Xamarin.Android /t:PrepareExternal
+      inputs:
+        solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:PrepareExternal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare-external.binlog
+
+    - template: yaml-templates/dotnet-internal.yaml
+
+    - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Prepare
       inputs:
         solution: Xamarin.Android.sln
@@ -330,6 +339,14 @@ stages:
         Remove-Item "${env:TEMP}\$log"
       displayName: downgrade XA to stable
       ignoreLASTEXITCODE: true
+
+    - task: DotNetCoreCLI@2
+      displayName: PrepareExternal
+      inputs:
+        projects: Xamarin.Android.sln
+        arguments: '-c $(XA.Build.Configuration) -target:PrepareExternal -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare-external.binlog'
+
+    - template: yaml-templates/dotnet-internal.yaml
 
     - task: DotNetCoreCLI@2
       displayName: Prepare Solution

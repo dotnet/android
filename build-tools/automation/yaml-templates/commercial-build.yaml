@@ -45,6 +45,8 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-external-git-dependencies
 
+- template: dotnet-internal.yaml
+
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}

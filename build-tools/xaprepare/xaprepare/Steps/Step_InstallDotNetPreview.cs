@@ -101,7 +101,7 @@ namespace Xamarin.Android.Prepare
 			if (Context.IsWindows) {
 				var args = new List<string> {
 					"-NoProfile", "-ExecutionPolicy", "unrestricted", "-file", dotnetScriptPath,
-					"-Version", version, "-InstallDir", dotnetPath, "-Verbose"
+					"-Version", version, "-InstallDir", dotnetPath, "-Verbose", "-Internal"
 				};
 				if (runtimeOnly)
 					args.AddRange (new string [] { "-Runtime", "dotnet" });
@@ -109,7 +109,7 @@ namespace Xamarin.Android.Prepare
 				return Utilities.RunCommand ("powershell.exe", args.ToArray ());
 			} else {
 				var args = new List<string> {
-					dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose"
+					dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose", "--internal"
 				};
 				if (runtimeOnly)
 					args.AddRange (new string [] { "-Runtime", "dotnet" });

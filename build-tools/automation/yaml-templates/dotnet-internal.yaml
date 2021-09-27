@@ -1,0 +1,11 @@
+steps:
+- checkout: yaml
+  clean: true
+
+- template: dotnet-internal/job/v1.yml@yaml
+  parameters:
+    workingDirectory: $(System.DefaultWorkingDirectory)/yaml-templates/
+    sourceVersionsProps: $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/eng/Versions.props
+    destinationVersionsProps: $(System.DefaultWorkingDirectory)/xamarin-android/eng/Versions.props
+    destinationNuGetConfig: $(System.DefaultWorkingDirectory)/xamarin-android/NuGet.config
+    binlog: $(Build.StagingDirectory)/dotnet-internal.binlog
