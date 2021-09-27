@@ -7,6 +7,8 @@ namespace Xamarin.Android.AssemblyBlobReader
 {
 	class BlobManifestReader
 	{
+		static readonly char[] fieldSplit = new char[] { ' ' };
+
 		public List<BlobManifestEntry> Entries                      { get; } = new List<BlobManifestEntry> ();
 		public Dictionary<uint, BlobManifestEntry> EntriesByHash32  { get; } = new Dictionary<uint, BlobManifestEntry> ();
 		public Dictionary<ulong, BlobManifestEntry> EntriesByHash64 { get; } = new Dictionary<ulong, BlobManifestEntry> ();
@@ -26,7 +28,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 
 			// Each subsequent line consists of fields separated with any number of spaces (for the pleasure of a human being reading the manifest)
 			while (!reader.EndOfStream) {
-				string[]? fields = reader.ReadLine ()?.Split (' ', StringSplitOptions.RemoveEmptyEntries);
+				string[]? fields = reader.ReadLine ()?.Split (fieldSplit, StringSplitOptions.RemoveEmptyEntries);
 				if (fields == null) {
 					continue;
 				}

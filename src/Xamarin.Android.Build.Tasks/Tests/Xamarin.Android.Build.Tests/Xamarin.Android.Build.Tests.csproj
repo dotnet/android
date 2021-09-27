@@ -32,6 +32,7 @@
     <Compile Remove="Resources\ApacheHttpClient.cs" />
     <Compile Remove="Expected\**" />
     <Compile Include="..\..\..\..\tools\xabuild\SymbolicLink.cs" />
+    <Compile Include="..\..\..\..\tools\assembly-blob-reader\Blob*.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

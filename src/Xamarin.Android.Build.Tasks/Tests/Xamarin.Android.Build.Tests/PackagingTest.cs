@@ -112,17 +112,19 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
-					var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
-					Assert.IsFalse (missingFiles.Any (),
-						string.Format ("The following Expected files are missing. {0}",
-						string.Join (Environment.NewLine, missingFiles)));
-					var additionalFiles = existingFiles.Where (x => !expectedFiles.Contains (Path.GetFileName (x.FullName)));
-					Assert.IsTrue (!additionalFiles.Any (),
-						string.Format ("Unexpected Files found! {0}",
-						string.Join (Environment.NewLine, additionalFiles.Select (x => x.FullName))));
-				}
+				var helper = new ArchiveAssemblyHelper (apk, usesAssembliesBlob);
+				IEnumerable<string> existingFiles;
+				IEnumerable<string> missingFiles;
+				IEnumerable<string> additionalFiles;
+
+				(existingFiles, missingFiles, additionalFiles) = helper.Contains (expectedFiles);
+				Assert.IsFalse (missingFiles.Any (),
+				       string.Format ("The following Expected files are missing. {0}",
+				       string.Join (Environment.NewLine, missingFiles)));
+
+				Assert.IsTrue (!additionalFiles.Any (),
+					string.Format ("Unexpected Files found! {0}",
+					string.Join (Environment.NewLine, additionalFiles)));
 			}
 		}
 

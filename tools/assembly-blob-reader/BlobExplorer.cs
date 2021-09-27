@@ -11,7 +11,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 		BlobReader? indexBlob;
 		BlobManifestReader? manifest;
 		int numberOfBlobs = 0;
-		Action<BlobExplorerLogLevel, string> logger;
+		Action<BlobExplorerLogLevel, string>? logger;
 
 		public IDictionary<string, BlobAssembly> AssembliesByName  { get; } = new SortedDictionary<string, BlobAssembly> (StringComparer.OrdinalIgnoreCase);
 		public IDictionary<uint, BlobAssembly> AssembliesByHash32  { get; } = new Dictionary<uint, BlobAssembly> ();
@@ -45,8 +45,6 @@ namespace Xamarin.Android.AssemblyBlobReader
 		//
 		public BlobExplorer (string blobPath, Action<BlobExplorerLogLevel, string>? customLogger = null)
 		{
-			logger = customLogger ?? DefaultLogger;
-
 			if (String.IsNullOrEmpty (blobPath)) {
 				throw new ArgumentException ("must not be null or empty", nameof (blobPath));
 			}
