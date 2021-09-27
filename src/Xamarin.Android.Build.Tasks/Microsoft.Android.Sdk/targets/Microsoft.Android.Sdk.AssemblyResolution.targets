@@ -69,21 +69,25 @@ _ResolveAssemblies MSBuild target.
       <_RIDs Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifiers)' != '' " />
     </ItemGroup>
     <PropertyGroup>
-      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">;_ProguardProjectConfiguration=$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
       <_AdditionalProperties>
-        _ComputeFilesToPublishForRuntimeIdentifiers=true;
-        AppendRuntimeIdentifierToOutputPath=true;
-        SkipCompilerExecution=true;
-        _OuterIntermediateAssembly=@(IntermediateAssembly);
-        _OuterOutputPath=$(OutputPath);
-        _OuterIntermediateOutputPath=$(IntermediateOutputPath);
-        _ProguardProjectConfiguration=$(_ProguardProjectConfiguration);
+        _ComputeFilesToPublishForRuntimeIdentifiers=true
+        ;AppendRuntimeIdentifierToOutputPath=true
+        ;SkipCompilerExecution=true
+        ;_OuterIntermediateAssembly=@(IntermediateAssembly)
+        ;_OuterOutputPath=$(OutputPath)
+        ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
+        $(_ProguardProjectConfiguration)
       </_AdditionalProperties>
+      <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>
     </PropertyGroup>
+    <ItemGroup>
+      <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)" />
+    </ItemGroup>
     <MSBuild
-        Projects="$(MSBuildProjectFile)"
-        Targets="_ComputeFilesToPublishForRuntimeIdentifiers"
-        Properties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)">
+        Projects="@(_ProjectToBuild)"
+        BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
+        Targets="_ComputeFilesToPublishForRuntimeIdentifiers">
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
     <ItemGroup>
