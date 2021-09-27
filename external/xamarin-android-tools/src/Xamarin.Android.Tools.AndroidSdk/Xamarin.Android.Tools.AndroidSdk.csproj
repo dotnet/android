@@ -14,6 +14,7 @@
     <Description>Xamarin tools for interacting with the Android SDK.</Description>
     <Copyright>Copyright © Xamarin 2011-2016</Copyright>
     <PackageTags>Xamarin;Xamarin.Android</PackageTags>
+    <AssemblyName>$(VendorPrefix)Xamarin.Android.Tools.AndroidSdk$(VendorSuffix)</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -38,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <FilesToSign Include="$(OutDir)\Xamarin.Android.Tools.AndroidSdk.dll">
+    <FilesToSign Include="$(OutDir)\$(AssemblyName).dll">
       <Authenticode>Microsoft400</Authenticode>
     </FilesToSign>
   </ItemGroup>

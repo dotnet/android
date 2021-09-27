@@ -11,6 +11,7 @@
     <UpdateXlfOnBuild Condition=" '$(RunningOnCI)' != 'true' ">true</UpdateXlfOnBuild>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <AssemblyName>$(VendorPrefix)Microsoft.Android.Build.BaseTasks$(VendorSuffix)</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
