@@ -208,6 +208,9 @@ namespace Xamarin.Android.Tasks
 			foreach (BlobAssemblyInfo assembly in assemblies) {
 				Log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: assembly hfs path == '{assembly.FilesystemAssemblyPath}'; assembly archive path == '{assembly.ArchiveAssemblyPath}'");
 				string assemblyName = GetAssemblyName (assembly);
+
+				Log.LogMessage (MessageImportance.Low, $"Got initial assemblyName == '{assemblyName}'");
+
 				string archivePath = assembly.ArchiveAssemblyPath;
 				if (archivePath.StartsWith (archiveAssembliesPrefix, StringComparison.OrdinalIgnoreCase)) {
 					archivePath = archivePath.Substring (archiveAssembliesPrefix.Length);
@@ -221,7 +224,12 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (!String.IsNullOrEmpty (archivePath)) {
-					assemblyName = $"{archivePath}/{assemblyName}";
+					if (archivePath.EndsWith ("/", StringComparison.Ordinal)) {
+						assemblyName = $"{archivePath}{assemblyName}";
+					} else {
+						assemblyName = $"{archivePath}/{assemblyName}";
+					}
+					Log.LogMessage (MessageImportance.Low, $"Got archivePath ('{archivePath}'), assemblyName now == '{assemblyName}'");
 				}
 
 				AssemblyBlobIndexEntry entry = WriteAssembly (writer, assembly, assemblyName, (uint)localAssemblies.Count);

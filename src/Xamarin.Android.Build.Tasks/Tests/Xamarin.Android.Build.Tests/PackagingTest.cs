@@ -69,10 +69,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssembliesBlob)
 		{
-			if (usesAssembliesBlob) {
-				Assert.Ignore ("Assembly blob not implemented yet");
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
@@ -113,16 +109,17 @@ namespace Xamarin.Android.Build.Tests
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, usesAssembliesBlob);
-				IEnumerable<string> existingFiles;
-				IEnumerable<string> missingFiles;
-				IEnumerable<string> additionalFiles;
+				List<string> existingFiles;
+				List<string> missingFiles;
+				List<string> additionalFiles;
 
-				(existingFiles, missingFiles, additionalFiles) = helper.Contains (expectedFiles);
-				Assert.IsFalse (missingFiles.Any (),
+				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles);
+
+				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
 				       string.Format ("The following Expected files are missing. {0}",
 				       string.Join (Environment.NewLine, missingFiles)));
 
-				Assert.IsTrue (!additionalFiles.Any (),
+				Assert.IsTrue (additionalFiles == null || additionalFiles.Count == 0,
 					string.Format ("Unexpected Files found! {0}",
 					string.Join (Environment.NewLine, additionalFiles)));
 			}

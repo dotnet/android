@@ -406,6 +406,7 @@ namespace Xamarin.Android.Tasks
 					// Add assembly
 					var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: false);
 					if (useAssembliesBlob) {
+						Log.LogDebugMessage ($"Creating BlobAssemblyInfo: sourcePath == {sourcePath}; assemblyPath == {assemblyPath}");
 						blobAssembly = new BlobAssemblyInfo (sourcePath, assemblyPath, assembly.GetMetadata ("Abi"));
 					} else {
 						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);

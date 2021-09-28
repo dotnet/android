@@ -10,15 +10,22 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[TestFixtureSource(nameof(FixtureArgs))]
 	[Category ("Node-1")]
 	public class BundleToolTests : DeviceTest
 	{
+		static readonly object[] FixtureArgs = {
+			new object[] { false },
+			new object[] { true },
+		};
+
 		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86" };
 		XamarinAndroidLibraryProject lib;
 		XamarinAndroidApplicationProject app;
 		ProjectBuilder libBuilder, appBuilder;
 		string intermediate;
 		string bin;
+		bool usesAssemblyBlobs;
 
 		// Disable split by language
 		const string BuildConfig = @"{
@@ -33,6 +40,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}
 }";
+
+		public BundleToolTests (bool usesAssemblyBlobs)
+		{
+			this.usesAssemblyBlobs = usesAssemblyBlobs;
+		}
 
 		[OneTimeSetUp]
 		public void OneTimeSetUp ()
@@ -50,6 +62,8 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+
+			lib.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
 
 			var bytes = new byte [1024];
 			app = new XamarinFormsMapsApplicationProject {
@@ -103,14 +117,10 @@ namespace Xamarin.Android.Build.Tests
 			appBuilder?.Dispose ();
 		}
 
-		string [] ListArchiveContents (string archive)
+		string [] ListArchiveContents (string archive, bool usesAssembliesBlob)
 		{
-			var entries = new List<string> ();
-			using (var zip = ZipArchive.Open (archive, FileMode.Open)) {
-				foreach (var entry in zip) {
-					entries.Add (entry.FullName);
-				}
-			}
+			var helper = new ArchiveAssemblyHelper (archive, usesAssembliesBlob);
+			List<string> entries = helper.ListArchiveContents ();
 			entries.Sort ();
 			return entries.ToArray ();
 		}
@@ -119,7 +129,7 @@ namespace Xamarin.Android.Build.Tests
 		public void BaseZip ()
 		{
 			var baseZip = Path.Combine (intermediate, "android", "bin", "base.zip");
-			var contents = ListArchiveContents (baseZip);
+			var contents = ListArchiveContents (baseZip, usesAssemblyBlobs);
 			var expectedFiles = new List<string> {
 				"dex/classes.dex",
 				"manifest/AndroidManifest.xml",
@@ -130,16 +140,33 @@ namespace Xamarin.Android.Build.Tests
 				"res/drawable-xxxhdpi-v4/icon.png",
 				"res/layout/main.xml",
 				"resources.pb",
-				"root/assemblies/Java.Interop.dll",
-				"root/assemblies/Mono.Android.dll",
-				"root/assemblies/Localization.dll",
-				"root/assemblies/es/Localization.resources.dll",
-				"root/assemblies/UnnamedProject.dll",
 			};
+
+			string blobEntryPrefix = ArchiveAssemblyHelper.DefaultBlobEntryPrefix;
+			if (usesAssemblyBlobs) {
+				expectedFiles.Add ($"{blobEntryPrefix}Java.Interop.dll");
+				expectedFiles.Add ($"{blobEntryPrefix}Mono.Android.dll");
+				expectedFiles.Add ($"{blobEntryPrefix}Localization.dll");
+				expectedFiles.Add ($"{blobEntryPrefix}es/Localization.resources.dll");
+				expectedFiles.Add ($"{blobEntryPrefix}UnnamedProject.dll");
+			} else {
+				expectedFiles.Add ("root/assemblies/Java.Interop.dll");
+				expectedFiles.Add ("root/assemblies/Mono.Android.dll");
+				expectedFiles.Add ("root/assemblies/Localization.dll");
+				expectedFiles.Add ("root/assemblies/es/Localization.resources.dll");
+				expectedFiles.Add ("root/assemblies/UnnamedProject.dll");
+			}
+
 			if (Builder.UseDotNet) {
-				expectedFiles.Add ("root/assemblies/System.Console.dll");
-				expectedFiles.Add ("root/assemblies/System.Linq.dll");
-				expectedFiles.Add ("root/assemblies/System.Net.Http.dll");
+				if (usesAssemblyBlobs) {
+					expectedFiles.Add ($"{blobEntryPrefix}System.Console.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.Linq.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.Net.Http.dll");
+				} else {
+					expectedFiles.Add ("root/assemblies/System.Console.dll");
+					expectedFiles.Add ("root/assemblies/System.Linq.dll");
+					expectedFiles.Add ("root/assemblies/System.Net.Http.dll");
+				}
 
 				//These are random files from Google Play Services .aar files
 				expectedFiles.Add ("root/play-services-base.properties");
@@ -147,10 +174,17 @@ namespace Xamarin.Android.Build.Tests
 				expectedFiles.Add ("root/play-services-maps.properties");
 				expectedFiles.Add ("root/play-services-tasks.properties");
 			} else {
-				expectedFiles.Add ("root/assemblies/mscorlib.dll");
-				expectedFiles.Add ("root/assemblies/System.Core.dll");
-				expectedFiles.Add ("root/assemblies/System.dll");
-				expectedFiles.Add ("root/assemblies/System.Runtime.Serialization.dll");
+				if (usesAssemblyBlobs) {
+					expectedFiles.Add ($"{blobEntryPrefix}mscorlib.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.Core.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.Runtime.Serialization.dll");
+				} else {
+					expectedFiles.Add ("root/assemblies/mscorlib.dll");
+					expectedFiles.Add ("root/assemblies/System.Core.dll");
+					expectedFiles.Add ("root/assemblies/System.dll");
+					expectedFiles.Add ("root/assemblies/System.Runtime.Serialization.dll");
+				}
 
 				//These are random files from Google Play Services .aar files
 				expectedFiles.Add ("root/build-data.properties");
@@ -180,7 +214,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.aab");
 			FileAssert.Exists (aab);
-			var contents = ListArchiveContents (aab);
+			var contents = ListArchiveContents (aab, usesAssemblyBlobs);
 			var expectedFiles = new List<string> {
 				"base/dex/classes.dex",
 				"base/manifest/AndroidManifest.xml",
@@ -243,7 +277,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var aab = Path.Combine (bin, $"{app.PackageName}-Signed.aab");
 			FileAssert.Exists (aab);
-			var contents = ListArchiveContents (aab);
+			var contents = ListArchiveContents (aab, usesAssembliesBlob: false);
 			Assert.IsTrue (StringAssertEx.ContainsText (contents, "META-INF/MANIFEST.MF"), $"{aab} is not signed!");
 		}
 
@@ -259,11 +293,11 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (aab);
 			// Expecting: splits/base-arm64_v8a.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
 			// This are split up based on: abi, base, and dpi
-			var contents = ListArchiveContents (aab).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
+			var contents = ListArchiveContents (aab, usesAssemblyBlobs).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
 			Assert.AreEqual (3, contents.Length, "Expecting three APKs!");
 
 			// Language split has been removed by the bundle configuration file, and therefore shouldn't be present
-			var languageSplitContent = ListArchiveContents (aab).Where (a => a.EndsWith ("-en.apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
+			var languageSplitContent = ListArchiveContents (aab, usesAssemblyBlobs).Where (a => a.EndsWith ("-en.apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
 			Assert.AreEqual (0, languageSplitContent.Length, "Found language split apk in bundle, but disabled by bundle configuration file!");
 
 			using (var stream = new MemoryStream ())
@@ -273,7 +307,16 @@ namespace Xamarin.Android.Build.Tests
 				baseMaster.Extract (stream);
 
 				stream.Position = 0;
-				var uncompressed = new [] { ".dll", ".bar", ".wav" };
+				var uncompressed = new List<string> {
+					".bar",
+					".wav",
+				};
+
+				if (usesAssemblyBlobs) {
+					uncompressed.Add (".blob");
+				} else {
+					uncompressed.Add (".dll");
+				}
 				using (var baseApk = ZipArchive.Open (stream)) {
 					foreach (var file in baseApk) {
 						foreach (var ext in uncompressed) {

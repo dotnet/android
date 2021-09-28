@@ -192,6 +192,8 @@ namespace Xamarin.Android.AssemblyBlobReader
 				basePathInArchive = "base/root/assemblies";
 			} else if (String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0) {
 				basePathInArchive = "assemblies";
+			} else if (String.Compare (".zip", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+				basePathInArchive = "root/assemblies";
 			} else {
 				throw new InvalidOperationException ($"Unrecognized archive extension '{extension}'");
 			}
@@ -291,7 +293,8 @@ namespace Xamarin.Android.AssemblyBlobReader
 		{
 			return
 				String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0 ||
-				String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0;
+				String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0 ||
+				String.Compare (".zip", extension, StringComparison.OrdinalIgnoreCase) == 0;
 		}
 
 		string GetBaseNameHaveExtension (string blobPath, string extension)
