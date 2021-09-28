@@ -87,6 +87,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty (app.ReleaseProperties, "AndroidPackageFormat", "aab");
 			app.SetAndroidSupportedAbis (Abis);
 			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.json");
+			app.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
 
 			libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupOnDispose: true);
 			Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
@@ -226,17 +227,34 @@ namespace Xamarin.Android.Build.Tests
 				"base/res/drawable-xxxhdpi-v4/icon.png",
 				"base/res/layout/main.xml",
 				"base/resources.pb",
-				"base/root/assemblies/Java.Interop.dll",
-				"base/root/assemblies/Mono.Android.dll",
-				"base/root/assemblies/Localization.dll",
-				"base/root/assemblies/es/Localization.resources.dll",
-				"base/root/assemblies/UnnamedProject.dll",
 				"BundleConfig.pb",
 			};
+
+			string blobEntryPrefix = ArchiveAssemblyHelper.DefaultBlobEntryPrefix;
+			if (usesAssemblyBlobs) {
+				expectedFiles.Add ($"{blobEntryPrefix}Java.Interop.dll");
+				expectedFiles.Add ($"{blobEntryPrefix}Mono.Android.dll");
+				expectedFiles.Add ($"{blobEntryPrefix}Localization.dll");
+				expectedFiles.Add ($"{blobEntryPrefix}es/Localization.resources.dll");
+				expectedFiles.Add ($"{blobEntryPrefix}UnnamedProject.dll");
+			} else {
+				expectedFiles.Add ("base/root/assemblies/Java.Interop.dll");
+				expectedFiles.Add ("base/root/assemblies/Mono.Android.dll");
+				expectedFiles.Add ("base/root/assemblies/Localization.dll");
+				expectedFiles.Add ("base/root/assemblies/es/Localization.resources.dll");
+				expectedFiles.Add ("base/root/assemblies/UnnamedProject.dll");
+			}
+
 			if (Builder.UseDotNet) {
-				expectedFiles.Add ("base/root/assemblies/System.Console.dll");
-				expectedFiles.Add ("base/root/assemblies/System.Linq.dll");
-				expectedFiles.Add ("base/root/assemblies/System.Net.Http.dll");
+				if (usesAssemblyBlobs) {
+					expectedFiles.Add ($"{blobEntryPrefix}System.Console.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.Linq.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.Net.Http.dll");
+				} else {
+					expectedFiles.Add ("base/root/assemblies/System.Console.dll");
+					expectedFiles.Add ("base/root/assemblies/System.Linq.dll");
+					expectedFiles.Add ("base/root/assemblies/System.Net.Http.dll");
+				}
 
 				//These are random files from Google Play Services .aar files
 				expectedFiles.Add ("base/root/play-services-base.properties");
@@ -244,10 +262,17 @@ namespace Xamarin.Android.Build.Tests
 				expectedFiles.Add ("base/root/play-services-maps.properties");
 				expectedFiles.Add ("base/root/play-services-tasks.properties");
 			} else {
-				expectedFiles.Add ("base/root/assemblies/mscorlib.dll");
-				expectedFiles.Add ("base/root/assemblies/System.Core.dll");
-				expectedFiles.Add ("base/root/assemblies/System.dll");
-				expectedFiles.Add ("base/root/assemblies/System.Runtime.Serialization.dll");
+				if (usesAssemblyBlobs) {
+					expectedFiles.Add ($"{blobEntryPrefix}mscorlib.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.Core.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}System.Runtime.Serialization.dll");
+				} else {
+					expectedFiles.Add ("base/root/assemblies/mscorlib.dll");
+					expectedFiles.Add ("base/root/assemblies/System.Core.dll");
+					expectedFiles.Add ("base/root/assemblies/System.dll");
+					expectedFiles.Add ("base/root/assemblies/System.Runtime.Serialization.dll");
+				}
 
 				//These are random files from Google Play Services .aar files
 				expectedFiles.Add ("base/root/build-data.properties");
@@ -293,7 +318,7 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (aab);
 			// Expecting: splits/base-arm64_v8a.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
 			// This are split up based on: abi, base, and dpi
-			var contents = ListArchiveContents (aab, usesAssemblyBlobs).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
+			var contents = ListArchiveContents (aab, usesAssembliesBlob: false).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
 			Assert.AreEqual (3, contents.Length, "Expecting three APKs!");
 
 			// Language split has been removed by the bundle configuration file, and therefore shouldn't be present

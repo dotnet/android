@@ -38,6 +38,7 @@ namespace Xamarin.Android.Tasks
 
 		public void Add (string apkName, BlobAssemblyInfo blobAssembly)
 		{
+			log.LogMessage (MessageImportance.Low, $"Add: apkName == '{apkName}'");
 			if (String.IsNullOrEmpty (apkName)) {
 				throw new ArgumentException ("must not be null or empty", nameof (apkName));
 			}
@@ -63,10 +64,13 @@ namespace Xamarin.Android.Tasks
 
 			void SetIndexBlob (AssemblyBlob b)
 			{
+				log.LogMessage (MessageImportance.Low, $"Checking if {b} is an index blob");
 				if (!b.IsIndexBlob) {
+					log.LogMessage (MessageImportance.Low, $"  it is not (ID: {b.ID})");
 					return;
 				}
 
+				log.LogMessage (MessageImportance.Low, $"   it is");
 				if (indexBlob != null) {
 					throw new InvalidOperationException ("Index blob already set!");
 				}

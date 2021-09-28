@@ -41,7 +41,7 @@ namespace Xamarin.Android.Build.Tests
 			} else if (String.Compare (".zip", extension, StringComparison.OrdinalIgnoreCase) == 0) {
 				assembliesRootDir = "root/assemblies/";
 			} else {
-				throw new InvalidOperationException ($"Unrecognized archive extension '{extension}'");
+				assembliesRootDir = String.Empty;
 			}
 		}
 
@@ -64,7 +64,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var explorer = new BlobExplorer (archivePath);
-			Console.WriteLine ($"explorer.AssembliesByName count: {explorer.AssembliesByName.Count}");
 			foreach (var kvp in explorer.AssembliesByName) {
 				string name = kvp.Key;
 				BlobAssembly asm = kvp.Value;
