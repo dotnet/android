@@ -29,6 +29,7 @@
     <_ASANScript>..\..\build-tools\wrap.sh\asan.sh</_ASANScript>
     <_UBSANScript>..\..\build-tools\wrap.sh\ubsan.sh</_UBSANScript>
     <_MonoAndroidTestPackage>Mono.Android_Tests</_MonoAndroidTestPackage>
+    <AndroidUseIntermediateDesignerFile>True</AndroidUseIntermediateDesignerFile>
   </PropertyGroup>
   <Import Project="Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\Configuration.props" />

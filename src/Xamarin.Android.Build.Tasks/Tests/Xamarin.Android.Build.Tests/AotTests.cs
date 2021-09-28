@@ -276,6 +276,13 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = true,
 				IsRelease = true,
 			};
+			if (Builder.UseDotNet) {
+				app1.PackageReferences.Clear ();
+				app1.PackageReferences.Add (KnownPackages.XamarinForms_5_0_0_2515);
+				app1.PackageReferences.Add (KnownPackages.XamarinFormsMaps_5_0_0_2515);
+				app1.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_11_3);
+
+			}
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
 			sb.BuildingInsideVisualStudio = false;
 			app1.Imports.Add (new Import ("foo.targets") {

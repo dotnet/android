@@ -24,6 +24,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] InputAssemblies { get; set; }
 
+		public bool UseDesignerAssembly { get; set; }
+
 		[Output]
 		public ITaskItem [] OutputAssemblies { get; set; }
 

@@ -165,7 +165,8 @@ namespace Xamarin.Android.Tasks
 			while (!reader.EndOfStream) {
 				var line = reader.ReadLine ();
 				var items = line.Split (Delimiter, 4);
-				yield return items;
+				if (items.Length == 4)
+					yield return items;
 			}
 		}
 	}

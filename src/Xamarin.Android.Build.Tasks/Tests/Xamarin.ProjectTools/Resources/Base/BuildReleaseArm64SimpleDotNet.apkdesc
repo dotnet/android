@@ -4,6 +4,9 @@
     "AndroidManifest.xml": {
       "Size": 3032
     },
+    "assemblies/_Microsoft.Android.Resource.Designer.dll": {
+      "Size": 1028
+    },
     "assemblies/Java.Interop.dll": {
       "Size": 58924
     },
@@ -35,7 +38,7 @@
       "Size": 3628
     },
     "classes.dex": {
-      "Size": 18968
+      "Size": 19020
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 93552

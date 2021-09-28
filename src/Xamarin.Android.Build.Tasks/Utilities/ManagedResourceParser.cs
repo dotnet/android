@@ -14,7 +14,7 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	class ManagedResourceParser : ResourceParser
+	class ManagedResourceParser : FileResourceParser
 	{
 		class CompareTuple : IComparer<(int Key, CodeMemberField Value)>
 		{
@@ -36,10 +36,6 @@ namespace Xamarin.Android.Tasks
 		static CompareTuple compareTuple = new CompareTuple ();
 
 		XDocument publicXml;
-
-		public string JavaPlatformDirectory { get; set; }
-
-		public string ResourceFlagFile { get; set; }
 
 		void SortMembers (CodeTypeDeclaration decl, StringComparison stringComparison = StringComparison.OrdinalIgnoreCase)
 		{
@@ -87,10 +83,7 @@ namespace Xamarin.Android.Tasks
 			transition = CreateClass ("Transition");
 			xml = CreateClass ("Xml");
 
-			string publicXmlPath = Path.Combine (JavaPlatformDirectory, "data", "res", "values", "public.xml");
-			if (File.Exists (publicXmlPath)) {
-				publicXml = XDocument.Load (publicXmlPath);
-			}
+			publicXml = LoadPublicXml ();
 
 			var resModifiedDate = !string.IsNullOrEmpty (ResourceFlagFile) && File.Exists (ResourceFlagFile)
 				? File.GetLastWriteTimeUtc (ResourceFlagFile)
@@ -296,104 +289,17 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessRtxtFile (string file)
 		{
-			var lines = System.IO.File.ReadLines (file);
-			int lineNumber = 0;
-			foreach (var line in lines) {
-				lineNumber++;
-				var items = line.Split (new char [] { ' ' }, 4);
-				if (items.Length < 4) {
-					Log.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it does not have the correct number of elements.");
-					continue;
-				}
-				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3], 16) : -1;
-				string itemName = items [2];
-				switch (items [1]) {
-				case "anim":
-					CreateIntField (animation, itemName, value);
-					break;
-				case "animator":
-					CreateIntField (animator, itemName, value);
-					break;
-				case "attr":
-					CreateIntField (attrib, itemName, value);
-					break;
-				case "array":
-					CreateIntField (arrays, itemName, value);
-					break;
-				case "bool":
-					CreateIntField (boolean, itemName, value);
-					break;
-				case "color":
-					CreateIntField (colors, itemName, value);
-					break;
-				case "dimen":
-					CreateIntField (dimension, itemName, value);
-					break;
-				case "drawable":
-					CreateIntField (drawable, itemName, value);
-					break;
-				case "font":
-					CreateIntField (font, itemName, value);
-					break;
-				case "id":
-					CreateIntField (ids, itemName, value);
-					break;
-				case "integer":
-					CreateIntField (ints, itemName, value);
-					break;
-				case "interpolator":
-					CreateIntField (interpolators, itemName, value);
-					break;
-				case "layout":
-					CreateIntField (layout, itemName, value);
-					break;
-				case "menu":
-					CreateIntField (menu, itemName, value);
-					break;
-				case "mipmap":
-					CreateIntField (mipmaps, itemName, value);
-					break;
-				case "plurals":
-					CreateIntField (plurals, itemName, value);
-					break;
-				case "raw":
-					CreateIntField (raw, itemName, value);
-					break;
-				case "string":
-					CreateIntField (strings, itemName, value);
-					break;
-				case "style":
-					CreateIntField (style, itemName, value);
-					break;
-				case "styleable":
-					switch (items [0]) {
-					case "int":
-						CreateIntField (styleable, itemName, Convert.ToInt32 (items [3], 10));
+			var parser = new RtxtParser ();
+			var resources = parser.Parse (file, Log, map);
+			foreach (var r in resources) {
+				var cl = CreateClass (r.ResourceTypeName);
+				switch (r.Type) {
+					case RType.Integer:
+						CreateIntField (cl, r.Identifier, r.Id);
 						break;
-					case "int[]":
-						var arrayValues = items [3].Trim (new char [] { '{', '}' })
-							.Replace (" ", "")
-							.Split (new char [] { ',' });
-						CreateIntArrayField (styleable, itemName, arrayValues.Length,
-							arrayValues.Select (x => string.IsNullOrEmpty (x) ? -1 : Convert.ToInt32 (x, 16)).ToArray ());
+					case RType.Array:
+						CreateIntArrayField (cl, r.Identifier, r.Ids.Length, r.Ids);
 						break;
-					}
-					break;
-				case "transition":
-					CreateIntField (transition, itemName, value);
-					break;
-				case "xml":
-					CreateIntField (xml, itemName, value);
-					break;
-				// for custom views
-				default:
-					CodeTypeDeclaration customClass;
-					if (!custom_types.TryGetValue (items [1], out customClass)) {
-							customClass = CreateClass (items [1]);
-							custom_types.Add (items [1], customClass);
-					}
-					CreateIntField (customClass, itemName, value);
-					break;
 				}
 			}
 		}
@@ -441,15 +347,22 @@ namespace Xamarin.Android.Tasks
 			return decl;
 		}
 
+		Dictionary<string, CodeTypeDeclaration> classMapping = new Dictionary<string, CodeTypeDeclaration> (StringComparer.OrdinalIgnoreCase);
+
 		CodeTypeDeclaration CreateClass (string type)
 		{
-			var t = new CodeTypeDeclaration (ResourceParser.GetNestedTypeName (type)) {
+			var typeName = ResourceParser.GetNestedTypeName (type);
+			if (classMapping.ContainsKey (typeName)) {
+				return classMapping [typeName];
+			}
+			var t = new CodeTypeDeclaration (typeName) {
 				IsPartial = true,
 				TypeAttributes = TypeAttributes.Public,
 			};
 			t.Members.Add (new CodeConstructor () {
 				Attributes = MemberAttributes.Private,
 			});
+			classMapping.Add (typeName, t);
 			return t;
 		}
 
@@ -608,7 +521,6 @@ namespace Xamarin.Android.Tasks
 		void ProcessStyleable (XmlReader reader)
 		{
 			string topName = null;
-			int fieldCount = 0;
 			List<CodeMemberField> fields = new List<CodeMemberField> ();
 			List<string> attribs = new List<string> ();
 			while (reader.Read ()) {

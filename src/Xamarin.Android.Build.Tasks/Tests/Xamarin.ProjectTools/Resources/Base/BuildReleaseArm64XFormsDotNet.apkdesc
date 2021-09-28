@@ -4,6 +4,9 @@
     "AndroidManifest.xml": {
       "Size": 3568
     },
+    "assemblies/_Microsoft.Android.Resource.Designer.dll": {
+      "Size": 1945
+    },
     "assemblies/FormsViewGroup.dll": {
       "Size": 7314
     },
@@ -185,10 +188,10 @@
       "Size": 528450
     },
     "assemblies/Xamarin.Forms.Platform.Android.dll": {
-      "Size": 384799
+      "Size": 337827
     },
     "assemblies/Xamarin.Forms.Platform.dll": {
-      "Size": 56878
+      "Size": 11087
     },
     "assemblies/Xamarin.Forms.Xaml.dll": {
       "Size": 60774
@@ -197,7 +200,7 @@
       "Size": 40159
     },
     "classes.dex": {
-      "Size": 3090508
+      "Size": 3141008
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 93552

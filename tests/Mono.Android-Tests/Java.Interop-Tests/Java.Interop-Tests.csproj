@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\**\*.cs" />
+    <Compile Remove="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\obj\*.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\Java.Interop\JavaVMFixture.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\Java.Interop\JniReferenceSafeHandleTest.cs" />
   </ItemGroup>

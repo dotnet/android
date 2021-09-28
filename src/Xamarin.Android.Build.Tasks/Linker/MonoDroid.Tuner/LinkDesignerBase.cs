@@ -67,20 +67,24 @@ namespace MonoDroid.Tuner  {
 			return false;
 		}
 
-		protected void ClearDesignerClass (TypeDefinition designer)
+		protected void ClearDesignerClass (TypeDefinition designer, bool completely = false)
 		{
 			LogMessage ($"    TryRemoving {designer.FullName}");
 			// for each of the nested types clear all but the
 			// int[] fields.
-			for (int i = designer.NestedTypes.Count -1; i >= 0; i--) {
-				var nestedType = designer.NestedTypes [i];
-				RemoveFieldsFromType (nestedType, designer.Module);
-				if (nestedType.Fields.Count == 0) {
-					// no fields we do not need this class at all.
-					designer.NestedTypes.RemoveAt (i);
+			if (!completely) {
+				for (int i = designer.NestedTypes.Count -1; i >= 0; i--) {
+					var nestedType = designer.NestedTypes [i];
+					RemoveFieldsFromType (nestedType, designer.Module);
+					if (nestedType.Fields.Count == 0) {
+						// no fields we do not need this class at all.
+						designer.NestedTypes.RemoveAt (i);
+					}
 				}
+				RemoveUpdateIdValues (designer);
+			} else {
+				designer.NestedTypes.Clear ();
 			}
-			RemoveUpdateIdValues (designer);
 			designer.Fields.Clear ();
 			designer.Properties.Clear ();
 			designer.CustomAttributes.Clear ();

@@ -26,5 +26,6 @@ namespace MonoDroid.Tuner
 		public bool PreserveJniMarshalMethods { get; set; }
 		public bool DeterministicOutput { get; set; }
 		public bool LinkResources { get; set; }
+		public bool UseDesignerAssembly { get; set; }
 	}
 }
