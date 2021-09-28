@@ -30,9 +30,9 @@
     <AndroidFirstPlatformId Condition="'$(AndroidFirstPlatformId)' == ''">$(AndroidFirstApiLevel)</AndroidFirstPlatformId>
     <_IsRunningNuGetRestore Condition="$(RestoreTaskAssemblyFile.EndsWith('NuGet.exe', StringComparison.InvariantCultureIgnoreCase))">True</_IsRunningNuGetRestore>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
-    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">30</AndroidLatestStableApiLevel>
+    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">31</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
-    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v11.0</AndroidLatestStableFrameworkVersion>
+    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v12.0</AndroidLatestStableFrameworkVersion>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
@@ -93,9 +93,9 @@
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
-    <MonoDarwinPackageUrl>https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2020-02/144/b4a385816ed4f1398d0184c38f19f560e868fd80/MonoFramework-MDK-6.12.0.137.macos10.xamarin.universal.pkg</MonoDarwinPackageUrl>
-    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">6.12.0.137</MonoRequiredMinimumVersion>
-    <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">6.12.99</MonoRequiredMaximumVersion>
+    <MonoDarwinPackageUrl>https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2020-02/151/c633fe923832f0c3db3c4e6aa98e5592bf5a06e7/MonoFramework-MDK-6.12.0.145.macos10.xamarin.universal.pkg</MonoDarwinPackageUrl>
+    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">6.12.0.145</MonoRequiredMinimumVersion>
+    <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">$(MonoRequiredMinimumVersion)</MonoRequiredMaximumVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' And '$(RunningOnCI)' == 'true' ">False</IgnoreMaxMonoVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>
     <LinkerSourceDirectory>$(MSBuildThisFileDirectory)external\mono\sdks\out\android-sources\external\linker\src</LinkerSourceDirectory>
@@ -108,23 +108,28 @@
     <ProGuardSourceDirectory Condition=" '$(ProGuardSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\proguard</ProGuardSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
+    <ThirdPartySourcePath>$(MSBuildThisFileDirectory)src-ThirdParty\</ThirdPartySourcePath>
     <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
     <!--
-      For some reason, the URL for platform-tools/build-tools 30.0.2 is prefixed with what appears to be a GIT commit hash or some other checksum...
+      For some reason, the URL for platform-tools/build-tools 30.0.3 is prefixed with what appears to be a GIT commit hash or some other checksum...
       Linux packages don't have any prefix, but this forces us to have *some* mechanism to handle this...
     -->
-    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">5a6ceea22103d8dec989aefcef309949c0c42f1d.</XABuildToolsPackagePrefix>
-    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">efbaa277338195608aa4e3dbd43927e97f60218c.</XABuildToolsPackagePrefix>
-    <XABuildToolsVersion>30.0.2</XABuildToolsVersion>
-    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">30.0.2</XABuildToolsFolder>
+    <XABuildToolsPackagePrefixMacOS>f6d24b187cc6bd534c6c37604205171784ac5621.</XABuildToolsPackagePrefixMacOS>
+    <XABuildToolsPackagePrefixWindows>91936d4ee3ccc839f0addd53c9ebf087b1e39251.</XABuildToolsPackagePrefixWindows>
+    <XABuildToolsPackagePrefixLinux></XABuildToolsPackagePrefixLinux>
+    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildToolsPackagePrefixMacOS)</XABuildToolsPackagePrefix>
+    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
+    <XABuildToolsVersion>30.0.3</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">30.0.3</XABuildToolsFolder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">b2be9c80582174e645d3736daa0d44d8610b38a8.</XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>30.0.2</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.4.0</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>
+    <MauiFeedUrl>https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json</MauiFeedUrl>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
     <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
@@ -155,12 +160,13 @@
   <PropertyGroup>
     <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools\</AdbToolPath>
     <AdbToolExe Condition=" '$(AdbToolExe)' == '' ">adb</AdbToolExe>
+    <AvdManagerHome Condition=" '$(AvdManagerHome)' == '' ">$(AndroidToolchainDirectory)</AvdManagerHome>
     <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' ">avdmanager</AvdManagerToolExe>
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
     <AndroidToolExe Condition=" '$(AndroidToolExe)' == '' ">android</AndroidToolExe>
-    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">1.0</CommandLineToolsFolder>
-    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">6200805_latest</CommandLineToolsVersion>
+    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">5.0</CommandLineToolsFolder>
+    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">7583922_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
     <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">7033400</EmulatorVersion>
     <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">30.3.5</EmulatorPkgRevision>

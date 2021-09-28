@@ -344,6 +344,11 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public bool MonoArchiveDownloaded { get; set; }
 
+		// <summary>
+		///   Set by <see cref="Step_Get_Android_BuildTools"/> if the archive has been downloaded and validated.
+		/// </summary>
+		public bool BuildToolsArchiveDownloaded { get; set; }
+
 		/// <summary>
 		///   Determines whether or not we are running on a hosted azure pipelines agent.
 		///   These agents have certain limitations, the most pressing being the amount of available storage.
@@ -356,27 +361,6 @@ namespace Xamarin.Android.Prepare
 				string serverTypeValue = Environment.GetEnvironmentVariable ("SYSTEM_SERVERTYPE");
 				bool isHostedServerType = !string.IsNullOrEmpty (serverTypeValue) && serverTypeValue.ToUpperInvariant ().Contains ("HOSTED");
 				return hasHostedAgentName || isHostedServerType;
-			}
-		}
-
-		string _bundledPreviewRuntimePackVersion;
-		public string BundledPreviewRuntimePackVersion {
-			get {
-				if (string.IsNullOrEmpty (_bundledPreviewRuntimePackVersion)) {
-					var dotnetPath = Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
-					dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
-					var dotnetPreviewVersion = Properties.GetRequiredValue (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion);
-					var bundledVersionsPath = Path.Combine (dotnetPath, "sdk", dotnetPreviewVersion, "Microsoft.NETCoreSdk.BundledVersions.props");
-					if (!File.Exists (bundledVersionsPath))
-						throw new FileNotFoundException ("Could not find Microsoft.NETCoreSdk.BundledVersions.props.", bundledVersionsPath);
-
-					var version = XDocument.Load (bundledVersionsPath).Descendants ().FirstOrDefault (p => p.Name == "BundledNETCoreAppPackageVersion")?.Value ?? string.Empty;
-					if (string.IsNullOrEmpty (version))
-						throw new InvalidOperationException ($"Unable to locate $(BundledNETCoreAppPackageVersion) in {bundledVersionsPath}.");
-
-					_bundledPreviewRuntimePackVersion = version;
-				}
-				return _bundledPreviewRuntimePackVersion;
 			}
 		}
 

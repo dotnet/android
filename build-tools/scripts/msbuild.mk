@@ -37,11 +37,15 @@ ifeq ($(MSBUILD),msbuild)
 export USE_MSBUILD  = 1
 endif   # $(MSBUILD) == msbuild
 
+ifneq ($(V),0)
+MSBUILD_FLAGS += /v:diag
+endif   # $(V) != 0
+
 ifeq ($(USE_MSBUILD),1)
 
 # $(call MSBUILD_BINLOG,name,msbuild=$(MSBUILD),outdir=Build)
 define MSBUILD_BINLOG
-	$(if $(2),$(2),$(MSBUILD)) $(MSBUILD_FLAGS) /v:normal \
+	$(if $(2),$(2),$(MSBUILD)) $(MSBUILD_FLAGS) \
 		/binaryLogger:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/$(if $(3),$(3),Build)$(CONFIGURATION)/msbuild-`date +%Y%m%dT%H%M%S`-$(1).binlog"
 endef
 
@@ -58,10 +62,6 @@ MSBUILD_FLAGS += /p:_DebugFileExt=.pdb
 else    # $(_CSC_EMITS_PDB) == ''
 MSBUILD_FLAGS += /p:_DebugFileExt=.mdb
 endif   # $(_CSC_EMITS_PDB) == Pdb
-
-ifneq ($(V),0)
-MSBUILD_FLAGS += /v:diag
-endif   # $(V) != 0
 
 # $(call MSBUILD_BINLOG,name,msbuild=$(MSBUILD))
 define MSBUILD_BINLOG

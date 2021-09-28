@@ -8,6 +8,8 @@ core workload SDK packs imported by WorkloadManifest.targets.
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
 
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateUnixFilePermissions" />
+
   <PropertyGroup>
     <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
     <Description>C# Tools and Bindings for the Android SDK</Description>
@@ -52,19 +54,30 @@ core workload SDK packs imported by WorkloadManifest.targets.
         DestinationFiles="@(AndroidSdkBuildTools->'$(ToolsSourceDir)%(RelativePath)')"
     />
 
+    <GenerateUnixFilePermissions
+        Condition=" '$(HostOS)' != 'Windows' "
+        Output="$(IntermediateOutputPath)UnixFilePermissions.xml"
+        PackagePath="tools"
+        Files="@(AndroidSdkBuildTools)"
+    />
+
     <ItemGroup>
       <!-- Microsoft.Android.Sdk.ILLink output -->
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.pdb" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.runtimeconfig.json" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.pdb" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.runtimeconfig.json" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\Version*" PackagePath="tools" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" PackagePath="targets" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\dotnet.aotprofile" PackagePath="targets" />
+      <_PackageFiles Include="$(IntermediateOutputPath)UnixFilePermissions.xml" PackagePath="data" Condition=" '$(HostOS)' != 'Windows' " />
       <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
@@ -104,10 +117,10 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         Include="Microsoft.Android"
         TargetFramework="$(_AndroidNETAppTargetFramework)"
         RuntimeFrameworkName="Microsoft.Android"
-        DefaultRuntimeFrameworkVersion="$(AndroidPackVersionLong)"
-        LatestRuntimeFrameworkVersion="$(AndroidPackVersionLong)"
+        DefaultRuntimeFrameworkVersion="**FromWorkload**"
+        LatestRuntimeFrameworkVersion="**FromWorkload**"
         TargetingPackName="Microsoft.Android.Ref"
-        TargetingPackVersion="$(AndroidPackVersionLong)"
+        TargetingPackVersion="**FromWorkload**"
         RuntimePackNamePatterns="Microsoft.Android.Runtime.**RID**"
         RuntimePackRuntimeIdentifiers="@(_AndroidNETAppRuntimePackRids, '%3B')"
         Profile="Android"

@@ -46,7 +46,7 @@ namespace Android.App {
 					extra = new[]{"Name", "Required"};
 				} else {
 					self = new UsesLibraryAttribute ();
-					extra = new string[0];
+					extra = Array.Empty<string> ();
 				}
 
 				self.specified = mapping.Load (self, attr);

@@ -11,7 +11,7 @@ namespace tmt
 {
 	abstract class AnELF
 	{
-		protected static readonly byte[] EmptyArray = new byte[0];
+		protected static readonly byte[] EmptyArray = Array.Empty<byte> ();
 
 		const string DynsymSectionName  = ".dynsym";
 		const string SymtabSectionName  = ".symtab";

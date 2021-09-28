@@ -1,7 +1,9 @@
+using System;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
+using Mono.Cecil;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -11,13 +13,35 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class SingleProjectTest : BaseTest
 	{
+		static readonly object [] AndroidManifestPropertiesSource = new object [] {
+			new object [] {
+				/* versionName */  "2.1",
+				/* versionCode */  "42",
+				/* errorMessage */ "",
+			},
+			new object [] {
+				/* versionName */  "1.0.0",
+				/* versionCode */  "1.0.0",
+				/* errorMessage */ "XA0003",
+			},
+			new object [] {
+				/* versionName */  "3.1.3a1",
+				/* versionCode */  "42",
+				/* errorMessage */ "",
+			},
+			new object [] {
+				/* versionName */  "6.0-preview.7",
+				/* versionCode */  "42",
+				/* errorMessage */ "",
+			},
+		};
+
 		[Test]
-		public void AndroidManifestProperties ()
+		[TestCaseSource (nameof (AndroidManifestPropertiesSource))]
+		public void AndroidManifestProperties (string versionName, string versionCode, string errorMessage)
 		{
 			var packageName = "com.xamarin.singleproject";
 			var applicationLabel = "My Sweet App";
-			var versionName = "2.1";
-			var versionCode = "42";
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.AndroidManifest = proj.AndroidManifest
 				.Replace ("package=\"${PACKAGENAME}\"", "")
@@ -29,12 +53,18 @@ namespace Xamarin.Android.Build.Tests
 			}
 			proj.SetProperty ("ApplicationId", packageName);
 			proj.SetProperty ("ApplicationTitle", applicationLabel);
-			proj.SetProperty ("ApplicationVersion", versionName);
-			proj.SetProperty ("AndroidVersionCode", versionCode);
+			proj.SetProperty ("ApplicationVersion", versionCode);
+			proj.SetProperty ("ApplicationDisplayVersion", versionName);
 
 			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				if (!string.IsNullOrEmpty (errorMessage)) {
+					b.ThrowOnBuildFailure = false;
+					Assert.IsFalse (b.Build (proj), "Build should have failed.");
+					StringAssertEx.Contains (errorMessage, b.LastBuildOutput, $"Build should fail with message '{errorMessage}'");
+					return;
+				}
 
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var manifest = b.Output.GetIntermediaryPath ("android/AndroidManifest.xml");
 				FileAssert.Exists (manifest);
 
@@ -48,6 +78,34 @@ namespace Xamarin.Android.Build.Tests
 
 				var apk = b.Output.GetIntermediaryPath ($"android/bin/{packageName}.apk");
 				FileAssert.Exists (apk);
+
+				// NOTE: the $(Version) setting is only implemented in .NET 6
+				if (!Builder.UseDotNet)
+					return;
+				// If not valid version, skip
+				if (!Version.TryParse (versionName, out _))
+					return;
+
+				int index = versionName.IndexOf ('-');
+				var versionNumber = index == -1 ?
+					$"{versionName}.0.0" :
+					$"{versionName.Substring (0, index)}.0.0";
+				var assemblyPath = b.Output.GetIntermediaryPath ($"android/assets/{proj.ProjectName}.dll");
+				FileAssert.Exists (assemblyPath);
+				using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+
+				// System.Reflection.AssemblyVersion
+				Assert.AreEqual (versionNumber, assembly.Name.Version.ToString ());
+
+				// System.Reflection.AssemblyFileVersion
+				var assemblyInfoVersion = assembly.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "System.Reflection.AssemblyInformationalVersionAttribute");
+				Assert.IsNotNull (assemblyInfoVersion, "Should find AssemblyInformationalVersionAttribute!");
+				Assert.AreEqual (versionName, assemblyInfoVersion.ConstructorArguments [0].Value);
+
+				// System.Reflection.AssemblyInformationalVersion
+				var assemblyFileVersion = assembly.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "System.Reflection.AssemblyFileVersionAttribute");
+				Assert.IsNotNull (assemblyFileVersion, "Should find AssemblyFileVersionAttribute!");
+				Assert.AreEqual (versionNumber, assemblyFileVersion.ConstructorArguments [0].Value);
 			}
 		}
 	}

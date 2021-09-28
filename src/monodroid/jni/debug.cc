@@ -6,9 +6,9 @@
 // Based on code from mt's libmonotouch/debug.m file.
 //
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #ifndef WINDOWS
 #include <arpa/inet.h>
@@ -23,10 +23,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <ctype.h>
-#include <assert.h>
-#include <limits.h>
+#include <cerrno>
+#include <cctype>
+
 #include <mono/metadata/mono-debug.h>
 
 #ifdef ANDROID
@@ -83,18 +82,18 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 	} else {
 		mname_ptr = utils.strdup_new (desc);
 	}
-	simple_pointer_guard<char[]> mname (mname_ptr);
+	std::unique_ptr<char> mname {mname_ptr};
 
 	unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
-	simple_pointer_guard<char[]> libname (utils.string_concat ("libmono-profiler-", mname.get (), ".so"));
+	std::unique_ptr<char> libname {utils.string_concat ("libmono-profiler-", mname.get (), ".so")};
 	bool found = false;
-	void *handle = androidSystem.load_dso_from_any_directories (libname, dlopen_flags);
-	found = load_profiler_from_handle (handle, desc, mname);
+	void *handle = androidSystem.load_dso_from_any_directories (libname.get (), dlopen_flags);
+	found = load_profiler_from_handle (handle, desc, mname.get ());
 
 	if (!found && libmono_path != nullptr) {
-		simple_pointer_guard<char[]> full_path (utils.path_combine (libmono_path, libname));
-		handle = androidSystem.load_dso (full_path, dlopen_flags, FALSE);
-		found = load_profiler_from_handle (handle, desc, mname);
+		std::unique_ptr<char> full_path {utils.path_combine (libmono_path, libname.get ())};
+		handle = androidSystem.load_dso (full_path.get (), dlopen_flags, FALSE);
+		found = load_profiler_from_handle (handle, desc, mname.get ());
 	}
 
 	if (found && logfile != nullptr)
@@ -130,8 +129,8 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 	if (!dso_handle)
 		return false;
 
-	simple_pointer_guard<char[]> symbol (utils.string_concat (INITIALIZER_NAME, "_", name));
-	bool result = load_profiler (dso_handle, desc, symbol);
+	std::unique_ptr<char> symbol {utils.string_concat (INITIALIZER_NAME, "_", name)};
+	bool result = load_profiler (dso_handle, desc, symbol.get ());
 
 	if (result)
 		return true;
@@ -149,14 +148,14 @@ Debug::set_debugger_log_level (const char *level)
 	}
 
 	unsigned long v = strtoul (level, nullptr, 0);
-	if (v == ULONG_MAX && errno == ERANGE) {
+	if (v == std::numeric_limits<unsigned long>::max () && errno == ERANGE) {
 		log_error (LOG_DEFAULT, "Invalid debugger log level value '%s', expecting a positive integer or zero", level);
 		return;
 	}
 
-	if (v > INT_MAX) {
-		log_warn (LOG_DEFAULT, "Debugger log level value is higher than the maximum of %u, resetting to the maximum value.", INT_MAX);
-		v = INT_MAX;
+	if (v > std::numeric_limits<int>::max ()) {
+		log_warn (LOG_DEFAULT, "Debugger log level value is higher than the maximum of %u, resetting to the maximum value.", std::numeric_limits<int>::max ());
+		v = std::numeric_limits<int>::max ();
 	}
 
 	got_debugger_log_level = true;
@@ -177,7 +176,7 @@ Debug::parse_options (char *options, ConnOptions *opts)
 
 		if (strstr (arg, "port=") == arg) {
 			int port = atoi (arg + strlen ("port="));
-			if (port < 0 || port > USHRT_MAX) {
+			if (port < 0 || port > std::numeric_limits<unsigned short>::max ()) {
 				log_error (LOG_DEFAULT, "Invalid debug port value %d", port);
 				continue;
 			}
@@ -647,7 +646,7 @@ Debug::enable_soft_breakpoints (void)
 void*
 xamarin::android::conn_thread (void *arg)
 {
-	assert (arg != nullptr);
+	abort_if_invalid_pointer_argument (arg);
 
 	int res;
 	Debug *instance = static_cast<Debug*> (arg);

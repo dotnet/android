@@ -10,10 +10,11 @@ using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
+#if !NET472
 namespace Xamarin.Android.Build.Tests
 {
-	[NonParallelizable]
-	[Category ("UsesDevices"), Category ("SmokeTests"), Category ("DotNetIgnore")] // These don't need to run under `dotnet test`
+	[TestFixture]
+	[Category ("UsesDevice"), Category ("SmokeTests")]
 	public class XASdkDeployTests : DeviceTest
 	{
 		static object [] DotNetInstallAndRunSource = new object [] {
@@ -88,9 +89,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
-			XASdkProject proj;
-			proj = new XASdkProject () {
-			};
+			var proj = new XASdkProject ();
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 
@@ -109,7 +108,7 @@ namespace Xamarin.Android.Build.Tests
 			// setup the debugger
 			var session = new SoftDebuggerSession ();
 			session.Breakpoints = new BreakpointStore {
-				{ Path.Combine (Root, dotnet.ProjectDirectory, "MainActivity.cs"),  19 },
+				{ Path.Combine (Root, dotnet.ProjectDirectory, "MainActivity.cs"), 10 },
 			};
 			session.TargetHitBreakpoint += (sender, e) => {
 				Console.WriteLine ($"BREAK {e.Type}");
@@ -137,7 +136,7 @@ namespace Xamarin.Android.Build.Tests
 				"AndroidAttachDebugger=True",
 			}), "Project should have run.");
 			WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
-			Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, dotnet.ProjectDirectory, "logcat.log")), "Activity should have started");
+			Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, dotnet.ProjectDirectory, "logcat.log"), 120), "Activity should have started");
 			// we need to give a bit of time for the debug server to start up.
 			WaitFor (2000);
 			session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
@@ -158,3 +157,4 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}
 }
+#endif

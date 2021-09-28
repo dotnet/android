@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 		///   env:<PasswordEnvironentVariable>
 		///   file:<PasswordFile>
 		/// </summary>
-		public string KeyPass { get; set; }
+		public string KeyPass { get; set; } = string.Empty;
 
 		/// <summary>
 		/// The Password for the Keystore.
@@ -48,19 +48,22 @@ namespace Xamarin.Android.Tasks
 		///   env:<PasswordEnvironentVariable>
 		///   file:<PasswordFile>
 		/// </summary>
-		public string StorePass { get; set; }
+		public string StorePass { get; set; } = string.Empty;
 
 		public string AdditionalArguments { get; set; }
 
 		void AddStorePass (CommandLineBuilder cmd, string cmdLineSwitch, string value)
 		{
+			string pass = value.Replace ("env:", string.Empty)
+				.Replace ("file:", string.Empty)
+				.Replace ("pass:", string.Empty);
 			if (value.StartsWith ("env:", StringComparison.Ordinal)) {
-				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} ", value);
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} env:", pass);
 			}
 			else if (value.StartsWith ("file:", StringComparison.Ordinal)) {
-				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} file:", value.Replace ("file:", string.Empty));
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} file:", pass);
 			} else {
-				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} pass:", value);
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} pass:", pass);
 			}
 		}
 
@@ -136,6 +139,14 @@ namespace Xamarin.Android.Tasks
 			} else {
 				if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
 					Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningKeyStore)", KeyStore);
+					return false;
+				}
+				if (string.IsNullOrEmpty (KeyPass)) {
+					Log.LogCodedError ("XA4314", Properties.Resources.XA4314, "$(AndroidSigningKeyPass)");
+					return false;
+				}
+				if (string.IsNullOrEmpty (StorePass)) {
+					Log.LogCodedError ("XA4314", Properties.Resources.XA4314, "$(AndroidSigningStorePass)");
 					return false;
 				}
 			}

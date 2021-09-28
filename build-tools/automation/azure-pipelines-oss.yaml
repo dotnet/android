@@ -91,26 +91,26 @@ stages:
 
     # Prepare and build everything
     - script: >
-        echo "make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
-        make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+        echo "make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
+        make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare-update-mono
 
     - script: >
-        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
-        make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
+        make prepare CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare
 
     - script: >
-        echo "make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1" &&
-        make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+        echo "make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1" &&
+        make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make jenkins
 
     - script: >
-        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
-        make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+        echo "make create-installers CONFIGURATION=$(XA.Build.Configuration)" &&
+        make create-installers CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: create installers
 
@@ -134,20 +134,20 @@ stages:
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - script: >
-        echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
-        make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
+        echo "all-tests CONFIGURATION=$(XA.Build.Configuration)" &&
+        make all-tests CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make all-tests
 
     - script: >
-        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1" &&
-        make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1
+        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration)" &&
+        make package-build-status CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package build status
 
     - script: >
-        echo "make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
-        make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1
+        echo "make run-performance-tests CONFIGURATION=$(XA.Build.Configuration)" &&
+        make run-performance-tests CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: run performance tests
       condition: and(succeeded(), eq(variables['EnableTestExecution'], 'true'))   # The variable is defined on the pipeline definition
@@ -163,7 +163,7 @@ stages:
   jobs:
   - job: linux_build_package
     displayName: Linux Build
-    pool: Xamarin-Android-Ubuntu-Public
+    pool: android-public-ubuntu-vmss
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -172,44 +172,18 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - template: yaml-templates/use-dot-net.yaml
+    - template: yaml-templates/setup-ubuntu.yaml
 
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
+    - script: make prepare PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+      displayName: make prepare
 
-    - task: NuGetToolInstaller@1
-      displayName: 'Use NuGet 5.x'
-      inputs:
-        versionSpec: 5.x
-
-    - script: >
-        sudo apt remove -y --purge --auto-remove mono-devel &&
-        sudo apt install -y gnupg ca-certificates &&
-        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&
-        (echo "deb https://download.mono-project.com/repo/ubuntu preview-bionic main" | sudo tee /etc/apt/sources.list.d/mono-official-preview.list) &&
-        sudo apt update &&
-        sudo apt install -y mono-devel
-      displayName: install mono preview
-
-    - script: >
-        sudo apt remove -y --purge --auto-remove cmake &&
-        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null &&
-        sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' &&
-        sudo apt-get update &&
-        sudo apt install -y cmake
-      displayName: install updated version of cmake
-
-    - script: echo "##vso[task.setvariable variable=PATH]$PATH:$HOME/android-toolchain/$(XA.Jdk11.Folder)/bin"
-      displayName: append jdk tools to PATH
-
-    - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+    - script: make jenkins PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make jenkins
 
-    - script: make create-nupkgs V=1 CONFIGURATION=$(XA.Build.Configuration)
+    - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-nupkgs
 
-    - script: make package-deb V=1 CONFIGURATION=$(XA.Build.Configuration)
+    - script: make package-deb CONFIGURATION=$(XA.Build.Configuration)
       displayName: make package-deb
 
     - script: >

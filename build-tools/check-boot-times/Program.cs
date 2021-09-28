@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
@@ -13,6 +13,7 @@ namespace Xamarin.Android.Tools
 	{
 		static string sdkPath;
 		static string adbPath;
+		static string avdHome;
 		static string avdManagerPath;
 		static string emulatorPath;
 		static string sdkManagerPath;
@@ -40,15 +41,20 @@ namespace Xamarin.Android.Tools
 				{
 					    Argument = new Argument<string>(),
 				},
+				new Option ("--avdhome", "Parent folder of emulator preferences (`.android`) and nested `avd` folder.")
+				{
+					Argument = new Argument<string> (),
+				},
 			};
 
 			rootCommand.Name = "CheckBootTimes";
 			rootCommand.Description = "Collect Android Emulator boot times.";
-			rootCommand.Handler = System.CommandLine.Invocation.CommandHandler.Create(async (bool verbose, int? executiontimes, string sdkpath, string devicename) => {
+			rootCommand.Handler = System.CommandLine.Invocation.CommandHandler.Create(async (bool verbose, int? executiontimes, string sdkpath, string devicename, string avdhome) => {
 				showVerbose = verbose;
 				executionTimes = executiontimes.HasValue ? executiontimes.Value : 1;
 				sdkPath = sdkpath;
 				deviceName = devicename;
+				avdHome = avdhome;
 
 				Console.WriteLine ($"Testing emulator startup times for {executionTimes} execution(s). This may take several minutes.");
 
@@ -349,14 +355,12 @@ namespace Xamarin.Android.Tools
 
 		static bool UpdateVirtualDevice ()
 		{
-			var homePath = GetHomePath ();
-			var vdPath = Path.Combine (homePath, $".android/avd/{deviceName}.avd/config.ini");
+			var homePath = string.IsNullOrWhiteSpace (avdHome) ? GetHomePath () : avdHome;
+			var vdPath = Path.Combine (homePath, ".android", "avd", $"{deviceName}.avd", "config.ini");
 
 			if (!File.Exists (vdPath)) {
 				return false;
 			}
-
-			var sdkPath = new FileInfo (emulatorPath).Directory.Parent.FullName;
 
 			var content = "skin.name=pixel_2" + Environment.NewLine;
 			content += "skin.dynamic=yes" + Environment.NewLine;
@@ -396,6 +400,10 @@ namespace Xamarin.Android.Tools
 					process.StartInfo.RedirectStandardOutput = true;
 					process.StartInfo.RedirectStandardError = true;
 					process.EnableRaisingEvents = true;
+					process.StartInfo.EnvironmentVariables ["ANDROID_SDK_ROOT"] = sdkPath;
+					if (!string.IsNullOrWhiteSpace (avdHome)) {
+						process.StartInfo.EnvironmentVariables ["ANDROID_PREFS_ROOT"] = avdHome;
+					}
 
 					var mre = new ManualResetEvent (false /* -> nonsignaled */);
 
@@ -508,6 +516,14 @@ namespace Xamarin.Android.Tools
 				}
 			}
 
+			if (string.IsNullOrWhiteSpace (sdkPath) || !Directory.Exists (sdkPath)) {
+				sdkPath = new FileInfo (emulatorPath).Directory.Parent.FullName;
+			}
+
+			Console.WriteLine ($"Using ANDROID_SDK_ROOT: '{sdkPath}'");
+			if (!string.IsNullOrWhiteSpace (avdHome)) {
+				Console.WriteLine ($"Using ANDROID_PREFS_ROOT: '{avdHome}'");
+			}
 			Console.WriteLine ($"Running adb from: '{adbPath}'");
 			Console.WriteLine ($"Running avdmanager from: '{avdManagerPath}'");
 			Console.WriteLine ($"Running emulator from: '{emulatorPath}'");
@@ -528,22 +544,22 @@ namespace Xamarin.Android.Tools
 					if (!string.IsNullOrWhiteSpace (sdkPath)) {
 						potentialLocations.AddRange (new []{
 							$"{sdkPath}/platform-tools",
-							$"{sdkPath}/cmdline-tools/1.0/bin",
+							$"{sdkPath}/cmdline-tools/5.0/bin",
 							$"{sdkPath}/cmdline-tools/latest/bin",
 							$"{sdkPath}/emulator",
 						});
 					} else {
 						potentialLocations.AddRange (new []{
 							"AppData/Local/Android/Sdk/platform-tools",
-							"AppData/Local/Android/Sdk/cmdline-tools/1.0/bin",
+							"AppData/Local/Android/Sdk/cmdline-tools/5.0/bin",
 							"AppData/Local/Android/Sdk/cmdline-tools/latest/bin",
 							"AppData/Local/Android/Sdk/emulator",
 							"Library/Android/sdk/platform-tools",
-							"Library/Android/sdk/cmdline-tools/1.0/bin",
+							"Library/Android/sdk/cmdline-tools/5.0/bin",
 							"Library/Android/sdk/cmdline-tools/latest/bin",
 							"Library/Android/sdk/emulator",
 							"android-toolchain/sdk/platform-tools",
-							"android-toolchain/sdk/cmdline-tools/1.0/bin",
+							"android-toolchain/sdk/cmdline-tools/5.0/bin",
 							"android-toolchain/sdk/cmdline-tools/latest/bin",
 							"android-toolchain/sdk/emulator",
 						});
@@ -551,7 +567,7 @@ namespace Xamarin.Android.Tools
 						if (RunningOnWindowsEnvironment) {
 							potentialLocations.AddRange (new []{
 								"C:/Program Files (x86)/Android/android-sdk/platform-tools",
-								"C:/Program Files (x86)/Android/android-sdk/cmdline-tools/1.0/bin",
+								"C:/Program Files (x86)/Android/android-sdk/cmdline-tools/5.0/bin",
 								"C:/Program Files (x86)/Android/android-sdk/cmdline-tools/latest/bin",
 								"C:/Program Files (x86)/Android/android-sdk/emulator",
 							});

@@ -35,20 +35,48 @@ CompressedAssemblies compressed_assemblies = {
 };
 
 ApplicationConfig application_config = {
-	/*.uses_mono_llvm =*/ false,
-	/*.uses_mono_aot =*/ false,
-	/*.uses_assembly_preload =*/ false,
-	/*.is_a_bundled_app =*/ false,
-	/*.broken_exception_transitions =*/ false,
-	/*.instant_run_enabled =*/ false,
-	/*.jni_add_native_method_registration_attribute_present =*/ false,
-	/*.bound_exception_type =*/ 0, // System
-	/*.package_naming_policy =*/ 0,
-	/*.environment_variable_count =*/ 0,
-	/*.system_property_count =*/ 0,
-	/*.android_package_name =*/ "com.xamarin.test",
+	.uses_mono_llvm = false,
+	.uses_mono_aot = false,
+	.uses_assembly_preload = false,
+	.is_a_bundled_app = false,
+	.broken_exception_transitions = false,
+	.instant_run_enabled = false,
+	.jni_add_native_method_registration_attribute_present = false,
+	.have_runtime_config_blob = false,
+	.bound_exception_type = 0, // System
+	.package_naming_policy = 0,
+	.environment_variable_count = 0,
+	.system_property_count = 0,
+	.number_of_assemblies_in_apk = 0,
+	.bundled_assembly_name_width = 0,
+	.android_package_name = "com.xamarin.test",
 };
 
 const char* mono_aot_mode_name = "";
 const char* app_environment_variables[] = {};
 const char* app_system_properties[] = {};
+
+static constexpr size_t AssemblyNameWidth = 128;
+
+static char first_assembly_name[AssemblyNameWidth];
+static char second_assembly_name[AssemblyNameWidth];
+
+XamarinAndroidBundledAssembly bundled_assemblies[] = {
+	{
+		.apk_fd = -1,
+		.data_offset = 0,
+		.data_size = 0,
+		.data = nullptr,
+		.name_length = 0,
+		.name = first_assembly_name,
+	},
+
+	{
+		.apk_fd = -1,
+		.data_offset = 0,
+		.data_size = 0,
+		.data = nullptr,
+		.name_length = 0,
+		.name = second_assembly_name,
+	},
+};

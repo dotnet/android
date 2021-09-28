@@ -21,6 +21,8 @@ namespace Xamarin.Android.Tasks
 
 		public string JavacToolExe { get; set; }
 
+		public string TargetPlatformVersion { get; set; }
+
 		[Required]
 		public string LatestSupportedJavaVersion { get; set; }
 
@@ -67,6 +69,9 @@ namespace Xamarin.Android.Tasks
 		protected virtual bool ValidateJava (string javaExe, Regex versionRegex)
 		{
 			var required = Version.Parse (MinimumSupportedJavaVersion);
+			if (Version.TryParse (TargetPlatformVersion, out var targetPlatformVersion) && targetPlatformVersion.Major >= 31) {
+				required = new Version (11, 0);
+			}
 			MinimumRequiredJdkVersion = required.ToString ();
 
 			try {
@@ -74,7 +79,7 @@ namespace Xamarin.Android.Tasks
 				if (versionNumber != null) {
 					Log.LogMessage (MessageImportance.Normal, $"Found Java SDK version {versionNumber}.");
 					if (versionNumber < required) {
-						Log.LogCodedError ("XA0031", Properties.Resources.XA0031, required, "`<Project Sdk=\"Xamarin.Android.Sdk\">`");
+						Log.LogCodedError ("XA0031", Properties.Resources.XA0031_NET, required);
 					}
 					var latest = Version.Parse (LatestSupportedJavaVersion);
 					if (versionNumber > latest) {

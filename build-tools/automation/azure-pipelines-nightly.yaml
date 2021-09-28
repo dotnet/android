@@ -14,8 +14,9 @@ schedules:
   branches:
     include:
     - main
-    - d16-9
-    - release/*
+    - d16-11
+    - d17-0
+    - release/6.0.1xx-preview9
 
 # External sources, scripts, tests, and yaml template files.
 resources:

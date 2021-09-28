@@ -17,6 +17,33 @@ namespace Xamarin.Android.Build.Tests
 	{
 		public const string GuestUserName = "guest1";
 
+		protected bool HasDevices {
+			get {
+				string output = RunAdbCommand ("shell echo OK");
+				return output.Contains ("OK");
+			}
+		}
+
+		/// <summary>
+		/// Checks if there is a device available
+		/// * Defaults to Assert.Fail ()
+		/// </summary>
+		public void AssertHasDevices (bool fail = true)
+		{
+			if (!HasDevices) {
+				var message = "This test requires an attached device or emulator.";
+				if (fail) {
+					Assert.Fail (message);
+				} else {
+					Assert.Ignore (message);
+				}
+			}
+		}
+
+		protected string DeviceAbi => SetUp.DeviceAbi;
+
+		protected int DeviceSdkVersion => SetUp.DeviceSdkVersion;
+
 		[OneTimeSetUp]
 		public void DeviceSetup ()
 		{
@@ -25,11 +52,22 @@ namespace Xamarin.Android.Build.Tests
 			CreateGuestUser (GuestUserName);
 		}
 
+		[SetUp]
+		public void CheckDevice ()
+		{
+			if (!HasDevices) {
+				// something went wrong with the emulator.
+				// lets restart it.
+				RestartDevice (Path.Combine (Root, "Emulator.csproj"));
+			}
+		}
+
 		[TearDown]
 		protected override void CleanupTest ()
 		{
 			if (HasDevices && TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed &&
 					TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir)) {
+				Directory.CreateDirectory (outputDir);
 				string local = Path.Combine (outputDir, "screenshot.png");
 				string deviceLog = Path.Combine (outputDir, "logcat-failed.log");
 				string remote = "/data/local/tmp/screenshot.png";
@@ -60,6 +98,16 @@ namespace Xamarin.Android.Build.Tests
  				RunAdbCommand ($"uninstall {package}");
 			}
  		}
+
+		public static void RestartDevice (string project)
+		{
+			TestContext.Out.WriteLine ($"Trying to restart Emulator");
+			// shell out to msbuild and start the emulator again
+			using (var builder = new Builder ()) {
+				var out1 = RunProcessWithExitCode (builder.BuildTool, $"{project} /restore /t:AcquireAndroidTarget", timeoutInSeconds: 120);
+				TestContext.Out.WriteLine ($"{out1}");
+			}
+		}
 
 		protected static void RunAdbInput (string command, params object [] args)
 		{
@@ -93,20 +141,6 @@ namespace Xamarin.Android.Build.Tests
 			WaitFor (timeout ?? TimeSpan.FromMinutes (1), func);
 			stopwatch.Stop ();
 			return stopwatch.Elapsed;
-		}
-
-		protected void WaitFor (TimeSpan timeSpan, Func<bool> func)
-		{
-			var pause = new ManualResetEvent (false);
-			TimeSpan total = timeSpan;
-			TimeSpan interval = TimeSpan.FromMilliseconds (10);
-			while (total.TotalMilliseconds > 0) {
-				pause.WaitOne (interval);
-				total = total.Subtract (interval);
-				if (func ()) {
-					break;
-				}
-			}
 		}
 
 		protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15)

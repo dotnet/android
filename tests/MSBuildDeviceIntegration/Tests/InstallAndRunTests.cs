@@ -7,8 +7,8 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[SingleThreaded]
-	[Category ("UsesDevices")]
+	[TestFixture]
+	[Category ("UsesDevice")]
 	public class InstallAndRunTests : DeviceTest
 	{
 		static ProjectBuilder builder;
@@ -56,11 +56,10 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			Assert.IsTrue (MonitorAdbLogcat ((line) => {
 				return line.Contains (expectedLogcatOutput);
-			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
+			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // TODO: UnhandledException not firing: https://github.com/dotnet/runtime/issues/44526
 		public void SubscribeToAppDomainUnhandledException ()
 		{
 			AssertHasDevices ();
@@ -84,10 +83,45 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			else
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
+#if NETCOREAPP
+			string expectedLogcatOutput = "# Unhandled Exception: sender=System.Object; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
+#else   // NETCOREAPP
 			string expectedLogcatOutput = "# Unhandled Exception: sender=RootDomain; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
-			Assert.IsTrue (MonitorAdbLogcat ((line) => {
-				return line.Contains (expectedLogcatOutput);
-			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
+#endif  // NETCOREAPP
+			Assert.IsTrue (
+				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
+					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
+				$"Output did not contain {expectedLogcatOutput}!");
+		}
+
+
+		public static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
+		{
+			// On .NET 6, `adb logcat` output may be line-wrapped in unexpected ways.
+			// https://github.com/xamarin/xamarin-android/pull/6119#issuecomment-896246633
+			// Try to see if *successive* lines match expected output
+			var remaining   = expectedLogcatOutput;
+			return line => {
+				if (line.IndexOf (remaining) >= 0) {
+					Reset ();
+					return true;
+				}
+				int count   = Math.Min (line.Length, remaining.Length);
+				for ( ; count > 0; count--) {
+					var startMatch = remaining.Substring (0, count);
+					if (line.IndexOf (startMatch) >= 0) {
+						remaining = remaining.Substring (count);
+						return false;
+					}
+				}
+				Reset ();
+				return false;
+			};
+
+			void Reset ()
+			{
+				remaining   = expectedLogcatOutput;
+			}
 		}
 
 		Regex ObfuscatedStackRegex = new Regex ("in <.*>:0", RegexOptions.Compiled);
@@ -183,7 +217,7 @@ namespace Library1 {
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_FORMS_INIT}",
 @"			var cl = new Library1.Class1(null);
 			cl.GetData();
 ");
@@ -211,7 +245,7 @@ namespace Library1 {
 				Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
 				SymbolicateAndAssert (archivePath, logcatPath, new string [] {
 					Path.Combine (Root, lb.ProjectDirectory, "Class1.cs:12"),
-					Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:33"),
+					Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:23"),
 					Directory.Exists (builder.BuildOutputDirectory)
 						? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
 						: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
@@ -378,10 +412,11 @@ namespace Library1 {
 				},
 			};
 			if (Builder.UseDotNet) {
-				// NOTE: workaround for netcoreapp3.1 dependency preferred over monoandroid8.0
+				// NOTE: workaround for netcoreapp3.0 dependency being included along with monoandroid8.0
+				// See: https://www.nuget.org/packages/SQLitePCLRaw.bundle_green/2.0.3
 				proj.PackageReferences.Add (new Package {
-					Id = "SQLitePCLRaw.lib.e_sqlite3.android",
-					Version = "2.0.4",
+					Id = "SQLitePCLRaw.provider.dynamic_cdecl",
+					Version = "2.0.3",
 				});
 			}
 
@@ -435,14 +470,8 @@ namespace Library1 {
 
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
 
-			if (Builder.UseDotNet) {
-				// serialization is broken on net6 when the app is linked. enable again once it is fixed
-				if (isRelease)
-					return;
-
+			if (Builder.UseDotNet)
 				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Json"));
-				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Formatters"));
-			}
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 				@"TestJsonDeserializationCreatesJavaHandle();
@@ -507,8 +536,9 @@ namespace Library1 {
 				Name = ""John Smith"",
 				Age = 900,
 			};
-
+#if !NET
 			TestBinaryDeserialization (p);
+#endif
 			TestJsonDeserialization (p);").Replace ("//${AFTER_MAINACTIVITY}", @"
 	[DataContract]
 	[Serializable]
@@ -529,18 +559,23 @@ namespace Library1 {
 				return null;
 			}
 		}
-	}").Replace ("using System;", @"using System;
-using System.IO;
+	}");
+
+			string usings =
+@"using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization.Json;");
+using System.Runtime.Serialization.Json;
+";
+			proj.MainActivity = usings + proj.MainActivity;
+
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			Assert.IsFalse (MonitorAdbLogcat ((line) => {
 				return line.Contains ("TestJsonDeserializationCreatesJavaHandle");
-			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did contain TestJsonDeserializationCreatesJavaHandle!");
+			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did contain TestJsonDeserializationCreatesJavaHandle!");
 		}
 
 		[Test]
@@ -566,17 +601,54 @@ using System.Runtime.Serialization.Json;");
 
 			ClearAdbLogcat ();
 			RunAdbCommand ("shell setprop debug.mono.log all");
+			var logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
+			Assert.AreEqual (logProp, "all", "The debug.mono.log prop was not set correctly.");
+
 			if (CommercialBuildAvailable)
 				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
 			else
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
-			var logcatFilePath = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
-			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity", logcatFilePath, 30);
-			RunAdbCommand ("shell setprop debug.mono.log \"\"");
-			Assert.True (didStart, "Activity should have started.");
-			Assert.IsTrue (File.ReadAllText (logcatFilePath).Contains ("Enabling Mono Interpreter"), "logcat output did not contain 'Enabling Mono Interpreter'.");
+			Func<string, bool> checkForInterpMessage = line => {
+				return line.Contains ("Enabling Mono Interpreter");
+			};
+			var timeoutInSeconds = 120;
+			var didPrintInterpMessage = MonitorAdbLogcat (
+				action: checkForInterpMessage,
+				logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "interpreter-logcat.log"),
+				timeout: timeoutInSeconds);
+			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds);
+			RunAdbCommand ("shell setprop debug.mono.log \"''\"");
+			logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
+			Assert.AreEqual (logProp, string.Empty, "The debug.mono.log prop was not unset correctly.");
+			Assert.IsTrue (didPrintInterpMessage, "logcat output did not contain 'Enabling Mono Interpreter'.");
+			Assert.IsTrue (didStart, "Activity should have started.");
 		}
 
+		[Test]
+		public void SingleProject_ApplicationId ()
+		{
+			AssertHasDevices ();
+
+			proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
+
+			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			if (Builder.UseDotNet)
+				Assert.True (builder.RunTarget (proj, "Run"), "Project should have run.");
+			else if (CommercialBuildAvailable)
+				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+			else
+				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
+			Assert.IsTrue (didStart, "Activity should have started.");
+		}
 	}
 }

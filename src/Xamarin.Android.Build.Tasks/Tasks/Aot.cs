@@ -1,18 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-using Java.Interop.Tools.Diagnostics;
 using Xamarin.Android.Tools;
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -33,20 +28,9 @@ namespace Xamarin.Android.Tasks
 	}
 
 	// can't be a single ToolTask, because it has to run mkbundle many times for each arch.
-	public class Aot : AndroidAsyncTask
+	public class Aot : GetAotArguments
 	{
 		public override string TaskPrefix => "AOT";
-
-		[Required]
-		public string AndroidAotMode { get; set; }
-
-		public string AndroidNdkDirectory { get; set; }
-
-		[Required]
-		public string AndroidApiLevel { get; set; }
-
-		[Required]
-		public ITaskItem ManifestFile { get; set; }
 
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
@@ -56,125 +40,16 @@ namespace Xamarin.Android.Tasks
 		public string [] SupportedAbis { get; set; }
 
 		[Required]
-		public string AotOutputDirectory { get; set; }
-
-		[Required]
 		public string IntermediateAssemblyDir { get; set; }
 
 		public string LinkMode { get; set; }
-
-		public bool EnableLLVM { get; set; }
-
-		public string AndroidSequencePointsMode { get; set; }
-
-		public string AotAdditionalArguments { get; set; }
 
 		public ITaskItem[] AdditionalNativeLibraryReferences { get; set; }
 
 		public string ExtraAotOptions { get; set; }
 
-		public ITaskItem [] Profiles { get; set; }
-
-		[Required]
-		public string AndroidBinUtilsDirectory { get; set; }
-
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
-
-		AotMode AotMode;
-		SequencePointsMode sequencePointsMode;
-
-		public override bool RunTask ()
-		{
-			// NdkUtil must always be initialized - once per thread
-			if (!NdkUtil.Init (LogCodedError, AndroidNdkDirectory))
-				return false;
-
-			return base.RunTask ();
-		}
-
-		public static bool GetAndroidAotMode(string androidAotMode, out AotMode aotMode)
-		{
-			aotMode = AotMode.Normal;
-
-			switch ((androidAotMode ?? string.Empty).ToLowerInvariant().Trim())
-			{
-			case "":
-			case "none":
-				aotMode = AotMode.None;
-				return true;
-			case "normal":
-				aotMode = AotMode.Normal;
-				return true;
-			case "hybrid":
-				aotMode = AotMode.Hybrid;
-				return true;
-			case "full":
-				aotMode = AotMode.Full;
-				return true;
-			case "interpreter":
-				aotMode = AotMode.Interp;
-				return true; // We don't do anything here for this mode, this is just to set the flag for the XA
-							  // runtime to initialize Mono in the inrepreter "AOT" mode.
-			}
-
-			return false;
-		}
-
-		public static bool TryGetSequencePointsMode (string value, out SequencePointsMode mode)
-		{
-			mode = SequencePointsMode.None;
-			switch ((value ?? string.Empty).ToLowerInvariant().Trim ()) {
-			case "none":
-				mode = SequencePointsMode.None;
-				return true;
-			case "normal":
-				mode = SequencePointsMode.Normal;
-				return true;
-			case "offline":
-				mode = SequencePointsMode.Offline;
-				return true;
-			}
-			return false;
-		}
-
-		static string GetNdkToolchainLibraryDir(string binDir, string archDir = null)
-		{
-			var baseDir = Path.GetFullPath(Path.Combine(binDir, ".."));
-
-			string libDir = Path.Combine (baseDir, "lib", "gcc");
-			if (!String.IsNullOrEmpty (archDir))
-				libDir = Path.Combine (libDir, archDir);
-
-			var gccLibDir = Directory.EnumerateDirectories (libDir).ToList();
-			gccLibDir.Sort();
-
-			var libPath = gccLibDir.LastOrDefault();
-			if (libPath == null) {
-				goto no_toolchain_error;
-			}
-
-			if (NdkUtil.UsingClangNDK)
-				return libPath;
-
-			gccLibDir = Directory.EnumerateDirectories(libPath).ToList();
-			gccLibDir.Sort();
-
-			libPath = gccLibDir.LastOrDefault();
-			if (libPath == null) {
-				goto no_toolchain_error;
-			}
-
-			return libPath;
-
-		  no_toolchain_error:
-			throw new Exception("Could not find a valid NDK compiler toolchain library path");
-		}
-
-		static string GetNdkToolchainLibraryDir (string binDir, AndroidTargetArch arch)
-		{
-			return GetNdkToolchainLibraryDir (binDir, NdkUtil.GetArchDirName (arch));
-		}
 
 		static string QuoteFileName(string fileName)
 		{
@@ -183,57 +58,11 @@ namespace Xamarin.Android.Tasks
 			return builder.ToString();
 		}
 
-		int GetNdkApiLevel(string androidNdkPath, string androidApiLevel, AndroidTargetArch arch)
-		{
-			var manifest    = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
-
-			int level;
-			if (manifest.MinSdkVersion.HasValue) {
-				level       = manifest.MinSdkVersion.Value;
-			}
-			else if (int.TryParse (androidApiLevel, out level)) {
-				// level already set
-			}
-			else {
-				// Probably not ideal!
-				level       = MonoAndroidHelper.SupportedVersions.MaxStableVersion.ApiLevel;
-			}
-
-			// Some Android API levels do not exist on the NDK level. Workaround this my mapping them to the
-			// most appropriate API level that does exist.
-			if (level == 6 || level == 7) level = 5;
-			else if (level == 10) level = 9;
-			else if (level == 11) level = 12;
-			else if (level == 20) level = 19;
-			else if (level == 22) level = 21;
-			else if (level == 23) level = 21;
-
-			// API levels below level 21 do not provide support for 64-bit architectures.
-			if (NdkUtil.IsNdk64BitArch(arch) && level < 21) {
-				level = 21;
-			}
-
-			// We perform a downwards API level lookup search since we might not have hardcoded the correct API
-			// mapping above and we do not want to crash needlessly.
-			for (; level >= 5; level--) {
-				try {
-					NdkUtil.GetNdkPlatformLibPath (androidNdkPath, arch, level);
-					break;
-				} catch (InvalidOperationException ex) {
-					// Path not found, continue searching...
-					continue;
-				}
-			}
-
-			return level;
-		}
-
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			// NdkUtil must always be initialized - once per thread
-			if (!NdkUtil.Init (LogCodedError, AndroidNdkDirectory)) {
-				LogDebugMessage ("Failed to initialize NdkUtil");
-				return;
+			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
+			if (ndk == null) {
+				return; // NdkTools.Create will log appropriate error
 			}
 
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
@@ -247,11 +76,11 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
+			TryGetSequencePointsMode (AndroidSequencePointsMode, out SequencePointsMode);
 
 			var nativeLibs = new List<string> ();
 
-			await this.WhenAllWithLock (GetAotConfigs (),
+			await this.WhenAllWithLock (GetAotConfigs (ndk),
 				(config, lockObject) => {
 					if (!config.Valid) {
 						Cancel ();
@@ -277,55 +106,16 @@ namespace Xamarin.Android.Tasks
 			LogDebugTaskItems ("  NativeLibrariesReferences: ", NativeLibrariesReferences);
 		}
 
-		IEnumerable<Config> GetAotConfigs ()
+		IEnumerable<Config> GetAotConfigs (NdkTools ndk)
 		{
 			if (!Directory.Exists (AotOutputDirectory))
 				Directory.CreateDirectory (AotOutputDirectory);
 
-			var sdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
+			SdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
 			foreach (var abi in SupportedAbis) {
-				string aotCompiler = "";
-				string outdir = "";
-				string mtriple = "";
-				AndroidTargetArch arch;
+				(string aotCompiler, string outdir, string mtriple, AndroidTargetArch arch) = GetAbiSettings (abi);
 
-				switch (abi) {
-				case "armeabi-v7a":
-					aotCompiler = Path.Combine (sdkBinDirectory, "cross-arm");
-					outdir = Path.Combine (AotOutputDirectory, "armeabi-v7a");
-					mtriple = "armv7-linux-gnueabi";
-					arch = AndroidTargetArch.Arm;
-					break;
-
-				case "arm64":
-				case "arm64-v8a":
-				case "aarch64":
-					aotCompiler = Path.Combine (sdkBinDirectory, "cross-arm64");
-					outdir = Path.Combine (AotOutputDirectory, "arm64-v8a");
-					mtriple = "aarch64-linux-android";
-					arch = AndroidTargetArch.Arm64;
-					break;			
-
-				case "x86":
-					aotCompiler = Path.Combine (sdkBinDirectory, "cross-x86");
-					outdir = Path.Combine (AotOutputDirectory, "x86");
-					mtriple = "i686-linux-android";
-					arch = AndroidTargetArch.X86;
-					break;
-
-				case "x86_64":
-					aotCompiler = Path.Combine (sdkBinDirectory, "cross-x86_64");
-					outdir = Path.Combine (AotOutputDirectory, "x86_64");
-					mtriple = "x86_64-linux-android";
-					arch = AndroidTargetArch.X86_64;
-					break;
-
-				// case "mips":
-				default:
-					throw new Exception ("Unsupported Android target architecture ABI: " + abi);
-				}
-
-				if (EnableLLVM && !NdkUtil.ValidateNdkPlatform (LogMessage, LogCodedError, AndroidNdkDirectory, arch, enableLLVM:EnableLLVM)) {
+				if (EnableLLVM && !ndk.ValidateNdkPlatform (LogMessage, LogCodedError, arch, enableLLVM:EnableLLVM)) {
 					yield return Config.Invalid;
 					yield break;
 				}
@@ -339,63 +129,7 @@ namespace Xamarin.Android.Tasks
 					outdir = outdir.Replace (WorkingDirectory + Path.DirectorySeparatorChar, string.Empty);
 				}
 
-				int level = 0;
-				string toolPrefix = EnableLLVM
-					? NdkUtil.GetNdkToolPrefix (AndroidNdkDirectory, arch, level = GetNdkApiLevel (AndroidNdkDirectory, AndroidApiLevel, arch))
-					: Path.Combine (AndroidBinUtilsDirectory, $"{NdkUtil.GetArchDirName (arch)}-");
-				var toolchainPath = toolPrefix.Substring(0, toolPrefix.LastIndexOf(Path.DirectorySeparatorChar));
-				var ldFlags = string.Empty;
-				if (EnableLLVM) {
-					if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
-						yield return Config.Invalid;
-						yield break;
-					}
-
-					string androidLibPath = string.Empty;
-					try {
-						androidLibPath = NdkUtil.GetNdkPlatformLibPath(AndroidNdkDirectory, arch, level);
-					} catch (InvalidOperationException ex) {
-						Diagnostic.Error (5101, ex.Message);
-					}
-
-					string toolchainLibDir;
-					if (NdkUtil.UsingClangNDK)
-						toolchainLibDir = GetNdkToolchainLibraryDir (toolchainPath, arch);
-					else
-						toolchainLibDir = GetNdkToolchainLibraryDir (toolchainPath);
-
-					var libs = new List<string>();
-					if (NdkUtil.UsingClangNDK) {
-						libs.Add ($"-L{toolchainLibDir}");
-						libs.Add ($"-L{androidLibPath}");
-
-						if (arch == AndroidTargetArch.Arm) {
-							// Needed for -lunwind to work
-							string compilerLibDir = Path.Combine (toolchainPath, "..", "sysroot", "usr", "lib", NdkUtil.GetArchDirName (arch));
-							libs.Add ($"-L{compilerLibDir}");
-						}
-					}
-
-					libs.Add ($"\\\"{Path.Combine (toolchainLibDir, "libgcc.a")}\\\"");
-					libs.Add ($"\\\"{Path.Combine (androidLibPath, "libc.so")}\\\"");
-					libs.Add ($"\\\"{Path.Combine (androidLibPath, "libm.so")}\\\"");
-
-					ldFlags = string.Join(";", libs);
-				}
-
-				string ldName = String.Empty;
-				if (EnableLLVM) {
-					ldName = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "ld", level);
-					if (!String.IsNullOrEmpty (ldName)) {
-						ldName = Path.GetFileName (ldName);
-						if (ldName.IndexOf ('-') >= 0) {
-							ldName = ldName.Substring (ldName.LastIndexOf ("-") + 1);
-						}
-					}
-				} else {
-					ldName = "ld";
-				}
-
+				string toolPrefix = GetToolPrefix (ndk, arch, out int level);
 				foreach (var assembly in ResolvedAssemblies) {
 					string outputFile = Path.Combine(outdir, string.Format ("libaot-{0}.so",
 						Path.GetFileName (assembly.ItemSpec)));
@@ -404,38 +138,13 @@ namespace Xamarin.Android.Tasks
 						Path.GetFileName (assembly.ItemSpec)));
 
 					string tempDir = Path.Combine (outdir, Path.GetFileName (assembly.ItemSpec));
-					if (!Directory.Exists (tempDir))
-						Directory.CreateDirectory (tempDir);
+					Directory.CreateDirectory (tempDir);
 
-					List<string> aotOptions = new List<string> ();
-
-					if (Profiles != null && Profiles.Length > 0) {
-						aotOptions.Add ("profile-only");
-						foreach (var p in Profiles) {
-							var fp = Path.GetFullPath (p.ItemSpec);
-							aotOptions.Add ($"profile={fp}");
-						}
-					}
-					if (!string.IsNullOrEmpty (AotAdditionalArguments))
-						aotOptions.Add (AotAdditionalArguments);
-					if (sequencePointsMode == SequencePointsMode.Offline)
-						aotOptions.Add ($"msym-dir={outdir}");
-					if (AotMode != AotMode.Normal)
-						aotOptions.Add (AotMode.ToString ().ToLowerInvariant ());
-
-					aotOptions.Add ($"outfile={outputFile}");
-					aotOptions.Add ("asmwriter");
-					aotOptions.Add ($"mtriple={mtriple}");
-					aotOptions.Add ($"tool-prefix={toolPrefix}");
-					aotOptions.Add ($"llvm-path={sdkBinDirectory}");
-					aotOptions.Add ($"temp-path={tempDir}");
-
-					if (!String.IsNullOrEmpty (ldName)) {
-						// MUST be before `ld-flags`, otherwise Mono fails to parse it on Windows
-						aotOptions.Add ($"ld-name={ldName}");
-					}
-
-					aotOptions.Add ($"ld-flags={ldFlags}");
+					var aotOptions = GetAotOptions (ndk, arch, level, outdir, mtriple, toolPrefix);
+					// NOTE: ordering seems to matter on Windows
+					aotOptions.Insert (0, $"outfile={outputFile}");
+					aotOptions.Insert (0, $"llvm-path={SdkBinDirectory}");
+					aotOptions.Insert (0, $"temp-path={tempDir}");
 
 					// we need to quote the entire --aot arguments here to make sure it is parsed
 					// on windows as one argument. Otherwise it will be split up into multiple
@@ -466,7 +175,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 		}
-			
+
 		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly, string responseFile)
 		{
 			var stdout_completed = new ManualResetEvent (false);
@@ -487,7 +196,7 @@ namespace Xamarin.Android.Tasks
 				WindowStyle=ProcessWindowStyle.Hidden,
 				WorkingDirectory = WorkingDirectory,
 			};
-			
+
 			// we do not want options to be provided out of band to the cross compilers
 			psi.EnvironmentVariables ["MONO_ENV_OPTIONS"] = String.Empty;
 			// the C code cannot parse all the license details, including the activation code that tell us which license level is allowed

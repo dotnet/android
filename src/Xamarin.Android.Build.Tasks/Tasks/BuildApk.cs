@@ -89,6 +89,8 @@ namespace Xamarin.Android.Tasks
 
 		public string CheckedBuild { get; set; }
 
+		public string RuntimeConfigBinFilePath { get; set; }
+
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -170,10 +172,11 @@ namespace Xamarin.Android.Tasks
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 
 				// Add classes.dx
+				CompressionMethod dexCompressionMethod = GetCompressionMethod (".dex");
 				foreach (var dex in DalvikClasses) {
 					string apkName = dex.GetMetadata ("ApkName");
 					string dexPath = string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName;
-					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath);
+					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath, compressionMethod: dexCompressionMethod);
 				}
 
 				if (EmbedAssemblies && !BundleAssemblies)
@@ -188,6 +191,10 @@ namespace Xamarin.Android.Tasks
 					foreach (ITaskItem typemap in TypeMappings) {
 						AddFileToArchiveIfNewer (apk, typemap.ItemSpec, RootPath + Path.GetFileName(typemap.ItemSpec), compressionMethod: UncompressedMethod);
 					}
+				}
+
+				if (!String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath)) {
+					AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, $"{AssembliesPath}rc.bin", compressionMethod: UncompressedMethod);
 				}
 
 				int count = 0;
@@ -237,6 +244,10 @@ namespace Xamarin.Android.Tasks
 								Log.LogDebugMessage ($"Skipping {path} as the archive file is up to date.");
 								continue;
 							}
+							if (string.Compare (Path.GetFileName (name), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0) {
+								Log.LogDebugMessage ("Ignoring jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
+								continue;
+							}
 							if (apk.Archive.Any (e => e.FullName == path)) {
 								Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
 								continue;
@@ -246,7 +257,7 @@ namespace Xamarin.Android.Tasks
 								jarItem.Extract (d);
 								data = d.ToArray ();
 							}
-							Log.LogDebugMessage ($"Adding {path} as the archive file is out of date.");
+							Log.LogDebugMessage ($"Adding {path} from {jarFile} as the archive file is out of date.");
 							apk.Archive.AddEntry (data, path);
 						}
 					}
@@ -274,7 +285,7 @@ namespace Xamarin.Android.Tasks
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 
 			var outputFiles = new List<string> ();
-			uncompressedFileExtensions = UncompressedFileExtensions?.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
+			uncompressedFileExtensions = UncompressedFileExtensions?.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string> ();
 
 			existingEntries.Clear ();
 
@@ -628,8 +639,12 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			NdkUtil.Init (AndroidNdkDirectory);
-			string clangDir = NdkUtil.GetClangDeviceLibraryPath (AndroidNdkDirectory);
+			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
+			if (ndk == null) {
+				return; // NdkTools.Create will log appropriate error
+			}
+
+			string clangDir = ndk.GetClangDeviceLibraryPath ();
 			if (String.IsNullOrEmpty (clangDir)) {
 				LogSanitizerError ($"Unable to find the clang compiler directory. Is NDK installed?");
 				return;
@@ -685,7 +700,11 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			var libs = AdditionalNativeLibraryReferences
-				.Select (l => new LibInfo { Path = l.ItemSpec, Abi = AndroidRidAbiHelper.GetNativeLibraryAbi (l) });
+				.Select (l => new LibInfo {
+					Path = l.ItemSpec,
+					Abi = AndroidRidAbiHelper.GetNativeLibraryAbi (l),
+					ArchiveFileName = l.GetMetadata ("ArchiveFileName"),
+				});
 
 			AddNativeLibraries (files, supportedAbis, libs);
 		}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,43 +19,80 @@ namespace MonoDroid.Tuner
 	/// <summary>
 	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
 	/// </summary>
-	public class FixAbstractMethodsStep : BaseStep
+	public class FixAbstractMethodsStep :
+#if NET5_LINKER
+	BaseMarkHandler
+#else   // !NET5_LINKER
+	BaseStep
+#endif  // !NET5_LINKER
 	{
-		readonly TypeDefinitionCache cache;
 
-		public FixAbstractMethodsStep (TypeDefinitionCache cache)
+#if NET5_LINKER
+		public override void Initialize (LinkContext context, MarkContext markContext)
+		{
+			base.Initialize (context, markContext);
+			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
+#else   // !NET5_LINKER
+		public FixAbstractMethodsStep (IMetadataResolver cache)
 		{
 			this.cache = cache;
 		}
 
-		protected override void ProcessAssembly (AssemblyDefinition assembly)
+		readonly
+#endif  // !NET5_LINKER
+		IMetadataResolver cache;
+
+		bool CheckShouldProcessAssembly (AssemblyDefinition assembly)
 		{
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
 
 			if (IsProductOrSdkAssembly (assembly))
-				return;
+				return false;
 
 #if !NET5_LINKER
 			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
-#endif
+#endif  // !NET5_LINKER
+
+			return assembly.MainModule.HasTypeReference ("Java.Lang.Object");
+		}
+
+		void UpdateAssemblyAction (AssemblyDefinition assembly)
+		{
+			if (Annotations.GetAction (assembly) == AssemblyAction.Copy)
+				Annotations.SetAction (assembly, AssemblyAction.Save);
+		}
+
+#if NET5_LINKER
+		protected void ProcessType (TypeDefinition type)
+		{
+			var assembly = type.Module.Assembly;
+			if (!CheckShouldProcessAssembly (assembly))
+				return;
+
+			if (!MightNeedFix (type))
+				return;
+
+			if (!FixAbstractMethods (type))
+				return;
+
+			UpdateAssemblyAction (assembly);
+			MarkAbstractMethodErrorType ();
+		}
+#else   // !NET5_LINKER
+		protected override void ProcessAssembly (AssemblyDefinition assembly)
+		{
+			if (!CheckShouldProcessAssembly (assembly))
+				return;
 
 			if (FixAbstractMethodsUnconditional (assembly)) {
-#if !NET5_LINKER
 				Context.SafeReadSymbols (assembly);
-#endif
-				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
-				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
-					Annotations.SetAction (assembly, AssemblyAction.Save);
-				var td = AbstractMethodErrorConstructor.DeclaringType.Resolve ();
-				Annotations.Mark (td);
-				Annotations.SetPreserve (td, TypePreserve.Nothing);
-				Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor.Resolve ());
+				UpdateAssemblyAction (assembly);
+				MarkAbstractMethodErrorType ();
 			}
 		}
 
-
-#if !NET5_LINKER
 		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
 		{
 			if (IsProductOrSdkAssembly (assembly))
@@ -76,7 +113,6 @@ namespace MonoDroid.Tuner
 				}
 			}
 		}
-#endif
 
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
@@ -85,9 +121,6 @@ namespace MonoDroid.Tuner
 
 		bool FixAbstractMethodsUnconditional (AssemblyDefinition assembly)
 		{
-			if (!assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
-				return false;
-
 			bool changed = false;
 			foreach (var type in assembly.MainModule.Types) {
 				if (MightNeedFix (type))
@@ -95,6 +128,7 @@ namespace MonoDroid.Tuner
 			}
 			return changed;
 		}
+#endif  // !NET5_LINKER
 
 		bool IsProductOrSdkAssembly (AssemblyDefinition assembly)
 		{
@@ -270,9 +304,9 @@ namespace MonoDroid.Tuner
 			LogMessage ($"Added method: {method} to type: {type.FullName} scope: {type.Scope}");
 		}
 
-		MethodReference abstractMethodErrorConstructor;
+		MethodDefinition abstractMethodErrorConstructor;
 
-		MethodReference AbstractMethodErrorConstructor {
+		MethodDefinition AbstractMethodErrorConstructor {
 			get {
 				if (abstractMethodErrorConstructor != null)
 					return abstractMethodErrorConstructor;
@@ -297,6 +331,21 @@ namespace MonoDroid.Tuner
 			}
 		}
 
+		bool markedAbstractMethodErrorType;
+
+		void MarkAbstractMethodErrorType ()
+		{
+			if (markedAbstractMethodErrorType)
+				return;
+			markedAbstractMethodErrorType = true;
+
+
+			var td = AbstractMethodErrorConstructor.DeclaringType;
+			Annotations.Mark (td);
+			Annotations.SetPreserve (td, TypePreserve.Nothing);
+			Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor);
+		}
+
 		public virtual void LogMessage (string message)
 		{
 			Context.LogMessage (message);
@@ -310,9 +359,9 @@ namespace MonoDroid.Tuner
 					return assembly;
 			}
 			return null;
-#else
+#else   // NET5_LINKER
 			return Context.GetLoadedAssembly ("Mono.Android");
-#endif
+#endif  // NET5_LINKER
 		}
 	}
 }

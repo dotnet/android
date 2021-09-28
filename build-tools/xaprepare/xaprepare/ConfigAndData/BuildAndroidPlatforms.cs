@@ -5,8 +5,8 @@ namespace Xamarin.Android.Prepare
 {
 	class BuildAndroidPlatforms
 	{
-		public const string AndroidNdkVersion = "22b";
-		public const string AndroidNdkPkgRevision = "22.1.7171670";
+		public const string AndroidNdkVersion = "23";
+		public const string AndroidNdkPkgRevision = "23.0.7599858";
 
 		public static readonly List<AndroidPlatform> AllPlatforms = new List<AndroidPlatform> {
 			new AndroidPlatform (apiName: "",                       apiLevel: 1,  platformID: "1"),
@@ -39,7 +39,7 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "Pie",                    apiLevel: 28, platformID: "28",  include: "v9.0",    framework: "v9.0"),
 			new AndroidPlatform (apiName: "Q",                      apiLevel: 29, platformID: "29",  include: "v10.0",   framework: "v10.0"),
 			new AndroidPlatform (apiName: "R",                      apiLevel: 30, platformID: "30",  include: "v11.0",   framework: "v11.0"),
-			new AndroidPlatform (apiName: "S",                      apiLevel: 31, platformID: "S",   include: "v11.0.99",   framework: "v11.0.99", stable: false),
+			new AndroidPlatform (apiName: "S",                      apiLevel: 31, platformID: "31",  include: "v12.0",   framework: "v12.0"),
 		};
 
 		// These are here until we can drop "legacy" targets and use only .NET6+

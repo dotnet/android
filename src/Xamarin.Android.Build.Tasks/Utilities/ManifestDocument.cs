@@ -84,7 +84,8 @@ namespace Xamarin.Android.Tasks {
 		public List<string> Assemblies { get; set; }
 		public DirectoryAssemblyResolver Resolver { get; set; }
 		public string SdkDir { get; set; }
-		public string SdkVersion { get; set; }
+		public string TargetSdkVersion { get; set; }
+		public string MinSdkVersion { get; set; }
 		public bool Debug { get; set; }
 		public bool MultiDex { get; set; }
 		public bool NeedsInternet { get; set; }
@@ -118,7 +119,7 @@ namespace Xamarin.Android.Tasks {
 			var minAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "minSdkVersion");
 			if (minAttr == null) {
 				int minSdkVersion;
-				if (!int.TryParse (SdkVersionName, out minSdkVersion))
+				if (!int.TryParse (MinSdkVersionName, out minSdkVersion))
 					minSdkVersion = defaultMinSdkVersion;
 				return Math.Min (minSdkVersion, defaultMinSdkVersion).ToString ();
 			}
@@ -129,7 +130,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			var targetAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "targetSdkVersion");
 			if (targetAttr == null) {
-				return SdkVersionName;
+				return TargetSdkVersionName;
 			}
 			return targetAttr.Value;
 		}
@@ -150,9 +151,12 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		string SdkVersionName {
-			get { return MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (SdkVersion); }
-		}
+		string TargetSdkVersionName => MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (TargetSdkVersion);
+
+		string MinSdkVersionName =>
+			string.IsNullOrEmpty (MinSdkVersion) ?
+				TargetSdkVersionName :
+				MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (MinSdkVersion);
 
 		string ToFullyQualifiedName (string typeName)
 		{
@@ -258,6 +262,11 @@ namespace Xamarin.Android.Tasks {
 			} else {
 				PackageName = manifest_package;
 			}
+			if (PackageName.Contains ("${")) {
+				// placeholder detected
+				PackageName = ReplacePlaceholders (Placeholders, PackageName);
+				manifest.SetAttributeValue ("package", PackageName);
+			}
 
 			manifest.SetAttributeValue (XNamespace.Xmlns + "android", "http://schemas.android.com/apk/res/android");
 
@@ -288,8 +297,8 @@ namespace Xamarin.Android.Tasks {
 			if (!manifest.Elements ("uses-sdk").Any ()) {
 				manifest.AddFirst (
 						new XElement ("uses-sdk",
-							new XAttribute (androidNs + "minSdkVersion", SdkVersionName),
-							new XAttribute (androidNs + "targetSdkVersion", SdkVersionName)));
+							new XAttribute (androidNs + "minSdkVersion", MinSdkVersionName),
+							new XAttribute (androidNs + "targetSdkVersion", TargetSdkVersionName)));
 			}
 
 			// If no minSdkVersion is specified, set it to TargetFrameworkVersion
@@ -297,7 +306,7 @@ namespace Xamarin.Android.Tasks {
 
 			if (uses.Attribute (androidNs + "minSdkVersion") == null) {
 				int minSdkVersion;
-				if (!int.TryParse (SdkVersionName, out minSdkVersion))
+				if (!int.TryParse (MinSdkVersionName, out minSdkVersion))
 					minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
 				minSdkVersion = Math.Min (minSdkVersion, XABuildConfig.NDKMinimumApiAvailable);
 				uses.SetAttributeValue (androidNs + "minSdkVersion", minSdkVersion.ToString ());
@@ -308,7 +317,7 @@ namespace Xamarin.Android.Tasks {
 			if (tsv != null)
 				targetSdkVersion = tsv.Value;
 			else {
-				targetSdkVersion = SdkVersionName;
+				targetSdkVersion = TargetSdkVersionName;
 				uses.AddBeforeSelf (new XComment ("suppress UsesMinSdkAttributes"));
 			}
 
@@ -592,11 +601,11 @@ namespace Xamarin.Android.Tasks {
 				throw new InvalidOperationException ("Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
 
 			ApplicationAttribute appAttr = assemblyAttr.SingleOrDefault () ?? typeAttr.SingleOrDefault ();
-			var ull1 = usesLibraryAttr ?? new UsesLibraryAttribute [0];
-			var ull2 = typeUsesLibraryAttr.AsEnumerable () ?? new UsesLibraryAttribute [0];
+			var ull1 = usesLibraryAttr ?? Array.Empty<UsesLibraryAttribute> ();
+			var ull2 = typeUsesLibraryAttr.AsEnumerable () ?? Array.Empty<UsesLibraryAttribute> ();
 			var usesLibraryAttrs = ull1.Concat (ull2);
-			var ucl1 = usesConfigurationAttr ?? new UsesConfigurationAttribute [0];
-			var ucl2 = typeUsesConfigurationAttr.AsEnumerable () ?? new UsesConfigurationAttribute [0];
+			var ucl1 = usesConfigurationAttr ?? Array.Empty<UsesConfigurationAttribute>();
+			var ucl2 = typeUsesConfigurationAttr.AsEnumerable () ?? Array.Empty<UsesConfigurationAttribute> ();
 			var usesConfigurationattrs = ucl1.Concat (ucl2);
 			bool needManifestAdd = true;
 
@@ -789,6 +798,13 @@ namespace Xamarin.Android.Tasks {
 				return;
 
 			var filter = new XElement ("intent-filter");
+
+			// Add android:exported="true" if not already present
+			XName exported = androidNs + "exported";
+			if (activity.Attribute (exported) == null) {
+				activity.Add (new XAttribute (exported, "true"));
+			}
+
 			activity.AddFirst (filter);
 			foreach (KeyValuePair<string, string> e in LauncherIntentElements) {
 				if (!filter.Elements (e.Key).Any (x => ((string) x.Attribute (attName)) == e.Value))
@@ -960,13 +976,7 @@ namespace Xamarin.Android.Tasks {
 			}
 			if (!string.IsNullOrEmpty (PackageName))
 				s = s.Replace ("${applicationId}", PackageName);
-			if (Placeholders != null)
-				foreach (var entry in Placeholders.Select (e => e.Split (new char [] {'='}, 2, StringSplitOptions.None))) {
-					if (entry.Length == 2)
-						s = s.Replace ("${" + entry [0] + "}", entry [1]);
-					else
-						logCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", Placeholders)));
-				}
+			s = ReplacePlaceholders (Placeholders, s, logCodedWarning);
 			stream.Write (s);
 		}
 
@@ -999,6 +1009,22 @@ namespace Xamarin.Android.Tasks {
 			default:
 				throw new ArgumentOutOfRangeException ("abi", "unsupported ABI");
 			}
+		}
+
+		internal static string ReplacePlaceholders (string [] placeholders, string text, Action<string, string> logCodedWarning = null)
+		{
+			string result = text;
+			if (placeholders == null)
+				return result;
+			foreach (var entry in placeholders.Select (e => e.Split (new char [] {'='}, 2, StringSplitOptions.None))) {
+				if (entry.Length == 2)
+					result = result.Replace ("${" + entry [0] + "}", entry [1]);
+				else {
+					if (logCodedWarning != null)
+						logCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", placeholders)));
+				}
+			}
+			return result;
 		}
 
 		public void SetAbi (string abi)
@@ -1034,7 +1060,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			var regex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]");
 			var kvp = new Dictionary<string, int> ();
-			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? new string [0]) {
+			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? Array.Empty<string> ()) {
 				var keyValue = item.Split (new char [] { '=' });
 				int val;
 				if (!int.TryParse (keyValue [1], out val))

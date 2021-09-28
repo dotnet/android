@@ -22,37 +22,11 @@ See the [Target Framework Names in .NET 5][net5spec] spec for details.
 
 [net5spec]: https://github.com/dotnet/designs/blob/5e921a9dc8ecce33b3195dcdb6f10ef56ef8b9d7/accepted/2020/net5/net5.md
 
-## Consolidation of binding projects
+## Bindings projects
 
-In .NET 6, there will no longer be a concept of a [binding
-project][binding] as a separate project type. Any of the MSBuild item
-groups or build actions that currently work in binding projects will
-be supported through a .NET 6 Android application or library.
+Changes for bindings projects are documented [here][binding].
 
-For example, a binding library would be identical to a class library:
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net6.0-android</TargetFramework>
-  </PropertyGroup>
-</Project>
-```
-
-Along with the file structure:
-
-    Transforms/
-        Metadata.xml
-    foo.jar
-
-`Transforms\*.xml` files are automatically included as a
-`@(TransformFile)` item, and `.jar` files are automatically included
-as a `@(AndroidLibrary)` item.
-
-This will bind C# types for the Java types found in `foo.jar` using
-the metadata fixups from `Transforms\Metadata.xml`.
-
-[binding]: https://docs.microsoft.com/xamarin/android/platform/binding-java-library/
+[binding]: OneDotNetBindingProjects.md
 
 ## .NET Configuration Files
 
@@ -189,6 +163,18 @@ It is recommended to migrate to the new linker settings, as
 
 [linker]: https://docs.microsoft.com/dotnet/core/deploying/trimming-options
 [linker-full]: https://docs.microsoft.com/dotnet/core/deploying/trimming-options#trimmed-assemblies
+
+## AOT
+
+`$(RunAOTCompilation)` will be the new MSBuild property for enabling
+AOT. This is the same property used for [Blazor WASM][blazor].
+`$(AotAssemblies)` will also enable AOT, in order to help with
+migration from "legacy" Xamarin.Android to .NET 6.
+
+It is recommended to migrate to the new `$(RunAOTCompilation)`
+property, as `$(AotAssemblies)` will eventually be deprecated.
+
+[blazor]: https://devblogs.microsoft.com/aspnet/asp-net-core-updates-in-net-6-preview-4/#blazor-webassembly-ahead-of-time-aot-compilation
 
 ## dotnet cli
 

@@ -13,6 +13,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <DefineConstants>$(DefineConstants);NO_MARSHAL_MEMBER_BUILDER_SUPPORT</DefineConstants>
+    <JavaInteropTestDirectory>$(JavaInteropSourceDirectory)\tests\Java.Interop-Tests\</JavaInteropTestDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,9 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(JavaInteropSourceDirectory)\tests\Java.Interop-Tests\**\*.cs" />
-    <Compile Remove="$(JavaInteropSourceDirectory)\tests\Java.Interop-Tests\Java.Interop\JavaVMFixture.cs" />
-    <Compile Remove="$(JavaInteropSourceDirectory)\tests\Java.Interop-Tests\Java.Interop\JniReferenceSafeHandleTest.cs" />
+    <Compile Include="$(JavaInteropTestDirectory)**\*.cs" Exclude="$(JavaInteropTestDirectory)obj\**;$(JavaInteropTestDirectory)bin\**" />
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JavaVMFixture.cs" />
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniReferenceSafeHandleTest.cs" />
   </ItemGroup>
 
   <ItemGroup>

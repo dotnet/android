@@ -89,6 +89,7 @@ namespace Xamarin.Android.NetTests {
 			Assert.IsFalse (h.UseDefaultCredentials, "#13");
 			Assert.IsTrue (h.UseProxy, "#14");
 			Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
+			Assert.IsNull (h.ServerCertificateCustomValidationCallback, "#16");
 		}
 
 		[Test]

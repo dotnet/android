@@ -5,33 +5,17 @@
     <PackageReference Include="Microsoft.DotNet.Arcade.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 
+  <Import Project="License.targets" />
   <Import Project="..\..\build-tools\installers\create-installers.targets" />
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
 
   <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetSharedFrameworkTaskFile)"/>
   <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
+  <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" AssemblyFile="$(PrepTasksAssembly)" />
 
   <PropertyGroup>
     <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0\</_MonoAndroidNETOutputDir>
   </PropertyGroup>
-
-  <!-- LICENSE setup -->
-  <PropertyGroup>
-    <NuGetLicense Condition="Exists('$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt')">$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt</NuGetLicense>
-    <NuGetLicense Condition=" '$(NuGetLicense)' == '' ">$(XamarinAndroidSourcePath)LICENSE</NuGetLicense>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-  </PropertyGroup>
-  <Target Name="_GetLicense">
-    <!-- NuGet doesn't have a way to change the filename of License.txt, so copy it -->
-    <Copy
-        SourceFiles="$(NuGetLicense)"
-        DestinationFiles="$(IntermediateOutputPath)$(PackageLicenseFile)"
-        SkipUnchangedFiles="true"
-    />
-    <ItemGroup>
-      <_PackageFiles Include="$(IntermediateOutputPath)$(PackageLicenseFile)" PackagePath="\" />
-    </ItemGroup>
-  </Target>
 
   <!-- https://github.com/dotnet/runtime/blob/0647ec314948904319da5eb15e9931f7c85ed1e2/src/installer/pkg/projects/Directory.Build.targets#L281 -->
   <!-- TODO: Generate PlatformManifest.txt files? -->
@@ -73,7 +57,7 @@
   </Target>
 
   <Target Name="CreateAllPacks"
-      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties">
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties;GetXAVersionInfo">
     <RemoveDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
@@ -86,18 +70,17 @@
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BundleTool.proj&quot;" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj&quot;" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
+    <ReplaceFileContents
+        SourceFile="vs-workload.in.props"
+        DestinationFile="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\vs-workload.props"
+        Replacements="@PACK_VERSION_LONG@=$(AndroidPackVersionLong);@PACK_VERSION_SHORT@=$(AndroidMSIVersion);@WORKLOAD_VERSION@=$(AndroidMSIVersion)"
+    />
   </Target>
 
   <Target Name="ExtractWorkloadPacks"
       DependsOnTargets="DeleteExtractedWorkloadPacks" >
     <ItemGroup>
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.NET.Sdk.Android.Manifest-*.nupkg" />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Sdk.$(HostOS).*.nupkg" />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Sdk.BundleTool.*.nupkg" />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Ref.*.nupkg" />
-      <_WLTemplates Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Templates.*.nupkg" />
-      <!-- Runtime packs are not yet supported by workloads -->
-      <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Runtime.*.nupkg" /> -->
     </ItemGroup>
     <PropertyGroup>
       <_WLPackVersion>@(_WLManifest->'%(Filename)'->Replace('Microsoft.NET.Sdk.Android.Manifest-$(DotNetPreviewVersionBand).', ''))</_WLPackVersion>
@@ -112,36 +95,42 @@
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE" />
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
     </ItemGroup>
-    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)Microsoft.NET.Sdk.Android" />
+    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
-    <Unzip
-        SourceFiles="@(_WLPacks)"
-        DestinationFolder="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(_WLPackVersion)', ''))\$(_WLPackVersion)"
-    />
-    <MakeDir Directories="$(DotNetPreviewPath)template-packs" />
-    <!-- TODO: Workaround Linux casing issue and copy template packs to lowercase destination -->
-    <Copy SourceFiles="@(_WLTemplates)" DestinationFiles="@(_WLTemplates->'%(Filename)%(Extension)'->ToLower()->'$(DotNetPreviewPath)template-packs\%(Identity)')" />
+
+    <!-- dotnet workload install android-aot -->
+    <PropertyGroup>
+      <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
+    </PropertyGroup>
     <ItemGroup>
-      <_UnixExecutables Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.*\*\tools\$(HostOS)\**\*.*" />
-      <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Sdk.Android\**" />
-      <_FilesToTouch Include="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(_WLPackVersion)', ''))\$(_WLPackVersion)\**" />
+      <_InstallArguments Include="--skip-manifest-update" />
+      <_InstallArguments Include="--verbosity diag" />
+      <_InstallArguments Include="--source &quot;$(OutputPath.TrimEnd('\'))&quot;" />
+      <_InstallArguments Include="--source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
+      <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
-    <Exec
-        Condition=" '$(HostOS)' == 'Darwin' or '$(HostOS)' == 'Linux' "
-        Command="chmod +x &quot;%(_UnixExecutables.Identity)&quot;"
-    />
-    <!-- Some files had timestamps in the future -->
-    <Touch Files="@(_FilesToTouch)" />
+    <MakeDir Directories="$(_TempDirectory)" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; workload install android-aot @(_InstallArguments, ' ')" WorkingDirectory="$(_TempDirectory)" />
+    <RemoveDir Directories="$(_TempDirectory)" />
   </Target>
 
   <Target Name="DeleteExtractedWorkloadPacks" >
     <ItemGroup>
-      <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Sdk.Android\**\*.*" />
-      <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**\*.*" />
-      <_PackFilesToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android*\**\*.*" />
-      <_PackFilesToDelete Include="$(DotNetPreviewPath)template-packs\Microsoft.Android.Templates.*.nupkg" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)metadata" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.sdk.android" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.workload.android" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Ref" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.android-arm" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.android-arm64" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.android-x86" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.android-x64" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.BundleTool" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Darwin" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Linux" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Windows" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)template-packs" />
     </ItemGroup>
-    <RemoveDir Directories="%(_PackFilesToDelete.RootDir)%(_PackFilesToDelete.Directory)" />
+    <RemoveDir Directories="@(_PackFoldersToDelete)" />
   </Target>
 
   <Target Name="PushManifestToBuildAssetRegistry" >
@@ -152,7 +141,7 @@
     <Error Condition="'@(BuildArtifacts)' == ''" Text="No packages to create manifest from." />
 
     <ItemGroup>
-      <ManifestBuildData Include="InitialAssetsLocation=https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json" />
+      <ManifestBuildData Include="InitialAssetsLocation=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
       <ManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
       <ManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
       <ManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />

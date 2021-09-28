@@ -555,6 +555,11 @@ namespace Xamarin.ProjectTools
 			Version = "0.0.1-alpha",
 			TargetFramework = "MonoAndroid10",
 		};
+		public static Package Xamarin_Legacy_NUnitLite = new Package {
+			Id = "Xamarin.Legacy.NUnitLite",
+			Version = "0.0.1-alpha",
+			TargetFramework = "MonoAndroid10",
+		};
 	}
 }
 

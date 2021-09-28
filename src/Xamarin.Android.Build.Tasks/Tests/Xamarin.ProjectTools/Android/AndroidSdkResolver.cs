@@ -22,7 +22,9 @@ namespace Xamarin.ProjectTools
 
 		public static string GetAndroidSdkPath ()
 		{
-			var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+			var sdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
+			if (String.IsNullOrEmpty (sdkPath))
+				sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
 			if (String.IsNullOrEmpty (sdkPath))
 				sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
 			if (String.IsNullOrEmpty (sdkPath))
@@ -34,7 +36,9 @@ namespace Xamarin.ProjectTools
 
 		public static string GetAndroidNdkPath ()
 		{
-			var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
+			var ndkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_NDK_PATH");
+			if (String.IsNullOrEmpty (ndkPath))
+				ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
 			if (String.IsNullOrEmpty (ndkPath))
 				ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
 			if (String.IsNullOrEmpty (ndkPath))
@@ -113,8 +117,16 @@ namespace Xamarin.ProjectTools
 		}
 
 		static int? maxInstalled;
+		static object maxInstalledLock = new object ();
 
 		public static int GetMaxInstalledPlatform ()
+		{
+			lock (maxInstalledLock) {
+				return GetMaxInstalledPlatformInternal ();
+			}
+		}
+
+		static int GetMaxInstalledPlatformInternal ()
 		{
 			if (maxInstalled != null)
 				return maxInstalled.Value;
@@ -123,10 +135,12 @@ namespace Xamarin.ProjectTools
 			foreach (var dir in Directory.EnumerateDirectories (Path.Combine (sdkPath, "platforms"))) {
 				int version;
 				string v = Path.GetFileName (dir).Replace ("android-", "");
+				Console.WriteLine ($"GetMaxInstalledPlatform: Parsing {v}");
 				if (!int.TryParse (v, out version))
 					continue;
 				if (version < maxInstalled)
 					continue;
+				Console.WriteLine ($"GetMaxInstalledPlatform: Setting maxInstalled to {version}");
 				maxInstalled = version;
 			}
 			return maxInstalled ?? 0;

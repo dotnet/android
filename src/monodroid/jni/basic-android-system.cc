@@ -16,9 +16,9 @@ void
 BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
 	// appDirs[2] points to the native library directory
-	simple_pointer_guard<char[]> libmonodroid_path = utils.path_combine (appDirs[2].get_cstr (), "libmonodroid.so");
+	std::unique_ptr<char> libmonodroid_path {utils.path_combine (appDirs[2].get_cstr (), "libmonodroid.so")};
 	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path.get ());
-	if (!utils.file_exists (libmonodroid_path)) {
+	if (!utils.file_exists (libmonodroid_path.get ())) {
 		log_debug (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path.get ());
 		set_embedded_dso_mode_enabled (true);
 	} else {
@@ -62,8 +62,8 @@ BasicAndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApk
 void
 BasicAndroidSystem::add_apk_libdir (const char *apk, size_t index, [[maybe_unused]] size_t apk_count, void *user_data)
 {
-	assert (user_data != nullptr);
-	assert (index < app_lib_directories_size);
+	abort_if_invalid_pointer_argument (user_data);
+	abort_unless (index < app_lib_directories_size, "Index out of range");
 	app_lib_directories [index] = utils.string_concat (apk, "!/lib/", static_cast<const char*>(user_data));
 	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", app_lib_directories[index]);
 }

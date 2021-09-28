@@ -96,6 +96,16 @@ struct CompressedAssemblies
 	CompressedAssemblyDescriptor *descriptors;
 };
 
+struct XamarinAndroidBundledAssembly final
+{
+	int32_t  apk_fd;
+	uint32_t data_offset;
+	uint32_t data_size;
+	uint8_t *data;
+	uint32_t name_length;
+	char    *name;
+};
+
 struct ApplicationConfig
 {
 	bool uses_mono_llvm;
@@ -105,10 +115,13 @@ struct ApplicationConfig
 	bool broken_exception_transitions;
 	bool instant_run_enabled;
 	bool jni_add_native_method_registration_attribute_present;
+	bool have_runtime_config_blob;
 	uint8_t bound_exception_type;
 	uint32_t package_naming_policy;
 	uint32_t environment_variable_count;
 	uint32_t system_property_count;
+	uint32_t number_of_assemblies_in_apk;
+	uint32_t bundled_assembly_name_width;
 	const char *android_package_name;
 };
 
@@ -130,4 +143,7 @@ MONO_API const char* app_environment_variables[];
 MONO_API const char* app_system_properties[];
 
 MONO_API const char* mono_aot_mode_name;
+
+MONO_API XamarinAndroidBundledAssembly bundled_assemblies[];
+
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

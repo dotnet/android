@@ -420,7 +420,7 @@ namespace Xamarin.Android.Tasks
 			var typeMapEntryComparer = new TypeMapEntryArrayComparer ();
 			foreach (ModuleReleaseData module in modules) {
 				if (module.TypesScratch.Count == 0) {
-					module.Types = new TypeMapReleaseEntry[0];
+					module.Types = Array.Empty<TypeMapReleaseEntry> ();
 					continue;
 				}
 

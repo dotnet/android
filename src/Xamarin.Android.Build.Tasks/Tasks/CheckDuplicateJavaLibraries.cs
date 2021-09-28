@@ -17,7 +17,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CDJ";
 
 		public ITaskItem [] JavaSourceFiles { get; set; }
-		public ITaskItem[] JavaLibraries { get; set; }		
+		public ITaskItem[] JavaLibraries { get; set; }
 		public ITaskItem[] LibraryProjectJars { get; set; }
 
 		public override bool RunTask ()
@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tasks
 				jarFiles = jarFiles.Concat (JavaLibraries);
 			else if (JavaLibraries != null)
 				jarFiles = JavaLibraries;
-			var jarFilePaths = (LibraryProjectJars ?? new ITaskItem [0]).Concat (jarFiles ?? new ITaskItem [0]).Select (j => j.ItemSpec);
+			var jarFilePaths = (LibraryProjectJars ?? Array.Empty<ITaskItem> ()).Concat (jarFiles ?? Array.Empty<ITaskItem> ()).Select (j => j.ItemSpec);
 
 			// Remove duplicate identical jars by name, size and content, and reject any jars that conflicts by name (i.e. different content).
 			var jars = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths).ToArray ();
@@ -36,7 +36,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogCodedError ("XA1014", Properties.Resources.XA1014, String.Join (", ", dups.ToArray ()));
 				return false;
 			}
-			
+
 			return true;
 		}
 	}

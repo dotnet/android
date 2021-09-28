@@ -2,30 +2,41 @@
 
   <!-- User-facing configuration-agnostic defaults -->
   <PropertyGroup>
-    <MinimumSupportedJavaVersion Condition=" '$(MinimumSupportedJavaVersion)' == '' ">1.8.0</MinimumSupportedJavaVersion>
+    <MinimumSupportedJavaVersion Condition=" '$(MinimumSupportedJavaVersion)' == '' ">11.0</MinimumSupportedJavaVersion>
     <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">System</AndroidBoundExceptionType>
     <MonoAndroidResourcePrefix Condition=" '$(MonoAndroidResourcePrefix)' == '' ">Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
     <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
-    <AndroidResgenFile Condition=" '$(AndroidResgenFile)' == '' ">$(MonoAndroidResourcePrefix)\$(_AndroidResourceDesigner)</AndroidResgenFile>
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
-    <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
-    <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">true</AndroidUseIntermediateDesignerFile>
+    <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' and '$(UsingAndroidNETSdk)' == 'true' ">Xamarin.Android.Net.AndroidMessageHandler</AndroidHttpClientHandlerType>
+    <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' and '$(UsingAndroidNETSdk)' != 'true' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
+    <AndroidGenerateResourceDesigner Condition=" '$(AndroidGenerateResourceDesigner)' == '' ">true</AndroidGenerateResourceDesigner>
+    <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">$(AndroidGenerateResourceDesigner)</AndroidUseIntermediateDesignerFile>
     <GenerateDependencyFile Condition=" '$(GenerateDependencyFile)' == '' ">false</GenerateDependencyFile>
-    <GenerateRuntimeConfigurationFiles Condition=" '$(GenerateRuntimeConfigurationFiles)' == '' ">false</GenerateRuntimeConfigurationFiles>
     <CopyLocalLockFileAssemblies Condition=" '$(CopyLocalLockFileAssemblies)' == '' ">false</CopyLocalLockFileAssemblies>
     <ComputeNETCoreBuildOutputFiles Condition=" '$(ComputeNETCoreBuildOutputFiles)' == '' ">false</ComputeNETCoreBuildOutputFiles>
-    <!-- jar2xml is not supported -->
-    <AndroidClassParser>class-parse</AndroidClassParser>
     <!-- mono-symbolicate is not supported -->
     <MonoSymbolArchive>false</MonoSymbolArchive>
-    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
     <!--
-      Disable @(Content) from referenced projects 
+      Disable @(Content) from referenced projects
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
     -->
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
     <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' ">true</UseMonoRuntime>
+    <!-- $(SupportedOSPlatformVersion) must be '21.0', but we should support integer values like '21' -->
+    <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' != '' and !$(SupportedOSPlatformVersion.Contains('.')) ">$(SupportedOSPlatformVersion).0</SupportedOSPlatformVersion>
+
+    <!-- Bindings properties -->
+    <!-- jar2xml is not supported -->
+    <AndroidClassParser>class-parse</AndroidClassParser>
+    <!-- Anything other than XAJavaInterop1 is not supported -->
+    <AndroidCodegenTarget>XAJavaInterop1</AndroidCodegenTarget>
+    <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
+    <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
+    <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
+
+    <!-- Mono components -->
+    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">false</AndroidEnableProfiler>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->
@@ -35,6 +46,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
+    <AndroidPackageFormats Condition=" '$(AndroidPackageFormats)' == '' " >aab;apk</AndroidPackageFormats>
   </PropertyGroup>
 
   <!-- Application project settings -->
@@ -47,7 +59,6 @@
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <PublishReferencesDocumentationFiles Condition=" '$(PublishReferencesDocumentationFiles)' == '' ">false</PublishReferencesDocumentationFiles>
-    <SelfContained Condition=" '$(SelfContained)' == '' ">true</SelfContained>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and ('$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full') ">true</PublishTrimmed>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and '$(Configuration)' == 'Release' and '$(AndroidLinkMode)' != 'None' ">true</PublishTrimmed>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
@@ -60,6 +71,9 @@
     <AndroidManifest Condition=" '$(AndroidManifest)' == '' and Exists ('Properties\AndroidManifest.xml') and !Exists ('AndroidManifest.xml') ">Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidManifest Condition=" '$(AndroidManifest)' == '' ">AndroidManifest.xml</AndroidManifest>
     <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
+    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
+    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
+    <AotAssemblies>$(RunAOTCompilation)</AotAssemblies>
 
     <!--
       Runtime libraries feature switches defaults
@@ -69,21 +83,28 @@
     <EnableUnsafeUTF7Encoding Condition="'$(EnableUnsafeUTF7Encoding)' == ''">false</EnableUnsafeUTF7Encoding>
     <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
-    <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
-    <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == ''">true</UseSystemResourceKeys>
+    <!--
+      FIXME: set $(InvariantGlobalization) to empty unless it is set to true
+      See: https://github.com/dotnet/sdk/blob/1f544a59270cecb2947e50a01f7056c685b4e319/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L389-L392
+    -->
+    <InvariantGlobalization Condition="'$(InvariantGlobalization)' != 'true'"></InvariantGlobalization>
+    <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == '' and '$(PublishTrimmed)' == 'true'">true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == ''">false</HttpActivityPropagationSupport>
     <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
     <UseNativeHttpHandler Condition="'$(UseNativeHttpHandler)' == ''">true</UseNativeHttpHandler>
+    <EnableSingleFileAnalyzer Condition="'$(EnableSingleFileAnalyzer)' == ''">true</EnableSingleFileAnalyzer>
 
     <!-- XA feature switches defaults -->
     <VSAndroidDesigner Condition="'$(VSAndroidDesigner)' == ''">false</VSAndroidDesigner>
 
+    <!-- profiler won't work without internet permission, we must thus force it -->
+    <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
-    <ApplicationVersion Condition=" '$(ApplicationVersion)' == '' ">1.0</ApplicationVersion>
-    <AndroidVersionCode Condition=" '$(AndroidVersionCode)' == '' ">1</AndroidVersionCode>
-    <AssemblyVersion Condition=" '$(AssemblyVersion)' == '' ">$(ApplicationVersion)</AssemblyVersion>
-    <FileVersion Condition=" '$(FileVersion)' == '' ">$(ApplicationVersion)</FileVersion>
+    <!-- Default to 1, if blank -->
+    <ApplicationVersion Condition=" '$(ApplicationVersion)' == '' ">1</ApplicationVersion>
+    <Version Condition=" $([System.Version]::TryParse ('$(ApplicationDisplayVersion)', $([System.Version]::Parse('1.0')))) ">$(ApplicationDisplayVersion)</Version>
+    <ApplicationDisplayVersion Condition=" '$(ApplicationDisplayVersion)' == '' ">$(Version)</ApplicationDisplayVersion>
   </PropertyGroup>
 
 </Project>

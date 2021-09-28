@@ -3,14 +3,12 @@
 #include <cstdarg>
 
 #include <jni.h>
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
+#include <ctime>
+#include <cstdio>
+#include <cstring>
 #include <strings.h>
-#include <ctype.h>
-#include <assert.h>
-#include <errno.h>
-#include <limits.h>
+#include <cctype>
+#include <cerrno>
 
 #if defined (APPLE_OS_X)
 #include <dlfcn.h>
@@ -18,7 +16,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include <sys/time.h>
 #include <sys/types.h>
@@ -29,6 +27,7 @@
 #include <mono/metadata/debug-helpers.h>
 #include <mono/metadata/mono-config.h>
 #include <mono/metadata/mono-debug.h>
+#include <mono/metadata/object.h>
 #include <mono/utils/mono-dl-fallback.h>
 #include <mono/utils/mono-logger.h>
 
@@ -39,7 +38,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <errno.h>
 #endif
 
 #if defined (__linux__) || defined (__linux)
@@ -103,23 +101,27 @@ using namespace xamarin::android::internal;
 
 #if !defined (NET6)
 #include "config.include"
-#endif // ndef NET6
 #include "machine.config.include"
 
-#if defined (NET6)
-std::mutex MonodroidRuntime::pinvoke_map_write_lock;
-#else // def NET6
 std::mutex MonodroidRuntime::api_init_lock;
 void *MonodroidRuntime::api_dso_handle = nullptr;
-#endif // ndef NET6
+#else // ndef NET6
+std::mutex MonodroidRuntime::pinvoke_map_write_lock;
+
+MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
+	.trusted_platform_assemblies = nullptr,
+	.app_paths = nullptr,
+	.native_dll_search_directories = nullptr,
+	.pinvoke_override = &MonodroidRuntime::monodroid_pinvoke_override
+};
+
+#endif // def NET6
 
 #ifdef WINDOWS
 static const char* get_xamarin_android_msbuild_path (void);
 const char *BasicAndroidSystem::SYSTEM_LIB_PATH = get_xamarin_android_msbuild_path();
-#endif
 
 /* Set of Windows-specific utility/reimplementation of Unix functions */
-#ifdef WINDOWS
 
 static char *msbuild_folder_path = nullptr;
 
@@ -157,6 +159,7 @@ setenv(const char *name, const char *value, int overwrite)
 }
 #endif // def WINDOWS
 
+#if !defined (NET6)
 typedef void* (*mono_mkbundle_init_ptr) (void (*)(const MonoBundledAssembly **), void (*)(const char* assembly_name, const char* config_xml),void (*) (int mode));
 mono_mkbundle_init_ptr mono_mkbundle_init;
 
@@ -198,14 +201,15 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 	}
 
 	mono_mkbundle_initialize_mono_api = reinterpret_cast<mono_mkbundle_initialize_mono_api_ptr> (java_interop_lib_symbol (libapp, "initialize_mono_api", nullptr));
-	if (!mono_mkbundle_initialize_mono_api)
+	if (mono_mkbundle_initialize_mono_api == nullptr)
 		log_error (LOG_BUNDLE, "Missing initialize_mono_api in the application");
 
 	mono_mkbundle_init = reinterpret_cast<mono_mkbundle_init_ptr> (java_interop_lib_symbol (libapp, "mono_mkbundle_init", nullptr));
-	if (!mono_mkbundle_init)
+	if (mono_mkbundle_init == nullptr)
 		log_error (LOG_BUNDLE, "Missing mono_mkbundle_init in the application");
 	log_info (LOG_BUNDLE, "Bundled app loaded: %s", dso_name);
 }
+#endif
 
 void
 MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
@@ -317,8 +321,10 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 	size_t name_len = strlen (name);
 
 	static_local_string<SENSIBLE_PATH_MAX> pname (name_len + culture_len);
-	if (culture_len > 0)
+	if (culture_len > 0) {
 		pname.append (culture, culture_len);
+		pname.append ("/");
+	}
 	pname.append (name, name_len);
 
 	constexpr char dll_extension[] = ".dll";
@@ -361,6 +367,10 @@ bool
 MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 {
 #ifndef RELEASE
+	if (filename == nullptr) {
+		return true;
+	}
+
 	size_t filename_len = strlen (filename) + 1; // includes space for path separator
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 		const char *odir = androidSystem.get_override_dir (i);
@@ -498,12 +508,15 @@ MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved)
 void
 MonodroidRuntime::parse_gdb_options ()
 {
-	char *val;
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> val;
 
-	if (!(androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_GDB_PROPERTY, &val) > 0))
+	if (!(androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_GDB_PROPERTY, val) > 0))
 		return;
 
-	if (strstr (val, "wait:") == val) {
+	constexpr char wait_param[] = "wait:";
+	constexpr size_t wait_param_length = sizeof(wait_param) - 1;
+
+	if (val.starts_with (wait_param)) {
 		/*
 		 * The form of the property should be: 'wait:<timestamp>', where <timestamp> should be
 		 * the output of date +%s in the android shell.
@@ -513,20 +526,18 @@ MonodroidRuntime::parse_gdb_options ()
 		 */
 		bool do_wait = true;
 
-		long long v = atoll (val + strlen ("wait:"));
+		long long v = atoll (val.get () + wait_param_length);
 		if (v > 100000) {
 			time_t secs = time (nullptr);
 
 			if (v + 10 < secs) {
-				log_warn (LOG_DEFAULT, "Found stale %s property with value '%s', not waiting.", Debug::DEBUG_MONO_GDB_PROPERTY, val);
+				log_warn (LOG_DEFAULT, "Found stale %s property with value '%s', not waiting.", Debug::DEBUG_MONO_GDB_PROPERTY, val.get ());
 				do_wait = false;
 			}
 		}
 
 		wait_for_gdb = do_wait;
 	}
-
-	delete[] val;
 }
 
 #if defined (DEBUG) && !defined (WINDOWS)
@@ -594,13 +605,13 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 				continue;
 			}
 
-			if (sdb_port < 0 || sdb_port > USHRT_MAX) {
+			if (sdb_port < 0 || sdb_port > std::numeric_limits<unsigned short>::max ()) {
 				log_error (LOG_DEFAULT, "Invalid SDB port value %d", sdb_port);
 				ret = false;
 				continue;
 			}
 
-			if (out_port > USHRT_MAX) {
+			if (out_port > std::numeric_limits<unsigned short>::max ()) {
 				log_error (LOG_DEFAULT, "Invalid output port value %d", out_port);
 				ret = false;
 				continue;
@@ -755,9 +766,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 
 	bool log_methods = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
 	if (XA_UNLIKELY (log_methods)) {
-		simple_pointer_guard<char[]> jit_log_path = utils.path_combine (androidSystem.get_override_dir (0), "methods.txt");
-		jit_log = utils.monodroid_fopen (jit_log_path, "a");
-		utils.set_world_accessable (jit_log_path);
+		std::unique_ptr<char> jit_log_path {utils.path_combine (androidSystem.get_override_dir (0), "methods.txt")};
+		jit_log = utils.monodroid_fopen (jit_log_path.get (), "a");
+		utils.set_world_accessable (jit_log_path.get ());
 	}
 
 	profiler_handle = mono_profiler_create (nullptr);
@@ -801,21 +812,14 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 
 	osBridge.register_gc_hooks ();
 
+#if !defined (NET6)
 	if (mono_mkbundle_initialize_mono_api) {
 		BundleMonoAPI bundle_mono_api = {
 			.mono_register_bundled_assemblies = mono_register_bundled_assemblies,
-#if !defined(NET6)
 			.mono_register_config_for_assembly = mono_register_config_for_assembly,
-#else
-			.mono_register_config_for_assembly = nullptr,
-#endif // ndef NET6
 			.mono_jit_set_aot_mode = reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode),
 			.mono_aot_register_module = mono_aot_register_module,
-#if !defined(NET6)
 			.mono_config_parse_memory = mono_config_parse_memory,
-#else
-			.mono_config_parse_memory = nullptr,
-#endif // ndef NET6
 			.mono_register_machine_config = reinterpret_cast<void (*)(const char *)>(mono_register_machine_config),
 		};
 
@@ -824,34 +828,63 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	}
 
 	if (mono_mkbundle_init)
-		mono_mkbundle_init (
-			mono_register_bundled_assemblies,
-#if defined(NET6)
-			nullptr,
-#else
-			mono_register_config_for_assembly,
-#endif // def NET6
-			reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode));
-
+		mono_mkbundle_init (mono_register_bundled_assemblies, mono_register_config_for_assembly, reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode));
+#endif // ndef NET6
 	/*
 	 * Assembly preload hooks are invoked in _reverse_ registration order.
 	 * Looking for assemblies from the update dir takes precedence over
 	 * everything else, and thus must go LAST.
 	 */
-	embeddedAssemblies.install_preload_hooks ();
+	embeddedAssemblies.install_preload_hooks_for_appdomains ();
 #ifndef RELEASE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
 }
 
+#if defined (NET6)
+void
+MonodroidRuntime::cleanup_runtime_config (MonovmRuntimeConfigArguments *args, [[maybe_unused]] void *user_data)
+{
+	if (args == nullptr || args->kind != 1 || args->runtimeconfig.data.data == nullptr) {
+		return;
+	}
+
+#if !defined (WINDOWS)
+	munmap (static_cast<void*>(const_cast<char*>(args->runtimeconfig.data.data)), args->runtimeconfig.data.data_len);
+#endif // ndef WINDOWS
+}
+#endif // def NET6
+
 MonoDomain*
 MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain)
 {
 	size_t user_assemblies_count   = 0;
+#if defined (NET6)
+	constexpr bool have_mono_mkbundle_init = false;
+#else // def NET6
+	bool have_mono_mkbundle_init = mono_mkbundle_init != nullptr;
+#endif // ndef NET6
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count);
 
-	if (!mono_mkbundle_init && user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
+#if defined (NET6)
+	timing_period blob_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		blob_time.mark_start ();
+
+	if (embeddedAssemblies.have_runtime_config_blob ()) {
+		runtime_config_args.kind = 1;
+		embeddedAssemblies.get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
+		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
+	}
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		blob_time.mark_end ();
+		Timing::info (blob_time, "Register runtimeconfig binary blob");
+	}
+#endif // def NET6
+
+	if (!have_mono_mkbundle_init && user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
 		           androidSystem.get_override_dir (0),
 		           (AndroidSystem::MAX_OVERRIDES > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
@@ -859,8 +892,11 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	}
 
 	MonoDomain *domain;
+#if !defined (NET6)
 	if (is_root_domain) {
+#endif // ndef NET6
 		domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
+#if !defined (NET6)
 	} else {
 		MonoDomain* root_domain = mono_get_root_domain ();
 
@@ -874,12 +910,11 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 		domain = utils.monodroid_create_appdomain (root_domain, domain_name.get (), /*shadow_copy:*/ 1, /*shadow_directory:*/ androidSystem.get_override_dir (0));
 	}
+#endif // ndef NET6
 
 	if constexpr (is_running_on_desktop) {
 		if (is_root_domain) {
-			// Check that our corlib is coherent with the version of Mono we loaded otherwise
-			// tell the IDE that the project likely need to be recompiled.
-			simple_pointer_guard<char, false> corlib_error_message_guard = const_cast<char*>(mono_check_corlib_version ());
+			c_unique_ptr<char> corlib_error_message_guard {const_cast<char*>(mono_check_corlib_version ())};
 			char *corlib_error_message = corlib_error_message_guard.get ();
 
 			if (corlib_error_message == nullptr) {
@@ -919,31 +954,69 @@ MonodroidRuntime::LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int ve
 	return 1;
 }
 
-inline void
-MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
+force_inline void
+MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
 {
-	info->klass             = utils.monodroid_get_class_from_image (domain, image, type->_namespace, type->_typename);
+	info->klass             = klass;
 	info->handle            = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle"));
 	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
 	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
 	info->weak_handle       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("weak_handle"));
-	if (info->klass == NULL || info->handle == NULL || info->handle_type == NULL ||
-			info->refs_added == NULL || info->weak_handle == NULL) {
+	if (info->klass == nullptr || info->handle == nullptr || info->handle_type == nullptr ||
+			info->refs_added == nullptr || info->weak_handle == nullptr) {
 		log_fatal (LOG_DEFAULT, "The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
 				type->_namespace, type->_typename,
 				info->handle,
 				info->handle_type,
 				info->refs_added,
 				info->weak_handle);
-		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+		abort ();
 	}
 }
 
+#if defined (NET6)
+force_inline void
+MonodroidRuntime::lookup_bridge_info (MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
+{
+	lookup_bridge_info (
+		mono_class_from_name (image, type->_namespace, type->_typename),
+		type,
+		info
+	);
+}
+#else // def NET6
+force_inline void
+MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
+{
+	lookup_bridge_info (
+		utils.monodroid_get_class_from_image (domain, image, type->_namespace, type->_typename),
+		type,
+		info
+	);
+}
+#endif // ndef NET6
+
+#if defined (NET6)
 void
-MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader)
+MonodroidRuntime::monodroid_debugger_unhandled_exception (MonoException *ex)
+{
+	mono_debugger_agent_unhandled_exception (ex);
+}
+#endif
+
+void
+MonodroidRuntime::init_android_runtime (
+#if !defined (NET6)
+	MonoDomain *domain,
+#endif // ndef NET6
+	JNIEnv *env, jclass runtimeClass, jobject loader)
 {
 	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
+#if defined (NET6)
+	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
+	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
+#endif // def NET6
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                 = osBridge.get_jvm ();
@@ -967,17 +1040,34 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
-	MonoAssembly *assm = utils.monodroid_load_assembly (domain, "Mono.Android");
+	MonoAssembly *assm;
+#if defined (NET6)
+	assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+#else // def NET6
+	assm = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+#endif // ndef NET6
 	MonoImage *image = mono_assembly_get_image (assm);
 
 	uint32_t i = 0;
 
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES; ++i) {
-		lookup_bridge_info (domain, image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
+		lookup_bridge_info (
+#if !defined (NET6)
+			domain,
+#endif // ndef NET6
+			image,
+			&osBridge.get_java_gc_bridge_type (i),
+			&osBridge.get_java_gc_bridge_info (i)
+		);
 	}
 
 	// TODO: try looking up the method by its token
-	MonoClass *runtime = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "JNIEnv");
+	MonoClass *runtime;
+#if defined (NET6)
+	runtime = mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+#else
+	runtime = utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+#endif
 	MonoMethod *method = mono_class_get_method_from_name (runtime, "Initialize", 1);
 
 	if (method == nullptr) {
@@ -985,10 +1075,23 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 		exit (FATAL_EXIT_MISSING_INIT);
 	}
 
-	MonoAssembly    *ji_assm    = utils.monodroid_load_assembly (domain, "Java.Interop");
+	MonoAssembly *ji_assm;
+#if defined (NET6)
+	ji_assm = utils.monodroid_load_assembly (default_alc, SharedConstants::JAVA_INTEROP_ASSEMBLY_NAME);
+#else // def NET6
+	ji_assm = utils.monodroid_load_assembly (domain, SharedConstants::JAVA_INTEROP_ASSEMBLY_NAME);
+#endif // ndef NET6
+
 	MonoImage       *ji_image   = mono_assembly_get_image  (ji_assm);
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES + OSBridge::NUM_JI_GC_BRIDGE_TYPES; ++i) {
-		lookup_bridge_info (domain, ji_image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
+		lookup_bridge_info (
+#if !defined (NET6)
+			domain,
+#endif // ndef NET6
+			ji_image,
+			&osBridge.get_java_gc_bridge_type (i),
+			&osBridge.get_java_gc_bridge_info (i)
+		);
 	}
 
 	/* If running on desktop, we may be swapping in a new Mono.Android image when calling this
@@ -1026,7 +1129,11 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	void *args [] = {
 		&init,
 	};
+#if defined (NET6)
+	mono_runtime_invoke (method, nullptr, args, nullptr);
+#else // def NET6
 	utils.monodroid_runtime_invoke (domain, method, nullptr, args, nullptr);
+#endif // ndef NET6
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		partial_time.mark_end ();
@@ -1034,20 +1141,37 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	}
 }
 
+#if defined (NET6)
+MonoClass*
+MonodroidRuntime::get_android_runtime_class ()
+{
+	MonoAssembly *assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+	MonoImage *image   = mono_assembly_get_image (assm);
+	return mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+}
+#else // def NET6
 MonoClass*
 MonodroidRuntime::get_android_runtime_class (MonoDomain *domain)
 {
-	MonoAssembly *assm = utils.monodroid_load_assembly (domain, "Mono.Android");
+	MonoAssembly *assm = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 	MonoImage *image   = mono_assembly_get_image (assm);
-	MonoClass *runtime = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "JNIEnv");
-
-	return runtime;
+	return utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
 }
+#endif // ndef NET6
 
 inline void
-MonodroidRuntime::propagate_uncaught_exception (MonoDomain *domain, JNIEnv *env, jobject javaThread, jthrowable javaException)
+MonodroidRuntime::propagate_uncaught_exception (
+#if !defined (NET6)
+	MonoDomain *domain,
+#endif // ndef NET6
+	JNIEnv *env, jobject javaThread, jthrowable javaException)
 {
-	MonoClass *runtime = get_android_runtime_class (domain);
+	MonoClass *runtime;
+#if defined (NET6)
+	runtime = get_android_runtime_class ();
+#else
+	runtime = get_android_runtime_class (domain);
+#endif
 	MonoMethod *method = mono_class_get_method_from_name (runtime, "PropagateUncaughtException", 3);
 
 	void* args[] = {
@@ -1055,7 +1179,11 @@ MonodroidRuntime::propagate_uncaught_exception (MonoDomain *domain, JNIEnv *env,
 		&javaThread,
 		&javaException,
 	};
+#if defined (NET6)
+	mono_runtime_invoke (method, nullptr, args, nullptr);
+#else // def NET6
 	utils.monodroid_runtime_invoke (domain, method, nullptr, args, nullptr);
+#endif // ndef NET6
 }
 
 #if DEBUG
@@ -1176,7 +1304,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err)
 	size_t len = base_len + LIBAOT_PREFIX_SIZE; // includes the trailing \0
 	static_local_string<PATH_MAX> basename (len);
 
-	basename.append (LIBAOT_PREFIX).append (basename_part);
+	basename.append (LIBAOT_PREFIX).append_c (basename_part);
 
 	h = androidSystem.load_dso_from_any_directories (basename.get (), dl_flags);
 
@@ -1190,7 +1318,6 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err)
 void*
 MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[maybe_unused]] void *user_data)
 {
-	log_warn (LOG_DEFAULT, "MonodroidRuntime::monodroid_dlopen (\"%s\", 0x%x, %p, %p)", name, flags, err, user_data);
 	if (name == nullptr) {
 		log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET6+");
 		return nullptr;
@@ -1206,7 +1333,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 	size_t len = ADD_WITH_OVERFLOW_CHECK (size_t, strlen (name), DSO_EXTENSION_SIZE); // includes the trailing \0
 	static_local_string<PATH_MAX> full_name (len);
 
-	full_name.append (name).append (DSO_EXTENSION);
+	full_name.append_c (name).append (DSO_EXTENSION);
 	return monodroid_dlopen (full_name.get (), flags, err);
 }
 #else // def NET6 && def ANDROID
@@ -1316,7 +1443,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 	size_t len = base_len + LIBAOT_PREFIX_SIZE; // includes the trailing \0
 	static_local_string<PATH_MAX> basename (len);
 
-	basename.append (LIBAOT_PREFIX).append (basename_part);
+	basename.append (LIBAOT_PREFIX).append_c (basename_part);
 
 	h = androidSystem.load_dso_from_any_directories (basename.get (), dl_flags);
 
@@ -1440,6 +1567,69 @@ MonodroidRuntime::set_trace_options (void)
 	mono_jit_set_trace_options (value.get ());
 }
 
+#if defined (NET6)
+inline void
+MonodroidRuntime::set_profile_options ()
+{
+	// We want to avoid dynamic allocation, thus let’s create a buffer that can take both the property value and a
+	// path without allocation
+	dynamic_local_string<SENSIBLE_PATH_MAX + PROPERTY_VALUE_BUFFER_LEN> value;
+	{
+		dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> prop_value;
+		if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, prop_value) == 0)
+			return;
+
+		value.assign (prop_value);
+	}
+
+	// NET6+ supports only the AOT Mono profiler, if the prefix is absent or different than 'aot:' we consider the
+	// property to contain value for the dotnet tracing profiler.
+	constexpr char AOT_PREFIX[] = "aot:";
+	if (!value.starts_with (AOT_PREFIX)) {
+		// setenv(3) makes copies of its arguments
+		setenv ("DOTNET_DiagnosticPorts", value.get (), 1);
+		return;
+	}
+
+	constexpr char OUTPUT_ARG[] = "output=";
+	constexpr size_t OUTPUT_ARG_LEN = sizeof(OUTPUT_ARG) - 1;
+	constexpr size_t start_index = sizeof(AOT_PREFIX); // one char past ':'
+
+	dynamic_local_string<SENSIBLE_PATH_MAX> output_path;
+	bool have_output_arg = false;
+	string_segment param;
+
+	while (value.next_token (start_index, ',', param)) {
+		dynamic_local_string<SENSIBLE_PATH_MAX> temp;
+		temp.assign (param.start (), param.length ());
+		if (!param.starts_with (OUTPUT_ARG)) {
+			continue;
+		}
+
+		output_path.assign (param.start () + OUTPUT_ARG_LEN, param.length () - OUTPUT_ARG_LEN);
+		have_output_arg = true;
+		break;
+	}
+
+	if (!have_output_arg) {
+		constexpr char PROFILE_FILE_NAME_PREFIX[] = "profile.";
+		constexpr char AOT_EXT[] = "aotprofile";
+
+		output_path
+			.assign_c (androidSystem.get_override_dir (0))
+			.append (MONODROID_PATH_SEPARATOR)
+			.append (PROFILE_FILE_NAME_PREFIX)
+			.append (AOT_EXT);
+
+		value
+			.append (OUTPUT_ARG)
+			.append (output_path.get (), output_path.length ());
+	}
+
+	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value.get ());
+	debug.monodroid_profiler_load (androidSystem.get_runtime_libdir (), value.get (), output_path.get ());
+}
+#else // def NET6
 inline void
 MonodroidRuntime::set_profile_options ()
 {
@@ -1466,7 +1656,7 @@ MonodroidRuntime::set_profile_options ()
 	while (value.next_token (start_index, ',', param)) {
 		dynamic_local_string<SENSIBLE_PATH_MAX> temp;
 		temp.assign (param.start (), param.length ());
-		if (!param.starts_with (OUTPUT_ARG, OUTPUT_ARG_LEN) || param.length () == OUTPUT_ARG_LEN) {
+		if (!param.starts_with (OUTPUT_ARG) || param.length () == OUTPUT_ARG_LEN) {
 			continue;
 		}
 
@@ -1477,11 +1667,8 @@ MonodroidRuntime::set_profile_options ()
 
 	if (!have_output_arg) {
 		constexpr char   MLPD_EXT[] = "mlpd";
-		constexpr size_t MLPD_EXT_LEN = sizeof(MLPD_EXT) - 1;
 		constexpr char   AOT_EXT[] = "aotprofile";
-		constexpr size_t AOT_EXT_LEN = sizeof(AOT_EXT) - 1;
 		constexpr char   COV_EXT[] = "xml";
-		constexpr size_t COV_EXT_LEN = sizeof(COV_EXT) - 1;
 		constexpr char   LOG_PREFIX[] = "log:";
 		constexpr size_t LOG_PREFIX_LENGTH = sizeof(LOG_PREFIX) - 1;
 		constexpr char   AOT_PREFIX[] = "aot:";
@@ -1491,23 +1678,22 @@ MonodroidRuntime::set_profile_options ()
 		constexpr char   COVERAGE_PREFIX[] = "coverage:";
 		constexpr size_t COVERAGE_PREFIX_LENGTH = sizeof(COVERAGE_PREFIX) - 1;
 		constexpr char   PROFILE_FILE_NAME_PREFIX[] = "profile.";
-		constexpr size_t PROFILE_FILE_NAME_PREFIX_LEN = sizeof(PROFILE_FILE_NAME_PREFIX) - 1;
 
 		size_t length_adjust = colon_idx >= 1 ? 0 : 1;
 
 		output_path
-			.assign (androidSystem.get_override_dir (0))
+			.assign_c (androidSystem.get_override_dir (0))
 			.append (MONODROID_PATH_SEPARATOR)
-			.append (PROFILE_FILE_NAME_PREFIX, PROFILE_FILE_NAME_PREFIX_LEN);
+			.append (PROFILE_FILE_NAME_PREFIX);
 
 		if (value.starts_with (LOG_PREFIX, LOG_PREFIX_LENGTH - length_adjust)) {
-			output_path.append (MLPD_EXT, MLPD_EXT_LEN);
+			output_path.append (MLPD_EXT);
 		} else if (value.starts_with (AOT_PREFIX, AOT_PREFIX_LENGTH - length_adjust)) {
-			output_path.append (AOT_EXT, AOT_EXT_LEN);
+			output_path.append (AOT_EXT);
 		} else if (value.starts_with (DEFAULT_PREFIX, DEFAULT_PREFIX_LENGTH - length_adjust)) {
-			output_path.append (MLPD_EXT, MLPD_EXT_LEN);
+			output_path.append (MLPD_EXT);
 		} else if (value.starts_with (COVERAGE_PREFIX, COVERAGE_PREFIX_LENGTH - length_adjust)) {
-			output_path.append (COV_EXT, COV_EXT_LEN);
+			output_path.append (COV_EXT);
 		} else {
 			size_t len = colon_idx < 0 ? value.length () : static_cast<size_t>(colon_idx + 1);
 			output_path.append (value.get (), len);
@@ -1518,7 +1704,7 @@ MonodroidRuntime::set_profile_options ()
 		else
 			value.append (",");
 		value
-			.append (OUTPUT_ARG, OUTPUT_ARG_LEN)
+			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
 	}
 
@@ -1531,6 +1717,7 @@ MonodroidRuntime::set_profile_options ()
 	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value.get ());
 	debug.monodroid_profiler_load (androidSystem.get_runtime_libdir (), value.get (), output_path.get ());
 }
+#endif // ndef NET6
 
 /*
 Disable LLVM signal handlers.
@@ -1560,6 +1747,29 @@ MonodroidRuntime::disable_external_signal_handlers (void)
 	}
 }
 
+#if defined (NET6)
+inline void
+MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly)
+{
+	timing_period total_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		total_time.mark_start ();
+
+	const char *assm_name = assembly.get_cstr ();
+	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
+
+	MonoImageOpenStatus open_status;
+	mono_assembly_load_full_alc (alc_handle, aname, nullptr /* basedir */, &open_status);
+
+	mono_assembly_name_free (aname);
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+		TIMING_LOG_INFO (total_time, "Assembly load (ALC): %s", assm_name);
+	}
+}
+#endif // NET6
+
 inline void
 MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 {
@@ -1568,34 +1778,34 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 		total_time.mark_start ();
 
 	const char *assm_name = assembly.get_cstr ();
-	MonoAssemblyName *aname;
-
-	aname = mono_assembly_name_new (assm_name);
+	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
 
 #ifndef ANDROID
 	if (designerAssemblies.has_assemblies () && designerAssemblies.try_load_assembly (domain, aname) != nullptr) {
 		log_debug (LOG_ASSEMBLY, "Dynamically opened assembly %s", mono_assembly_name_get_name (aname));
 	} else
 #endif
-	if (domain != mono_domain_get ()) {
-		MonoDomain *current = mono_domain_get ();
-		mono_domain_set (domain, FALSE);
-		mono_assembly_load_full (aname, NULL, NULL, 0);
-		mono_domain_set (current, FALSE);
-	} else {
-		mono_assembly_load_full (aname, NULL, NULL, 0);
+	{
+		MonoDomain *current = utils.get_current_domain ();
+		if (domain != current) {
+			mono_domain_set (domain, FALSE);
+			mono_assembly_load_full (aname, NULL, NULL, 0);
+			mono_domain_set (current, FALSE);
+		} else {
+			mono_assembly_load_full (aname, NULL, NULL, 0);
+		}
 	}
 
 	mono_assembly_name_free (aname);
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
-		TIMING_LOG_INFO (total_time, "Assembly load: %s preloaded", assm_name);
+		TIMING_LOG_INFO (total_time, "Assembly load (domain): %s", assm_name);
 	}
 }
 
 inline void
-MonodroidRuntime::load_assemblies (MonoDomain *domain, bool preload, jstring_array_wrapper &assemblies)
+MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preload, jstring_array_wrapper &assemblies)
 {
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
@@ -1603,7 +1813,7 @@ MonodroidRuntime::load_assemblies (MonoDomain *domain, bool preload, jstring_arr
 
 	for (size_t i = 0; i < assemblies.get_length (); ++i) {
 		jstring_wrapper &assembly = assemblies [i];
-		load_assembly (domain, assembly);
+		load_assembly (ctx, assembly);
 		// only load the first "main" assembly if we are not preloading.
 		if (!preload)
 			break;
@@ -1637,18 +1847,39 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 		}
 	}
 
+#if defined (NET6)
+	default_alc = mono_alc_get_default_gchandle ();
+	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
+
+	embeddedAssemblies.install_preload_hooks_for_alc ();
+	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
+#endif // def NET6
+
 #ifndef ANDROID
 	if (assembliesBytes != nullptr)
 		designerAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes, assembliesPaths);
 #endif
 	bool preload = (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
+
+#if defined (NET6)
+	load_assemblies (default_alc, preload, assemblies);
+	init_android_runtime (env, runtimeClass, loader);
+#else // def NET6
 	load_assemblies (domain, preload, assemblies);
 	init_android_runtime (domain, env, runtimeClass, loader);
-
+#endif // ndef NET6
 	osBridge.add_monodroid_domain (domain);
 
 	return domain;
 }
+
+#if defined (NET6)
+void
+MonodroidRuntime::monodroid_unhandled_exception (MonoObject *java_exception)
+{
+	mono_unhandled_exception (java_exception);
+}
+#endif // def NET6
 
 MonoReflectionType*
 MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name)
@@ -1716,18 +1947,19 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
 	constexpr size_t MASK_DLL_LEN = sizeof(MASK_DLL) - 1;
 	constexpr char   MASK_GC[] = "gc";
 	constexpr size_t MASK_GC_LEN = sizeof(MASK_GC) - 1;
+	constexpr char   COMMA[] = ",";
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> log_mask;
 	if (mono_log_mask == nullptr || *mono_log_mask == '\0') {
 		if (have_log_assembly) {
 			log_mask.append (MASK_ASM);
-			log_mask.append (",");
+			log_mask.append (COMMA);
 			log_mask.append (MASK_DLL);
 		}
 
 		if (have_log_gc) {
 			if (log_mask.length () > 0) {
-				log_mask.append (",");
+				log_mask.append (COMMA);
 			}
 			log_mask.append (MASK_GC);
 		}
@@ -1744,7 +1976,7 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
 
 	bool need_asm = have_log_assembly, need_dll = have_log_assembly, need_gc = have_log_gc;
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> input_log_mask;
-	input_log_mask.assign (mono_log_mask);
+	input_log_mask.assign_c (mono_log_mask);
 
 	string_segment token;
 	while (input_log_mask.next_token (',', token)) {
@@ -1763,17 +1995,17 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
 	}
 
 	if (need_asm) {
-		input_log_mask.append (",");
+		input_log_mask.append (COMMA);
 		input_log_mask.append (MASK_ASM);
 	}
 
 	if (need_dll) {
-		input_log_mask.append (",");
+		input_log_mask.append (COMMA);
 		input_log_mask.append (MASK_DLL);
 	}
 
 	if (need_gc) {
-		input_log_mask.append (",");
+		input_log_mask.append (COMMA);
 		input_log_mask.append (MASK_GC);
 	}
 
@@ -1808,14 +2040,15 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 #if defined (NET6)
 	{
-		MonoVMProperties monovm_props (monodroid_pinvoke_override);
+		MonoVMProperties monovm_props;
 
 		// NOTE: the `const_cast` breaks the contract made to MonoVMProperties that the arrays it returns won't be
 		// modified, but it's "ok" since Mono doesn't modify them and by using `const char* const*` in MonoVMProperties
 		// we may get better code generated (since the methods returning the arrays are marked as `const`, thus not
 		// modifying the class state, allowing the compiler to make some assumptions when optimizing) and the class
 		// itself doesn't touch the arrays outside its constructor.
-		monovm_initialize (
+		monovm_initialize_preparsed (
+			&monovm_core_properties,
 			monovm_props.property_count (),
 			const_cast<const char**>(monovm_props.property_keys ()),
 			const_cast<const char**>(monovm_props.property_values ())
@@ -1857,7 +2090,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	set_debug_env_vars ();
 #endif
 
+#if !defined (NET6)
 	setup_bundled_app ("libmonodroid_bundle_app.so");
+#endif
 
 #if defined (ANDROID)
 	if (mono_log_level == nullptr || *mono_log_level == '\0') {
@@ -1892,11 +2127,12 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		utils.set_world_accessable (counters_path.get ());
 	}
 
+#if !defined (NET6)
 	void *dso_handle = nullptr;
 #if defined (WINDOWS) || defined (APPLE_OS_X)
 	const char *my_location = get_my_location ();
 	if (my_location != nullptr) {
-		simple_pointer_guard<char, false> dso_path (utils.path_combine (my_location, API_DSO_NAME));
+		std::unique_ptr<char[]> dso_path {utils.path_combine (my_location, API_DSO_NAME)};
 		log_info (LOG_DEFAULT, "Attempting to load %s", dso_path.get ());
 		dso_handle = java_interop_lib_load (dso_path.get (), JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
 #if defined (APPLE_OS_X)
@@ -1913,7 +2149,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)
 	if (dso_handle == nullptr)
 		dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY);
-#if !defined (NET6)
+
 	init_internal_api_dso (dso_handle);
 #endif // ndef NET6
 	mono_dl_fallback_register (monodroid_dlopen, monodroid_dlsym, nullptr, nullptr);
@@ -1928,9 +2164,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 #if !defined (NET6)
 	mono_config_parse_memory (reinterpret_cast<const char*> (monodroid_config));
-#endif // ndef NET6
 	mono_register_machine_config (reinterpret_cast<const char*> (monodroid_machine_config));
-
+#endif // ndef NET6
 	log_info (LOG_DEFAULT, "Probing for Mono AOT mode\n");
 
 	MonoAotMode mode = MonoAotMode::MONO_AOT_MODE_NONE;
@@ -2021,6 +2256,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		log_info_nocheck (LOG_DEFAULT, "MonoVM version: %s", mono_get_runtime_build_info ());
 #endif // def ANDROID
 	}
+
+	startup_in_progress = false;
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
@@ -2133,17 +2370,22 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		&methods_len,
 	};
 
-	MonoDomain *domain = mono_domain_get ();
+	MonoMethod *register_jni_natives = registerType;
+#if !defined (NET6)
+	MonoDomain *domain = utils.get_current_domain (/* attach_thread_if_needed */ false);
 	mono_jit_thread_attach (domain);
 	// Refresh current domain as it might have been modified by the above call
 	domain = mono_domain_get ();
 
-	MonoMethod *register_jni_natives = registerType;
 	if constexpr (is_running_on_desktop) {
-		MonoClass *runtime = utils.monodroid_get_class_from_name (domain, "Mono.Android", "Android.Runtime", "JNIEnv");
+		MonoClass *runtime = utils.monodroid_get_class_from_name (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
 		register_jni_natives = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
 	}
+
 	utils.monodroid_runtime_invoke (domain, register_jni_natives, nullptr, args, nullptr);
+#else // ndef NET6
+	mono_runtime_invoke (register_jni_natives, nullptr, args, nullptr);
+#endif // def NET6
 
 	env->ReleaseStringChars (methods, methods_ptr);
 	env->ReleaseStringChars (managedType, managedType_ptr);
@@ -2205,6 +2447,10 @@ get_jnienv (void)
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[maybe_unused]] jclass klass, jobject javaThread, jthrowable javaException)
 {
-	MonoDomain *domain = mono_domain_get ();
+#if defined (NET6)
+	monodroidRuntime.propagate_uncaught_exception (env, javaThread, javaException);
+#else // def NET6
+	MonoDomain *domain = utils.get_current_domain ();
 	monodroidRuntime.propagate_uncaught_exception (domain, env, javaThread, javaException);
+#endif // ndef NET6
 }

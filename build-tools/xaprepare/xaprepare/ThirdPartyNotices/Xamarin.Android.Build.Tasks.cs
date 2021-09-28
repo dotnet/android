@@ -43,7 +43,7 @@ namespace Xamarin.Android.Prepare
 			new XamarinAndroidBuildTasks_IronyProject_Irony_TPN (),
 			new XamarinAndroidBuildTasks_JamesNK_NewtonsoftJson_TPN (),
 			new XamarinAndroidBuildTasks_NuGet_NuGetClient_TPN (),
-			new XamarinAndroidBuildTasks_android_platform_ndk_TPN (),
+			new XamarinAndroidBuildTasks_gnu_binutils_TPN (),
 		};
 	}
 
@@ -141,13 +141,13 @@ namespace Xamarin.Android.Prepare
 ";
 	}
 
-	class XamarinAndroidBuildTasks_android_platform_ndk_TPN : ThirdPartyNotice {
+	class XamarinAndroidBuildTasks_gnu_binutils_TPN : ThirdPartyNotice {
 
-		static readonly Uri    url         = new Uri ("https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=tree;f=gas");
+		static readonly Uri    url         = new Uri ("https://sourceware.org/git/?p=binutils-gdb.git;a=tree;hb=HEAD");
 
 		public override string LicenseText => String.Empty;
 		public override string LicenseFile => CommonLicenses.GPLv3Path;
-		public override string Name        => "android/platform/ndk";
+		public override string Name        => "gnu/binutils";
 		public override Uri    SourceUrl   => url;
 	}
 }

@@ -273,8 +273,14 @@ namespace Xamarin.Android.Build.Tests
 				$"{ProjectName}.dll",
 				"CommonSampleLibrary.dll",
 				$"{PackageName}-Signed.apk",
-				$"{PackageName}.apk",
 			};
+
+			if (!Builder.UseDotNet) {
+				produced_binaries.Add ($"{PackageName}.apk");
+			} else {
+				produced_binaries.Add ($"{PackageName}.aab");
+				produced_binaries.Add ($"{PackageName}-Signed.aab");
+			}
 		}
 
 		[Test]
@@ -478,8 +484,6 @@ namespace Xamarin.Android.Build.Tests
 			var ret = new List <string> {
 				"AndroidGenerateLayoutBindings=true"
 			};
-			if (!Builder.UseDotNet)
-				ret.Add ("TargetFrameworkVersion=" + builder.LatestTargetFrameworkVersion ());
 			if (manyBuild)
 				ret.Add ("ForceParallelBuild=true");
 

@@ -1,0 +1,24 @@
+steps:
+- template: use-dot-net.yaml
+
+- template: use-dot-net.yaml
+  parameters:
+    version: $(DotNetCoreVersion)
+
+- script: sudo rm /etc/apt/sources.list.d/treasure-data.list || true
+  displayName: remove invalid treasure-data source
+
+- script: >
+    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&
+    echo "deb https://download.mono-project.com/repo/ubuntu preview-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-preview.list &&
+    sudo apt update &&
+    sudo apt install -y --no-install-recommends mono-complete nuget msbuild
+  displayName: install mono preview
+
+- task: NuGetToolInstaller@1
+  displayName: Use NuGet 5.x
+  inputs:
+    versionSpec: 5.x
+
+- script: echo "##vso[task.setvariable variable=XDG_CONFIG_HOME]$HOME/.config"
+  displayName: update XDG_CONFIG_HOME

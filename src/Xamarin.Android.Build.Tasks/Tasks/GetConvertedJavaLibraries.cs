@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -20,7 +21,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			ConvertedFilesToBeGenerated =
-				(JarsToConvert ?? new string [0]).Select (
+				(JarsToConvert ?? Array.Empty<string> ()).Select (
 					j => Path.Combine (OutputJackDirectory,
 					                   Files.HashString (j) + Path.ChangeExtension (Path.GetFileName (j), Extension)))
 				             .ToArray ();

@@ -28,7 +28,7 @@ namespace Xamarin.ProjectTools
 			var assembly = typeof (XASdkProject).Assembly;
 			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))
 				default_android_manifest = sr.ReadToEnd ();
-			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.MainActivity.cs")))
+			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.DotNet.MainActivity.cs")))
 				default_main_activity_cs = sr.ReadToEnd ();
 			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.LayoutMain.axml")))
 				default_layout_main = sr.ReadToEnd ();
@@ -56,12 +56,13 @@ namespace Xamarin.ProjectTools
 		{
 			Sdk = "Microsoft.NET.Sdk";
 			TargetFramework = "net6.0-android";
-
-			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
+			SupportedOSPlatformVersion = "21";
 			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 			GlobalPackagesFolder = FileSystemUtils.FindNugetGlobalPackageFolder ();
 			SetProperty (KnownProperties.OutputType, outputType);
+			SetProperty (KnownProperties.Nullable, "enable");
+			SetProperty (KnownProperties.ImplicitUsings, "enable");
 
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {
@@ -89,34 +90,19 @@ namespace Xamarin.ProjectTools
 		public string AndroidManifest { get; set; } = default_android_manifest;
 
 		/// <summary>
-		/// Defaults to AndroidSdkResolver.GetMaxInstalledPlatform ()
+		/// Defaults to 21.0
 		/// </summary>
-		public string TargetSdkVersion { get; set; }
-
-		/// <summary>
-		/// Defaults to API 19
-		/// </summary>
-		public string MinSdkVersion { get; set; } = "19";
+		public string SupportedOSPlatformVersion {
+			get { return GetProperty (KnownProperties.SupportedOSPlatformVersion); }
+			set { SetProperty (KnownProperties.SupportedOSPlatformVersion, value); }
+		}
 
 		public virtual string ProcessManifestTemplate ()
 		{
-			var uses_sdk = new StringBuilder ("<uses-sdk ");
-			if (!string.IsNullOrEmpty (MinSdkVersion)) {
-				uses_sdk.Append ("android:minSdkVersion=\"");
-				uses_sdk.Append (MinSdkVersion);
-				uses_sdk.Append ("\" ");
-			}
-			if (!string.IsNullOrEmpty (TargetSdkVersion)) {
-				uses_sdk.Append ("android:targetSdkVersion=\"");
-				uses_sdk.Append (TargetSdkVersion);
-				uses_sdk.Append ("\" ");
-			}
-			uses_sdk.Append ("/>");
-
 			return AndroidManifest
 				.Replace ("${PROJECT_NAME}", ProjectName)
 				.Replace ("${PACKAGENAME}", PackageName)
-				.Replace ("${USES_SDK}", uses_sdk.ToString ());
+				.Replace ("${USES_SDK}", "");
 		}
 
 		public override string ProcessSourceTemplate (string source)

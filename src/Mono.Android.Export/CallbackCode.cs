@@ -407,7 +407,7 @@ namespace Java.Interop
 		}
 	
 		// Ignore ToNative() overload that takes generic instancing mapping. The reflected method should have nothing to do with it.
-		[DynamicDependency ("ToLocalJniHandle", "Android.Runtime.JavaArray", "Mono.Android")]
+		[DynamicDependency ("ToLocalJniHandle", "Android.Runtime.JavaArray`1", "Mono.Android")]
 		[DynamicDependency ("ToLocalJniHandle", "Android.Runtime.JavaCollection", "Mono.Android")]
 		[DynamicDependency ("ToLocalJniHandle", "Android.Runtime.JavaCollection`1", "Mono.Android")]
 		[DynamicDependency ("ToLocalJniHandle", "Android.Runtime.JavaDictionary", "Mono.Android")]

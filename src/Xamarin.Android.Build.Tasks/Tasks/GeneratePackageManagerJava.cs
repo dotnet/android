@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.Build.Framework;
@@ -28,6 +27,8 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public ITaskItem[] ResolvedUserAssemblies { get; set; }
+
+		public ITaskItem[] SatelliteAssemblies { get; set; }
 
 		[Required]
 		public string OutputDirectory { get; set; }
@@ -59,6 +60,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool InstantRunEnabled { get; set; }
 
+		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
 
 		public string PackageNamingPolicy { get; set; }
@@ -70,6 +72,7 @@ namespace Xamarin.Android.Tasks
 		public string TlsProvider { get; set; }
 		public string AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
+		public bool UsingAndroidNETSdk { get; set; }
 
 		[Output]
 		public string BuildId { get; set; }
@@ -88,12 +91,7 @@ namespace Xamarin.Android.Tasks
 			var doc = AndroidAppManifest.Load (Manifest, MonoAndroidHelper.SupportedVersions);
 			int minApiVersion = doc.MinSdkVersion == null ? 4 : (int) doc.MinSdkVersion;
 			// We need to include any special assemblies in the Assemblies list
-			var assemblies = ResolvedUserAssemblies
-				.Concat (MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies))
-				.ToList ();
 			var mainFileName = Path.GetFileName (MainAssembly);
-			Func<string,string,bool> fileNameEq = (a,b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
-			assemblies = assemblies.Where (a => fileNameEq (a.ItemSpec, mainFileName)).Concat (assemblies.Where (a => !fileNameEq (a.ItemSpec, mainFileName))).ToList ();
 
 			using (var pkgmgr = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				pkgmgr.WriteLine ("package mono;");
@@ -103,7 +101,15 @@ namespace Xamarin.Android.Tasks
 				pkgmgr.WriteLine ("\tpublic static String[] Assemblies = new String[]{");
 
 				pkgmgr.WriteLine ("\t\t/* We need to ensure that \"{0}\" comes first in this list. */", mainFileName);
-				foreach (var assembly in assemblies) {
+				pkgmgr.WriteLine ("\t\t\"" + mainFileName + "\",");
+				foreach (var assembly in ResolvedUserAssemblies) {
+					if (string.Compare (Path.GetFileName (assembly.ItemSpec), mainFileName, StringComparison.OrdinalIgnoreCase) == 0)
+						continue;
+					pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly.ItemSpec) + "\",");
+				}
+				foreach (var assembly in MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies)) {
+					if (string.Compare (Path.GetFileName (assembly.ItemSpec), mainFileName, StringComparison.OrdinalIgnoreCase) == 0)
+						continue;
 					pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly.ItemSpec) + "\",");
 				}
 
@@ -185,7 +191,7 @@ namespace Xamarin.Android.Tasks
 			if (!Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode))
 				sequencePointsMode = SequencePointsMode.None;
 
-			foreach (ITaskItem env in Environments ?? new TaskItem[0]) {
+			foreach (ITaskItem env in Environments ?? Array.Empty<ITaskItem> ()) {
 				foreach (string line in File.ReadLines (env.ItemSpec)) {
 					var lineToWrite = line;
 					if (lineToWrite.StartsWith ("MONO_LOG_LEVEL=", StringComparison.Ordinal))
@@ -201,8 +207,10 @@ namespace Xamarin.Android.Tasks
 					}
 					if (lineToWrite.StartsWith ("XA_HTTP_CLIENT_HANDLER_TYPE=", StringComparison.Ordinal))
 						haveHttpMessageHandler = true;
-					if (lineToWrite.StartsWith ("XA_TLS_PROVIDER=", StringComparison.Ordinal))
+
+					if (!UsingAndroidNETSdk && lineToWrite.StartsWith ("XA_TLS_PROVIDER=", StringComparison.Ordinal))
 						haveTlsProvider = true;
+
 					if (lineToWrite.StartsWith ("mono.enable_assembly_preload=", StringComparison.Ordinal)) {
 						int idx = lineToWrite.IndexOf ('=');
 						uint val;
@@ -238,7 +246,7 @@ namespace Xamarin.Android.Tasks
 					AddEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE", HttpClientHandlerType.Trim ());
 			}
 
-			if (!haveTlsProvider) {
+			if (!UsingAndroidNETSdk && !haveTlsProvider) {
 				if (TlsProvider == null)
 					AddEnvironmentVariable (defaultTlsProvider[0], defaultTlsProvider[1]);
 				else
@@ -261,6 +269,40 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
+			int assemblyNameWidth = 0;
+			int assemblyCount = ResolvedAssemblies.Length;
+			Encoding assemblyNameEncoding = Encoding.UTF8;
+
+			Action<ITaskItem> updateNameWidth = (ITaskItem assembly) => {
+				string assemblyName = Path.GetFileName (assembly.ItemSpec);
+				int nameBytes = assemblyNameEncoding.GetBytes (assemblyName).Length;
+				if (nameBytes > assemblyNameWidth) {
+					assemblyNameWidth = nameBytes;
+				}
+			};
+
+			if (SatelliteAssemblies != null) {
+				assemblyCount += SatelliteAssemblies.Length;
+
+				foreach (ITaskItem assembly in SatelliteAssemblies) {
+					updateNameWidth (assembly);
+				}
+			}
+
+			foreach (var assembly in ResolvedAssemblies) {
+				updateNameWidth (assembly);
+			}
+
+			int abiNameLength = 0;
+			foreach (string abi in SupportedAbis) {
+				if (abi.Length <= abiNameLength) {
+					continue;
+				}
+				abiNameLength = abi.Length;
+			}
+			assemblyNameWidth += abiNameLength + 1; // room for '/'
+
+			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 			foreach (string abi in SupportedAbis) {
 				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
@@ -279,6 +321,9 @@ namespace Xamarin.Android.Tasks
 					BoundExceptionType = boundExceptionType,
 					InstantRunEnabled = InstantRunEnabled,
 					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
+					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
+					NumberOfAssembliesInApk = assemblyCount,
+					BundledAssemblyNameWidth = assemblyNameWidth + 1,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

@@ -854,7 +854,7 @@ namespace Lib1 {
 						"res/raw/test.txt");
 
 					Assert.IsNotNull (rawContentBuildOne, "res/raw/test.txt should have been in the apk ");
-					string txt = Encoding.UTF8.GetString (rawContentBuildOne ?? new byte[0]);
+					string txt = Encoding.UTF8.GetString (rawContentBuildOne ?? Array.Empty<byte> ());
 					StringAssert.Contains ("Test Build 1", txt, $"res/raw/test.txt should have been 'Test Build 1' not {txt}");
 					Assert.IsNotNull (ZipHelper.ReadFileFromZip (apk, "res/raw/test2.txt"), "res/raw/test2.txt should have been in the apk.");
 					theme.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -878,7 +878,7 @@ namespace Lib1 {
 					byte[] rawContentBuildTwo = ZipHelper.ReadFileFromZip (apk,
 						"res/raw/test.txt");
 					Assert.IsNotNull (rawContentBuildTwo, "res/raw/test.txt should have been in the apk ");
-					txt = Encoding.UTF8.GetString (rawContentBuildTwo ?? new byte[0]);
+					txt = Encoding.UTF8.GetString (rawContentBuildTwo ?? Array.Empty<byte> ());
 					StringAssert.Contains ("Test Build 2 Now", txt, $"res/raw/test.txt should have been 'Test Build 2' not {txt}");
 					rawToDelete.Deleted = true;
 					rawToDelete.Timestamp = DateTimeOffset.UtcNow;

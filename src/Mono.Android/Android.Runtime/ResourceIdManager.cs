@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Android.Runtime
@@ -30,6 +31,7 @@ namespace Android.Runtime
 			}
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Types in Resource.designer.cs are preserved, because it is the root assembly passed to the linker.")]
 		static Type? GetResourceTypeFromAssembly (Assembly assembly)
 		{
 			foreach (var customAttribute in assembly.GetCustomAttributes (typeof (ResourceDesignerAttribute), true)) {

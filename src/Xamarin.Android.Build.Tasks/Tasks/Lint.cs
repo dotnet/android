@@ -17,7 +17,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "LNT";
 
 		// we need to check for lint based errors and warnings
-		// Sample Manifest Warnings note the ^ and ~ differences.... 
+		// Sample Manifest Warnings note the ^ and ~ differences....
 		//
 		//AndroidManifest.xml:19: Warning: <uses-permission> tag appears after <application> tag [ManifestOrder]
 		//<uses-permission android:name="android.permission.INTERNET" />
@@ -61,8 +61,8 @@ namespace Xamarin.Android.Tasks
 		public string JavaSdkPath { get; set; }
 
 		/// <summary>
-		/// Location of an xml config files used to 
-		/// determine whether issues are enabled or disabled 
+		/// Location of an xml config files used to
+		/// determine whether issues are enabled or disabled
 		/// for lint. Normally named lint.xml however it can
 		/// be any file using the AndroidLintConfig build action
 		/// </summary>
@@ -109,7 +109,7 @@ namespace Xamarin.Android.Tasks
 
 		/// <summary>
 		/// Add the given folders (or paths) as a resource
-		/// directories for the project. 
+		/// directories for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the resource directories.</value>
 		public ITaskItem[] ResourceDirectories {get; set;}
@@ -123,14 +123,14 @@ namespace Xamarin.Android.Tasks
 
 		/// <summary>
 		/// Add the given folder (or path) as a class directories
-		/// for the project. 
+		/// for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing class directories.</value>
 		public ITaskItem[] ClassDirectories    {get; set;}
 
 		/// <summary>
 		/// Add the given folders (or jar files, or paths) as
-		/// class directories for the project. 
+		/// class directories for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the class path jars.</value>
 		public ITaskItem[] ClassPathJars       {get; set;}
@@ -155,16 +155,16 @@ namespace Xamarin.Android.Tasks
 
 		public Lint ()
 		{
-			ResourceDirectories = new ITaskItem[0];
-			SourceDirectories = new ITaskItem[0];
-			ClassDirectories = new ITaskItem[0];
-			ClassPathJars = new ITaskItem[0];
-			LibraryDirectories = new ITaskItem[0];
-			LibraryJars = new ITaskItem[0];
+			ResourceDirectories = Array.Empty<ITaskItem> ();
+			SourceDirectories = Array.Empty<ITaskItem> ();
+			ClassDirectories = Array.Empty<ITaskItem> ();
+			ClassPathJars = Array.Empty<ITaskItem> ();
+			LibraryDirectories = Array.Empty<ITaskItem> ();
+			LibraryJars = Array.Empty<ITaskItem> ();
 		}
 
 		static readonly Dictionary<string, Version> DisabledIssuesByVersion = new Dictionary<string, Version> () {
-			// We need to hard code this test in because Lint will issue an Error 
+			// We need to hard code this test in because Lint will issue an Error
 			// if android:debuggable appears in the manifest. We actually need that
 			// in debug mode. It seems the android tools do some magic to
 			// decide if its needed or not.
@@ -185,6 +185,10 @@ namespace Xamarin.Android.Tasks
 			// MonoPackageManager.java causes this warning to be emitted.
 			// This is by design so we can safely ignore this.
 			{ "ObsoleteSdkInt", new Version (26, 1, 1) },
+			// In cmdline-tools/4.0 and LintVersion=4.2.0 we started seeing errors such as:
+			// obj/Debug/android/AndroidManifest.xml(12,89): error XA0103: MainActivity must extend android.app.Activity [Instantiatable]
+			// obj/Debug/android/AndroidManifest.xml(18,28): error XA0103: MonoRuntimeProvider must extend android.content.ContentProvider [Instantiatable]
+			{ "Instantiatable", new Version (4, 2, 0) },
 		};
 
 		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)", RegexOptions.Compiled);
@@ -329,7 +333,7 @@ namespace Xamarin.Android.Tasks
 			if (type == "Warning") {
 				if (!string.IsNullOrEmpty (file))
 					Log.LogWarning ("", "XA0102", "", file, line, column, 0, 0, text.Replace ("Warning:", ""));
-				else 
+				else
 					Log.LogCodedWarning ("XA0102", text.Replace ("Warning:", ""));
 			} else {
 				if (!string.IsNullOrEmpty (file))

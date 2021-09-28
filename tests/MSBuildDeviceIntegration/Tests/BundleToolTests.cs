@@ -11,7 +11,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Category ("Node-2")]
-	public class BundleToolTests : BaseTest
+	public class BundleToolTests : DeviceTest
 	{
 		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86" };
 		XamarinAndroidLibraryProject lib;
@@ -138,7 +138,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			if (Builder.UseDotNet) {
 				expectedFiles.Add ("root/assemblies/System.Console.dll");
-				expectedFiles.Add ("root/assemblies/System.IO.FileSystem.dll");
 				expectedFiles.Add ("root/assemblies/System.Linq.dll");
 				expectedFiles.Add ("root/assemblies/System.Net.Http.dll");
 
@@ -202,7 +201,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			if (Builder.UseDotNet) {
 				expectedFiles.Add ("base/root/assemblies/System.Console.dll");
-				expectedFiles.Add ("base/root/assemblies/System.IO.FileSystem.dll");
 				expectedFiles.Add ("base/root/assemblies/System.Linq.dll");
 				expectedFiles.Add ("base/root/assemblies/System.Net.Http.dll");
 
@@ -318,7 +316,7 @@ namespace Xamarin.Android.Build.Tests
 			string aapt2 = Path.Combine (task.Aapt2ToolPath, task.Aapt2ToolExe);
 			string adb = Path.Combine (task.AdbToolPath, task.AdbToolExe);
 			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ($"build-apks --connected-device --bundle foo.aab --output foo.apks --mode default --adb \"{adb}\" --device-id emulator-5554 --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
+			Assert.AreEqual ($"build-apks --connected-device --mode default --adb \"{adb}\" --device-id emulator-5554 --bundle foo.aab --output foo.apks --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
 		}
 
 		[Test]

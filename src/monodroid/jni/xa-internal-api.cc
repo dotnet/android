@@ -11,7 +11,7 @@
 #include "xa-internal-api-impl.hh"
 
 #if defined (WINDOWS)
-#define WINDOWS_UNUSED_ARG UNUSED_ARG
+#define WINDOWS_UNUSED_ARG [[maybe_unused]]
 #else
 #define WINDOWS_UNUSED_ARG
 #endif
@@ -136,6 +136,12 @@ int
 MonoAndroidInternalCalls_Impl::monodroid_gref_get ()
 {
 	return osBridge.get_gc_gref_count ();
+}
+
+int
+MonoAndroidInternalCalls_Impl::monodroid_weak_gref_get ()
+{
+	return osBridge.get_gc_weak_gref_count ();
 }
 
 void

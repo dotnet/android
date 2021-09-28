@@ -48,6 +48,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease)
 		{
+			AssertTargetFrameworkVersionSupported (tfv);
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				TargetFrameworkVersion = tfv,
@@ -461,7 +463,7 @@ class MemTest {
 			var proj = new XamarinFormsAndroidApplicationProject ();
 			proj.AndroidUseAapt2 = useAapt2;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "Jars\\material-menu-1.1.0.aar") {
-				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -998,14 +1000,14 @@ namespace UnamedProject
 					"bundles", "armeabi-v7a", "libmonodroid_bundle_app.so");
 				Assert.IsTrue (File.Exists (libapp), "libmonodroid_bundle_app.so does not exist");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var zipFile = ZipHelper.OpenZip (apk)) {
 					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 						"lib/armeabi-v7a/libmonodroid_bundle_app.so"),
-						$"lib/armeabi-v7a/libmonodroid_bundle_app.so should be in the {proj.PackageName}.apk");
+						$"lib/armeabi-v7a/libmonodroid_bundle_app.so should be in the {proj.PackageName}-Signed.apk");
 					Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
 						Path.Combine ("assemblies", "UnnamedProject.dll")),
-						$"UnnamedProject.dll should not be in the {proj.PackageName}.apk");
+						$"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
 				}
 			}
 		}
@@ -1026,14 +1028,14 @@ namespace UnamedProject
 						"bundles", abi, "libmonodroid_bundle_app.so");
 					Assert.IsTrue (File.Exists (libapp), abi + " libmonodroid_bundle_app.so does not exist");
 					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							"lib/" + abi + "/libmonodroid_bundle_app.so"),
-							$"lib/{0}/libmonodroid_bundle_app.so should be in the {proj.PackageName}.apk", abi);
+							$"lib/{0}/libmonodroid_bundle_app.so should be in the {proj.PackageName}-Signed.apk", abi);
 						Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
 							Path.Combine ("assemblies", "UnnamedProject.dll")),
-							$"UnnamedProject.dll should not be in the {proj.PackageName}.apk");
+							$"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
 					}
 				}
 			}
@@ -1143,8 +1145,6 @@ namespace UnamedProject
 			}
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
-				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
-
 				string intermediateDir;
 				if (IsWindows && !Builder.UseDotNet) {
 					intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.TargetFrameworkAbbreviated);
@@ -1174,7 +1174,7 @@ namespace UnamedProject
 			using (var b = CreateApkBuilder ()) {
 				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				string androidBinDir = Path.Combine (intermediateDir, "android", "bin");
-				string apkPath = Path.Combine (androidBinDir, $"{proj.PackageName}.apk");
+				string apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
@@ -1435,6 +1435,9 @@ namespace App1
 					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 					var assetsPdb = Path.Combine (intermediate, "android", "assets", "Library1.pdb");
 					var binSrc = Path.Combine (outputPath, "Library1.pdb");
+					Assert.IsTrue (
+						File.Exists (Path.Combine (intermediate, "android", "assets", "Mono.Android.pdb")),
+						"Mono.Android.pdb must be copied to Intermediate directory");
 					Assert.IsTrue (
 						File.Exists (assetsPdb),
 						"Library1.pdb must be copied to Intermediate directory");
@@ -1901,7 +1904,7 @@ namespace App1
 				var runtimeInfo = b.GetSupportedRuntimes ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apkPath = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath,"android", "bin", $"{proj.PackageName}.apk");
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == supportedAbi && x.Runtime == expectedRuntime);
 					Assert.IsNotNull (runtime, "Could not find the expected runtime.");
@@ -1945,13 +1948,13 @@ namespace App1
 					Assert.Ignore ("Cross compiler was not available");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var msymarchive = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + ".apk.mSYM");
 				using (var zipFile = ZipHelper.OpenZip (apk)) {
 					var mdbExits = ZipHelper.ReadFileFromZip (zipFile, "assemblies/UnnamedProject.dll.mdb") != null ||
 						ZipHelper.ReadFileFromZip (zipFile, "assemblies/UnnamedProject.pdb") != null;
 					Assert.AreEqual (embedMdb, mdbExits,
-						$"assemblies/UnnamedProject.dll.mdb or assemblies/UnnamedProject.pdb should{0}be in the {proj.PackageName}.apk", embedMdb ? " " : " not ");
+						$"assemblies/UnnamedProject.dll.mdb or assemblies/UnnamedProject.pdb should{0}be in the {proj.PackageName}-Signed.apk", embedMdb ? " " : " not ");
 					if (aotAssemblies) {
 						foreach (var abi in abis) {
 							var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
@@ -1970,10 +1973,10 @@ namespace App1
 							Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
 							Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 								string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
-								$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}.apk", abi);
+								$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}-Signed.apk", abi);
 							Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 								"assemblies/UnnamedProject.dll"),
-								$"UnnamedProject.dll should be in the {proj.PackageName}.apk");
+								$"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
 						}
 					}
 					var runtimeInfo = b.GetSupportedRuntimes ();
@@ -2059,7 +2062,8 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 					using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
 						Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 						var apk = Path.Combine (Root, builder.ProjectDirectory,
-							proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+							proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+						FileAssert.Exists (apk);
 						Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "warning XA4301: APK already contains the item lib/armeabi-v7a/libRSSupport.so; ignoring."),
 							"warning about skipping libRSSupport.so should have been raised");
 						using (var zipFile = ZipHelper.OpenZip (apk)) {
@@ -2348,11 +2352,13 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
 			using (var builder = CreateApkBuilder ()) {
 				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion, out string[] _);
+				AssertTargetFrameworkVersionSupported (firstFrameworkVersion);
 				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
 				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, firstFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={firstFrameworkVersion}"), $"TargetFrameworkVerson should be {firstFrameworkVersion}");
+				AssertTargetFrameworkVersionSupported (lastFrameworkVersion);
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { $"TargetFrameworkVersion={lastFrameworkVersion}" }), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={lastFrameworkVersion}"), $"TargetFrameworkVersion should be {lastFrameworkVersion}");
 			}
@@ -2808,7 +2814,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "NetStandard16.pdb")),
 					"NetStandard16.pdb must be copied to Intermediate directory");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var zipFile = ZipHelper.OpenZip (apk)) {
 					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							"assemblies/NetStandard16.pdb"),
@@ -3357,22 +3363,22 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
 		[Test]
-		[Retry (5)]
 		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
 			var proj = new XamarinAndroidApplicationProject {
 				DexTool = dexTool,
+				Sources = {
+					new BuildItem.Source ("ApacheHttpClient.cs") {
+						BinaryContent = () => ResourceData.ApacheHttpClient_cs,
+					},
+				},
 			};
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>",
 				"<uses-library android:name=\"org.apache.http.legacy\" android:required=\"false\" /></application>");
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				string downloaddir = Path.Combine (Root, b.ProjectDirectory, "Downloads");
-				Directory.CreateDirectory (downloaddir);
-				proj.SetProperty ("XamarinBuildDownloadDir", downloaddir);
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
 			}
 		}
@@ -3898,7 +3904,7 @@ namespace UnnamedProject
 </network-security-config>"
 			});
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource (@"Resources\raw\my_ca") {
-				BinaryContent = () => new byte [0], // doesn't have to be real, just *exist*
+				BinaryContent = () => Array.Empty<byte> (), // doesn't have to be real, just *exist*
 			});
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -3922,9 +3928,6 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, Path.Combine ("armeabi", "libe_sqlite3.so")), "Build should not use `armeabi`.");
-				if (Builder.UseDotNet) {
-					StringAssertEx.Contains ("warning XA4301", b.LastBuildOutput, "Should get a XA4301 warning");
-				}
 			}
 		}
 
@@ -3932,17 +3935,21 @@ namespace UnnamedProject
 		public void PackageNamingPolicy ([Values ("LowercaseMD5", "LowercaseCrc64")] string packageNamingPolicy)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("UseInterpreter", "true");
 			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
+				var values = new List<string> {
+					$"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}"
+				};
 				if (Builder.UseDotNet) {
-					Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}{Environment.NewLine}mono.enable_assembly_preload=0", File.ReadAllText (environment).Trim ());
-				} else {
-					Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}", File.ReadAllText (environment).Trim ());
+					values.Add ("mono.enable_assembly_preload=0");
+					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				}
+				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
 			}
 		}
 
@@ -3963,7 +3970,7 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var archive = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.{packageFormat}");
+					proj.OutputPath, $"{proj.PackageName}.{packageFormat}");
 				var prefix = packageFormat == "apk" ? "" : "base/root/";
 				var expectedFiles = new [] {
 					prefix + "META-INF/maven/com.google.code.gson/gson/pom.xml",
@@ -3997,21 +4004,23 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // OpenTK not even shipped for .net 6.
-		public void XA4313 ()
+		public void XA4313 ([Values ("OpenTK-1.0", "Xamarin.Android.NUnitLite")] string reference)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				References = {
-					new BuildItem.Reference ("OpenTK-1.0")
+					new BuildItem.Reference (reference)
 				},
 			};
+			bool shouldSucceed = !Builder.UseDotNet;
+			string expectedText = shouldSucceed ? "succeeded" : "FAILED";
+			string warnOrError = shouldSucceed ? "warning" : "error";
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				Assert.AreEqual (shouldSucceed, builder.Build (proj), $"Build should have {expectedText}.");
 				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build succeeded."))
-						.FirstOrDefault (x => x.Contains ("warning XA4313"));
-				Assert.IsNotNull (error, "Build should have failed with XA4313.");
+						.SkipWhile (x => !x.StartsWith ($"Build {expectedText}."))
+						.FirstOrDefault (x => x.Contains ($"{warnOrError} XA4313"));
+				Assert.IsNotNull (error, $"Build should have {expectedText} with XA4313 {warnOrError}.");
 			}
 		}
 
@@ -4020,6 +4029,17 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_OpenTK);
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void NUnitLiteNugetWorks ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_NUnitLite);
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");

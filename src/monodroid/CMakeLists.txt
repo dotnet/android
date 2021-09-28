@@ -19,7 +19,7 @@ project(
   LANGUAGES CXX C
   )
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -279,7 +279,6 @@ endif()
 if(ANDROID)
   add_compile_definitions(HAVE_LZ4)
   add_compile_definitions(PLATFORM_ANDROID)
-  add_compile_definitions(__ANDROID_API__=${ANDROID_NATIVE_API_LEVEL})
 
   if(ANDROID_ABI MATCHES "^(arm64-v8a|x86_64)")
     add_compile_definitions(ANDROID64)
@@ -370,7 +369,7 @@ if(WIN32 OR MINGW)
   message(STATUS "Win32 or MinGW")
   add_compile_options(-fomit-frame-pointer)
   list(APPEND LOCAL_COMMON_LINKER_ARGS -static -pthread -dynamic)
-  list(APPEND LINK_LIBS -lmman -lmincore -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm)
+  list(APPEND LINK_LIBS -lmman -lkernel32 -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm)
 endif()
 
 if(UNIX)
@@ -492,6 +491,7 @@ if(ANDROID)
       ${BIONIC_SOURCES_DIR}/cxa_guard.cc
       ${SOURCES_DIR}/cxx-abi/string.cc
       ${SOURCES_DIR}/cxx-abi/terminate.cc
+      ${SOURCES_DIR}/cxx-abi/vector.cc
       )
   endif()
 else()

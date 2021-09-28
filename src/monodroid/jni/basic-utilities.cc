@@ -17,7 +17,7 @@ char*
 BasicUtilities::path_combine (const char *path1, const char *path2)
 {
 	// Don't let erroneous nullptr parameters situation propagate
-	assert (path1 != nullptr || path2 != nullptr);
+	abort_unless (path1 != nullptr || path2 != nullptr, "At least one path must be a valid pointer");
 
 	if (path1 == nullptr)
 		return strdup_new (path2);
@@ -65,14 +65,14 @@ BasicUtilities::create_directory (const char *pathname, mode_t mode)
 	mode_t oldumask;
 #endif
 	oldumask = umask (022);
-	simple_pointer_guard<char[]> path (strdup_new (pathname));
+	std::unique_ptr<char> path {strdup_new (pathname)};
 	int rv, ret = 0;
-	for (char *d = path; d != nullptr && *d; ++d) {
+	for (char *d = path.get (); d != nullptr && *d; ++d) {
 		if (*d != '/')
 			continue;
 		*d = 0;
 		if (*path) {
-			rv = make_directory (path, mode);
+			rv = make_directory (path.get (), mode);
 			if  (rv == -1 && errno != EEXIST)  {
 				ret = -1;
 				break;

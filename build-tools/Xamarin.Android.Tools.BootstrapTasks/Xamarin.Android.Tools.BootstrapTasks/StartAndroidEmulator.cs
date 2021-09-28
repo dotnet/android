@@ -17,7 +17,17 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Output]
 		public                  int             EmulatorProcessId       {get; set;}
 
-		public                  string          AndroidSdkHome  {get; set;}
+		/// <summary>
+		/// Specifies $ANDROID_HOME and $ANDROID_SDK_ROOT. This is the path to the Android SDK.
+		/// </summary>
+		[Required]
+		public                  string          AndroidSdkDirectory     {get; set;}
+
+		/// <summary>
+		/// Specifies $ANDROID_PREFS_ROOT. This is not the path to the Android SDK, but a root folder that contains the `.android` folder.
+		/// </summary>
+		[Required]
+		public                  string          AvdManagerHome  {get; set;}
 		public                  string          Port            {get; set;}
 		public                  string          ImageName       {get; set;} = "XamarinAndroidTestRunner64";
 		public			string		Arguments	{get; set;}
@@ -26,11 +36,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public override bool Execute ()
 		{
-			Log.LogMessage (MessageImportance.Low, $"Task {nameof (StartAndroidEmulator)}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdkHome)}: {AndroidSdkHome}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (ImageName)}: {ImageName}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (Port)}: {Port}");
-
 			Run (GetEmulatorPath ());
 
 			if (!string.IsNullOrEmpty (Port)) {
@@ -79,10 +84,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var p = new Process () {
 				StartInfo = psi,
 			};
-			if (!string.IsNullOrEmpty (AndroidSdkHome)) {
-				psi.EnvironmentVariables ["ANDROID_HOME"] = AndroidSdkHome;
-				Log.LogMessage (MessageImportance.Low, $"\tANDROID_HOME=\"{AndroidSdkHome}\"");
-			}
+			psi.EnvironmentVariables ["ANDROID_HOME"]       = AndroidSdkDirectory;
+			psi.EnvironmentVariables ["ANDROID_PREFS_ROOT"] = AvdManagerHome;
+			psi.EnvironmentVariables ["ANDROID_SDK_ROOT"]   = AndroidSdkDirectory;
+			Log.LogMessage (MessageImportance.Low, $"\tANDROID_HOME=\"{psi.EnvironmentVariables ["ANDROID_HOME"]}\"");
+			Log.LogMessage (MessageImportance.Low, $"\tANDROID_PREFS_ROOT=\"{psi.EnvironmentVariables ["ANDROID_PREFS_ROOT"]}\"");
+			Log.LogMessage (MessageImportance.Low, $"\tANDROID_SDK_ROOT=\"{psi.EnvironmentVariables ["ANDROID_SDK_ROOT"]}\"");
 
 			var sawError        = new AutoResetEvent (false);
 

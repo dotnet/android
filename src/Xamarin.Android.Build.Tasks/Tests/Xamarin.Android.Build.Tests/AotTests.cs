@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using Xamarin.Android.Build;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -14,7 +15,50 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class AotTests : BaseTest
 	{
-		[Test, Category ("SmokeTests")]
+		public string SdkWithSpacesPath {
+			get {
+				return Path.Combine (Root, "temp", string.Format ("SDK Ümläüts"));
+			}
+		}
+
+		[OneTimeSetUp]
+		public void Setup ()
+		{
+			if (!IsWindows)
+				return;
+			// Use standard NDK directory for now
+			// See: https://github.com/dotnet/runtime/issues/56163
+			if (Builder.UseDotNet)
+				return;
+
+			var sdkPath = AndroidSdkPath;
+			var ndkPath = AndroidNdkPath;
+
+			var symSdkPath = Path.Combine (SdkWithSpacesPath, "sdk");
+			var symNdkPath = Path.Combine (SdkWithSpacesPath, "ndk");
+
+			SymbolicLink.Create (symSdkPath, sdkPath);
+			SymbolicLink.Create (symNdkPath, ndkPath);
+
+			Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", symSdkPath);
+			Environment.SetEnvironmentVariable ("TEST_ANDROID_NDK_PATH", symNdkPath);
+		}
+
+		[OneTimeTearDown]
+		public void TearDown ()
+		{
+			if (!IsWindows)
+				return;
+			// Use standard NDK directory for now
+			// See: https://github.com/dotnet/runtime/issues/56163
+			if (Builder.UseDotNet)
+				return;
+			Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", "");
+			Environment.SetEnvironmentVariable ("TEST_ANDROID_NDK_PATH", "");
+			Directory.Delete (SdkWithSpacesPath, recursive: true);
+		}
+
+		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseProfiledAot ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -29,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test, Category ("SmokeTests")]
+		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseWithCustomAotProfile ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -52,7 +96,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[Test, Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseProfiledAotWithoutDefaultProfile ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -111,6 +155,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
+		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
 		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
@@ -144,10 +189,8 @@ namespace Xamarin.Android.Build.Tests
 					return;
 				//NOTE: Windows has shortened paths such as: C:\Users\myuser\ANDROI~3\ndk\PLATFO~1\AN3971~1\arch-x86\usr\lib\libc.so
 				if (checkMinLlvmPath && !IsWindows) {
-					bool ndk22OrNewer = false;
-					if (Xamarin.Android.Tasks.NdkUtil.GetNdkToolchainRelease (AndroidNdkPath, out Xamarin.Android.Tasks.NdkUtilOld.NdkVersion ndkVersion)) {
-						ndk22OrNewer = ndkVersion.Version >= 22;
-					}
+					Xamarin.Android.Tasks.NdkTools ndk = Xamarin.Android.Tasks.NdkTools.Create (AndroidNdkPath);
+					bool ndk22OrNewer = ndk.Version.Main.Major >= 22;
 
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
@@ -167,14 +210,14 @@ namespace Xamarin.Android.Build.Tests
 						"aot", abi, "libaot-UnnamedProject.dll.so");
 					Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
 					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
-							$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}.apk", abi);
+							$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}-Signed.apk", abi);
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							"assemblies/UnnamedProject.dll"),
-							$"UnnamedProject.dll should be in the {proj.PackageName}.apk");
+							$"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
 					}
 				}
 				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");
@@ -190,6 +233,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor"), Category ("MkBundle")]
+		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
 		public void BuildAotApplicationAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplicationAndBundle AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
@@ -219,14 +263,14 @@ namespace Xamarin.Android.Build.Tests
 						"aot", abi, "libaot-UnnamedProject.dll.so");
 					Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
 					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
-							$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}.apk", abi);
+							$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}-Signed.apk", abi);
 						Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
 							"assemblies/UnnamedProject.dll"),
-							$"UnnamedProject.dll should not be in the {proj.PackageName}.apk");
+							$"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
 					}
 				}
 				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");
@@ -334,6 +378,7 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
+		[Category ("HybridAOT")]
 		public void HybridAOT ([Values ("armeabi-v7a;arm64-v8a", "armeabi-v7a", "arm64-v8a")] string abis)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -365,7 +410,7 @@ namespace "+ libName + @" {
 
 				b.Build (proj);
 
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var entry = zip.ReadEntry ($"assemblies/{proj.ProjectName}.dll");
@@ -384,8 +429,15 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		public void NoSymbolsArgShouldReduceAppSize ([Values (true, false)] bool enableHybridAot)
+		[Category ("LLVM")]
+		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode)
 		{
+			if (Builder.UseDotNet) {
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/57800");
+			}
+
+			AssertAotModeSupported (androidAotMode);
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = true,
@@ -393,8 +445,8 @@ namespace "+ libName + @" {
 			var supportedAbi = "arm64-v8a";
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty ("EnableLLVM", true.ToString ());
-			if (enableHybridAot)
-				proj.SetProperty ("AndroidAotMode", "Hybrid");
+			if (!string.IsNullOrEmpty (androidAotMode))
+				proj.SetProperty ("AndroidAotMode", androidAotMode);
 
 			var xaAssemblySize = 0;
 			var xaAssemblySizeNoSymbol = 0;

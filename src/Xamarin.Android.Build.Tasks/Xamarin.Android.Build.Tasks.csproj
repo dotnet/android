@@ -18,6 +18,8 @@
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\monoandroid10\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
     <NoWarn>8632</NoWarn>
     <GenerateResxSource>true</GenerateResxSource>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,7 +40,7 @@
   <ItemGroup>
     <PackageReference Include="ILRepack" Version="2.0.18" />
     <PackageReference Include="Irony" Version="1.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
     <PackageReference Include="NuGet.Common" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="NuGet.Configuration" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="NuGet.DependencyResolver.Core" Version="$(NuGetApiPackageVersion)" />
@@ -50,7 +52,6 @@
     <PackageReference Include="NuGet.Protocol" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="System.CodeDom" Version="4.7.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="1.8.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
@@ -364,12 +365,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="startup-xf.aotprofile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(PkgMono_Posix_NETStandard)\runtimes\linux-x64\native\libMonoPosixHelper.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

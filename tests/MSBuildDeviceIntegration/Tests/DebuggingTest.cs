@@ -12,7 +12,8 @@ using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("UsesDevices")]
+	[TestFixture]
+	[Category ("UsesDevice")]
 	public class DebuggingTest : DeviceTest {
 		[TearDown]
 		public void ClearDebugProperties ()
@@ -31,6 +32,8 @@ namespace Xamarin.Android.Build.Tests
 				proj.TargetFrameworkVersion = "v11.0";
 			}
 
+			AssertTargetFrameworkVersionSupported (proj.TargetFrameworkVersion);
+
 			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
 	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
@@ -40,7 +43,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs)
+		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs, [Values (false, true)] bool useEmbeddedDex)
 		{
 			AssertHasDevices ();
 
@@ -51,9 +54,13 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
 			proj.SetDefaultTargetDevice ();
+			if (Builder.UseDotNet && isRelease) {
+				// bundle tool does NOT support embeddedDex files it seems.
+				useEmbeddedDex = false;
+			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" ");
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
 				Assert.True (b.Install (proj), "Project should have installed.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				AssertExtractNativeLibs (manifest, extractNativeLibs);
@@ -358,11 +365,13 @@ namespace ${ROOT_NAMESPACE} {
 				Assert.True (appBuilder.Install (app, parameters: parameters.ToArray ()), "App should have installed.");
 
 				if (!embedAssemblies) {
-					// Check that we deployed .pdb files
+					// Check that we deployed app and framework .pdb files
 					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+{app.ProjectName}\.pdb", appBuilder.LastBuildOutput,
 						$"{app.ProjectName}.pdb should be deployed!");
 					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+{lib.ProjectName}\.pdb", appBuilder.LastBuildOutput,
 						$"{lib.ProjectName}.pdb should be deployed!");
+					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+Mono.Android\.pdb", appBuilder.LastBuildOutput,
+						$"Mono.Android.pdb should be deployed!");
 				}
 
 				int breakcountHitCount = 0;

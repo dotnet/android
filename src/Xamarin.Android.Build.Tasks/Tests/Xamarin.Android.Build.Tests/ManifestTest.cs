@@ -134,19 +134,42 @@ namespace Bug12935
 			};
 			proj.MainActivity = ScreenOrientationActivity;
 			proj.AndroidUseAapt2 = useAapt2;
-			var directory = $"temp/CheckElementReOrdering_{useAapt2}";
-			using (var builder = CreateApkBuilder (directory)) {
+			using (var builder = CreateApkBuilder ()) {
 				proj.AndroidManifest = ElementOrderManifest;
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				Assert.IsTrue (builder.Build (proj), "first build should have succeeded");
 				var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				XDocument doc = XDocument.Load (manifestFile);
 				var ns = doc.Root.GetNamespaceOfPrefix ("android");
-				var manifest = doc.Element ("manifest");
-				Assert.IsNotNull (manifest, "manifest element should not be null.");
-				var app = manifest.Element ("application");
-				Assert.IsNotNull (app, "application element should not be null.");
+				var manifest = GetElement (doc, "manifest");
+				var app = GetElement (manifest, "application");
 				Assert.AreEqual (0, app.ElementsAfterSelf ().Count (),
 					"There should be no elements after the application element");
+				var activity = GetElement (app, "activity");
+				AssertAttribute (activity, ns + "exported", "true");
+				var intent_filter = GetElement (activity, "intent-filter");
+				var action = GetElement (intent_filter, "action");
+				AssertAttribute (action, ns + "name", "android.intent.action.MAIN");
+				var category = GetElement (intent_filter, "category");
+				AssertAttribute (category, ns + "name", "android.intent.category.LAUNCHER");
+
+				// Add Exported=true and build again
+				proj.MainActivity = proj.MainActivity.Replace ("MainLauncher = true,", "MainLauncher = true, Exported = true,");
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (builder.Build (proj), "second build should have succeeded");
+			}
+
+			static XElement GetElement (XContainer parent, XName name)
+			{
+				var e = parent.Element (name);
+				Assert.IsNotNull (e, $"{name} element should not be null.");
+				return e;
+			}
+
+			static void AssertAttribute (XElement parent, XName name, string expected)
+			{
+				var a = parent.Attribute (name);
+				Assert.IsNotNull (a, $"{name} attribute should not be null.");
+				Assert.AreEqual (expected, a.Value, $"{name} attribute value did not match.");
 			}
 		}
 
@@ -501,18 +524,25 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceholders ()
+		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				ManifestMerger = manifestMerger,
+				JavaPackageName = "com.foo.bar",
 			};
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ");
-			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1=val1");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false, false)) {
+			proj.AndroidManifest = proj.AndroidManifest.
+				Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ").
+				Replace ("package=\"${PACKAGENAME}\"", "package=\"${Package}\"");
+			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1=val1;Package=com.foo.bar");
+			using (var builder = CreateApkBuilder ()) {
 				builder.Build (proj);
 				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
 				Assert.IsTrue (manifest.Contains (" android:label=\"val1\""), "#1");
 				Assert.IsTrue (manifest.Contains (" x=\"a=b\\c\"".Replace ('\\', Path.DirectorySeparatorChar)), "#2");
+				Assert.IsTrue (manifest.Contains ("package=\"com.foo.bar\""), "PackageName should have been replaced with 'com.foo.bar'");
+				var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"com.foo.bar-Signed.apk");
+				FileAssert.Exists (apk, $"'{apk}' should have been created.");
 			}
 		}
 

@@ -1,8 +1,7 @@
-#include <assert.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cstdarg>
+#include <cstdio>
+#include <cerrno>
 #ifndef WINDOWS
 #include <sys/socket.h>
 #else
@@ -82,6 +81,17 @@ timing_diff::timing_diff (const timing_period &period)
 	}
 
 	ns = static_cast<uint32_t>(nsec % ms_in_nsec);
+}
+
+Util::Util ()
+{
+#ifndef WINDOWS
+	page_size = getpagesize ();
+#else   // defined(WINDOWS)
+	SYSTEM_INFO info;
+	GetSystemInfo (&info);
+	page_size = info.dwPageSize;
+#endif  // defined(WINDOWS)
 }
 
 int
@@ -174,6 +184,24 @@ Util::monodroid_store_package_name (const char *name)
 	log_info (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
 }
 
+#if defined (NET6)
+MonoAssembly*
+Util::monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const char *basename)
+{
+	MonoImageOpenStatus  status;
+	MonoAssemblyName    *aname = mono_assembly_name_new (basename);
+	MonoAssembly        *assm = mono_assembly_load_full_alc (alc_handle, aname, nullptr, &status);
+
+	mono_assembly_name_free (aname);
+
+	if (assm == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+		log_fatal (LOG_DEFAULT, "Unable to find assembly '%s'.", basename);
+		exit (FATAL_EXIT_MISSING_ASSEMBLY);
+	}
+	return assm;
+}
+#endif // def NET6
+
 MonoAssembly *
 Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 {
@@ -182,7 +210,7 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 	MonoImageOpenStatus   status;
 
 	aname = mono_assembly_name_new (basename);
-	MonoDomain *current = mono_domain_get ();
+	MonoDomain *current = get_current_domain ();
 
 	if (domain != current) {
 		mono_domain_set (domain, FALSE);
@@ -201,10 +229,11 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 	return assm;
 }
 
+#if !defined (NET6)
 MonoObject *
 Util::monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc)
 {
-	MonoDomain *current = mono_domain_get ();
+	MonoDomain *current = get_current_domain ();
 	if (domain == current) {
 		return mono_runtime_invoke (method, obj, params, exc);
 	}
@@ -218,7 +247,7 @@ Util::monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *ob
 void
 Util::monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc)
 {
-	MonoDomain *current = mono_domain_get ();
+	MonoDomain *current = get_current_domain ();
 	if (domain == current) {
 		mono_property_set_value (property, obj, params, exc);
 		return;
@@ -254,14 +283,17 @@ Util::monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendl
 
 	return mono_domain_from_appdomain (appdomain);
 }
+#endif // ndef NET6
 
 MonoClass*
-Util::monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type)
+Util::monodroid_get_class_from_name ([[maybe_unused]] MonoDomain *domain, const char* assembly, const char *_namespace, const char *type)
 {
-	MonoDomain *current = mono_domain_get ();
+#if !defined (NET6)
+	MonoDomain *current = get_current_domain ();
 
 	if (domain != current)
 		mono_domain_set (domain, FALSE);
+#endif // ndef NET6
 
 	MonoClass *result;
 	MonoAssemblyName *aname = mono_assembly_name_new (assembly);
@@ -272,18 +304,21 @@ Util::monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, c
 	} else
 		result = nullptr;
 
+#if !defined (NET6)
 	if (domain != current)
 		mono_domain_set (current, FALSE);
+#endif // ndef NET6
 
 	mono_assembly_name_free (aname);
 
 	return result;
 }
 
+#if !defined (NET6)
 MonoClass*
 Util::monodroid_get_class_from_image (MonoDomain *domain, MonoImage *image, const char *_namespace, const char *type)
 {
-	MonoDomain *current = mono_domain_get ();
+	MonoDomain *current = get_current_domain ();
 
 	if (domain != current)
 		mono_domain_set (domain, FALSE);
@@ -295,6 +330,7 @@ Util::monodroid_get_class_from_image (MonoDomain *domain, MonoImage *image, cons
 
 	return result;
 }
+#endif // ndef NET6
 
 jclass
 Util::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref)
@@ -310,16 +346,4 @@ Util::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *nam
 		return nullptr;
 
 	return reinterpret_cast<jclass> (make_gref ? osBridge.lref_to_gref (env, field) : field);
-}
-
-int
-Util::monodroid_getpagesize (void)
-{
-#ifndef WINDOWS
-	return getpagesize ();
-#else   // defined(WINDOWS)
-	SYSTEM_INFO info;
-	GetSystemInfo (&info);
-	return info.dwPageSize;
-#endif  // defined(WINDOWS)
 }

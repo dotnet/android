@@ -21,7 +21,8 @@ override_dh_install:
 	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/opt.exe
 	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/aapt2.exe
 	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/libwinpthread-1.dll
-	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/libzip.dll
+	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/libZipSharpNative.dll
+	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/runtimes/*/libMono.Unix.so
 
 	dh_install
 
@@ -40,7 +41,9 @@ override_dh_clideps:
 		--exclude-moduleref=libfam.so.0 \
 		--exclude-moduleref=libgamin-1.so.0 \
 		--exclude-moduleref=libmono-btls-shared \
+		--exclude-moduleref=libZipSharpNative \
 		--exclude-moduleref=lzo.dll \
+		--exclude-moduleref=Microsoft.VisualStudio.Setup.Configuration.Native.dll \
 		--exclude-moduleref=mscoree.dll \
 		--exclude-moduleref=mscorwks.dll \
 		--exclude-moduleref=msvcrt \

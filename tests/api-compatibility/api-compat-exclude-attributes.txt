@@ -8,7 +8,9 @@ T:System.Diagnostics.DebuggerStepThroughAttribute
 
 T:System.Runtime.CompilerServices.AsyncIteratorStateMachineAttribute
 T:System.Runtime.CompilerServices.AsyncStateMachineAttribute
+T:System.Runtime.CompilerServices.CompilerGeneratedAttribute
 T:System.Runtime.CompilerServices.IteratorStateMachineAttribute
 
 T:System.Runtime.CompilerServices.NullableAttribute
 T:System.Runtime.CompilerServices.NullableContextAttribute
+T:System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute

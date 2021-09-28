@@ -1,20 +1,28 @@
 using Mono.Cecil;
+using Mono.Linker;
 using Mono.Linker.Steps;
 using MonoDroid.Tuner;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
-	class PreserveJavaInterfaces : BaseSubStep
+	class PreserveJavaInterfaces : BaseMarkHandler
 	{
-		public override bool IsActiveFor (AssemblyDefinition assembly)
+		public override void Initialize (LinkContext context, MarkContext markContext)
+		{
+			base.Initialize (context, markContext);
+			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
+
+		bool IsActiveFor (AssemblyDefinition assembly)
 		{
 			return assembly.Name.Name == "Mono.Android" || assembly.MainModule.HasTypeReference ("Android.Runtime.IJavaObject");
 		}
 
-		public override SubStepTargets Targets { get { return SubStepTargets.Type;  } }
-
-		public override void ProcessType (TypeDefinition type)
+		void ProcessType (TypeDefinition type)
 		{
+			if (!IsActiveFor (type.Module.Assembly))
+				return;
+
 			// If we are preserving a Mono.Android interface,
 			// preserve all members on the interface.
 			if (!type.IsInterface)

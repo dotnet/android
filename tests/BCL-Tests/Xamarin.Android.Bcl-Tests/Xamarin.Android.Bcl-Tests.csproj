@@ -15,6 +15,7 @@
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>

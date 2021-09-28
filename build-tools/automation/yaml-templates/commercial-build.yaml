@@ -26,7 +26,7 @@ steps:
     provisioning_script: ${{ parameters.xaSourcePath }}/build-tools/provisioning/xcode.csx
     provisioning_extra_args: '-v -v -v -v'
 
-- script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+- script: make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-update-mono
 
@@ -46,12 +46,12 @@ steps:
   displayName: make prepare-external-git-dependencies
 
 # Prepare and Build everything
-- script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
 
 # Build and package test assemblies
-- script: make all-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
+- script: make all-tests CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make all-tests
 
@@ -85,7 +85,7 @@ steps:
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
 
-- script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+- script: make create-installers CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 

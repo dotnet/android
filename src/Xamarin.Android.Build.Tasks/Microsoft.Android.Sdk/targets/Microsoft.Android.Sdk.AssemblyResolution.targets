@@ -14,6 +14,16 @@ _ResolveAssemblies MSBuild target.
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.StripNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
+  <!-- HACK: workaround for: https://github.com/dotnet/sdk/issues/19891 -->
+  <Target Name="_RemoveLinuxFrameworkReferences"
+      AfterTargets="ProcessFrameworkReferences">
+    <ItemGroup>
+      <_ProblematicRIDs Include="linux-arm;linux-arm64;linux-x86;linux-x64" />
+      <PackageDownload Remove="Microsoft.AspNetCore.App.Runtime.%(_ProblematicRIDs.Identity)" />
+      <PackageDownload Remove="Microsoft.NETCore.App.Host.%(_ProblematicRIDs.Identity)" />
+    </ItemGroup>
+  </Target>
+
   <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
     <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
     <OutDir     Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutDir>
@@ -31,8 +41,15 @@ _ResolveAssemblies MSBuild target.
   </PropertyGroup>
 
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
-      DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish"
+      DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;_AndroidAot"
       Returns="@(ResolvedFileToPublish)">
+      <ItemGroup>
+        <ResolvedFileToPublish
+            Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
+            Update="@(ResolvedFileToPublish)"
+            RuntimeIdentifier="$(RuntimeIdentifier)"
+        />
+      </ItemGroup>
   </Target>
 
   <Target Name="_FixupIntermediateAssembly" Condition=" '$(_OuterIntermediateAssembly)' != '' ">
@@ -52,21 +69,25 @@ _ResolveAssemblies MSBuild target.
       <_RIDs Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifiers)' != '' " />
     </ItemGroup>
     <PropertyGroup>
-      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">;_ProguardProjectConfiguration=$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
       <_AdditionalProperties>
-        _ComputeFilesToPublishForRuntimeIdentifiers=true;
-        AppendRuntimeIdentifierToOutputPath=true;
-        SkipCompilerExecution=true;
-        _OuterIntermediateAssembly=@(IntermediateAssembly);
-        _OuterOutputPath=$(OutputPath);
-        _OuterIntermediateOutputPath=$(IntermediateOutputPath);
-        _ProguardProjectConfiguration=$(_ProguardProjectConfiguration);
+        _ComputeFilesToPublishForRuntimeIdentifiers=true
+        ;AppendRuntimeIdentifierToOutputPath=true
+        ;SkipCompilerExecution=true
+        ;_OuterIntermediateAssembly=@(IntermediateAssembly)
+        ;_OuterOutputPath=$(OutputPath)
+        ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
+        $(_ProguardProjectConfiguration)
       </_AdditionalProperties>
+      <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>
     </PropertyGroup>
+    <ItemGroup>
+      <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)" />
+    </ItemGroup>
     <MSBuild
-        Projects="$(MSBuildProjectFile)"
-        Targets="_ComputeFilesToPublishForRuntimeIdentifiers"
-        Properties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)">
+        Projects="@(_ProjectToBuild)"
+        BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
+        Targets="_ComputeFilesToPublishForRuntimeIdentifiers">
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
     <ItemGroup>
@@ -81,6 +102,7 @@ _ResolveAssemblies MSBuild target.
         Condition=" '%(Identity)' != '' "
     />
     <ProcessAssemblies
+        RuntimeIdentifiers="@(_RIDs)"
         InputAssemblies="@(_ResolvedAssemblyFiles->Distinct())"
         ResolvedSymbols="@(_ResolvedSymbolFiles->Distinct())"
         PublishTrimmed="$(PublishTrimmed)">
@@ -168,8 +190,14 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup>
       <_ResolvedNativeLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.so' " />
     </ItemGroup>
+    <ItemGroup>
+      <_MonoComponent Condition=" '$(AndroidEnableProfiler)' == 'true' " Include="diagnostics_tracing" />
+      <_MonoComponent Condition=" '$(AndroidUseInterpreter)' == 'true' " Include="hot_reload" />
+      <_MonoComponent Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " Include="debugger" />
+    </ItemGroup>
     <ProcessNativeLibraries
         InputLibraries="@(_ResolvedNativeLibraries)"
+        Components="@(_MonoComponent->Distinct())"
         IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>

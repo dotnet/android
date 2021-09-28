@@ -129,14 +129,14 @@ Added in Xamarin.Android 6.1.
 
 A path to a directory containing
 the Android [binutils][binutils] such as `ld`, the native linker,
-and `as`, the native assembler. These tools are part of the Android
-NDK and are also included in the Xamarin.Android installation.
+and `as`, the native assembler. These tools are included in the
+Xamarin.Android installation.
 
-The default value is `$(MonoAndroidBinDirectory)\ndk\`.
+The default value is `$(MonoAndroidBinDirectory)\binutils\`.
 
 Added in Xamarin.Android 10.0.
 
-[binutils]: https://android.googlesource.com/toolchain/binutils/
+[binutils]: https://github.com/xamarin/xamarin-android-binutils/
 
 ## AndroidBoundExceptionType
 
@@ -168,6 +168,32 @@ implements a .NET type or interface in terms of Java types, for example
   This will become the default value in .NET 6.0.
 
 Added in Xamarin.Android 10.2.
+
+## AndroidBoundInterfacesContainConstants
+
+A boolean property that
+determines whether binding constants on interfaces will be supported,
+or the workaround of creating an `IMyInterfaceConsts` class
+will be used.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
+## AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods
+
+A boolean property that
+whether default and static members on interfaces will be supported,
+or  old workaround of creating a sibling class containing static
+members like `abstract class MyInterface`.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
+
+## AndroidBoundInterfacesContainTypes
+
+A boolean property that
+whether types nested in interfaces will be supported, or the workaround
+of creating a non-nested type like `IMyInterfaceMyNestedClass`.
+
+Defaults to `True` in .NET 6 and `False` for legacy.
 
 ## AndroidBuildApplicationPackage
 
@@ -212,8 +238,7 @@ A string property which controls how
 `.jar` files are parsed. Possible values include:
 
 - **class-parse**: Uses `class-parse.exe` to parse Java bytecode
-  directly, without assistance of a JVM. This value is
-  experimental.
+  directly, without assistance of a JVM.
 
 - **jar2xml**: Use `jar2xml.jar` to use Java reflection to extract
   types and members from a `.jar` file.
@@ -227,12 +252,12 @@ The advantages of `class-parse` over `jar2xml` are:
 - `class-parse` doesn't "skip" classes which inherit from or
   contain members of unresolvable types.
 
-**Experimental**. Added in Xamarin.Android 6.0.
+Added in Xamarin.Android 6.0.
 
-The default value is `jar2xml`.
+The default value is `jar2xml` in "legacy" Xamarin.Android and
+`class-parse` in .NET 6 and higher.
 
-Support for `jar2xml` is obsolete, and support for `jar2xml` will be removed
-as part of .NET 6.
+Support for `jar2xml` is obsolete, and `jar2xml` is removed in .NET 6.
 
 ## AndroidCodegenTarget
 
@@ -262,6 +287,9 @@ The benefits of `XAJavaInterop1` include:
   managed subclasses.
 
 The default value is `XAJavaInterop1`.
+
+Support for `XamarinAndroid` is obsolete, and support for `XamarinAndroid` will be removed
+as part of .NET 6.
 
 ## AndroidCreatePackagePerAbi
 
@@ -539,6 +567,12 @@ Added in Xamarin.Android 9.2.
 Enables generation of [layout code-behind](https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/LayoutCodeBehind.md)
 if set to `true` or disables it completely if set to `false`. The
 default value is `false`.
+
+## AndroidGenerateResourceDesigner
+
+Defaults to `true`. When set to `false`, disables the generation of `Resource.designer.cs`.
+
+Added in .NET 6 RC 1. Not supported in Xamarin.Android.
 
 ## AndroidHttpClientHandlerType
 
@@ -878,6 +912,43 @@ properties are set, which are required for Android App Bundles:
 
 [apk]: https://en.wikipedia.org/wiki/Android_application_package
 [bundle]: https://developer.android.com/platform/technology/app-bundle
+
+This property will be deprecated for .net 6. Users should switch over to
+the newer [`AndroidPackageFormats`](~/android/deploy-test/building-apps/build-properties.md#androidpackageformats).
+
+## AndroidPackageFormats
+
+A semi-colon delimited property with valid values of `apk` and `aab`.
+This indicates if you want to package the Android application as
+an [APK file][apk] or [Android App Bundle][bundle]. App Bundles
+are a new format for `Release` builds that are intended for
+submission on Google Play.
+
+When building a Release build you might want to generate both
+and `aab` and an `apk` for distribution to various stores.
+
+Setting `AndroidPackageFormats` to `aab;apk` will result in both
+being generated. Setting `AndroidPackageFormats` to either `aab`
+or `apk` will generate only one file.
+
+For .net 6 `AndroidPackageFormats` will be set to `aab;apk` for
+`Release` builds only. It is recommended that you continue to use
+just `apk` for debugging.
+
+For Legacy Xamarin.Android this value currently defaults to `""`.
+As a result Legacy Xamarin.Android will NOT by default produce
+both as part of a release build. If a user wants to produce both
+outputs they will need to define the following in their `Release`
+configuration.
+
+```
+<AndroidPackageFormats>aab;apk</AndroidPackageFormats>
+```
+
+You will also need to remove the existing `AndroidPackageFormat` for
+that configuration if you have it.
+
+Added in Xamarin.Android 11.5.
 
 ## AndroidPackageNamingPolicy
 

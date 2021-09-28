@@ -7,8 +7,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[NonParallelizable] //These tests deploy to devices
-	[Category ("Commercial"), Category ("UsesDevices")]
+	[Category ("Commercial"), Category ("UsesDevice")]
 	public class InstantRunTest : DeviceTest
 	{
 		[Test]
@@ -179,7 +178,7 @@ namespace Xamarin.Android.Build.Tests
 
 		#pragma warning disable 414
 		static object [] SkipFastDevAlreadyInstalledResourcesSource = new object [] {
-			new object[] { new Package [0], null },
+			new object[] { Array.Empty<Package> (), null },
 			new object[] { new Package [] { KnownPackages.AndroidSupportV4_27_0_2_1, KnownPackages.SupportV7AppCompat_27_0_2_1}, "Android.Support.V7.App.AppCompatActivity" },
 		};
 		#pragma warning restore 414
@@ -267,7 +266,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Install (proj), "packaging should have succeeded. 0");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				Assert.IsNull (ZipHelper.ReadFileFromZip (apk, "Mono.Android.typemap"), $"Mono.Android.typemap should NOT be in {apk}.");
 				var logLines = b.LastBuildOutput;
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
@@ -298,6 +297,10 @@ namespace Xamarin.Android.Build.Tests
 					nativeLib,
 				},
 			};
+			if (Builder.UseDotNet) {
+				//NOTE: in .NET 6 by default an x86_64 emulator would fall back to x86 if we don't set this.
+				proj.SetAndroidSupportedAbis (DeviceAbi);
+			}
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
@@ -317,6 +320,42 @@ namespace Xamarin.Android.Build.Tests
 					"Apk should not have been built");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("libtest.so")), "libtest.so should have been uploaded");
+			}
+		}
+
+		[Test]
+		public void InstantRunFastDevDexes ([Values ("dx", "d8")] string dexTool, [Values (false, true)] bool useEmbeddedDex)
+		{
+			AssertDexToolSupported (dexTool);
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			var proj = new XamarinAndroidApplicationProject () {
+				AndroidFastDeploymentType = "Assemblies:Dexes",
+				UseLatestPlatformSdk = true,
+				DexTool = dexTool,
+			};
+			proj.SetDefaultTargetDevice ();
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Install (proj), "packaging should have succeeded. 0");
+				var logLines = b.LastBuildOutput;
+				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
+					l.Contains ("Target _BuildApkFastDev needs to be built")),
+					"Apk should have been built");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("classes.dex")), "classes.dex should have been uploaded");
+				ClearAdbLogcat ();
+				b.BuildLogFile = "run.log";
+				if (CommercialBuildAvailable)
+					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
+				else
+					AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+				b.BuildLogFile = "uninstall.log";
+				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
 	}

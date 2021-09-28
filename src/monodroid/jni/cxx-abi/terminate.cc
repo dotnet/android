@@ -4,7 +4,6 @@
 //  Does NOT support terminate handlers, since we don't use them.
 //
 #include <cstdlib>
-#include <exception>
 #include <android/log.h>
 
 namespace std {

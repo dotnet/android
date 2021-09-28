@@ -9,7 +9,8 @@ namespace System.NetTests
 	[TestFixture]
 	public class WebSocketTests
 	{
-		[Test, Category ("InetAccess"), Category ("DotNetIgnore")] // https://github.com/xamarin/xamarin-android/issues/5801
+		[Test, Category ("InetAccess")]
+		[Ignore ("echo.websocket.org is not available anymore")]
 		public void TestSocketConnection()
 		{
 			string testMessage = "This is a test!";

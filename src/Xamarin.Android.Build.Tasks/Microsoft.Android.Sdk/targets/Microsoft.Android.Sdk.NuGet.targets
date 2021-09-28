@@ -2,7 +2,9 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.NuGet.targets
 
-This file contains *temporary* workarounds for NuGet in .NET 5.
+This file contains *temporary* workarounds for NuGet. This is required for Visual Studio 16.x.
+
+Not needed for versions of MSBuild that contain: https://github.com/NuGet/NuGet.Client/commit/10274281c37e9dd3626938757f7e947d649b821b
 
 ***********************************************************************************************
 -->

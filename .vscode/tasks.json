@@ -4,6 +4,18 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Build All Xamarin.Android",
+            "type": "shell",
+            "windows":{ "command": ".\\build.cmd ${input:buildtype}"},
+            "linux":{"command": "./build.sh ${input:buildtype}"},
+            "osx":{"command": "./build.sh ${input:buildtype}"},
+            "group": {
+              "kind": "build",
+              "isDefault": true
+            },
+            "problemMatcher": ["$msCompile", "$gcc"]
+        },
+        {
             "label": "Build Xamarin.Android Build Tasks",
             "type": "shell",
             "command": "msbuild src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj /restore /t:Build /p:Configuration=${input:configuration}",
@@ -86,7 +98,67 @@
           "problemMatcher": [
               "$msCompile"
           ]
+        },
+        {
+          "label": "build-sample",
+          "type": "shell",
+          "command": "bin/${input:configuration}/bin/xabuild ${input:project} /t:${input:target} /p:Configuration=${input:configuration}",
+          "group": {
+              "kind": "build",
+              "isDefault": true
+          },
+          "problemMatcher": [
+              "$msCompile"
+          ]
+        },
+        {
+          "label": "run-sample",
+          "type": "shell",
+          "command": "bin/${input:configuration}/bin/xabuild ${input:project} /restore \"/t:Install;_Run\" /p:AndroidAttachDebugger=${input:attach} /p:Configuration=${input:configuration}",
+          "group": {
+              "kind": "build",
+              "isDefault": true
+          },
+          "problemMatcher": [
+              "$msCompile"
+          ]
+        },
+        {
+          "label": "prepare-sample-under-dotnet",
+          "type": "shell",
+          "command": "dotnet build --no-restore tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj -c ${input:configuration} -t:GenerateNuGetConfig -p:AndroidNETTestConfigOutputDir=${workspaceRoot}/samples",
+          "group": {
+              "kind": "build",
+              "isDefault": true
+          },
+          "problemMatcher": [
+              "$msCompile"
+          ]
+        },
+        {
+          "label": "build-sample-under-dotnet",
+          "type": "shell",
+          "command": "${env:HOME}/android-toolchain/dotnet/dotnet build ${input:project} -p:Configuration=${input:configuration} -t:${input:target}",
+          "group": {
+              "kind": "build",
+              "isDefault": true
+          },
+          "problemMatcher": [
+              "$msCompile"
+          ]
       },
+        {
+          "label": "run-sample-under-dotnet",
+          "type": "shell",
+          "command": "${env:HOME}/android-toolchain/dotnet/dotnet build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach}",
+          "group": {
+              "kind": "build",
+              "isDefault": true
+          },
+          "problemMatcher": [
+              "$msCompile"
+          ]
+        },
     ],
     "inputs": [
       {
@@ -95,6 +167,63 @@
         "default": "Debug",
         "description": "The Build Configuration",
         "options": [ "Debug", "Release"]
-      }
+      },
+      {
+        "id": "attach",
+        "type": "pickString",
+        "default": "Build",
+        "description": "Attach Debugger?",
+        "options": [
+            "true",
+            "false",
+        ]
+      },
+      {
+        // Add additional projects here. They will be available in the drop down
+        // in vscode.
+        "id": "project",
+        "type": "pickString",
+        "default": "samples/HelloWorld/HelloWorld.csproj",
+        "description": "Pick the Project you want to build.",
+        "options": [
+            "samples/HelloWorld/HelloWorld.csproj",
+            "samples/HelloWorld/HelloWorld.DotNet.csproj",
+            "samples/VSAndroidApp/VSAndroidApp.csproj",
+        ]
+      },
+      {
+        "id": "targetframework",
+        "type": "pickString",
+        "default": "Build",
+        "description": "Select TargetFramework",
+        "options": [
+            "net6.0-android",
+        ]
+      },
+      {
+        "id": "target",
+        "type": "pickString",
+        "default": "Build",
+        "description": "Select MSBuild Target to run.",
+        "options": [
+            "Build",
+            "Install",
+            "SignAndroidPackage",
+            "Clean"
+        ]
+      },
+      {
+        "id": "buildtype",
+        "type": "pickString",
+        "default": "Prepare",
+        "description": "Select Build Stage to Run.",
+        "options": [
+            "Prepare",
+            "PrepareExternal",
+            "Build",
+            "Pack",
+            "Everything",
+        ]
+      },
     ]
 }

@@ -11,6 +11,7 @@ namespace Xamarin.Android.Tasks
 		SortedDictionary <string, string> environmentVariables;
 		SortedDictionary <string, string> systemProperties;
 		uint stringCounter = 0;
+		uint bufferCounter = 0;
 
 		public bool IsBundledApp { get; set; }
 		public bool UsesMonoAOT { get; set; }
@@ -22,6 +23,9 @@ namespace Xamarin.Android.Tasks
 		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
 		public bool InstantRunEnabled { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
+		public bool HaveRuntimeConfigBlob { get; set; }
+		public int NumberOfAssembliesInApk { get; set; }
+		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
@@ -70,6 +74,9 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "jni_add_native_method_registration_attribute_present");
 				size += WriteData (output, JniAddNativeMethodRegistrationAttributePresent);
 
+				WriteCommentLine (output, "have_runtime_config_blob");
+				size += WriteData (output, HaveRuntimeConfigBlob);
+
 				WriteCommentLine (output, "bound_exception_type");
 				size += WriteData (output, (byte)BoundExceptionType);
 
@@ -81,6 +88,12 @@ namespace Xamarin.Android.Tasks
 
 				WriteCommentLine (output, "system_property_count");
 				size += WriteData (output, systemProperties == null ? 0 : systemProperties.Count * 2);
+
+				WriteCommentLine (output, "number_of_assemblies_in_apk");
+				size += WriteData (output, NumberOfAssembliesInApk);
+
+				WriteCommentLine (output, "bundled_assembly_name_width");
+				size += WriteData (output, BundledAssemblyNameWidth);
 
 				WriteCommentLine (output, "android_package_name");
 				size += WritePointer (output, MakeLocalLabel (stringLabel));
@@ -95,6 +108,57 @@ namespace Xamarin.Android.Tasks
 
 			WriteNameValueStringArray (output, "app_environment_variables", environmentVariables);
 			WriteNameValueStringArray (output, "app_system_properties", systemProperties);
+
+			WriteBundledAssemblies (output);
+		}
+
+		void WriteBundledAssemblies (StreamWriter output)
+		{
+			WriteCommentLine (output, $"Bundled assembly name buffers, all {BundledAssemblyNameWidth} bytes long");
+			WriteSection (output, ".bss.bundled_assembly_names", hasStrings: false, writable: true, nobits: true);
+
+			var name_labels = new List<string> ();
+			for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+				string bufferLabel = GetBufferLabel ();
+				WriteBufferAllocation (output, bufferLabel, (uint)BundledAssemblyNameWidth);
+				name_labels.Add (bufferLabel);
+			}
+
+			string label = "bundled_assemblies";
+			WriteCommentLine (output, "Bundled assemblies data");
+			WriteDataSection (output, label);
+			WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
+
+			uint size = 0;
+			for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+				size += WriteStructure (output, packed: false, structureWriter: () => WriteBundledAssembly (output, MakeLocalLabel (name_labels[i])));
+			}
+			WriteStructureSize (output, label, size);
+		}
+
+		uint WriteBundledAssembly (StreamWriter output, string nameLabel)
+		{
+			WriteCommentLine (output, "apk_fd");
+			uint size = WriteData (output, (int)-1);
+
+			WriteCommentLine (output, "data_offset");
+			size += WriteData (output, (uint)0);
+
+			WriteCommentLine (output, "data_size");
+			size += WriteData (output, (uint)0);
+
+			WriteCommentLine (output, "data");
+			size += WritePointer (output);
+
+			WriteCommentLine (output, "name_length");
+			size += WriteData (output, (uint)0);
+
+			WriteCommentLine (output, "name");
+			size += WritePointer (output, nameLabel);
+
+			output.WriteLine ();
+
+			return size;
 		}
 
 		void WriteNameValueStringArray (StreamWriter output, string label, SortedDictionary<string, string> entries)
@@ -140,6 +204,12 @@ namespace Xamarin.Android.Tasks
 		{
 			stringCounter++;
 			return $"env.str.{stringCounter}";
+		}
+
+		string GetBufferLabel ()
+		{
+			bufferCounter++;
+			return $"env.buf.{bufferCounter}";
 		}
 	};
 }

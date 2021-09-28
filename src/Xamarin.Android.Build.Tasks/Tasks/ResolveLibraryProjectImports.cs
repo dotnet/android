@@ -46,7 +46,7 @@ namespace Xamarin.Android.Tasks
 
 		[Output]
 		public ITaskItem [] Jars { get; set; }
-		
+
 		[Output]
 		public ITaskItem [] ResolvedAssetDirectories { get; set; }
 
@@ -115,7 +115,7 @@ namespace Xamarin.Android.Tasks
 						new XElement ("ResolvedResourceDirectories",
 							ResolvedResourceDirectories.ToXElements ("ResolvedResourceDirectory", knownMetadata)
 							),
-						new XElement ("ResolvedAssetDirectories", 
+						new XElement ("ResolvedAssetDirectories",
 							ResolvedAssetDirectories.ToXElements ("ResolvedAssetDirectory", knownMetadata)),
 						new XElement ("ResolvedEnvironmentFiles",
 							ResolvedEnvironmentFiles.ToXElements ("ResolvedEnvironmentFile", knownMetadata)),
@@ -327,7 +327,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 			}
-			foreach (var aarFile in AarLibraries ?? new ITaskItem[0]) {
+			foreach (var aarFile in AarLibraries ?? Array.Empty<ITaskItem> ()) {
 				if (!File.Exists (aarFile.ItemSpec))
 					continue;
 				string aarIdentityName = Path.GetFileName (aarFile.ItemSpec);
@@ -370,7 +370,7 @@ namespace Xamarin.Android.Tasks
 
 				// temporarily extracted directory will look like:
 				// _lp_/[aarFile]
-				
+
 				using (var zip = MonoAndroidHelper.ReadZipFile (aarFile.ItemSpec)) {
 					try {
 						updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {

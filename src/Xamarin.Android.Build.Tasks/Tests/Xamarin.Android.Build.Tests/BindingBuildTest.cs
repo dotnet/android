@@ -56,15 +56,18 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
 				}
 
-				//A list of properties we check exist in binding projects
-				var properties = new [] {
-					"AndroidSdkBuildToolsVersion",
-					"AndroidSdkPlatformToolsVersion",
-					"AndroidSdkToolsVersion",
-					"AndroidNdkVersion",
-				};
-				foreach (var property in properties) {
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, property + " = "), $"$({property}) should be set!");
+				//TODO: see https://github.com/dotnet/msbuild/issues/6609
+				if (!Builder.UseDotNet) {
+					//A list of properties we check exist in binding projects
+					var properties = new [] {
+						"AndroidSdkBuildToolsVersion",
+						"AndroidSdkPlatformToolsVersion",
+						"AndroidSdkToolsVersion",
+						"AndroidNdkVersion",
+					};
+					foreach (var property in properties) {
+						Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, property + " = "), $"$({property}) should be set!");
+					}
 				}
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
@@ -94,13 +97,6 @@ namespace Xamarin.Android.Build.Tests
 				};
 				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
 					.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i)));
-				var directories = Directory.GetDirectories (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
-					// designtime folder is left behind, so Intellisense continues to work after a Clean
-					.Where (x => Path.GetFileName (x) != "designtime")
-					// .NET 5+ sets $(ProduceReferenceAssembly) by default
-					// https://github.com/dotnet/sdk/blob/18ee4eac8b3abe6d554d2e0c39d8952da0f23ce5/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.TargetFrameworkInference.targets#L242-L244
-					.Where (x => Path.GetFileName (x) != "ref");
-				CollectionAssert.IsEmpty (directories, $"{proj.IntermediateOutputPath} should have no directories.");
 				CollectionAssert.IsEmpty (files, $"{proj.IntermediateOutputPath} should have no files.");
 			}
 		}
@@ -114,7 +110,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.Jars.Add (new AndroidItem.AndroidLibrary ("Jars\\material-menu-1.1.0.aar") {
-				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			proj.AndroidClassParser = classParser;
 			using (var b = CreateDllBuilder ()) {
@@ -423,7 +419,6 @@ namespace Foo {
 		{
 			var binding = new XamarinAndroidBindingProject () {
 				IsRelease = true,
-				UseLatestPlatformSdk = true,
 				Jars = {
 					new AndroidItem.LibraryProjectZip ("Jars\\ActionBarSherlock-4.3.1.zip") {
 						WebContent = "https://github.com/xamarin/monodroid-samples/blob/master/ActionBarSherlock/ActionBarSherlock/Jars/ActionBarSherlock-4.3.1.zip?raw=true"
@@ -498,7 +493,7 @@ namespace Foo {
 				AndroidClassParser = classParser
 			};
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\material-menu-1.1.0.aar") {
-				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.DesignTimeBuild (proj), "design-time build should have succeeded.");

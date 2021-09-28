@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (Zip)}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (File)}: {File.ItemSpec}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (Entries)}:");
-			foreach (var p in Entries ?? new ITaskItem [0]) {
+			foreach (var p in Entries ?? Array.Empty<ITaskItem> ()) {
 				Log.LogMessage (MessageImportance.Low, $"    {p.ItemSpec}");
 			}
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (Overwrite)}: {Overwrite}");

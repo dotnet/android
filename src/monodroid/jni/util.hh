@@ -32,12 +32,17 @@ constexpr int FALSE = 0;
 #include <jni.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/appdomain.h>
+#include <mono/metadata/threads.h>
 
 #include "monodroid.h"
 #include "jni-wrappers.hh"
 #ifdef __cplusplus
 #include "basic-utilities.hh"
 #endif
+
+#if defined (NET6)
+#include <mono/metadata/mono-private-unstable.h>
+#endif // def NET6
 
 #include "java-interop-util.h"
 #include "logger.hh"
@@ -78,13 +83,25 @@ namespace xamarin::android
 		static constexpr uint32_t ms_in_nsec = 1000000ULL;
 
 	public:
-		int              monodroid_getpagesize ();
+		Util ();
+
+		int              monodroid_getpagesize () const noexcept
+		{
+			return page_size;
+		}
+
 		void             monodroid_store_package_name (const char *name);
 		MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
+#if defined (NET6)
+		MonoAssembly    *monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const char *basename);
+#else // def NET6
 		MonoObject      *monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);
+#endif // ndef NET6
 		MonoClass       *monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type);
+#if !defined (NET6)
 		MonoDomain      *monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendly_name, int shadow_copy, const char *shadow_directories);
 		MonoClass       *monodroid_get_class_from_image (MonoDomain *domain, MonoImage* image, const char *_namespace, const char *type);
+#endif
 		int              send_uninterrupted (int fd, void *buf, size_t len);
 		ssize_t          recv_uninterrupted (int fd, void *buf, size_t len);
 		jclass           get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref = false);
@@ -94,9 +111,29 @@ namespace xamarin::android
 			return (log_categories & category) != 0;
 		}
 
+		MonoDomain *get_current_domain (bool attach_thread_if_needed = true) const noexcept
+		{
+			MonoDomain *ret = mono_domain_get ();
+			if (ret != nullptr) {
+				return ret;
+			}
+
+			// It's likely that we got a nullptr because the current thread isn't attached (see
+			// https://github.com/xamarin/xamarin-android/issues/6211), so we need to attach the thread to the root
+			// domain
+			ret = mono_get_root_domain ();
+			if (attach_thread_if_needed) {
+				mono_thread_attach (ret);
+			}
+
+			return ret;
+		}
+
 	private:
 		//char *monodroid_strdup_printf (const char *format, va_list vargs);
+#if !defined (NET6)
 		void  monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc);
+#endif // ndef NET6
 
 		template<typename IdxType>
 		void package_hash_to_hex (IdxType idx);
@@ -106,6 +143,7 @@ namespace xamarin::android
 
 	private:
 		char package_property_suffix[9];
+		int page_size;
 	};
 }
 #endif // __cplusplus

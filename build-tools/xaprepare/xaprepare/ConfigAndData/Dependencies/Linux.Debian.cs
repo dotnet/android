@@ -22,6 +22,11 @@ namespace Xamarin.Android.Prepare
 			new DebianLinuxProgram ("zulu-8"),
 		};
 
+		static readonly Dictionary<string, string> DebianUnstableVersionMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+			{ "bookworm", "12" },
+			{ "bookworm/sid", "12" },
+		};
+
 		protected Version DebianRelease { get; private set; } = new Version (0, 0);
 		protected bool IsTesting { get; private set; }
 
@@ -42,24 +47,49 @@ namespace Xamarin.Android.Prepare
 				Dependencies.AddRange (packagesPre10);
 		}
 
-		static bool IsDebian10OrNewer (string[] lines)
+		static bool IsDebian10OrNewer (string? version)
 		{
-			if (lines == null || lines.Length < 1)
+			if (String.IsNullOrEmpty (version)) {
 				return false;
-
-			string version = lines[0].Trim ();
-			if (String.IsNullOrEmpty (version))
-				return false;
+			}
 
 			return
 				version.IndexOf ("bullseye", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				version.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0 ||
 				version.IndexOf ("sid", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
-		protected override bool InitOS ()
+		static string? ReadDebianVersion ()
 		{
-			if (!base.InitOS ())
+			if (!File.Exists (DebianVersionPath)) {
+				return null;
+			}
+
+			string[] lines = File.ReadAllLines (DebianVersionPath);
+			return lines[0].Trim ();
+		}
+
+		static bool IsBookwormSidOrNewer (string? debian_version)
+		{
+			if (String.IsNullOrEmpty (debian_version)) {
 				return false;
+			}
+
+			return debian_version!.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+
+		protected override bool EnsureVersionInformation (Context context)
+		{
+			string? debian_version = null;
+			if (String.IsNullOrEmpty (Release)) {
+				// Debian/unstable "bookworm" (to become Debian 12 eventually) removed
+				// VERSION_ID and VERSION_CODENAME from /etc/os-release, so we need to
+				// fake it
+				debian_version = ReadDebianVersion ();
+				if (IsBookwormSidOrNewer (debian_version) && DebianUnstableVersionMap.TryGetValue (debian_version!, out string unstable_version)) {
+					Release = unstable_version;
+				};
+			}
 
 			Version debianRelease;
 			if (!Version.TryParse (Release, out debianRelease)) {
@@ -76,7 +106,11 @@ namespace Xamarin.Android.Prepare
 			}
 
 			if (debianRelease.Major < 10 && DerivativeDistro && File.Exists (DebianVersionPath)) {
-				if (IsDebian10OrNewer (File.ReadAllLines (DebianVersionPath)))
+				if (String.IsNullOrEmpty (debian_version)) {
+					debian_version = ReadDebianVersion ();
+				}
+
+				if (IsDebian10OrNewer (debian_version))
 				    debianRelease = new Version (10, 0); // faking it, but it's ok
 			}
 

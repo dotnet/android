@@ -25,13 +25,16 @@ namespace Xamarin.Android.Build.Tests
 			public bool   broken_exception_transitions;
 			public bool   instant_run_enabled;
 			public bool   jni_add_native_method_registration_attribute_present;
+			public bool   have_runtime_config_blob;
 			public byte   bound_stream_io_exception_type;
 			public uint   package_naming_policy;
 			public uint   environment_variable_count;
 			public uint   system_property_count;
+			public uint   number_of_assemblies_in_apk;
+			public uint   bundled_assembly_name_width;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 12;
+		const uint ApplicationConfigFieldCount = 15;
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -150,27 +153,42 @@ namespace Xamarin.Android.Build.Tests
 						ret.jni_add_native_method_registration_attribute_present = ConvertFieldToBool ("jni_add_native_method_registration_attribute_present", envFile, i, field [1]);
 						break;
 
-					case 7: // bound_stream_io_exception_type: byte / .byte
+					case 7: // have_runtime_config_blob: bool / .byte
+						AssertFieldType (envFile, ".byte", field [0], i);
+						ret.have_runtime_config_blob = ConvertFieldToBool ("have_runtime_config_blob", envFile, i, field [1]);
+						break;
+
+					case 8: // bound_stream_io_exception_type: byte / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.bound_stream_io_exception_type = ConvertFieldToByte ("bound_stream_io_exception_type", envFile, i, field [1]);
 						break;
 
-					case 8: // package_naming_policy: uint32_t / .word | .long
+					case 9: // package_naming_policy: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.package_naming_policy = ConvertFieldToUInt32 ("package_naming_policy", envFile, i, field [1]);
 						break;
 
-					case 9: // environment_variable_count: uint32_t / .word | .long
+					case 10: // environment_variable_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.environment_variable_count = ConvertFieldToUInt32 ("environment_variable_count", envFile, i, field [1]);
 						break;
 
-					case 10: // system_property_count: uint32_t / .word | .long
+					case 11: // system_property_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile, i, field [1]);
 						break;
 
-					case 11: // android_package_name: string / [pointer type]
+					case 12: // number_of_assemblies_in_apk: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
+						ret.number_of_assemblies_in_apk = ConvertFieldToUInt32 ("number_of_assemblies_in_apk", envFile, i, field [1]);
+						break;
+
+					case 13: // bundled_assembly_name_width: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
+						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile, i, field [1]);
+						break;
+
+					case 14: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;
@@ -339,7 +357,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public static void AssertValidEnvironmentSharedLibrary (string outputDirectoryRoot, string sdkDirectory, string ndkDirectory, string supportedAbis)
 		{
-			NdkUtil.Init (ndkDirectory);
+			NdkTools ndk = NdkTools.Create (ndkDirectory);
 			MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => {}, sdkDirectory, ndkDirectory, AndroidSdkResolver.GetJavaSdkPath ());
 
 			AndroidTargetArch arch;
@@ -372,7 +390,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (File.Exists (envSharedLibrary), $"Application environment SharedLibrary '{envSharedLibrary}' must exist");
 
 				// API level doesn't matter in this case
-				AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, NdkUtil.GetNdkTool (ndkDirectory, arch, "readelf", 0));
+				AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, ndk.GetToolPath ("readelf", arch, 0));
 			}
 		}
 

@@ -182,6 +182,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + XA4311: The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.
 + [XA4312](xa4312.md): Referencing an Android Wear application project from an Android application project is deprecated.
 + [XA4313](xa4313.md): Framework assembly has been deprecated.
++ [XA4314](xa4314.md): `$(Property)` is empty. A value for `$(Property)` should be provided.
 
 ## XA5xxx: GCC and toolchain
 

@@ -52,7 +52,7 @@
     <CreateAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         AndroidAbi="$(TestAvdAbi)"
-        AndroidSdkHome="$(AndroidSdkDirectory)"
+        AvdManagerHome="$(AvdManagerHome)"
         JavaSdkHome="$(JavaSdkDirectory)"
         SdkVersion="$(TestAvdApiLevel)"
         TargetId="$(SdkManagerImageName)"
@@ -64,7 +64,8 @@
     />
     <StartAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
-        AndroidSdkHome="$(AndroidSdkDirectory)"
+        AndroidSdkDirectory="$(AndroidSdkDirectory)"
+        AvdManagerHome="$(AvdManagerHome)"
         Arguments="$(TestEmulatorArguments)"
         ImageName="$(TestAvdName)"
         Port="$(_AdbEmulatorPort)"
@@ -346,6 +347,8 @@
   <Target Name="CheckBootTimes"
       DependsOnTargets="AcquireAndroidTarget;ReleaseAndroidTarget">
     <RunAndroidEmulatorCheckBootTimes
+        AndroidSdkDirectory="$(AndroidSdkDirectory)"
+        AvdManagerHome="$(AvdManagerHome)"
         DeviceName="$(TestAvdName)"
         CheckBootTimesPath="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\check-boot-times.exe"
     />

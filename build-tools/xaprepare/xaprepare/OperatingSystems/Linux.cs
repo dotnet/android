@@ -172,6 +172,11 @@ and re-enable it after building with the following command:
 			return true;
 		}
 
+		protected virtual bool EnsureVersionInformation (Context context)
+		{
+			return true;
+		}
+
 		public static Linux DetectAndCreate (Context context)
 		{
 			string name = String.Empty;
@@ -233,6 +238,10 @@ and re-enable it after building with the following command:
 			linux.warnBinFmt = ShouldWarnAboutBinfmt ();
 			linux.codeName = codeName;
 			linux.derived = usingBaseDistro;
+
+			if (!linux.EnsureVersionInformation (context)) {
+				throw new InvalidOperationException ("Unable to detect version of your Linux distribution");
+			}
 
 			return linux;
 		}

@@ -373,3 +373,158 @@ steps rely on having the Android NDK installed.
         (gdb) set sysroot /tmp/gdb-symbols
         (gdb) set solib-search-path /tmp/gdb-symbols
         (gdb) target remote :50999
+
+# .NET 6 Tips
+
+## Finding Mono runtime packs
+
+The Mono "runtime packs" for Android are:
+
+* https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.android-arm/
+* https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.android-arm64/
+* https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.android-x86/
+* https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.android-x64/
+
+`main` builds of the Mono runtime packs are on the following NuGet
+feed, such as this `nuget.config`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
+  </packageSources>
+</configuration>
+```
+
+You can view these packages on Azure DevOps here:
+
+* https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6
+
+You can search for a given pack such as
+`Microsoft.NETCore.App.Runtime.android-arm` and download the `.nupkg`
+for a given version if needed.
+
+To find the commit of a given package, locate the `.nuspec` file
+inside the `.nupkg`, and look for:
+
+```xml
+<repository type="git" url="https://github.com/dotnet/runtime" commit="7bd472498e690e9421df86d5a9d728faa939742c" />
+```
+
+This information is also visible on Windows if you have [NuGet Package
+Explorer][nuget-explorer].
+
+[nuget-explorer]: https://github.com/NuGetPackageExplorer/NuGetPackageExplorer
+
+## Testing different Mono runtime pack versions
+
+One common scenario that comes up -- how does one test a specific
+dotnet/runtime build along with a .NET 6 Android application?
+
+One way to do this would be to copy individual files on top of the
+NuGet cache, such as:
+
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-arm/`
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-arm64/`
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-x86/`
+* `~/.nuget/packages/microsoft.netcore.app.runtime.mono.android-x64/`
+
+However, this is not the best idea, since there are many files in
+these packs. It would be an OK approach if you only need to update one
+file.
+
+A second (better) way is to add this MSBuild target to your Android
+`.csproj` file:
+
+```xml
+<Target Name="UpdateMonoRuntimePacks" BeforeTargets="ProcessFrameworkReferences">
+  <ItemGroup>
+      <KnownRuntimePack 
+          Update="Microsoft.NETCore.App"
+          Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net6.0' "
+          LatestRuntimeFrameworkVersion="6.0.0-preview.7.21364.3"
+      />
+  </ItemGroup>
+</Target>
+```
+
+`6.0.0-preview.7.21364.3` is a version from the `dotnet6` feed above,
+and so you would also need an accompanying `nuget.config` file.
+
+This could also be used with local or CI builds of dotnet/runtime by
+copying `.nupkg` files to the `library-packs` directory of a given
+.NET install:
+
+* `C:\Program Files\dotnet\library-packs`
+* `/usr/local/share/dotnet/library-packs`
+* `~/android-toolchain/dotnet/library-packs`
+
+The `library-packs` directory is simply an implicit NuGet feed that is
+automatically picked up by the .NET SDK.
+
+## Enabling Mono Logging
+
+Since [6e58ce4][6e58ce4], logging from Mono is no longer enabled by
+default. You can set the `debug.mono.log` system property to answer
+questions like: Is AOT working? Is the Mono Interpreter enabled?
+
+If you wanted to enable logging for AOT, for example:
+
+```bash
+$ adb shell setprop debug.mono.log mono_log_level=debug,mono_log_mask=aot
+```
+
+You could use `mono_log_mask=all` to enable all logging. See the [Mono
+documentation][mono-logging] for more information about
+`MONO_LOG_LEVEL` and `MONO_LOG_MASK`.
+
+There is further logging produced by `libmonodroid.so` you can enable with:
+
+```bash
+$ adb shell setprop debug.mono.log=default,timing=bare,assembly,gc,debugger
+```
+
+You can combine both together. The following would log nearly everything:
+
+```bash
+$ adb shell setprop debug.mono.log=default,timing=bare,assembly,gc,debugger,mono_log_level=debug,mono_log_mask=aot
+```
+
+To unset `debug.mono.log`, you can do:
+
+```bash
+$ adb shell setprop debug.mono.log "''"
+```
+
+You could also reboot the device or emulator to completely clear all
+system properties.
+
+The `debug.mono.log` system property can also be set in an
+`@(AndroidEnvironment)` text file. However, the system property will
+be preferred if it is not blank.
+
+[mono-logging]: https://www.mono-project.com/docs/advanced/runtime/logging-runtime-events/
+[6e58ce4]: https://github.com/xamarin/xamarin-android/commit/6e58ce405d00a965f3c206e2d509f5a5343b16f7
+
+## Installing .NET MAUI
+
+`make pack-dotnet` or `msbuild Xamarin.Android.sln -t:PackDotNet`
+provisions a .NET SDK and locally built Android workload in:
+
+    ~/android-toolchain/dotnet/
+
+If you *also* want .NET MAUI, you don't want to `dotnet workload
+install maui`, because it will blow away your local build of the
+Android workload.
+
+To simplify things, we have an MSBuild target to install .NET MAUI:
+
+    msbuild Xamarin.Android.sln -t:InstallMaui -p:MauiVersion=6.0.100-rc.1.1351
+
+To find the version number of .NET MAUI you want to install, find the
+package on the [nightly Azure DevOps feed][maui-feed]. Or look for the
+`Microsoft.NET.Sdk.Maui.Manifest-6.0.100` package on NuGet.org for public
+releases.
+
+[maui-feed]: https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6%40Local
