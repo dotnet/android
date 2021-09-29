@@ -49,12 +49,6 @@ namespace Xamarin.Android.Build.Tests
 
 			static SetUp ()
 			{
-#if NETCOREAPP
-				Builder.UseDotNet = true;
-#else
-				Builder.UseDotNet = false;
-#endif
-
 				using (var builder = new Builder ()) {
 					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
 					AndroidMSBuildDirectory = builder.AndroidMSBuildDirectory;

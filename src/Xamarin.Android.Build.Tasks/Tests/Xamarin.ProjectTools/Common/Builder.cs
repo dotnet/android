@@ -22,7 +22,7 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// If true, use `dotnet build` and IShortFormProject throughout the tests
 		/// </summary>
-		public static bool UseDotNet { get; set; }
+		public static bool UseDotNet => Environment.Version.Major >= 5;
 
 		string root;
 		string buildLogFullPath;
