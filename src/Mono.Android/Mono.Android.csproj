@@ -47,6 +47,16 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <IncludeAndroidJavadoc Condition=" '$(IncludeAndroidJavadoc)' == '' And '$(CONVERT_JAVADOC_TO_XMLDOC)' == 'true' And '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)'">True</IncludeAndroidJavadoc>
+    <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense+extraremarks</AndroidJavadocVerbosity>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
+    <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
+    <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
   </PropertyGroup>
 
