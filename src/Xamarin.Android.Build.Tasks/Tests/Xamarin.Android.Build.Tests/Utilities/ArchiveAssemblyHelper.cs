@@ -23,6 +23,7 @@ namespace Xamarin.Android.Build.Tests
 		readonly string archivePath;
 		readonly string assembliesRootDir;
 		bool useAssemblyBlobs;
+		List<string> archiveContents;
 
 		public ArchiveAssemblyHelper (string archivePath, bool useAssemblyBlobs)
 		{
@@ -45,8 +46,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		public List<string> ListArchiveContents (string blobEntryPrefix = DefaultBlobEntryPrefix)
+		public List<string> ListArchiveContents (string blobEntryPrefix = DefaultBlobEntryPrefix, bool forceRefresh = false)
 		{
+			if (!forceRefresh && archiveContents != null) {
+				return archiveContents;
+			}
+
 			if (String.IsNullOrEmpty (blobEntryPrefix)) {
 				throw new ArgumentException (nameof (blobEntryPrefix), "must not be null or empty");
 			}
@@ -58,6 +63,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
+			archiveContents = entries;
 			if (!useAssemblyBlobs) {
 				Console.WriteLine ("Not using assembly blobs");
 				return entries;
@@ -79,6 +85,16 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			return entries;
+		}
+
+		public bool Exists (string entryPath)
+		{
+			List<string> contents = ListArchiveContents (assembliesRootDir);
+			if (contents.Count == 0) {
+				return false;
+			}
+
+			return contents.Contains (entryPath);
 		}
 
 		public void Contains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles)

@@ -96,6 +96,17 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */          "Full",
 				/* embedMdb */           !CommercialBuildAvailable, // because we don't use FastDev in the OSS repo
 				/* expectedRuntime */    "debug",
+				/* usesAssemblyBlobs */  false,
+			},
+			new object[] {
+				/* isRelease */          false,
+				/* monoSymbolArchive */  false ,
+				/* aotAssemblies */      false,
+				/* debugSymbols */       true,
+				/* debugType */          "Full",
+				/* embedMdb */           !CommercialBuildAvailable, // because we don't use FastDev in the OSS repo
+				/* expectedRuntime */    "debug",
+				/* usesAssemblyBlobs */  true,
 			},
 			new object[] {
 				/* isRelease */          true,
@@ -105,6 +116,17 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */          "Full",
 				/* embedMdb */           false,
 				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  false,
+			},
+			new object[] {
+				/* isRelease */          true,
+				/* monoSymbolArchive */  false,
+				/* aotAssemblies */      false,
+				/* debugSymbols */       true,
+				/* debugType */          "Full",
+				/* embedMdb */           false,
+				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  true,
 			},
 			new object[] {
 				/* isRelease */          true,
@@ -114,6 +136,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */          "Full",
 				/* embedMdb */           false,
 				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  false,
 			},
 			new object[] {
 				/* isRelease */          true,
@@ -123,6 +146,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */          "Portable",
 				/* embedMdb */           false,
 				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  false,
 			},
 			new object[] {
 				/* isRelease */          true,
@@ -132,6 +156,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */          "Portable",
 				/* embedMdb */           false,
 				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  false,
 			},
 			new object[] {
 				/* isRelease */          true,
@@ -141,6 +166,17 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */          "Portable",
 				/* embedMdb */           false,
 				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  false,
+			},
+			new object[] {
+				/* isRelease */          true,
+				/* monoSymbolArchive */  false ,
+				/* aotAssemblies */      false,
+				/* debugSymbols */       true,
+				/* debugType */          "Portable",
+				/* embedMdb */           false,
+				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  true,
 			},
 			new object[] {
 				/* isRelease */          true,
@@ -150,6 +186,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */          "",
 				/* embedMdb */           false,
 				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  false,
 			},
 			new object[] {
 				/* isRelease */          true,
@@ -159,9 +196,19 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */          "",
 				/* embedMdb */           false,
 				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  false,
+			},
+			new object[] {
+				/* isRelease */          true,
+				/* monoSymbolArchive */  true ,
+				/* aotAssemblies */      true,
+				/* debugSymbols */       false,
+				/* debugType */          "",
+				/* embedMdb */           false,
+				/* expectedRuntime */    "release",
+				/* usesAssemblyBlobs */  true,
 			},
 		};
 #pragma warning restore 414
 	}
 }
-

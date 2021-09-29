@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 		protected const string BlobExtension = ".blob";
 
 		static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
-		static uint id = 0;
+		static readonly Dictionary<string, uint> apkIds = new Dictionary<string, uint> (StringComparer.Ordinal);
 
 		protected static uint globalAssemblyIndex = 0;
 
@@ -52,7 +52,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// NOTE: NOT thread safe, if we ever have parallel runs of BuildApk this operation must either be atomic or protected with a lock
-			ID = id++;
+			if (!apkIds.ContainsKey (apkName)) {
+				apkIds.Add (apkName, 0);
+			}
+			ID = apkIds[apkName]++;
 
 			this.archiveAssembliesPrefix = archiveAssembliesPrefix;
 			ApkName = apkName;
