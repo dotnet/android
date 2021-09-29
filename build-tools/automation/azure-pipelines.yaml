@@ -125,6 +125,7 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
+      path: s/xamarin-android
 
     - template: yaml-templates/install-microbuild-tooling.yaml
       parameters:
@@ -409,6 +410,7 @@ stages:
     - checkout: self
       clean: true
       submodules: recursive
+      path: s/xamarin-android
 
     - checkout: monodroid
       clean: true
@@ -1518,6 +1520,7 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
+      path: s/xamarin-android
 
     - checkout: release_scripts
       clean: true
