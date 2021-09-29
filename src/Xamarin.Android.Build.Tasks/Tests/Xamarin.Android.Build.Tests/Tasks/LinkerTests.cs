@@ -211,20 +211,23 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RemoveDesigner ()
+		public void RemoveDesigner ([Values (true, false)] bool usesAssemblyBlobs)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
 			proj.SetProperty ("AndroidLinkResources", "True");
+			proj.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
 			string assemblyName = proj.ProjectName;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
+				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
+				Assert.IsTrue (helper.Exists ($"assemblies/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
+				// TODO: helper must be able to extract assembly from the blob
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ($"assemblies/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
 					var entry = zip.ReadEntry ($"assemblies/{assemblyName}.dll");
 					using (var stream = new MemoryStream ()) {
 						entry.Extract (stream);

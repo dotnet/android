@@ -9,7 +9,7 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
-	class ArchiveAssemblyHelper
+	public class ArchiveAssemblyHelper
 	{
 		public const string DefaultBlobEntryPrefix = "{blob}";
 
@@ -20,10 +20,19 @@ namespace Xamarin.Android.Build.Tests
 			".mdb",
 		};
 
+		static readonly Dictionary<string, string> ArchToAbi = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+			{"x86", "x86"},
+			{"x86_64", "x86_64"},
+			{"armeabi_v7a", "armeabi-v7a"},
+			{"arm64_v8a", "arm64-v8a"},
+		};
+
 		readonly string archivePath;
 		readonly string assembliesRootDir;
 		bool useAssemblyBlobs;
 		List<string> archiveContents;
+
+		public string ArchivePath => archivePath;
 
 		public ArchiveAssemblyHelper (string archivePath, bool useAssemblyBlobs)
 		{
@@ -70,26 +79,35 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var explorer = new BlobExplorer (archivePath);
-			foreach (var kvp in explorer.AssembliesByName) {
-				string name = kvp.Key;
-				BlobAssembly asm = kvp.Value;
+			foreach (var asm in explorer.Assemblies) {
+				string prefix = blobEntryPrefix;
 
-				entries.Add ($"{blobEntryPrefix}{name}.dll");
+				if (!String.IsNullOrEmpty (asm.Blob.Arch)) {
+					string arch = ArchToAbi[asm.Blob.Arch];
+					prefix = $"{prefix}{arch}/";
+				}
+
+				entries.Add ($"{prefix}{asm.Name}.dll");
 				if (asm.DebugDataOffset > 0) {
-					entries.Add ($"{blobEntryPrefix}{name}.pdb");
+					entries.Add ($"{prefix}{asm.Name}.pdb");
 				}
 
 				if (asm.ConfigDataOffset > 0) {
-					entries.Add ($"{blobEntryPrefix}{name}.dll.config");
+					entries.Add ($"{prefix}{asm.Name}.dll.config");
 				}
+			}
+
+			Console.WriteLine ("Archive entries with synthetised assembly blob entries:");
+			foreach (string e in entries) {
+				Console.WriteLine ($"  {e}");
 			}
 
 			return entries;
 		}
 
-		public bool Exists (string entryPath)
+		public bool Exists (string entryPath, bool forceRefresh = false)
 		{
-			List<string> contents = ListArchiveContents (assembliesRootDir);
+			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh);
 			if (contents.Count == 0) {
 				return false;
 			}
