@@ -226,16 +226,11 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (apk);
 				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
 				Assert.IsTrue (helper.Exists ($"assemblies/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
-				// TODO: helper must be able to extract assembly from the blob
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					var entry = zip.ReadEntry ($"assemblies/{assemblyName}.dll");
-					using (var stream = new MemoryStream ()) {
-						entry.Extract (stream);
-						stream.Position = 0;
-						using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
-							var type = assembly.MainModule.GetType ($"{assemblyName}.Resource");
-							Assert.AreEqual (0, type.NestedTypes.Count, "All Nested Resource Types should be removed.");
-						}
+				using (var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll")) {
+					stream.Position = 0;
+					using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
+						var type = assembly.MainModule.GetType ($"{assemblyName}.Resource");
+						Assert.AreEqual (0, type.NestedTypes.Count, "All Nested Resource Types should be removed.");
 					}
 				}
 			}

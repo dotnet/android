@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,8 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class ArchiveAssemblyHelper
 	{
-		public const string DefaultBlobEntryPrefix = "{blob}";
+		public const string DefaultBlobEntryPrefix = "{blobReader}";
+		const int BlobReadBufferSize = 8192;
 
 		static readonly HashSet<string> SpecialExtensions = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
 			".dll",
@@ -26,6 +28,8 @@ namespace Xamarin.Android.Build.Tests
 			{"armeabi_v7a", "armeabi-v7a"},
 			{"arm64_v8a", "arm64-v8a"},
 		};
+
+		static readonly ArrayPool<byte> buffers = ArrayPool<byte>.Create ();
 
 		readonly string archivePath;
 		readonly string assembliesRootDir;
@@ -53,6 +57,80 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				assembliesRootDir = String.Empty;
 			}
+		}
+
+		public Stream ReadEntry (string path)
+		{
+			if (useAssemblyBlobs) {
+				return ReadBlobEntry (path);
+			}
+
+			return ReadZipEntry (path);
+		}
+
+		Stream ReadZipEntry (string path)
+		{
+			using (var zip = ZipHelper.OpenZip (archivePath)) {
+				ZipEntry entry = zip.ReadEntry (path);
+				var ret = new MemoryStream ();
+				entry.Extract (ret);
+				ret.Flush ();
+				return ret;
+			}
+		}
+
+		Stream ReadBlobEntry (string path)
+		{
+			BlobReader blobReader = null;
+			BlobAssembly assembly = null;
+			string name = Path.GetFileNameWithoutExtension (path);
+			var explorer = new BlobExplorer (archivePath);
+
+			foreach (var asm in explorer.Assemblies) {
+				if (String.Compare (name, asm.Name, StringComparison.Ordinal) != 0) {
+					continue;
+				}
+				assembly = asm;
+				blobReader = asm.Blob;
+				break;
+			}
+
+			if (blobReader == null) {
+				Console.WriteLine ($"Blob for entry {path} not found, will try a standard Zip read");
+				return ReadZipEntry (path);
+			}
+
+			string blobEntryName;
+			if (String.IsNullOrEmpty (blobReader.Arch)) {
+				blobEntryName = $"{assembliesRootDir}assemblies.blob";
+			} else {
+				blobEntryName = $"{assembliesRootDir}assemblies_{blobReader.Arch}.blob";
+			}
+
+			Stream blob = ReadZipEntry (blobEntryName);
+			if (blob == null) {
+				Console.WriteLine ($"Blob zip entry {blobEntryName} does not exist");
+				return null;
+			}
+
+			blob.Seek (assembly.DataOffset, SeekOrigin.Begin);
+			var ret = new MemoryStream ();
+			byte[] buffer = buffers.Rent (BlobReadBufferSize);
+			int toRead = (int)assembly.DataSize;
+			while (toRead > 0) {
+				int nread = blob.Read (buffer, 0, BlobReadBufferSize);
+				if (nread <= 0) {
+					break;
+				}
+
+				ret.Write (buffer, 0, nread);
+				toRead -= nread;
+			}
+			ret.Flush ();
+			blob.Dispose ();
+			buffers.Return (buffer);
+
+			return ret;
 		}
 
 		public List<string> ListArchiveContents (string blobEntryPrefix = DefaultBlobEntryPrefix, bool forceRefresh = false)
@@ -97,7 +175,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			Console.WriteLine ("Archive entries with synthetised assembly blob entries:");
+			Console.WriteLine ("Archive entries with synthetised assembly blobReader entries:");
 			foreach (string e in entries) {
 				Console.WriteLine ($"  {e}");
 			}
@@ -170,7 +248,7 @@ namespace Xamarin.Android.Build.Tests
 			if (explorer.AssembliesByName.Count != 0) {
 				existingFiles.AddRange (blobAssemblies);
 
-				// We need to fake config and debug files since they have no named entries in the blob
+				// We need to fake config and debug files since they have no named entries in the blobReader
 				foreach (string file in configFiles) {
 					BlobAssembly asm = GetBlobAssembly (file);
 					if (asm == null) {
