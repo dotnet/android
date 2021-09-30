@@ -613,6 +613,7 @@ using System.Runtime.Serialization.Json;
 			proj.SetAndroidSupportedAbis (abis);
 			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
 			builder = CreateApkBuilder ();
+			builder.BuildLogFile = "install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
 			if (!Builder.UseDotNet) {
@@ -627,6 +628,7 @@ using System.Runtime.Serialization.Json;
 			var logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
 			Assert.AreEqual (logProp, "all", "The debug.mono.log prop was not set correctly.");
 
+			builder.BuildLogFile = "run.log";
 			if (CommercialBuildAvailable)
 				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
 			else
