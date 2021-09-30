@@ -9,7 +9,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-3")]
+	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Children)]
 	public class BindingBuildTest : BaseTest {
 #pragma warning disable 414

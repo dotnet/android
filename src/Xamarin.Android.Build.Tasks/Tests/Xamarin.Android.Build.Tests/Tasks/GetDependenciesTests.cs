@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.IO;
@@ -11,7 +11,7 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
-	[Category ("Node-2")]
+	[Category ("Node-5")]
 	[Parallelizable (ParallelScope.Children)]
 	public class GetDependenciesTest : BaseTest {
 

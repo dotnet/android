@@ -954,11 +954,33 @@ stages:
       job_name: mac_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
+      
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 4
+      job_name: mac_msbuild_tests_4
+      job_suffix: Legacy
+      nunit_categories: '&& cat != SmokeTests'
+
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 5
+      job_name: mac_msbuild_tests_5
+      job_suffix: Legacy
+      nunit_categories: '&& cat != SmokeTests'
+
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 6
+      job_name: mac_msbuild_tests_6
+      job_suffix: Legacy
+      nunit_categories: '&& cat != SmokeTests'
 
   # Xamarin.Android (Test MSBuild Legacy - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 1
+      additional_node_id: 4
       job_name: win_msbuild_tests_1
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
@@ -966,6 +988,7 @@ stages:
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 2
+      additional_node_id: 5
       job_name: win_msbuild_tests_2
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
@@ -974,6 +997,7 @@ stages:
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 3
+      additional_node_id: 6
       job_name: win_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
@@ -1008,10 +1032,35 @@ stages:
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'net6.0'
 
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 4
+      job_name: mac_dotnet_tests_4
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'net6.0'
+
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 5
+      job_name: mac_dotnet_tests_5
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'net6.0'
+
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 6
+      job_name: mac_dotnet_tests_6
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'net6.0'
+
   # Xamarin.Android (Test MSBuild One .NET - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 1
+      additional_node_id: 4
       job_name: win_dotnet_tests_1
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
@@ -1020,6 +1069,7 @@ stages:
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 2
+      additional_node_id: 5
       job_name: win_dotnet_tests_2
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
@@ -1028,6 +1078,7 @@ stages:
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 3
+      additional_node_id: 6
       job_name: win_dotnet_tests_3
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)

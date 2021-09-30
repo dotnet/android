@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.IO;
@@ -9,7 +9,7 @@ using System.Text;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-3")]
+	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Children)]
 	public class AidlTest : BaseTest
 	{

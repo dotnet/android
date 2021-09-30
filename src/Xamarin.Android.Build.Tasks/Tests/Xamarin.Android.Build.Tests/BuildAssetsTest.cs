@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-3")]
+	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Children)]
 	public class BuildAssetsTest : BaseTest
 	{

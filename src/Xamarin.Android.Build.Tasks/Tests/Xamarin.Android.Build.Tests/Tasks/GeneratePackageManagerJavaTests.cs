@@ -11,7 +11,7 @@ using Microsoft.Android.Build.Tasks;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-2")]
+	[Category ("Node-5")]
 	public class GeneratePackageManagerJavaTests : BaseTest
 	{
 #pragma warning disable 414

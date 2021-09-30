@@ -8,7 +8,7 @@ using Xamarin.Android.Tasks;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-2")]
+	[Category ("Node-5")]
 	public class GenerateLibraryResourcesTests : BaseTest
 	{
 		string temp;
