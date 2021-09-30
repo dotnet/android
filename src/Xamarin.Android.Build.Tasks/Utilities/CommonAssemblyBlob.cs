@@ -12,8 +12,8 @@ namespace Xamarin.Android.Tasks
 	{
 		readonly List<BlobAssemblyInfo> assemblies;
 
-		public CommonAssemblyBlob (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log)
-			: base (apkName, archiveAssembliesPrefix, log)
+		public CommonAssemblyBlob (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log, uint id, AssemblyBlobGlobalIndex globalIndexCounter)
+			: base (apkName, archiveAssembliesPrefix, log, id, globalIndexCounter)
 		{
 			assemblies = new List <BlobAssemblyInfo> ();
 		}

@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests
 			{"arm64_v8a", "arm64-v8a"},
 		};
 
-		static readonly ArrayPool<byte> buffers = ArrayPool<byte>.Create ();
+		static readonly ArrayPool<byte> buffers = ArrayPool<byte>.Shared;
 
 		readonly string archivePath;
 		readonly string assembliesRootDir;

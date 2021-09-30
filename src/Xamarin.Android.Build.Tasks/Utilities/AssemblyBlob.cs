@@ -28,20 +28,18 @@ namespace Xamarin.Android.Tasks
 		protected const string BlobExtension = ".blob";
 
 		static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
-		static readonly Dictionary<string, uint> apkIds = new Dictionary<string, uint> (StringComparer.Ordinal);
-
-		protected static uint globalAssemblyIndex = 0;
 
 		string archiveAssembliesPrefix;
 		string indexBlobPath;
 
 		protected string ApkName { get; }
 		protected TaskLoggingHelper Log { get; }
+		protected AssemblyBlobGlobalIndex GlobalIndexCounter { get; }
 
 		public uint ID { get; }
 		public bool IsIndexBlob => ID == 0;
 
-		protected AssemblyBlob (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log)
+		protected AssemblyBlob (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log, uint id, AssemblyBlobGlobalIndex globalIndexCounter)
 		{
 			if (String.IsNullOrEmpty (archiveAssembliesPrefix)) {
 				throw new ArgumentException ("must not be null or empty", nameof (archiveAssembliesPrefix));
@@ -51,11 +49,8 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentException ("must not be null or empty", nameof (apkName));
 			}
 
-			// NOTE: NOT thread safe, if we ever have parallel runs of BuildApk this operation must either be atomic or protected with a lock
-			if (!apkIds.ContainsKey (apkName)) {
-				apkIds.Add (apkName, 0);
-			}
-			ID = apkIds[apkName]++;
+			GlobalIndexCounter = globalIndexCounter ?? throw new ArgumentNullException (nameof (globalIndexCounter));
+			ID = id;
 
 			this.archiveAssembliesPrefix = archiveAssembliesPrefix;
 			ApkName = apkName;
@@ -317,7 +312,7 @@ namespace Xamarin.Android.Tasks
 			(offset, size) = WriteFile (assembly.FilesystemAssemblyPath, true);
 
 			// NOTE: globalAssemblIndex++ is not thread safe but it **must** increase monotonically (see also ArchAssemblyBlob.Generate for a special case)
-			var ret = new AssemblyBlobIndexEntry (assemblyName, ID, globalAssemblyIndex++, localBlobIndex) {
+			var ret = new AssemblyBlobIndexEntry (assemblyName, ID, GlobalIndexCounter.Increment (), localBlobIndex) {
 				DataOffset = offset,
 				DataSize = size,
 			};

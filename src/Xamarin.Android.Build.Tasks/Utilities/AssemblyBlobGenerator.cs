@@ -24,6 +24,14 @@ namespace Xamarin.Android.Tasks
 
 		AssemblyBlob indexBlob;
 
+		// IDs must be counted per AssemblyBlobGenerator instance because it's possible that a single build will create more than one instance of the class and each time
+		// the blobs must be assigned IDs starting from 0, or there will be errors due to "missing" index blob
+		readonly Dictionary<string, uint> apkIds = new Dictionary<string, uint> (StringComparer.Ordinal);
+
+		// Global assembly index must be restarted from 0 for the same reasons as apkIds above and at the same time it must be unique for each assembly added to **any**
+		// blob, thus we need to keep the state here
+		AssemblyBlobGlobalIndex globalIndexCounter = new AssemblyBlobGlobalIndex ();
+
 		public AssemblyBlobGenerator (string archiveAssembliesPrefix, TaskLoggingHelper log)
 		{
 			if (String.IsNullOrEmpty (archiveAssembliesPrefix)) {
@@ -46,8 +54,8 @@ namespace Xamarin.Android.Tasks
 			Blob blob;
 			if (!blobs.ContainsKey (apkName)) {
 				blob = new Blob {
-					Common = new CommonAssemblyBlob (apkName, archiveAssembliesPrefix, log),
-					Arch = new ArchAssemblyBlob (apkName, archiveAssembliesPrefix, log)
+					Common = new CommonAssemblyBlob (apkName, archiveAssembliesPrefix, log, GetNextBlobID (apkName), globalIndexCounter),
+					Arch = new ArchAssemblyBlob (apkName, archiveAssembliesPrefix, log, GetNextBlobID (apkName), globalIndexCounter)
 				};
 
 				blobs.Add (apkName, blob);
@@ -77,6 +85,15 @@ namespace Xamarin.Android.Tasks
 
 				indexBlob = b;
 			}
+		}
+
+		uint GetNextBlobID (string apkName)
+		{
+			// NOTE: NOT thread safe, if we ever have parallel runs of BuildApk this operation must either be atomic or protected with a lock
+			if (!apkIds.ContainsKey (apkName)) {
+				apkIds.Add (apkName, 0);
+			}
+			return apkIds[apkName]++;
 		}
 
 		public Dictionary<string, List<string>> Generate (string outputDirectory)

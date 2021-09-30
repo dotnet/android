@@ -12,8 +12,8 @@ namespace Xamarin.Android.Tasks
 		readonly Dictionary<string, List<BlobAssemblyInfo>> assemblies;
 		HashSet<string> seenArchAssemblyNames;
 
-		public ArchAssemblyBlob (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log)
-			: base (apkName, archiveAssembliesPrefix, log)
+		public ArchAssemblyBlob (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log, uint id, AssemblyBlobGlobalIndex globalIndexCounter)
+			: base (apkName, archiveAssembliesPrefix, log, id, globalIndexCounter)
 		{
 			assemblies = new Dictionary<string, List<BlobAssemblyInfo>> (StringComparer.OrdinalIgnoreCase);
 		}
@@ -100,7 +100,7 @@ namespace Xamarin.Android.Tasks
 				// NOTE: not thread safe! The counter must grow monotonically but we also don't want to use different index values for the architecture-specific
 				// assemblies with the same names, that would only waste space in the generated `libxamarin-app.so`.  To use the same index values for the same
 				// assemblies in different architectures we need to move the counter back here.
-				globalAssemblyIndex -= (uint)archAssemblies.Count;
+				GlobalIndexCounter.Subtract ((uint)archAssemblies.Count);
 
 				if (addToGlobalIndex) {
 					// We want the architecture-specific assemblies to be added to the global index only once
