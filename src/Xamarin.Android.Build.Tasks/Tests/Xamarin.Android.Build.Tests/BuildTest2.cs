@@ -506,7 +506,17 @@ class MemTest {
 				var files = new List<string> {
 					"material-menu-1.1.0.aar",
 				};
-				if (!Builder.UseDotNet) {
+				// .NET 6 tests use AndroidX, others use Support
+				if (Builder.UseDotNet) {
+					files.Add ("androidx.core.core.aar");
+					files.Add ("androidx.transition.transition.aar");
+					files.Add ("androidx.recyclerview.recyclerview.aar");
+					files.Add ("androidx.coordinatorlayout.coordinatorlayout.aar");
+					files.Add ("androidx.cardview.cardview.aar");
+					files.Add ("androidx.appcompat.appcompat-resources.aar");
+					files.Add ("androidx.appcompat.appcompat.aar");
+					files.Add ("com.google.android.material.material.aar");
+				} else {
 					files.Add ("Xamarin.Android.Support.Compat.dll");
 					files.Add ("Xamarin.Android.Support.Design.dll");
 					files.Add ("Xamarin.Android.Support.Media.Compat.dll");

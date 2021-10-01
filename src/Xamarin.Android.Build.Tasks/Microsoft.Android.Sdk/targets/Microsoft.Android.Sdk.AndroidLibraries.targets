@@ -26,13 +26,17 @@ projects.
       <_AarFromLibraries     Include="%(_AarDistinctDirectory.Identity)*.aar" />
     </ItemGroup>
     <ItemGroup Condition=" '@(_AarFromLibraries->Count())' != '0' ">
-      <!-- NOTE: set %(Pack) to false for located .aar files, we should not repackage into NuGets -->
-      <AndroidAarLibrary Include="@(_AarFromLibraries)" Exclude="@(AndroidAarLibrary)" Pack="false" />
       <!--
-        NOTE: %(AndroidSkipResourceProcessing) is required for located .aar's; there could be custom views.
-        Update in a second step, in case there was an existing @(AndroidAarLibrary) with the same path.
+        NOTE:
+        * set %(Pack) to false for located .aar files, we should not repackage into NuGets
+        * %(AndroidSkipResourceProcessing) is required for located .aar's; there could be custom views.
       -->
-      <AndroidAarLibrary Update="@(_AarFromLibraries)" AndroidSkipResourceProcessing="false" />
+      <AndroidAarLibrary
+          Include="@(_AarFromLibraries)"
+          Exclude="@(AndroidAarLibrary)"
+          Pack="false"
+          AndroidSkipResourceProcessing="false"
+      />
     </ItemGroup>
   </Target>
 
