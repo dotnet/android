@@ -12,7 +12,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice")]
+	[Category ("UsesDevice"), Category ("Node-1")]
 	public class MonoAndroidExportTest : DeviceTest {
 #pragma warning disable 414
 		static object [] MonoAndroidExportTestCases = new object [] {

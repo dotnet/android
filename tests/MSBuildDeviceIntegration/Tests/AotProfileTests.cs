@@ -5,7 +5,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("UsesDevice"), Category ("AOT"), Category ("ProfiledAOT")]
+	[Category ("UsesDevice"), Category ("AOT"), Category ("ProfiledAOT"), Category ("Node-3")]
 	public class AotProfileTests : DeviceTest
 	{
 

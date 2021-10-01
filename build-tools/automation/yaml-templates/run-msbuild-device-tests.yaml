@@ -1,6 +1,7 @@
 # Runs MSBuild tests against a device running on macOS
 
 parameters:
+  node_id: 0
   job_name: ''
   job_suffix: ''
   nunit_categories: ''
@@ -9,10 +10,10 @@ parameters:
 
 jobs:
   - job: ${{ parameters.job_name }}
-    displayName: MSBuild With Emulator - macOS - ${{ parameters.job_suffix }}
+    displayName: MSBuild With Emulator - macOS-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
     pool:
       vmImage: $(HostedMacImage)
-    timeoutInMinutes: 150
+    timeoutInMinutes: 90
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
@@ -29,7 +30,8 @@ jobs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - ${{ if eq(parameters.job_suffix, 'Legacy') }}:
+    # Only run on Legacy Node-1
+    - ${{ if and(eq(parameters.job_suffix, 'Legacy'), eq(parameters.node_id, 1)) }}:
       - task: MSBuild@1
         displayName: build check-boot-times.csproj
         inputs:
@@ -56,11 +58,22 @@ jobs:
     - template: run-nunit-tests.yaml
       parameters:
         useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
-        testRunTitle: MSBuildDeviceIntegration On Device - macOS - ${{ parameters.job_suffix }}
+        testRunTitle: MSBuildDeviceIntegration On Device - macOS-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
-        dotNetTestExtraArgs: --filter "TestCategory != TimeZoneInfo ${{ parameters.nunit_categories }}"
+        nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }} && cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
+        dotNetTestExtraArgs: --filter "TestCategory = Node-${{ parameters.node_id }} & TestCategory != TimeZoneInfo ${{ parameters.nunit_categories }}"
         testResultsFile: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}-$(XA.Build.Configuration).xml
+
+    # Tests with no "Node" category. This should be empty, but just in case! Only run these tests on node 1
+    - ${{ if eq(parameters.node_id, 1) }}:
+      - template: run-nunit-tests.yaml
+        parameters:
+          useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
+          testRunTitle: MSBuildDeviceIntegration On Device - macOS-NoNode - ${{ parameters.job_suffix }}
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
+          nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3 && cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
+          dotNetTestExtraArgs: --filter "TestCategory != Node-1 & TestCategory != Node-2 & TestCategory != Node-3 & TestCategory != TimeZoneInfo ${{ parameters.nunit_categories }}"
+          testResultsFile: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}-NoNode-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -74,6 +87,6 @@ jobs:
 
     - template: upload-results.yaml
       parameters:
-        artifactName: Test Results - MSBuild With Emulator - macOS - ${{ parameters.job_suffix }}
+        artifactName: Test Results - MSBuild With Emulator - macOS-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
 
     - template: fail-on-issue.yaml

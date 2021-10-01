@@ -13,7 +13,7 @@ using System.Collections.Generic;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice")]
+	[Category ("UsesDevice"), Category ("Node-3")]
 	public class DebuggingTest : DeviceTest {
 		[TearDown]
 		public void ClearDebugProperties ()
