@@ -52,7 +52,7 @@ namespace MonoDroid.Tuner
 				return false;
 
 #if !NET5_LINKER
-			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
+			CheckAppDomainUsage (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
 #endif  // !NET5_LINKER
 
 			return assembly.MainModule.HasTypeReference ("Java.Lang.Object");
@@ -86,22 +86,24 @@ namespace MonoDroid.Tuner
 			if (!CheckShouldProcessAssembly (assembly))
 				return;
 
-			if (FixAbstractMethodsUnconditional (assembly)) {
+			if (FixAbstractMethods (assembly)) {
 				Context.SafeReadSymbols (assembly);
 				UpdateAssemblyAction (assembly);
 				MarkAbstractMethodErrorType ();
 			}
 		}
 
-		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
+		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
-			if (IsProductOrSdkAssembly (assembly))
-				return;
-
-			CheckAppDomainUsageUnconditional (assembly, warn);
+			bool changed = false;
+			foreach (var type in assembly.MainModule.Types) {
+				if (MightNeedFix (type))
+					changed |= FixAbstractMethods (type);
+			}
+			return changed;
 		}
 
-		void CheckAppDomainUsageUnconditional (AssemblyDefinition assembly, Action<string> warn)
+		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
 		{
 			if (!assembly.MainModule.HasTypeReference ("System.AppDomain"))
 				return;
@@ -113,27 +115,13 @@ namespace MonoDroid.Tuner
 				}
 			}
 		}
-
-		internal bool FixAbstractMethods (AssemblyDefinition assembly)
-		{
-			return !IsProductOrSdkAssembly (assembly) && FixAbstractMethodsUnconditional (assembly);
-		}
-
-		bool FixAbstractMethodsUnconditional (AssemblyDefinition assembly)
-		{
-			bool changed = false;
-			foreach (var type in assembly.MainModule.Types) {
-				if (MightNeedFix (type))
-					changed |= FixAbstractMethods (type);
-			}
-			return changed;
-		}
 #endif  // !NET5_LINKER
 
-		bool IsProductOrSdkAssembly (AssemblyDefinition assembly)
-		{
-			return Profile.IsSdkAssembly (assembly) || Profile.IsProductAssembly (assembly);
-		}
+		bool IsProductOrSdkAssembly (AssemblyDefinition assembly) =>
+			IsProductOrSdkAssembly (assembly.Name.Name);
+
+		public bool IsProductOrSdkAssembly (string assemblyName) =>
+			Profile.IsSdkAssembly (assemblyName) || Profile.IsProductAssembly (assemblyName);
 
 		bool MightNeedFix (TypeDefinition type)
 		{

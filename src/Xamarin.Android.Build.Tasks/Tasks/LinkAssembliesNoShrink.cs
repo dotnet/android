@@ -1,11 +1,10 @@
+#nullable enable
 using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using System;
 using System.IO;
-
-using MTProfile = Mono.Tuner.Profile;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -21,13 +20,21 @@ namespace Xamarin.Android.Tasks
 		/// These are used so we have the full list of SearchDirectories
 		/// </summary>
 		[Required]
-		public ITaskItem [] ResolvedAssemblies { get; set; }
+		public ITaskItem [] ResolvedAssemblies { get; set; } = Array.Empty<ITaskItem> ();
 
 		[Required]
-		public ITaskItem [] SourceFiles { get; set; }
+		public ITaskItem [] SourceFiles { get; set; } = Array.Empty<ITaskItem> ();
 
 		[Required]
-		public ITaskItem [] DestinationFiles { get; set; }
+		public ITaskItem [] DestinationFiles { get; set; } = Array.Empty<ITaskItem> ();
+
+		/// <summary>
+		/// $(TargetName) would be "AndroidApp1" with no extension
+		/// </summary>
+		[Required]
+		public string TargetName { get; set; } = "";
+
+		public bool UsingAndroidNETSdk { get; set; }
 
 		public bool AddKeepAlives { get; set; }
 
@@ -45,31 +52,38 @@ namespace Xamarin.Android.Tasks
 				DeterministicMvid = Deterministic,
 			};
 
-			var hasSystemPrivateCorelib = false;
 			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParameters)) {
 				// Add SearchDirectories with ResolvedAssemblies
 				foreach (var assembly in ResolvedAssemblies) {
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
-					if (Path.GetFileName (assembly.ItemSpec).Equals ("System.Private.CoreLib.dll", StringComparison.OrdinalIgnoreCase))
-						hasSystemPrivateCorelib = true;
-
 					if (!resolver.SearchDirectories.Contains (path))
 						resolver.SearchDirectories.Add (path);
 				}
 
-				// Set up the FixAbstractMethodsStep
-				var step1 = new FixAbstractMethodsStep (resolver, new TypeDefinitionCache (), Log);
-				// Set up the AddKeepAlivesStep
-				var step2 = new AddKeepAlivesStep (resolver, new TypeDefinitionCache (), Log, hasSystemPrivateCorelib);
+				// Set up the FixAbstractMethodsStep and AddKeepAlivesStep
+				var cache = new TypeDefinitionCache ();
+				var fixAbstractMethodsStep = new FixAbstractMethodsStep (resolver, cache, Log);
+				var addKeepAliveStep = new AddKeepAlivesStep (resolver, cache, Log, UsingAndroidNETSdk);
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
-					AssemblyDefinition assemblyDefinition = null;
-
 					var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
-					if (!MTProfile.IsSdkAssembly (assemblyName) && !MTProfile.IsProductAssembly (assemblyName)) {
+
+					// In .NET 6+, we can skip the main assembly
+					if (UsingAndroidNETSdk && !AddKeepAlives && assemblyName == TargetName) {
+						CopyIfChanged (source, destination);
+						continue;
+					}
+					if (fixAbstractMethodsStep.IsProductOrSdkAssembly (assemblyName)) {
+						CopyIfChanged (source, destination);
+						continue;
+					}
+
+					// Check AppDomain usage on any non-Product or Sdk assembly
+					AssemblyDefinition? assemblyDefinition = null;
+					if (!UsingAndroidNETSdk) {
 						assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
-						step1.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogMessageFromText (msg, MessageImportance.High));
+						fixAbstractMethodsStep.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogMessageFromText (msg, MessageImportance.High));
 					}
 
 					// Only run the step on "MonoAndroid" assemblies
@@ -77,8 +91,8 @@ namespace Xamarin.Android.Tasks
 						if (assemblyDefinition == null)
 							assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
 
-						if (step1.FixAbstractMethods (assemblyDefinition) ||
-						    (AddKeepAlives && step2.AddKeepAlives (assemblyDefinition))) {
+						if (fixAbstractMethodsStep.FixAbstractMethods (assemblyDefinition) ||
+						    (AddKeepAlives && addKeepAliveStep.AddKeepAlives (assemblyDefinition))) {
 							Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
 							writerParameters.WriteSymbols = assemblyDefinition.MainModule.HasSymbols;
 							assemblyDefinition.Write (destination.ItemSpec, writerParameters);
@@ -86,18 +100,23 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 
-					if (MonoAndroidHelper.CopyAssemblyAndSymbols (source.ItemSpec, destination.ItemSpec)) {
-						Log.LogDebugMessage ($"Copied: {destination.ItemSpec}");
-					} else {
-						Log.LogDebugMessage ($"Skipped unchanged file: {destination.ItemSpec}");
-
-						// NOTE: We still need to update the timestamp on this file, or this target would run again
-						File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
-					}
+					CopyIfChanged (source, destination);
 				}
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		void CopyIfChanged (ITaskItem source, ITaskItem destination)
+		{
+			if (MonoAndroidHelper.CopyAssemblyAndSymbols (source.ItemSpec, destination.ItemSpec)) {
+				Log.LogDebugMessage ($"Copied: {destination.ItemSpec}");
+			} else {
+				Log.LogDebugMessage ($"Skipped unchanged file: {destination.ItemSpec}");
+
+				// NOTE: We still need to update the timestamp on this file, or this target would run again
+				File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
+			}
 		}
 
 		class FixAbstractMethodsStep : MonoDroid.Tuner.FixAbstractMethodsStep
