@@ -60,18 +60,27 @@ namespace Xamarin.Android.Tasks
 				string abi = kvp.Key;
 				List<BlobAssemblyInfo> archAssemblies = kvp.Value;
 
+				Log.LogMessage (MessageImportance.Low, $"Blob: assemblies for architecture {abi}:");
 				// All the architecture blobs must have assemblies in exactly the same order
 				archAssemblies.Sort ((BlobAssemblyInfo a, BlobAssemblyInfo b) => Path.GetFileName (a.FilesystemAssemblyPath).CompareTo (Path.GetFileName (b.FilesystemAssemblyPath)));
 				if (assemblyNames.Count == 0) {
+					Log.LogMessage (MessageImportance.Low, $"     first arch, preparing names list, {archAssemblies.Count} entries");
 					for (int i = 0; i < archAssemblies.Count; i++) {
 						BlobAssemblyInfo info = archAssemblies[i];
+						Log.LogMessage (MessageImportance.Low, $"   {Path.GetFileName (info.FilesystemAssemblyPath)}");
 						assemblyNames.Add (i, Path.GetFileName (info.FilesystemAssemblyPath));
 					}
 					continue;
 				}
 
+				Log.LogMessage (MessageImportance.Low, $"      {archAssemblies.Count} entries");
+				for (int i = 0; i < archAssemblies.Count; i++) {
+					BlobAssemblyInfo info = archAssemblies[i];
+					Log.LogMessage (MessageImportance.Low, $"   {Path.GetFileName (info.FilesystemAssemblyPath)}");
+				}
+
 				if (archAssemblies.Count != assemblyNames.Count) {
-					throw new InvalidOperationException ($"Assembly list for ABI '{abi}' has a different number of assemblies than other ABI lists");
+					throw new InvalidOperationException ($"Assembly list for ABI '{abi}' has a different number of assemblies than other ABI lists (expected {assemblyNames.Count}, found {archAssemblies.Count}");
 				}
 
 				for (int i = 0; i < archAssemblies.Count; i++) {
