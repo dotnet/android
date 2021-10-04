@@ -1092,14 +1092,46 @@ stages:
   # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - Legacy)"
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
-      job_name: mac_msbuilddevice_tests
+      node_id: 1
+      job_name: mac_msbuilddevice_tests_1
+      job_suffix: Legacy
+      jdkTestFolder: $(XA.Jdk11.Folder)
+
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      node_id: 2
+      job_name: mac_msbuilddevice_tests_2
+      job_suffix: Legacy
+      jdkTestFolder: $(XA.Jdk11.Folder)
+
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      node_id: 3
+      job_name: mac_msbuilddevice_tests_3
       job_suffix: Legacy
       jdkTestFolder: $(XA.Jdk11.Folder)
 
   # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - One .NET)"
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
-      job_name: mac_dotnetdevice_tests
+      node_id: 1
+      job_name: mac_dotnetdevice_tests_1
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'net6.0'
+
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      node_id: 2
+      job_name: mac_dotnetdevice_tests_2
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'net6.0'
+
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      node_id: 3
+      job_name: mac_dotnetdevice_tests_3
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'net6.0'
