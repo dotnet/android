@@ -119,27 +119,6 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 				m.Parameters.Count == item.Arguments.Length)
 				.ToArray ();
 
-			// First, try loose match.
-
-			MethodBase candidate = null;
-			bool overloaded = false;
-			foreach (var m in methods) {
-				if (overloaded)
-					break;
-				if (candidate != null) {
-					overloaded = true;
-					break;
-				} else
-					candidate = m;
-			}
-			if (!overloaded) {
-				if (candidate == null)
-					Errors.Add ("warning: method with matching argument count not found: " + t.FullName + " member: " + item.FormatMember ());
-				return candidate.Wrap ();
-			}
-
-			// Second, try strict match.
-
 			var argTypeLists = methods.Select (m => new { Method = m, Jni = m is Ctor ? ((Ctor) m).JniSignature : ((Method) m).JniSignature})
 			                          .Select (p => new { Method = p.Method, Arguments = p.Jni == null ? null : ParseJniMethodArgumentsSignature (p.Jni)})
 			                          .ToArray ();
