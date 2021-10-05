@@ -175,6 +175,12 @@ namespace Xamarin.Android.Tasks
 		void SetDestinationSubDirectory (ITaskItem assembly, string fileName, ITaskItem? symbol)
 		{
 			var rid = assembly.GetMetadata ("RuntimeIdentifier");
+			// Satellite assemblies have `RuntimeIdentifier` set, but they shouldn't - they aren't specific to any architecture, therefore we need to check it here in
+			// order to avoid them getting the `Abi` metadata, which would put them in the arch-specific assembly blob.
+			if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) || String.Compare ("resources", assembly.GetMetadata ("AssetType"), StringComparison.OrdinalIgnoreCase) == 0) {
+				rid = String.Empty;
+			}
+
 			var abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
 			if (!string.IsNullOrEmpty (abi)) {
 				string destination = Path.Combine (assembly.GetMetadata ("DestinationSubDirectory"), abi);
