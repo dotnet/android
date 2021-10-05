@@ -1,10 +1,6 @@
 steps:
 - template: use-dot-net.yaml
 
-- template: use-dot-net.yaml
-  parameters:
-    version: $(DotNetCoreVersion)
-
 - script: sudo rm /etc/apt/sources.list.d/treasure-data.list || true
   displayName: remove invalid treasure-data source
 

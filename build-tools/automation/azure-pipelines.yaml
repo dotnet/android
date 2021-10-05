@@ -39,7 +39,6 @@ variables:
   InstallerArtifactName: installers-unsigned
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
-  DotNetCoreVersion: 3.1.405
   DotNet6Version: 6.0.100-preview.3.21202.5
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -181,10 +180,6 @@ stages:
 
     - template: yaml-templates\use-dot-net.yaml
 
-    - template: yaml-templates\use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
-
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
     # VSIXInstaller.exe will exit non-zero when the downgrade attempt is a no-op, so we will allow this step to fail silently.
@@ -302,10 +297,6 @@ stages:
       displayName: set JI_JAVA_HOME
 
     - template: yaml-templates\use-dot-net.yaml
-
-    - template: yaml-templates\use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
 
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
@@ -505,8 +496,10 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
-      displayName: install emulator
+    - template: yaml-templates/run-xaprepare.yaml
+      parameters:
+        displayName: install emulator
+        arguments: --s=EmulatorTestDependencies
 
     - script: make prepare CONFIGURATION=$(ApkTestConfiguration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
       workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
@@ -756,8 +749,10 @@ stages:
       parameters:
         configuration: $(XA.Build.Configuration)
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
-      displayName: install emulator
+    - template: yaml-templates/run-xaprepare.yaml
+      parameters:
+        displayName: install emulator
+        arguments: --s=EmulatorTestDependencies
 
     - script: make prepare CONFIGURATION=$(XA.Build.Configuration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
       workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
@@ -889,8 +884,10 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
-      displayName: install emulator
+    - template: yaml-templates/run-xaprepare.yaml
+      parameters:
+        displayName: install emulator
+        arguments: --s=EmulatorTestDependencies
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -1309,8 +1306,10 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
-      displayName: install emulator
+    - template: yaml-templates/run-xaprepare.yaml
+      parameters:
+        displayName: install emulator
+        arguments: --s=EmulatorTestDependencies
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -1532,8 +1531,6 @@ stages:
       clean: true
 
     - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
 
     - task: DownloadPipelineArtifact@2
       inputs:
