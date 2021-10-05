@@ -940,6 +940,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
 			};
+			proj.SetProperty ("AndroidUseAssembliesBlob", "False");
 			using (var b = CreateApkBuilder ()) {
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
 					WebContentFileNameFromAzure = "PdbTestLibrary.dll"

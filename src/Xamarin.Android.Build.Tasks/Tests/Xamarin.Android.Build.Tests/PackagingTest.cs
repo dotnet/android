@@ -638,6 +638,7 @@ namespace XamFormsSample
 					},
 				}
 			};
+			app.SetProperty ("AndroidUseAssembliesBlob", "False");
 			app.MainActivity = @"using System;
 using Android.App;
 using Android.Content;
