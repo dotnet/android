@@ -95,7 +95,7 @@ namespace Xamarin.Android.Tasks
 						if (!string.IsNullOrEmpty (ProjectDir)) {
 							var fullRelPath = Path.GetFullPath (rel).Normalize (NormalizationForm.FormC);
 							var fullProjectPath = Path.GetFullPath (ProjectDir).Normalize (NormalizationForm.FormC);
-							if (fullRelPath.StartsWith (fullProjectPath)) {
+							if (fullRelPath.StartsWith (fullProjectPath, StringComparison.Ordinal)) {
 								rel = fullRelPath.Replace (fullProjectPath, string.Empty);
 							}
 						}
@@ -109,7 +109,7 @@ namespace Xamarin.Android.Tasks
 
 				if (prefixes != null) {
 					foreach (var p in prefixes) {
-						if (rel.StartsWith (p))
+						if (rel.StartsWith (p, StringComparison.Ordinal))
 							rel = rel.Substring (p.Length);
 					}
 				}

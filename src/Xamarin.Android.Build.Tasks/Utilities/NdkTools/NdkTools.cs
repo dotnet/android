@@ -140,7 +140,7 @@ namespace Xamarin.Android.Tasks
 		public string GetNdkToolPrefixForAOT (AndroidTargetArch arch, int apiLevel)
 		{
 			string path = GetToolPath (NdkToolKind.Assembler, arch, apiLevel);
-			return path.Substring (0, path.LastIndexOf ("-") + 1);;
+			return path.Substring (0, path.LastIndexOf ("-", StringComparison.Ordinal) + 1);;
 		}
 
 		// Work around for a bug in NDK r19 before its 'c' release. See NdkToolsWithClangWithPlatforms.ctor

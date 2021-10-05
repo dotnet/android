@@ -39,7 +39,7 @@ namespace Xamarin.ProjectTools
 
 		public string TargetFrameworkDirectory {
 			get {
-				int index = TargetFrameworks.IndexOf (";");
+				int index = TargetFrameworks.IndexOf (";", StringComparison.Ordinal);
 				if (index != -1) {
 					return TargetFrameworks.Substring (0, TargetFrameworks.Length - index).ToLowerInvariant ();
 				}

@@ -609,7 +609,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
 						.FirstOrDefault (x => x.Contains ("error XA1019:"));
 				Assert.IsNotNull (error, "Build should have failed with XA1019.");
 			}

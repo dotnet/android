@@ -312,7 +312,7 @@ namespace Xamarin.Android.Build.Tests
 		static string AssertIsAssemblerString (string file, string value, int lineNumber)
 		{
 			string v = value.Trim ();
-			Assert.IsTrue (v.StartsWith ("\"") && v.EndsWith("\""), $"Field value is not a valid assembler string in '{file}:{lineNumber}': {v}");
+			Assert.IsTrue (v.StartsWith ("\"", StringComparison.Ordinal) && v.EndsWith("\"", StringComparison.Ordinal), $"Field value is not a valid assembler string in '{file}:{lineNumber}': {v}");
 			return v.Trim ('"');
 		}
 

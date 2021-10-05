@@ -209,7 +209,7 @@ namespace Xamarin.Android.JniEnv
 
 				switch (entry.ApiName) {
 				case "NewArray":
-					var copyArray = JNIEnvEntries.Single (e => e.Name.StartsWith ("Get") && e.Name.EndsWith ("ArrayRegion") &&
+					var copyArray = JNIEnvEntries.Single (e => e.Name.StartsWith ("Get", StringComparison.Ordinal) && e.Name.EndsWith ("ArrayRegion", StringComparison.Ordinal) &&
 							e.Parameters [0].Type.Type == entry.ReturnType.Type);
 					o.Write ("\t\t{2} static {0} {1} (", entry.ReturnType.ManagedType, entry.ApiName, entry.Visibility);
 					o.WriteLine ("{0} array)", copyArray.Parameters [3].Type.ManagedType);
@@ -233,7 +233,7 @@ namespace Xamarin.Android.JniEnv
 					break;
 				case "CopyArray":
 					o.Write ("\t\t{2} static unsafe {0} {1} (", entry.ReturnType.ManagedType, entry.ApiName, entry.Visibility);
-					if (entry.Name.StartsWith ("G")) {
+					if (entry.Name.StartsWith ("G", StringComparison.Ordinal)) {
 						o.WriteLine ("IntPtr src, {0} dest)", entry.Parameters [3].Type.ManagedType);
 						o.WriteLine ("\t\t{");
 						o.WriteLine ("\t\t\tif (src == IntPtr.Zero)");
@@ -319,7 +319,7 @@ namespace Xamarin.Android.JniEnv
 			o.Write ("Env.{0} (Handle", entry.Name);
 			for (int i = 0; i < entry.Parameters.Length; i++) {
 				o.Write (", ");
-				if (entry.Parameters [i].Type.ManagedType.StartsWith ("out "))
+				if (entry.Parameters [i].Type.ManagedType.StartsWith ("out ", StringComparison.Ordinal))
 					o.Write ("out ");
 				o.Write (Escape (entry.Parameters [i].Name));
 			}
@@ -327,7 +327,7 @@ namespace Xamarin.Android.JniEnv
 			RaiseException (o, entry);
 			if (is_void) {
 			}
-			else if (entry.ReturnType.ManagedType == "IntPtr" && entry.ReturnType.Type.StartsWith ("j") && !entry.ReturnType.Type.EndsWith ("ID")) {
+			else if (entry.ReturnType.ManagedType == "IntPtr" && entry.ReturnType.Type.StartsWith ("j", StringComparison.Ordinal) && !entry.ReturnType.Type.EndsWith ("ID", StringComparison.Ordinal)) {
 				o.WriteLine ("\t\t\treturn LogCreateLocalRef (tmp);");
 			} else {
 				o.WriteLine ("\t\t\treturn tmp;");
@@ -381,13 +381,13 @@ namespace Xamarin.Android.JniEnv
 			if (!is_void)
 				o.Write ("return ");
 			var n = entry.Name;
-			if (n.StartsWith ("Call"))
+			if (n.StartsWith ("Call", StringComparison.Ordinal))
 				n = n.TrimEnd (new[]{'A'});
 			o.Write ("JniEnvironment.{0}.{1} (", entry.DeclaringType, n);
 			for (int i = 0; i < entry.Parameters.Length; i++) {
 				if (i > 0)
 					o.Write (", ");
-				if (entry.Parameters [i].Type.ManagedType.StartsWith ("out "))
+				if (entry.Parameters [i].Type.ManagedType.StartsWith ("out ", StringComparison.Ordinal))
 					o.Write ("out ");
 				if (entry.Parameters [i].Type.ManagedType == "JValue*")
 					o.Write ("(JniArgumentValue*) " + Escape (entry.Parameters [i].Name));
@@ -445,7 +445,7 @@ namespace Xamarin.Android.JniEnv
 				case "jweak":
 					return true;
 			}
-			if (type.Type.StartsWith ("j") && type.Type.EndsWith("Array"))
+			if (type.Type.StartsWith ("j", StringComparison.Ordinal) && type.Type.EndsWith("Array", StringComparison.Ordinal))
 				return true;
 			return false;
 		}
@@ -643,9 +643,9 @@ namespace Xamarin.Android.JniEnv
 			case "jobjectRefType":
 				return "int";
 			default:
-				if (native_type.EndsWith ("Array"))
+				if (native_type.EndsWith ("Array", StringComparison.Ordinal))
 					return "IntPtr";
-				if (native_type.EndsWith ("*"))
+				if (native_type.EndsWith ("*", StringComparison.Ordinal))
 					return "IntPtr";
 				return native_type;
 			}

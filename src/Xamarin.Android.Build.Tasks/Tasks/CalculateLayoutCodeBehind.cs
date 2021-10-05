@@ -482,7 +482,7 @@ namespace Xamarin.Android.Tasks
 			bool capitalize = false;
 			if (id.StartsWith ("@id/", StringComparison.Ordinal) || id.StartsWith ("@+id/", StringComparison.Ordinal))
 				ns = "Resource.Id";
-			else if (id.StartsWith ("@android:id/")) {
+			else if (id.StartsWith ("@android:id/", StringComparison.Ordinal)) {
 				ns = $"{GlobalIdPrefix}Android.Resource.Id";
 				capitalize = true;
 			} else

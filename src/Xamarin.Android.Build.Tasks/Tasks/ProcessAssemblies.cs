@@ -144,8 +144,8 @@ namespace Xamarin.Android.Tasks
 		static bool IsFrameworkAssembly (ITaskItem assembly)
 		{
 			string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
-			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.") ||
-				packageId.StartsWith ("Microsoft.Android.Runtime.");
+			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.Ordinal) ||
+				packageId.StartsWith ("Microsoft.Android.Runtime.", StringComparison.Ordinal);
 		}
 
 		static ITaskItem? GetOrCreateSymbolItem (Dictionary<string, ITaskItem> symbols, ITaskItem assembly)

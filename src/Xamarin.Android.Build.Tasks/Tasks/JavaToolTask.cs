@@ -143,11 +143,11 @@ namespace Xamarin.Android.Tasks
 				return false;
 			} else if (foundError) {
 				if (singleLine.Trim () == "^") {
-					column = singleLine.IndexOf ("^");
+					column = singleLine.IndexOf ("^", StringComparison.Ordinal);
 					return true;
 				}
 
-				if (singleLine.StartsWith ("Note:") || singleLine.Trim ().EndsWith ("errors")) {
+				if (singleLine.StartsWith ("Note:", StringComparison.Ordinal) || singleLine.Trim ().EndsWith ("errors", StringComparison.Ordinal)) {
 					// See if we have one last error to print out
 					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
 					errorText.Clear ();

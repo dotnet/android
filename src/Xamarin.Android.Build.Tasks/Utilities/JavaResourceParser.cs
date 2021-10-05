@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tasks
 						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
 						var f = new CodeMemberField (typeof (int), GetResourceName (name, m.Groups[1].Value, map)) {
 								Attributes      = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
-								InitExpression  = new CodePrimitiveExpression (ToInt32 (m.Groups [2].Value, m.Groups [2].Value.IndexOf ("0x") == 0 ? 16 : 10)),
+								InitExpression  = new CodePrimitiveExpression (ToInt32 (m.Groups [2].Value, m.Groups [2].Value.IndexOf ("0x", StringComparison.Ordinal) == 0 ? 16 : 10)),
 								Comments = {
 									new CodeCommentStatement ("aapt resource value: " + m.Groups [2].Value),
 								},

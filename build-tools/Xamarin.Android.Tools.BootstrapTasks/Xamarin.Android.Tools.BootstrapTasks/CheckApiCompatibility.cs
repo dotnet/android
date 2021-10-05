@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			}
 
 			TargetImplementationPath = implementationPath.FullName;
-			if (TargetImplementationPath.EndsWith ("\\") || TargetImplementationPath.EndsWith ("/")) {
+			if (TargetImplementationPath.EndsWith ("\\", StringComparison.Ordinal) || TargetImplementationPath.EndsWith ("/", StringComparison.Ordinal)) {
 				TargetImplementationPath = TargetImplementationPath.Substring (0, TargetImplementationPath.Length - 1);
 			}
 
@@ -189,7 +189,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						if (!string.IsNullOrWhiteSpace (args.Data)) {
 							lines.Add (args.Data.Trim ());
 
-							if (args.Data.IndexOf ("Native Crash Reporting") != -1) {
+							if (args.Data.IndexOf ("Native Crash Reporting", StringComparison.Ordinal) != -1) {
 								processHasCrashed = true;
 							}
 						}
@@ -245,13 +245,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						Log.LogMessage (MessageImportance.High, $"{Environment.NewLine}*** CodeGen missing items***{Environment.NewLine}");
 						var indent = 0;
 						foreach (var item in missingItems) {
-							if (item.StartsWith ("}")) {
+							if (item.StartsWith ("}", StringComparison.Ordinal)) {
 								indent--;
 							}
 
-							Log.LogMessage (MessageImportance.High, $"{(item.StartsWith ("namespace ") ? Environment.NewLine : string.Empty)}{new string (' ', indent * 2)}{item}");
+							Log.LogMessage (MessageImportance.High, $"{(item.StartsWith ("namespace ", StringComparison.Ordinal) ? Environment.NewLine : string.Empty)}{new string (' ', indent * 2)}{item}");
 
-							if (item.StartsWith ("{")) {
+							if (item.StartsWith ("{", StringComparison.Ordinal)) {
 								indent++;
 							}
 						}

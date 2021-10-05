@@ -1353,11 +1353,11 @@ namespace Mono.Options
 			for (int i = 0; i < nameStart.Length; ++i) {
 				int start, j = 0;
 				do {
-					start = description.IndexOf (nameStart [i], j);
+					start = description.IndexOf (nameStart [i], j, StringComparison.Ordinal);
 				} while (start >= 0 && j != 0 ? description [j++ - 1] == '{' : false);
 				if (start == -1)
 					continue;
-				int end = description.IndexOf ("}", start);
+				int end = description.IndexOf ("}", start, StringComparison.Ordinal);
 				if (end == -1)
 					continue;
 				return description.Substring (start + nameStart [i].Length, end - start - nameStart [i].Length);

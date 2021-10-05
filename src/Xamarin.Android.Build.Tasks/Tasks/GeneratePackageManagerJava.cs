@@ -219,7 +219,7 @@ namespace Xamarin.Android.Tasks
 						}
 						continue;
 					}
-					if (lineToWrite.StartsWith ("XA_BROKEN_EXCEPTION_TRANSITIONS=")) {
+					if (lineToWrite.StartsWith ("XA_BROKEN_EXCEPTION_TRANSITIONS=", StringComparison.Ordinal)) {
 						brokenExceptionTransitions = true;
 						continue;
 					}

@@ -82,7 +82,7 @@ namespace Xamarin.Android.Tasks {
 			}
 			var output = new Dictionary<string, ITaskItem> (processed.Count);
 			foreach (var file in processed) {
-				ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec)) ?? null;
+				ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec, StringComparison.Ordinal)) ?? null;
 				var hash = resdir?.GetMetadata ("Hash") ?? null;
 				var stamp = resdir?.GetMetadata ("StampFile") ?? null;
 				var filename = !string.IsNullOrEmpty (hash) ? hash : "compiled";

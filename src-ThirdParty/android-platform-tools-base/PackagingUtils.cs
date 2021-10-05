@@ -62,7 +62,7 @@ namespace Xamarin.Android.Tasks
 			return !EqualsIgnoreCase (folderName, "CVS") &&
 				!EqualsIgnoreCase (folderName, ".svn") &&
 				!EqualsIgnoreCase (folderName, "SCCS") &&
-				!folderName.StartsWith ("_");
+				!folderName.StartsWith ("_", StringComparison.Ordinal);
 		}
 
 		/// <summary>
