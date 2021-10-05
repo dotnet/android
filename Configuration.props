@@ -238,11 +238,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(XABuildingForNetCoreApp)' != 'True' And '$(XAShouldAnalyzeAssembly)' == 'True' ">
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <WarningsAsErrors>$(WarningsAsErrors);CA1309;CA1310</WarningsAsErrors>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(XABuildingForNetCoreApp)' == 'True' And '$(XAShouldAnalyzeAssembly)' == 'True' ">
-    <NoWarn>$(NoWarn);CA1309;CA1310</NoWarn>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
