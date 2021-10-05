@@ -421,7 +421,11 @@ EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENS
 		if (bba->config_data_size != 0) {
 			assembly_runtime_info.config_data = rd.data_start + bba->config_data_offset;
 
-			mono_register_config_for_assembly (name.get (), reinterpret_cast<const char*>(assembly_runtime_info.config_data));
+			// Mono takes ownership of the pointers
+			mono_register_config_for_assembly (
+				utils.string_concat (name.get (), ".dll"),
+				utils.strdup_new (reinterpret_cast<const char*>(assembly_runtime_info.config_data))
+			);
 		}
 #endif // NET6
 

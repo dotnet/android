@@ -317,13 +317,14 @@ namespace Xamarin.Android.Tasks
 				DataSize = size,
 			};
 
-			(offset, size) = WriteFile (assembly.DebugInfoPath, false);
+			(offset, size) = WriteFile (assembly.DebugInfoPath, required: false);
 			if (offset != 0 && size != 0) {
 				ret.DebugDataOffset = offset;
 				ret.DebugDataSize = size;
 			}
 
-			(offset, size) = WriteFile (assembly.ConfigPath, false);
+			// Config files must end with \0 (nul)
+			(offset, size) = WriteFile (assembly.ConfigPath, required: false, appendNul: true);
 			if (offset != 0 && size != 0) {
 				ret.ConfigDataOffset = offset;
 				ret.ConfigDataSize = size;
@@ -331,7 +332,7 @@ namespace Xamarin.Android.Tasks
 
 			return ret;
 
-			(uint offset, uint size) WriteFile (string filePath, bool required)
+			(uint offset, uint size) WriteFile (string filePath, bool required, bool appendNul = false)
 			{
 				if (!File.Exists (filePath)) {
 					if (required) {
@@ -355,7 +356,13 @@ namespace Xamarin.Android.Tasks
 					fs.CopyTo (writer.BaseStream);
 				}
 
-				return (offset, (uint)fi.Length);
+				uint length = (uint)fi.Length;
+				if (appendNul) {
+					length++;
+					writer.Write ((byte)0);
+				}
+
+				return (offset, length);
 			}
 		}
 	}
