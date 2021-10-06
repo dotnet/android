@@ -146,6 +146,15 @@ namespace xamarin::android::internal {
 			return need_to_scan_more_apks;
 		}
 
+		void ensure_valid_blobs () const noexcept
+		{
+			if (!application_config.have_assemblies_blob) {
+				return;
+			}
+
+			abort_unless (index_blob_header != nullptr && blob_assembly_hashes != nullptr, "Invalid or incomplete assembly blob data");
+		}
+
 	private:
 		const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid);
 		MonoReflectionType* typemap_java_to_managed (const char *java_type_name);

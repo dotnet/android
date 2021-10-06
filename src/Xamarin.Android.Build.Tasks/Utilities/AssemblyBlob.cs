@@ -111,14 +111,26 @@ namespace Xamarin.Android.Tasks
 			var localAssemblies = new List<AssemblyBlobIndexEntry> ();
 
 			manifestWriter.WriteLine ("Hash 32     Hash 64             Blob ID  Blob idx  Name");
-			// TODO: check if there are no duplicates here
+
+			var seenHashes32 = new HashSet<ulong> ();
+			var seenHashes64 = new HashSet<ulong> ();
+			bool haveDuplicates = false;
 			foreach (AssemblyBlobIndexEntry assembly in globalIndex) {
 				if (assembly.BlobID == ID) {
 					localEntryCount++;
 					localAssemblies.Add (assembly);
 				}
 
+				if (WarnAboutDuplicateHash ("32", assembly.Name, assembly.NameHash32, seenHashes32) ||
+				    WarnAboutDuplicateHash ("64", assembly.Name, assembly.NameHash64, seenHashes64)) {
+					haveDuplicates = true;
+				}
+
 				manifestWriter.WriteLine ($"0x{assembly.NameHash32:x08}  0x{assembly.NameHash64:x016}  {assembly.BlobID:d03}      {assembly.LocalBlobIndex:d04}      {assembly.Name}");
+			}
+
+			if (haveDuplicates) {
+				throw new InvalidOperationException ("Duplicate assemblies encountered");
 			}
 
 			uint globalAssemblyCount = (uint)globalIndex.Count;
@@ -152,6 +164,17 @@ namespace Xamarin.Android.Tasks
 				blobWriter.Write (entry.LocalBlobIndex);
 				blobWriter.Write (entry.BlobID);
 			}
+
+			bool WarnAboutDuplicateHash (string bitness, string assemblyName, ulong hash, HashSet<ulong> seenHashes)
+			{
+				if (seenHashes.Contains (hash)) {
+					Log.LogMessage (MessageImportance.High, "Duplicate {bitness}-bit hash 0x{hash} encountered for assembly {assemblyName}");
+					return true;
+				}
+
+				seenHashes.Add (hash);
+				return false;
+			}
 		}
 
 		protected string GetAssemblyName (BlobAssemblyInfo assembly)
@@ -180,7 +203,6 @@ namespace Xamarin.Android.Tasks
 
 			blobPaths.Add (outputFilePath);
 			Log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: generating blob: {outputFilePath}");
-			// TODO: test with satellite assemblies, their name must include the culture prefix
 
 			using (var fs = File.Open (outputFilePath, FileMode.Create, FileAccess.Write, FileShare.Read)) {
 				using (var writer = new BinaryWriter (fs, Encoding.UTF8)) {
