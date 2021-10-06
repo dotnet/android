@@ -12,6 +12,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 		BlobManifestReader? manifest;
 		int numberOfBlobs = 0;
 		Action<BlobExplorerLogLevel, string>? logger;
+		bool keepBlobInMemory;
 
 		public IDictionary<string, BlobAssembly> AssembliesByName  { get; } = new SortedDictionary<string, BlobAssembly> (StringComparer.OrdinalIgnoreCase);
 		public IDictionary<uint, BlobAssembly> AssembliesByHash32  { get; } = new Dictionary<uint, BlobAssembly> ();
@@ -43,7 +44,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 		// Whichever file is referenced in `blobPath`, the BASE_NAME component is extracted and all the found files are read.
 		// If `blobPath` points to an aab or an apk, BASE_NAME will always be `assemblies`
 		//
-		public BlobExplorer (string blobPath, Action<BlobExplorerLogLevel, string>? customLogger = null)
+		public BlobExplorer (string blobPath, Action<BlobExplorerLogLevel, string>? customLogger = null, bool keepBlobInMemory = false)
 		{
 			if (String.IsNullOrEmpty (blobPath)) {
 				throw new ArgumentException ("must not be null or empty", nameof (blobPath));
@@ -54,6 +55,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 			}
 
 			logger = customLogger;
+			this.keepBlobInMemory = keepBlobInMemory;
 			BlobPath = blobPath;
 			string? extension = Path.GetExtension (blobPath);
 			string? baseName = null;
@@ -216,7 +218,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 					entry.Extract (stream);
 
 					if (entry.FullName.EndsWith (".blob", StringComparison.Ordinal)) {
-						AddBlob (new BlobReader (stream, GetBlobArch (entry.FullName)));
+						AddBlob (new BlobReader (stream, GetBlobArch (entry.FullName), keepBlobInMemory));
 					} else if (entry.FullName.EndsWith (".manifest", StringComparison.Ordinal)) {
 						manifest = new BlobManifestReader (stream);
 					}
@@ -287,7 +289,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 		BlobReader CreateBlobReader (Stream input, string? arch)
 		{
 			numberOfBlobs++;
-			return new BlobReader (input, arch);
+			return new BlobReader (input, arch, keepBlobInMemory);
 		}
 
 		bool IsAndroidArchive (string extension)

@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 
 		static bool UncompressDLL (Stream inputStream, string fileName, string filePath, string prefix)
 		{
-			string outputFile = $"{prefix}{Path.GetFileName (filePath)}";
+			string outputFile = $"{prefix}{filePath}";
 			bool retVal = true;
 
 			Console.WriteLine ($"Processing {fileName}");
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 		static bool UncompressDLL (string filePath, string prefix)
 		{
 			using (var fs = File.Open (filePath, FileMode.Open, FileAccess.Read)) {
-				return UncompressDLL (fs, filePath, filePath, prefix);
+				return UncompressDLL (fs, filePath, Path.GetFileName (filePath), prefix);
 			}
 		}
 
@@ -93,7 +93,8 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 				using (var stream = new MemoryStream ()) {
 					entry.Extract (stream);
 					stream.Seek (0, SeekOrigin.Begin);
-					UncompressDLL (stream, $"{filePath}!{entry.FullName}", entry.FullName, prefix);
+					string fileName = entry.FullName.Substring (assembliesPath.Length);
+					UncompressDLL (stream, $"{filePath}!{entry.FullName}", fileName, prefix);
 				}
 			}
 
@@ -102,18 +103,19 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 
 		static bool UncompressFromAPK_Blobs (string filePath, string prefix)
 		{
-			var explorer = new BlobExplorer (filePath);
+			var explorer = new BlobExplorer (filePath, keepBlobInMemory: true);
 			foreach (BlobAssembly assembly in explorer.Assemblies) {
-				string assemblyName = assembly.Name;
-				if (String.IsNullOrEmpty (assemblyName)) {
-					assemblyName = $"{assembly.Hash32:x}_{assembly.Hash64:x}.dll";
-				}
+				string assemblyName = assembly.DllName;
 
 				if (!String.IsNullOrEmpty (assembly.Blob.Arch)) {
 					assemblyName = $"{assembly.Blob.Arch}/{assemblyName}";
 				}
 
-				throw new NotImplementedException ();
+				using (var stream = new MemoryStream ()) {
+					assembly.ExtractImage (stream);
+					stream.Seek (0, SeekOrigin.Begin);
+					UncompressDLL (stream, $"{filePath}!{assemblyName}", assemblyName, prefix);
+				}
 			}
 
 			return true;
@@ -123,7 +125,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 		{
 			string prefix = $"uncompressed-{Path.GetFileNameWithoutExtension (filePath)}{Path.DirectorySeparatorChar}";
 			using (ZipArchive apk = ZipArchive.Open (filePath, FileMode.Open)) {
-				if (!apk.ContainsEntry ($"{assembliesPath}/assemblies.blob")) {
+				if (!apk.ContainsEntry ($"{assembliesPath}assemblies.blob")) {
 					return UncompressFromAPK_IndividualEntries (apk, filePath, assembliesPath, prefix);
 				}
 			}
