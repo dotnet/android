@@ -327,12 +327,12 @@ namespace Xamarin.ProjectTools
 					sw.WriteLine (msbuildArgs);
 				}
 
-				psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
+				psi.SetEnvironmentVariable ("MSBUILD", "msbuild");
 				sw.WriteLine ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
 
 				if (environmentVariables != null) {
 					foreach (var kvp in environmentVariables) {
-						psi.EnvironmentVariables [kvp.Key] = kvp.Value;
+						psi.SetEnvironmentVariable (kvp.Key, kvp.Value);
 					}
 				}
 			}
@@ -342,12 +342,12 @@ namespace Xamarin.ProjectTools
 			// Both Jenkins and VSTS have an environment variable containing the full commit message, which will inexplicably cause your test to fail...
 			// For a Jenkins case, see https://github.com/xamarin/xamarin-android/pull/1049#issuecomment-347625456
 			// For a VSTS case, see http://build.devdiv.io/1806783
-			psi.EnvironmentVariables ["ghprbPullLongDescription"] =
-				psi.EnvironmentVariables ["BUILD_SOURCEVERSIONMESSAGE"] = "";
+			psi.SetEnvironmentVariable ("ghprbPullLongDescription", "");
+			psi.SetEnvironmentVariable ("BUILD_SOURCEVERSIONMESSAGE", "");
 
 			// Ensure any variable alteration from DotNetXamarinProject.Construct is cleared.
 			if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
-				psi.EnvironmentVariables ["MSBUILD_EXE_PATH"] = null;
+				psi.SetEnvironmentVariable ("MSBUILD_EXE_PATH", null);
 			}
 
 			psi.Arguments = args.ToString ();
