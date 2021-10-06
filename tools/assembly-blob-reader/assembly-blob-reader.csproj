@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <Company>Microsoft Corporation</Company>
-    <Copyright>2020 Microsoft Corporation</Copyright>
+    <Copyright>2021 Microsoft Corporation</Copyright>
     <Version>0.0.1</Version>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../../bin/$(Configuration)/bin/assembly-blob-reader</OutputPath>

@@ -53,6 +53,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 				throw new ArgumentException ($"'{blobPath}' points to a directory", nameof (blobPath));
 			}
 
+			logger = customLogger;
 			BlobPath = blobPath;
 			string? extension = Path.GetExtension (blobPath);
 			string? baseName = null;

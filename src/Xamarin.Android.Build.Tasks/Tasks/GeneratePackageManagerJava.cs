@@ -287,8 +287,6 @@ namespace Xamarin.Android.Tasks
 			};
 
 			int assemblyCount = 0;
-			int blobCommonAssemblyCount = 0;
-			int blobArchAssemblyCount = 0;
 			HashSet<string> archAssemblyNames = null;
 
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
@@ -301,9 +299,7 @@ namespace Xamarin.Android.Tasks
 				if (String.IsNullOrEmpty (abi)) {
 					assemblyCount++;
 				} else {
-					if (archAssemblyNames == null) {
-						archAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-					}
+					archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 					string assemblyName = Path.GetFileName (assembly.ItemSpec);
 					if (!archAssemblyNames.Contains (assemblyName)) {
@@ -362,7 +358,10 @@ namespace Xamarin.Android.Tasks
 					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
-					NumberOfAssemblyBlobsInApk = 2, // Until feature APKs are a thing, we're going to have just two blobs in each app
+					NumberOfAssemblyBlobsInApk = 2, // Until feature APKs are a thing, we're going to have just two blobs in each app - one for arch-agnostic
+									// and up to 4 other for arch-specific assemblies. Only **one** arch-specific blob is ever loaded on the app
+									// runtime, thus the number 2 here. All architecture specific blobs contain assemblies with the same names
+									// and in the same order.
 					HaveAssembliesBlob = UseAssembliesBlob,
 				};
 

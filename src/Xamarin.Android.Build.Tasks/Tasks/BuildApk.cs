@@ -698,7 +698,7 @@ namespace Xamarin.Android.Tasks
 
 			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
 			if (ndk == null) {
-				return; // NdkTools.Create will Log appropriate error
+				return; // NdkTools.Create will log appropriate error
 			}
 
 			string clangDir = ndk.GetClangDeviceLibraryPath ();

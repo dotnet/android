@@ -1,0 +1,10 @@
+#!/bin/bash
+truepath=$(readlink "$0" || echo "$0")
+mydir=$(dirname ${truepath})
+binariesdir="${mydir}/assembly-blob-reader"
+
+if [ -x "${binariesdir}/tmt" ]; then
+	exec "${binariesdir}/assembly-blob-reader" "$@"
+else
+	exec dotnet "${binariesdir}/assembly-blob-reader.dll"
+fi

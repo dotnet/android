@@ -4,6 +4,7 @@ using System.IO;
 
 using K4os.Compression.LZ4;
 using Xamarin.Tools.Zip;
+using Xamarin.Android.AssemblyBlobReader;
 
 namespace Xamarin.Android.Tools.DecompressAssemblies
 {
@@ -17,7 +18,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 		{
 			Console.WriteLine ("Usage: decompress-assemblies {file.{dll,apk,aab}} [{file.{dll,apk,aab} ...]");
 			Console.WriteLine ();
-			Console.WriteLine ("DLL files passed on command are uncompressed to the current directory with the `uncompressed-` prefix added to their name.");
+			Console.WriteLine ("DLL files passed on command line are uncompressed to the current directory with the `uncompressed-` prefix added to their name.");
 			Console.WriteLine ("DLL files from AAB/APK archives are uncompressed to a subdirectory of the current directory named after the archive with extension removed");
 			return 1;
 		}
@@ -78,28 +79,56 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 			}
 		}
 
-		static bool UncompressFromAPK (string filePath, string assembliesPath)
+		static bool UncompressFromAPK_IndividualEntries (ZipArchive apk, string filePath, string assembliesPath, string prefix)
 		{
-			string prefix = $"uncompressed-{Path.GetFileNameWithoutExtension (filePath)}{Path.DirectorySeparatorChar}";
-			using (ZipArchive apk = ZipArchive.Open (filePath, FileMode.Open)) {
-				foreach (ZipEntry entry in apk) {
-					if (!entry.FullName.StartsWith (assembliesPath, StringComparison.Ordinal)) {
-						continue;
-					}
+			foreach (ZipEntry entry in apk) {
+				if (!entry.FullName.StartsWith (assembliesPath, StringComparison.Ordinal)) {
+					continue;
+				}
 
-					if (!entry.FullName.EndsWith (".dll", StringComparison.Ordinal)) {
-						continue;
-					}
+				if (!entry.FullName.EndsWith (".dll", StringComparison.Ordinal)) {
+					continue;
+				}
 
-					using (var stream = new MemoryStream ()) {
-						entry.Extract (stream);
-						stream.Seek (0, SeekOrigin.Begin);
-						UncompressDLL (stream, $"{filePath}!{entry.FullName}", entry.FullName, prefix);
-					}
+				using (var stream = new MemoryStream ()) {
+					entry.Extract (stream);
+					stream.Seek (0, SeekOrigin.Begin);
+					UncompressDLL (stream, $"{filePath}!{entry.FullName}", entry.FullName, prefix);
 				}
 			}
 
 			return true;
+		}
+
+		static bool UncompressFromAPK_Blobs (string filePath, string prefix)
+		{
+			var explorer = new BlobExplorer (filePath);
+			foreach (BlobAssembly assembly in explorer.Assemblies) {
+				string assemblyName = assembly.Name;
+				if (String.IsNullOrEmpty (assemblyName)) {
+					assemblyName = $"{assembly.Hash32:x}_{assembly.Hash64:x}.dll";
+				}
+
+				if (!String.IsNullOrEmpty (assembly.Blob.Arch)) {
+					assemblyName = $"{assembly.Blob.Arch}/{assemblyName}";
+				}
+
+				throw new NotImplementedException ();
+			}
+
+			return true;
+		}
+
+		static bool UncompressFromAPK (string filePath, string assembliesPath)
+		{
+			string prefix = $"uncompressed-{Path.GetFileNameWithoutExtension (filePath)}{Path.DirectorySeparatorChar}";
+			using (ZipArchive apk = ZipArchive.Open (filePath, FileMode.Open)) {
+				if (!apk.ContainsEntry ($"{assembliesPath}/assemblies.blob")) {
+					return UncompressFromAPK_IndividualEntries (apk, filePath, assembliesPath, prefix);
+				}
+			}
+
+			return UncompressFromAPK_Blobs (filePath, prefix);
 		}
 
 		static int Main (string[] args)
