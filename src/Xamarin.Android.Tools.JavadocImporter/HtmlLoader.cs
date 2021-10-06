@@ -231,7 +231,7 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 
 		public string GetJavaDocPath (string name)
 		{
-			if (name.StartsWith ("mono/", StringComparison.Ordinal)) {
+			if (name.StartsWith ("mono/", StringComparison.OrdinalIgnoreCase)) {
 				// generator.exe-generated type; there are no docs
 				return null;
 			}

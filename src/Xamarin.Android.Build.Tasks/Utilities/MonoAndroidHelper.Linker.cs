@@ -58,7 +58,7 @@ namespace Xamarin.Android.Tasks
 					// e.g. $prefix/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0.
 					// Trim off the version.
 					.Select (p => Path.GetDirectoryName (p.TrimEnd (Path.DirectorySeparatorChar)))
-					.Any (p => assembly.StartsWith (p, StringComparison.Ordinal));
+					.Any (p => assembly.StartsWith (p, StringComparison.OrdinalIgnoreCase));
 		}
 	}
 }
