@@ -385,7 +385,7 @@ EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENS
 
 	const BlobHashEntry *hash_entry = find_blob_assembly_entry (name_hash, blob_assembly_hashes, application_config.number_of_assemblies_in_apk);
 	if (hash_entry == nullptr) {
-		log_debug (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
+		log_warn (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
 		return nullptr;
 	}
 
