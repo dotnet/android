@@ -23,6 +23,10 @@ namespace Xamarin.ProjectTools
 					// Ignore exception
 					// Hit thread safety issue, wait a tiny bit and then retry.
 					Thread.Sleep (100);
+				} catch (NullReferenceException) {
+					// Ignore exception
+					// Hit thread safety issue, wait a tiny bit and then retry.
+					Thread.Sleep (100);
 				}
 			}
 
