@@ -11,6 +11,7 @@
 
   * [Submitting Bugs, Feature Requests, and Pull Requests][bugs]
   * [Directory Structure](project-docs/ExploringSources.md)
+  * [Assembly blob format](project-docs/AssemblyBlobs.md)
 
 [bugs]: https://github.com/xamarin/xamarin-android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests
 
