@@ -10,10 +10,6 @@ steps:
   parameters:
     remove_dotnet: true
 
-- template: use-dot-net.yaml
-  parameters:
-    version: $(DotNetCoreVersion)
-
 - task: NuGetAuthenticate@0
   displayName: authenticate with azure artifacts
   inputs:

@@ -1,0 +1,16 @@
+parameters:
+  displayName: run xaprepare
+  configuration: $(XA.Build.Configuration)
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  framework: net6.0
+  condition: succeeded()
+  arguments:
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: ${{ parameters.displayName }}
+  condition: ${{ parameters.condition }}
+  inputs:
+    command: run
+    projects: ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/xaprepare.csproj
+    arguments: -f ${{ parameters.framework }} -c ${{ parameters.configuration }} -- ${{ parameters.arguments }} --no-emoji --run-mode=CI

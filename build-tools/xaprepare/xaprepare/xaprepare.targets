@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask TaskName="ReplaceFileContents" Condition=" '$(OS)' == 'Windows_NT' " TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask TaskName="ReplaceFileContents" Condition=" '$(OS)' == 'Windows_NT' or '$(MSBuildRuntimeType)' != 'Mono' " TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <SourceFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true" />
       <DestinationFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true" />
@@ -8,10 +8,10 @@
       <ReplacementFilePath ParameterType="System.String" />
     </ParameterGroup>
     <Task>
-      <Code Type="Class" Language="cs" Source="..\..\xa-prep-tasks\Xamarin.Android.BuildTools.PrepTasks\ReplaceFileContents.cs"/>
+      <Code Type="Class" Language="cs" Source="../../xa-prep-tasks/Xamarin.Android.BuildTools.PrepTasks/ReplaceFileContents.cs"/>
     </Task>
   </UsingTask>
-  <UsingTask TaskName="ReplaceFileContents" Condition=" '$(OS)' != 'Windows_NT' " TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+  <UsingTask TaskName="ReplaceFileContents" Condition=" '$(OS)' != 'Windows_NT' and '$(MSBuildRuntimeType)' == 'Mono' " TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
     <ParameterGroup>
       <SourceFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true" />
       <DestinationFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true" />
