@@ -1526,8 +1526,13 @@ stages:
     - checkout: release_scripts
       clean: true
 
-    - template: yaml-templates/use-dot-net.yaml
-
+    # Doesn't support .NET 6 yet
+    - task: UseDotNet@2
+      displayName: Use .NET Core 3.1
+      inputs:
+        packageType: runtime
+        version: 3.1.405
+    
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(InstallerArtifactName)
