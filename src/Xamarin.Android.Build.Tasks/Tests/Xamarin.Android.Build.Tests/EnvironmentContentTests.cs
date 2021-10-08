@@ -58,10 +58,10 @@ namespace Xamarin.Android.Build.Tests
 				string monoDebugVar;
 				Assert.IsTrue (envvars.TryGetValue ("MONO_DEBUG", out monoDebugVar), "Environment should contain MONO_DEBUG");
 				Assert.IsFalse (String.IsNullOrEmpty (monoDebugVar), "Environment must contain MONO_DEBUG with a value");
-				Assert.IsTrue (monoDebugVar.IndexOf ("soft-breakpoints") >= 0, "Environment must contain MONO_DEBUG with 'soft-breakpoints' in its value");
+				Assert.IsTrue (monoDebugVar.IndexOf ("soft-breakpoints", StringComparison.Ordinal) >= 0, "Environment must contain MONO_DEBUG with 'soft-breakpoints' in its value");
 
 				if (!String.IsNullOrEmpty (sequencePointsMode))
-					Assert.IsTrue (monoDebugVar.IndexOf ("gen-compact-seq-points") >= 0, "The values from Mono.env should have been merged into environment");
+					Assert.IsTrue (monoDebugVar.IndexOf ("gen-compact-seq-points", StringComparison.Ordinal) >= 0, "The values from Mono.env should have been merged into environment");
 
 				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
 

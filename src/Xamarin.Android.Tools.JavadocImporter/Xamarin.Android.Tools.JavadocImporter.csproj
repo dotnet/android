@@ -16,9 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(LinkerSourceFullPath)\analyzer\common\Mono.Options\Options.cs">
-      <Link>Options.cs</Link>
-    </Compile>
     <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
       <Link>StringRocks.cs</Link>
     </Compile>
@@ -53,6 +50,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Xml.SgmlReader" Version="1.8.14" />
+    <PackageReference Include="Mono.Options" Version="6.12.0.148" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
   </ItemGroup>
 

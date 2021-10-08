@@ -116,7 +116,7 @@ namespace Xamarin.Android.Tasks
 			if (singleLine.Length == 0)
 				return;
 
-			if (singleLine.StartsWith ("Warning:")) {
+			if (singleLine.StartsWith ("Warning:", StringComparison.Ordinal)) {
 				hasWarnings = true;
 				return;
 			}

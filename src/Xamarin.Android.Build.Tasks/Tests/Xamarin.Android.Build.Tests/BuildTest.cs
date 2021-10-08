@@ -693,7 +693,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					b.ThrowOnBuildFailure = false;
 					Assert.IsFalse (b.Build (proj), "Build should have failed.");
 					string error = b.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
 						.FirstOrDefault (x => x.Contains ("error XA1011:"));
 					Assert.IsNotNull (error, "Build should have failed with XA1011.");
 					return;
@@ -2141,7 +2141,7 @@ namespace UnnamedProject
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
 						.FirstOrDefault (x => x.Contains ("error XA1018:"));
 				Assert.IsNotNull (error, "Build should have failed with XA1018.");
 				StringAssert.Contains ("DoesNotExist", error, "Error should include the name of the nonexistent file");
@@ -2163,7 +2163,7 @@ namespace UnnamedProject
 				builder.ThrowOnBuildFailure = false;
 				Assert.AreEqual (shouldSucceed, builder.Build (proj), $"Build should have {expectedText}.");
 				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ($"Build {expectedText}."))
+						.SkipWhile (x => !x.StartsWith ($"Build {expectedText}.", StringComparison.Ordinal))
 						.FirstOrDefault (x => x.Contains ($"{warnOrError} XA4313"));
 				Assert.IsNotNull (error, $"Build should have {expectedText} with XA4313 {warnOrError}.");
 			}
@@ -2247,7 +2247,7 @@ namespace UnnamedProject
 				builder.Build (proj);
 				Assert.IsNotNull(
 					builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith (expectedBuildResult ? "Build succeeded." : "Build FAILED."))
+						.SkipWhile (x => !x.StartsWith (expectedBuildResult ? "Build succeeded." : "Build FAILED.", StringComparison.Ordinal))
 						.FirstOrDefault (x => x.Contains (expectedWarning)),
 					$"Build output should contain '{expectedWarning}'.");
 			}

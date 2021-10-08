@@ -160,7 +160,7 @@ namespace Xamarin.Android.Tasks {
 
 		string ToFullyQualifiedName (string typeName)
 		{
-			if (typeName.StartsWith ("."))
+			if (typeName.StartsWith (".", StringComparison.Ordinal))
 				return PackageName + typeName;
 			if (typeName.Contains ("."))
 				return typeName;
@@ -662,7 +662,7 @@ namespace Xamarin.Android.Tasks {
 				switch (el.Name.LocalName) {
 				case "provider":
 					var autho = el.Attribute (androidNs.GetName ("authorities"));
-					if (autho != null && autho.Value.EndsWith (".__mono_init__"))
+					if (autho != null && autho.Value.EndsWith (".__mono_init__", StringComparison.Ordinal))
 						continue;
 					goto case "activity";
 				case "activity":
@@ -720,7 +720,7 @@ namespace Xamarin.Android.Tasks {
 
 		XElement ActivityFromTypeDefinition (TypeDefinition type, string name, int targetSdkVersion)
 		{
-			if (name.StartsWith ("_"))
+			if (name.StartsWith ("_", StringComparison.Ordinal))
 				throw new InvalidActivityNameException (string.Format ("Activity name '{0}' is invalid, because activity namespaces may not begin with an underscore.", type.FullName));
 
 			return ToElement (type, name,

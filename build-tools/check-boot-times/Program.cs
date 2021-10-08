@@ -177,7 +177,7 @@ namespace Xamarin.Android.Tools
 
 				var activity = i % 2 == 0 ? "com.google.android.apps.photos/.home.HomeActivity" : "com.android.settings/.wifi.WifiStatusTest";
 				await RunProcess (adbPath, $"-e shell am start -n '{activity}'", 5000, (data, mre) => {
-					if (!string.IsNullOrWhiteSpace (data) && data.IndexOf ("com.android") != -1) {
+					if (!string.IsNullOrWhiteSpace (data) && data.IndexOf ("com.android", StringComparison.Ordinal) != -1) {
 						mre.Set ();
 					}
 					return true;
@@ -375,7 +375,7 @@ namespace Xamarin.Android.Tools
 		{
 			bool validation (string data, ManualResetEvent mre)
 			{
-				if (!string.IsNullOrWhiteSpace (data) && data.IndexOf ("100%") != -1) {
+				if (!string.IsNullOrWhiteSpace (data) && data.IndexOf ("100%", StringComparison.Ordinal) != -1) {
 					mre.Set ();
 				}
 

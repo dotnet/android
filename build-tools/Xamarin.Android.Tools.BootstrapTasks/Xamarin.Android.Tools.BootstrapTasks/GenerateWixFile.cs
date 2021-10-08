@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -121,13 +122,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			packWriter.WriteAttributeString ("FileSource", directory);
 			foreach (var child in Directory.EnumerateDirectories (directory)) {
 				var directoryName = Path.GetFileName (child);
-				if (directoryName.StartsWith (".") || directoryName.StartsWith ("_"))
+				if (directoryName.StartsWith (".", StringComparison.Ordinal) || directoryName.StartsWith ("_", StringComparison.Ordinal))
 					continue;
 				RecurseDirectory (top_dir, packWriter, componentWriter, child);
 			}
 			foreach (var file in Directory.EnumerateFiles (directory)) {
 				var fileName = Path.GetFileName (file);
-				if (fileName.StartsWith (".") || fileName.StartsWith ("_"))
+				if (fileName.StartsWith (".", StringComparison.Ordinal) || fileName.StartsWith ("_", StringComparison.Ordinal))
 					continue;
 				AddFile (top_dir, packWriter, componentWriter, file);
 			}

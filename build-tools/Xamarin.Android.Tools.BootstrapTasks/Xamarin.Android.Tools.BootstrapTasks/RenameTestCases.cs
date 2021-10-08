@@ -166,7 +166,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		static void GetTestCaseInfo (string sourceFile, string destinationFolder, string config, string flavor, Action<string> logDebugMessage, out string testSuiteName, out string testCaseName, out string logcatPath)
 		{
 			var name        = Path.GetFileNameWithoutExtension (sourceFile);
-			if (name.StartsWith ("TestResult-"))
+			if (name.StartsWith ("TestResult-", StringComparison.Ordinal))
 				name    = name.Substring ("TestResult-".Length);
 			testSuiteName   = name;
 			testCaseName    = $"Possible Crash / {config}";

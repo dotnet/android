@@ -25,7 +25,7 @@ namespace Xamarin.Android.Build.Tests
 				bool foundHeader = false;
 				while (!reader.EndOfStream) {
 					var line = reader.ReadLine ();
-					if (line.StartsWith ("#") || string.IsNullOrWhiteSpace (line)) {
+					if (line.StartsWith ("#", StringComparison.Ordinal) || string.IsNullOrWhiteSpace (line)) {
 						continue;
 					}
 					var split = line.Split (',');

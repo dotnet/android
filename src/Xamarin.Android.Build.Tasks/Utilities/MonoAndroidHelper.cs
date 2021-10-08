@@ -224,7 +224,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsEmbeddedReferenceJar (string jar)
 		{
-			return jar.StartsWith ("__reference__");
+			return jar.StartsWith ("__reference__", StringComparison.Ordinal);
 		}
 
 		public static void LogWarning (object log, string msg, params object [] args)

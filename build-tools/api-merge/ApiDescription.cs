@@ -397,7 +397,7 @@ namespace Xamarin.Android.ApiMerge {
 				return "*";
 
 			// varargs should be normalized.
-			if (type.EndsWith ("..."))
+			if (type.EndsWith ("...", StringComparison.Ordinal))
 				return GetParameterType (type.Substring (0, type.Length - 3) + "[]", mappings);
 
 			int first = type.IndexOfAny (type_sep);

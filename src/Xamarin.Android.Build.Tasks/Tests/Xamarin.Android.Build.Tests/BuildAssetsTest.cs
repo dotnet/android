@@ -116,7 +116,7 @@ namespace Xamarin.Android.Build.Tests
 					using (var apk = ZipHelper.OpenZip (Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk"))) {
 						foreach (var a in libproj.OtherBuildItems.Where (x => x is AndroidItem.AndroidAsset)) {
 							var item = a.Include ().ToLower ().Replace ("\\", "/");
-							if (item.EndsWith ("/"))
+							if (item.EndsWith ("/", StringComparison.Ordinal))
 								continue;
 							var data = ZipHelper.ReadFileFromZip (apk, item);
 							Assert.IsNotNull (data, "{0} should be in the apk.", item);
@@ -124,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 						}
 						foreach (var a in proj.OtherBuildItems.Where (x => x is AndroidItem.AndroidAsset)) {
 							var item = a.Include ().ToLower ().Replace ("\\", "/");
-							if (item.EndsWith ("/"))
+							if (item.EndsWith ("/", StringComparison.Ordinal))
 								continue;
 							var data = ZipHelper.ReadFileFromZip (apk, item);
 							Assert.IsNotNull (data, "{0} should be in the apk.", item);

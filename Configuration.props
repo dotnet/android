@@ -226,6 +226,20 @@
 
   <!-- Fix for IDEs -->
   <Target Name="CreateManifestResourceNames" />
+   
+  <!-- Don't analyze code from external repos -->
+  <PropertyGroup Condition=" !$(MSBuildProjectDirectory.Contains ('external')) and !$(MSBuildProjectDirectory.Contains ('NUnitLite')) ">
+    <XAShouldAnalyzeAssembly>True</XAShouldAnalyzeAssembly>
+  </PropertyGroup>
+   
+  <!-- The net6.0 versions of these analyzers are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
+  <PropertyGroup Condition=" '$(TargetFramework)' != '' And (!$(TargetFramework.StartsWith('nets')) And !$(TargetFramework.StartsWith('net4')) And !$(TargetFramework.StartsWith('monoandroid'))) ">
+    <XABuildingForNetCoreApp>True</XABuildingForNetCoreApp>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(XABuildingForNetCoreApp)' != 'True' And '$(XAShouldAnalyzeAssembly)' == 'True' ">
+    <WarningsAsErrors>$(WarningsAsErrors);CA1309;CA1310</WarningsAsErrors>
+  </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\RoslynAnalyzers.projitems" Condition=" '$(EnableRoslynAnalyzers)' == 'true' " />

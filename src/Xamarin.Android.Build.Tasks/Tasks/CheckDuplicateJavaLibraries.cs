@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar")) : null;
+			var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) : null;
 			if (jarFiles != null && JavaLibraries != null)
 				jarFiles = jarFiles.Concat (JavaLibraries);
 			else if (JavaLibraries != null)

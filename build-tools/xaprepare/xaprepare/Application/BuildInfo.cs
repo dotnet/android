@@ -141,7 +141,7 @@ namespace Xamarin.Android.Prepare
 				if (be == null || String.IsNullOrEmpty (be.Line))
 					continue;
 
-				if (be.Line.IndexOf ("<ProductVersion>") >= 0) {
+				if (be.Line.IndexOf ("<ProductVersion>", StringComparison.Ordinal) >= 0) {
 					Log.DebugLine ($"Last version change on {GetCommitDate (be)} by {be.Author}");
 					CommitOfLastVersionChange = be.Commit;
 					Log.StatusLine ("    Commit: ", be.Commit, tailColor: ConsoleColor.Cyan);

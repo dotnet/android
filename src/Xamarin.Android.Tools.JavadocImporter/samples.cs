@@ -28,7 +28,7 @@ public class SampleRepository
 	Dictionary<string, SampleDesc> index = new Dictionary<string, SampleDesc> ();
 	Dictionary<string, string>     updates = new Dictionary<string, string> ();
 
-	public SampleRepository (string name) : this (ZipArchive.Open (name.EndsWith (".zip") ? name : name + ".zip", FileMode.Open))
+	public SampleRepository (string name) : this (ZipArchive.Open (name.EndsWith (".zip", StringComparison.OrdinalIgnoreCase) ? name : name + ".zip", FileMode.Open))
 	{
 		
 	}

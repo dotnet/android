@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tasks
 				string outPath = Path.Combine (IntermediateOutputDirectory, "aidl");
 				var ret = tool.Run (opts, assemblyFile => AssemblyDefinition.ReadAssembly (assemblyFile), (dir, file) => {
 					var dst = Path.GetFullPath (Path.Combine (outPath, Path.ChangeExtension (file, ".cs")));
-					if (!dst.StartsWith (outPath))
+					if (!dst.StartsWith (outPath, StringComparison.OrdinalIgnoreCase))
 						dst = Path.Combine (outPath, Path.ChangeExtension (Path.GetFileName (file), ".cs"));
 					string dstdir = Path.GetDirectoryName (dst);
 					if (!Directory.Exists (dstdir))

@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 			if (!m.Success)
 				return string.Format ("!:BadHref:{0}", href);
 			string jniTypeName = m.Groups ["type"].Value.Replace ('.', '$');
-			if (jniTypeName.EndsWith ("package-summary"))
+			if (jniTypeName.EndsWith ("package-summary", StringComparison.Ordinal))
 				return CreateNamespaceCref (jniTypeName);
 			Type type = GetAvailableTypes ()
 				.FirstOrDefault (t => {
@@ -201,10 +201,10 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 			if (href == null)
 				return "";
 			var cref = CrefFromHref (href.Value);
-			if (!cref.StartsWith ("!:BadHref"))
+			if (!cref.StartsWith ("!:BadHref", StringComparison.Ordinal))
 				return new XElement ("see",
 						new XAttribute ("cref", cref));
-			int packageStart = href.Value.LastIndexOf ("../");
+			int packageStart = href.Value.LastIndexOf ("../", StringComparison.Ordinal);
 			if (packageStart < 0)
 				return "";
 			var url = href.Value.Substring (packageStart + "../".Length);
