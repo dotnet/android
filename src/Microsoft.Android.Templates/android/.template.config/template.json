@@ -1,10 +1,10 @@
 {
   "$schema": "http://json.schemastore.org/template",
   "author": "Microsoft",
-  "classifications": [ "Android" ],
+  "classifications": [ "Android", "Mobile" ],
   "identity": "Microsoft.Android.AndroidApp",
-  "name": "Android Application",
-  "description": "A project for creating an Android application",
+  "name": "Android Application (Preview)",
+  "description": "A project for creating a .NET 6 Android application",
   "shortName": "android",
   "tags": {
     "language": "C#",
