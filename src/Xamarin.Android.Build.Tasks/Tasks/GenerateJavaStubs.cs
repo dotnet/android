@@ -282,9 +282,10 @@ namespace Xamarin.Android.Tasks
 				NeedsInternet = NeedsInternet,
 				InstantRunEnabled = InstantRunEnabled
 			};
-			// Only set manifest.VersionCode if it is not blank.
-			// We do not want to override the existing manifest in this case.
-			if (!string.IsNullOrEmpty (VersionCode)) {
+			// Only set manifest.VersionCode if there is no existing value in AndroidManifest.xml.
+			if (manifest.HasVersionCode) {
+				Log.LogDebugMessage ($"Using existing versionCode in: {ManifestTemplate}");
+			} else if (!string.IsNullOrEmpty (VersionCode)) {
 				manifest.VersionCode = VersionCode;
 			}
 			manifest.Assemblies.AddRange (userAssemblies.Values);
