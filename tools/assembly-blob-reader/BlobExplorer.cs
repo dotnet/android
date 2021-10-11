@@ -318,7 +318,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 		string GetBaseNameNoExtension (string blobPath)
 		{
 			string fileName = Path.GetFileName (blobPath);
-			if (fileName.EndsWith ("_assemblies")) {
+			if (fileName.EndsWith ("_assemblies", StringComparison.OrdinalIgnoreCase)) {
 				return fileName;
 			}
 			return $"{fileName}_assemblies";

@@ -68,6 +68,10 @@ and `base/root/assemblies/` (for AAB) folders.
 The architecture agnostic blob is always named `assemblies.blob` while
 the architecture-specific one is called `assemblies.[ARCH].blob`.
 
+Each APK in the application (e.g. the future Feature APKs) **may**
+contain the above two assembly blob files (some APKs may contain only
+resources, other may contain only native libraries etc)
+
 Currently, Xamarin.Android applications will produce only one set of
 blobs but when Xamarin.Android adds support for Android Features, each
 feature APK will contain its own set of blobs.  All of the APKs will
@@ -119,7 +123,10 @@ Individual fields have the following meanings:
  - `local_entry_count`: number of assemblies stored in this blob (also
    the number of entries in the assembly descriptor table, see below)
  - `global_entry_count`: number of entries in the index blob's (see
-   below) hash tables, all the other blobs store `0` in this field
+   below) hash tables and, thus, the number of assemblies stored in
+   **all** of the blobs across **all** of the application's APK files,
+   all the other blobs store `0` in this field since they do **not**
+   have the hash tables.
  - `blob_id`: a unique ID of this blob.
  
 ## Assembly descriptor table
@@ -181,13 +188,15 @@ Both tables share the same format, despite the hashes themselves being
 of different sizes.  This is done to make handling of the tables
 easier on the runtime.
 
-Each entry contains, among other fields, the assembly name hash.  The
-hash value is obtained using the
+Each entry contains, among other fields, the assembly name hash.  In
+case of satellite assemblies, the assembly culture (e.g. `en/` or
+`fr/`) is treated as part of the assembly name, thus resulting in a
+unique hash. The  hash value is obtained using the
 [xxHash](https://cyan4973.github.io/xxHash/) algorithm and is
 calculated **without** including the `.dll` extension.  This is done
 for runtime efficiency as the vast majority of Mono requests to load
 an assembly does not include the `.dll` suffix, thus saving us time of
-appending it in order to generate the hash for index lookup.
+appending it in order to generate the hash for index lookup. 
 
 Each entry is represented by the following structure:
 
