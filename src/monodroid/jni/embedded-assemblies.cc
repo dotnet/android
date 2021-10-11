@@ -389,7 +389,6 @@ EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENS
 		return nullptr;
 	}
 
-	// log_debug (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: found index entry (blob id: %u; index: %u)", hash_entry->blob_id, hash_entry->mapping_index);
 	if (hash_entry->mapping_index >= application_config.number_of_assemblies_in_apk) {
 		log_fatal (LOG_ASSEMBLY, "Invalid assembly index %u, exceeds the maximum index of %u", hash_entry->mapping_index, application_config.number_of_assemblies_in_apk - 1);
 		abort ();

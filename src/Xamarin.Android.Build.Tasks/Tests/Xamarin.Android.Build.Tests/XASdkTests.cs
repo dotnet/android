@@ -624,17 +624,15 @@ namespace Xamarin.Android.Build.Tests
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
 			helper.AssertContainsEntry ($"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
-//			using (var apk = ZipHelper.OpenZip (apkPath)) {
-				foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
-					helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
-					helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
-					if (rids.Length > 1) {
-						helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
-					} else {
-						helper.AssertContainsEntry ("assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
-					}
+			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
+				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
+				helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+				if (rids.Length > 1) {
+					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
+				} else {
+					helper.AssertContainsEntry ("assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				}
-//			}
+			}
 		}
 
 
