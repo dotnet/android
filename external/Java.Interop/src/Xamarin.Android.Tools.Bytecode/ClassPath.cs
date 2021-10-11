@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 					if (entry.Length == 0)
 						continue;
 					using (var s = entry.Open ()) {
-						if (!ClassFile.IsClassFile (s))
+						if (!ClassFile.IsClassFile (s) || entry.Name.EndsWith (".jnilib", StringComparison.OrdinalIgnoreCase))
 							continue;
 					}
 					using (var s = entry.Open ()) {
