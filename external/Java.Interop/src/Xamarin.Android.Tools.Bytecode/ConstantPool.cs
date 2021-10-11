@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -45,7 +45,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 		NameAndType         = 12,
 		MethodHandle        = 15,
 		MethodType          = 16,
+		Dynamic             = 17,
 		InvokeDynamic       = 18,
+		Module              = 19,
+		Package             = 20,
 	}
 
 	public abstract class ConstantPoolItem {
@@ -85,8 +88,11 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case ConstantPoolItemType.NameAndType:         return new ConstantPoolNameAndTypeItem (constantPool, stream);
 			case ConstantPoolItemType.MethodHandle:        return new ConstantPoolMethodHandleItem (constantPool, stream);
 			case ConstantPoolItemType.MethodType:          return new ConstantPoolMethodTypeItem (constantPool, stream);
+			case ConstantPoolItemType.Dynamic:             return new ConstantPoolDynamicItem (constantPool, stream);
 			case ConstantPoolItemType.InvokeDynamic:       return new ConstantPoolInvokeDynamicItem (constantPool, stream);
-			default:
+			case ConstantPoolItemType.Module:              return new ConstantPoolModuleItem (constantPool, stream);
+			case ConstantPoolItemType.Package:             return new ConstantPoolPackageItem (constantPool, stream);
+				default:
 				throw new NotSupportedException (string.Format ("Unknown constant type 0x{0}.", type.ToString ("x")));
 			}
 		}
@@ -463,6 +469,24 @@ namespace Xamarin.Android.Tools.Bytecode {
 		}
 	}
 
+	// http://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.9
+	public sealed class ConstantPoolDynamicItem : ConstantPoolItem
+	{
+		ushort boostrapMethodAttrIndex;
+		ushort nameAndTypeIndex;
+
+		public ConstantPoolDynamicItem (ConstantPool constantPool, Stream stream)
+			: base (constantPool, stream)
+		{
+			boostrapMethodAttrIndex = stream.ReadNetworkUInt16 ();
+			nameAndTypeIndex = stream.ReadNetworkUInt16 ();
+		}
+
+		public override ConstantPoolItemType Type {
+			get { return ConstantPoolItemType.InvokeDynamic; }
+		}
+	}
+
 	// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.10
 	public sealed class ConstantPoolInvokeDynamicItem : ConstantPoolItem {
 
@@ -480,5 +504,56 @@ namespace Xamarin.Android.Tools.Bytecode {
 			get {return ConstantPoolItemType.InvokeDynamic;}
 		}
 	}
-}
 
+	// http://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.11
+	public sealed class ConstantPoolModuleItem : ConstantPoolItem
+	{
+		ushort nameIndex;
+
+		public ConstantPoolModuleItem (ConstantPool constantPool, Stream stream)
+			: base (constantPool, stream)
+		{
+			nameIndex = stream.ReadNetworkUInt16 ();
+		}
+
+		public override ConstantPoolItemType Type {
+			get { return ConstantPoolItemType.Module; }
+		}
+
+		public ConstantPoolUtf8Item Name {
+			get { return (ConstantPoolUtf8Item) ConstantPool [nameIndex]; }
+		}
+
+		public override string ToString ()
+		{
+			return string.Format (CultureInfo.InvariantCulture, "Module(nameIndex={0} Name=\"{1}\")",
+					nameIndex, Name.Value);
+		}
+	}
+
+	// http://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.12
+	public sealed class ConstantPoolPackageItem : ConstantPoolItem
+	{
+		ushort nameIndex;
+
+		public ConstantPoolPackageItem (ConstantPool constantPool, Stream stream)
+			: base (constantPool, stream)
+		{
+			nameIndex = stream.ReadNetworkUInt16 ();
+		}
+
+		public override ConstantPoolItemType Type {
+			get { return ConstantPoolItemType.Module; }
+		}
+
+		public ConstantPoolUtf8Item Name {
+			get { return (ConstantPoolUtf8Item) ConstantPool [nameIndex]; }
+		}
+
+		public override string ToString ()
+		{
+			return string.Format (CultureInfo.InvariantCulture, "Package(nameIndex={0} Name=\"{1}\")",
+					nameIndex, Name.Value);
+		}
+	}
+}
