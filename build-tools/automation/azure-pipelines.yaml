@@ -146,10 +146,12 @@ stages:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - macOS
 
-    - script: mono $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=DetermineApplicableTests --no-emoji --run-mode=CI
-      displayName: determine which test stages to run
-      name: TestConditions
-      condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
+    - template: yaml-templates/run-xaprepare.yaml
+      parameters:
+        arguments: --s=DetermineApplicableTests
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        displayName: determine which test stages to run
+        condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"

@@ -12,8 +12,9 @@ jobs:
     steps:
     - template: setup-test-environment.yaml
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
-      displayName: install emulator
+    - template: run-xaprepare.yaml
+      parameters:
+        arguments: --s=EmulatorTestDependencies
 
     - task: DownloadPipelineArtifact@2
       inputs:
