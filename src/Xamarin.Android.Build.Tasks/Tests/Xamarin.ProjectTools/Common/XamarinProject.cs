@@ -389,7 +389,7 @@ $@"<Project>
 				RedirectStandardOutput = true,
 			};
 			//TODO: possibly remove this later?
-			psi.EnvironmentVariables.Add ("MONO_LOG_LEVEL", "debug");
+			psi.SetEnvironmentVariable ("MONO_LOG_LEVEL", "debug");
 			Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
 			using (var process = new Process {
 				StartInfo = psi,
