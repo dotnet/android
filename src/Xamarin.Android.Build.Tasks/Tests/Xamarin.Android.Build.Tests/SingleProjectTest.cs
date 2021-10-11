@@ -125,6 +125,10 @@ namespace Xamarin.Android.Build.Tests
 			if (!Builder.UseDotNet) {
 				proj.SetProperty ("GenerateApplicationManifest", "true");
 			}
+			proj.SetProperty ("ApplicationId", "com.i.should.not.be.used");
+			proj.SetProperty ("ApplicationTitle", "I should not be used");
+			proj.SetProperty ("ApplicationVersion", "21");
+			proj.SetProperty ("ApplicationDisplayVersion", "1.1.1.1");
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
