@@ -19,15 +19,11 @@ pr:
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
 # https://dev.azure.com/xamarin/public/_apps/hub/ms.vss-ciworkflow.build-ci-hub?_a=edit-build-definition&id=48&view=Tab_Variables
 variables:
-  XA.Jdk8.Folder: jdk-1.8
-  XA.Jdk11.Folder: jdk-11
-  XA.Build.Configuration: Release
-  NuGetArtifactName: nuget-unsigned
-  InstallerArtifactName: installers-unsigned
-  EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
-  PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
-  DotNet6Version: 6.0.100-preview.3.21202.5
-  GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
+- template: yaml-templates/variables.yaml
+- name: EXTRA_MSBUILD_ARGS
+  value: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+- name: PREPARE_FLAGS
+  value: PREPARE_CI=1 PREPARE_CI_PR=1
 
 stages:
 - stage: mac_stage

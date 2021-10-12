@@ -1,0 +1,33 @@
+variables:
+- name: RunningOnCI
+  value: true
+- name: XA.Build.Configuration
+  value: Release
+- name: XA.Jdk8.Folder
+  value: jdk-1.8
+- name: XA.Jdk11.Folder
+  value: jdk-11
+- name: NuGetArtifactName
+  value: nuget-unsigned
+- name: InstallerArtifactName
+  value: installers-unsigned
+- name: TestAssembliesArtifactName
+  value: test-assemblies
+- name: NUnitConsoleVersion
+  value: 3.11.1
+- name: NUnit.NumberOfTestWorkers
+  value: 4
+- name: DotNet6Version
+  value: 6.0.100-rc.2.21505.57
+- name: GitHub.Token
+  value: $(github--pat--vs-mobiletools-engineering-service2)
+- name: HostedMacImage
+  value: macOS-10.15
+- name: HostedWinVS2019
+  value: Hosted Windows 2019 with VS2019
+- name: VSEngWinVS2019
+  value: android-win-2019
+- name: VSEngMicroBuild2019
+  value: VSEngSS-MicroBuild2019-1ES
+- name: TeamName
+  value: XamarinAndroid

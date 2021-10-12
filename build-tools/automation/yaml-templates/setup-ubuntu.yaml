@@ -1,8 +1,10 @@
 steps:
-- template: use-dot-net.yaml
 
 - script: sudo rm /etc/apt/sources.list.d/treasure-data.list || true
   displayName: remove invalid treasure-data source
+
+- script: echo "##vso[task.setvariable variable=XDG_CONFIG_HOME]$HOME/.config"
+  displayName: update XDG_CONFIG_HOME
 
 - script: >
     sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&
@@ -11,10 +13,12 @@ steps:
     sudo apt install -y --no-install-recommends mono-complete nuget msbuild
   displayName: install mono preview
 
+- script: sudo apt upgrade
+  displayName: update packages
+
+- template: use-dot-net.yaml
+
 - task: NuGetToolInstaller@1
   displayName: Use NuGet 5.x
   inputs:
     versionSpec: 5.x
-
-- script: echo "##vso[task.setvariable variable=XDG_CONFIG_HOME]$HOME/.config"
-  displayName: update XDG_CONFIG_HOME
