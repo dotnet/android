@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-using Xamarin.Android.AssemblyBlobReader;
+using Xamarin.Android.AssemblyStore;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 
@@ -12,8 +12,8 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class ArchiveAssemblyHelper
 	{
-		public const string DefaultBlobEntryPrefix = "{blobReader}";
-		const int BlobReadBufferSize = 8192;
+		public const string DefaultAssemblyStoreEntryPrefix = "{storeReader}";
+		const int AssemblyStoreReadBufferSize = 8192;
 
 		static readonly HashSet<string> SpecialExtensions = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
 			".dll",
@@ -33,19 +33,19 @@ namespace Xamarin.Android.Build.Tests
 
 		readonly string archivePath;
 		readonly string assembliesRootDir;
-		bool useAssemblyBlobs;
+		bool useAssemblyStores;
 		List<string> archiveContents;
 
 		public string ArchivePath => archivePath;
 
-		public ArchiveAssemblyHelper (string archivePath, bool useAssemblyBlobs)
+		public ArchiveAssemblyHelper (string archivePath, bool useAssemblyStores)
 		{
 			if (String.IsNullOrEmpty (archivePath)) {
 				throw new ArgumentException ("must not be null or empty", nameof (archivePath));
 			}
 
 			this.archivePath = archivePath;
-			this.useAssemblyBlobs = useAssemblyBlobs;
+			this.useAssemblyStores = useAssemblyStores;
 
 			string extension = Path.GetExtension (archivePath) ?? String.Empty;
 			if (String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0) {
@@ -61,8 +61,8 @@ namespace Xamarin.Android.Build.Tests
 
 		public Stream ReadEntry (string path)
 		{
-			if (useAssemblyBlobs) {
-				return ReadBlobEntry (path);
+			if (useAssemblyStores) {
+				return ReadStoreEntry (path);
 			}
 
 			return ReadZipEntry (path);
@@ -79,46 +79,46 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		Stream ReadBlobEntry (string path)
+		Stream ReadStoreEntry (string path)
 		{
-			BlobReader blobReader = null;
-			BlobAssembly assembly = null;
+			AssemblyStoreReader storeReader = null;
+			AssemblyStoreAssembly assembly = null;
 			string name = Path.GetFileNameWithoutExtension (path);
-			var explorer = new BlobExplorer (archivePath);
+			var explorer = new AssemblyStoreExplorer (archivePath);
 
 			foreach (var asm in explorer.Assemblies) {
 				if (String.Compare (name, asm.Name, StringComparison.Ordinal) != 0) {
 					continue;
 				}
 				assembly = asm;
-				blobReader = asm.Blob;
+				storeReader = asm.Store;
 				break;
 			}
 
-			if (blobReader == null) {
-				Console.WriteLine ($"Blob for entry {path} not found, will try a standard Zip read");
+			if (storeReader == null) {
+				Console.WriteLine ($"Store for entry {path} not found, will try a standard Zip read");
 				return ReadZipEntry (path);
 			}
 
-			string blobEntryName;
-			if (String.IsNullOrEmpty (blobReader.Arch)) {
-				blobEntryName = $"{assembliesRootDir}assemblies.blob";
+			string storeEntryName;
+			if (String.IsNullOrEmpty (storeReader.Arch)) {
+				storeEntryName = $"{assembliesRootDir}assemblies.store";
 			} else {
-				blobEntryName = $"{assembliesRootDir}assemblies_{blobReader.Arch}.blob";
+				storeEntryName = $"{assembliesRootDir}assemblies_{storeReader.Arch}.store";
 			}
 
-			Stream blob = ReadZipEntry (blobEntryName);
-			if (blob == null) {
-				Console.WriteLine ($"Blob zip entry {blobEntryName} does not exist");
+			Stream store = ReadZipEntry (storeEntryName);
+			if (store == null) {
+				Console.WriteLine ($"Store zip entry {storeEntryName} does not exist");
 				return null;
 			}
 
-			blob.Seek (assembly.DataOffset, SeekOrigin.Begin);
+			store.Seek (assembly.DataOffset, SeekOrigin.Begin);
 			var ret = new MemoryStream ();
-			byte[] buffer = buffers.Rent (BlobReadBufferSize);
+			byte[] buffer = buffers.Rent (AssemblyStoreReadBufferSize);
 			int toRead = (int)assembly.DataSize;
 			while (toRead > 0) {
-				int nread = blob.Read (buffer, 0, BlobReadBufferSize);
+				int nread = store.Read (buffer, 0, AssemblyStoreReadBufferSize);
 				if (nread <= 0) {
 					break;
 				}
@@ -127,20 +127,20 @@ namespace Xamarin.Android.Build.Tests
 				toRead -= nread;
 			}
 			ret.Flush ();
-			blob.Dispose ();
+			store.Dispose ();
 			buffers.Return (buffer);
 
 			return ret;
 		}
 
-		public List<string> ListArchiveContents (string blobEntryPrefix = DefaultBlobEntryPrefix, bool forceRefresh = false)
+		public List<string> ListArchiveContents (string storeEntryPrefix = DefaultAssemblyStoreEntryPrefix, bool forceRefresh = false)
 		{
 			if (!forceRefresh && archiveContents != null) {
 				return archiveContents;
 			}
 
-			if (String.IsNullOrEmpty (blobEntryPrefix)) {
-				throw new ArgumentException (nameof (blobEntryPrefix), "must not be null or empty");
+			if (String.IsNullOrEmpty (storeEntryPrefix)) {
+				throw new ArgumentException (nameof (storeEntryPrefix), "must not be null or empty");
 			}
 
 			var entries = new List<string> ();
@@ -151,17 +151,17 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			archiveContents = entries;
-			if (!useAssemblyBlobs) {
-				Console.WriteLine ("Not using assembly blobs");
+			if (!useAssemblyStores) {
+				Console.WriteLine ("Not using assembly stores");
 				return entries;
 			}
 
-			var explorer = new BlobExplorer (archivePath);
+			var explorer = new AssemblyStoreExplorer (archivePath);
 			foreach (var asm in explorer.Assemblies) {
-				string prefix = blobEntryPrefix;
+				string prefix = storeEntryPrefix;
 
-				if (!String.IsNullOrEmpty (asm.Blob.Arch)) {
-					string arch = ArchToAbi[asm.Blob.Arch];
+				if (!String.IsNullOrEmpty (asm.Store.Arch)) {
+					string arch = ArchToAbi[asm.Store.Arch];
 					prefix = $"{prefix}{arch}/";
 				}
 
@@ -175,7 +175,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			Console.WriteLine ("Archive entries with synthetised assembly blobReader entries:");
+			Console.WriteLine ("Archive entries with synthetised assembly storeReader entries:");
 			foreach (string e in entries) {
 				Console.WriteLine ($"  {e}");
 			}
@@ -203,8 +203,8 @@ namespace Xamarin.Android.Build.Tests
 				throw new ArgumentException ("must not be empty", nameof (fileNames));
 			}
 
-			if (useAssemblyBlobs) {
-				BlobContains (fileNames, out existingFiles, out missingFiles, out additionalFiles);
+			if (useAssemblyStores) {
+				StoreContains (fileNames, out existingFiles, out missingFiles, out additionalFiles);
 			} else {
 				ArchiveContains (fileNames, out existingFiles, out missingFiles, out additionalFiles);
 			}
@@ -219,7 +219,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		void BlobContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles)
+		void StoreContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles)
 		{
 			var assemblyNames = fileNames.Where (x => x.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)).ToList ();
 			var configFiles = fileNames.Where (x => x.EndsWith (".config", StringComparison.OrdinalIgnoreCase)).ToList ();
@@ -241,16 +241,16 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			var explorer = new BlobExplorer (archivePath);
+			var explorer = new AssemblyStoreExplorer (archivePath);
 
-			// Blobs don't store the assembly extension
-			var blobAssemblies = explorer.AssembliesByName.Keys.Select (x => $"{x}.dll");
+			// Assembly stores don't store the assembly extension
+			var storeAssemblies = explorer.AssembliesByName.Keys.Select (x => $"{x}.dll");
 			if (explorer.AssembliesByName.Count != 0) {
-				existingFiles.AddRange (blobAssemblies);
+				existingFiles.AddRange (storeAssemblies);
 
-				// We need to fake config and debug files since they have no named entries in the blobReader
+				// We need to fake config and debug files since they have no named entries in the storeReader
 				foreach (string file in configFiles) {
-					BlobAssembly asm = GetBlobAssembly (file);
+					AssemblyStoreAssembly asm = GetStoreAssembly (file);
 					if (asm == null) {
 						continue;
 					}
@@ -261,7 +261,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				foreach (string file in debugFiles) {
-					BlobAssembly asm = GetBlobAssembly (file);
+					AssemblyStoreAssembly asm = GetStoreAssembly (file);
 					if (asm == null) {
 						continue;
 					}
@@ -281,14 +281,14 @@ namespace Xamarin.Android.Build.Tests
 
 			additionalFiles = existingFiles.Where (x => !fileNames.Contains (x)).ToList ();
 
-			BlobAssembly GetBlobAssembly (string file)
+			AssemblyStoreAssembly GetStoreAssembly (string file)
 			{
 				string assemblyName = Path.GetFileNameWithoutExtension (file);
 				if (assemblyName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
 					assemblyName = Path.GetFileNameWithoutExtension (assemblyName);
 				}
 
-				if (!explorer.AssembliesByName.TryGetValue (assemblyName, out BlobAssembly asm) || asm == null) {
+				if (!explorer.AssembliesByName.TryGetValue (assemblyName, out AssemblyStoreAssembly asm) || asm == null) {
 					return null;
 				}
 

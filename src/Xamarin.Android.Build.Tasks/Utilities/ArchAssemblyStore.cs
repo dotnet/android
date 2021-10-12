@@ -7,34 +7,34 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	class ArchAssemblyBlob : AssemblyBlob
+	class ArchAssemblyStore : AssemblyStore
 	{
-		readonly Dictionary<string, List<BlobAssemblyInfo>> assemblies;
+		readonly Dictionary<string, List<AssemblyStoreAssemblyInfo>> assemblies;
 		HashSet<string> seenArchAssemblyNames;
 
-		public ArchAssemblyBlob (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log, uint id, AssemblyBlobGlobalIndex globalIndexCounter)
+		public ArchAssemblyStore (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log, uint id, AssemblyStoreGlobalIndex globalIndexCounter)
 			: base (apkName, archiveAssembliesPrefix, log, id, globalIndexCounter)
 		{
-			assemblies = new Dictionary<string, List<BlobAssemblyInfo>> (StringComparer.OrdinalIgnoreCase);
+			assemblies = new Dictionary<string, List<AssemblyStoreAssemblyInfo>> (StringComparer.OrdinalIgnoreCase);
 		}
 
-		public override string WriteIndex (List<AssemblyBlobIndexEntry> globalIndex)
+		public override string WriteIndex (List<AssemblyStoreIndexEntry> globalIndex)
 		{
 			throw new InvalidOperationException ("Architecture-specific assembly blob cannot contain global assembly index");
 		}
 
-		public override void Add (BlobAssemblyInfo blobAssembly)
+		public override void Add (AssemblyStoreAssemblyInfo blobAssembly)
 		{
 			if (String.IsNullOrEmpty (blobAssembly.Abi)) {
 				throw new InvalidOperationException ($"Architecture-agnostic assembly cannot be added to an architecture-specific blob ({blobAssembly.FilesystemAssemblyPath})");
 			}
 
 			if (!assemblies.ContainsKey (blobAssembly.Abi)) {
-				assemblies.Add (blobAssembly.Abi, new List<BlobAssemblyInfo> ());
+				assemblies.Add (blobAssembly.Abi, new List<AssemblyStoreAssemblyInfo> ());
 			}
 
 			Log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: adding Arch '{blobAssembly.Abi}' assembly {blobAssembly.FilesystemAssemblyPath}");
-			List<BlobAssemblyInfo> blobAssemblies = assemblies[blobAssembly.Abi];
+			List<AssemblyStoreAssemblyInfo> blobAssemblies = assemblies[blobAssembly.Abi];
 			blobAssemblies.Add (blobAssembly);
 
 			if (seenArchAssemblyNames == null) {
@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tasks
 			seenArchAssemblyNames.Add (assemblyName);
 		}
 
-		public override void Generate (string outputDirectory, List<AssemblyBlobIndexEntry> globalIndex, List<string> blobPaths)
+		public override void Generate (string outputDirectory, List<AssemblyStoreIndexEntry> globalIndex, List<string> blobPaths)
 		{
 			if (assemblies.Count == 0) {
 				return;
@@ -58,15 +58,15 @@ namespace Xamarin.Android.Tasks
 			var assemblyNames = new Dictionary<int, string> ();
 			foreach (var kvp in assemblies) {
 				string abi = kvp.Key;
-				List<BlobAssemblyInfo> archAssemblies = kvp.Value;
+				List<AssemblyStoreAssemblyInfo> archAssemblies = kvp.Value;
 
 				Log.LogMessage (MessageImportance.Low, $"Blob: assemblies for architecture {abi}:");
 				// All the architecture blobs must have assemblies in exactly the same order
-				archAssemblies.Sort ((BlobAssemblyInfo a, BlobAssemblyInfo b) => Path.GetFileName (a.FilesystemAssemblyPath).CompareTo (Path.GetFileName (b.FilesystemAssemblyPath)));
+				archAssemblies.Sort ((AssemblyStoreAssemblyInfo a, AssemblyStoreAssemblyInfo b) => Path.GetFileName (a.FilesystemAssemblyPath).CompareTo (Path.GetFileName (b.FilesystemAssemblyPath)));
 				if (assemblyNames.Count == 0) {
 					Log.LogMessage (MessageImportance.Low, $"     first arch, preparing names list, {archAssemblies.Count} entries");
 					for (int i = 0; i < archAssemblies.Count; i++) {
-						BlobAssemblyInfo info = archAssemblies[i];
+						AssemblyStoreAssemblyInfo info = archAssemblies[i];
 						Log.LogMessage (MessageImportance.Low, $"   {Path.GetFileName (info.FilesystemAssemblyPath)}");
 						assemblyNames.Add (i, Path.GetFileName (info.FilesystemAssemblyPath));
 					}
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 
 				Log.LogMessage (MessageImportance.Low, $"      {archAssemblies.Count} entries");
 				for (int i = 0; i < archAssemblies.Count; i++) {
-					BlobAssemblyInfo info = archAssemblies[i];
+					AssemblyStoreAssemblyInfo info = archAssemblies[i];
 					Log.LogMessage (MessageImportance.Low, $"   {Path.GetFileName (info.FilesystemAssemblyPath)}");
 				}
 
@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				for (int i = 0; i < archAssemblies.Count; i++) {
-					BlobAssemblyInfo info = archAssemblies[i];
+					AssemblyStoreAssemblyInfo info = archAssemblies[i];
 					string fileName = Path.GetFileName (info.FilesystemAssemblyPath);
 
 					if (assemblyNames[i] != fileName) {
@@ -96,7 +96,7 @@ namespace Xamarin.Android.Tasks
 			bool addToGlobalIndex = true;
 			foreach (var kvp in assemblies) {
 				string abi = kvp.Key;
-				List<BlobAssemblyInfo> archAssemblies = kvp.Value;
+				List<AssemblyStoreAssemblyInfo> archAssemblies = kvp.Value;
 
 				if (archAssemblies.Count == 0) {
 					continue;

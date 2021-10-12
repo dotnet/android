@@ -72,7 +72,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
-			proj.SetProperty ("AndroidUseAssembliesBlob", usesAssembliesBlob.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssembliesBlob.ToString ());
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			if (!Builder.UseDotNet) {
 				proj.PackageReferences.Add (new Package {
@@ -638,7 +638,7 @@ namespace XamFormsSample
 					},
 				}
 			};
-			app.SetProperty ("AndroidUseAssembliesBlob", "False");
+			app.SetProperty ("AndroidUseAssemblyStore", "False");
 			app.MainActivity = @"using System;
 using Android.App;
 using Android.Content;

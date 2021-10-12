@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Xamarin.Android.Tasks
 {
-	class BlobAssemblyInfo
+	class AssemblyStoreAssemblyInfo
 	{
 		public string FilesystemAssemblyPath { get; }
 		public string ArchiveAssemblyPath { get; }
@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tasks
 		public string ConfigPath { get; private set; }
 		public string Abi { get; }
 
-		public BlobAssemblyInfo (string filesystemAssemblyPath, string archiveAssemblyPath, string abi)
+		public AssemblyStoreAssemblyInfo (string filesystemAssemblyPath, string archiveAssemblyPath, string abi)
 		{
 			if (String.IsNullOrEmpty (filesystemAssemblyPath)) {
 				throw new ArgumentException ("must not be null or empty", nameof (filesystemAssemblyPath));

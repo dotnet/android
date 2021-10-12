@@ -438,7 +438,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 		}
 	}
 
-	embeddedAssemblies.ensure_valid_blobs ();
+	embeddedAssemblies.ensure_valid_assembly_stores ();
 }
 
 #if defined (DEBUG) && !defined (WINDOWS)

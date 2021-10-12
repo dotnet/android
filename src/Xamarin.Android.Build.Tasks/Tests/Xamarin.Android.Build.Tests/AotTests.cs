@@ -182,7 +182,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
-			proj.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			bool checkMinLlvmPath = enableLLVM && (supportedAbis == "armeabi-v7a" || supportedAbis == "x86");
 			if (checkMinLlvmPath) {
 				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
@@ -261,7 +261,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
-			proj.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder (path)) {
 				if (!b.CrossCompilerAvailable (supportedAbis))
 					Assert.Ignore ("Cross compiler was not available");
@@ -405,7 +405,7 @@ namespace "+ libName + @" {
 			proj.SetProperty ("AndroidAotMode", "Hybrid");
 			// So we can use Mono.Cecil to open assemblies directly
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
-			proj.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			proj.SetAndroidSupportedAbis (abis);
 
 			using (var b = CreateApkBuilder ()) {

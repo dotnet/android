@@ -10,8 +10,9 @@
 
 static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
-static constexpr uint32_t BUNDLED_ASSEMBLIES_BLOB_MAGIC = 0x41424158; // 'XABA', little-endian
-static constexpr uint32_t BUNDLED_ASSEMBLIES_BLOB_VERSION = 1; // Increase whenever an incompatible change is made to the blob format
+static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
+static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 1; // Increase whenever an incompatible change is made to the
+															 // assembly store format
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
@@ -109,41 +110,41 @@ struct XamarinAndroidBundledAssembly final
 };
 
 //
-// Blob format
+// Assembly store format
 //
 // The separate hash indices for 32 and 64-bit hashes are required because they will be sorted differently.
 // The 'index' field of each of the hashes{32,64} entry points not only into the `assemblies` array in the
-// blob but also into the `uint8_t*` `blob_bundled_assemblies*` arrays.
+// store but also into the `uint8_t*` `assembly_store_bundled_assemblies*` arrays.
 //
-// This way the `assemblies` array in the blob can remain read only, because we write the "mapped" assembly
+// This way the `assemblies` array in the store can remain read only, because we write the "mapped" assembly
 // pointer somewhere else. Otherwise we'd have to copy the `assemblies` array to a writable area of memory.
 //
-// Each blob has a unique ID assigned, which is an index into an array of pointers to arrays which store
-// individual assembly addresses. Only blob with ID 0 comes with the hashes32 and hashes64 arrays. This is
-// done to make it possible to use a single sorted array to find assemblies insted of each blob having its
+// Each store has a unique ID assigned, which is an index into an array of pointers to arrays which store
+// individual assembly addresses. Only store with ID 0 comes with the hashes32 and hashes64 arrays. This is
+// done to make it possible to use a single sorted array to find assemblies insted of each store having its
 // own sorted array of hashes, which would require several binary searches instead of just one.
 //
-//   BundledAssemblyBlobHeader header;
-//   BlobBundledAssembly assemblies[header.local_entry_count];
-//   BlobHashEntry hashes32[header.global_entry_count]; // only in blob with ID 0
-//   BlobHashEntry hashes64[header.global_entry_count]; // only in blob with ID 0
+//   AssemblyStoreHeader header;
+//   AssemblyStoreAssemblyDescriptor assemblies[header.local_entry_count];
+//   AssemblyStoreHashEntry hashes32[header.global_entry_count]; // only in assembly store with ID 0
+//   AssemblyStoreHashEntry hashes64[header.global_entry_count]; // only in assembly store with ID 0
 //   [DATA]
 //
 
 //
-// The structures which are found in the blob files must be packed, to avoid problems when calculating offsets (runtime
+// The structures which are found in the store files must be packed to avoid problems when calculating offsets (runtime
 // size of a structure can be different than the real data size)
 //
-struct [[gnu::packed]] BundledAssemblyBlobHeader final
+struct [[gnu::packed]] AssemblyStoreHeader final
 {
 	uint32_t magic;
 	uint32_t version;
 	uint32_t local_entry_count;
 	uint32_t global_entry_count;
-	uint32_t blob_id;
+	uint32_t store_id;
 };
 
-struct [[gnu::packed]] BlobHashEntry final
+struct [[gnu::packed]] AssemblyStoreHashEntry final
 {
 	union {
 		uint64_t hash64;
@@ -151,17 +152,17 @@ struct [[gnu::packed]] BlobHashEntry final
 	};
 
 	// Index into the array with pointers to assembly data.
-	// It **must** be unique across all the blobs from all the apks
+	// It **must** be unique across all the stores from all the apks
 	uint32_t mapping_index;
 
-	// Index into the array with assembly descriptors inside a blob
-	uint32_t local_blob_index;
+	// Index into the array with assembly descriptors inside a store
+	uint32_t local_store_index;
 
-	// Index into the array with blob mmap addresses
-	uint32_t blob_id;
+	// Index into the array with assembly store mmap addresses
+	uint32_t store_id;
 };
 
-struct [[gnu::packed]] BlobBundledAssembly final
+struct [[gnu::packed]] AssemblyStoreAssemblyDescriptor final
 {
 	uint32_t data_offset;
 	uint32_t data_size;
@@ -173,19 +174,19 @@ struct [[gnu::packed]] BlobBundledAssembly final
 	uint32_t config_data_size;
 };
 
-struct AssemblyBlobRuntimeData final
+struct AssemblyStoreRuntimeData final
 {
 	uint8_t             *data_start;
 	uint32_t             assembly_count;
-	BlobBundledAssembly *assemblies;
+	AssemblyStoreAssemblyDescriptor *assemblies;
 };
 
-struct BlobAssemblyRuntimeData final
+struct AssemblyStoreSingleAssemblyRuntimeData final
 {
 	uint8_t             *image_data;
 	uint8_t             *debug_info_data;
 	uint8_t             *config_data;
-	BlobBundledAssembly *descriptor;
+	AssemblyStoreAssemblyDescriptor *descriptor;
 };
 
 struct ApplicationConfig
@@ -198,14 +199,14 @@ struct ApplicationConfig
 	bool instant_run_enabled;
 	bool jni_add_native_method_registration_attribute_present;
 	bool have_runtime_config_blob;
-	bool have_assemblies_blob;
+	bool have_assembly_store;
 	uint8_t bound_exception_type;
 	uint32_t package_naming_policy;
 	uint32_t environment_variable_count;
 	uint32_t system_property_count;
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
-	uint32_t number_of_assembly_blobs;
+	uint32_t number_of_assembly_store_files;
 	const char *android_package_name;
 };
 
@@ -229,7 +230,7 @@ MONO_API const char* app_system_properties[];
 MONO_API const char* mono_aot_mode_name;
 
 MONO_API XamarinAndroidBundledAssembly bundled_assemblies[];
-MONO_API BlobAssemblyRuntimeData blob_bundled_assemblies[];
-MONO_API AssemblyBlobRuntimeData assembly_blobs[];
+MONO_API AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
+MONO_API AssemblyStoreRuntimeData assembly_stores[];
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

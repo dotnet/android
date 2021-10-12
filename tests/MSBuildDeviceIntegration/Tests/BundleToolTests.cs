@@ -63,7 +63,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 
-			lib.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
+			lib.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 
 			var bytes = new byte [1024];
 			app = new XamarinFormsMapsApplicationProject {
@@ -87,7 +87,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty (app.ReleaseProperties, "AndroidPackageFormat", "aab");
 			app.SetAndroidSupportedAbis (Abis);
 			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.json");
-			app.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
+			app.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 
 			libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupOnDispose: true);
 			Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
@@ -143,7 +143,7 @@ namespace Xamarin.Android.Build.Tests
 				"resources.pb",
 			};
 
-			string blobEntryPrefix = ArchiveAssemblyHelper.DefaultBlobEntryPrefix;
+			string blobEntryPrefix = ArchiveAssemblyHelper.DefaultAssemblyStoreEntryPrefix;
 			if (usesAssemblyBlobs) {
 				expectedFiles.Add ($"{blobEntryPrefix}Java.Interop.dll");
 				expectedFiles.Add ($"{blobEntryPrefix}Mono.Android.dll");
@@ -230,7 +230,7 @@ namespace Xamarin.Android.Build.Tests
 				"BundleConfig.pb",
 			};
 
-			string blobEntryPrefix = ArchiveAssemblyHelper.DefaultBlobEntryPrefix;
+			string blobEntryPrefix = ArchiveAssemblyHelper.DefaultAssemblyStoreEntryPrefix;
 			if (usesAssemblyBlobs) {
 				expectedFiles.Add ($"{blobEntryPrefix}Java.Interop.dll");
 				expectedFiles.Add ($"{blobEntryPrefix}Mono.Android.dll");

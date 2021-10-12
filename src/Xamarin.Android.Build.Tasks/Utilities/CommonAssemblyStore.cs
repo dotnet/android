@@ -8,17 +8,17 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	class CommonAssemblyBlob : AssemblyBlob
+	class CommonAssemblyStore : AssemblyStore
 	{
-		readonly List<BlobAssemblyInfo> assemblies;
+		readonly List<AssemblyStoreAssemblyInfo> assemblies;
 
-		public CommonAssemblyBlob (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log, uint id, AssemblyBlobGlobalIndex globalIndexCounter)
+		public CommonAssemblyStore (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log, uint id, AssemblyStoreGlobalIndex globalIndexCounter)
 			: base (apkName, archiveAssembliesPrefix, log, id, globalIndexCounter)
 		{
-			assemblies = new List <BlobAssemblyInfo> ();
+			assemblies = new List <AssemblyStoreAssemblyInfo> ();
 		}
 
-		public override void Add (BlobAssemblyInfo blobAssembly)
+		public override void Add (AssemblyStoreAssemblyInfo blobAssembly)
 		{
 			if (!String.IsNullOrEmpty (blobAssembly.Abi)) {
 				throw new InvalidOperationException ($"Architecture-specific assembly cannot be added to an architecture-agnostic blob ({blobAssembly.FilesystemAssemblyPath})");
@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 			assemblies.Add (blobAssembly);
 		}
 
-		public override void Generate (string outputDirectory, List<AssemblyBlobIndexEntry> globalIndex, List<string> blobPaths)
+		public override void Generate (string outputDirectory, List<AssemblyStoreIndexEntry> globalIndex, List<string> blobPaths)
 		{
 			if (assemblies.Count == 0) {
 				return;

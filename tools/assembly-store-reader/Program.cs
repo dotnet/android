@@ -3,23 +3,23 @@ using System.IO;
 
 using Mono.Options;
 
-namespace Xamarin.Android.AssemblyBlobReader
+namespace Xamarin.Android.AssemblyStore
 {
 	class Program
 	{
-		static void ShowBlobInfo (string blobPath)
+		static void ShowAssemblyStoreInfo (string storePath)
 		{
-			var explorer = new BlobExplorer (blobPath);
+			var explorer = new AssemblyStoreExplorer (storePath);
 
 			string yesno = explorer.IsCompleteSet ? "yes" : "no";
-			Console.WriteLine ($"Blob set '{explorer.BlobSetName}':");
+			Console.WriteLine ($"Store set '{explorer.StoreSetName}':");
 			Console.WriteLine ($"  Is complete set? {yesno}");
-			Console.WriteLine ($"  Number of blobs in the set: {explorer.NumberOfBlobs}");
+			Console.WriteLine ($"  Number of stores in the set: {explorer.NumberOfStores}");
 			Console.WriteLine ();
 			Console.WriteLine ("Assemblies:");
 
 			string infoIndent = "    ";
-			foreach (BlobAssembly assembly in explorer.Assemblies) {
+			foreach (AssemblyStoreAssembly assembly in explorer.Assemblies) {
 				Console.WriteLine ($"  {assembly.RuntimeIndex}:");
 				Console.Write ($"{infoIndent}Name: ");
 				if (String.IsNullOrEmpty (assembly.Name)) {
@@ -28,11 +28,11 @@ namespace Xamarin.Android.AssemblyBlobReader
 					Console.WriteLine (assembly.Name);
 				}
 
-				Console.Write ($"{infoIndent}Blob ID: {assembly.Blob.BlobID} (");
-				if (String.IsNullOrEmpty (assembly.Blob.Arch)) {
+				Console.Write ($"{infoIndent}Store ID: {assembly.Store.StoreID} (");
+				if (String.IsNullOrEmpty (assembly.Store.Arch)) {
 					Console.Write ("shared");
 				} else {
-					Console.Write (assembly.Blob.Arch);
+					Console.Write (assembly.Store.Arch);
 				}
 				Console.WriteLine (")");
 
@@ -73,18 +73,18 @@ namespace Xamarin.Android.AssemblyBlobReader
 		static int Main (string[] args)
 		{
 			if (args.Length == 0) {
-				Console.Error.WriteLine ("Usage: read-blob BLOB_PATH [BLOB_PATH ...]");
+				Console.Error.WriteLine ("Usage: read-assembly-store BLOB_PATH [BLOB_PATH ...]");
 				Console.Error.WriteLine ();
 				Console.Error.WriteLine (@"  where each BLOB_PATH can point to:
     * aab file
     * apk file
-    * index blob file (e.g. base_assemblies.blob)
-    * arch blob file (e.g. base_assemblies.arm64_v8a.blob)
-    * blob manifest file (e.g. base_assemblies.manifest)
-    * blob base name (e.g. base or base_assemblies)
+    * index store file (e.g. base_assemblies.blob)
+    * arch store file (e.g. base_assemblies.arm64_v8a.blob)
+    * store manifest file (e.g. base_assemblies.manifest)
+    * store base name (e.g. base or base_assemblies)
 
-  In each case the whole set of blobs and manifests will be read (if available). Search for the
-  various members of the blob set (common/main blob, arch blobs, manifest) is based on this naming
+  In each case the whole set of stores and manifests will be read (if available). Search for the
+  various members of the store set (common/main store, arch stores, manifest) is based on this naming
   convention:
 
      {BASE_NAME}[.ARCH_NAME].{blob|manifest}
@@ -98,7 +98,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 
 			bool first = true;
 			foreach (string path in args) {
-				ShowBlobInfo (path);
+				ShowAssemblyStoreInfo (path);
 				if (first) {
 					first = false;
 					continue;

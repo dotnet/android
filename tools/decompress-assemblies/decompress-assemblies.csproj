@@ -17,7 +17,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <Compile Include="..\assembly-blob-reader\Blob*.cs" />
+    <Compile Include="..\assembly-store-reader\AssemblyStore*.cs" />
   </ItemGroup>
 
   <ItemGroup>

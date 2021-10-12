@@ -1,6 +1,0 @@
-<Project>
-  <Target Name="CopyLaunchScript"
-          AfterTargets="Build">
-    <Copy SourceFiles="..\scripts\read-blob" DestinationFiles="$(OutputPath)\..\read-blob" />
-  </Target>
-</Project>

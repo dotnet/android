@@ -109,7 +109,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ActiveConfigurationProperties, "MonoSymbolArchive", monoSymbolArchive);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
-			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder ()) {
 				if (aotAssemblies && !b.CrossCompilerAvailable (string.Join (";", abis)))
 					Assert.Ignore ("Cross compiler was not available");
@@ -940,7 +940,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
 			};
-			proj.SetProperty ("AndroidUseAssembliesBlob", "False");
+			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 			using (var b = CreateApkBuilder ()) {
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
 					WebContentFileNameFromAzure = "PdbTestLibrary.dll"

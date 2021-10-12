@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Xamarin.Android.AssemblyBlobReader
+namespace Xamarin.Android.AssemblyStore
 {
-	class BlobManifestReader
+	class AssemblyStoreManifestReader
 	{
 		static readonly char[] fieldSplit = new char[] { ' ' };
 
-		public List<BlobManifestEntry> Entries                      { get; } = new List<BlobManifestEntry> ();
-		public Dictionary<uint, BlobManifestEntry> EntriesByHash32  { get; } = new Dictionary<uint, BlobManifestEntry> ();
-		public Dictionary<ulong, BlobManifestEntry> EntriesByHash64 { get; } = new Dictionary<ulong, BlobManifestEntry> ();
+		public List<AssemblyStoreManifestEntry> Entries                      { get; } = new List<AssemblyStoreManifestEntry> ();
+		public Dictionary<uint, AssemblyStoreManifestEntry> EntriesByHash32  { get; } = new Dictionary<uint, AssemblyStoreManifestEntry> ();
+		public Dictionary<ulong, AssemblyStoreManifestEntry> EntriesByHash64 { get; } = new Dictionary<ulong, AssemblyStoreManifestEntry> ();
 
-		public BlobManifestReader (Stream manifest)
+		public AssemblyStoreManifestReader (Stream manifest)
 		{
 			manifest.Seek (0, SeekOrigin.Begin);
 			using (var sr = new StreamReader (manifest, Encoding.UTF8, detectEncodingFromByteOrderMarks: false)) {
@@ -33,7 +33,7 @@ namespace Xamarin.Android.AssemblyBlobReader
 					continue;
 				}
 
-				var entry = new BlobManifestEntry (fields);
+				var entry = new AssemblyStoreManifestEntry (fields);
 				Entries.Add (entry);
 				if (entry.Hash32 != 0) {
 					EntriesByHash32.Add (entry.Hash32, entry);

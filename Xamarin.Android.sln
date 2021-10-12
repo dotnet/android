@@ -148,7 +148,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "decompress-assemblies", "to
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tmt", "tools\tmt\tmt.csproj", "{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "assembly-blob-reader", "tools\assembly-blob-reader\assembly-blob-reader.csproj", "{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "assembly-store-reader", "tools\assembly-store-reader\assembly-store-reader.csproj", "{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

@@ -218,7 +218,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
 			proj.SetProperty ("AndroidLinkResources", "True");
-			proj.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			string assemblyName = proj.ProjectName;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");

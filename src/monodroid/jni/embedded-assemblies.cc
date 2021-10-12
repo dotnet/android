@@ -141,9 +141,9 @@ EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, u
 }
 
 force_inline void
-EmbeddedAssemblies::get_assembly_data (BlobAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
+EmbeddedAssemblies::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
-	get_assembly_data (e.image_data, e.descriptor->data_size, "<blob>", assembly_data, assembly_data_size);
+	get_assembly_data (e.image_data, e.descriptor->data_size, "<assembly_store>", assembly_data, assembly_data_size);
 }
 
 #if defined (NET6)
@@ -342,11 +342,11 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 	return nullptr;
 }
 
-force_inline const BlobHashEntry*
-EmbeddedAssemblies::find_blob_assembly_entry (hash_t hash, const BlobHashEntry *entries, size_t entry_count) noexcept
+force_inline const AssemblyStoreHashEntry*
+EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept
 {
 	hash_t entry_hash;
-	const BlobHashEntry *ret;
+	const AssemblyStoreHashEntry *ret;
 
 	while (entry_count > 0) {
 		ret = entries + (entry_count / 2);
@@ -372,7 +372,7 @@ EmbeddedAssemblies::find_blob_assembly_entry (hash_t hash, const BlobHashEntry *
 }
 
 force_inline MonoAssembly*
-EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
+EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
 {
 	size_t len = name.length ();
 
@@ -381,9 +381,9 @@ EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENS
 	}
 
 	hash_t name_hash = xxhash::hash (name.get (), len);
-	log_debug (LOG_ASSEMBLY, "blob_assemblies_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
+	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
 
-	const BlobHashEntry *hash_entry = find_blob_assembly_entry (name_hash, blob_assembly_hashes, application_config.number_of_assemblies_in_apk);
+	const AssemblyStoreHashEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, application_config.number_of_assemblies_in_apk);
 	if (hash_entry == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
 		return nullptr;
@@ -394,19 +394,19 @@ EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENS
 		abort ();
 	}
 
-	BlobAssemblyRuntimeData &assembly_runtime_info = blob_bundled_assemblies[hash_entry->mapping_index];
+	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[hash_entry->mapping_index];
 	if (assembly_runtime_info.image_data == nullptr) {
-		if (hash_entry->blob_id >= application_config.number_of_assembly_blobs) {
-			log_fatal (LOG_ASSEMBLY, "Invalid assembly blob ID %u, exceeds the maximum of %u", hash_entry->blob_id, application_config.number_of_assembly_blobs - 1);
+		if (hash_entry->store_id >= application_config.number_of_assembly_store_files) {
+			log_fatal (LOG_ASSEMBLY, "Invalid assembly store ID %u, exceeds the maximum of %u", hash_entry->store_id, application_config.number_of_assembly_store_files - 1);
 			abort ();
 		}
 
-		AssemblyBlobRuntimeData &rd = assembly_blobs[hash_entry->blob_id];
-		if (hash_entry->local_blob_index >= rd.assembly_count) {
-			log_fatal (LOG_ASSEMBLY, "Invalid index %u into local blob descriptor array", hash_entry->local_blob_index);
+		AssemblyStoreRuntimeData &rd = assembly_stores[hash_entry->store_id];
+		if (hash_entry->local_store_index >= rd.assembly_count) {
+			log_fatal (LOG_ASSEMBLY, "Invalid index %u into local store assembly descriptor array", hash_entry->local_store_index);
 		}
 
-		BlobBundledAssembly *bba = &rd.assemblies[hash_entry->local_blob_index];
+		AssemblyStoreAssemblyDescriptor *bba = &rd.assemblies[hash_entry->local_store_index];
 
 		// The assignments here don't need to be atomic, the value will always be the same, so even if two threads
 		// arrive here at the same time, nothing bad will happen.
@@ -443,6 +443,11 @@ EmbeddedAssemblies::blob_assemblies_open_from_bundles (dynamic_local_string<SENS
 
 	uint8_t *assembly_data;
 	uint32_t assembly_data_size;
+
+	// AOT needs this since Mono will form the DSO name by appending the .so suffix to the assembly name passed to
+	// functions below and `monodroid_dlopen` uses the `.dll.so` extension to check whether we're being asked to load
+	// the AOTd code for an assembly.
+	name.append (SharedConstants::DLL_EXTENSION);
 
 	get_assembly_data (assembly_runtime_info, assembly_data, assembly_data_size);
 	MonoImage *image = loader (assembly_data, assembly_data_size, name.get ());
@@ -482,8 +487,8 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 	name.append_c (asmname);
 
 	MonoAssembly *a;
-	if (application_config.have_assemblies_blob) {
-		a = blob_assemblies_open_from_bundles (name, loader, ref_only);
+	if (application_config.have_assembly_store) {
+		a = assembly_store_open_from_bundles (name, loader, ref_only);
 	} else {
 		a = individual_assemblies_open_from_bundles (name, loader, ref_only);
 	}

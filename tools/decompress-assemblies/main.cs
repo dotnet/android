@@ -4,7 +4,7 @@ using System.IO;
 
 using K4os.Compression.LZ4;
 using Xamarin.Tools.Zip;
-using Xamarin.Android.AssemblyBlobReader;
+using Xamarin.Android.AssemblyStore;
 
 namespace Xamarin.Android.Tools.DecompressAssemblies
 {
@@ -101,14 +101,14 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 			return true;
 		}
 
-		static bool UncompressFromAPK_Blobs (string filePath, string prefix)
+		static bool UncompressFromAPK_AssemblyStores (string filePath, string prefix)
 		{
-			var explorer = new BlobExplorer (filePath, keepBlobInMemory: true);
-			foreach (BlobAssembly assembly in explorer.Assemblies) {
+			var explorer = new AssemblyStoreExplorer (filePath, keepStoreInMemory: true);
+			foreach (AssemblyStoreAssembly assembly in explorer.Assemblies) {
 				string assemblyName = assembly.DllName;
 
-				if (!String.IsNullOrEmpty (assembly.Blob.Arch)) {
-					assemblyName = $"{assembly.Blob.Arch}/{assemblyName}";
+				if (!String.IsNullOrEmpty (assembly.Store.Arch)) {
+					assemblyName = $"{assembly.Store.Arch}/{assemblyName}";
 				}
 
 				using (var stream = new MemoryStream ()) {
@@ -130,7 +130,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 				}
 			}
 
-			return UncompressFromAPK_Blobs (filePath, prefix);
+			return UncompressFromAPK_AssemblyStores (filePath, prefix);
 		}
 
 		static int Main (string[] args)

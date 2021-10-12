@@ -80,10 +80,10 @@ namespace xamarin::android::internal {
 		static constexpr char  assemblies_prefix[] = "assemblies/";
 		static constexpr char  zip_path_separator[] = "/";
 
-		static constexpr char bundled_assemblies_blob_prefix[] = "assemblies";
-		static constexpr char bundled_assemblies_blob_ext[] = ".blob";
-		static constexpr auto bundled_assemblies_common_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, bundled_assemblies_blob_ext);
-		static constexpr auto bundled_assemblies_arch_blob_name = concat_const ("/", bundled_assemblies_blob_prefix, ".", SharedConstants::android_abi, bundled_assemblies_blob_ext);
+		static constexpr char assembly_store_prefix[] = "assemblies";
+		static constexpr char assembly_store_extension[] = ".blob";
+		static constexpr auto assembly_store_common_file_name = concat_const ("/", assembly_store_prefix, assembly_store_extension);
+		static constexpr auto assembly_store_arch_file_name = concat_const ("/", assembly_store_prefix, ".", SharedConstants::android_abi, assembly_store_extension);
 
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -146,13 +146,13 @@ namespace xamarin::android::internal {
 			return need_to_scan_more_apks;
 		}
 
-		void ensure_valid_blobs () const noexcept
+		void ensure_valid_assembly_stores () const noexcept
 		{
-			if (!application_config.have_assemblies_blob) {
+			if (!application_config.have_assembly_store) {
 				return;
 			}
 
-			abort_unless (index_blob_header != nullptr && blob_assembly_hashes != nullptr, "Invalid or incomplete assembly blob data");
+			abort_unless (index_assembly_store_header != nullptr && assembly_store_hashes != nullptr, "Invalid or incomplete assembly store data");
 		}
 
 	private:
@@ -165,7 +165,7 @@ namespace xamarin::android::internal {
 #endif // def NET6
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
 		MonoAssembly* individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept;
-		MonoAssembly* blob_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept;
+		MonoAssembly* assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept;
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only);
 
 		template<bool LogMapping>
@@ -199,11 +199,11 @@ namespace xamarin::android::internal {
 #endif // ndef NET6
 		static void get_assembly_data (uint8_t *data, uint32_t data_size, const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 		static void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
-		static void get_assembly_data (BlobAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
+		static void get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
 		void zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
-		void zip_load_blob_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
+		void zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
 		bool zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
 		bool zip_adjust_data_offset (int fd, ZipEntryLoadState &state);
@@ -249,10 +249,10 @@ namespace xamarin::android::internal {
 			return assemblies_prefix_override != nullptr ? static_cast<uint32_t>(strlen (assemblies_prefix_override)) : sizeof(assemblies_prefix) - 1;
 		}
 
-		bool all_blobs_found () const noexcept
+		bool all_required_zip_entries_found () const noexcept
 		{
 			return
-				number_of_mapped_blobs == application_config.number_of_assembly_blobs
+				number_of_mapped_assembly_stores == application_config.number_of_assembly_store_files
 #if defined (NET6)
 				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob)
 #endif // NET6
@@ -275,8 +275,8 @@ namespace xamarin::android::internal {
 		void set_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
-		void map_assembly_blob (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
-		const BlobHashEntry* find_blob_assembly_entry (hash_t hash, const BlobHashEntry *entries, size_t entry_count) noexcept;
+		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
+		const AssemblyStoreHashEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept;
 
 	private:
 		std::vector<XamarinAndroidBundledAssembly> *bundled_debug_data = nullptr;
@@ -298,11 +298,11 @@ namespace xamarin::android::internal {
 		md_mmap_info           runtime_config_blob_mmap{};
 		bool                   runtime_config_blob_found = false;
 #endif // def NET6
-		uint32_t               number_of_mapped_blobs = 0;
+		uint32_t               number_of_mapped_assembly_stores = 0;
 		bool                   need_to_scan_more_apks = true;
 
-		BundledAssemblyBlobHeader *index_blob_header = nullptr;
-		BlobHashEntry             *blob_assembly_hashes;
+		AssemblyStoreHeader *index_assembly_store_header = nullptr;
+		AssemblyStoreHashEntry             *assembly_store_hashes;
 	};
 }
 

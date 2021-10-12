@@ -120,7 +120,7 @@ namespace Xamarin.Android.Tasks
 
 		List<string> existingEntries = new List<string> ();
 
-		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string blobApkName)
+		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			ArchiveFileList files = new ArchiveFileList ();
 			bool refresh = true;
@@ -180,7 +180,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (EmbedAssemblies && !BundleAssemblies)
-					AddAssemblies (apk, debug, compress, compressedAssembliesInfo, blobApkName);
+					AddAssemblies (apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
 
 				AddRuntimeLibraries (apk, supportedAbis);
 				apk.Flush();
@@ -301,7 +301,7 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
 			}
 
-			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, blobApkName: null);
+			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
 			outputFiles.Add (ApkOutputPath);
 			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
 				foreach (var abi in SupportedAbis) {
@@ -310,7 +310,7 @@ namespace Xamarin.Android.Tasks
 					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
 					ExecuteWithAbi (new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi),
 						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)),
-					        debug, compress, compressedAssembliesInfo, blobApkName: abi);
+					        debug, compress, compressedAssembliesInfo, assemblyStoreApkName: abi);
 					outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
 				}
 			}
@@ -322,37 +322,36 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string blobApkName)
+		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
-			bool useAssembliesBlob = appConfState != null ? appConfState.UseAssembliesBlob : false;
+			bool useAssemblyStores = appConfState != null ? appConfState.UseAssemblyStore : false;
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
 			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
-			AssemblyBlobGenerator blobGenerator;
+			AssemblyStoreGenerator storeGenerator;
 
-			if (useAssembliesBlob) {
-				Log.LogDebugMessage ("Creating AssemblyBlobGenerator instance");
-				blobGenerator = new AssemblyBlobGenerator (AssembliesPath, Log);
+			if (useAssemblyStores) {
+				storeGenerator = new AssemblyStoreGenerator (AssembliesPath, Log);
 			} else {
-				blobGenerator = null;
+				storeGenerator = null;
 			}
 
 			int count = 0;
-			BlobAssemblyInfo blobAssembly = null;
+			AssemblyStoreAssemblyInfo storeAssembly = null;
 
 			//
 			// NOTE
 			//
-			// The very first blob (ID 0) **must** contain an index of all the assemblies included in the application, even if they
-			// are included in other APKs than the base one. The ID 0 blob **must** be placed in the base assembly
+			// The very first store (ID 0) **must** contain an index of all the assemblies included in the application, even if they
+			// are included in other APKs than the base one. The ID 0 store **must** be placed in the base assembly
 			//
 
-			// Currently, all the assembly blobs end up in the "base" apk (the APK name is the key in the dictionary below) but the code is ready for the time when we
+			// Currently, all the assembly stores end up in the "base" apk (the APK name is the key in the dictionary below) but the code is ready for the time when we
 			// partition assemblies into "feature" APKs
 			const string DefaultBaseApkName = "base";
-			if (String.IsNullOrEmpty (blobApkName)) {
-				blobApkName = DefaultBaseApkName;
+			if (String.IsNullOrEmpty (assemblyStoreApkName)) {
+				assemblyStoreApkName = DefaultBaseApkName;
 			}
 
 			// Add user assemblies
@@ -362,25 +361,25 @@ namespace Xamarin.Android.Tasks
 			count = 0;
 			AddAssembliesFromCollection (ResolvedFrameworkAssemblies);
 
-			if (!useAssembliesBlob) {
+			if (!useAssemblyStores) {
 				return;
 			}
 
-			Dictionary<string, List<string>> blobPaths = blobGenerator.Generate (Path.GetDirectoryName (ApkOutputPath));
-			if (blobPaths == null) {
-				throw new InvalidOperationException ("Blob generator did not generate any blobs");
+			Dictionary<string, List<string>> assemblyStorePaths = storeGenerator.Generate (Path.GetDirectoryName (ApkOutputPath));
+			if (assemblyStorePaths == null) {
+				throw new InvalidOperationException ("Assembly store generator did not generate any stores");
 			}
 
-			if (!blobPaths.TryGetValue (blobApkName, out List<string> baseBlobs) || baseBlobs == null || baseBlobs.Count == 0) {
-				throw new InvalidOperationException ("Blob generator didn't generate the required base blobs");
+			if (!assemblyStorePaths.TryGetValue (assemblyStoreApkName, out List<string> baseAssemblyStores) || baseAssemblyStores == null || baseAssemblyStores.Count == 0) {
+				throw new InvalidOperationException ("Assembly store generator didn't generate the required base stores");
 			}
 
-			string blobPrefix = $"{blobApkName}_";
-			foreach (string blobPath in baseBlobs) {
-				string inArchiveName = Path.GetFileName (blobPath);
+			string assemblyStorePrefix = $"{assemblyStoreApkName}_";
+			foreach (string assemblyStorePath in baseAssemblyStores) {
+				string inArchiveName = Path.GetFileName (assemblyStorePath);
 
-				if (inArchiveName.StartsWith (blobPrefix, StringComparison.Ordinal)) {
-					inArchiveName = inArchiveName.Substring (blobPrefix.Length);
+				if (inArchiveName.StartsWith (assemblyStorePrefix, StringComparison.Ordinal)) {
+					inArchiveName = inArchiveName.Substring (assemblyStorePrefix.Length);
 				}
 
 				CompressionMethod compressionMethod;
@@ -390,7 +389,7 @@ namespace Xamarin.Android.Tasks
 					compressionMethod = UncompressedMethod;
 				}
 
-				AddFileToArchiveIfNewer (apk, blobPath, AssembliesPath + inArchiveName, compressionMethod);
+				AddFileToArchiveIfNewer (apk, assemblyStorePath, AssembliesPath + inArchiveName, compressionMethod);
 			}
 
 			void AddAssembliesFromCollection (ITaskItem[] assemblies)
@@ -409,17 +408,16 @@ namespace Xamarin.Android.Tasks
 
 					// Add assembly
 					var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: false);
-					if (useAssembliesBlob) {
-						Log.LogDebugMessage ($"Creating BlobAssemblyInfo: sourcePath == {sourcePath}; assemblyPath == {assemblyPath}");
-						blobAssembly = new BlobAssemblyInfo (sourcePath, assemblyPath, assembly.GetMetadata ("Abi"));
+					if (useAssemblyStores) {
+						storeAssembly = new AssemblyStoreAssemblyInfo (sourcePath, assemblyPath, assembly.GetMetadata ("Abi"));
 					} else {
 						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 					}
 
 					// Try to add config if exists
 					var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-					if (useAssembliesBlob) {
-						blobAssembly.SetConfigPath (config);
+					if (useAssemblyStores) {
+						storeAssembly.SetConfigPath (config);
 					} else {
 						AddAssemblyConfigEntry (apk, assemblyPath, config);
 					}
@@ -440,16 +438,16 @@ namespace Xamarin.Android.Tasks
 						}
 
 						if (!String.IsNullOrEmpty (symbolsPath)) {
-							if (useAssembliesBlob) {
-								blobAssembly.SetDebugInfoPath (symbolsPath);
+							if (useAssemblyStores) {
+								storeAssembly.SetDebugInfoPath (symbolsPath);
 							} else {
 								AddFileToArchiveIfNewer (apk, symbolsPath, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 							}
 						}
 					}
 
-					if (useAssembliesBlob) {
-						blobGenerator.Add (blobApkName, blobAssembly);
+					if (useAssemblyStores) {
+						storeGenerator.Add (assemblyStoreApkName, storeAssembly);
 					} else {
 						count++;
 						if (count >= ZipArchiveEx.ZipFlushFilesLimit) {

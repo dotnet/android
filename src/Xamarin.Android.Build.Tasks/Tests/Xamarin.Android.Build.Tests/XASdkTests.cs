@@ -530,7 +530,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
-			proj.SetProperty ("AndroidUseAssembliesBlob", usesAssemblyBlobs.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			if (aot) {
 				proj.SetProperty ("RunAOTCompilation", "true");
 			}

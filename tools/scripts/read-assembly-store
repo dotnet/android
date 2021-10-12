@@ -1,0 +1,10 @@
+#!/bin/bash
+truepath=$(readlink "$0" || echo "$0")
+mydir=$(dirname ${truepath})
+binariesdir="${mydir}/assembly-store-reader"
+
+if [ -x "${binariesdir}/assembly-store-reader" ]; then
+	exec "${binariesdir}/assembly-store-reader" "$@"
+else
+	exec dotnet "${binariesdir}/assembly-store-reader.dll"
+fi

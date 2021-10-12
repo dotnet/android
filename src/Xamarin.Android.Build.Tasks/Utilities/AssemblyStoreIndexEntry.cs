@@ -5,10 +5,10 @@ using K4os.Hash.xxHash;
 
 namespace Xamarin.Android.Tasks
 {
-	class AssemblyBlobIndexEntry
+	class AssemblyStoreIndexEntry
 	{
 		public string Name { get; }
-		public uint BlobID { get; }
+		public uint StoreID { get; }
 		public uint MappingIndex { get; }
 		public uint LocalBlobIndex { get; }
 
@@ -25,14 +25,14 @@ namespace Xamarin.Android.Tasks
 		public uint ConfigDataOffset { get; set; }
 		public uint ConfigDataSize { get; set; }
 
-		public AssemblyBlobIndexEntry (string name, uint blobID, uint mappingIndex, uint localBlobIndex)
+		public AssemblyStoreIndexEntry (string name, uint blobID, uint mappingIndex, uint localBlobIndex)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				throw new ArgumentException ("must not be null or empty", nameof (name));
 			}
 
 			Name = name;
-			BlobID = blobID;
+			StoreID = blobID;
 			MappingIndex = mappingIndex;
 			LocalBlobIndex = localBlobIndex;
 

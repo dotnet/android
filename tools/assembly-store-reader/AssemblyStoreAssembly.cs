@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 
-namespace Xamarin.Android.AssemblyBlobReader
+namespace Xamarin.Android.AssemblyStore
 {
-	class BlobAssembly
+	class AssemblyStoreAssembly
 	{
 		public uint DataOffset       { get; }
 		public uint DataSize         { get; }
@@ -17,14 +17,14 @@ namespace Xamarin.Android.AssemblyBlobReader
 		public string Name           { get; set; } = String.Empty;
 		public uint RuntimeIndex     { get; set; }
 
-		public BlobReader Blob       { get; }
+		public AssemblyStoreReader Store       { get; }
 		public string DllName        => MakeFileName ("dll");
 		public string PdbName        => MakeFileName ("pdb");
 		public string ConfigName     => MakeFileName ("dll.config");
 
-		internal BlobAssembly (BinaryReader reader, BlobReader blob)
+		internal AssemblyStoreAssembly (BinaryReader reader, AssemblyStoreReader store)
 		{
-			Blob = blob;
+			Store = store;
 
 			DataOffset = reader.ReadUInt32 ();
 			DataSize = reader.ReadUInt32 ();
@@ -36,32 +36,32 @@ namespace Xamarin.Android.AssemblyBlobReader
 
 		public void ExtractImage (string outputDirPath, string? fileName = null)
 		{
-			Blob.ExtractAssemblyImage (this, MakeOutputFilePath (outputDirPath, "dll", fileName));
+			Store.ExtractAssemblyImage (this, MakeOutputFilePath (outputDirPath, "dll", fileName));
 		}
 
 		public void ExtractImage (Stream output)
 		{
-			Blob.ExtractAssemblyImage (this, output);
+			Store.ExtractAssemblyImage (this, output);
 		}
 
 		public void ExtractDebugData (string outputDirPath, string? fileName = null)
 		{
-			Blob.ExtractAssemblyDebugData (this, MakeOutputFilePath (outputDirPath, "pdb", fileName));
+			Store.ExtractAssemblyDebugData (this, MakeOutputFilePath (outputDirPath, "pdb", fileName));
 		}
 
 		public void ExtractDebugData (Stream output)
 		{
-			Blob.ExtractAssemblyDebugData (this, output);
+			Store.ExtractAssemblyDebugData (this, output);
 		}
 
 		public void ExtractConfig (string outputDirPath, string? fileName = null)
 		{
-			Blob.ExtractAssemblyConfig (this, MakeOutputFilePath (outputDirPath, "dll.config", fileName));
+			Store.ExtractAssemblyConfig (this, MakeOutputFilePath (outputDirPath, "dll.config", fileName));
 		}
 
 		public void ExtractConfig (Stream output)
 		{
-			Blob.ExtractAssemblyConfig (this, output);
+			Store.ExtractAssemblyConfig (this, output);
 		}
 
 		string MakeOutputFilePath (string outputDirPath, string extension, string? fileName)

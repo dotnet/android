@@ -1,8 +1,8 @@
 namespace Xamarin.Android.Tasks
 {
-	// This class may seem weird, but it's designed with the specific needs of AssemblyBlob instances in mind and also prepared for thread-safe use in the future, should the
+	// This class may seem weird, but it's designed with the specific needs of AssemblyStore instances in mind and also prepared for thread-safe use in the future, should the
 	// need arise
-	sealed class AssemblyBlobGlobalIndex
+	sealed class AssemblyStoreGlobalIndex
 	{
 		uint value = 0;
 

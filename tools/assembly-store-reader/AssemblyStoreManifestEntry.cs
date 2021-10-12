@@ -1,26 +1,26 @@
 using System;
 using System.Globalization;
 
-namespace Xamarin.Android.AssemblyBlobReader
+namespace Xamarin.Android.AssemblyStore
 {
-	class BlobManifestEntry
+	class AssemblyStoreManifestEntry
 	{
 		// Fields are:
-		//  Hash 32 | Hash 64 | Blob ID | Blob idx | Name
+		//  Hash 32 | Hash 64 | Store ID | Store idx | Name
 		const int NumberOfFields = 5;
 		const int Hash32FieldIndex = 0;
 		const int Hash64FieldIndex = 1;
-		const int BlobIDFieldIndex = 2;
-		const int BlobIndexFieldIndex = 3;
+		const int StoreIDFieldIndex = 2;
+		const int StoreIndexFieldIndex = 3;
 		const int NameFieldIndex = 4;
 
 		public uint Hash32 { get; }
 		public ulong Hash64 { get; }
-		public uint BlobID { get; }
-		public uint IndexInBlob { get; }
+		public uint StoreID { get; }
+		public uint IndexInStore { get; }
 		public string Name { get; }
 
-		public BlobManifestEntry (string[] fields)
+		public AssemblyStoreManifestEntry (string[] fields)
 		{
 			if (fields.Length != NumberOfFields) {
 				throw new ArgumentOutOfRangeException (nameof (fields), "Invalid number of fields");
@@ -28,8 +28,8 @@ namespace Xamarin.Android.AssemblyBlobReader
 
 			Hash32 = GetUInt32 (fields[Hash32FieldIndex]);
 			Hash64 = GetUInt64 (fields[Hash64FieldIndex]);
-			BlobID = GetUInt32 (fields[BlobIDFieldIndex]);
-			IndexInBlob = GetUInt32 (fields[BlobIndexFieldIndex]);
+			StoreID = GetUInt32 (fields[StoreIDFieldIndex]);
+			IndexInStore = GetUInt32 (fields[StoreIndexFieldIndex]);
 			Name = fields[NameFieldIndex].Trim ();
 		}
 

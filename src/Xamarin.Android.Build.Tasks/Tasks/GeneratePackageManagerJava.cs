@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] SatelliteAssemblies { get; set; }
 
-		public bool UseAssembliesBlob { get; set; }
+		public bool UseAssemblyStore { get; set; }
 
 		[Required]
 		public string OutputDirectory { get; set; }
@@ -275,7 +275,7 @@ namespace Xamarin.Android.Tasks
 			Encoding assemblyNameEncoding = Encoding.UTF8;
 
 			Action<ITaskItem> updateNameWidth = (ITaskItem assembly) => {
-				if (UseAssembliesBlob) {
+				if (UseAssemblyStore) {
 					return;
 				}
 
@@ -290,7 +290,7 @@ namespace Xamarin.Android.Tasks
 			HashSet<string> archAssemblyNames = null;
 
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
-				if (!UseAssembliesBlob) {
+				if (!UseAssemblyStore) {
 					assemblyCount++;
 					return;
 				}
@@ -321,7 +321,7 @@ namespace Xamarin.Android.Tasks
 				updateAssemblyCount (assembly);
 			}
 
-			if (!UseAssembliesBlob) {
+			if (!UseAssemblyStore) {
 				int abiNameLength = 0;
 				foreach (string abi in SupportedAbis) {
 					if (abi.Length <= abiNameLength) {
@@ -335,7 +335,7 @@ namespace Xamarin.Android.Tasks
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 			if (appConfState != null) {
-				appConfState.UseAssembliesBlob = UseAssembliesBlob;
+				appConfState.UseAssemblyStore = UseAssemblyStore;
 			};
 
 			foreach (string abi in SupportedAbis) {
@@ -358,11 +358,11 @@ namespace Xamarin.Android.Tasks
 					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
-					NumberOfAssemblyBlobsInApk = 2, // Until feature APKs are a thing, we're going to have just two blobs in each app - one for arch-agnostic
-									// and up to 4 other for arch-specific assemblies. Only **one** arch-specific blob is ever loaded on the app
-									// runtime, thus the number 2 here. All architecture specific blobs contain assemblies with the same names
-									// and in the same order.
-					HaveAssembliesBlob = UseAssembliesBlob,
+					NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
+									  // and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
+									  // runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
+									  // and in the same order.
+					HaveAssemblyStore = UseAssemblyStore,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

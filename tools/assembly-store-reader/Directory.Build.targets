@@ -1,0 +1,6 @@
+<Project>
+  <Target Name="CopyLaunchScript"
+          AfterTargets="Build">
+    <Copy SourceFiles="..\scripts\read-assembly-store" DestinationFiles="$(OutputPath)\..\read-assembly-store" />
+  </Target>
+</Project>

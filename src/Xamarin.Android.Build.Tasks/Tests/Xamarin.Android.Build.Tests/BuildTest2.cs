@@ -77,7 +77,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.IsRelease = true;
 			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			proj.SetProperty ("LinkerDumpDependencies", "True");
-			proj.SetProperty ("AndroidUseAssembliesBlob", "False");
+			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
 			if (forms) {
 				proj.PackageReferences.Clear ();

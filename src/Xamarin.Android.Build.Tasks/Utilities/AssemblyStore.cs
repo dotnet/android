@@ -9,7 +9,7 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	abstract class AssemblyBlob
+	abstract class AssemblyStore
 	{
 		// The two constants below must match their counterparts in src/monodroid/jni/xamarin-app.hh
 		const uint BlobMagic = 0x41424158; // 'XABA', little-endian, must match the BUNDLED_ASSEMBLIES_BLOB_MAGIC native constant
@@ -34,12 +34,12 @@ namespace Xamarin.Android.Tasks
 
 		protected string ApkName { get; }
 		protected TaskLoggingHelper Log { get; }
-		protected AssemblyBlobGlobalIndex GlobalIndexCounter { get; }
+		protected AssemblyStoreGlobalIndex GlobalIndexCounter { get; }
 
 		public uint ID { get; }
-		public bool IsIndexBlob => ID == 0;
+		public bool IsIndexStore => ID == 0;
 
-		protected AssemblyBlob (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log, uint id, AssemblyBlobGlobalIndex globalIndexCounter)
+		protected AssemblyStore (string apkName, string archiveAssembliesPrefix, TaskLoggingHelper log, uint id, AssemblyStoreGlobalIndex globalIndexCounter)
 		{
 			if (String.IsNullOrEmpty (archiveAssembliesPrefix)) {
 				throw new ArgumentException ("must not be null or empty", nameof (archiveAssembliesPrefix));
@@ -57,12 +57,12 @@ namespace Xamarin.Android.Tasks
 			Log = log;
 		}
 
-		public abstract void Add (BlobAssemblyInfo blobAssembly);
-		public abstract void Generate (string outputDirectory, List<AssemblyBlobIndexEntry> globalIndex, List<string> blobPaths);
+		public abstract void Add (AssemblyStoreAssemblyInfo blobAssembly);
+		public abstract void Generate (string outputDirectory, List<AssemblyStoreIndexEntry> globalIndex, List<string> blobPaths);
 
-		public virtual string WriteIndex (List<AssemblyBlobIndexEntry> globalIndex)
+		public virtual string WriteIndex (List<AssemblyStoreIndexEntry> globalIndex)
 		{
-			if (!IsIndexBlob) {
+			if (!IsIndexStore) {
 				throw new InvalidOperationException ("Assembly index may be written only to blob with index 0");
 			}
 
@@ -95,7 +95,7 @@ namespace Xamarin.Android.Tasks
 			return indexBlobManifestPath;
 		}
 
-		void WriteIndex (BinaryWriter blobWriter, string manifestPath, List<AssemblyBlobIndexEntry> globalIndex)
+		void WriteIndex (BinaryWriter blobWriter, string manifestPath, List<AssemblyStoreIndexEntry> globalIndex)
 		{
 			using (var manifest = File.Open (manifestPath, FileMode.Create, FileAccess.Write)) {
 				using (var manifestWriter = new StreamWriter (manifest, new UTF8Encoding (false))) {
@@ -105,18 +105,18 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void WriteIndex (BinaryWriter blobWriter, StreamWriter manifestWriter, List<AssemblyBlobIndexEntry> globalIndex)
+		void WriteIndex (BinaryWriter blobWriter, StreamWriter manifestWriter, List<AssemblyStoreIndexEntry> globalIndex)
 		{
 			uint localEntryCount = 0;
-			var localAssemblies = new List<AssemblyBlobIndexEntry> ();
+			var localAssemblies = new List<AssemblyStoreIndexEntry> ();
 
 			manifestWriter.WriteLine ("Hash 32     Hash 64             Blob ID  Blob idx  Name");
 
 			var seenHashes32 = new HashSet<ulong> ();
 			var seenHashes64 = new HashSet<ulong> ();
 			bool haveDuplicates = false;
-			foreach (AssemblyBlobIndexEntry assembly in globalIndex) {
-				if (assembly.BlobID == ID) {
+			foreach (AssemblyStoreIndexEntry assembly in globalIndex) {
+				if (assembly.StoreID == ID) {
 					localEntryCount++;
 					localAssemblies.Add (assembly);
 				}
@@ -126,7 +126,7 @@ namespace Xamarin.Android.Tasks
 					haveDuplicates = true;
 				}
 
-				manifestWriter.WriteLine ($"0x{assembly.NameHash32:x08}  0x{assembly.NameHash64:x016}  {assembly.BlobID:d03}      {assembly.LocalBlobIndex:d04}      {assembly.Name}");
+				manifestWriter.WriteLine ($"0x{assembly.NameHash32:x08}  0x{assembly.NameHash64:x016}  {assembly.StoreID:d03}      {assembly.LocalBlobIndex:d04}      {assembly.Name}");
 			}
 
 			if (haveDuplicates) {
@@ -146,23 +146,23 @@ namespace Xamarin.Android.Tasks
 			WriteAssemblyDescriptors (blobWriter, localAssemblies, CalculateOffsetFixup ((uint)localAssemblies.Count, offsetFixup));
 
 			Log.LogMessage (MessageImportance.Low, $"Index blob, writing hash tables ({globalAssemblyCount * 2} entries, {offsetFixup} bytes");
-			var sortedIndex = new List<AssemblyBlobIndexEntry> (globalIndex);
-			sortedIndex.Sort ((AssemblyBlobIndexEntry a, AssemblyBlobIndexEntry b) => a.NameHash32.CompareTo (b.NameHash32));
-			foreach (AssemblyBlobIndexEntry entry in sortedIndex) {
+			var sortedIndex = new List<AssemblyStoreIndexEntry> (globalIndex);
+			sortedIndex.Sort ((AssemblyStoreIndexEntry a, AssemblyStoreIndexEntry b) => a.NameHash32.CompareTo (b.NameHash32));
+			foreach (AssemblyStoreIndexEntry entry in sortedIndex) {
 				WriteHash (entry, entry.NameHash32);
 			}
 
-			sortedIndex.Sort ((AssemblyBlobIndexEntry a, AssemblyBlobIndexEntry b) => a.NameHash64.CompareTo (b.NameHash64));
-			foreach (AssemblyBlobIndexEntry entry in sortedIndex) {
+			sortedIndex.Sort ((AssemblyStoreIndexEntry a, AssemblyStoreIndexEntry b) => a.NameHash64.CompareTo (b.NameHash64));
+			foreach (AssemblyStoreIndexEntry entry in sortedIndex) {
 				WriteHash (entry, entry.NameHash64);
 			}
 
-			void WriteHash (AssemblyBlobIndexEntry entry, ulong hash)
+			void WriteHash (AssemblyStoreIndexEntry entry, ulong hash)
 			{
 				blobWriter.Write (hash);
 				blobWriter.Write (entry.MappingIndex);
 				blobWriter.Write (entry.LocalBlobIndex);
-				blobWriter.Write (entry.BlobID);
+				blobWriter.Write (entry.StoreID);
 			}
 
 			bool WarnAboutDuplicateHash (string bitness, string assemblyName, ulong hash, HashSet<ulong> seenHashes)
@@ -177,7 +177,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		protected string GetAssemblyName (BlobAssemblyInfo assembly)
+		protected string GetAssemblyName (AssemblyStoreAssemblyInfo assembly)
 		{
 			string assemblyName = Path.GetFileNameWithoutExtension (assembly.FilesystemAssemblyPath);
 			if (assemblyName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
@@ -187,7 +187,7 @@ namespace Xamarin.Android.Tasks
 			return assemblyName;
 		}
 
-		protected void Generate (string outputFilePath, List<BlobAssemblyInfo> assemblies, List<AssemblyBlobIndexEntry> globalIndex, List<string> blobPaths, bool addToGlobalIndex = true)
+		protected void Generate (string outputFilePath, List<AssemblyStoreAssemblyInfo> assemblies, List<AssemblyStoreIndexEntry> globalIndex, List<string> blobPaths, bool addToGlobalIndex = true)
 		{
 			if (globalIndex == null) {
 				throw new ArgumentNullException (nameof (globalIndex));
@@ -197,7 +197,7 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentNullException (nameof (blobPaths));
 			}
 
-			if (IsIndexBlob) {
+			if (IsIndexStore) {
 				indexBlobPath = outputFilePath;
 			}
 
@@ -212,11 +212,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void Generate (BinaryWriter writer, List<BlobAssemblyInfo> assemblies, List<AssemblyBlobIndexEntry> globalIndex, bool addToGlobalIndex)
+		void Generate (BinaryWriter writer, List<AssemblyStoreAssemblyInfo> assemblies, List<AssemblyStoreIndexEntry> globalIndex, bool addToGlobalIndex)
 		{
-			var localAssemblies = new List<AssemblyBlobIndexEntry> ();
+			var localAssemblies = new List<AssemblyStoreIndexEntry> ();
 
-			if (!IsIndexBlob) {
+			if (!IsIndexStore) {
 				// Index blob's header and data before the assemblies is handled in WriteIndex in a slightly different
 				// way.
 				uint nbytes = BlobHeaderNativeStructSize + (BlobBundledAssemblyNativeStructSize * (uint)assemblies.Count);
@@ -225,7 +225,7 @@ namespace Xamarin.Android.Tasks
 				bytePool.Return (zeros);
 			}
 
-			foreach (BlobAssemblyInfo assembly in assemblies) {
+			foreach (AssemblyStoreAssemblyInfo assembly in assemblies) {
 				Log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: assembly hfs path == '{assembly.FilesystemAssemblyPath}'; assembly archive path == '{assembly.ArchiveAssemblyPath}'");
 				string assemblyName = GetAssemblyName (assembly);
 
@@ -252,7 +252,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogMessage (MessageImportance.Low, $"Got archivePath ('{archivePath}'), assemblyName now == '{assemblyName}'");
 				}
 
-				AssemblyBlobIndexEntry entry = WriteAssembly (writer, assembly, assemblyName, (uint)localAssemblies.Count);
+				AssemblyStoreIndexEntry entry = WriteAssembly (writer, assembly, assemblyName, (uint)localAssemblies.Count);
 				Log.LogMessage (MessageImportance.Low, $"   => assemblyName == '{entry.Name}'; dataOffset == {entry.DataOffset}");
 				if (addToGlobalIndex) {
 					globalIndex.Add (entry);
@@ -262,7 +262,7 @@ namespace Xamarin.Android.Tasks
 
 			writer.Flush ();
 
-			if (IsIndexBlob) {
+			if (IsIndexStore) {
 				return;
 			}
 
@@ -289,11 +289,11 @@ namespace Xamarin.Android.Tasks
 			writer.Write ((uint)ID);                // blob_id
 		}
 
-		void WriteAssemblyDescriptors (BinaryWriter writer, List<AssemblyBlobIndexEntry> assemblies, uint offsetFixup = 0)
+		void WriteAssemblyDescriptors (BinaryWriter writer, List<AssemblyStoreIndexEntry> assemblies, uint offsetFixup = 0)
 		{
 			// Each assembly must be identical to the BlobBundledAssembly structure in src/monodroid/jni/xamarin-app.hh
 
-			foreach (AssemblyBlobIndexEntry assembly in assemblies) {
+			foreach (AssemblyStoreIndexEntry assembly in assemblies) {
 				Log.LogMessage (MessageImportance.Low, $"  => {assembly.Name} before adjustment: data offset == {assembly.DataOffset}");
 				AdjustOffsets (assembly, offsetFixup);
 				Log.LogMessage (MessageImportance.Low, $"  => {assembly.Name} after adjustment: data offset == {assembly.DataOffset}");
@@ -309,7 +309,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void AdjustOffsets (AssemblyBlobIndexEntry assembly, uint offsetFixup)
+		void AdjustOffsets (AssemblyStoreIndexEntry assembly, uint offsetFixup)
 		{
 			if (offsetFixup == 0) {
 				return;
@@ -326,15 +326,15 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		AssemblyBlobIndexEntry WriteAssembly (BinaryWriter writer, BlobAssemblyInfo assembly, string assemblyName, uint localBlobIndex)
+		AssemblyStoreIndexEntry WriteAssembly (BinaryWriter writer, AssemblyStoreAssemblyInfo assembly, string assemblyName, uint localBlobIndex)
 		{
 			uint offset;
 			uint size;
 
 			(offset, size) = WriteFile (assembly.FilesystemAssemblyPath, true);
 
-			// NOTE: globalAssemblIndex++ is not thread safe but it **must** increase monotonically (see also ArchAssemblyBlob.Generate for a special case)
-			var ret = new AssemblyBlobIndexEntry (assemblyName, ID, GlobalIndexCounter.Increment (), localBlobIndex) {
+			// NOTE: globalAssemblIndex++ is not thread safe but it **must** increase monotonically (see also ArchAssemblyStore.Generate for a special case)
+			var ret = new AssemblyStoreIndexEntry (assemblyName, ID, GlobalIndexCounter.Increment (), localBlobIndex) {
 				DataOffset = offset,
 				DataSize = size,
 			};
