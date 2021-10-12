@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;net6.0</TargetFrameworks>
     <RootNamespace>Java.Interop.Tools.Common_Tests</RootNamespace>
     <IsPackable>false</IsPackable>
   </PropertyGroup>

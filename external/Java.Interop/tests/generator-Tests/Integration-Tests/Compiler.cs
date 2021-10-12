@@ -47,8 +47,12 @@ namespace generatortests
 				MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location),
 				MetadataReference.CreateFromFile (typeof(Uri).Assembly.Location),
 				MetadataReference.CreateFromFile (Path.Combine (binDir, "Java.Interop.dll")),
-				MetadataReference.CreateFromFile (Path.Combine (facDir, "netstandard.dll"))
+				MetadataReference.CreateFromFile (Path.Combine (facDir, "netstandard.dll")),
+#if NET
+				MetadataReference.CreateFromFile (Path.Combine (facDir, "System.Runtime.dll")),
+#endif  // NET
 			};
+
 
 			// Compile!
 			var compilation = CSharpCompilation.Create (

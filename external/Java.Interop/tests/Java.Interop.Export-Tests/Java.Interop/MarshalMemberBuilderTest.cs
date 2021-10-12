@@ -12,6 +12,7 @@ using NUnit.Framework;
 
 namespace Java.InteropTests
 {
+#if !NET
 	[TestFixture]
 	class MarshalMemberBuilderTest : JavaVMFixture
 	{
@@ -555,4 +556,5 @@ namespace Java.InteropTests
 }}");
 		}
 	}
+#endif  // !NET
 }

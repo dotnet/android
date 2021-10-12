@@ -529,7 +529,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				else if (Double.IsPositiveInfinity (doubleItem.Value))
 					value = "(1.0 / 0.0)";
 				else
-					value = doubleItem.Value.ToString ("R", CultureInfo.InvariantCulture);
+					value = doubleItem.Value.ToString ("G17", CultureInfo.InvariantCulture);
 				break;
 			case ConstantPoolItemType.Float:
 				var floatItem = (ConstantPoolFloatItem) constant;
@@ -540,7 +540,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				else if (Double.IsPositiveInfinity (floatItem.Value))
 					value = "(1.0f / 0.0f)";
 				else
-					value = floatItem.Value.ToString ("R", CultureInfo.InvariantCulture);
+					value = floatItem.Value.ToString ("G9", CultureInfo.InvariantCulture);
 				break;
 			case ConstantPoolItemType.Long:     value = ((ConstantPoolLongItem) constant).Value.ToString ();    break;
 			case ConstantPoolItemType.Integer:

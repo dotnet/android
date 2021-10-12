@@ -7,56 +7,56 @@ steps:
   displayName: 'Tests: generator'
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/generator-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/generator-Tests.dll
   continueOnError: true
   
 - task: DotNetCoreCLI@2
   displayName: 'Tests: JavaCallableWrappers'
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll
   continueOnError: true
    
 - task: DotNetCoreCLI@2
   displayName: 'Tests: logcat-parse'
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/logcat-parse-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/logcat-parse-Tests.dll
   continueOnError: true
   
 - task: DotNetCoreCLI@2
   displayName: 'Tests: ApiXmlAdjuster'
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll
   continueOnError: true
   
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Bytecode'
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/Xamarin.Android.Tools.Bytecode-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Xamarin.Android.Tools.Bytecode-Tests.dll
   continueOnError: true
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop.Tools.Generator'
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/Java.Interop.Tools.Generator-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Tools.Generator-Tests.dll
   continueOnError: true
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop.Tools.JavaSource'
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/Java.Interop.Tools.JavaSource-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Tools.JavaSource-Tests.dll
   continueOnError: true
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Xamarin.SourceWriter'
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/Xamarin.SourceWriter-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Xamarin.SourceWriter-Tests.dll
   continueOnError: true
 
 - task: DotNetCoreCLI@2
@@ -80,7 +80,7 @@ steps:
   condition: eq('${{ parameters.runNativeTests }}', 'true')
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/Java.Interop.Dynamic-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Dynamic-Tests.dll
   continueOnError: true
 
 - task: DotNetCoreCLI@2
@@ -88,7 +88,7 @@ steps:
   condition: eq('${{ parameters.runNativeTests }}', 'true')
   inputs:
     command: test
-    arguments: bin/Test$(Build.Configuration)/Java.Interop.Export-Tests.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll
   continueOnError: true
 
 - task: DotNetCoreCLI@2

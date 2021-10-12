@@ -490,7 +490,7 @@
         type="double"
         type-generic-aware="double"
         jni-signature="D"
-        value="4.94065645841247E-324"
+        value="4.9406564584124654E-324"
         visibility="public"
         volatile="false" />
       <field
@@ -593,7 +593,7 @@
         type="float"
         type-generic-aware="float"
         jni-signature="F"
-        value="1.401298E-45"
+        value="1.40129846E-45"
         visibility="public"
         volatile="false" />
       <field

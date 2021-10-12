@@ -29,7 +29,12 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		public void Crc64 ()
 		{
 			JavaNativeTypeManager.PackageNamingPolicy = PackageNamingPolicy.LowercaseCrc64;
+#if NET
+			// System.String moved assemblies in .NET
+			Assert.AreEqual ("crc64d04135c992393d83", JavaNativeTypeManager.GetPackageName (typeof (string)));
+#else   // !NET
 			Assert.AreEqual ("crc64b74743e9328eed0a", JavaNativeTypeManager.GetPackageName (typeof (string)));
+#endif  // !NET
 		}
 
 		[Test]
@@ -43,7 +48,12 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		public void LowercaseWithAssemblyName ()
 		{
 			JavaNativeTypeManager.PackageNamingPolicy = PackageNamingPolicy.LowercaseWithAssemblyName;
+#if NET
+			// System.String moved assemblies in .NET
+			Assert.AreEqual ("assembly_system_private_corelib.system", JavaNativeTypeManager.GetPackageName (typeof (string)));
+#else   // !NET
 			Assert.AreEqual ("assembly_mscorlib.system", JavaNativeTypeManager.GetPackageName (typeof (string)));
+#endif  // !NET
 		}
 	}
 }

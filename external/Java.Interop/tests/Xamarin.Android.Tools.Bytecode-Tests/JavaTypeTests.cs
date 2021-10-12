@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -114,25 +114,25 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						Name                = "STATIC_FINAL_SINGLE_MIN",
 						Descriptor          = "F",
 						AccessFlags         = FieldAccessFlags.Public | FieldAccessFlags.Static | FieldAccessFlags.Final,
-						ConstantValue       = "Float(1.401298E-45)",
+						ConstantValue       = "Float(1.40129846E-45)",
 					},
 					new ExpectedFieldDeclaration {
 						Name                = "STATIC_FINAL_SINGLE_MAX",
 						Descriptor          = "F",
 						AccessFlags         = FieldAccessFlags.Public | FieldAccessFlags.Static | FieldAccessFlags.Final,
-						ConstantValue       = "Float(3.402823E+38)",
+						ConstantValue       = "Float(3.40282347E+38)",
 					},
 					new ExpectedFieldDeclaration {
 						Name                = "STATIC_FINAL_DOUBLE_MIN",
 						Descriptor          = "D",
 						AccessFlags         = FieldAccessFlags.Public | FieldAccessFlags.Static | FieldAccessFlags.Final,
-						ConstantValue       = "Double(4.94065645841247E-324)",
+						ConstantValue       = "Double(4.9406564584124654E-324)",
 					},
 					new ExpectedFieldDeclaration {
 						Name                = "STATIC_FINAL_DOUBLE_MAX",
 						Descriptor          = "D",
 						AccessFlags         = FieldAccessFlags.Public | FieldAccessFlags.Static | FieldAccessFlags.Final,
-						ConstantValue       = "Double(1.79769313486232E+308)",
+						ConstantValue       = "Double(1.7976931348623157E+308)",
 					},
 					new ExpectedFieldDeclaration {
 						Name                = "STATIC_FINAL_STRING",
