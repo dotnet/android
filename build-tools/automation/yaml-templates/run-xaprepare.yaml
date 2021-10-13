@@ -1,5 +1,6 @@
 parameters:
   displayName: run xaprepare
+  name:
   configuration: $(XA.Build.Configuration)
   xaSourcePath: $(System.DefaultWorkingDirectory)
   framework: net6.0
@@ -9,6 +10,7 @@ parameters:
 steps:
 - task: DotNetCoreCLI@2
   displayName: ${{ parameters.displayName }}
+  name: ${{ parameters.name }}
   condition: ${{ parameters.condition }}
   inputs:
     command: run

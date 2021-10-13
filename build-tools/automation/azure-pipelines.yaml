@@ -151,6 +151,7 @@ stages:
         arguments: --s=DetermineApplicableTests
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         displayName: determine which test stages to run
+        name: TestConditions
         condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
