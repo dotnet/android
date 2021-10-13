@@ -31,15 +31,15 @@ namespace Xamarin.Android.AssemblyStore
 		//
 		//   aab
 		//   apk
-		//   index store (e.g. base_assemblies.store)
-		//   arch store (e.g. base_assemblies.arm64_v8a.store)
+		//   index store (e.g. base_assemblies.blob)
+		//   arch store (e.g. base_assemblies.arm64_v8a.blob)
 		//   store manifest (e.g. base_assemblies.manifest)
 		//   store base name (e.g. base or base_assemblies)
 		//
 		// In each case the whole set of stores and manifests will be read (if available). Search for the various members of the store set (common/main store, arch stores,
 		// manifest) is based on this naming convention:
 		//
-		//   {BASE_NAME}[.ARCH_NAME].{store|manifest}
+		//   {BASE_NAME}[.ARCH_NAME].{blob|manifest}
 		//
 		// Whichever file is referenced in `storePath`, the BASE_NAME component is extracted and all the found files are read.
 		// If `storePath` points to an aab or an apk, BASE_NAME will always be `assemblies`
@@ -72,6 +72,7 @@ namespace Xamarin.Android.AssemblyStore
 
 			StoreSetName = baseName;
 			if (!IsAndroidArchive (extension)) {
+				Logger (AssemblyStoreExplorerLogLevel.Info, $"{storePath} is not an Android archive, reading from filesystem");
 				string? directoryName = Path.GetDirectoryName (storePath);
 				if (String.IsNullOrEmpty (directoryName)) {
 					directoryName = ".";
@@ -79,6 +80,7 @@ namespace Xamarin.Android.AssemblyStore
 
 				ReadStoreSetFromFilesystem (baseName, directoryName);
 			} else {
+				Logger (AssemblyStoreExplorerLogLevel.Info, $"{storePath} is an Android archive");
 				ReadStoreSetFromArchive (baseName, storePath, extension);
 			}
 
@@ -202,6 +204,7 @@ namespace Xamarin.Android.AssemblyStore
 			}
 
 			basePathInArchive = $"{basePathInArchive}/{baseName}.";
+			Logger (AssemblyStoreExplorerLogLevel.Info, $"basePathInArchive == '{basePathInArchive}'");
 			using (ZipArchive archive = ZipArchive.Open (archivePath, FileMode.Open)) {
 				ReadStoreSetFromArchive (archive, basePathInArchive);
 			}
@@ -209,15 +212,18 @@ namespace Xamarin.Android.AssemblyStore
 
 		void ReadStoreSetFromArchive (ZipArchive archive, string basePathInArchive)
 		{
+			Logger (AssemblyStoreExplorerLogLevel.Info, $"Reading entries from ZIP");
 			foreach (ZipEntry entry in archive) {
+				Logger (AssemblyStoreExplorerLogLevel.Info, $"  {entry.FullName}");
 				if (!entry.FullName.StartsWith (basePathInArchive, StringComparison.Ordinal)) {
+					Logger (AssemblyStoreExplorerLogLevel.Info, $"    not a blob, ignoring");
 					continue;
 				}
 
 				using (var stream = new MemoryStream ()) {
 					entry.Extract (stream);
 
-					if (entry.FullName.EndsWith (".store", StringComparison.Ordinal)) {
+					if (entry.FullName.EndsWith (".blob", StringComparison.Ordinal)) {
 						AddStore (new AssemblyStoreReader (stream, GetStoreArch (entry.FullName), keepStoreInMemory));
 					} else if (entry.FullName.EndsWith (".manifest", StringComparison.Ordinal)) {
 						manifest = new AssemblyStoreManifestReader (stream);
@@ -263,7 +269,7 @@ namespace Xamarin.Android.AssemblyStore
 					continue;
 				}
 
-				if (String.Compare (".store", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+				if (String.Compare (".blob", extension, StringComparison.OrdinalIgnoreCase) == 0) {
 					AddStore (ReadStore (de));
 				} else if (String.Compare (".manifest", extension, StringComparison.OrdinalIgnoreCase) == 0) {
 					manifest = ReadManifest (de);

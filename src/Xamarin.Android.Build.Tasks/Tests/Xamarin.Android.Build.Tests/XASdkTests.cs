@@ -398,104 +398,104 @@ namespace Xamarin.Android.Build.Tests
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          false,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          false,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  true,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm64",
 				/* isRelease */          false,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-x86",
 				/* isRelease */          false,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-x64",
 				/* isRelease */          false,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  true,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                true,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                true,
-				/* usesAssemblyBlobs */  true,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm64",
 				/* isRelease */          true,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          false,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          false,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  true,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86",
 				/* isRelease */          true,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          true,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          true,
 				/* aot */                false,
-				/* usesAssemblyBlobs */  true,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          true,
 				/* aot */                true,
-				/* usesAssemblyBlobs */  false,
+				/* usesAssemblyStore */  false,
 			},
 		};
 
 		[Test]
 		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildSource))]
-		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyBlobs)
+		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore)
 		{
 			var proj = new XASdkProject {
 				IsRelease = isRelease,
@@ -530,7 +530,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
 			if (aot) {
 				proj.SetProperty ("RunAOTCompilation", "true");
 			}
@@ -619,7 +619,7 @@ namespace Xamarin.Android.Build.Tests
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apkPath);
-			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyBlobs);
+			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
 			helper.AssertContainsEntry ($"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);

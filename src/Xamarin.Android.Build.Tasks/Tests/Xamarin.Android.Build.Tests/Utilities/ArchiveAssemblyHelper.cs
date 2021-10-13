@@ -102,9 +102,9 @@ namespace Xamarin.Android.Build.Tests
 
 			string storeEntryName;
 			if (String.IsNullOrEmpty (storeReader.Arch)) {
-				storeEntryName = $"{assembliesRootDir}assemblies.store";
+				storeEntryName = $"{assembliesRootDir}assemblies.blob";
 			} else {
-				storeEntryName = $"{assembliesRootDir}assemblies_{storeReader.Arch}.store";
+				storeEntryName = $"{assembliesRootDir}assemblies_{storeReader.Arch}.blob";
 			}
 
 			Stream store = ReadZipEntry (storeEntryName);
@@ -156,7 +156,9 @@ namespace Xamarin.Android.Build.Tests
 				return entries;
 			}
 
+			Console.WriteLine ($"Creating AssemblyStoreExplorer for archive '{archivePath}'");
 			var explorer = new AssemblyStoreExplorer (archivePath);
+			Console.WriteLine ($"Explorer found {explorer.Assemblies.Count} assemblies");
 			foreach (var asm in explorer.Assemblies) {
 				string prefix = storeEntryPrefix;
 
