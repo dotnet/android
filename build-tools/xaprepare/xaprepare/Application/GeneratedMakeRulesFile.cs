@@ -164,7 +164,7 @@ namespace Xamarin.Android.Prepare
 
 			WriteMSBuildCall (
 				fileToRemovePath: $"{monoFrameworksRoot}/{latestStableFramework}/OpenTK-1.0.*",
-				projectPath: "src/OpenTK-1.0/OpenTK.csproj"
+				projectPath: "build-tools/download-legacy-assemblies/download-legacy-assemblies.csproj"
 			);
 			sw.WriteLine ();
 

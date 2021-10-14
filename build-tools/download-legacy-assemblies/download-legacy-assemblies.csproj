@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.Build.NoTargets">
+
+  <!-- This project downloads the Xamarin.Legacy.OpenTK NuGet and
+       copies the assemblies to the output directory for the installer to ship.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssetTargetFallback>$(AssetTargetFallback);monoandroid11.0;net6.0-android30.0</AssetTargetFallback>
+  </PropertyGroup>
+
+  <Import Project="../../Configuration.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Xamarin.Legacy.OpenTK" Version="1.0.1"  GeneratePathProperty="true"  NoWarn="NU1701" />
+  </ItemGroup>
+
+  <Target Name="_CopyAssembliesToOutput"
+    Condition=" '$(TargetFramework)' != '' "
+    AfterTargets="Build">
+
+    <ItemGroup>
+      <_LegacyOpenTKAssembliesToCopy Include="$(PkgXamarin_Legacy_OpenTK)/lib/monoandroid11.0/OpenTK-1.0.dll" />
+      <_LegacyOpenTKAssembliesToCopy Include="$(PkgXamarin_Legacy_OpenTK)/lib/monoandroid11.0/OpenTK-1.0.pdb" />
+      <_LegacyOpenTKAssembliesToCopy Include="$(PkgXamarin_Legacy_OpenTK)/lib/net6.0-android30.0/OpenTK-1.0.xml" />
+    </ItemGroup>
+
+    <Copy
+      SourceFiles="@(_LegacyOpenTKAssembliesToCopy)"
+      DestinationFolder="$(XAInstallPrefix)xbuild-frameworks/MonoAndroid/$(AndroidFrameworkVersion)/"
+      SkipUnchangedFiles="True"
+    />
+
+  </Target>
+</Project>

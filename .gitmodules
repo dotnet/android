@@ -26,10 +26,6 @@
     path = external/nrefactory
     url = https://github.com/xamarin/NRefactory.git
     branch = master
-[submodule "external/opentk"]
-    path = external/opentk
-    url = https://github.com/mono/opentk.git
-    branch = main
 [submodule "external/proguard"]
     path = external/proguard
     url = https://github.com/Guardsquare/proguard.git
