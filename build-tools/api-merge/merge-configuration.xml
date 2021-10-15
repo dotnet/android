@@ -22,18 +22,18 @@
     <File Path="api-31.xml.in" Level="31" />
   </Inputs>
   <Outputs>
-    <File Path="android-19\mcw\api.xml" LastLevel="19" />
-    <File Path="android-20\mcw\api.xml" LastLevel="20" />
-    <File Path="android-21\mcw\api.xml" LastLevel="21" />
-    <File Path="android-22\mcw\api.xml" LastLevel="22" />
-    <File Path="android-23\mcw\api.xml" LastLevel="23" />
-    <File Path="android-24\mcw\api.xml" LastLevel="24" />
-    <File Path="android-25\mcw\api.xml" LastLevel="25" />
-    <File Path="android-26\mcw\api.xml" LastLevel="26" />
-    <File Path="android-27\mcw\api.xml" LastLevel="27" />
-    <File Path="android-28\mcw\api.xml" LastLevel="28" />
-    <File Path="android-29\mcw\api.xml" LastLevel="29" />
-    <File Path="android-30\mcw\api.xml" LastLevel="30" />
-    <File Path="android-31\mcw\api.xml" LastLevel="31" />
+    <File Path="android-19\api.xml" LastLevel="19" />
+    <File Path="android-20\api.xml" LastLevel="20" />
+    <File Path="android-21\api.xml" LastLevel="21" />
+    <File Path="android-22\api.xml" LastLevel="22" />
+    <File Path="android-23\api.xml" LastLevel="23" />
+    <File Path="android-24\api.xml" LastLevel="24" />
+    <File Path="android-25\api.xml" LastLevel="25" />
+    <File Path="android-26\api.xml" LastLevel="26" />
+    <File Path="android-27\api.xml" LastLevel="27" />
+    <File Path="android-28\api.xml" LastLevel="28" />
+    <File Path="android-29\api.xml" LastLevel="29" />
+    <File Path="android-30\api.xml" LastLevel="30" />
+    <File Path="android-31\api.xml" LastLevel="31" />
   </Outputs>
 </Configuration>
