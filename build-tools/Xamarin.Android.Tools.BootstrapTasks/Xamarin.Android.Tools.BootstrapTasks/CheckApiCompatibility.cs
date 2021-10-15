@@ -159,7 +159,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			for (int i = 0; i < 3; i++) {
 				using (var genApiProcess = new Process ()) {
 
-					if (Environment.Version.Major > 5) {
+					if (Environment.Version.Major >= 5) {
 						var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "..", "netcoreapp2.1", "Microsoft.DotNet.ApiCompat.dll"));
 						genApiProcess.StartInfo.FileName = "dotnet";
 						genApiProcess.StartInfo.Arguments = $"\"{apiCompat}\" ";
