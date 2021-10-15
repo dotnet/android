@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tasks {
 				string stampFile = directory.GetMetadata ("StampFile");
 				string directoryHash = Files.HashString (directory.ItemSpec);
 				if (string.IsNullOrEmpty (stampFile)) {
-					if (Path.GetFullPath (directory.ItemSpec).StartsWith (libraryProjectDir)) {
+					if (Path.GetFullPath (directory.ItemSpec).StartsWith (libraryProjectDir, StringComparison.OrdinalIgnoreCase)) {
 						// If inside the `lp` directory
 						stampFile = Path.GetFullPath (Path.Combine (directory.ItemSpec, "..", "..")) + ".stamp";
 					} else {
@@ -57,7 +57,7 @@ namespace Xamarin.Android.Tasks {
 				IEnumerable<string> files;
 				string filesCache = directory.GetMetadata ("FilesCache");
 				if (string.IsNullOrEmpty (filesCache)) {
-					if (Path.GetFullPath (directory.ItemSpec).StartsWith (libraryProjectDir)) {
+					if (Path.GetFullPath (directory.ItemSpec).StartsWith (libraryProjectDir, StringComparison.OrdinalIgnoreCase)) {
 						filesCache = Path.Combine (directory.ItemSpec, "..", "files.cache");
 					} else {
 						filesCache = Path.Combine (directory.ItemSpec, "..", $"{directoryHash}-files.cache");

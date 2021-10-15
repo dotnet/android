@@ -1067,7 +1067,7 @@ namespace UnamedProject
 					b.ThrowOnBuildFailure = false;
 					Assert.IsFalse (b.Build (proj), "Build should have failed.");
 					string error = b.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
 						.FirstOrDefault (x => x.Contains ("error XA1011:"));
 					Assert.IsNotNull (error, "Build should have failed with XA1011.");
 					return;
@@ -1353,7 +1353,7 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			using (var builder = CreateApkBuilder ()) {
 				Assert.True (builder.Build (proj), "Build should have succeeded.");
 				string warning = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build succeeded."))
+						.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal))
 						.FirstOrDefault (x => x.Contains ("R8 : warning : Missing class: java.lang.ClassValue"));
 				if (useConfig) {
 					Assert.IsNull (warning, "Build should have completed without an R8 warning for `java.lang.ClassValue`.");

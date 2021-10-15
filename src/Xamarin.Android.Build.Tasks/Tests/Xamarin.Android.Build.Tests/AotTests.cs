@@ -402,7 +402,7 @@ namespace "+ libName + @" {
 					b.ThrowOnBuildFailure = false;
 					Assert.IsFalse (b.Build (proj), "Build should have failed.");
 					string error = b.LastBuildOutput
-							.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+							.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
 							.FirstOrDefault (x => x.Contains ("error XA1025:"));
 					Assert.IsNotNull (error, "Build should have failed with XA1025.");
 					return;

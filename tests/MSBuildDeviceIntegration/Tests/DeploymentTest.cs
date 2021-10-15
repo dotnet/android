@@ -19,7 +19,7 @@ using System.Xml.XPath;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice")]
+	[Category ("UsesDevice"), Category ("Node-2")]
 	public class DeploymentTest : DeviceTest {
 
 		static ProjectBuilder builder;

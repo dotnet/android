@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						return;
 					}
 
-					if (content.StartsWith ("namespace ") || content.IndexOf (" interface ") != -1 || content.IndexOf (" class ") != -1 || content.IndexOf (" partial struct ") != -1 || content.IndexOf (" enum ") != -1) {
+					if (content.StartsWith ("namespace ", StringComparison.Ordinal) || content.IndexOf (" interface ", StringComparison.Ordinal) != -1 || content.IndexOf (" class ", StringComparison.Ordinal) != -1 || content.IndexOf (" partial struct ", StringComparison.Ordinal) != -1 || content.IndexOf (" enum ", StringComparison.Ordinal) != -1) {
 						if (string.IsNullOrWhiteSpace (currentObject.Item)) {
 							currentObject.Item = content;
 						} else {

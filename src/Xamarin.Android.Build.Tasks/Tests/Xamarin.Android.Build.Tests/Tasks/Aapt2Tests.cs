@@ -51,7 +51,7 @@ namespace Xamarin.Android.Build.Tests
 		ITaskItem CreateTaskItemForResourceFile (string root, string dir, string file)
 		{
 			string ext = Path.GetExtension (file);
-			if (dir.StartsWith ("values"))
+			if (dir.StartsWith ("values", StringComparison.Ordinal))
 				ext = ".arsc";
 			return new TaskItem (Path.Combine (root, dir, file), new Dictionary<string, string> { { "_FlatFile", $"{dir}_{Path.GetFileNameWithoutExtension (file)}{ext}.flat" } } );
 		}
@@ -60,7 +60,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string ext = Path.GetExtension (file);
 			string dir = Path.GetFileName (Path.GetDirectoryName (file));
-			if (dir.StartsWith ("values"))
+			if (dir.StartsWith ("values", StringComparison.Ordinal))
 				ext = ".arsc";
 			return new TaskItem (file, new Dictionary<string, string> { { "_FlatFile", $"{dir}_{Path.GetFileNameWithoutExtension (file)}{ext}.flat" } } );
 		}

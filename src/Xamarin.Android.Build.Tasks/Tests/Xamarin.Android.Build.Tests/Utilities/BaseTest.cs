@@ -463,7 +463,7 @@ namespace Xamarin.Android.Build.Tests
 		// https://github.com/xamarin/xamarin-android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L108-L132
 		void CreateShellScript (string path, string contents)
 		{
-			if (IsWindows && string.Compare (Path.GetExtension (path), ".dll", true) != 0)
+			if (IsWindows && string.Compare (Path.GetExtension (path), ".dll", StringComparison.OrdinalIgnoreCase) != 0)
 				path += ".cmd";
 			using (var script = new StreamWriter (path)) {
 				if (IsWindows) {

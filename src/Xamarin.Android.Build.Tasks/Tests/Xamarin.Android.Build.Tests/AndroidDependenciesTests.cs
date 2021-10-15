@@ -60,9 +60,9 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				IEnumerable<string> taskOutput = builder.LastBuildOutput
 					.Select (x => x.Trim ())
-					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\""))
-					.SkipWhile (x => !x.StartsWith ("Output Item(s):"))
-					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\""));
+					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
 				if (ndkRequired)
 					StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency.");
 				else

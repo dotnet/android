@@ -95,7 +95,7 @@ namespace Xamarin.Android.Tasks
 			var options = new LinkerOptions ();
 			options.MainAssembly = res.GetAssembly (MainAssembly);
 			options.OutputDirectory = Path.GetFullPath (OutputDirectory);
-			options.LinkSdkOnly = string.Compare (LinkMode, "SdkOnly", true) == 0;
+			options.LinkSdkOnly = string.Compare (LinkMode, "SdkOnly", StringComparison.OrdinalIgnoreCase) == 0;
 			options.LinkNone = false;
 			options.Resolver = resolver;
 			options.LinkDescriptions = LinkDescriptions.Select (item => Path.GetFullPath (item.ItemSpec)).ToArray ();

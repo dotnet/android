@@ -316,11 +316,11 @@ namespace Xamarin.Android.Tasks
 			}
 			if (matched) {
 				if (singleLine.Trim () == "^") {
-					column = singleLine.IndexOf ("^");
+					column = singleLine.IndexOf ("^", StringComparison.Ordinal);
 					GenerateErrorOrWarning ();
 				}
 				if (singleLine.Trim ().Contains ("~")) {
-					column = singleLine.IndexOf ("~");
+					column = singleLine.IndexOf ("~", StringComparison.Ordinal);
 					GenerateErrorOrWarning ();
 				}
 			} else

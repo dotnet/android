@@ -575,12 +575,12 @@ namespace Bug12935
 				IEnumerable<string> messages;
 				if (string.CompareOrdinal (manifestMerger, "legacy") == 0) {
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded."));
+					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal));
 				}
 				else {
 					builder.ThrowOnBuildFailure = false;
 					Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED."));
+					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
 				}
 				string warning = messages.FirstOrDefault (x => x.Contains ("warning XA1010:"));
 				Assert.IsNotNull (warning, "Warning should be XA1010");

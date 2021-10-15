@@ -8,7 +8,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice")]
+	[Category ("UsesDevice"), Category ("Node-2")]
 	public class InstallAndRunTests : DeviceTest
 	{
 		static ProjectBuilder builder;
@@ -102,14 +102,14 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			// Try to see if *successive* lines match expected output
 			var remaining   = expectedLogcatOutput;
 			return line => {
-				if (line.IndexOf (remaining) >= 0) {
+				if (line.IndexOf (remaining, StringComparison.Ordinal) >= 0) {
 					Reset ();
 					return true;
 				}
 				int count   = Math.Min (line.Length, remaining.Length);
 				for ( ; count > 0; count--) {
 					var startMatch = remaining.Substring (0, count);
-					if (line.IndexOf (startMatch) >= 0) {
+					if (line.IndexOf (startMatch, StringComparison.Ordinal) >= 0) {
 						remaining = remaining.Substring (count);
 						return false;
 					}

@@ -36,6 +36,7 @@ namespace Xamarin.Android.Tasks {
 
 		static XNamespace androidNs = AndroidXmlNamespace;
 		static XNamespace androidToolsNs = AndroidXmlToolsNamespace;
+		static readonly XName versionCodeAttributeName = androidNs + "versionCode";
 
 		XDocument doc;
 
@@ -101,7 +102,7 @@ namespace Xamarin.Android.Tasks {
 		/// </summary>
 		public string VersionCode {
 			get {
-				XAttribute attr = doc.Root.Attribute (androidNs + "versionCode");
+				XAttribute attr = doc.Root.Attribute (versionCodeAttributeName);
 				if (attr != null) {
 					string code = attr.Value;
 					if (!string.IsNullOrEmpty (code))
@@ -110,9 +111,11 @@ namespace Xamarin.Android.Tasks {
 				return "1";
 			}
 			set {
-				doc.Root.SetAttributeValue (androidNs + "versionCode", versionCode = value);
+				doc.Root.SetAttributeValue (versionCodeAttributeName, versionCode = value);
 			}
 		}
+
+		public bool HasVersionCode => doc.Root.Attribute (versionCodeAttributeName) != null;
 
 		public string GetMinimumSdk () {
 			int defaultMinSdkVersion = MonoAndroidHelper.SupportedVersions.MinStableVersion.ApiLevel;
@@ -160,7 +163,7 @@ namespace Xamarin.Android.Tasks {
 
 		string ToFullyQualifiedName (string typeName)
 		{
-			if (typeName.StartsWith ("."))
+			if (typeName.StartsWith (".", StringComparison.Ordinal))
 				return PackageName + typeName;
 			if (typeName.Contains ("."))
 				return typeName;
@@ -270,8 +273,8 @@ namespace Xamarin.Android.Tasks {
 
 			manifest.SetAttributeValue (XNamespace.Xmlns + "android", "http://schemas.android.com/apk/res/android");
 
-			if (manifest.Attribute (androidNs + "versionCode") == null) {
-				manifest.SetAttributeValue (androidNs + "versionCode",
+			if (manifest.Attribute (versionCodeAttributeName) == null) {
+				manifest.SetAttributeValue (versionCodeAttributeName,
 					string.IsNullOrEmpty (versionCode) ? "1" : versionCode);
 			}
 			if (manifest.Attribute (androidNs + "versionName") == null) {
@@ -662,7 +665,7 @@ namespace Xamarin.Android.Tasks {
 				switch (el.Name.LocalName) {
 				case "provider":
 					var autho = el.Attribute (androidNs.GetName ("authorities"));
-					if (autho != null && autho.Value.EndsWith (".__mono_init__"))
+					if (autho != null && autho.Value.EndsWith (".__mono_init__", StringComparison.Ordinal))
 						continue;
 					goto case "activity";
 				case "activity":
@@ -720,7 +723,7 @@ namespace Xamarin.Android.Tasks {
 
 		XElement ActivityFromTypeDefinition (TypeDefinition type, string name, int targetSdkVersion)
 		{
-			if (name.StartsWith ("_"))
+			if (name.StartsWith ("_", StringComparison.Ordinal))
 				throw new InvalidActivityNameException (string.Format ("Activity name '{0}' is invalid, because activity namespaces may not begin with an underscore.", type.FullName));
 
 			return ToElement (type, name,

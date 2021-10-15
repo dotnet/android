@@ -164,7 +164,7 @@ namespace Xamarin.Android.Build.Tests
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				CompressionMethod method = compressNativeLibraries ? CompressionMethod.Deflate : CompressionMethod.Store;
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/") && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
+					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
 					var abiPaths = new string[] { "lib/x86/" };
 					foreach (var file in libFiles) {
 						Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
@@ -208,7 +208,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var zip = ZipHelper.OpenZip (apk)) {
 				foreach (var entry in zip) {
-					if (entry.FullName.EndsWith (".so")) {
+					if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
 						AssertCompression (entry, compressed: false);
 					}
 				}
@@ -245,7 +245,7 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
-						if (entry.FullName.EndsWith (".so") || entry.FullName.EndsWith (".bar")) {
+						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
 							AssertCompression (entry, compressed: true);
 						}
 					}
@@ -262,7 +262,7 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
-						if (entry.FullName.EndsWith (".so") || entry.FullName.EndsWith (".bar")) {
+						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
 							AssertCompression (entry, compressed: false);
 						}
 					}
@@ -950,7 +950,7 @@ public class Test
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
-						if (entry.FullName.EndsWith (".so")) {
+						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
 							AssertCompression (entry, compressed: true);
 						}
 					}

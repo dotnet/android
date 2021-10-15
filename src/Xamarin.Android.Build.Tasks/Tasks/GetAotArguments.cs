@@ -276,7 +276,7 @@ namespace Xamarin.Android.Tasks
 				if (!string.IsNullOrEmpty (ldName)) {
 					ldName = Path.GetFileName (ldName);
 					if (ldName.IndexOf ('-') >= 0) {
-						ldName = ldName.Substring (ldName.LastIndexOf ("-") + 1);
+						ldName = ldName.Substring (ldName.LastIndexOf ("-", StringComparison.Ordinal) + 1);
 					}
 				}
 			} else {

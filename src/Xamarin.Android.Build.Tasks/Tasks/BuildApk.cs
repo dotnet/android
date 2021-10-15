@@ -215,7 +215,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar")) : null;
+				var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) : null;
 				if (jarFiles != null && JavaLibraries != null)
 					jarFiles = jarFiles.Concat (JavaLibraries);
 				else if (JavaLibraries != null)

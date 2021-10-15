@@ -152,7 +152,7 @@ namespace MonoDroid.Tuner {
 
 		string TypeNameWithoutKey (string name)
 		{
-			var idx = name.IndexOf (", PublicKeyToken=");
+			var idx = name.IndexOf (", PublicKeyToken=", StringComparison.Ordinal);
 			if (idx > 0)
 				name = name.Substring (0, idx);
 
@@ -266,7 +266,7 @@ namespace MonoDroid.Tuner {
 
 		static bool IsImplementor (TypeDefinition type)
 		{
-			return type.Name.EndsWith ("Implementor") && type.Inherits ("Java.Lang.Object");
+			return type.Name.EndsWith ("Implementor", StringComparison.Ordinal) && type.Inherits ("Java.Lang.Object");
 		}
 
 		static bool IsUserType (TypeDefinition type)
@@ -280,7 +280,7 @@ namespace MonoDroid.Tuner {
 				return;
 
 			foreach (MethodDefinition method in type.Methods)
-				if (method.Name.EndsWith ("Handler"))
+				if (method.Name.EndsWith ("Handler", StringComparison.Ordinal))
 					PreserveMethod (type, method);
 		}
 	}

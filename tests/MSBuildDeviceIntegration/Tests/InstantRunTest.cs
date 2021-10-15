@@ -7,7 +7,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Commercial"), Category ("UsesDevice")]
+	[Category ("Commercial"), Category ("UsesDevice"), Category ("Node-3")]
 	public class InstantRunTest : DeviceTest
 	{
 		[Test]

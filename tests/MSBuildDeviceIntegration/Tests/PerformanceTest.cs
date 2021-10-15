@@ -11,6 +11,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[Category ("Node-2")]
 	public class PerformanceTest : DeviceTest
 	{
 		const int Retry = 2;
@@ -24,7 +25,7 @@ namespace Xamarin.Android.Build.Tests
 				bool foundHeader = false;
 				while (!reader.EndOfStream) {
 					var line = reader.ReadLine ();
-					if (line.StartsWith ("#") || string.IsNullOrWhiteSpace (line)) {
+					if (line.StartsWith ("#", StringComparison.Ordinal) || string.IsNullOrWhiteSpace (line)) {
 						continue;
 					}
 					var split = line.Split (',');

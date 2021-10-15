@@ -86,7 +86,7 @@ namespace Mono.Linker.Steps {
 				return;
 			var jname = ra.ConstructorArguments.First ().Value.ToString ();
 			var jargs = ra.ConstructorArguments [1].Value.ToString ();
-			var pargs = jargs.StartsWith ("()") ? string.Empty : "***";
+			var pargs = jargs.StartsWith ("()", StringComparison.Ordinal) ? string.Empty : "***";
 			// FIXME: do not preserve all overroads.
 			if (jname == ".ctor")
 				writer.WriteLine ("   <init>(...);", pargs);

@@ -132,7 +132,7 @@ namespace Java.Interop {
 			if (arguments.Length == 0)
 				return type.Assembly.GetType (type + suffix);
 			Type definition = type.GetGenericTypeDefinition ();
-			int bt = definition.FullName!.IndexOf ("`");
+			int bt = definition.FullName!.IndexOf ("`", StringComparison.Ordinal);
 			if (bt == -1)
 				throw new NotSupportedException ("Generic type doesn't follow generic type naming convention! " + type.FullName);
 			Type? suffixDefinition = definition.Assembly.GetType (

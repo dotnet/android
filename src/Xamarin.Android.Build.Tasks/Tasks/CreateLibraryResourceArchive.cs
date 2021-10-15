@@ -181,9 +181,9 @@ namespace Xamarin.Android.Tasks
 			var ordered = new SortedList<int,string> ();
 			foreach (var line in File.ReadAllLines (singleFile)) {
 				var s = line.Trim ();
-				if (s.StartsWith ("#"))
+				if (s.StartsWith ("#", StringComparison.Ordinal))
 					continue;
-				if (!s.StartsWith (librefspec))
+				if (!s.StartsWith (librefspec, StringComparison.Ordinal))
 					continue;
 				int eqpos = s.IndexOf ('=');
 				if (eqpos < 0)

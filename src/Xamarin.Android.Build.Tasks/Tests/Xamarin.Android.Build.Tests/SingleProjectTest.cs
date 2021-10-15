@@ -108,5 +108,39 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (versionNumber, assemblyFileVersion.ConstructorArguments [0].Value);
 			}
 		}
+
+		[Test]
+		public void AndroidManifestValuesWin ()
+		{
+			var packageName = "com.xamarin.singleproject";
+			var applicationLabel = "My Sweet App";
+			var versionName = "99.0";
+			var versionCode = "99";
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidManifest = proj.AndroidManifest
+				.Replace ("package=\"${PACKAGENAME}\"", $"package=\"{packageName}\"")
+				.Replace ("android:label=\"${PROJECT_NAME}\"", $"android:label=\"{applicationLabel}\"")
+				.Replace ("android:versionName=\"1.0\"", $"android:versionName=\"{versionName}\"")
+				.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
+			if (!Builder.UseDotNet) {
+				proj.SetProperty ("GenerateApplicationManifest", "true");
+			}
+			proj.SetProperty ("ApplicationId", "com.i.should.not.be.used");
+			proj.SetProperty ("ApplicationTitle", "I should not be used");
+			proj.SetProperty ("ApplicationVersion", "21");
+			proj.SetProperty ("ApplicationDisplayVersion", "1.1.1.1");
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var manifest = b.Output.GetIntermediaryPath ("android/AndroidManifest.xml");
+			FileAssert.Exists (manifest);
+
+			using var stream = File.OpenRead (manifest);
+			var doc = XDocument.Load (stream);
+			Assert.AreEqual (packageName, doc.Root.Attribute ("package")?.Value);
+			Assert.AreEqual (versionName, doc.Root.Attribute (AndroidAppManifest.AndroidXNamespace + "versionName")?.Value);
+			Assert.AreEqual (versionCode, doc.Root.Attribute (AndroidAppManifest.AndroidXNamespace + "versionCode")?.Value);
+			Assert.AreEqual (applicationLabel, doc.Root.Element ("application").Attribute (AndroidAppManifest.AndroidXNamespace + "label")?.Value);
+		}
 	}
 }

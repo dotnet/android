@@ -19,8 +19,6 @@ steps:
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
 
-- template: delete-platform-31.yaml
-
 - script: |
     echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/${{ parameters.jdkTestFolder }}"
     echo "##vso[task.setvariable variable=DOTNET_TOOL_PATH]$HOME/Library/Android/dotnet/dotnet"
@@ -35,24 +33,24 @@ steps:
 
 - template: use-dot-net.yaml
 
-- task: MSBuild@1
-  displayName: build xaprepare
+- task: DotNetCoreCLI@2
+  displayName: shut down existing build daemons
   inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare.sln
-    configuration: ${{ parameters.configuration }}
-    msbuildArguments: /restore
+    command: custom
+    custom: build-server
+    arguments: shutdown
 
-- script: >
-    pgrep -lfi VBCSCompiler.exe | awk '{system("kill -HUP " $1)}' &&
-    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI &&
-    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=AndroidTestDependencies --no-emoji --run-mode=CI
-  displayName: install test dependencies
-  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
-- script: >
-    ${{ parameters.xaSourcePath }}\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=AndroidTestDependencies --no-emoji --run-mode=CI
-  displayName: install test dependencies
-  condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+- template: run-xaprepare.yaml
+  parameters:
+    displayName: run xaprepare-UpdateMono
+    arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
+    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+  
+- template: run-xaprepare.yaml
+  parameters:
+    arguments: --s=AndroidTestDependencies
+    xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - task: MSBuild@1
   displayName: nuget restore Xamarin.Android.Build.Tasks.sln

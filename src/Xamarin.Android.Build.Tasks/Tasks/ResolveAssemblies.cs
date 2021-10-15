@@ -187,7 +187,7 @@ namespace Xamarin.Android.Tasks
 			}
 			foreach (var folder in lockFile.PackageFolders) {
 				var path = assemblyPath.Replace (folder.Path, string.Empty);
-				if (path.StartsWith ($"{Path.DirectorySeparatorChar}"))
+				if (path.StartsWith ($"{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
 					path = path.Substring (1);
 				var libraryPath = lockFile.Libraries.FirstOrDefault (x => path.StartsWith (x.Path.Replace('/', Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase));
 				if (libraryPath == null)

@@ -122,7 +122,7 @@ namespace Xamarin.Android.Build.Tests
 			validateJavaVersion.JavaSdkPath = javaPath;
 
 			Assert.IsTrue (validateJavaVersion.Execute (), "second Execute should succeed!");
-			Assert.IsFalse (messages.Any (m => m.Message.StartsWith ("Using cached value for")), "`java -version` should *not* be cached!");
+			Assert.IsFalse (messages.Any (m => m.Message.StartsWith ("Using cached value for", StringComparison.Ordinal)), "`java -version` should *not* be cached!");
 		}
 	}
 }

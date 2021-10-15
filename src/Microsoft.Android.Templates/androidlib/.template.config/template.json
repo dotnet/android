@@ -1,10 +1,10 @@
 {
   "$schema": "http://json.schemastore.org/template",
   "author": "Microsoft",
-  "classifications": [ "Android" ],
+  "classifications": [ "Android", "Mobile" ],
   "identity": "Microsoft.Android.AndroidLib",
-  "name": "Android Class library",
-  "description": "A project for creating an Android class library",
+  "name": "Android Class Library (Preview)",
+  "description": "A project for creating a .NET 6 Android class library",
   "shortName": "androidlib",
   "tags": {
     "language": "C#",

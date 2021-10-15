@@ -309,7 +309,7 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 		public override IEnumerable<XNode> GetTypeSummaryNodes (XElement jd)
 		{
 			var classDataComment = jd.DescendantNodes ()
-				.Where (n => n.NodeType == XmlNodeType.Comment && ((XComment)n).Value.IndexOf ("======== START OF CLASS DATA ========") > 0)
+				.Where (n => n.NodeType == XmlNodeType.Comment && ((XComment)n).Value.IndexOf ("======== START OF CLASS DATA ========", StringComparison.Ordinal) > 0)
 				.FirstOrDefault ();
 			if (classDataComment == null)
 				yield break;
@@ -323,7 +323,7 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 				// The next comment node is the end of this CLASS SUMMARY. It could be different comments
 				if (n.NodeType == XmlNodeType.Comment) {
 					var c = (XComment)n;
-					if (c.Value.IndexOf (" SUMMARY ========") > 0)
+					if (c.Value.IndexOf (" SUMMARY ========", StringComparison.Ordinal) > 0)
 						yield break;
 				} else if (n is XText) {
 					// FIXME: we don't use HAP for JavaDoc6 anymore, so we don't need such a mess.
@@ -339,7 +339,7 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 					// Sometimes this NESTED CLASS SUMMARY node could come *inside* a <p> tag. I think it is wrong, but
 					// 1) I don't trust SgmlReader, and 2) I don't trust javadoc/doclet.
 					var e = n as XElement;
-					if (e != null && e.Nodes ().Any (x => x.NodeType == XmlNodeType.Comment && ((XComment)x).Value.IndexOf (" SUMMARY ========") > 0))
+					if (e != null && e.Nodes ().Any (x => x.NodeType == XmlNodeType.Comment && ((XComment)x).Value.IndexOf (" SUMMARY ========", StringComparison.Ordinal) > 0))
 						yield break;
 					// skip empty <P> tag.
 					if (e == null || e.Name.LocalName != "p" || e.Nodes ().Any ())
