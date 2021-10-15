@@ -43,19 +43,21 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}
 
 			var parameters  = method.GetParameters ();
-			NAssert.AreEqual (Parameters.Count, parameters.Length,  $"Method {Name} Parameter Count");
+			NAssert.AreEqual (Parameters.Count, parameters.Length,  $"Method {Name} Parameter Count\n" +
+				$"Expected signature: {string.Join (", ", Parameters.Select (p => $"{p.Type.TypeSignature}: {p.Name}"))}\n" +
+				$"  Actual signature: {string.Join (", ", parameters.Select (p => $"{p.Type.TypeSignature}: {p.Name}"))}");
 			for (int i = 0; i < Parameters.Count; ++i) {
-				NAssert.AreEqual (Parameters [i].Name,                  parameters [i].Name,                message);
-				NAssert.AreEqual (i,                                    parameters [i].Position,            message);
-				NAssert.AreEqual (Parameters [i].Type.BinaryName,       parameters [i].Type.BinaryName,     message);
-				NAssert.AreEqual (Parameters [i].Type.TypeSignature,    parameters [i].Type.TypeSignature,  message);
+				NAssert.AreEqual (Parameters [i].Name,                  parameters [i].Name,                message + $": parameter {i} name");
+				NAssert.AreEqual (i,                                    parameters [i].Position,            message + $": parameter {i} position");
+				NAssert.AreEqual (Parameters [i].Type.BinaryName,       parameters [i].Type.BinaryName,     message + $": parameter {i} binary name");
+				NAssert.AreEqual (Parameters [i].Type.TypeSignature,    parameters [i].Type.TypeSignature,  message + $": parameter {i} type signature");
 			}
 
 			var exceptions  = method.GetThrows ();
 			NAssert.AreEqual (Throws.Count, exceptions.Count);
 			for (int i = 0; i < Throws.Count; ++i) {
-				NAssert.AreEqual (Throws [i].BinaryName,    exceptions [i].BinaryName,      message);
-				NAssert.AreEqual (Throws [i].TypeSignature, exceptions [i].TypeSignature,   message);
+				NAssert.AreEqual (Throws [i].BinaryName,    exceptions [i].BinaryName,      message + $": throws {i} binary name");
+				NAssert.AreEqual (Throws [i].TypeSignature, exceptions [i].TypeSignature,   message + $": throws {i} type signature");
 			}
 		}
 	}

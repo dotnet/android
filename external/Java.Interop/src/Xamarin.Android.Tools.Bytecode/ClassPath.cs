@@ -41,14 +41,22 @@ namespace Xamarin.Android.Tools.Bytecode {
 			Load (path);
 		}
 
-		public void Load (string jarFile)
+		public void Load (string filePath)
 		{
-			if (!IsJarFile (jarFile))
-				throw new ArgumentException ("'jarFile' is not a valid .jar file.", "jarFile");
-
-			using (var jarStream = File.OpenRead (jarFile)) { 
-				Load (jarStream);
+			if (IsJmodFile (filePath)) {
+				using (var source   = File.OpenRead (filePath)) {
+					var slice       = new PartialStream (source, 4);
+					Load (slice);
+				}
+				return;
 			}
+			if (IsJarFile (filePath)) {
+				using (var jarStream = File.OpenRead (filePath)) {
+					Load (jarStream);
+				}
+				return;
+			}
+			throw new ArgumentException ($"`{filePath}` is not a supported file format.", nameof (filePath));
 		}
 
 		public void Load (Stream jarStream, bool leaveOpen = false)
@@ -107,6 +115,23 @@ namespace Xamarin.Android.Tools.Bytecode {
 				using (new ZipArchive (f)) {
 					return true;
 				}
+			}
+			catch (Exception) {
+				return false;
+			}
+		}
+
+		public static bool IsJmodFile (string jmodFile)
+		{
+			if (jmodFile == null)
+				throw new ArgumentNullException (nameof (jmodFile));
+			try {
+				var f = File.OpenRead (jmodFile);
+				var h = new byte[4];
+				if (f.Read (h, 0, h.Length) != 4) {
+					return false;
+				}
+				return h[0] == 0x4a && h[1] == 0x4d && h[2] == 0x01 && h[3] == 0x00;
 			}
 			catch (Exception) {
 				return false;

@@ -15,6 +15,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			log (TraceLevel.Warning, verbosity, format, args);
 		}
 
+		public static void Warning (int verbosity, string message) => Warning (verbosity, "{0}", message);
+
 		public static void Error (string format, params object[] args)
 		{
 			var log = OnLog;
@@ -22,6 +24,8 @@ namespace Xamarin.Android.Tools.Bytecode
 				return;
 			log (TraceLevel.Error, 0, format, args);
 		}
+
+		public static void Error (string message) => Error ("{0}", message);
 
 		public static void Message (string format, params object[] args)
 		{
@@ -31,6 +35,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			log (TraceLevel.Info, 0, format, args);
 		}
 
+		public static void Message (string message) => Message ("{0}", message);
+
 		public static void Debug (string format, params object[] args)
 		{
 			var log = OnLog;
@@ -38,6 +44,8 @@ namespace Xamarin.Android.Tools.Bytecode
 				return;
 			log (TraceLevel.Verbose, 0, format, args);
 		}
+
+		public static void Debug (string message) => Debug ("{0}", message);
 	}
 }
 

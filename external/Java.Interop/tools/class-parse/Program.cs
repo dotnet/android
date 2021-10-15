@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tools {
 					return;
 				}
 			}
-			if (ClassPath.IsJarFile (file)) {
+			if (ClassPath.IsJmodFile (file) || ClassPath.IsJarFile (file)) {
 				jar.Load (file);
 				return;
 			}

@@ -360,6 +360,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
+		public string OuterClassName => OuterClass?.Name?.Value;
+
 		public override string ToString ()
 		{
 			return string.Format ("InnerClass(InnerClass='{0}', OuterClass='{1}', InnerName='{2}', InnerClassAccessFlags={3})",

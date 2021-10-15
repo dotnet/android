@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -11,16 +12,45 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 
 	public class ClassFileFixture {
 
+		static void OnLog (TraceLevel level, int verbosity, string format, object[] args)
+		{
+			var message = string.Format (format, args);
+
+			// No "debug" messages from `Methods.cs` should be generated when parsing `.class` files.
+			if (message.StartsWith ("class-parse: method", StringComparison.OrdinalIgnoreCase)) {
+				Assert.Fail ($"TraceLevel={level}, Verbosity={verbosity}, Message={message}");
+			}
+		}
+
+		[SetUp]
+		public void CreateLogger ()
+		{
+			Log.OnLog   = OnLog;
+		}
+
+		[TearDown]
+		public void DestroyLogger ()
+		{
+			Log.OnLog   = null;
+		}
+
 		protected static ClassFile LoadClassFile (string resource)
 		{
 			using (var stream = GetResourceStream (resource)) {
+				if (stream == null) {
+					throw new InvalidOperationException ($"Could not find resource `{resource}`!");
+				}
 				return new ClassFile (stream);
 			}
 		}
 
 		protected static string LoadString (string resource)
 		{
-			using (var s = GetResourceStream (resource))
+			var s   = GetResourceStream (resource);
+			if (s == null) {
+				throw new InvalidOperationException ($"Could not find resource `{resource}`!");
+			}
+			using (s)
 			using (var r = new StreamReader (s))
 				return r.ReadToEnd ();
 		}

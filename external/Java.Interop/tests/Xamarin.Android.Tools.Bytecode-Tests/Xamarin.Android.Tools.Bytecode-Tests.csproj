@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj" />
+    <ProjectReference Include="$(XamarinAndroidToolsFullPath)\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +32,7 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaAnnotation.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaEnum.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%241.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%241MyStringList.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24ASC.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24PSC.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24RNC%24RPNC.class" />
@@ -45,25 +47,6 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\NonGenericGlobalType.class" />
   </ItemGroup>
 
-  <ItemGroup>
-    <TestJar Include="java\**\*.java" Exclude="java\java\util\Collection.java,java\android\annotation\NonNull.java" />
-    <TestJarNoParameters Include="java\java\util\Collection.java" />
-    <TestKotlinJar Include="kotlin\**\*.kt" />
-  </ItemGroup>
-
-  <Target Name="BuildClasses" BeforeTargets="BeforeBuild" Inputs="@(TestJar)" Outputs="@(TestJar->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')">
-    <MakeDir Directories="$(IntermediateOutputPath)classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -parameters $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; java/android/annotation/NonNull.java @(TestJar->'%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters->'%(Identity)', ' ')" />
-  </Target>
-
-  <!-- 
-      If the Kotlin compiler is available this step will compile .kt files into .class
-      files. Useful for writing new tests. It is not used by CI, you must commit the
-      resulting .class files.  
-  -->
-  <Target Name="BuildKotlinClasses" BeforeTargets="BeforeBuild" Inputs="@(TestKotlinJar)" Outputs="@(TestKotlinJar->'%(RecursiveDir)%(Filename).class')" Condition=" '$(KotlinCPath)' != '' ">
-    <Exec Command="&quot;$(KotlinCPath)&quot; @(TestKotlinJar->'%(Identity)', ' ') -d &quot;kotlin&quot;" />
-  </Target>
+  <Import Project="Xamarin.Android.Tools.Bytecode-Tests.targets" />
 
 </Project>
