@@ -12,21 +12,6 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			var msbuild = new MSBuildRunner (context);
-
-			string slnPath = Path.Combine (Configurables.Paths.ExternalDir, "debugger-libs", "debugger-libs.sln");
-			bool result = await msbuild.Run (
-				projectPath: slnPath,
-				logTag: "debugger-libs-restore",
-				arguments: new List <string> {
-				   "/t:Restore"
-			    },
-				binlogName: "prepare-debugger-libs-restore"
-			);
-
-			if (!result)
-				return false;
-
 			return await ExecuteOSSpecific (context);
 		}
 

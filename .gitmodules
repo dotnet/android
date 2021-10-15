@@ -6,10 +6,6 @@
     path = external/apksig
     url = https://android.googlesource.com/platform/tools/apksig
     branch = platform-tools-30.0.3
-[submodule "external/debugger-libs"]
-    path = external/debugger-libs
-    url = https://github.com/mono/debugger-libs
-    branch = main
 [submodule "external/Java.Interop"]
     path = external/Java.Interop
     url = https://github.com/xamarin/java.interop.git
@@ -21,10 +17,6 @@
 [submodule "external/mman-win32"]
     path = external/mman-win32
     url = https://github.com/alitrack/mman-win32.git
-    branch = master
-[submodule "external/nrefactory"]
-    path = external/nrefactory
-    url = https://github.com/xamarin/NRefactory.git
     branch = master
 [submodule "external/opentk"]
     path = external/opentk

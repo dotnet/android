@@ -28,15 +28,12 @@
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="2.4.5" />
     <PackageReference Include="MSBuild.StructuredLogger" Version="2.1.500" />
+    <PackageReference Include="xa-build-dependencies" Version="0.0.1" /> 
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
-    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj" />
-    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj" />
-    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj" />
-    <ProjectReference Include="..\..\external\nrefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj" />
   </ItemGroup>
 
   <Import Project="MSBuildDeviceIntegration.targets" />
