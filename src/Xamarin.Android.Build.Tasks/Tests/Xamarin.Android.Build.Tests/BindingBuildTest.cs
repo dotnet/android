@@ -596,6 +596,19 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
+		[TestCaseSource (nameof (ClassParseOptions))]
+		public void NothingToBind (string classParser)
+		{
+			var proj = new XamarinAndroidBindingProject {
+				AndroidClassParser = classParser,
+			};
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				b.AssertHasNoWarnings ();
+			}
+		}
+
+		[Test]
 		[Category ("DotNetIgnore")] //TODO: @(LibraryProjectProperties) not supported yet in .NET 5+
 		public void BugzillaBug11964 ()
 		{

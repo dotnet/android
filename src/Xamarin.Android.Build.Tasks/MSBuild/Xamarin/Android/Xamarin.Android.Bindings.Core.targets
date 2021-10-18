@@ -29,7 +29,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
   </PropertyGroup>
 
   <Target Name="_SetAndroidGenerateManagedBindings"
-      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' ">
+      Condition=" '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' ">
     <PropertyGroup>
       <!-- Used throughout to determine if C# binding-related targets should skip -->
       <_AndroidGenerateManagedBindings>true</_AndroidGenerateManagedBindings>
