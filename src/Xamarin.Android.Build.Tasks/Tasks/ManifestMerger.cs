@@ -30,6 +30,8 @@ namespace Xamarin.Android.Tasks
 
 		public string [] ManifestPlaceholders { get; set; }
 
+		public string ExtraArgs { get; set; }
+
 		string tempFile;
 		string responseFile;
 
@@ -97,6 +99,9 @@ namespace Xamarin.Android.Tasks
 					} else
 						Log.LogCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", ManifestPlaceholders)));
 				}
+			}
+			if (!string.IsNullOrEmpty (ExtraArgs)) {
+				sb.AppendLine (ExtraArgs);
 			}
 			sb.AppendLine ("--out");
 			sb.AppendLine (tempFile);
