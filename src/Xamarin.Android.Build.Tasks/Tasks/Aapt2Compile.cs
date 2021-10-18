@@ -15,7 +15,7 @@ using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
-	
+
 	public class Aapt2Compile : Aapt2 {
 		public override string TaskPrefix => "A2C";
 
@@ -37,8 +37,8 @@ namespace Xamarin.Android.Tasks {
 
 		protected override int GetRequiredDaemonInstances ()
 		{
-			return Math.Min ((ResourcesToCompile ?? ResourceDirectories).Length, DaemonMaxInstanceCount);
-		} 
+			return Math.Min ((ResourcesToCompile ?? ResourceDirectories)?.Length ?? 1, DaemonMaxInstanceCount);
+		}
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
@@ -56,6 +56,7 @@ namespace Xamarin.Android.Tasks {
 		void ProcessDirectory (ITaskItem item, object lockObject)
 		{
 			var flatFile = item.GetMetadata ("_FlatFile");
+			bool isArchive = false;
 			bool isDirectory = flatFile.EndsWith (".flata", StringComparison.OrdinalIgnoreCase);
 			if (string.IsNullOrEmpty (flatFile)) {
 				FileAttributes fa = File.GetAttributes (item.ItemSpec);
@@ -65,9 +66,13 @@ namespace Xamarin.Android.Tasks {
 			string fileOrDirectory = item.GetMetadata ("ResourceDirectory");
 			if (string.IsNullOrEmpty (fileOrDirectory) || !isDirectory)
 				fileOrDirectory = item.ItemSpec;
+			if (isDirectory && !Directory.Exists (fileOrDirectory)) {
+				LogWarning ($"Ignoring directory '{fileOrDirectory}' as it does not exist!");
+				return;
+			}
 			if (isDirectory && !Directory.EnumerateDirectories (fileOrDirectory).Any ())
 				return;
-			
+
 			string outputArchive = isDirectory ?  GetFullPath (FlatArchivesDirectory) : GetFullPath (FlatFilesDirectory);
 			string targetDir = item.GetMetadata ("_ArchiveDirectory");
 			if (!string.IsNullOrEmpty (targetDir)) {
@@ -83,6 +88,12 @@ namespace Xamarin.Android.Tasks {
 					filename = $"{filename}.flata";
 				outputArchive = Path.Combine (outputArchive, filename);
 				expectedOutputFile = outputArchive;
+				string archive = item.GetMetadata (ResolveLibraryProjectImports.ResourceDirectoryArchive);
+				if (!string.IsNullOrEmpty (archive) && File.Exists (archive)) {
+					LogDebugMessage ($"Found Compressed Resource Archive '{archive}'.");
+					fileOrDirectory = archive;
+					isArchive = true;
+				}
 			} else {
 				if (IsInvalidFilename (fileOrDirectory)) {
 					LogDebugMessage ($"Invalid filename, ignoring: {fileOrDirectory}");
@@ -90,7 +101,7 @@ namespace Xamarin.Android.Tasks {
 				}
 				expectedOutputFile = Path.Combine (outputArchive, flatFile);
 			}
-			RunAapt (GenerateCommandLineCommands (fileOrDirectory, isDirectory, outputArchive), expectedOutputFile);
+			RunAapt (GenerateCommandLineCommands (fileOrDirectory, isDirectory, isArchive, outputArchive), expectedOutputFile);
 			if (isDirectory) {
 				lock (lockObject)
 					archives.Add (new TaskItem (expectedOutputFile));
@@ -100,7 +111,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		protected string[] GenerateCommandLineCommands (string fileOrDirectory, bool isDirectory, string outputArchive)
+		protected string[] GenerateCommandLineCommands (string fileOrDirectory, bool isDirectory, bool isArchive, string outputArchive)
 		{
 			List<string> cmd = new List<string> ();
 			cmd.Add ("compile");
@@ -111,7 +122,7 @@ namespace Xamarin.Android.Tasks {
 				cmd.Add (GetFullPath (ResourceSymbolsTextFile));
 			}
 			if (isDirectory) {
-				cmd.Add ("--dir");
+				cmd.Add (isArchive ? "--zip" : "--dir");
 				cmd.Add (GetFullPath (fileOrDirectory).TrimEnd ('\\'));
 			} else
 				cmd.Add (GetFullPath (fileOrDirectory));

@@ -56,6 +56,10 @@ This file is used by all project types, including binding projects.
       <Output TaskParameter="ResolvedEnvironmentFiles" ItemName="LibraryEnvironments" />
       <Output TaskParameter="ResolvedResourceDirectoryStamps" ItemName="_LibraryResourceDirectoryStamps" />
     </ReadLibraryProjectImportsCache>
+    <ItemGroup>
+      <FileWrites Include="@(ResolvedResourceDirectories->'%(ResourceDirectoryArchive)')"
+          Condition=" '%(ResolvedResourceDirectories.ResourceDirectoryArchive)' != '' And Exists ('%(ResolvedResourceDirectories.ResourceDirectoryArchive)')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_BuildLibraryImportsCache"

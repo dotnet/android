@@ -61,9 +61,12 @@ namespace Xamarin.Android.Tasks
 
 		internal const string OriginalFile = "OriginalFile";
 		internal const string AndroidSkipResourceProcessing = "AndroidSkipResourceProcessing";
+
+		internal const string ResourceDirectoryArchive = "ResourceDirectoryArchive";
 		static readonly string [] knownMetadata = new [] {
 			OriginalFile,
-			AndroidSkipResourceProcessing
+			AndroidSkipResourceProcessing,
+			ResourceDirectoryArchive
 		};
 
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap();
@@ -177,6 +180,7 @@ namespace Xamarin.Android.Tasks
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string nativeimportsDir = Path.Combine (outDirForDll, NativeImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");
+				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
 				string assetsDir = Path.Combine (importsDir, "assets");
 
 				// Skip already-extracted resources.
@@ -194,6 +198,7 @@ namespace Xamarin.Android.Tasks
 					if (Directory.Exists (resDir)) {
 						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, assemblyPath },
+							{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
 						});
 						if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceProcessing), out skip) && skip)
 							taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
@@ -290,8 +295,11 @@ namespace Xamarin.Android.Tasks
 							// which resulted in missing resource issue.
 							// Here we replaced copy with use of '-S' option and made it to work.
 							if (Directory.Exists (resDir)) {
+								CreateResourceArchive (resDir, resDirArchive);
 								var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
-									{ OriginalFile, assemblyPath }
+									{ OriginalFile, assemblyPath },
+									{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
+
 								});
 								if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceProcessing), out skip) && skip)
 									taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
@@ -335,6 +343,7 @@ namespace Xamarin.Android.Tasks
 				string outDirForDll = Path.Combine (OutputImportDirectory, aarIdentityName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");
+				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
 				string assetsDir = Path.Combine (importsDir, "assets");
 
 				bool updated = false;
@@ -357,6 +366,7 @@ namespace Xamarin.Android.Tasks
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
 							{ AndroidSkipResourceProcessing, skipProcessing },
+							{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
 						}));
 					}
 					if (Directory.Exists (assetsDir))
@@ -406,6 +416,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				if (Directory.Exists (resDir)) {
+					CreateResourceArchive (resDir, resDirArchive);
 					var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
 					if (string.IsNullOrEmpty (skipProcessing)) {
 						skipProcessing = "True";
@@ -413,6 +424,7 @@ namespace Xamarin.Android.Tasks
 					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 						{ OriginalFile, aarFullPath },
 						{ AndroidSkipResourceProcessing, skipProcessing },
+						{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
 					}));
 				}
 				if (Directory.Exists (assetsDir))
@@ -420,6 +432,16 @@ namespace Xamarin.Android.Tasks
 						{ OriginalFile, aarFullPath },
 					}));
 			}
+		}
+
+		void CreateResourceArchive (string resDir, string outputFile)
+		{
+			var fileMode = File.Exists (outputFile) ? FileMode.Open : FileMode.CreateNew;
+			Files.ArchiveZipUpdate (outputFile, f => {
+				using (var zip = new ZipArchiveEx (f, fileMode)) {
+					zip.AddDirectory (resDir, "res");
+				}
+			});
 		}
 
 		static void AddJar (IDictionary<string, ITaskItem> jars, string destination, string path, string originalFile = null)
