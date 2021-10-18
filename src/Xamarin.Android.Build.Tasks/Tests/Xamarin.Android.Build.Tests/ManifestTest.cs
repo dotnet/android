@@ -535,6 +535,7 @@ namespace Bug12935
 				Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ").
 				Replace ("package=\"${PACKAGENAME}\"", "package=\"${Package}\"");
 			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1=val1;Package=com.foo.bar");
+			proj.SetProperty ("AndroidManifestMergerExtraArgs", "--log VERBOSE");
 			using (var builder = CreateApkBuilder ()) {
 				builder.Build (proj);
 				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
