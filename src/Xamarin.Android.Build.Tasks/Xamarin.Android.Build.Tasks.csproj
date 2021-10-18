@@ -445,8 +445,6 @@
     </ProjectReference>
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
   </ItemGroup>
 
   <!-- Import Microsoft.NET.Sdk targets before our targets so we can override behavior -->

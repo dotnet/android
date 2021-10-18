@@ -316,7 +316,7 @@ namespace MonoDroid.Tuner {
 			if (marshalType == null || !marshalType.HasMethods)
 				return false;
 
-			var marshalMethodName = MarshalMemberBuilder.GetMarshalMethodName (nativeMethod, signature);
+			var marshalMethodName = GetMarshalMethodName (nativeMethod, signature);
 			if (marshalMethodName == null)
 				return false;
 
@@ -327,6 +327,24 @@ namespace MonoDroid.Tuner {
 				}
 
 			return false;
+		}
+
+		public static string GetMarshalMethodName (string name, string signature)
+		{
+			if (name == null)
+				throw new ArgumentNullException (nameof(name));
+
+			if (signature == null)
+				throw new ArgumentNullException (nameof(signature));
+
+			var idx1 = signature.IndexOf ('(');
+			var idx2 = signature.IndexOf (')');
+			var arguments = signature;
+
+			if (idx1 >= 0 && idx2 >= idx1)
+				arguments = arguments.Substring (idx1 + 1, idx2 - idx1 - 1);
+
+			return $"n_{name}{(string.IsNullOrEmpty (arguments) ? "" : "_")}{arguments?.Replace ('/', '_')?.Replace (';', '_')}";
 		}
 
 		public static Instruction CreateLoadArraySizeOrOffsetInstruction (int intValue)
