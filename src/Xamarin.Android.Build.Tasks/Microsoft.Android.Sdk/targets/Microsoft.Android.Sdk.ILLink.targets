@@ -20,6 +20,7 @@ This file contains the .NET 5-specific targets to customize ILLink
         -->
       <_TrimmerDumpDependencies Condition=" '$(LinkerDumpDependencies)' == 'true' ">true</_TrimmerDumpDependencies>
       <_AndroidLinkerCustomStepAssembly>$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll</_AndroidLinkerCustomStepAssembly>
+      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
     </PropertyGroup>
     <ItemGroup>
       <RuntimeHostConfigurationOption Include="Android.Runtime.AndroidEnvironment.VSAndroidDesignerIsEnabled"
