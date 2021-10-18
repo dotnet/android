@@ -15,29 +15,21 @@ namespace Xamarin.Android.Prepare
 			var msbuild = new MSBuildRunner (context);
 
 			string slnPath = Path.Combine (Configurables.Paths.ExternalDir, "debugger-libs", "debugger-libs.sln");
-			bool result = await msbuild.Run (
+			bool result = await msbuild.Restore (
 				projectPath: slnPath,
 				logTag: "debugger-libs-restore",
-				arguments: new List <string> {
-				   "/t:Restore"
-			    },
 				binlogName: "prepare-debugger-libs-restore"
 			);
 
 			if (!result)
 				return false;
 
-			return await ExecuteOSSpecific (context);
+			return await msbuild.Restore (
+				projectPath: Path.Combine (Configurables.Paths.ExternalXamarinAndroidToolsSln),
+				logTag: "xat-restore",
+				binlogName: "prepare-xat-restore"
+			);
 		}
 
-		async Task<bool> NuGetRestore (NuGetRunner nuget, string solutionFilePath)
-		{
-			if (!await nuget.Restore (solutionFilePath)) {
-				Log.ErrorLine ($"NuGet restore for solution {solutionFilePath} failed");
-				return false;
-			}
-
-			return true;
-		}
 	}
 }

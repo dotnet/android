@@ -10,29 +10,22 @@ namespace Xamarin.Android.Prepare
 			: base ("Preparing local components")
 		{}
 
-		async Task<bool> Restore (MSBuildRunner msbuild, string csprojPath, string logTag, string binLogName, string additionalArgument = null)
-		{
-			var args = new List<string> { "/t:Restore" };
-			if (additionalArgument != null)
-				args.Add (additionalArgument);
-
-			return await msbuild.Run (
-				projectPath: csprojPath,
-				logTag: logTag,
-				arguments: args,
-				binlogName: binLogName
-			);
-		}
 
 		protected override async Task<bool> Execute(Context context)
 		{
 			var msbuild = new MSBuildRunner (context);
-
 			string xfTestPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "tests", "Xamarin.Forms-Performance-Integration", "Xamarin.Forms.Performance.Integration.csproj");
-			if (!await Restore (msbuild, xfTestPath, "xfperf", "prepare-restore"))
+
+			if (!await msbuild.Restore (projectPath: xfTestPath, logTag: "xfperf", binlogName: "prepare-local"))
 				return false;
 
-			return await Restore (msbuild, xfTestPath, "xfperf", "prepare-restore", "/p:BundleAssemblies=true");
+			// The Xamarin.Forms PackageReference version varies based on the value of $(BundleAssemblies)
+			return await msbuild.Restore (
+				projectPath: xfTestPath,
+				logTag: "xfperfbundle",
+				arguments: new List<string> { "-p:BundleAssemblies=true" },
+				binlogName: "prepare-local-bundle"
+			);
 		}
 	}
 }

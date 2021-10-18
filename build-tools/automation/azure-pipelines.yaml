@@ -423,10 +423,6 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-external-git-dependencies
 
-    - script: make prepare PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make prepare
-
     - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make jenkins

@@ -7,8 +7,8 @@ namespace Xamarin.Android.Prepare
 {
 	partial class MSBuildRunner : ToolRunner
 	{
-		protected override string DefaultToolExecutableName => "msbuild";
-		protected override string ToolName                  => "MSBuild";
+		protected override string DefaultToolExecutableName => "dotnet";
+		protected override string ToolName                  => "dotnet";
 
 		public List<string> StandardArguments { get; }
 
@@ -18,8 +18,8 @@ namespace Xamarin.Android.Prepare
 			ProcessTimeout = TimeSpan.FromMinutes (30);
 
 			StandardArguments = new List<string> {
-				$"/p:Configuration={context.Configuration}",
-				"/restore",
+				"build", // dotnet build includes implicit restore
+				$"-p:Configuration={context.Configuration}",
 			};
 		}
 
@@ -32,11 +32,12 @@ namespace Xamarin.Android.Prepare
 				workingDirectory = BuildPaths.XamarinAndroidSourceRoot;
 
 			ProcessRunner runner = CreateProcessRunner ();
+
 			AddArguments (runner, StandardArguments);
 			if (!String.IsNullOrEmpty (binlogName)) {
 				string logPath = Utilities.GetRelativePath (workingDirectory!, Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{Context.BuildTimeStamp}-{binlogName}.binlog"));
-				runner.AddArgument ("/v:normal");
-				runner.AddQuotedArgument ($"/bl:{logPath}");
+				runner.AddArgument ("-v:n");
+				runner.AddQuotedArgument ($"-bl:{logPath}");
 			}
 			AddArguments (runner, arguments);
 			runner.AddQuotedArgument (Utilities.GetRelativePath (workingDirectory!, projectPath));
@@ -58,6 +59,21 @@ namespace Xamarin.Android.Prepare
 			} finally {
 				StopTwiddler ();
 			}
+		}
+
+		public async Task<bool> Restore (string projectPath, string logTag, List<string>? arguments = null, string? binlogName = null, string? workingDirectory = null)
+		{
+			var args = new List<string> { "-t:Restore" };
+			if (arguments != null)
+				args.AddRange (arguments);
+
+			return await Run (
+				projectPath: projectPath,
+				logTag: logTag,
+				arguments: args,
+				binlogName: binlogName,
+				workingDirectory: workingDirectory
+			);
 		}
 
 		protected override TextWriter CreateLogSink (string? logFilePath)

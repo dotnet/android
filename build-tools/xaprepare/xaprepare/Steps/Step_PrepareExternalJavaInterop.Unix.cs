@@ -16,11 +16,11 @@ namespace Xamarin.Android.Prepare
 			var make = new MakeRunner (context) {
 				NoParallelJobs = true
 			};
-			var result = await make.Run (
-				logTag: "java-interop-prepare",
+			return await make.Run (
+				logTag: "java-interop-prepare-core",
 				workingDirectory: javaInteropDir,
 				arguments: new List <string> {
-					"prepare",
+					"prepare-core",
 					$"CONFIGURATION={context.Configuration}",
 					$"JI_JAVA_HOME={context.OS.JavaHome}",
 					$"JAVA_HOME={context.OS.JavaHome}",
@@ -28,21 +28,6 @@ namespace Xamarin.Android.Prepare
 					$"DOTNET_TOOL_PATH={dotnetTool}"
 				}
 			);
-			if (!result)
-				return false;
-
-			Log.StatusLine ();
-			result = await make.Run (
-				logTag: "java-interop-props",
-				workingDirectory: javaInteropDir,
-				arguments: new List <string> {
-					$"bin/Build{context.Configuration}/JdkInfo.props",
-					$"CONFIGURATION={context.Configuration}",
-					$"JI_MAX_JDK={Configurables.Defaults.MaxJDKVersion}",
-					$"DOTNET_TOOL_PATH={dotnetTool}"
-				}
-			);
-			return result;
 		}
 	}
 }
