@@ -33,34 +33,29 @@ resources:
 
 # Global variables
 variables:
-  XA.Jdk8.Folder: jdk-1.8
-  XA.Jdk11.Folder: jdk-11
-  NuGetArtifactName: nuget-unsigned
-  InstallerArtifactName: installers-unsigned
-  TestAssembliesArtifactName: test-assemblies
-  NUnitConsoleVersion: 3.11.1
-  DotNet6Version: 6.0.100-preview.3.21202.5
-  HostedMacImage: macOS-10.15
-  HostedWinVS2019: Hosted Windows 2019 with VS2019
-  VSEngWinVS2019: android-win-2019
-  VSEngMicroBuild2019: VSEngSS-MicroBuild2019-1ES
+- template: yaml-templates/variables.yaml
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
   # - This is a non-fork branch with name containing "mono-" (for Mono bumps)
-  IsMonoBranch: $[and(ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
-  RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
-  DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != ProfiledAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger & TestCategory != SystemApplication'
-  NUnit.NumberOfTestWorkers: 4
-  GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
-  CONVERT_JAVADOC_TO_XMLDOC: $[ne(variables['Build.DefinitionName'], 'Xamarin.Android-PR')]
-  ${{ if and(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest')) }}:
-    MicroBuildSignType: Real
-    VSEngMacBuildPool: VSEng-Xamarin-RedmondMac-Android-Trusted
-  ${{ if or(ne(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.Reason'], 'PullRequest')) }}:
-    MicroBuildSignType: Test
-    VSEngMacBuildPool: VSEng-Xamarin-RedmondMac-Android-Untrusted
-  TeamName: XamarinAndroid
+- name: IsMonoBranch
+  value: $[and(ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
+- name: RunAllTests
+  value: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
+- name: DotNetNUnitCategories
+  value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != ProfiledAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger & TestCategory != SystemApplication'
+- name: CONVERT_JAVADOC_TO_XMLDOC
+  value: $[ne(variables['Build.DefinitionName'], 'Xamarin.Android-PR')]
+- ${{ if and(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest')) }}:
+  - name: MicroBuildSignType
+    value: Real
+  - name: VSEngMacBuildPool
+    value: VSEng-Xamarin-RedmondMac-Android-Trusted
+- ${{ if or(ne(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.Reason'], 'PullRequest')) }}:
+  - name: MicroBuildSignType
+    value: Test
+  - name: VSEngMacBuildPool
+    value: VSEng-Xamarin-RedmondMac-Android-Untrusted
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
