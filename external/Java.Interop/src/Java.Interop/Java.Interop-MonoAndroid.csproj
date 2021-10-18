@@ -17,6 +17,7 @@
     <LangVersion>8.0</LangVersion>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>0.1.0.0</Version>
   </PropertyGroup>
   <Import Project="..\..\Directory.Build.props" />
   <PropertyGroup>

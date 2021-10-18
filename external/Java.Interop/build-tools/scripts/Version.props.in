@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <Version>@VERSION@</Version>
+    <Version Condition=" '$(Version)' == '' ">@VERSION@</Version>
     <InformationalVersion>@VERSION@ git-rev-head:@COMMIT@ git-branch:@BRANCH@</InformationalVersion>
     <Company>Microsoft Corporation</Company>
     <Copyright>Microsoft Corporation</Copyright>
