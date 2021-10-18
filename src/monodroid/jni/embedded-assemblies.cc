@@ -375,8 +375,9 @@ force_inline MonoAssembly*
 EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
 {
 	size_t len = name.length ();
+	bool have_dll_ext = utils.ends_with (name, SharedConstants::DLL_EXTENSION);
 
-	if (utils.ends_with (name, SharedConstants::DLL_EXTENSION)) {
+	if (have_dll_ext) {
 		len -= sizeof(SharedConstants::DLL_EXTENSION) - 1;
 	}
 
@@ -444,10 +445,12 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	uint8_t *assembly_data;
 	uint32_t assembly_data_size;
 
-	// AOT needs this since Mono will form the DSO name by appending the .so suffix to the assembly name passed to
-	// functions below and `monodroid_dlopen` uses the `.dll.so` extension to check whether we're being asked to load
-	// the AOTd code for an assembly.
-	name.append (SharedConstants::DLL_EXTENSION);
+	if (!have_dll_ext) {
+		// AOT needs this since Mono will form the DSO name by appending the .so suffix to the assembly name passed to
+		// functions below and `monodroid_dlopen` uses the `.dll.so` extension to check whether we're being asked to load
+		// the AOTd code for an assembly.
+		name.append (SharedConstants::DLL_EXTENSION);
+	}
 
 	get_assembly_data (assembly_runtime_info, assembly_data, assembly_data_size);
 	MonoImage *image = loader (assembly_data, assembly_data_size, name.get ());

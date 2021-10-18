@@ -327,10 +327,9 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 	}
 	pname.append (name, name_len);
 
-	constexpr char dll_extension[] = ".dll";
-	constexpr size_t dll_extension_len = sizeof(dll_extension) - 1;
+	constexpr size_t dll_extension_len = sizeof(SharedConstants::DLL_EXTENSION) - 1;
 
-	bool is_dll = utils.ends_with (name, dll_extension);
+	bool is_dll = utils.ends_with (name, SharedConstants::DLL_EXTENSION);
 	size_t file_name_len = pname.length () + 1;
 	if (!is_dll)
 		file_name_len += dll_extension_len;
@@ -344,7 +343,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		static_local_string<SENSIBLE_PATH_MAX> fullpath (override_dir_len + file_name_len);
 		utils.path_combine (fullpath, override_dir, override_dir_len, pname.get (), pname.length ());
 		if (!is_dll) {
-			fullpath.append (dll_extension, dll_extension_len);
+			fullpath.append (SharedConstants::DLL_EXTENSION, dll_extension_len);
 		}
 
 		log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", fullpath.get ());
