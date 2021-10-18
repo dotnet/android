@@ -39,8 +39,9 @@ namespace Xamarin.Android.Tasks
 		{
 			tempFile = OutputManifestFile + ".tmp";
 			responseFile = Path.Combine (Path.GetDirectoryName (OutputManifestFile), "manifestmerger.rsp");
+			bool result = false;
 			try {
-				bool result = base.Execute ();
+				result = base.Execute ();
 				if (!result)
 					return result;
 				var m = new ManifestDocument (tempFile);
@@ -58,7 +59,7 @@ namespace Xamarin.Android.Tasks
 			} finally {
 				if (File.Exists (tempFile))
 					File.Delete (tempFile);
-				if (File.Exists (responseFile))
+				if (File.Exists (responseFile) && result)
 					File.Delete (responseFile);
 			}
 		}
@@ -101,7 +102,9 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			if (!string.IsNullOrEmpty (ExtraArgs)) {
-				sb.AppendLine (ExtraArgs);
+				foreach (var entry in ExtraArgs.Split (new char[] { ' ' })) {
+					sb.AppendLine (entry);
+				}
 			}
 			sb.AppendLine ("--out");
 			sb.AppendLine (tempFile);
@@ -112,8 +115,9 @@ namespace Xamarin.Android.Tasks
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
-			if (ExitCode != 0)
+			if (ExitCode > 0) {
 				Log.LogCodedError (DefaultErrorCode, singleLine);
+			}
 			base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}
