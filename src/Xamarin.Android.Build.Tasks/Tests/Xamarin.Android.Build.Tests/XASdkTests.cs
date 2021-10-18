@@ -646,24 +646,24 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Publish (), "first `dotnet publish` should succeed");
+			dotnet.AssertHasNoWarnings ();
 
 			var publishDirectory = Path.Combine (FullProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
-			string ext = isRelease ? "aab" : "apk";
-			var apk = Path.Combine (publishDirectory, $"{proj.PackageName}.{ext}");
-			var apkSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.{ext}");
-			FileAssert.Exists (apk);
+			var apk = Path.Combine (publishDirectory, $"{proj.PackageName}.apk");
+			var apkSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk");
+			// NOTE: the unsigned .apk doesn't exist when $(AndroidPackageFormats) is `aab;apk`
+			if (!isRelease) {
+				FileAssert.Exists (apk);
+			}
 			FileAssert.Exists (apkSigned);
 
-			Assert.IsTrue (dotnet.Publish (parameters: new [] { "AndroidPackageFormat=aab" }), $"second `dotnet publish` should succeed");
-			var aab = Path.Combine (publishDirectory, $"{proj.PackageName}.aab");
-			var aabSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab");
+			// NOTE: $(AndroidPackageFormats) defaults to `aab;apk` in Release
 			if (isRelease) {
-				FileAssert.Exists (apkSigned);
-			} else {
-				FileAssert.DoesNotExist (apkSigned);
+				var aab = Path.Combine (publishDirectory, $"{proj.PackageName}.aab");
+				var aabSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab");
+				FileAssert.Exists (aab);
+				FileAssert.Exists (aabSigned);
 			}
-			FileAssert.Exists (aab);
-			FileAssert.Exists (aabSigned);
 		}
 
 		[Test]

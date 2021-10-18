@@ -21,7 +21,9 @@ This file contains the implementation for 'dotnet publish'.
 
   <Target Name="_CalculateAndroidFilesToPublish">
     <ItemGroup>
-      <_AndroidFilesToPublish Include="$(OutputPath)*.$(AndroidPackageFormat)" />
+      <_AllPackageFormats Include="$(AndroidPackageFormat);$(AndroidPackageFormats)" />
+      <_AndroidPackageFormats Include="@(_AllPackageFormats->Distinct())" />
+      <_AndroidFilesToPublish Include="$(OutputPath)*.%(_AndroidPackageFormats.Identity)" />
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
       <ResolvedFileToPublish Include="@(_AndroidFilesToPublish)" RelativePath="%(FileName)%(Extension)" />
     </ItemGroup>
