@@ -96,7 +96,7 @@ AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[] = {
 		.debug_info_data = nullptr,
 		.config_data = nullptr,
 		.descriptor = nullptr,
-	}
+	},
 };
 
 AssemblyStoreRuntimeData assembly_stores[] = {
