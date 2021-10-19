@@ -205,8 +205,7 @@ namespace Xamarin.Android.Tasks
 		{
 			CodeDomProvider provider = CodeDomProvider.CreateProvider (language);
 
-			string code = null;
-			using (var o = new StringWriter ()) {
+			using (var o = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				var options = new CodeGeneratorOptions () {
 					BracingStyle = "C",
 					IndentString = "\t",
@@ -240,11 +239,12 @@ namespace Xamarin.Android.Tasks
 				if (isCSharp)
 					provider.GenerateCodeFromCompileUnit(new CodeSnippetCompileUnit("#pragma warning restore 1591"), o, options);
 
-				code = o.ToString ();
-			}
-
-			if (Files.CopyIfStringChanged (code, file)) {
-				Log.LogDebugMessage ($"Writing to: {file}");
+				o.Flush ();
+				if (Files.CopyIfStreamChanged (o.BaseStream, file)) {
+					Log.LogDebugMessage ($"Writing to: {file}");
+				} else {
+					Log.LogDebugMessage ($"Up to date: {file}");
+				}
 			}
 		}
 

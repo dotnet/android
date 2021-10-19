@@ -987,6 +987,7 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceFlagFile="$(_AndroidResFlagFile)"
 		Condition="Exists ('$(MonoAndroidResourcePrefix)')"
 	/>
+	<Touch Condition="Exists ('$(_AndroidManagedResourceDesignerFile)')" Files="$(_AndroidManagedResourceDesignerFile)" />
 	<ItemGroup>
 		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
 		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == 'Resources\Resource.designer.cs'"/>
