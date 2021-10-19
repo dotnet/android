@@ -1,6 +1,8 @@
 #include <host-config.h>
 
+#if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 #include <compare>
+#endif
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -345,6 +347,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 force_inline const AssemblyStoreHashEntry*
 EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept
 {
+#if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 	hash_t entry_hash;
 	const AssemblyStoreHashEntry *ret;
 
@@ -367,6 +370,7 @@ EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreH
 			return ret;
 		}
 	}
+#endif // ndef __MINGW32__ || (def __MINGW32__ && __GNUC__ >= 10)
 
 	return nullptr;
 }

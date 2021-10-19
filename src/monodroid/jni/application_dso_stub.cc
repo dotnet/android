@@ -34,6 +34,10 @@ CompressedAssemblies compressed_assemblies = {
 	/*.descriptors = */ nullptr,
 };
 
+//
+// Config settings below **must** be valid for Desktop builds as the default `libxamarin-app.{dll,dylib,so}` is used by
+// the Designer
+//
 ApplicationConfig application_config = {
 	.uses_mono_llvm = false,
 	.uses_mono_aot = false,

@@ -292,11 +292,14 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 
 	std::vector<uint8_t>  buf (cd_size);
 	ZipEntryLoadState state {
-		.apk_fd     = fd,
-		.apk_name   = apk_name,
-		.prefix     = get_assemblies_prefix (),
-		.prefix_len = get_assemblies_prefix_length (),
-		.buf_offset = 0,
+		.apk_fd              = fd,
+		.apk_name            = apk_name,
+		.prefix              = get_assemblies_prefix (),
+		.prefix_len          = get_assemblies_prefix_length (),
+		.buf_offset          = 0,
+		.local_header_offset = 0,
+		.data_offset         = 0,
+		.file_size           = 0,
 	};
 
 	ssize_t nread = read (fd, buf.data (), static_cast<read_count_type>(buf.size ()));
