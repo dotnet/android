@@ -79,10 +79,10 @@ namespace xamarin::android
 			return _elems[n];
 		}
 
-		char _elems[Size];
+		char _elems[Size]{};
 	};
 
-	// MinGW 9 on the CI build bots has a bug in std::array which causes builds to fail with:
+	// MinGW 9 on the CI build bots has a bug in the gcc compiler which causes builds to fail with:
 	//
 	//  error G713F753E: ‘constexpr auto xamarin::android::concat_const(const char (&)[Length]...) [with long long unsigned int ...Length = {15, 7, 5}]’ called in a constant expression
 	//  ...
