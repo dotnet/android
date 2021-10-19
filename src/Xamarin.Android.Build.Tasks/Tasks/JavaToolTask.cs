@@ -14,10 +14,10 @@ namespace Xamarin.Android.Tasks
 	public abstract class JavaToolTask : AndroidToolTask
 	{
 		/*
-		Example Javac output for errors. Regex Matches on the first line, we then need to 
+		Example Javac output for errors. Regex Matches on the first line, we then need to
 		process the second line to get the column number so the IDE can correctly
-		mark where the error is. 
-		
+		mark where the error is.
+
 		TestMe.java:1: error: class, interface, or enum expected
 		public classo TestMe { }
 		^
@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 		*/
 		const string CodeErrorRegExString = @"(?<file>.+\.java):(?<line>\d+):(?<error>.+)";
 		/*
-		 
+
 		Sample OutOfMemoryError raised by java. RegEx matches the java.lang.* line of the error
 		and splits it into an exception and an error
 
@@ -80,6 +80,8 @@ namespace Xamarin.Android.Tasks
 
 		public virtual string DefaultErrorCode => null;
 
+		public string WorkingDirectory { get; set; }
+
 		protected override string ToolName {
 			get { return OS.IsWindows ? "java.exe" : "java"; }
 		}
@@ -98,6 +100,13 @@ namespace Xamarin.Android.Tasks
 				return !Log.HasLoggedErrors;
 			}
 			return base.HandleTaskExecutionErrors ();
+		}
+
+		protected override string GetWorkingDirectory ()
+		{
+			if (!string.IsNullOrEmpty (WorkingDirectory))
+				return WorkingDirectory;
+			return base.GetWorkingDirectory ();
 		}
 
 		protected override string GenerateFullPathToTool ()
@@ -155,7 +164,7 @@ namespace Xamarin.Android.Tasks
 					return true;
 				}
 				errorText.AppendLine (singleLine);
-			} 
+			}
 			return true;
 		}
 
@@ -173,7 +182,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogMessage (MessageImportance.High, singleLine);
 				errorLines.Add (singleLine);
 				return;
-			} 
+			}
 			base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}

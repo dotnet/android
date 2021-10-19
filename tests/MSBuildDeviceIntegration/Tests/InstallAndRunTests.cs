@@ -178,6 +178,29 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}) ;
 		}
 
+		[Test]
+		[Category ("UsesDevice"), Category ("SmokeTests")]
+		public void SmokeTestBuildAndRunWithSpecialCharacters ()
+		{
+			AssertHasDevices ();
+			var testName = "テスト";
+
+			var rootPath = Path.Combine (Root, "temp", TestName);
+			var proj = new XamarinFormsAndroidApplicationProject () {
+				ProjectName = testName,
+				IsRelease = true,
+			};
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetDefaultTargetDevice ();
+			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+				Assert.IsTrue (builder.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true), "Project should have run.");
+				var timeoutInSeconds = 120;
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds));
+			}
+		}
+
 		[Test, Category ("MonoSymbolicate")]
 		public void MonoSymbolicateNetStandardStackTrace ()
 		{

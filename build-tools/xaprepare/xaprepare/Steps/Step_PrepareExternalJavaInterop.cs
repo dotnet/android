@@ -12,7 +12,29 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			return await ExecuteOSSpecific (context);
+			// make prepare-core on Unix
+			var result = await ExecuteOSSpecific (context);
+			if (!result)
+				return false;
+
+			string javaInteropDir = context.Properties.GetRequiredValue (KnownProperties.JavaInteropFullPath);
+			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
+			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
+			var msbuild = new MSBuildRunner (context);
+
+			return await msbuild.Run (
+				projectPath: Path.Combine (javaInteropDir, "Java.Interop.sln"),
+				logTag: "java-interop-prepare",
+				arguments: new List<string> {
+				   "-t:Prepare",
+				   $"-p:MaximumJdkVersion={Configurables.Defaults.MaxJDKVersion}",
+				   $"-p:MaxJdkVersion={Configurables.Defaults.MaxJDKVersion}",
+				   $"-p:JdksRoot={context.OS.JavaHome}",
+				   $"-p:DotnetToolPath={dotnetTool}"
+				},
+				binlogName: "java-interop-prepare",
+				workingDirectory: javaInteropDir
+			);
 		}
 	}
 }

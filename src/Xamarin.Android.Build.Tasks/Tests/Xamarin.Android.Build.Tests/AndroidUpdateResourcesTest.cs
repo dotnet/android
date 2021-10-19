@@ -830,6 +830,7 @@ namespace Lib1 {
 					rawToDelete,
 				},
 			};
+			libProj.SetProperty ("Deterministic", "true");
 			var appProj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				ProjectName = "App1",

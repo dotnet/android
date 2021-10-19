@@ -33,17 +33,7 @@ resources:
 
 # Global variables
 variables:
-  RunningOnCI: true
-  XA.Build.Configuration: Release
-  XA.Jdk11.Folder: jdk-11
-  XA.Jdk8.Folder: jdk-1.8
-  NuGetArtifactName: nuget-unsigned
-  InstallerArtifactName: installers-unsigned
-  TestAssembliesArtifactName: test-assemblies
-  DotNet6Version: 6.0.100-preview.3.21202.5
-  HostedMacImage: macOS-10.15
-  GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
-  NUnit.NumberOfTestWorkers: 4
+- template: yaml-templates/variables.yaml
 
 stages:
 - stage: mac_build
