@@ -46,7 +46,6 @@ namespace Xamarin.Android.Tasks
 
 		public void Add (string apkName, AssemblyStoreAssemblyInfo storeAssembly)
 		{
-			log.LogMessage (MessageImportance.Low, $"Add: apkName == '{apkName}'");
 			if (String.IsNullOrEmpty (apkName)) {
 				throw new ArgumentException ("must not be null or empty", nameof (apkName));
 			}
@@ -72,13 +71,10 @@ namespace Xamarin.Android.Tasks
 
 			void SetIndexStore (AssemblyStore b)
 			{
-				log.LogMessage (MessageImportance.Low, $"Checking if {b} is an index store");
 				if (!b.IsIndexStore) {
-					log.LogMessage (MessageImportance.Low, $"  it is not (ID: {b.ID})");
 					return;
 				}
 
-				log.LogMessage (MessageImportance.Low, $"   it is");
 				if (indexStore != null) {
 					throw new InvalidOperationException ("Index store already set!");
 				}

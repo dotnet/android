@@ -24,7 +24,6 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Architecture-specific assembly cannot be added to an architecture-agnostic blob ({blobAssembly.FilesystemAssemblyPath})");
 			}
 
-			Log.LogMessage (MessageImportance.Low, $"AssemblyBlobGenerator: adding Common assembly {blobAssembly.FilesystemAssemblyPath}");
 			assemblies.Add (blobAssembly);
 		}
 
