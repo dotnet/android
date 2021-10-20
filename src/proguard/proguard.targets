@@ -1,8 +1,8 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_OutputJar>$(OutputPath)lib\proguard.jar</_OutputJar>
+    <_OutputJar>$(OutputPath)lib/proguard.jar</_OutputJar>
     <_OutputBat>$(OutputPath)bin\proguard.bat</_OutputBat>
-    <_OutputSh>$(OutputPath)bin\proguard.sh</_OutputSh>
+    <_OutputSh>$(OutputPath)bin/proguard.sh</_OutputSh>
     <_OutputLicense>$(OutputPath)license.md</_OutputLicense>
   </PropertyGroup>
   <ItemGroup>
@@ -13,25 +13,25 @@
       Inputs="$(MSBuildThisFile)"
       Outputs="@(_Outputs)">
     <Exec
-        Command="&quot;..\gradlew&quot; fatJar $(GradleArgs)"
+        Command="&quot;../gradlew&quot; fatJar $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(ProGuardSourceFullPath)\base"
+        WorkingDirectory="$(ProGuardSourceFullPath)/base"
     />
     <MakeDir Directories="$(OutputPath)" />
     <Copy
-        SourceFiles="..\..\external\proguard\lib\proguard.jar"
+        SourceFiles="../../external/proguard/lib/proguard.jar"
         DestinationFiles="$(_OutputJar)"
     />
     <Copy
-        SourceFiles="..\..\external\proguard\bin\proguard.bat"
+        SourceFiles="../../external/proguard/bin/proguard.bat"
         DestinationFiles="$(_OutputBat)"
     />
     <Copy
-        SourceFiles="..\..\external\proguard\bin\proguard.sh"
+        SourceFiles="../../external/proguard/bin/proguard.sh"
         DestinationFiles="$(_OutputSh)"
     />
     <Copy
-        SourceFiles="..\..\external\proguard\docs\md\license.md"
+        SourceFiles="../../external/proguard/docs/md/license.md"
         DestinationFiles="$(_OutputLicense)"
     />
     <Touch Files="@(_Outputs)" />
@@ -41,7 +41,7 @@
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(ProGuardSourceFullPath)\base"
+        WorkingDirectory="$(ProGuardSourceFullPath)/base"
     />
   </Target>
   <Target Name="CoreCompile" />

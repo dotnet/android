@@ -144,8 +144,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		// We do that by using Microsoft.DotNet.ApiCompat.dll
 		void ValidateApiCompat (string contractPath, bool validateAgainstReference)
 		{
-			var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "Microsoft.DotNet.ApiCompat.exe"));
-
 			var contractAssembly = new FileInfo (Path.Combine (contractPath, assemblyToValidate));
 			if (!contractAssembly.Exists) {
 				LogError ($"Contract assembly {assemblyToValidate} does not exists in the contract path.");
@@ -161,8 +159,17 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			for (int i = 0; i < 3; i++) {
 				using (var genApiProcess = new Process ()) {
 
-					genApiProcess.StartInfo.FileName = apiCompat.FullName;
-					genApiProcess.StartInfo.Arguments = $"\"{contractAssembly.FullName}\" -i \"{TargetImplementationPath}\" --allow-default-interface-methods ";
+					if (Environment.Version.Major >= 5) {
+						var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "..", "netcoreapp2.1", "Microsoft.DotNet.ApiCompat.dll"));
+						genApiProcess.StartInfo.FileName = "dotnet";
+						genApiProcess.StartInfo.Arguments = $"\"{apiCompat}\" ";
+					} else {
+						var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "Microsoft.DotNet.ApiCompat.exe"));
+						genApiProcess.StartInfo.FileName = apiCompat.FullName;
+					}
+
+					genApiProcess.StartInfo.Arguments += $"\"{contractAssembly.FullName}\" -i \"{TargetImplementationPath}\" --allow-default-interface-methods ";
+
 
 					// Verify if there is a file with acceptable issues.
 					var acceptableIssuesFile = new FileInfo (Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }.txt"));
