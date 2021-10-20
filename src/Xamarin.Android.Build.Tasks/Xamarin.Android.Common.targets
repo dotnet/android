@@ -2041,7 +2041,8 @@ because xbuild doesn't support framework reference assemblies.
       ProjectFullPath="$(MSBuildProjectFullPath)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)">
+      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+      UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle

@@ -67,12 +67,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssembliesBlob)
+		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssembliesBlob.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			if (!Builder.UseDotNet) {
 				proj.PackageReferences.Add (new Package {
@@ -88,6 +88,7 @@ namespace Xamarin.Android.Build.Tests
 					"Java.Interop.dll",
 					"Mono.Android.dll",
 					"rc.bin",
+					"System.Console.dll",
 					"System.Private.CoreLib.dll",
 					"System.Runtime.dll",
 					"System.Linq.dll",
@@ -108,7 +109,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk, usesAssembliesBlob);
+				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
 				List<string> existingFiles;
 				List<string> missingFiles;
 				List<string> additionalFiles;
