@@ -78,10 +78,35 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
+		void SetAssemblyAbiMetadata (string abi, string assetType, ITaskItem assembly, ITaskItem? symbol)
+		{
+			if (String.IsNullOrEmpty (abi) || String.Compare ("native", assetType, StringComparison.OrdinalIgnoreCase) != 0) {
+				return;
+			}
+
+			assembly.SetMetadata ("Abi", abi);
+			if (symbol != null) {
+				symbol.SetMetadata ("Abi", abi);
+			}
+		}
+
+		void SetAssemblyAbiMetadata (ITaskItem assembly, ITaskItem? symbol)
+		{
+			string assetType = assembly.GetMetadata ("AssetType");
+			string rid = assembly.GetMetadata ("RuntimeIdentifier");
+			if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) || String.Compare ("resources", assetType, StringComparison.OrdinalIgnoreCase) == 0) {
+				// Satellite assemblies are abi-agnostic, they shouldn't have the Abi metadata set
+				return;
+			}
+
+			SetAssemblyAbiMetadata (AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid), assetType, assembly, symbol);
+		}
+
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
 			foreach (var assembly in InputAssemblies) {
 				var symbol = GetOrCreateSymbolItem (symbols, assembly);
+				SetAssemblyAbiMetadata (assembly, symbol);
 				symbol?.SetDestinationSubPath ();
 				assembly.SetDestinationSubPath ();
 				assembly.SetMetadata ("FrameworkAssembly", IsFrameworkAssembly (assembly).ToString ());
@@ -175,9 +200,15 @@ namespace Xamarin.Android.Tasks
 		void SetDestinationSubDirectory (ITaskItem assembly, string fileName, ITaskItem? symbol)
 		{
 			var rid = assembly.GetMetadata ("RuntimeIdentifier");
-			// Satellite assemblies have `RuntimeIdentifier` set, but they shouldn't - they aren't specific to any architecture, therefore we need to check it here in
-			// order to avoid them getting the `Abi` metadata, which would put them in the arch-specific assembly blob.
-			if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) || String.Compare ("resources", assembly.GetMetadata ("AssetType"), StringComparison.OrdinalIgnoreCase) == 0) {
+			string assetType = assembly.GetMetadata ("AssetType");
+
+			// Satellite assemblies have `RuntimeIdentifier` set, but they shouldn't - they aren't specific to any architecture, so they should have none of the
+			// abi-specific metadata set
+			//
+			// Likewise, only abi-specific assemblies (with `AssetType=native` metadata set) should have the `Destination*` metadata set
+			if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) ||
+			    String.Compare ("resources", assetType, StringComparison.OrdinalIgnoreCase) == 0 ||
+			    String.Compare ("native", assetType, StringComparison.OrdinalIgnoreCase) != 0) {
 				rid = String.Empty;
 			}
 
@@ -186,13 +217,13 @@ namespace Xamarin.Android.Tasks
 				string destination = Path.Combine (assembly.GetMetadata ("DestinationSubDirectory"), abi);
 				assembly.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
 				assembly.SetMetadata ("DestinationSubPath", Path.Combine (destination, fileName));
-				assembly.SetMetadata ("Abi", abi);
 				if (symbol != null) {
 					destination = Path.Combine (symbol.GetMetadata ("DestinationSubDirectory"), abi);
 					symbol.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
 					symbol.SetMetadata ("DestinationSubPath", Path.Combine (destination, Path.GetFileName (symbol.ItemSpec)));
-					symbol.SetMetadata ("Abi", abi);
 				}
+
+				SetAssemblyAbiMetadata (abi, assetType, assembly, symbol);
 			} else {
 				Log.LogDebugMessage ($"Android ABI not found for: {assembly.ItemSpec}");
 				assembly.SetDestinationSubPath ();

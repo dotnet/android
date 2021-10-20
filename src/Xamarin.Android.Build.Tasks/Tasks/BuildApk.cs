@@ -324,8 +324,8 @@ namespace Xamarin.Android.Tasks
 
 		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
-			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
-			bool useAssemblyStores = appConfState != null ? appConfState.UseAssemblyStore : false;
+			object useAssemblyStoresState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal (RegisterAssemblyStoreState.RegisteredObjectKey, RegisteredTaskObjectLifetime.Build);
+			bool useAssemblyStores = useAssemblyStoresState != null ? (bool)useAssemblyStoresState : false;
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
 			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));

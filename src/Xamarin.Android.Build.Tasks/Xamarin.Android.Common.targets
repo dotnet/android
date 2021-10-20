@@ -92,6 +92,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.WriteLockFile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="GenerateCompressedAssembliesNativeSourceFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Unzip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.RegisterAssemblyStoreState" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
 <!--
 *******************************************
@@ -1553,8 +1554,13 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
+<Target Name="_RegisterAssemblyStoreState">
+  <RegisterAssemblyStoreState UseAssemblyStore="$(AndroidUseAssemblyStore)" />
+</Target>
+
 <PropertyGroup>
   <_GeneratePackageManagerJavaDependsOn>
+    _RegisterAssemblyStoreState;
     _GenerateJavaStubs;
     _ManifestMerger;
     _ConvertCustomView;
