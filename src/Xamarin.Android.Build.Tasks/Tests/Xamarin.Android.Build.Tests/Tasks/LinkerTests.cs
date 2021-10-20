@@ -211,20 +211,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RemoveDesigner ([Values (true, false)] bool usesAssemblyBlobs)
+		public void RemoveDesigner ([Values (true, false)] bool useAssemblyStore)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
 			proj.SetProperty ("AndroidLinkResources", "True");
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", useAssemblyStore.ToString ());
 			string assemblyName = proj.ProjectName;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
-				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
+				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
 				Assert.IsTrue (helper.Exists ($"assemblies/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
 				using (var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll")) {
 					stream.Position = 0;
@@ -237,7 +237,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LinkDescription ()
+		public void LinkDescription ([Values (true, false)] bool useAssemblyStore)
 		{
 			string assembly_name = Builder.UseDotNet ? "System.Console" : "mscorlib";
 			string linker_xml = "<linker/>";
@@ -252,6 +252,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			// So we can use Mono.Cecil to open assemblies directly
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
+			proj.SetProperty ("AndroidUseAssemblyStore", useAssemblyStore.ToString ());
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
@@ -270,17 +271,14 @@ $@"<linker>
 
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					var entry = zip.ReadEntry ($"assemblies/{assembly_name}.dll");
-					Assert.IsNotNull (entry, $"{assembly_name}.dll should exist in apk!");
-					using (var stream = new MemoryStream ()) {
-						entry.Extract (stream);
-						stream.Position = 0;
-						using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
-							var type = assembly.MainModule.GetType ("System.Console");
-							var method = type.Methods.FirstOrDefault (p => p.Name == "Beep");
-							Assert.IsNotNull (method, "System.Console.Beep should exist!");
-						}
+				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
+				Assert.IsTrue (helper.Exists ($"assemblies/{assembly_name}.dll"), $"{assembly_name}.dll should exist in apk!");
+				using (var stream = helper.ReadEntry ($"assemblies/{assembly_name}.dll")) {
+					stream.Position = 0;
+					using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
+						var type = assembly.MainModule.GetType ("System.Console");
+						var method = type.Methods.FirstOrDefault (p => p.Name == "Beep");
+						Assert.IsNotNull (method, "System.Console.Beep should exist!");
 					}
 				}
 			}

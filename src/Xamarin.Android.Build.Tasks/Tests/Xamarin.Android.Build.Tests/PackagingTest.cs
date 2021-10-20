@@ -851,9 +851,8 @@ namespace App1
 
 				var apk = Path.Combine (Root, appBuilder.ProjectDirectory,
 					app.OutputPath, $"{app.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ($"assemblies/es/{lib.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
-				}
+				var helper = new ArchiveAssemblyHelper (apk);
+				Assert.IsTrue (helper.Exists ($"assemblies/es/{lib.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
 			}
 		}
 
@@ -880,9 +879,8 @@ namespace App1
 
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
-				}
+				var helper = new ArchiveAssemblyHelper (apk);
+				Assert.IsTrue (helper.Exists ($"assemblies/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
 			}
 		}
 

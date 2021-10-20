@@ -39,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public string ArchivePath => archivePath;
 
-		public ArchiveAssemblyHelper (string archivePath, bool useAssemblyStores, string[] rids = null)
+		public ArchiveAssemblyHelper (string archivePath, bool useAssemblyStores = true, string[] rids = null)
 		{
 			if (String.IsNullOrEmpty (archivePath)) {
 				throw new ArgumentException ("must not be null or empty", nameof (archivePath));
