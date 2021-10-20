@@ -165,7 +165,7 @@ namespace Xamarin.Android.Tasks
 			bool WarnAboutDuplicateHash (string bitness, string assemblyName, ulong hash, HashSet<ulong> seenHashes)
 			{
 				if (seenHashes.Contains (hash)) {
-					Log.LogMessage (MessageImportance.High, "Duplicate {bitness}-bit hash 0x{hash} encountered for assembly {assemblyName}");
+					Log.LogMessage (MessageImportance.High, $"Duplicate {bitness}-bit hash 0x{hash} encountered for assembly {assemblyName}");
 					return true;
 				}
 

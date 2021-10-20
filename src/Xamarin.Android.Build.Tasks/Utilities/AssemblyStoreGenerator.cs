@@ -19,8 +19,9 @@ namespace Xamarin.Android.Tasks
 		readonly string archiveAssembliesPrefix;
 		readonly TaskLoggingHelper log;
 
-		// NOTE: when/if we have parallel BuildApk this should become a ConcurrentDictionary
-		readonly Dictionary<string, Store> stores;
+		// NOTE: when/if we have parallel BuildApk these should become concurrent collections
+		readonly Dictionary<string, Store> stores = new Dictionary<string, Store> (StringComparer.Ordinal);
+		readonly HashSet<string> seenAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 		AssemblyStore indexStore;
 
@@ -40,12 +41,16 @@ namespace Xamarin.Android.Tasks
 
 			this.archiveAssembliesPrefix = archiveAssembliesPrefix;
 			this.log = log;
-
-			stores = new Dictionary<string, Store> (StringComparer.Ordinal);
 		}
 
 		public void Add (string apkName, AssemblyStoreAssemblyInfo storeAssembly)
 		{
+			if (seenAssemblies.Contains (storeAssembly.FilesystemAssemblyPath)) {
+				log.LogMessage (MessageImportance.Low, $"Ignoring duplicate assembly {storeAssembly.FilesystemAssemblyPath} when adding to assembly store set '{apkName}'");
+				return;
+			}
+			seenAssemblies.Add (storeAssembly.FilesystemAssemblyPath);
+
 			if (String.IsNullOrEmpty (apkName)) {
 				throw new ArgumentException ("must not be null or empty", nameof (apkName));
 			}
