@@ -204,7 +204,6 @@ namespace Xamarin.Android.AssemblyStore
 			}
 
 			basePathInArchive = $"{basePathInArchive}/{baseName}.";
-			Logger (AssemblyStoreExplorerLogLevel.Info, $"basePathInArchive == '{basePathInArchive}'");
 			using (ZipArchive archive = ZipArchive.Open (archivePath, FileMode.Open)) {
 				ReadStoreSetFromArchive (archive, basePathInArchive);
 			}
@@ -212,11 +211,8 @@ namespace Xamarin.Android.AssemblyStore
 
 		void ReadStoreSetFromArchive (ZipArchive archive, string basePathInArchive)
 		{
-			Logger (AssemblyStoreExplorerLogLevel.Info, $"Reading entries from ZIP");
 			foreach (ZipEntry entry in archive) {
-				Logger (AssemblyStoreExplorerLogLevel.Info, $"  {entry.FullName}");
 				if (!entry.FullName.StartsWith (basePathInArchive, StringComparison.Ordinal)) {
-					Logger (AssemblyStoreExplorerLogLevel.Info, $"    not a blob, ignoring");
 					continue;
 				}
 

@@ -619,7 +619,7 @@ namespace Xamarin.Android.Build.Tests
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apkPath);
-			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore);
+			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore, rids);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
 			helper.AssertContainsEntry ($"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);

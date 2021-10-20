@@ -34,11 +34,12 @@ namespace Xamarin.Android.Build.Tests
 		readonly string archivePath;
 		readonly string assembliesRootDir;
 		bool useAssemblyStores;
+		bool haveMultipleRids;
 		List<string> archiveContents;
 
 		public string ArchivePath => archivePath;
 
-		public ArchiveAssemblyHelper (string archivePath, bool useAssemblyStores)
+		public ArchiveAssemblyHelper (string archivePath, bool useAssemblyStores, string[] rids = null)
 		{
 			if (String.IsNullOrEmpty (archivePath)) {
 				throw new ArgumentException ("must not be null or empty", nameof (archivePath));
@@ -46,6 +47,7 @@ namespace Xamarin.Android.Build.Tests
 
 			this.archivePath = archivePath;
 			this.useAssemblyStores = useAssemblyStores;
+			haveMultipleRids = rids != null && rids.Length > 1;
 
 			string extension = Path.GetExtension (archivePath) ?? String.Empty;
 			if (String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0) {
@@ -162,7 +164,7 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var asm in explorer.Assemblies) {
 				string prefix = storeEntryPrefix;
 
-				if (!String.IsNullOrEmpty (asm.Store.Arch)) {
+				if (haveMultipleRids &&!String.IsNullOrEmpty (asm.Store.Arch)) {
 					string arch = ArchToAbi[asm.Store.Arch];
 					prefix = $"{prefix}{arch}/";
 				}

@@ -91,6 +91,8 @@ namespace Xamarin.Android.Tasks
 
 		public string RuntimeConfigBinFilePath { get; set; }
 
+		public bool UseAssemblyStore { get; set; }
+
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -324,14 +326,12 @@ namespace Xamarin.Android.Tasks
 
 		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
-			object useAssemblyStoresState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal (RegisterAssemblyStoreState.RegisteredObjectKey, RegisteredTaskObjectLifetime.Build);
-			bool useAssemblyStores = useAssemblyStoresState != null ? (bool)useAssemblyStoresState : false;
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
 			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
 			AssemblyStoreGenerator storeGenerator;
 
-			if (useAssemblyStores) {
+			if (UseAssemblyStore) {
 				storeGenerator = new AssemblyStoreGenerator (AssembliesPath, Log);
 			} else {
 				storeGenerator = null;
@@ -361,7 +361,7 @@ namespace Xamarin.Android.Tasks
 			count = 0;
 			AddAssembliesFromCollection (ResolvedFrameworkAssemblies);
 
-			if (!useAssemblyStores) {
+			if (!UseAssemblyStore) {
 				return;
 			}
 
@@ -408,7 +408,7 @@ namespace Xamarin.Android.Tasks
 
 					// Add assembly
 					var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: false);
-					if (useAssemblyStores) {
+					if (UseAssemblyStore) {
 						storeAssembly = new AssemblyStoreAssemblyInfo (sourcePath, assemblyPath, assembly.GetMetadata ("Abi"));
 					} else {
 						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
@@ -416,7 +416,7 @@ namespace Xamarin.Android.Tasks
 
 					// Try to add config if exists
 					var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-					if (useAssemblyStores) {
+					if (UseAssemblyStore) {
 						storeAssembly.SetConfigPath (config);
 					} else {
 						AddAssemblyConfigEntry (apk, assemblyPath, config);
@@ -438,7 +438,7 @@ namespace Xamarin.Android.Tasks
 						}
 
 						if (!String.IsNullOrEmpty (symbolsPath)) {
-							if (useAssemblyStores) {
+							if (UseAssemblyStore) {
 								storeAssembly.SetDebugInfoPath (symbolsPath);
 							} else {
 								AddFileToArchiveIfNewer (apk, symbolsPath, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
@@ -446,7 +446,7 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 
-					if (useAssemblyStores) {
+					if (UseAssemblyStore) {
 						storeGenerator.Add (assemblyStoreApkName, storeAssembly);
 					} else {
 						count++;
