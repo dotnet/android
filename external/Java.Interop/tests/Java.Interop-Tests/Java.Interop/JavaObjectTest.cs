@@ -110,6 +110,8 @@ namespace Java.InteropTests
 
 #if !NO_GC_BRIDGE_SUPPORT
 		[Test]
+		// See: https://github.com/dotnet/runtime/issues/60638
+		[Category ("IgnoreInterpreter")]
 		public void Dispose_Finalized ()
 		{
 			var d = false;
