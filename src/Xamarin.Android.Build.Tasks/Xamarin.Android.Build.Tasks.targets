@@ -336,7 +336,7 @@
       <_ILRepackArgs>$(_ILRepackArgs) /lib:&quot;$(_NetstandardDir.TrimEnd('\'))&quot;</_ILRepackArgs> <!-- Path to netstandard.dll -->
     </PropertyGroup>
     <Exec
-      Command="&quot;$(ILRepack)&quot; $(_ILRepackArgs)"
+      Command="$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(ILRepack)&quot; $(_ILRepackArgs)"
       WorkingDirectory="$(OutputPath)"
     />
     <Touch

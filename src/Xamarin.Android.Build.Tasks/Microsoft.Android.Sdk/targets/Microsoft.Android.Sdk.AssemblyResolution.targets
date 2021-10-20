@@ -28,7 +28,6 @@ _ResolveAssemblies MSBuild target.
     <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
     <OutDir     Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutDir>
     <PublishDir>$(OutputPath)</PublishDir>
-    <_AndroidLinkFlag>$(_OuterIntermediateOutputPath)link.flag</_AndroidLinkFlag>
     <BuildDependsOn>_RemoveLegacyDesigner;$(BuildDependsOn)</BuildDependsOn>
     <!-- We don't want IncrementalClean to run here, or files get deleted -->
     <CoreBuildDependsOn>
@@ -69,7 +68,6 @@ _ResolveAssemblies MSBuild target.
       <_RIDs Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifiers)' != '' " />
     </ItemGroup>
     <PropertyGroup>
-      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">;_ProguardProjectConfiguration=$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
       <_AdditionalProperties>
         _ComputeFilesToPublishForRuntimeIdentifiers=true
         ;AppendRuntimeIdentifierToOutputPath=true
@@ -77,7 +75,6 @@ _ResolveAssemblies MSBuild target.
         ;_OuterIntermediateAssembly=@(IntermediateAssembly)
         ;_OuterOutputPath=$(OutputPath)
         ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
-        $(_ProguardProjectConfiguration)
       </_AdditionalProperties>
       <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>
     </PropertyGroup>
@@ -90,6 +87,12 @@ _ResolveAssemblies MSBuild target.
         Targets="_ComputeFilesToPublishForRuntimeIdentifiers">
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
+    <!-- Properties produced by the inner build in Microsoft.Android.Sdk.ILLink.targets -->
+    <PropertyGroup>
+      <_InnerIntermediateOutputPath>$(IntermediateOutputPath)%(_RIDs.Identity)\</_InnerIntermediateOutputPath>
+      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(_InnerIntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_AndroidLinkFlag>$(_InnerIntermediateOutputPath)link.flag</_AndroidLinkFlag>
+    </PropertyGroup>
     <ItemGroup>
       <_ResolvedAssemblyFiles Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
       <_ResolvedSymbolFiles   Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.pdb' " />

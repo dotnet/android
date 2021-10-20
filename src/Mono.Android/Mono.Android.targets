@@ -110,7 +110,7 @@
       Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.exe"
       Outputs="Android.Runtime\JNIEnv.g.cs">
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) ..\..\bin\Build$(Configuration)\jnienv-gen.exe -o Android.Runtime\JNIEnv.g.cs --use-java-interop"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;../../bin/Build$(Configuration)/jnienv-gen.exe&quot; -o Android.Runtime/JNIEnv.g.cs --use-java-interop"
     />
     <Touch Files="Android.Runtime\JNIEnv.g.cs" />
   </Target>
@@ -160,7 +160,7 @@
       <_Fixup>--fixup=metadata</_Fixup>
       <_Enums1>--preserve-enums --enumflags=enumflags --enumfields=map.csv --enummethods=methodmap.csv</_Enums1>
       <_Enums2>--enummetadata=$(IntermediateOutputPath)mcw\enummetadata</_Enums2>
-      <_Annotations>--annotations="$(AndroidSdkDirectory)\platform-tools\api\annotations.zip"</_Annotations>
+      <_Annotations>--annotations="$(AndroidSdkDirectory)/platform-tools/api/annotations.zip"</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
       <_Api>$(IntermediateOutputPath)mcw\api.xml</_Api>
@@ -253,8 +253,8 @@
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
     <CheckApiCompatibility
-        ApiCompatPath="$(XAPackagesDir)\microsoft.dotnet.apicompat\$(MicrosoftDotNetApiCompatPackageVersion)\tools\net472\"
-        CodeGenPath="$(XAPackagesDir)\microsoft.dotnet.genapi\$(MicrosoftDotNetApiCompatPackageVersion)\tools\net472\"
+        ApiCompatPath="$(XAPackagesDir)/microsoft.dotnet.apicompat/$(MicrosoftDotNetApiCompatPackageVersion)/tools/net472/"
+        CodeGenPath="$(XAPackagesDir)/microsoft.dotnet.genapi/$(MicrosoftDotNetApiCompatPackageVersion)/tools/net472/"
         ApiLevel="$(AndroidFrameworkVersion)"
         LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
         TargetImplementationPath="$(OutputPath)"
