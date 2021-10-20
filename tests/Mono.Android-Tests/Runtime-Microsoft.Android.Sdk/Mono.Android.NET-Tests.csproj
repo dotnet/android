@@ -26,6 +26,7 @@
     -->
     <ExcludeCategories>DotNetIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(RunAOTCompilation)' == 'true' ">$(ExcludeCategories):InetAccess</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(UseInterpreter)' == 'true' ">$(ExcludeCategories):IgnoreInterpreter</ExcludeCategories>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
