@@ -16,7 +16,7 @@ schedules:
     - main
     - d16-11
     - d17-0
-    - release/6.0.1xx-preview9
+    - release/6.0.1xx-preview10
 
 # External sources, scripts, tests, and yaml template files.
 resources:
