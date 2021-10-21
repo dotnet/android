@@ -380,10 +380,14 @@ namespace Xamarin.Android.Prepare
 			public static string NetcoreAppRuntimeAndroidX86         => GetCachedPath (ref netcoreAppRuntimeAndroidX86, () => GetNetcoreAppRuntimePath (ctx, "x86"));
 			public static string NetcoreAppRuntimeAndroidX86_64      => GetCachedPath (ref netcoreAppRuntimeAndroidX86_64, () => GetNetcoreAppRuntimePath (ctx, "x64"));
 
-			public static string MicrosoftNETWorkloadMonoToolChainDir => Path.Combine (
+			public static string MicrosoftNETWorkloadMonoPackageDir => Path.Combine (
 				XAPackagesDir,
 				$"microsoft.net.workload.mono.toolchain.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionBand)}",
-				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion),
+				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion)
+			);
+
+			public static string MicrosoftNETWorkloadMonoToolChainDir => Path.Combine (
+				MicrosoftNETWorkloadMonoPackageDir,
 				"data"
 			);
 
