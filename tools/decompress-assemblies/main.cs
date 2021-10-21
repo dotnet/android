@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 							Directory.CreateDirectory (outputDir);
 						}
 						using (var fs = File.Open (outputFile, FileMode.Create, FileAccess.Write)) {
-							fs.Write (assemblyBytes, 0, assemblyBytes.Length);
+							fs.Write (assemblyBytes, 0, decoded);
 							fs.Flush ();
 						}
 						Console.WriteLine ($"  uncompressed to: {outputFile}");
