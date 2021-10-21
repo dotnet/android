@@ -748,14 +748,6 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
       displayName: prepare java.interop
 
-    - task: MSBuild@1
-      displayName: create nuget.config for Mono.Android.NET_Tests
-      inputs:
-        solution: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:GenerateNuGetConfig
-      continueOnError: true
-
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
