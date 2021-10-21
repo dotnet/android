@@ -212,6 +212,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Options.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Options.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LineEditor.dll"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LineEditor.pdb"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.dll" />
