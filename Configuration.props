@@ -129,7 +129,6 @@
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.8.1</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>
-    <MauiFeedUrl>https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json</MauiFeedUrl>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
     <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
