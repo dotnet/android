@@ -7,6 +7,7 @@ using Xamarin.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -80,7 +81,7 @@ namespace Xamarin.Android.Build.Tests
 				InstantRunEnabled = false,
 			};
 			Assert.IsTrue (task.Execute (), "Task should have executed.");
-			AssertFileContentsMatch (Path.Combine (Root, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
+			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
 		}
 	}
 }

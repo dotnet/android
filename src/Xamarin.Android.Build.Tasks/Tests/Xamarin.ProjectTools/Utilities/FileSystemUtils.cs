@@ -46,7 +46,7 @@ namespace Xamarin.ProjectTools
 			}
 
 			bool isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
-			string nugetPath = Path.Combine (XABuildPaths.TestOutputDirectory, "NuGet.exe");
+			string nugetPath = Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "nuget", "NuGet.exe");
 
 			if (File.Exists (nugetPath)) {
 				var psi = new ProcessStartInfo (isWindows ? nugetPath : "mono") {

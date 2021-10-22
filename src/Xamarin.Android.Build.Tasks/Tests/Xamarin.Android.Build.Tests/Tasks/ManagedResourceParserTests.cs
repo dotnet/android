@@ -380,9 +380,11 @@ int xml myxml 0x7f140000
 			return task;
 		}
 
+		static string ExpectedOutputDir = Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected");
+
 		void AssertResourceDesigner (GenerateResourceDesigner task, string expectedFile)
 		{
-			var expected = Path.Combine (Root, "Expected", expectedFile);
+			var expected = Path.Combine (ExpectedOutputDir, expectedFile);
 
 			FileAssert.Exists (task.NetResgenOutputFile);
 			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
@@ -455,7 +457,7 @@ int xml myxml 0x7f140000
 			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
-			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
+			var expected = Path.Combine (ExpectedOutputDir, "GenerateDesignerFileExpected.cs");
 			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
 			// Update the id, and force the managed parser to re-parse the output
 			File.WriteAllText (Path.Combine (Root, path, "res", "layout", "main.xml"), Main.Replace ("@+id/textview.withperiod", "@+id/textview.withperiod2"));
@@ -737,7 +739,7 @@ int styleable ElevenAttributes_attr10 10";
 			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
-			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileWithElevenStyleableAttributesExpected.cs");
+			var expected = Path.Combine (ExpectedOutputDir, "GenerateDesignerFileWithElevenStyleableAttributesExpected.cs");
 			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}

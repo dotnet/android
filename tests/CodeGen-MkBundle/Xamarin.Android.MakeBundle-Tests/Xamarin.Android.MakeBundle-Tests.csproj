@@ -21,7 +21,8 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
-    <RelativeRootPath>..\..\..\..\..\..\..</RelativeRootPath>
+    <RelativeRootPath Condition=" '$(BUILD_SOURCESDIRECTORY)' != '' ">$(BUILD_SOURCESDIRECTORY)</RelativeRootPath>
+    <RelativeRootPath Condition=" !Exists('$(RelativeRootPath)') ">..\..\..\..\..\..\..</RelativeRootPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' != 'true' ">

@@ -16,7 +16,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{
-			var path = Path.Combine (Path.GetFullPath (XABuildPaths.TestOutputDirectory), "temp", TestName);
+			var path = Path.Combine (Root, "temp", TestName);
 			var step = new FixAbstractMethodsStep (new TypeDefinitionCache ());
 			var pipeline = new Pipeline ();
 
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FixAbstractMethodsStep_Explicit ()
 		{
-			var path = Path.Combine (Path.GetFullPath (XABuildPaths.TestOutputDirectory), "temp", TestName);
+			var path = Path.Combine (Root, "temp", TestName);
 			var step = new FixAbstractMethodsStep (new TypeDefinitionCache ());
 			var pipeline = new Pipeline ();
 

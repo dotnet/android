@@ -18,7 +18,8 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
-    <RelativeRootPath>..\..\..\..\..\..\..</RelativeRootPath>
+    <RelativeRootPath Condition=" '$(BUILD_SOURCESDIRECTORY)' != '' ">$(BUILD_SOURCESDIRECTORY)</RelativeRootPath>
+    <RelativeRootPath Condition=" !Exists('$(RelativeRootPath)') ">..\..\..\..\..\..\..</RelativeRootPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' != 'true' ">
@@ -102,7 +103,7 @@
 
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="EmbeddedDSO.projitems" />
-  <Import Project="$(RelativeRootPath)\build-tools\scripts\TestApks.targets" />
+  <Import Project="$(RelativeRootPath)\build-tools\scripts\TestApks.targets" Condition=" '$(UnitTestsMode)' != 'true' " />
 
   <Target Name="_GrantPermissions">
     <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)" />

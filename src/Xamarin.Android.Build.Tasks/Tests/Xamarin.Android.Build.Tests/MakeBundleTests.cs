@@ -18,7 +18,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[Category ("Node-2"), Category ("MkBundle"), Category ("StaticProject")]
 	[Parallelizable (ParallelScope.Children)]
-	public class MakeBundleTests
+	public class MakeBundleTests : BaseTest
 	{
 		sealed class LocalBuilder : Builder
 		{
@@ -70,7 +70,7 @@ namespace Xamarin.Android.Build.Tests
 		static MakeBundleTests ()
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeGen-MkBundle", "Xamarin.Android.MakeBundle-Tests"));
-			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeGen-MkBundle");
+			TestOutputDir = Path.Combine (SetUp.TestDirectoryRoot, "temp", "CodeGen-MkBundle");
 		}
 
 		[OneTimeSetUp]
