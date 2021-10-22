@@ -8,6 +8,10 @@ namespace Xamarin.Android.Prepare
 		public const string AndroidNdkVersion = "23";
 		public const string AndroidNdkPkgRevision = "23.0.7599858";
 
+		/*#############################################################################
+		When adding a new version to this, please also update xamarin-android-tools:
+		https://github.com/xamarin/xamarin-android-tools/blob/f2af06f2a2c1966011b6b04a113560de37041cbc/src/Xamarin.Android.Tools.AndroidSdk/AndroidVersions.cs#L142
+		##############################################################################*/
 		public static readonly List<AndroidPlatform> AllPlatforms = new List<AndroidPlatform> {
 			new AndroidPlatform (apiName: "",                       apiLevel: 1,  platformID: "1"),
 			new AndroidPlatform (apiName: "",                       apiLevel: 2,  platformID: "2"),
