@@ -98,15 +98,22 @@
     <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
 
+    <!-- Parse NuGet.config -->
+    <XmlPeek
+        XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config"
+        Query="/configuration/packageSources/add/@value">
+      <Output TaskParameter="Result" ItemName="_NuGetSources" />
+    </XmlPeek>
+
     <!-- dotnet workload install android-aot -->
     <PropertyGroup>
       <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
     </PropertyGroup>
     <ItemGroup>
+      <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
       <_InstallArguments Include="--skip-manifest-update" />
       <_InstallArguments Include="--verbosity diag" />
-      <_InstallArguments Include="--source &quot;$(OutputPath.TrimEnd('\'))&quot;" />
-      <_InstallArguments Include="--source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
+      <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
     <MakeDir Directories="$(_TempDirectory)" />

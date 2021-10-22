@@ -33,28 +33,4 @@
       DependsOnTargets="_CreateJavaInteropDllConfigs">
   </Target>
 
-  <Target Name="GenerateNuGetConfig" >
-    <PropertyGroup>
-      <LocalNupkgDirectory Condition=" '$(LocalNupkgDirectory)' == '' ">$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\</LocalNupkgDirectory>
-      <AndroidNETTestConfigOutputDir Condition=" '$(AndroidNETTestConfigOutputDir)' == '' ">$(MSBuildThisFileDirectory)Runtime-Microsoft.Android.Sdk\</AndroidNETTestConfigOutputDir>
-      <AndroidNETTestConfigOutputDir>$([MSBuild]::EnsureTrailingSlash($(AndroidNETTestConfigOutputDir)))</AndroidNETTestConfigOutputDir>
-      <NuGetConfigContent>
-<![CDATA[
-<configuration>
-  <packageSources>
-    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
-    <add key="local-xa" value="$(LocalNupkgDirectory)" />
-  </packageSources>
-</configuration>
-]]>
-      </NuGetConfigContent>
-    </PropertyGroup>
-
-    <WriteLinesToFile
-        File="$(AndroidNETTestConfigOutputDir)nuget.config"
-        Lines="$(NuGetConfigContent)"
-        Overwrite="true"
-    />
-  </Target>
-
 </Project>

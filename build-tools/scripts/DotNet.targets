@@ -55,7 +55,7 @@
     <ItemGroup>
       <_InstallArguments Include="--skip-manifest-update" />
       <_InstallArguments Include="--verbosity diag" />
-      <_InstallArguments Include="--source $(MauiFeedUrl)" />
+      <_InstallArguments Include="--configfile &quot;$(XamarinAndroidSourcePath)NuGet.config&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; workload install maui-android @(_InstallArguments, ' ')" WorkingDirectory="$(_TempDirectory)" />

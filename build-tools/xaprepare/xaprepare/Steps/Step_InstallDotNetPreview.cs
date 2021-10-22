@@ -34,6 +34,16 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
+			// Delete all relevant NuGet package install directories, as we could possibly be using a new runtime commit with a previously installed version (6.0.0)
+			var runtimeDirs = Directory.GetDirectories (Configurables.Paths.XAPackagesDir, "microsoft.netcore.app.runtime.mono.android*");
+			var packageDirsToRemove = new List<string> (runtimeDirs);
+			packageDirsToRemove.Add (Configurables.Paths.MicrosoftNETWorkloadMonoPackageDir);
+			foreach (var packageDir in packageDirsToRemove) {
+				if (Directory.Exists (packageDir)) {
+					Utilities.DeleteDirectory (packageDir);
+				}
+			}
+
 			// Install runtime packs associated with the SDK previously installed.
 			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
 			var logPath = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs.binlog");
