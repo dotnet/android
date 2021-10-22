@@ -159,14 +159,14 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.pdb"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LayoutBinding.cs" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.debug.so')"                     ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android-checked+asan.debug.so')"        ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android-checked+ubsan.debug.so')"       ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android-checked+asan.debug.so')"        ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android-checked+ubsan.debug.so')"       ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.release.so')"                   ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android-checked+asan.release.so')"      ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android-checked+ubsan.release.so')"     ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android-checked+asan.release.so')"      ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android-checked+ubsan.release.so')"     ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxa-internal-api.so')"                        ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxa-internal-api-checked+asan.so')"           ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxa-internal-api-checked+ubsan.so')"          ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxa-internal-api-checked+asan.so')"           ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxa-internal-api-checked+ubsan.so')"          ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-btls-shared.so')"                       ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-btls-shared.d.so')"                     ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-profiler-aot.so')"                      ExcludeFromAndroidNETSdk="true" />
@@ -179,8 +179,8 @@
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmonosgen-2.0.d.so')"                         ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libsqlite3_xamarin.so')"                        ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper.so')"               ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper-checked+asan.so')"  ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper-checked+ubsan.so')" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper-checked+asan.so')"  ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper-checked+ubsan.so')" ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libmono-btls-shared.so')"           ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libmono-profiler-aot.so')"          ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libmono-profiler-log.so')"          ExcludeFromAndroidNETSdk="true" />

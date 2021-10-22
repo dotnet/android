@@ -60,7 +60,7 @@ stages:
 
     - template: yaml-templates/commercial-build.yaml
       parameters:
-        makeMSBuildArgs: /p:EnableRoslynAnalyzers=true
+        makeMSBuildArgs: /p:EnableRoslynAnalyzers=true /p:EnableNativeAnalyzers=true
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -130,9 +130,31 @@ stages:
         testName: Mono.Android_Tests-$(avdApiLevel)-$(avdAbi)
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(XA.Build.Configuration).xml
-        extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi)
+        extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:UseASAN=true
         artifactName: Mono.Android_Tests-Signed.apk
         artifactFolder: Default
+
+    # On API 28 emulator, run forms integration test with ASAN and UBSAN runtime sanitizers
+    - ${{ if eq(variables['avdApiLevel'], '28') }}:
+      - template: yaml-templates/apk-instrumentation.yaml
+        parameters:
+          configuration: $(XA.Build.Configuration)
+          testName: Xamarin.Forms-Performance-Integration
+          project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+          testResultsFiles: TestResult-UseASAN-Xamarin.Forms_Performance_Integration-Signed-$(XA.Build.Configuration).xml
+          extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:UseASAN=true
+          artifactSource: bin/Test$(XA.Build.Configuration)/Xamarin.Forms_Performance_Integration-Signed.apk
+          artifactFolder: Default
+
+      - template: yaml-templates/apk-instrumentation.yaml
+        parameters:
+          configuration: $(XA.Build.Configuration)
+          testName: Xamarin.Forms-Performance-Integration
+          project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+          testResultsFiles: TestResult-UseUBSAN-Xamarin.Forms_Performance_Integration-Signed-$(XA.Build.Configuration).xml
+          extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:UseUBSAN=true
+          artifactSource: bin/Test$(XA.Build.Configuration)/Xamarin.Forms_Performance_Integration-Signed.apk
+          artifactFolder: Default
 
     - task: MSBuild@1
       displayName: shut down emulator

@@ -403,8 +403,12 @@ namespace Xamarin.Android.Prepare
 				flags.Append (String.Join (" ", command.ExtraOptions));
 			}
 
-			sw.WriteLine ($"{indent}<MakeDir Directories=\"{workingDirectory}\" />");
-			sw.WriteLine ($"{indent}<ItemGroup>");
+			var conditionString = (workingDirectory.IndexOf ("-asan", StringComparison.OrdinalIgnoreCase) >= 0
+				|| workingDirectory.IndexOf ("-ubsan", StringComparison.OrdinalIgnoreCase) >= 0)
+				? " Condition=\"'$(EnableNativeAnalyzers)' == 'true'\" " : string.Empty;
+
+			sw.WriteLine ($"{indent}<MakeDir Directories=\"{workingDirectory}\"{conditionString}/>");
+			sw.WriteLine ($"{indent}<ItemGroup{conditionString}>");
 			sw.WriteLine ($"{indent}  <_ConfigureRuntimeCommands Include=\"{itemName}\">");
 			sw.WriteLine ($"{indent}    <Command>$(CmakePath)</Command>");
 			WriteProperty (sw, $"{indent}    ", "Arguments", flags, replacements);
