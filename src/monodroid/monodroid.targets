@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
-      DependsOnTargets="_GenerateIncludeFiles;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_BuildHostRuntimes;ClangTidyCheck">
+      DependsOnTargets="_GenerateIncludeFiles;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_BuildHostRuntimes">
   </Target>
   <Target Name="_TestPinvokeTables" Condition=" '$(HostOS)' == 'Linux' And '$(RunningOnCI)' == 'true' ">
     <Exec
