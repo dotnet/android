@@ -1,4 +1,7 @@
 Compat issues with assembly Mono.Android:
+CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' exists on 'Android.Net.Wifi.WifiManager.RemovePasspointConfiguration(System.String)' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' exists on 'Android.Telecom.TelecomManager.GetLine1Number(Android.Telecom.PhoneAccountHandle)' in the contract but not the implementation.
+CannotChangeAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' on 'Android.Telephony.TelephonyManager.Nai.get()' changed from '[RequiresPermissionAttribute("android.permission.READ_PHONE_STATE")]' in the contract to '[RequiresPermissionAttribute("android.permission.READ_PRIVILEGED_PHONE_STATE")]' in the implementation.
 TypesMustExist : Type 'Android.Bluetooth.BluetoothProfileConsts' does not exist in the implementation but it does exist in the contract.
 TypesMustExist : Type 'Android.Content.ComponentCallbacks2Consts' does not exist in the implementation but it does exist in the contract.
 TypesMustExist : Type 'Android.Content.DialogInterfaceConsts' does not exist in the implementation but it does exist in the contract.
