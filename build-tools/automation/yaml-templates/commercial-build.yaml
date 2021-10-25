@@ -81,7 +81,7 @@ steps:
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
 
-- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) _MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 
