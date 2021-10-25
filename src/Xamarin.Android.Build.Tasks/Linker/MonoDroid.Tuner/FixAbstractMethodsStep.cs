@@ -10,9 +10,12 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 
 using Mono.Tuner;
-#if NET5_LINKER
+#if ILLINK
 using Microsoft.Android.Sdk.ILLink;
-#endif
+using Resources = Microsoft.Android.Sdk.ILLink.Properties.Resources;
+#else   // !ILLINK
+using Resources = Xamarin.Android.Tasks.Properties.Resources;
+#endif  // !ILLINK
 
 namespace MonoDroid.Tuner
 {
@@ -20,27 +23,27 @@ namespace MonoDroid.Tuner
 	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
 	/// </summary>
 	public class FixAbstractMethodsStep :
-#if NET5_LINKER
+#if ILLINK
 	BaseMarkHandler
-#else   // !NET5_LINKER
+#else   // !ILLINK
 	BaseStep
-#endif  // !NET5_LINKER
+#endif  // !ILLINK
 	{
 
-#if NET5_LINKER
+#if ILLINK
 		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
-#else   // !NET5_LINKER
+#else   // !ILLINK
 		public FixAbstractMethodsStep (IMetadataResolver cache)
 		{
 			this.cache = cache;
 		}
 
 		readonly
-#endif  // !NET5_LINKER
+#endif  // !ILLINK
 		IMetadataResolver cache;
 
 		bool CheckShouldProcessAssembly (AssemblyDefinition assembly)
@@ -51,9 +54,13 @@ namespace MonoDroid.Tuner
 			if (IsProductOrSdkAssembly (assembly))
 				return false;
 
-#if !NET5_LINKER
-			CheckAppDomainUsage (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
-#endif  // !NET5_LINKER
+			CheckAppDomainUsage (assembly, (string msg) =>
+#if ILLINK
+				Context.LogMessage (msg)
+#else   // !ILLINK
+				Context.LogMessage (MessageImportance.High, msg)
+#endif  // !ILLINK
+			);
 
 			return assembly.MainModule.HasTypeReference ("Java.Lang.Object");
 		}
@@ -64,7 +71,7 @@ namespace MonoDroid.Tuner
 				Annotations.SetAction (assembly, AssemblyAction.Save);
 		}
 
-#if NET5_LINKER
+#if ILLINK
 		protected void ProcessType (TypeDefinition type)
 		{
 			var assembly = type.Module.Assembly;
@@ -80,7 +87,7 @@ namespace MonoDroid.Tuner
 			UpdateAssemblyAction (assembly);
 			MarkAbstractMethodErrorType ();
 		}
-#else   // !NET5_LINKER
+#else   // !ILLINK
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
 			if (!CheckShouldProcessAssembly (assembly))
@@ -102,6 +109,7 @@ namespace MonoDroid.Tuner
 			}
 			return changed;
 		}
+#endif  // !ILLINK
 
 		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
 		{
@@ -110,12 +118,11 @@ namespace MonoDroid.Tuner
 
 			foreach (var mr in assembly.MainModule.GetMemberReferences ()) {
 				if (mr.ToString ().Contains ("System.AppDomain System.AppDomain::CreateDomain")) {
-					warn (string.Format ("warning XA2000: " + Xamarin.Android.Tasks.Properties.Resources.XA2000, assembly));
+					warn (string.Format ("warning XA2000: " + Resources.XA2000, assembly));
 					break;
 				}
 			}
 		}
-#endif  // !NET5_LINKER
 
 		bool IsProductOrSdkAssembly (AssemblyDefinition assembly) =>
 			IsProductOrSdkAssembly (assembly.Name.Name);
@@ -341,15 +348,15 @@ namespace MonoDroid.Tuner
 
 		protected virtual AssemblyDefinition GetMonoAndroidAssembly ()
 		{
-#if !NET5_LINKER
+#if !ILLINK
 			foreach (var assembly in Context.GetAssemblies ()) {
 				if (assembly.Name.Name == "Mono.Android")
 					return assembly;
 			}
 			return null;
-#else   // NET5_LINKER
+#else   // ILLINK
 			return Context.GetLoadedAssembly ("Mono.Android");
-#endif  // NET5_LINKER
+#endif  // ILLINK
 		}
 	}
 }

@@ -65,6 +65,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <!-- Microsoft.Android.Sdk.ILLink output -->
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
+      <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\%(_LocalizationLanguages.Identity)\Microsoft.Android.Sdk.ILLink.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.pdb" PackagePath="tools" />

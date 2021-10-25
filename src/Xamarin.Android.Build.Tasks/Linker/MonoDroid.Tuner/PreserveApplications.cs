@@ -13,60 +13,60 @@ using Mono.Cecil;
 namespace MonoDroid.Tuner {
 
 	public class PreserveApplications :
-#if NET5_LINKER
+#if ILLINK
 		BaseMarkHandler
-#else   // !NET5_LINKER
+#else   // !ILLINK
 		BaseSubStep
-#endif  // !NET5_LINKER
+#endif  // !ILLINK
 	{
 
-#if NET5_LINKER
+#if ILLINK
 		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly));
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
-#else   // !NET5_LINKER
+#else   // !ILLINK
 		public override SubStepTargets Targets {
 			get { return SubStepTargets.Type
 				| SubStepTargets.Assembly;
 			}
 		}
-#endif  // !NET5_LINKER
+#endif  // !ILLINK
 
 		public
-#if !NET5_LINKER
+#if !ILLINK
 		override
-#endif  // !NET5_LINKER
+#endif  // !ILLINK
 		bool IsActiveFor (AssemblyDefinition assembly)
 		{
 			return Annotations.GetAction (assembly) == AssemblyAction.Link;
 		}
 
 		public 
-#if !NET5_LINKER
+#if !ILLINK
 		override
-#endif  // !NET5_LINKER
+#endif  // !ILLINK
 		void ProcessAssembly (AssemblyDefinition assembly)
 		{
-#if NET5_LINKER
+#if ILLINK
 			if (!IsActiveFor (assembly))
 				return;
-#endif  // NET5_LINKER
+#endif  // ILLINK
 			ProcessAttributeProvider (assembly);
 		}
 
 		public
-#if !NET5_LINKER
+#if !ILLINK
 		override
-#endif  // !NET5_LINKER
+#endif  // !ILLINK
 		void ProcessType (TypeDefinition type)
 		{
-#if NET5_LINKER
+#if ILLINK
 			if (!IsActiveFor (type.Module.Assembly))
 				return;
-#endif  // NET5_LINKER
+#endif  // ILLINK
 			if (!type.Inherits ("Android.App.Application"))
 				return;
 

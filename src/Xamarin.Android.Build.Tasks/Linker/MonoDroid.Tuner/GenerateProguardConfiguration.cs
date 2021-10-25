@@ -17,22 +17,22 @@ namespace Mono.Linker.Steps {
 	public class GenerateProguardConfiguration : BaseStep
 	{
 
-#if !NET5_LINKER
+#if !ILLINK
 		public GenerateProguardConfiguration (string outputFileName)
 		{
 			this.filename = outputFileName;
 		}
-#endif  // !NET5_LINKER
+#endif  // !ILLINK
 
 		string filename;
 		TextWriter writer;
 
 		protected override void Process ()
 		{
-#if NET5_LINKER
+#if ILLINK
 			if (Context.TryGetCustomData ("ProguardConfiguration", out string proguardPath))
 				filename = proguardPath;
-#endif  // NET5_LINKER
+#endif  // ILLINK
 			var dir = Path.GetDirectoryName (filename);
 			if (!Directory.Exists (dir))
 				Directory.CreateDirectory (dir);
