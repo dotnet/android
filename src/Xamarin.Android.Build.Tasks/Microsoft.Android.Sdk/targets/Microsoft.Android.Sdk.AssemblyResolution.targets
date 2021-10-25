@@ -20,7 +20,6 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup>
       <_ProblematicRIDs Include="linux-arm;linux-arm64;linux-x86;linux-x64" />
       <PackageDownload Remove="Microsoft.AspNetCore.App.Runtime.%(_ProblematicRIDs.Identity)" />
-      <PackageDownload Remove="Microsoft.NETCore.App.Host.%(_ProblematicRIDs.Identity)" />
     </ItemGroup>
   </Target>
 
