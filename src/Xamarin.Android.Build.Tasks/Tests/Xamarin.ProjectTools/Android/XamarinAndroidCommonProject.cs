@@ -89,6 +89,11 @@ namespace Xamarin.ProjectTools
 					PackageReferences.Add (KnownPackages.Xamarin_Android_FSharp_ResourceProvider);
 					Sources.Remove (resourceDesigner);
 					OtherBuildItems.Add (new BuildItem.NoActionResource (() => "Resources\\Resource.designer" + Language.DefaultDesignerExtension) { TextContent = () => string.Empty });
+
+					if (Builder.UseDotNet) {
+						// Use KnownPackages.FSharp_Core_Latest for FSharp.Core
+						SetProperty ("DisableImplicitFSharpCoreReference", "true");
+					}
 				}
 			}
 		}
