@@ -43,6 +43,13 @@ public class MonoPackageManager {
 				ClassLoader loader  = context.getClassLoader ();
 				String runtimeDir = getNativeLibraryPath (runtimePackage);
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
+				boolean haveSplitApks = false;
+
+				if (android.os.Build.VERSION.SDK_INT >= 21) {
+					if (runtimePackage.splitSourceDirs != null) {
+						haveSplitApks = runtimePackage.splitSourceDirs.length > 1;
+					}
+				}
 
 				//
 				// Preload DSOs libmonodroid.so depends on so that the dynamic
@@ -73,7 +80,7 @@ public class MonoPackageManager {
 				//
 				if (BuildConfig.Debug) {
 					System.loadLibrary ("xamarin-debug-app-helper");
-					DebugRuntime.init (apks, runtimeDir, appDirs);
+					DebugRuntime.init (apks, runtimeDir, appDirs, haveSplitApks);
 				} else {
 					System.loadLibrary("monosgen-2.0");
 				}
@@ -98,7 +105,8 @@ public class MonoPackageManager {
 						loader,
 						MonoPackageManager_Resources.Assemblies,
 						Build.VERSION.SDK_INT,
-						isEmulator ()
+						isEmulator (),
+						haveSplitApks
 					);
 
 				mono.android.app.ApplicationRegistration.registerApplications ();

@@ -67,11 +67,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckIncludedAssemblies ()
+		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			if (!Builder.UseDotNet) {
 				proj.PackageReferences.Add (new Package {
@@ -107,17 +108,20 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
-					var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
-					Assert.IsFalse (missingFiles.Any (),
-						string.Format ("The following Expected files are missing. {0}",
-						string.Join (Environment.NewLine, missingFiles)));
-					var additionalFiles = existingFiles.Where (x => !expectedFiles.Contains (Path.GetFileName (x.FullName)));
-					Assert.IsTrue (!additionalFiles.Any (),
-						string.Format ("Unexpected Files found! {0}",
-						string.Join (Environment.NewLine, additionalFiles.Select (x => x.FullName))));
-				}
+				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
+				List<string> existingFiles;
+				List<string> missingFiles;
+				List<string> additionalFiles;
+
+				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles);
+
+				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
+				       string.Format ("The following Expected files are missing. {0}",
+				       string.Join (Environment.NewLine, missingFiles)));
+
+				Assert.IsTrue (additionalFiles == null || additionalFiles.Count == 0,
+					string.Format ("Unexpected Files found! {0}",
+					string.Join (Environment.NewLine, additionalFiles)));
 			}
 		}
 
@@ -634,6 +638,7 @@ namespace XamFormsSample
 					},
 				}
 			};
+			app.SetProperty ("AndroidUseAssemblyStore", "False");
 			app.MainActivity = @"using System;
 using Android.App;
 using Android.Content;
@@ -846,9 +851,8 @@ namespace App1
 
 				var apk = Path.Combine (Root, appBuilder.ProjectDirectory,
 					app.OutputPath, $"{app.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ($"assemblies/es/{lib.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
-				}
+				var helper = new ArchiveAssemblyHelper (apk);
+				Assert.IsTrue (helper.Exists ($"assemblies/es/{lib.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
 			}
 		}
 
@@ -875,9 +879,8 @@ namespace App1
 
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
-				}
+				var helper = new ArchiveAssemblyHelper (apk);
+				Assert.IsTrue (helper.Exists ($"assemblies/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
 			}
 		}
 

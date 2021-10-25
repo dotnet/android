@@ -24,7 +24,9 @@ namespace Xamarin.Android.Tasks
 		public bool InstantRunEnabled { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 		public bool HaveRuntimeConfigBlob { get; set; }
+		public bool HaveAssemblyStore { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
+		public int NumberOfAssemblyStoresInApks { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
@@ -52,7 +54,7 @@ namespace Xamarin.Android.Tasks
 			WriteDataSection (output, "application_config");
 			WriteSymbol (output, "application_config", TargetProvider.GetStructureAlignment (true), packed: false, isGlobal: true, alwaysWriteSize: true, structureWriter: () => {
 				// Order of fields and their type must correspond *exactly* to that in
-				// src/monodroid/jni/xamarin-app.h ApplicationConfig structure
+				// src/monodroid/jni/xamarin-app.hh ApplicationConfig structure
 				WriteCommentLine (output, "uses_mono_llvm");
 				uint size = WriteData (output, UsesMonoLLVM);
 
@@ -77,6 +79,9 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "have_runtime_config_blob");
 				size += WriteData (output, HaveRuntimeConfigBlob);
 
+				WriteCommentLine (output, "have_assembly_store");
+				size += WriteData (output, HaveAssemblyStore);
+
 				WriteCommentLine (output, "bound_exception_type");
 				size += WriteData (output, (byte)BoundExceptionType);
 
@@ -95,6 +100,9 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "bundled_assembly_name_width");
 				size += WriteData (output, BundledAssemblyNameWidth);
 
+				WriteCommentLine (output, "number_of_assembly_store_files");
+				size += WriteData (output, NumberOfAssemblyStoresInApks);
+
 				WriteCommentLine (output, "android_package_name");
 				size += WritePointer (output, MakeLocalLabel (stringLabel));
 
@@ -110,19 +118,99 @@ namespace Xamarin.Android.Tasks
 			WriteNameValueStringArray (output, "app_system_properties", systemProperties);
 
 			WriteBundledAssemblies (output);
+			WriteAssemblyStoreAssemblies (output);
+		}
+
+		void WriteAssemblyStoreAssemblies (StreamWriter output)
+		{
+			output.WriteLine ();
+
+			string label = "assembly_store_bundled_assemblies";
+			WriteCommentLine (output, "Assembly store individual assembly data");
+			WriteDataSection (output, label);
+			WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
+
+			uint size = 0;
+			if (HaveAssemblyStore) {
+				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+					size += WriteStructure (output, packed: false, structureWriter: () => WriteAssemblyStoreAssembly (output));
+				}
+			}
+			WriteStructureSize (output, label, size);
+
+			output.WriteLine ();
+
+			label = "assembly_stores";
+			WriteCommentLine (output, "Assembly store data");
+			WriteDataSection (output, label);
+			WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
+
+			size = 0;
+			if (HaveAssemblyStore) {
+				for (int i = 0; i < NumberOfAssemblyStoresInApks; i++) {
+					size += WriteStructure (output, packed: false, structureWriter: () => WriteAssemblyStore (output));
+				}
+			}
+			WriteStructureSize (output, label, size);
+		}
+
+		uint WriteAssemblyStoreAssembly (StreamWriter output)
+		{
+			// Order of fields and their type must correspond *exactly* to that in
+			// src/monodroid/jni/xamarin-app.hh AssemblyStoreSingleAssemblyRuntimeData structure
+			WriteCommentLine (output, "image_data");
+			uint size = WritePointer (output);
+
+			WriteCommentLine (output, "debug_info_data");
+			size += WritePointer (output);
+
+			WriteCommentLine (output, "config_data");
+			size += WritePointer (output);
+
+			WriteCommentLine (output, "descriptor");
+			size += WritePointer (output);
+
+			output.WriteLine ();
+
+			return size;
+		}
+
+		uint WriteAssemblyStore (StreamWriter output)
+		{
+			// Order of fields and their type must correspond *exactly* to that in
+			// src/monodroid/jni/xamarin-app.hh AssemblyStoreRuntimeData structure
+			WriteCommentLine (output, "data_start");
+			uint size = WritePointer (output);
+
+			WriteCommentLine (output, "assembly_count");
+			size += WriteData (output, (uint)0);
+
+			WriteCommentLine (output, "assemblies");
+			size += WritePointer (output);
+
+			output.WriteLine ();
+
+			return size;
 		}
 
 		void WriteBundledAssemblies (StreamWriter output)
 		{
+			output.WriteLine ();
+
 			WriteCommentLine (output, $"Bundled assembly name buffers, all {BundledAssemblyNameWidth} bytes long");
 			WriteSection (output, ".bss.bundled_assembly_names", hasStrings: false, writable: true, nobits: true);
 
-			var name_labels = new List<string> ();
-			for (int i = 0; i < NumberOfAssembliesInApk; i++) {
-				string bufferLabel = GetBufferLabel ();
-				WriteBufferAllocation (output, bufferLabel, (uint)BundledAssemblyNameWidth);
-				name_labels.Add (bufferLabel);
+			List<string> name_labels = null;
+			if (!HaveAssemblyStore) {
+				name_labels = new List<string> ();
+				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+					string bufferLabel = GetBufferLabel ();
+					WriteBufferAllocation (output, bufferLabel, (uint)BundledAssemblyNameWidth);
+					name_labels.Add (bufferLabel);
+				}
 			}
+
+			output.WriteLine ();
 
 			string label = "bundled_assemblies";
 			WriteCommentLine (output, "Bundled assemblies data");
@@ -130,14 +218,22 @@ namespace Xamarin.Android.Tasks
 			WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
 
 			uint size = 0;
-			for (int i = 0; i < NumberOfAssembliesInApk; i++) {
-				size += WriteStructure (output, packed: false, structureWriter: () => WriteBundledAssembly (output, MakeLocalLabel (name_labels[i])));
+			if (!HaveAssemblyStore) {
+				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+					size += WriteStructure (output, packed: false, structureWriter: () => WriteBundledAssembly (output, MakeLocalLabel (name_labels[i])));
+				}
 			}
 			WriteStructureSize (output, label, size);
+
+			output.WriteLine ();
 		}
+
 
 		uint WriteBundledAssembly (StreamWriter output, string nameLabel)
 		{
+			// Order of fields and their type must correspond *exactly* to that in
+			// src/monodroid/jni/xamarin-app.hh XamarinAndroidBundledAssembly structure
+
 			WriteCommentLine (output, "apk_fd");
 			uint size = WriteData (output, (int)-1);
 

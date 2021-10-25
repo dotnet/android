@@ -74,6 +74,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.CopyNuGetConfig (relativeProjDir);
 			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
 
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
 			WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",

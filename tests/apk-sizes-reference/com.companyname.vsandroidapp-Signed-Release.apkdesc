@@ -4,68 +4,14 @@
     "AndroidManifest.xml": {
       "Size": 2896
     },
-    "assemblies/Java.Interop.dll": {
-      "Size": 68160
+    "assemblies/assemblies.blob": {
+      "Size": 2026794
     },
-    "assemblies/Mono.Android.dll": {
-      "Size": 330421
-    },
-    "assemblies/Mono.Security.dll": {
-      "Size": 61400
-    },
-    "assemblies/mscorlib.dll": {
-      "Size": 843651
-    },
-    "assemblies/System.Core.dll": {
-      "Size": 33884
-    },
-    "assemblies/System.dll": {
-      "Size": 208052
-    },
-    "assemblies/System.Net.Http.dll": {
-      "Size": 110901
-    },
-    "assemblies/System.Numerics.dll": {
-      "Size": 15656
-    },
-    "assemblies/VSAndroidApp.dll": {
-      "Size": 60901
-    },
-    "assemblies/Xamarin.Android.Arch.Lifecycle.Common.dll": {
-      "Size": 6971
-    },
-    "assemblies/Xamarin.Android.Arch.Lifecycle.LiveData.Core.dll": {
-      "Size": 7017
-    },
-    "assemblies/Xamarin.Android.Arch.Lifecycle.ViewModel.dll": {
-      "Size": 4779
-    },
-    "assemblies/Xamarin.Android.Support.Compat.dll": {
-      "Size": 50728
-    },
-    "assemblies/Xamarin.Android.Support.CoordinaterLayout.dll": {
-      "Size": 17769
-    },
-    "assemblies/Xamarin.Android.Support.Design.dll": {
-      "Size": 28949
-    },
-    "assemblies/Xamarin.Android.Support.DrawerLayout.dll": {
-      "Size": 14618
-    },
-    "assemblies/Xamarin.Android.Support.Fragment.dll": {
-      "Size": 41190
-    },
-    "assemblies/Xamarin.Android.Support.Loader.dll": {
-      "Size": 13489
-    },
-    "assemblies/Xamarin.Android.Support.v7.AppCompat.dll": {
-      "Size": 92177
-    },
-    "assemblies/Xamarin.Essentials.dll": {
-      "Size": 14090
+    "assemblies/assemblies.manifest": {
+      "Size": 1574
     },
     "classes.dex": {
-      "Size": 2940492
+      "Size": 2940564
     },
     "lib/armeabi-v7a/libmono-btls-shared.so": {
       "Size": 1112688
@@ -74,7 +20,7 @@
       "Size": 736396
     },
     "lib/armeabi-v7a/libmonodroid.so": {
-      "Size": 229116
+      "Size": 232320
     },
     "lib/armeabi-v7a/libmonosgen-2.0.so": {
       "Size": 4456332
@@ -83,7 +29,7 @@
       "Size": 48844
     },
     "lib/armeabi-v7a/libxamarin-app.so": {
-      "Size": 46912
+      "Size": 46832
     },
     "lib/x86/libmono-btls-shared.so": {
       "Size": 1459584
@@ -92,7 +38,7 @@
       "Size": 803352
     },
     "lib/x86/libmonodroid.so": {
-      "Size": 297800
+      "Size": 303316
     },
     "lib/x86/libmonosgen-2.0.so": {
       "Size": 4212220
@@ -101,7 +47,7 @@
       "Size": 61112
     },
     "lib/x86/libxamarin-app.so": {
-      "Size": 45580
+      "Size": 45500
     },
     "META-INF/android.arch.core_runtime.version": {
       "Size": 6
@@ -125,7 +71,7 @@
       "Size": 1213
     },
     "META-INF/ANDROIDD.SF": {
-      "Size": 67139
+      "Size": 65121
     },
     "META-INF/androidx.appcompat_appcompat.version": {
       "Size": 6
@@ -206,7 +152,7 @@
       "Size": 10
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 67012
+      "Size": 64994
     },
     "META-INF/proguard/androidx-annotations.pro": {
       "Size": 308
@@ -1664,5 +1610,5 @@
       "Size": 320016
     }
   },
-  "PackageSize": 9498135
+  "PackageSize": 9500681
 }

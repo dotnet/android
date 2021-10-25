@@ -290,6 +290,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.SourceWriter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.SourceWriter.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Compression.LZ4.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Hash.xxHash.dll" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />

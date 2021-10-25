@@ -98,7 +98,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("AOT"), Category ("MonoSymbolicate")]
 		[TestCaseSource (nameof (SequencePointChecks))]
 		public void CheckSequencePointGeneration (bool isRelease, bool monoSymbolArchive, bool aotAssemblies,
-			bool debugSymbols, string debugType, bool embedMdb, string expectedRuntime)
+		       bool debugSymbols, string debugType, bool embedMdb, string expectedRuntime, bool usesAssemblyBlobs)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -109,6 +109,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ActiveConfigurationProperties, "MonoSymbolArchive", monoSymbolArchive);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder ()) {
 				if (aotAssemblies && !b.CrossCompilerAvailable (string.Join (";", abis)))
 					Assert.Ignore ("Cross compiler was not available");
@@ -116,45 +117,42 @@ namespace Xamarin.Android.Build.Tests
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var msymarchive = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + ".apk.mSYM");
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					var mdbExits = ZipHelper.ReadFileFromZip (zipFile, "assemblies/UnnamedProject.dll.mdb") != null ||
-						ZipHelper.ReadFileFromZip (zipFile, "assemblies/UnnamedProject.pdb") != null;
-					Assert.AreEqual (embedMdb, mdbExits,
-						$"assemblies/UnnamedProject.dll.mdb or assemblies/UnnamedProject.pdb should{0}be in the {proj.PackageName}-Signed.apk", embedMdb ? " " : " not ");
-					if (aotAssemblies) {
-						foreach (var abi in abis) {
-							var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-								"aot", abi, "libaot-UnnamedProject.dll.so");
-							var shouldExist = monoSymbolArchive && debugSymbols && (debugType == "PdbOnly" || debugType == "Portable");
-							var symbolicateFile = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-								"aot", abi), "UnnamedProject.dll.msym", SearchOption.AllDirectories).FirstOrDefault ();
-							if (shouldExist)
-								Assert.IsNotNull (symbolicateFile, "UnnamedProject.dll.msym should exist");
-							else
-								Assert.IsNull (symbolicateFile, "{0} should not exist", symbolicateFile);
-							if (shouldExist) {
-								var foundMsyms = Directory.GetFiles (Path.Combine (msymarchive), "UnnamedProject.dll.msym", SearchOption.AllDirectories).Any ();
-								Assert.IsTrue (foundMsyms, "UnnamedProject.dll.msym should exist in the archive {0}", msymarchive);
-							}
-							Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
-							Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-								string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
-								$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}-Signed.apk", abi);
-							Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-								"assemblies/UnnamedProject.dll"),
-								$"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
-						}
-					}
-					var runtimeInfo = b.GetSupportedRuntimes ();
+				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
+				var mdbExits = helper.Exists ("assemblies/UnnamedProject.dll.mdb") || helper.Exists ("assemblies/UnnamedProject.pdb");
+				Assert.AreEqual (embedMdb, mdbExits,
+				                 $"assemblies/UnnamedProject.dll.mdb or assemblies/UnnamedProject.pdb should{0}be in the {proj.PackageName}-Signed.apk", embedMdb ? " " : " not ");
+				if (aotAssemblies) {
 					foreach (var abi in abis) {
-						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == expectedRuntime);
-						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
-						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
-						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Size == inApk.Length);
-						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
-						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", expectedRuntime, inApkRuntime.Runtime);
+						var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
+						                               "aot", abi, "libaot-UnnamedProject.dll.so");
+						var shouldExist = monoSymbolArchive && debugSymbols && (debugType == "PdbOnly" || debugType == "Portable");
+						var symbolicateFile = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
+						                                                        "aot", abi), "UnnamedProject.dll.msym", SearchOption.AllDirectories).FirstOrDefault ();
+						if (shouldExist)
+							Assert.IsNotNull (symbolicateFile, "UnnamedProject.dll.msym should exist");
+						else
+							Assert.IsNull (symbolicateFile, "{0} should not exist", symbolicateFile);
+						if (shouldExist) {
+							var foundMsyms = Directory.GetFiles (Path.Combine (msymarchive), "UnnamedProject.dll.msym", SearchOption.AllDirectories).Any ();
+							Assert.IsTrue (foundMsyms, "UnnamedProject.dll.msym should exist in the archive {0}", msymarchive);
+						}
+						Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
+						Assert.IsTrue (helper.Exists ($"lib/{abi}/libaot-UnnamedProject.dll.so"),
+						               $"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}-Signed.apk", abi);
+						Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"),
+						               $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
 					}
 				}
+				var runtimeInfo = b.GetSupportedRuntimes ();
+				foreach (var abi in abis) {
+					var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == expectedRuntime);
+					Assert.IsNotNull (runtime, "Could not find the expected runtime.");
+					var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
+					var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Size == inApk.Length);
+					Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
+					Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", expectedRuntime, inApkRuntime.Runtime);
+				}
+
 				b.Clean (proj);
 				Assert.IsTrue (!Directory.Exists (msymarchive), "{0} should have been deleted on Clean", msymarchive);
 			}
@@ -942,6 +940,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
 			};
+			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 			using (var b = CreateApkBuilder ()) {
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
 					WebContentFileNameFromAzure = "PdbTestLibrary.dll"

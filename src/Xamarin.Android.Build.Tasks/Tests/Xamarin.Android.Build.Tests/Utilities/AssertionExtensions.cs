@@ -61,9 +61,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[DebuggerHidden]
+		public static void AssertContainsEntry (this ArchiveAssemblyHelper helper, string archivePath)
+		{
+			Assert.IsTrue (helper.Exists (archivePath), $"{helper.ArchivePath} should contain {archivePath}");
+		}
+
+		[DebuggerHidden]
 		public static void AssertDoesNotContainEntry (this ZipArchive zip, string zipPath, string archivePath)
 		{
 			Assert.IsFalse (zip.ContainsEntry (archivePath), $"{zipPath} should *not* contain {archivePath}");
+		}
+
+		[DebuggerHidden]
+		public static void AssertDoesNotContainEntry (this ArchiveAssemblyHelper helper, string archivePath)
+		{
+			Assert.IsFalse (helper.Exists (archivePath), $"{helper.ArchivePath} should *not* contain {archivePath}");
 		}
 
 		[DebuggerHidden]
@@ -73,6 +85,16 @@ namespace Xamarin.Android.Build.Tests
 				zip.AssertContainsEntry (zipPath, archivePath);
 			} else {
 				zip.AssertDoesNotContainEntry (zipPath, archivePath);
+			}
+		}
+
+		[DebuggerHidden]
+		public static void AssertContainsEntry (this ArchiveAssemblyHelper helper, string archivePath, bool shouldContainEntry)
+		{
+			if (shouldContainEntry) {
+				helper.AssertContainsEntry (archivePath);
+			} else {
+				helper.AssertDoesNotContainEntry (archivePath);
 			}
 		}
 

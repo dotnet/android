@@ -30,6 +30,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] SatelliteAssemblies { get; set; }
 
+		public bool UseAssemblyStore { get; set; }
+
 		[Required]
 		public string OutputDirectory { get; set; }
 
@@ -270,10 +272,13 @@ namespace Xamarin.Android.Tasks
 			}
 
 			int assemblyNameWidth = 0;
-			int assemblyCount = ResolvedAssemblies.Length;
 			Encoding assemblyNameEncoding = Encoding.UTF8;
 
 			Action<ITaskItem> updateNameWidth = (ITaskItem assembly) => {
+				if (UseAssemblyStore) {
+					return;
+				}
+
 				string assemblyName = Path.GetFileName (assembly.ItemSpec);
 				int nameBytes = assemblyNameEncoding.GetBytes (assemblyName).Length;
 				if (nameBytes > assemblyNameWidth) {
@@ -281,29 +286,55 @@ namespace Xamarin.Android.Tasks
 				}
 			};
 
-			if (SatelliteAssemblies != null) {
-				assemblyCount += SatelliteAssemblies.Length;
+			int assemblyCount = 0;
+			HashSet<string> archAssemblyNames = null;
 
+			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
+				if (!UseAssemblyStore) {
+					assemblyCount++;
+					return;
+				}
+
+				string abi = assembly.GetMetadata ("Abi");
+				if (String.IsNullOrEmpty (abi)) {
+					assemblyCount++;
+				} else {
+					archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+					string assemblyName = Path.GetFileName (assembly.ItemSpec);
+					if (!archAssemblyNames.Contains (assemblyName)) {
+						assemblyCount++;
+						archAssemblyNames.Add (assemblyName);
+					}
+				}
+			};
+
+			if (SatelliteAssemblies != null) {
 				foreach (ITaskItem assembly in SatelliteAssemblies) {
 					updateNameWidth (assembly);
+					updateAssemblyCount (assembly);
 				}
 			}
 
 			foreach (var assembly in ResolvedAssemblies) {
 				updateNameWidth (assembly);
+				updateAssemblyCount (assembly);
 			}
 
-			int abiNameLength = 0;
-			foreach (string abi in SupportedAbis) {
-				if (abi.Length <= abiNameLength) {
-					continue;
+			if (!UseAssemblyStore) {
+				int abiNameLength = 0;
+				foreach (string abi in SupportedAbis) {
+					if (abi.Length <= abiNameLength) {
+						continue;
+					}
+					abiNameLength = abi.Length;
 				}
-				abiNameLength = abi.Length;
+				assemblyNameWidth += abiNameLength + 2; // room for '/' and the terminating NUL
 			}
-			assemblyNameWidth += abiNameLength + 1; // room for '/'
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
+
 			foreach (string abi in SupportedAbis) {
 				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
@@ -323,7 +354,12 @@ namespace Xamarin.Android.Tasks
 					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
 					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
-					BundledAssemblyNameWidth = assemblyNameWidth + 1,
+					BundledAssemblyNameWidth = assemblyNameWidth,
+					NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
+									  // and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
+									  // runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
+									  // and in the same order.
+					HaveAssemblyStore = UseAssemblyStore,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

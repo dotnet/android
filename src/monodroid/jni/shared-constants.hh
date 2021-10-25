@@ -1,6 +1,8 @@
 #ifndef __SHARED_CONSTANTS_HH
 #define __SHARED_CONSTANTS_HH
 
+#include "cpp-util.hh"
+
 namespace xamarin::android::internal
 {
 // _WIN32 is defined with _WIN64 so _WIN64 must be checked first.
@@ -22,6 +24,8 @@ namespace xamarin::android::internal
 		static constexpr char JNIENV_CLASS_NAME[] = "JNIEnv";
 		static constexpr char ANDROID_ENVIRONMENT_CLASS_NAME[] = "AndroidEnvironment";
 
+		static constexpr char DLL_EXTENSION[] = ".dll";
+
 #if defined (NET6)
 		static constexpr char RUNTIME_CONFIG_BLOB_NAME[] = "rc.bin";
 #endif // def NET6
@@ -39,6 +43,18 @@ namespace xamarin::android::internal
 		static constexpr char MONO_SGEN_SO[]      = "monosgen-2.0";
 		static constexpr char MONO_SGEN_ARCH_SO[] = "monosgen-" __BITNESS__ "-2.0";
 #endif
+
+#if __arm__
+		static constexpr char android_abi[] = "armeabi_v7a";
+#elif __aarch64__
+		static constexpr char android_abi[] = "arm64_v8a";
+#elif __x86_64__
+		static constexpr char android_abi[] = "x86_64";
+#elif __i386__
+		static constexpr char android_abi[] = "x86";
+#endif
+
+		static constexpr auto split_config_abi_apk_name = concat_const ("/split_config.", android_abi, ".apk");
 	};
 }
 #endif // __SHARED_CONSTANTS_HH

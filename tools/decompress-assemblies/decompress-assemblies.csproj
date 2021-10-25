@@ -17,6 +17,10 @@
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
+    <Compile Include="..\assembly-store-reader\AssemblyStore*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />

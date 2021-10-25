@@ -112,10 +112,11 @@ namespace Xamarin.ProjectTools
 
 		public bool Run ()
 		{
-			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "msbuild.binlog");
+			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "run.binlog");
 			var arguments = new List<string> {
 				"run",
 				"--project", $"\"{projectOrSolution}\"",
+				"--no-build",
 				$"/bl:\"{binlog}\""
 			};
 			return Execute (arguments.ToArray ());
@@ -146,7 +147,7 @@ namespace Xamarin.ProjectTools
 				$"\"{projectOrSolution}\"",
 				"/noconsolelogger",
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
-				$"/bl:\"{Path.Combine (testDir, "msbuild.binlog")}\""
+				$"/bl:\"{Path.Combine (testDir, $"{target}.binlog")}\""
 			};
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");

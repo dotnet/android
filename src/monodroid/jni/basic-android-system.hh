@@ -58,8 +58,7 @@ namespace xamarin::android::internal
 		static const char* get_built_for_abi_name ();
 
 	public:
-		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs);
-		void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks);
+		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks);
 
 		const char* get_override_dir (size_t index) const
 		{
@@ -105,10 +104,11 @@ namespace xamarin::android::internal
 		}
 
 	protected:
-		void  add_apk_libdir (const char *apk, size_t index, size_t apk_count, void *user_data);
 		void  for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data);
 
 	private:
+		void add_apk_libdir (const char *apk, size_t &index, const char *abi) noexcept;
+		void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept;
 		char* determine_primary_override_dir (jstring_wrapper &home);
 
 		void set_embedded_dso_mode_enabled (bool yesno) noexcept

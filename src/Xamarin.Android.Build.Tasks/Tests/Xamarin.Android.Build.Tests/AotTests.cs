@@ -115,50 +115,64 @@ namespace Xamarin.Android.Build.Tests
 				/* supportedAbis */   "armeabi-v7a",
 				/* enableLLVM */      false,
 				/* expectedResult */  true,
+				/* usesAssemblyBlobs */ false,
+			},
+			new object[] {
+				/* supportedAbis */   "armeabi-v7a",
+				/* enableLLVM */      false,
+				/* expectedResult */  true,
+				/* usesAssemblyBlobs */ true,
 			},
 			new object[] {
 				/* supportedAbis */   "armeabi-v7a",
 				/* enableLLVM */      true,
 				/* expectedResult */  true,
+				/* usesAssemblyBlobs */ false,
 			},
 			new object[] {
 				/* supportedAbis */   "arm64-v8a",
 				/* enableLLVM */      false,
 				/* expectedResult */  true,
+				/* usesAssemblyBlobs */ false,
 			},
 			new object[] {
 				/* supportedAbis */   "arm64-v8a",
 				/* enableLLVM */      true,
 				/* expectedResult */  true,
+				/* usesAssemblyBlobs */ false,
 			},
 			new object[] {
 				/* supportedAbis */   "x86",
 				/* enableLLVM */      false,
 				/* expectedResult */  true,
+				/* usesAssemblyBlobs */ false,
 			},
 			new object[] {
 				/* supportedAbis */   "x86",
 				/* enableLLVM */      true,
 				/* expectedResult */  true,
+				/* usesAssemblyBlobs */ false,
 			},
 			new object[] {
 				/* supportedAbis */   "x86_64",
 				/* enableLLVM */      false,
 				/* expectedResult */  true,
+				/* usesAssemblyBlobs */ false,
 			},
 			new object[] {
 				/* supportedAbis */   "x86_64",
 				/* enableLLVM */      true,
 				/* expectedResult */  true,
+				/* usesAssemblyBlobs */ false,
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
 		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
-		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
+		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult, bool usesAssemblyBlobs)
 		{
-			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
+			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}_{3}", supportedAbis, enableLLVM, expectedResult, usesAssemblyBlobs));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				BundleAssemblies = false,
@@ -168,6 +182,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			bool checkMinLlvmPath = enableLLVM && (supportedAbis == "armeabi-v7a" || supportedAbis == "x86");
 			if (checkMinLlvmPath) {
 				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
@@ -211,13 +226,13 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
 					var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+
+					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
+					Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
 							$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}-Signed.apk", abi);
-						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-							"assemblies/UnnamedProject.dll"),
-							$"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
 					}
 				}
 				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");
@@ -234,9 +249,9 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor"), Category ("MkBundle")]
 		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
-		public void BuildAotApplicationAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
+		public void BuildAotApplicationAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult, bool usesAssemblyBlobs)
 		{
-			var path = Path.Combine ("temp", string.Format ("BuildAotApplicationAndBundle AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
+			var path = Path.Combine ("temp", string.Format ("BuildAotApplicationAndBundle AndÜmläüts_{0}_{1}_{2}_{3}", supportedAbis, enableLLVM, expectedResult, usesAssemblyBlobs));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				BundleAssemblies = true,
@@ -246,6 +261,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder (path)) {
 				if (!b.CrossCompilerAvailable (supportedAbis))
 					Assert.Ignore ("Cross compiler was not available");
@@ -264,13 +280,12 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
 					var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
+					Assert.IsFalse (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
 							$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}-Signed.apk", abi);
-						Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-							"assemblies/UnnamedProject.dll"),
-							$"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
 					}
 				}
 				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");
@@ -381,6 +396,8 @@ namespace "+ libName + @" {
 		[Category ("HybridAOT")]
 		public void HybridAOT ([Values ("armeabi-v7a;arm64-v8a", "armeabi-v7a", "arm64-v8a")] string abis)
 		{
+			// There's no point in testing all of the ABIs with and without assembly blobs, let's test just one of them this way
+			bool usesAssemblyBlobs = String.Compare ("arm64-v8a", abis, StringComparison.Ordinal) == 0;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = true,
@@ -388,6 +405,7 @@ namespace "+ libName + @" {
 			proj.SetProperty ("AndroidAotMode", "Hybrid");
 			// So we can use Mono.Cecil to open assemblies directly
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			proj.SetAndroidSupportedAbis (abis);
 
 			using (var b = CreateApkBuilder ()) {
@@ -412,17 +430,15 @@ namespace "+ libName + @" {
 
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					var entry = zip.ReadEntry ($"assemblies/{proj.ProjectName}.dll");
-					Assert.IsNotNull (entry, $"{proj.ProjectName}.dll should exist in apk!");
-					using (var stream = new MemoryStream ()) {
-						entry.Extract (stream);
-						stream.Position = 0;
-						using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
-							var type = assembly.MainModule.GetType ($"{proj.ProjectName}.MainActivity");
-							var method = type.Methods.First (m => m.Name == "OnCreate");
-							Assert.LessOrEqual (method.Body.Instructions.Count, 1, "OnCreate should have stripped method bodies!");
-						}
+				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
+				Assert.IsTrue (helper.Exists ($"assemblies/{proj.ProjectName}.dll"), $"{proj.ProjectName}.dll should exist in apk!");
+
+				using (var stream = helper.ReadEntry ($"assemblies/{proj.ProjectName}.dll")) {
+					stream.Position = 0;
+					using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
+						var type = assembly.MainModule.GetType ($"{proj.ProjectName}.MainActivity");
+						var method = type.Methods.First (m => m.Name == "OnCreate");
+						Assert.LessOrEqual (method.Body.Instructions.Count, 1, "OnCreate should have stripped method bodies!");
 					}
 				}
 			}

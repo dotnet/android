@@ -398,63 +398,104 @@ namespace Xamarin.Android.Build.Tests
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          false,
 				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm64",
 				/* isRelease */          false,
 				/* aot */                false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-x86",
 				/* isRelease */          false,
 				/* aot */                false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-x64",
 				/* isRelease */          false,
 				/* aot */                false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                true,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm",
+				/* isRelease */          true,
+				/* aot */                true,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm64",
 				/* isRelease */          true,
 				/* aot */                false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          false,
 				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86",
 				/* isRelease */          true,
 				/* aot */                false,
+				/* usesAssemblyStore */  false,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          true,
 				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          true,
 				/* aot */                true,
+				/* usesAssemblyStore */  false,
 			},
 		};
 
 		[Test]
 		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildSource))]
-		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot)
+		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore)
 		{
 			var proj = new XASdkProject {
 				IsRelease = isRelease,
@@ -489,6 +530,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
 			if (aot) {
 				proj.SetProperty ("RunAOTCompilation", "true");
 			}
@@ -577,19 +619,18 @@ namespace Xamarin.Android.Build.Tests
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apkPath);
-			using (var apk = ZipHelper.OpenZip (apkPath)) {
-				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
-				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
-				apk.AssertContainsEntry (apkPath, $"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
-				apk.AssertContainsEntry (apkPath, $"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
-				foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
-					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonodroid.so");
-					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonosgen-2.0.so");
-					if (rids.Length > 1) {
-						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
-					} else {
-						apk.AssertContainsEntry (apkPath, "assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
-					}
+			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore, rids);
+			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
+			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
+			helper.AssertContainsEntry ($"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
+			helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
+			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
+				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
+				helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+				if (rids.Length > 1) {
+					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
+				} else {
+					helper.AssertContainsEntry ("assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				}
 			}
 		}

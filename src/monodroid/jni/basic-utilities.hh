@@ -1,6 +1,7 @@
 #ifndef __BASIC_UTILITIES_HH
 #define __BASIC_UTILITIES_HH
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -109,6 +110,20 @@ namespace xamarin::android
 			return p != nullptr && p [N - 1] == '\0';
 		}
 
+		template<size_t N>
+		bool ends_with (const char *str, std::array<char, N> const& end) const noexcept
+		{
+			char *p = const_cast<char*> (strstr (str, end.data ()));
+			return p != nullptr && p [N - 1] == '\0';
+		}
+
+		template<size_t N>
+		bool ends_with (const char *str, helper_char_array<N> const& end) const noexcept
+		{
+			char *p = const_cast<char*> (strstr (str, end.data ()));
+			return p != nullptr && p [N - 1] == '\0';
+		}
+
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
 		bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, const char (&end)[N]) const noexcept
 		{
@@ -120,6 +135,32 @@ namespace xamarin::android
 			}
 
 			return memcmp (str.get () + len - end_length, end, end_length) == 0;
+		}
+
+		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
+		bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, std::array<TChar, N> const& end) const noexcept
+		{
+			constexpr size_t end_length = N - 1;
+
+			size_t len = str.length ();
+			if (XA_UNLIKELY (len < end_length)) {
+				return false;
+			}
+
+			return memcmp (str.get () + len - end_length, end.data (), end_length) == 0;
+		}
+
+		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
+		bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, helper_char_array<N> const& end) const noexcept
+		{
+			constexpr size_t end_length = N - 1;
+
+			size_t len = str.length ();
+			if (XA_UNLIKELY (len < end_length)) {
+				return false;
+			}
+
+			return memcmp (str.get () + len - end_length, end.data (), end_length) == 0;
 		}
 
 		template<size_t MaxStackSize, typename TStorage, typename TChar = char>

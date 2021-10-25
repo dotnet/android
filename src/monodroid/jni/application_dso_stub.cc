@@ -34,6 +34,10 @@ CompressedAssemblies compressed_assemblies = {
 	/*.descriptors = */ nullptr,
 };
 
+//
+// Config settings below **must** be valid for Desktop builds as the default `libxamarin-app.{dll,dylib,so}` is used by
+// the Designer
+//
 ApplicationConfig application_config = {
 	.uses_mono_llvm = false,
 	.uses_mono_aot = false,
@@ -43,12 +47,14 @@ ApplicationConfig application_config = {
 	.instant_run_enabled = false,
 	.jni_add_native_method_registration_attribute_present = false,
 	.have_runtime_config_blob = false,
+	.have_assembly_store = false,
 	.bound_exception_type = 0, // System
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,
-	.number_of_assemblies_in_apk = 0,
+	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
+	.number_of_assembly_store_files = 2,
 	.android_package_name = "com.xamarin.test",
 };
 
@@ -78,5 +84,35 @@ XamarinAndroidBundledAssembly bundled_assemblies[] = {
 		.data = nullptr,
 		.name_length = 0,
 		.name = second_assembly_name,
+	},
+};
+
+AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[] = {
+	{
+		.image_data = nullptr,
+		.debug_info_data = nullptr,
+		.config_data = nullptr,
+		.descriptor = nullptr,
+	},
+
+	{
+		.image_data = nullptr,
+		.debug_info_data = nullptr,
+		.config_data = nullptr,
+		.descriptor = nullptr,
+	},
+};
+
+AssemblyStoreRuntimeData assembly_stores[] = {
+	{
+		.data_start = nullptr,
+		.assembly_count = 0,
+		.assemblies = nullptr,
+	},
+
+	{
+		.data_start = nullptr,
+		.assembly_count = 0,
+		.assemblies = nullptr,
 	},
 };

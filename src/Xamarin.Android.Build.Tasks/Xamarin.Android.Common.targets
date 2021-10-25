@@ -179,6 +179,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidFragmentType Condition=" '$(AndroidFragmentType)' == '' ">Android.App.Fragment</AndroidFragmentType>
 	<AndroidEnableAssemblyCompression Condition=" '$(AndroidEnableAssemblyCompression)' == '' ">True</AndroidEnableAssemblyCompression>
 	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
+	<AndroidUseAssemblyStore Condition=" '$(EmbedAssembliesIntoApk)' == 'False' Or '$(BundleAssemblies)' == 'True'">False</AndroidUseAssemblyStore>
+	<AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">True</AndroidUseAssemblyStore>
 	<_AndroidCheckedBuild Condition=" '$(_AndroidCheckedBuild)' == '' "></_AndroidCheckedBuild>
 
 	<!-- Currently only C# is supported -->
@@ -1510,6 +1512,7 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' ">.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_UseEmbeddedDex)' == 'True' ">.dex;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
+    <AndroidStoreUncompressedFileExtensions Condition=" '$(AndroidUseAssemblyStore)' == 'True' ">.blob;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
   </PropertyGroup>
 </Target>
 
@@ -1596,6 +1599,7 @@ because xbuild doesn't support framework reference assemblies.
     InstantRunEnabled="$(_InstantRunEnabled)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
+    UseAssemblyStore="$(AndroidUseAssemblyStore)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
@@ -2004,7 +2008,8 @@ because xbuild doesn't support framework reference assemblies.
     ProjectFullPath="$(MSBuildProjectFullPath)"
     IncludeWrapSh="$(AndroidIncludeWrapSh)"
     CheckedBuild="$(_AndroidCheckedBuild)"
-    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)">
+    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+    UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2036,7 +2041,8 @@ because xbuild doesn't support framework reference assemblies.
       ProjectFullPath="$(MSBuildProjectFullPath)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)">
+      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+      UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle

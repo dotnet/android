@@ -78,10 +78,35 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
+		void SetAssemblyAbiMetadata (string abi, string assetType, ITaskItem assembly, ITaskItem? symbol, bool isDuplicate)
+		{
+			if (String.IsNullOrEmpty (abi) || (!isDuplicate && String.Compare ("native", assetType, StringComparison.OrdinalIgnoreCase) != 0)) {
+				return;
+			}
+
+			assembly.SetMetadata ("Abi", abi);
+			if (symbol != null) {
+				symbol.SetMetadata ("Abi", abi);
+			}
+		}
+
+		void SetAssemblyAbiMetadata (ITaskItem assembly, ITaskItem? symbol, bool isDuplicate)
+		{
+			string assetType = assembly.GetMetadata ("AssetType");
+			string rid = assembly.GetMetadata ("RuntimeIdentifier");
+			if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) || String.Compare ("resources", assetType, StringComparison.OrdinalIgnoreCase) == 0) {
+				// Satellite assemblies are abi-agnostic, they shouldn't have the Abi metadata set
+				return;
+			}
+
+			SetAssemblyAbiMetadata (AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid), assetType, assembly, symbol, isDuplicate);
+		}
+
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
 			foreach (var assembly in InputAssemblies) {
 				var symbol = GetOrCreateSymbolItem (symbols, assembly);
+				SetAssemblyAbiMetadata (assembly, symbol, isDuplicate: false);
 				symbol?.SetDestinationSubPath ();
 				assembly.SetDestinationSubPath ();
 				assembly.SetMetadata ("FrameworkAssembly", IsFrameworkAssembly (assembly).ToString ());
@@ -119,7 +144,7 @@ namespace Xamarin.Android.Tasks
 				if (mvids.Count > 1) {
 					foreach (var assembly in group) {
 						var symbol = GetOrCreateSymbolItem (symbols, assembly);
-						SetDestinationSubDirectory (assembly, group.Key, symbol);
+						SetDestinationSubDirectory (assembly, group.Key, symbol, isDuplicate: true);
 						output.Add (assembly);
 					}
 				} else {
@@ -133,6 +158,7 @@ namespace Xamarin.Android.Tasks
 							symbol?.SetDestinationSubPath ();
 							assembly.SetDestinationSubPath ();
 							output.Add (assembly);
+							SetAssemblyAbiMetadata (assembly, symbol, false);
 						} else {
 							symbols.Remove (Path.ChangeExtension (assembly.ItemSpec, ".pdb"));
 						}
@@ -172,9 +198,19 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Sets %(DestinationSubDirectory) and %(DestinationSubPath) based on %(RuntimeIdentifier)
 		/// </summary>
-		void SetDestinationSubDirectory (ITaskItem assembly, string fileName, ITaskItem? symbol)
+		void SetDestinationSubDirectory (ITaskItem assembly, string fileName, ITaskItem? symbol, bool isDuplicate)
 		{
 			var rid = assembly.GetMetadata ("RuntimeIdentifier");
+			string assetType = assembly.GetMetadata ("AssetType");
+
+			// Satellite assemblies have `RuntimeIdentifier` set, but they shouldn't - they aren't specific to any architecture, so they should have none of the
+			// abi-specific metadata set
+			//
+			if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) ||
+			    String.Compare ("resources", assetType, StringComparison.OrdinalIgnoreCase) == 0) {
+				rid = String.Empty;
+			}
+
 			var abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
 			if (!string.IsNullOrEmpty (abi)) {
 				string destination = Path.Combine (assembly.GetMetadata ("DestinationSubDirectory"), abi);
@@ -185,6 +221,8 @@ namespace Xamarin.Android.Tasks
 					symbol.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
 					symbol.SetMetadata ("DestinationSubPath", Path.Combine (destination, Path.GetFileName (symbol.ItemSpec)));
 				}
+
+				SetAssemblyAbiMetadata (abi, assetType, assembly, symbol, isDuplicate);
 			} else {
 				Log.LogDebugMessage ($"Android ABI not found for: {assembly.ItemSpec}");
 				assembly.SetDestinationSubPath ();
