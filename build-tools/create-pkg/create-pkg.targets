@@ -139,8 +139,6 @@
       <PkgBuildArgs Include="--version $(XAVersion)"/>
       <PkgBuildArgs Include="--install-location &quot;$(PkgInstallDir)&quot; "/>
       <PkgBuildArgs Include="--scripts &quot;$(PkgScriptsDir)&quot; "/>
-      <PkgBuildArgs Include="--min-os-version 10.12" />
-      <PkgBuildArgs Include="--compression latest" />
       <PkgBuildArgs Include="&quot;$(PkgOutputPath)/xamarin.android.pkg&quot; "/>
     </ItemGroup>
     <Exec Command="pkgbuild @(PkgBuildArgs, ' ')" />
