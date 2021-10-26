@@ -70,6 +70,8 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			if (doc.DocumentNode.FirstChild.InnerHtml.StartsWith ("<?xml", StringComparison.Ordinal))
 				doc.DocumentNode.FirstChild.Remove ();
 
+			FixEscapedQuotes (doc.DocumentNode);
+
 			var ms = new MemoryStream ();
 			var xs = new XmlWriterSettings {
 				Encoding = new UTF8Encoding (false),
@@ -86,6 +88,18 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			return ms;
 		}
 
+		static void FixEscapedQuotes (HtmlNode node)
+		{
+			// Quotation marks in attribute values are already escaped as '&quot;', however the Save ()
+			// is interpreting them as the string '&quot;' and thinks it needs to escape the ampersand,
+			// resulting in writing '&amp;quot;'.  Here we "un-escape" the quotation mark,
+			// so that Save () will escape it correctly as '&quot;'.
+			foreach (var attr in node.Attributes)
+				attr.Value = attr.Value.Replace ("&quot;", "\"");
+
+			foreach (var child in node.ChildNodes)
+				FixEscapedQuotes (child);
+		}
 		#endregion
 
 		#region data loader
