@@ -19,7 +19,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			Log.LogMessage(MessageImportance.Low, $"  {nameof (ProcessId)}: {ProcessId}");
 
 			using (var p = Process.GetProcessById (ProcessId)) {
-				p.Kill ();
+				if (!p.HasExited)
+					p.Kill ();
 			}
 
 			return !Log.HasLoggedErrors;
