@@ -128,13 +128,19 @@
     <PropertyGroup>
         <PkgProductOutputPath Condition="'$(UseCommercialInstallerName)' == 'True'">$(OutputPath)xamarin.android-$(XAVersion).pkg</PkgProductOutputPath>
         <PkgProductOutputPath Condition="'$(PkgProductOutputPath)' == ''">$(OutputPath)Xamarin.Android.Sdk-$(XAOSSInstallerSuffix).pkg</PkgProductOutputPath>
+        <CompressedPayloadDir>$(PayloadDir).compressed</CompressedPayloadDir>
     </PropertyGroup>
+    <RemoveDir Directories="$(CompressedPayloadDir)" />
+    <MakeDir Directories="$(CompressedPayloadDir)" />
+    <Exec Command="/usr/bin/ditto --hfsCompression &quot;$(PayloadDir)&quot; &quot;$(CompressedPayloadDir)&quot;"/>
     <ItemGroup>
-      <PkgBuildArgs Include="--root &quot;$(PayloadDir)&quot;" />
+      <PkgBuildArgs Include="--root &quot;$(CompressedPayloadDir)&quot;" />
       <PkgBuildArgs Include="--identifier com.xamarin.android.pkg" />
       <PkgBuildArgs Include="--version $(XAVersion)"/>
       <PkgBuildArgs Include="--install-location &quot;$(PkgInstallDir)&quot; "/>
       <PkgBuildArgs Include="--scripts &quot;$(PkgScriptsDir)&quot; "/>
+      <PkgBuildArgs Include="--min-os-version 10.12" />
+      <PkgBuildArgs Include="--compression latest" />
       <PkgBuildArgs Include="&quot;$(PkgOutputPath)/xamarin.android.pkg&quot; "/>
     </ItemGroup>
     <Exec Command="pkgbuild @(PkgBuildArgs, ' ')" />
