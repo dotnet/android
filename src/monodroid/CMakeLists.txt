@@ -35,9 +35,16 @@ endif()
 
 option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
 option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
+
+if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
+  set(STRIP_DEBUG_DEFAULT OFF)
+else()
+  set(STRIP_DEBUG_DEFAULT ON)
+endif()
+
 option(ENABLE_NET6 "Enable compilation for .NET6" OFF)
 option(ENABLE_TIMING "Build with timing support" OFF)
-option(STRIP_DEBUG "Strip debugging information when linking" ON)
+option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFAULT})
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 option(USE_CCACHE "Use ccache, if found, to speed up recompilation" ${CCACHE_OPTION_DEFAULT})
 

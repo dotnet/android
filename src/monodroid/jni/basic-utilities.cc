@@ -344,7 +344,7 @@ BasicUtilities::monodroid_strsplit (const char *str, const char *delimiter, size
 		vector = (char **) xmalloc (2 * sizeof (vector));
 		vector [0] = nullptr;
 	} else if (size > 0) {
-		vector[size - 1] = nullptr;
+		add_to_vector (&vector, size, nullptr);
 	}
 
 	return vector;
