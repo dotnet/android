@@ -131,8 +131,8 @@ stages:
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(XA.Build.Configuration).xml
         extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:UseASAN=true
-        artifactName: Mono.Android_Tests-Signed.apk
-        artifactFolder: Default
+        artifactSource: bin/Test$(XA.Build.Configuration)/Mono.Android_Tests-Signed.apk
+        artifactFolder: UseASAN
 
     # On API 28 emulator, run forms integration test with ASAN and UBSAN runtime sanitizers
     - template: yaml-templates/apk-instrumentation.yaml
@@ -143,7 +143,7 @@ stages:
         testResultsFiles: TestResult-UseASAN-Xamarin.Forms_Performance_Integration-Signed-$(XA.Build.Configuration).xml
         extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:UseASAN=true
         artifactSource: bin/Test$(XA.Build.Configuration)/Xamarin.Forms_Performance_Integration-Signed.apk
-        artifactFolder: Default
+        artifactFolder: UseASAN
         condition: and(succeeded(), eq(variables.avdApiLevel, '28'))
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -154,7 +154,7 @@ stages:
         testResultsFiles: TestResult-UseUBSAN-Xamarin.Forms_Performance_Integration-Signed-$(XA.Build.Configuration).xml
         extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:UseUBSAN=true
         artifactSource: bin/Test$(XA.Build.Configuration)/Xamarin.Forms_Performance_Integration-Signed.apk
-        artifactFolder: Default
+        artifactFolder: UseUBSAN
         condition: and(succeeded(), eq(variables.avdApiLevel, '28'))
 
     - task: MSBuild@1
