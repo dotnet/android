@@ -55,6 +55,8 @@ namespace Java.Interop.Tools.Generator
 		public static LocalizedMessage WarningUnexpectedRootChildNode => new LocalizedMessage (0x8602, Localization.Resources.Generator_BG8602);
 		public static LocalizedMessage WarningUnexpectedPackageChildNode => new LocalizedMessage (0x8603, Localization.Resources.Generator_BG8603);
 		public static LocalizedMessage WarningNestedTypeAncestorNotFound => new LocalizedMessage (0x8604, Localization.Resources.Generator_BG8604);
+		public static LocalizedMessage WarningJavaTypeNotResolved => new LocalizedMessage (0x8605, Localization.Resources.Generator_BG8605);
+		public static LocalizedMessage WarningTypesNotBoundDueToMissingJavaTypes => new LocalizedMessage (0x8606, Localization.Resources.Generator_BG8606);
 		public static LocalizedMessage WarningUnknownReturnType => new LocalizedMessage (0x8700, Localization.Resources.Generator_BG8700);
 		public static LocalizedMessage WarningInvalidReturnType => new LocalizedMessage (0x8701, Localization.Resources.Generator_BG8701);
 		public static LocalizedMessage WarningUnknownParameterType => new LocalizedMessage (0x8800, Localization.Resources.Generator_BG8800);

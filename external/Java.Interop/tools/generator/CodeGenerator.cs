@@ -15,6 +15,9 @@ using Java.Interop.Tools.TypeNameMappings;
 using MonoDroid.Generation.Utilities;
 using Java.Interop.Tools.Generator.Transformation;
 using Java.Interop.Tools.Generator;
+using Java.Interop.Tools.JavaTypeSystem;
+using System.Text;
+using generator;
 
 namespace Xamarin.Android.Binder
 {
@@ -101,10 +104,26 @@ namespace Xamarin.Android.Binder
 				apiSourceAttr = xr.GetAttribute ("api-source");
 			}
 
+			var is_classparse = apiSourceAttr == "class-parse";
+
+			// Resolve types using Java.Interop.Tools.JavaTypeSystem
+			if (is_classparse && !options.UseLegacyJavaResolver) {
+				var output_xml = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
+				JavaTypeResolutionFixups.Fixup (filename, output_xml, resolver, references.Distinct ().ToArray ());
+
+				if (only_xml_adjuster)
+					return;
+
+				// Use this output for future steps
+				filename = output_xml;
+				apiXmlFile = filename;
+				is_classparse = false;
+			}
+
 			// We don't use shallow referenced types with class-parse because the Adjuster process
 			// enumerates every ctor/method/property/field to build its model, so we will need
 			// every type to be fully populated.
-			opt.UseShallowReferencedTypes = apiSourceAttr != "class-parse";
+			opt.UseShallowReferencedTypes = !is_classparse;
 
 			foreach (var reference in references.Distinct ()) {
 				try {
@@ -129,10 +148,12 @@ namespace Xamarin.Android.Binder
 			}
 
 			// For class-parse API description, transform it to jar2xml style.
-			if (apiSourceAttr == "class-parse") {
+			// Resolve types using ApiXmlAdjuster
+			if (is_classparse && options.UseLegacyJavaResolver) {
 				apiXmlFile = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
 				new Adjuster ().Process (filename, opt, opt.SymbolTable.AllRegisteredSymbols (opt).OfType<GenBase> ().ToArray (), apiXmlFile, Report.Verbosity ?? 0);
 			}
+
 			if (only_xml_adjuster)
 				return;
 

@@ -4,17 +4,18 @@
     "projects": [
       "src\\Java.Interop.Localization\\Java.Interop.Localization.csproj",
       "src\\Java.Interop.Tools.Cecil\\Java.Interop.Tools.Cecil.csproj",
-      "src\\Java.Interop.Tools.JavaCallableWrappers\\Java.Interop.Tools.JavaCallableWrappers.csproj",
       "src\\Java.Interop.Tools.Diagnostics\\Java.Interop.Tools.Diagnostics.csproj",
       "src\\Java.Interop.Tools.Generator\\Java.Interop.Tools.Generator.csproj",
+      "src\\Java.Interop.Tools.JavaCallableWrappers\\Java.Interop.Tools.JavaCallableWrappers.csproj",
+      "src\\Java.Interop.Tools.JavaTypeSystem\\Java.Interop.Tools.JavaTypeSystem.csproj",
       "src\\Xamarin.Android.Tools.AnnotationSupport\\Xamarin.Android.Tools.AnnotationSupport.csproj",
       "src\\Xamarin.Android.Tools.ApiXmlAdjuster\\Xamarin.Android.Tools.ApiXmlAdjuster.csproj",
       "src\\Xamarin.Android.Tools.Bytecode\\Xamarin.Android.Tools.Bytecode.csproj",
       "src\\Xamarin.SourceWriter\\Xamarin.SourceWriter.csproj",
-      "tests\\generator-Tests\\generator-Tests.csproj",
       "tests\\Xamarin.Android.Tools.Bytecode-Tests\\Xamarin.Android.Tools.Bytecode-Tests.csproj",
       "tests\\Xamarin.SourceWriter-Tests\\Xamarin.SourceWriter-Tests.csproj",
-      "tools\\generator\\generator.csproj",
+      "tests\\generator-Tests\\generator-Tests.csproj",
+      "tools\\generator\\generator.csproj"
     ]
   }
 }

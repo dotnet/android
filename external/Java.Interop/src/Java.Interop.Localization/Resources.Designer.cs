@@ -322,6 +322,24 @@ namespace Java.Interop.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Java type &apos;{0}&apos; could not be found (are you missing a Java reference jar/aar or a Java binding library NuGet?).
+        /// </summary>
+        public static string Generator_BG8605 {
+            get {
+                return ResourceManager.GetString("Generator_BG8605", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some types or members could not be bound because referenced Java types could not be found. See the &apos;java-resolution-report.log&apos; file for details..
+        /// </summary>
+        public static string Generator_BG8606 {
+            get {
+                return ResourceManager.GetString("Generator_BG8606", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown return type &apos;{0}&apos; for member &apos;{1}&apos;..
         /// </summary>
         public static string Generator_BG8700 {

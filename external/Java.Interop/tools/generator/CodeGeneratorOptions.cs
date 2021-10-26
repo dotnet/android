@@ -52,6 +52,7 @@ namespace Xamarin.Android.Binder
 		public bool		    SupportDefaultInterfaceMethods { get; set; }
 		public bool		    SupportNestedInterfaceTypes { get; set; }
 		public bool		    SupportNullableReferenceTypes { get; set; }
+		public bool		    UseLegacyJavaResolver { get; set; }
 
 		public XmldocStyle		    XmldocStyle { get; set; } = XmldocStyle.IntelliSense;
 
@@ -167,6 +168,9 @@ namespace Xamarin.Android.Binder
 				{ "annotations=",
 					"For internal use.",
 					v => opts.AnnotationsZipFiles.Add (v) },
+				{ "use-legacy-java-resolver",
+					"Uses the legacy ApiXmlAdjuster to resolve Java types, this is a *temporary* fallback in case there are unknown issues with JavaTypeSystem.",
+					v => opts.UseLegacyJavaResolver = v != null },
 				new ResponseFileSource (),
 			};
 

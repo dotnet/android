@@ -101,6 +101,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "invocation-overhead", "test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeTiming", "tests\NativeTiming\NativeTiming.csproj", "{BF5A4019-F2FF-45AC-949D-EF7E8C94196B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaTypeSystem", "src\Java.Interop.Tools.JavaTypeSystem\Java.Interop.Tools.JavaTypeSystem.csproj", "{B173F53B-986C-4E0D-881C-063BBB116E1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.JavaTypeSystem-Tests", "tests\Java.Interop.Tools.JavaTypeSystem-Tests\Java.Interop.Tools.JavaTypeSystem-Tests.csproj", "{11942DE9-AEC2-4B95-87AB-CA707C37643D}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{58b564a1-570d-4da2-b02d-25bddb1a9f4f}*SharedItemsImports = 5
@@ -284,6 +288,14 @@ Global
 		{BF5A4019-F2FF-45AC-949D-EF7E8C94196B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF5A4019-F2FF-45AC-949D-EF7E8C94196B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF5A4019-F2FF-45AC-949D-EF7E8C94196B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B173F53B-986C-4E0D-881C-063BBB116E1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B173F53B-986C-4E0D-881C-063BBB116E1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B173F53B-986C-4E0D-881C-063BBB116E1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B173F53B-986C-4E0D-881C-063BBB116E1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11942DE9-AEC2-4B95-87AB-CA707C37643D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11942DE9-AEC2-4B95-87AB-CA707C37643D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11942DE9-AEC2-4B95-87AB-CA707C37643D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11942DE9-AEC2-4B95-87AB-CA707C37643D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -332,6 +344,8 @@ Global
 		{998D178B-F4C7-48B5-BDEE-44E2F869BB22} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
 		{3CF58D34-693C-408A-BFE7-BC5E4BE44A26} = {271C9F30-F679-4793-942B-0D9527CB3E2F}
 		{BF5A4019-F2FF-45AC-949D-EF7E8C94196B} = {271C9F30-F679-4793-942B-0D9527CB3E2F}
+		{B173F53B-986C-4E0D-881C-063BBB116E1D} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
+		{11942DE9-AEC2-4B95-87AB-CA707C37643D} = {271C9F30-F679-4793-942B-0D9527CB3E2F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29204E0C-382A-49A0-A814-AD7FBF9774A5}

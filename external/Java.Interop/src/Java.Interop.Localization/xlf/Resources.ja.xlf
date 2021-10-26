@@ -167,6 +167,16 @@ The following terms should not be translated: &lt;package&gt;.</note>
         <target state="new">Could not find top ancestor type '{0}' for nested type '{1}'.</target>
         <note>{0}, {1} - .NET types.</note>
       </trans-unit>
+      <trans-unit id="Generator_BG8605">
+        <source>The Java type '{0}' could not be found (are you missing a Java reference jar/aar or a Java binding library NuGet?)</source>
+        <target state="new">The Java type '{0}' could not be found (are you missing a Java reference jar/aar or a Java binding library NuGet?)</target>
+        <note>{0} - Java type.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8606">
+        <source>Some types or members could not be bound because referenced Java types could not be found. See the 'java-resolution-report.log' file for details.</source>
+        <target state="new">Some types or members could not be bound because referenced Java types could not be found. See the 'java-resolution-report.log' file for details.</target>
+        <note>The following terms should not be translated: java-resolution-report.log</note>
+      </trans-unit>
       <trans-unit id="Generator_BG8700">
         <source>Unknown return type '{0}' for member '{1}'.</source>
         <target state="new">Unknown return type '{0}' for member '{1}'.</target>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputPath>$(TestOutputFullPath)</OutputPath>
+  </PropertyGroup>
+
+  <Import Project="..\..\build-tools\scripts\cecil.projitems" />
+
+  <ItemGroup>
+    <Compile Include="..\utils\NullableAttributes.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
+  </ItemGroup>
+</Project>
