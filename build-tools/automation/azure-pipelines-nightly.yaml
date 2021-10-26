@@ -60,7 +60,7 @@ stages:
 
     - template: yaml-templates/commercial-build.yaml
       parameters:
-        makeMSBuildArgs: /p:EnableRoslynAnalyzers=true
+        makeMSBuildArgs: /p:EnableRoslynAnalyzers=true /p:EnableNativeAnalyzers=true
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -131,7 +131,7 @@ stages:
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(XA.Build.Configuration).xml
         extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi)
-        artifactName: Mono.Android_Tests-Signed.apk
+        artifactSource: bin/Test$(XA.Build.Configuration)/Mono.Android_Tests-Signed.apk
         artifactFolder: Default
 
     - task: MSBuild@1
