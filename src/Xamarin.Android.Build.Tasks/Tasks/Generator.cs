@@ -59,6 +59,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] JavadocXml { get; set; }
 		public string JavadocVerbosity { get; set; }
 
+		public bool UseJavaLegacyResolver { get; set; }
+
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
 		public override bool RunTask ()
@@ -198,6 +200,9 @@ namespace Xamarin.Android.Tasks
 						WriteLine (sw, $"\"--with-javadoc-xml={Path.GetFullPath (xml.ItemSpec)}\"");
 					}
 				}
+
+				if (UseJavaLegacyResolver)
+					WriteLine (sw, "--use-legacy-java-resolver=true");
 			}
 
 			cmd.AppendSwitch (ApiXmlInput);

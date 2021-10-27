@@ -80,6 +80,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         EnableBindingNestedInterfaceTypes="$(AndroidBoundInterfacesContainTypes)"
         EnableBindingInterfaceConstants="$(AndroidBoundInterfacesContainConstants)"
         Nullable="$(Nullable)"
+        UseJavaLegacyResolver="$(_AndroidUseJavaLegacyResolver)"
     />
 
     <!-- Write a flag so we won't redo this target if nothing changed -->
