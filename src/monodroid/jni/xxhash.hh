@@ -52,7 +52,7 @@ namespace xamarin::android
 		force_inline static constexpr uint32_t hash (const char *input, size_t len) noexcept
 		{
 			return finalize (
-				(len >= 16 ? h16bytes<Seed> (input, len) : Seed + PRIME5) + len,
+				(len >= 16 ? h16bytes<Seed> (input, len) : Seed + PRIME5) + static_cast<uint32_t>(len),
 				(input) + (len & ~0xFU),
 				len & 0xF
 			);

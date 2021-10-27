@@ -76,6 +76,12 @@ namespace xamarin::android::internal
 			return memcmp (_start, s, length ()) == 0;
 		}
 
+		template<size_t Size>
+		force_inline bool equal (const char (&s)[Size]) noexcept
+		{
+			return equal (s, Size - 1);
+		}
+
 		force_inline bool starts_with_c (const char *s) const noexcept
 		{
 			if (s == nullptr)

@@ -24,6 +24,7 @@
 	va_end ((_args_));
 
 using namespace xamarin::android;
+using namespace xamarin::android::internal;
 
 // Must match the same ordering as LogCategories
 static const char* log_names[] = {
@@ -99,10 +100,10 @@ open_file (LogCategories category, const char *path, const char *override_dir, c
 	return f;
 }
 
-static const char *gref_file = NULL;
-static const char *lref_file = NULL;
-static int light_gref  = 0;
-static int light_lref  = 0;
+static const char *gref_file = nullptr;
+static const char *lref_file = nullptr;
+static bool light_gref  = false;
+static bool light_lref  = false;
 
 void
 init_reference_logging (const char *override_dir)
@@ -113,7 +114,7 @@ init_reference_logging (const char *override_dir)
 
 	if ((log_categories & LOG_LREF) != 0 && !light_lref) {
 		// if both lref & gref have files specified, and they're the same path, reuse the FILE*.
-		if (lref_file != NULL && strcmp (lref_file, gref_file != NULL ? gref_file : "") == 0) {
+		if (lref_file != nullptr && strcmp (lref_file, gref_file != nullptr ? gref_file : "") == 0) {
 			lref_log  = gref_log;
 		} else {
 			lref_log  = open_file (LOG_LREF, lref_file, override_dir, "lrefs.txt");
@@ -121,12 +122,25 @@ init_reference_logging (const char *override_dir)
 	}
 }
 
+template<size_t NameSize>
+force_inline static bool
+set_category (const char (&name)[NameSize], string_segment& arg, unsigned int entry, bool arg_starts_with_name = false)
+{
+	if ((log_categories & entry) == entry) {
+		return false;
+	}
+
+	if (arg_starts_with_name ? arg.starts_with (name, NameSize - 1) : arg.equal (name, NameSize - 1)) {
+		log_categories |= entry;
+		return true;
+	}
+
+	return false;
+}
+
 void
 init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 {
-	char *value;
-	char **args, **ptr;
-
 	mono_log_mask = nullptr;
 	mono_log_level = nullptr;
 
@@ -134,71 +148,114 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 	log_categories = LOG_DEFAULT;
 #endif
 	log_timing_categories = LOG_TIMING_DEFAULT;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_LOG_PROPERTY, &value) == 0)
+
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_LOG_PROPERTY, value) == 0)
 		return;
 
-	args = utils.monodroid_strsplit (value, ",", 0);
-	free (value);
-	value = NULL;
+	string_segment param;
+	while (value.next_token (',', param)) {
+		constexpr char CAT_ALL[] = "all";
+		constexpr size_t CAT_ALL_SIZE = sizeof(CAT_ALL) - 1;
 
-	for (ptr = args; ptr && *ptr; ptr++) {
-		const char *arg = *ptr;
-
-		if (!strcmp (arg, "all")) {
+		if (param.equal (CAT_ALL, CAT_ALL_SIZE)) {
 			log_categories = 0xFFFFFFFF;
 			break;
 		}
 
-#define CATEGORY(name,entry) do { \
-		if (!strncmp (arg, name, sizeof(name)-1)) \
-			log_categories |= entry; \
-	} while (0)
+		if (set_category ("assembly", param, LOG_ASSEMBLY)) {
+			continue;
+		}
 
-		CATEGORY ("assembly", LOG_ASSEMBLY);
-		CATEGORY ("default",  LOG_DEFAULT);
-		CATEGORY ("debugger", LOG_DEBUGGER);
-		CATEGORY ("gc",       LOG_GC);
-		CATEGORY ("gref",     LOG_GREF);
-		CATEGORY ("lref",     LOG_LREF);
-		CATEGORY ("timing",   LOG_TIMING);
-		CATEGORY ("bundle",   LOG_BUNDLE);
-		CATEGORY ("network",  LOG_NET);
-		CATEGORY ("netlink",  LOG_NETLINK);
+		if (set_category ("default",  param, LOG_DEFAULT)) {
+			continue;
+		}
 
-#undef CATEGORY
+		if (set_category ("debugger", param, LOG_DEBUGGER))  {
+			continue;
+		}
+
+		if (set_category ("gc",       param, LOG_GC)) {
+			continue;
+		}
+
+		if (set_category ("gref",     param, LOG_GREF)) {
+			continue;
+		}
+
+		if (set_category ("lref",     param, LOG_LREF)) {
+			continue;
+		}
+
+		if (set_category ("timing",   param, LOG_TIMING)) {
+			continue;
+		}
+
+		if (set_category ("bundle",   param, LOG_BUNDLE)) {
+			continue;
+		}
+
+		if (set_category ("network",  param, LOG_NET)) {
+			continue;
+		}
+
+		if (set_category ("netlink",  param, LOG_NETLINK)) {
+			continue;
+		}
+
+		constexpr char CAT_GREF_EQUALS[] = "gref=";
+		constexpr size_t CAT_GREF_EQUALS_LEN = sizeof(CAT_GREF_EQUALS) - 1;
+		if (set_category (CAT_GREF_EQUALS, param, LOG_GREF, true /* arg_starts_with_name */)) {
+			gref_file = utils.strdup_new (param, CAT_GREF_EQUALS_LEN);
+			continue;
+		}
+
+		if (set_category ("gref-", param, LOG_GREF)) {
+			light_gref = true;
+			continue;
+		}
+
+		constexpr char CAT_LREF_EQUALS[] = "lref=";
+		constexpr size_t CAT_LREF_EQUALS_LEN = sizeof(CAT_LREF_EQUALS) - 1;
+		if (set_category (CAT_LREF_EQUALS, param, LOG_LREF, true /* arg_starts_with_name */)) {
+			lref_file = utils.strdup_new (param, CAT_LREF_EQUALS_LEN);
+			continue;
+		}
+
+		if (set_category ("lref-", param, LOG_LREF)) {
+			light_lref = true;
+			continue;
+		}
+
+		if (param.starts_with ("timing=bare")) {
+			log_timing_categories |= LOG_TIMING_BARE;
+			continue;
+		}
 
 		constexpr char MONO_LOG_MASK_ARG[] = "mono_log_mask=";
 		constexpr size_t MONO_LOG_MASK_ARG_LEN = sizeof(MONO_LOG_MASK_ARG) - 1;
+		if (param.starts_with (MONO_LOG_MASK_ARG)) {
+			mono_log_mask = utils.strdup_new (param, MONO_LOG_MASK_ARG_LEN);
+			continue;
+		}
+
 		constexpr char MONO_LOG_LEVEL_ARG[] = "mono_log_level=";
 		constexpr size_t MONO_LOG_LEVEL_ARG_LEN = sizeof(MONO_LOG_LEVEL_ARG) - 1;
-
-		if (!strncmp (arg, "gref=", 5)) {
-			log_categories  |= LOG_GREF;
-			gref_file        = arg + 5;
-		} else if (!strncmp (arg, "gref-", 5)) {
-			log_categories  |= LOG_GREF;
-			light_gref       = 1;
-		} else if (!strncmp (arg, "lref=", 5)) {
-			log_categories  |= LOG_LREF;
-			lref_file        = arg + 5;
-		} else if (!strncmp (arg, "lref-", 5)) {
-			log_categories  |= LOG_LREF;
-			light_lref       = 1;
-		} else if (!strncmp (arg, "timing=bare", 11)) {
-			log_timing_categories |= LOG_TIMING_BARE;
-		} else if (strncmp (arg, MONO_LOG_MASK_ARG, MONO_LOG_MASK_ARG_LEN) == 0) {
-			mono_log_mask = utils.strdup_new (arg + MONO_LOG_MASK_ARG_LEN);
-		} else if (strncmp (arg, MONO_LOG_LEVEL_ARG, MONO_LOG_LEVEL_ARG_LEN) == 0) {
-			mono_log_level = utils.strdup_new (arg + MONO_LOG_LEVEL_ARG_LEN);
+		if (param.starts_with (MONO_LOG_LEVEL_ARG)) {
+			mono_log_level = utils.strdup_new (param, MONO_LOG_LEVEL_ARG_LEN);
+			continue;
 		}
+
 #if !defined (WINDOWS) && defined (DEBUG)
-		else if (!strncmp (arg, "debugger-log-level=", 19)) {
-			debug.set_debugger_log_level (arg + 19);
+		constexpr char DEBUGGER_LOG_LEVEL[] = "debugger-log-level=";
+		constexpr size_t DEBUGGER_LOG_LEVEL_LEN = sizeof (DEBUGGER_LOG_LEVEL) - 1;
+		if (param.starts_with (DEBUGGER_LOG_LEVEL)) {
+			dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> level;
+			level.assign (param.start () + DEBUGGER_LOG_LEVEL_LEN, param.length () - DEBUGGER_LOG_LEVEL_LEN);
+			debug.set_debugger_log_level (level.get ());
 		}
 #endif
 	}
-
-	utils.monodroid_strfreev (args);
 
 #if DEBUG
 	if ((log_categories & LOG_GC) != 0)

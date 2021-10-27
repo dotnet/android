@@ -284,69 +284,73 @@ BasicUtilities::monodroid_strfreev (char **str_array)
 char **
 BasicUtilities::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
 {
-	const char *c;
-	char *token, **vector;
-	size_t size = 1;
-
-	if (strncmp (str, delimiter, strlen (delimiter)) == 0) {
-		vector = (char **)xmalloc (2 * sizeof(vector));
-		vector[0] = strdup ("");
-		size++;
-		str += strlen (delimiter);
-	} else {
-		vector = nullptr;
+	if (str == nullptr || *str == '\0') {
+		return static_cast<char**>(xcalloc (sizeof(char*), 1));
 	}
 
-	while (*str && !(max_tokens > 0 && size >= max_tokens)) {
-		c = str;
-		if (strncmp (str, delimiter, strlen (delimiter)) == 0) {
-			token = strdup ("");
-			str += strlen (delimiter);
+	const char *p_str = str;
+	size_t tokens_in_str = 0;
+	size_t delimiter_len = strlen (delimiter);
+
+	while (*p_str != '\0') {
+		size_t bytes = strspn (p_str, delimiter);
+		if (bytes == 0) {
+			bytes = 1;
 		} else {
-			while (*str && strncmp (str, delimiter, strlen (delimiter)) != 0) {
-				str++;
-			}
-
-			if (*str) {
-				size_t toklen = static_cast<size_t>((str - c));
-				size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, toklen, 1);
-				token = new char [alloc_size];
-				strncpy (token, c, toklen);
-				token [toklen] = '\0';
-
-				/* Need to leave a trailing empty
-				 * token if the delimiter is the last
-				 * part of the string
-				 */
-				if (strcmp (str, delimiter) != 0) {
-					str += strlen (delimiter);
-				}
-			} else {
-				token = strdup (c);
-			}
+			tokens_in_str += bytes / delimiter_len;
 		}
 
-		add_to_vector (&vector, size, token);
-		size++;
+		p_str += bytes;
 	}
 
-	if (*str) {
-		if (strcmp (str, delimiter) == 0)
-			add_to_vector (&vector, size, strdup (""));
-		else {
-			/* Add the rest of the string as the last element */
-			add_to_vector (&vector, size, strdup (str));
+	size_t vector_size = (max_tokens > 0 && tokens_in_str >= max_tokens) ? max_tokens + 1 : tokens_in_str + 2; // Includes the terminating 'nullptr` entry
+
+	char **vector = static_cast<char**>(xmalloc (MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(char*), vector_size)));
+	size_t vector_idx = 0;
+
+	while (*str != '\0' && !(max_tokens > 0 && vector_idx + 1 >= max_tokens)) {
+		const char *c = str;
+
+		if (strncmp (str, delimiter, delimiter_len) == 0) {
+			vector[vector_idx++] = strdup ("");
+			str += delimiter_len;
+			continue;
 		}
-		size++;
+
+		while (*str != '\0' && strncmp (str, delimiter, delimiter_len) != 0) {
+			str++;
+		}
+
+		if (*str == '\0') {
+			vector[vector_idx++] = strdup (c);
+			continue;
+		}
+
+		size_t toklen = static_cast<size_t>((str - c));
+		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, toklen, 1);
+		char *token = static_cast<char*>(xmalloc (alloc_size));
+		strncpy (token, c, toklen);
+		token [toklen] = '\0';
+		vector[vector_idx++] = token;
+
+		/* Need to leave a trailing empty
+		 * token if the delimiter is the last
+		 * part of the string
+		 */
+		if (strcmp (str, delimiter) != 0) {
+			str += delimiter_len;
+		}
 	}
 
-	if (vector == nullptr) {
-		vector = (char **) xmalloc (2 * sizeof (vector));
-		vector [0] = nullptr;
-	} else if (size > 0) {
-		add_to_vector (&vector, size, nullptr);
+	if (*str != '\0') {
+		if (strncmp (str, delimiter, delimiter_len) == 0) {
+			vector[vector_idx++] = strdup ("");
+		} else {
+			vector[vector_idx++] = strdup (str);
+		}
 	}
 
+	vector[vector_idx] = nullptr;
 	return vector;
 }
 
@@ -369,17 +373,4 @@ BasicUtilities::monodroid_strdup_vprintf (const char *format, va_list vargs)
 	int n = vasprintf (&ret, format, vargs);
 
 	return n == -1 ? nullptr : ret;
-}
-
-void
-BasicUtilities::add_to_vector (char ***vector, size_t size, char *token)
-{
-	if (*vector == nullptr) {
-		*vector = (char **)static_cast<char**>(xmalloc (size * sizeof(*vector)));
-	} else {
-		size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(*vector), size + 1);
-		*vector = static_cast<char**>(xrealloc (*vector, alloc_size));
-	}
-
-	(*vector)[size - 1] = token;
 }
