@@ -14,6 +14,7 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
+			// Set when running on Azure Pipelines https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables
 			var rootDir = Environment.GetEnvironmentVariable ("BUILD_STAGINGDIRECTORY");
 			if (!Directory.Exists (rootDir))
 				return false;
