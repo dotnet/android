@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -280,7 +280,7 @@ namespace Xamarin.Android.Tools
 			return props;
 		}
 
-		// Keep ordering in sync w/ GetPreferredJdkInfos
+		// Keep ordering in sync w/ GetSupportedJdkInfos
 		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger = null)
 		{
 			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
@@ -302,8 +302,10 @@ namespace Xamarin.Android.Tools
 		}
 
 		// Keep ordering in sync w/ GetKnownSystemJdkInfos
-		internal static IEnumerable<JdkInfo> GetPreferredJdkInfos (Action<TraceLevel, string> logger)
+		public static IEnumerable<JdkInfo> GetSupportedJdkInfos (Action<TraceLevel, string>? logger = null)
 		{
+			logger = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
+
 			return MicrosoftOpenJdkLocations.GetMicrosoftOpenJdks (logger)
 				.Concat (EclipseAdoptiumJdkLocations.GetEclipseAdoptiumJdks (logger))
 				.Concat (MicrosoftDistJdkLocations.GetMicrosoftDistJdks (logger))
