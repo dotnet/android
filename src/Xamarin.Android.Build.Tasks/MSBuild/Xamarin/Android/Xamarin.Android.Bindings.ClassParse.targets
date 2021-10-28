@@ -43,7 +43,8 @@ This file is only used by binding projects.
         ToolPath="$(MonoAndroidToolsDirectory)"
         ToolExe="$(BindingsGeneratorToolExe)"
         Nullable="$(Nullable)"
-    />
+        UseJavaLegacyResolver="$(_AndroidUseJavaLegacyResolver)"
+     />
   </Target>
 
   <Target Name="_GetJavaSourceJarJavadocFiles"
