@@ -1193,13 +1193,14 @@ stages:
         targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
         overWrite: true
         flattenFolders: true
-      condition: always()
+      condition: ne(variables['Agent.JobStatus'], 'Succeeded')
 
     - template: yaml-templates/publish-artifact.yaml
       parameters:
         displayName: upload designer binlogs
         artifactName: Test Results - Designer - macOS
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
+        condition: ne(variables['Agent.JobStatus'], 'Succeeded')
 
   # Check - "Xamarin.Android (Designer Tests Windows)"
   # TODO: Enable once Windows test issues are fixed.
@@ -1270,13 +1271,14 @@ stages:
         targetFolder: $(Build.ArtifactStagingDirectory)\designer-binlogs
         overWrite: true
         flattenFolders: true
-      condition: always()
+      condition: ne(variables['Agent.JobStatus'], 'Succeeded')
 
     - template: yaml-templates/publish-artifact.yaml
       parameters:
         displayName: upload designer binlogs
         artifactName: Test Results - Designer - Windows
         targetPath: $(Build.ArtifactStagingDirectory)\designer-binlogs
+        condition: ne(variables['Agent.JobStatus'], 'Succeeded')
 
 - stage: bcl_tests
   displayName: BCL Emulator Tests
