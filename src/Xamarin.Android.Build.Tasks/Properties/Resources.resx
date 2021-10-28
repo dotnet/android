@@ -460,7 +460,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
-    <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.</value>
+    <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>

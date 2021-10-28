@@ -3,7 +3,7 @@
   <file datatype="xml" source-language="en" target-language="pt-BR" original="../Resources.resx">
     <body>
       <trans-unit id="XA2000">
-        <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.</source>
+        <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.</source>
         <target state="needs-review-translation">O uso de AppDomain.CreateDomain() foi detectado no assembly: {0}. O .NET 5 dá suporte apenas a um único AppDomain, portanto, essa API não estará mais disponível no Xamarin.Android quando o .NET 5 for lançado.</target>
         <note>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</note>
