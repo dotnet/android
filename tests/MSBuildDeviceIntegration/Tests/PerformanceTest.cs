@@ -326,6 +326,7 @@ namespace Xamarin.Android.Build.Tests
 			app.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () => "public class Foo : Bar { }"
 			});
+			app.PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
 			//NOTE: this will skip a 382ms <VerifyVersionsTask/> from the support library
 			app.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
 

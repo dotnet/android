@@ -131,12 +131,6 @@ stages:
       displayName: make all-tests
 
     - script: >
-        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration)" &&
-        make package-build-status CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: package build status
-
-    - script: >
         echo "make run-performance-tests CONFIGURATION=$(XA.Build.Configuration)" &&
         make run-performance-tests CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
@@ -145,7 +139,8 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: Build Results - macOS
+        includeBuildResults: true
+        artifactName: OSS Build Results - macOS
 
 - stage: linux_stage
   displayName: Linux
@@ -199,5 +194,5 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        configuration: $(XA.Build.Configuration)
         artifactName: OSS Build Results - Linux
+        includeBuildResults: true

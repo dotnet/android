@@ -138,8 +138,9 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: Build Results - macOS
+        includeBuildResults: true
 
     - template: yaml-templates/run-xaprepare.yaml
       parameters:
@@ -270,6 +271,7 @@ stages:
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: Build Results - Windows
+        includeBuildResults: true
 
     - template: yaml-templates\fail-on-issue.yaml
 
@@ -382,6 +384,7 @@ stages:
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: Build Results - Windows DotNet
+        includeBuildResults: true
 
     - template: yaml-templates\fail-on-issue.yaml
 
@@ -463,8 +466,9 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: Build Results - Linux
+        includeBuildResults: true
 
     - template: yaml-templates\fail-on-issue.yaml
 
@@ -819,7 +823,6 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        configuration: $(XA.Build.Configuration)
         artifactName: Test Results - APKs .NET - macOS
 
     - task: MSBuild@1
@@ -1580,8 +1583,9 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: Legacy Notarization Results - macOS
+        includeBuildResults: true
 
   # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
   - job: queue_vsix_signing

@@ -78,14 +78,3 @@ package-deb: $(ZIP_OUTPUT)
 	cp LICENSE $(ZIP_OUTPUT_BASENAME)/debian/copyright
 	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package xamarin.android-oss --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
 	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot
-
-
-_RESULT_PACKAGE_SUFFIX   = -v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
-
-"xa-test-results$(_RESULT_PACKAGE_SUFFIX).zip" package-test-results:
-	msbuild build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj /t:ZipTestResults \
-		/p:Configuration=$(CONFIGURATION) /p:TestResultZipName="xa-test-results$(_RESULT_PACKAGE_SUFFIX)"
-
-"xa-build-status$(_RESULT_PACKAGE_SUFFIX).zip" package-build-status:
-	msbuild build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj /t:ZipBuildStatus \
-		/p:Configuration=$(CONFIGURATION) /p:BuildStatusZipName="xa-build-status$(_RESULT_PACKAGE_SUFFIX)"

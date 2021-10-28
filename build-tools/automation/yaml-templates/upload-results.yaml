@@ -1,18 +1,37 @@
 parameters:
-  solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+  xaSourcePath: $(System.DefaultWorkingDirectory)
   configuration: $(XA.Build.Configuration)
   artifactName: results
+  includeBuildResults: false
 
 steps:
-- task: MSBuild@1
-  displayName: package build and test results
-  inputs:
-    solution: ${{ parameters.solution }}
-    configuration: ${{ parameters.configuration }}
-    msbuildArguments: /restore /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
-  condition: always()
-
-- template: publish-artifact.yaml
+- template: run-xaprepare.yaml
   parameters:
-    displayName: upload build and test results
-    artifactName: ${{ parameters.artifactName }}
+    configuration:  ${{ parameters.configuration }}
+    arguments: --s=CopyExtraResultFilesForCI --verbosity v
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    displayName: Copy extra result files
+    condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+
+- ${{ if eq(parameters.includeBuildResults, false) }}:
+  - template: publish-artifact.yaml
+    parameters:
+      displayName: upload test results
+      artifactName: ${{ parameters.artifactName }}
+      targetPath: $(Build.StagingDirectory)/Test${{ parameters.configuration }}
+      condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+
+# Copy Build$(Configuration) folder into test result root and upload single artifact
+- ${{ if eq(parameters.includeBuildResults, true) }}:
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: $(Build.StagingDirectory)/Build${{ parameters.configuration }}
+      targetFolder: $(Build.StagingDirectory)/Test${{ parameters.configuration }}/Build${{ parameters.configuration }}
+    condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+
+  - template: publish-artifact.yaml
+    parameters:
+      displayName: upload build and test results
+      artifactName: ${{ parameters.artifactName }}
+      targetPath: $(Build.StagingDirectory)/Test${{ parameters.configuration }}
+      condition: ne(variables['Agent.JobStatus'], 'Succeeded')

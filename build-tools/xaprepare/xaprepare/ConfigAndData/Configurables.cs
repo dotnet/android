@@ -218,62 +218,6 @@ namespace Xamarin.Android.Prepare
 				"$(ZIP_OUTPUT_BASENAME)/bin/*/bundle-*.zip"
 			};
 
-			/// <summary>
-			///   Used in rules.mk generator. Files to include in test results bundle. Must be syntactically
-			///   correct for GNU Make.
-			/// </summary>
-			public static readonly List <string> TestResultsBundleInclude = new List <string> {
-				"$(wildcard TestResult-*.xml)",
-				"$(wildcard bin/Test$(CONFIGURATION)/compatibility)",
-				"$(wildcard bin/Test$(CONFIGURATION)/logcat*)",
-				"$(wildcard bin/Test$(CONFIGURATION)/msbuild*.binlog*)",
-				"$(wildcard bin/Test$(CONFIGURATION)/temp)",
-				"$(wildcard bin/Test$(CONFIGURATION)/EmbeddedDSO)",
-				"$(wildcard bin/Test$(CONFIGURATION)/CodeBehind)",
-				"$(wildcard bin/Test$(CONFIGURATION)/TestOutput-*.txt)",
-				"$(wildcard bin/Test$(CONFIGURATION)/Timing_*)",
-				"$(wildcard *.csv)",
-			};
-
-			/// <summary>
-			///   Used in rules.mk generator. Files to exclude from the test results bundle. Must be syntactically
-			///   correct for GNU Make.
-			/// </summary>
-			public static readonly List <string> TestResultsBundleExclude = new List <string> {
-			};
-
-			/// <summary>
-			///   Used in rules.mk generator. Files to include in build status bundle archive. Must be syntactically
-			///   correct for GNU Make.
-			/// </summary>
-			public static readonly List <string> BuildStatusBundleInclude = new List <string> {
-				"Configuration.OperatingSystem.props",
-				"$(wildcard bin/Build$(CONFIGURATION)/msbuild*.binlog)",
-				"$(shell find . -name 'config.log')",
-				"$(shell find . -name 'config.status')",
-				"$(shell find . -name 'config.h')",
-				"$(shell find . -name 'CMakeCache.txt')",
-				"$(shell find . -name 'config.h')",
-				"$(shell find . -name '.ninja_log')",
-				"$(shell find . -name 'android-*.config.cache')",
-				"bin/Build$(CONFIGURATION)/XABuildConfig.cs",
-			};
-
-			/// <summary>
-			///   Used in rules.mk generator. Optional files to include in the build status bundle (included only if
-			///   they exist). Must be syntactically correct for GNU Make.
-			/// </summary>
-			public static readonly List <string> BuildStatusBundleIncludeConditional = new List <string> {
-				"Configuration.Override.props",
-			};
-
-			/// <summary>
-			///   Used in rules.mk generator. Files to exclude from the build status bundle. Must be syntactically
-			///   correct for GNU Make.
-			/// </summary>
-			public static readonly List <string> BuildStatusBundleExclude = new List <string> {
-			};
-
 			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
 				new NDKTool (name: "as"),
 				new NDKTool (name: "ld"),

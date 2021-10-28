@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -47,6 +47,11 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
+			public static string TestDirectoryRoot {
+				get;
+				private set;
+			}
+
 			static SetUp ()
 			{
 				using (var builder = new Builder ()) {
@@ -68,6 +73,8 @@ namespace Xamarin.Android.Build.Tests
 			[OneTimeSetUp]
 			public void BeforeAllTests ()
 			{
+				TestDirectoryRoot = XABuildPaths.TestOutputDirectory;
+
 				try {
 					DeviceSdkVersion = GetSdkVersion ();
 					if (DeviceSdkVersion != -1) {
@@ -138,7 +145,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public string Root {
 			get {
-				return Path.GetFullPath (XABuildPaths.TestOutputDirectory);
+				return Path.GetFullPath (SetUp.TestDirectoryRoot);
 			}
 		}
 

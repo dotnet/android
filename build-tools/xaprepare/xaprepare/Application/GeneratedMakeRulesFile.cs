@@ -51,12 +51,7 @@ namespace Xamarin.Android.Prepare
 
 			WriteVariable ("ZIP_EXTENSION", context.OS.ZipExtension);
 			WriteVariable ("ZIP_OUTPUT_BASENAME",    GetOutputFileName (context, "xamarin.android-oss"));
-			WriteVariable ("_TEST_RESULTS_BASENAME", GetOutputFileName (context, "xa-test-results"));
-			WriteVariable ("_BUILD_STATUS_BASENAME", GetOutputFileName (context, "xa-build-status"));
-
 			WriteVariable ("ZIP_OUTPUT",               "$(ZIP_OUTPUT_BASENAME).$(ZIP_EXTENSION)");
-			WriteVariable ("_BUILD_STATUS_ZIP_OUTPUT", "$(_BUILD_STATUS_BASENAME).$(ZIP_EXTENSION)");
-			WriteVariable ("_TEST_RESULTS_ZIP_OUTPUT", "$(_TEST_RESULTS_BASENAME).$(ZIP_EXTENSION)");
 
 			var allApiLevels     = new List <string> ();
 			var allPlatformIDs   = new List <string> ();
@@ -118,11 +113,6 @@ namespace Xamarin.Android.Prepare
 
 			WriteListVariable ("_BUNDLE_ZIPS_INCLUDE",         Configurables.Defaults.BundleZipsInclude);
 			WriteListVariable ("_BUNDLE_ZIPS_EXCLUDE",         Configurables.Defaults.BundleZipsExclude);
-			WriteListVariable ("_TEST_RESULTS_BUNDLE_INCLUDE", Configurables.Defaults.TestResultsBundleInclude);
-			WriteListVariable ("_TEST_RESULTS_BUNDLE_EXCLUDE", Configurables.Defaults.TestResultsBundleExclude);
-			WriteListVariable ("_BUILD_STATUS_BUNDLE_INCLUDE", Configurables.Defaults.BuildStatusBundleInclude);
-			WriteListVariable ("_BUILD_STATUS_BUNDLE_INCLUDE", Configurables.Defaults.BuildStatusBundleIncludeConditional, true);
-			WriteListVariable ("_BUILD_STATUS_BUNDLE_EXCLUDE", Configurables.Defaults.BuildStatusBundleExclude);
 
 			sw.WriteLine ();
 			sw.WriteLine (".PHONY: framework-assemblies");

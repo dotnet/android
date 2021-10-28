@@ -64,8 +64,9 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: Build Results - Nightly macOS
+        includeBuildResults: true
 
 - stage: test
   displayName: Test

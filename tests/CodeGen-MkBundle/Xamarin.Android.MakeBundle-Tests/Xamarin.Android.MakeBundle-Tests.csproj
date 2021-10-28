@@ -21,7 +21,9 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
-    <RelativeRootPath>..\..\..\..\..\..\..</RelativeRootPath>
+    <!--Set when running on Azure Pipelines https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables -->
+    <RelativeRootPath Condition=" '$(BUILD_SOURCESDIRECTORY)' != '' ">$(BUILD_SOURCESDIRECTORY)</RelativeRootPath>
+    <RelativeRootPath Condition=" !Exists('$(RelativeRootPath)') ">..\..\..\..\..\..\..</RelativeRootPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' != 'true' ">
