@@ -104,7 +104,7 @@ namespace Xamarin.Android.Build.Tests
 			TestContext.Out.WriteLine ($"Trying to restart Emulator");
 			// shell out to msbuild and start the emulator again
 			using (var builder = new Builder ()) {
-				var out1 = RunProcessWithExitCode (builder.BuildTool, $"{project} /restore /t:AcquireAndroidTarget", timeoutInSeconds: 120);
+				var out1 = RunProcessWithExitCode (builder.BuildTool, $"{(Builder.UseDotNet ? "build" : "")} {project} /restore /t:AcquireAndroidTarget", timeoutInSeconds: 120);
 				TestContext.Out.WriteLine ($"{out1}");
 			}
 		}
