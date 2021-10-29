@@ -851,6 +851,20 @@ Introduced in Xamarin.Android 10.2
 
 [manifest-merger]: https://developer.android.com/studio/build/manifest-merge
 
+## AndroidManifestMergerExtraArgs
+
+A string property to provide additional arguments to the
+[Android documentation][manifest-merger] tool.
+
+If you want detailed output from the tool you can add the following to the
+`.csproj`.
+
+```xml
+<AndroidManifestMergerExtraArgs>--log VERBOSE</AndroidManifestMergerExtraArgs>
+```
+
+Introduced in Xamarin.Android 11.x
+
 ## AndroidManifestPlaceholders
 
 A semicolon-separated list of
