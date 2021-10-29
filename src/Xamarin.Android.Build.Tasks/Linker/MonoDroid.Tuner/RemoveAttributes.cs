@@ -17,7 +17,7 @@ namespace MonoDroid.Tuner {
 
 		protected virtual bool DebugBuild {
 			get {
-#if NET5_LINKER
+#if ILLINK
 				return true;
 #else
 				return context.LinkSymbols;

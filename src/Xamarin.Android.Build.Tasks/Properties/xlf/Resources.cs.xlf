@@ -467,7 +467,7 @@ In this message, the term "binding" means a piece of generated code that makes i
         <note>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</note>
       </trans-unit>
       <trans-unit id="XA2000">
-        <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.</source>
+        <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.</source>
         <target state="needs-review-translation">V sestavení {0} se zjistilo, že se používá AppDomain.CreateDomain(). .NET 5 bude podporovat jen jednu doménu AppDomain, proto toto rozhraní API už nebude po vydání rozhraní .NET 5 v Xamarin.Androidu k dispozici.</target>
         <note>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</note>

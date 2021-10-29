@@ -35,6 +35,7 @@
     <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
     <MonoOptionsVersion>6.12.0.148</MonoOptionsVersion>
     <SystemCollectionsImmutableVersion>1.7.1</SystemCollectionsImmutableVersion>
+    <XliffTasksVersion>1.0.0-beta.20420.1</XliffTasksVersion>
   </PropertyGroup>
 
   <!-- Properties to help us run managed assemblies on various runtimes.

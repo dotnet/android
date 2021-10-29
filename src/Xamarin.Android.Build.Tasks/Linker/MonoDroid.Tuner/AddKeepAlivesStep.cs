@@ -10,28 +10,28 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 
 using Mono.Cecil.Cil;
-#if NET5_LINKER
+#if ILLINK
 using Microsoft.Android.Sdk.ILLink;
-#endif  // NET5_LINKER
+#endif  // ILLINK
 
 namespace MonoDroid.Tuner
 {
 	public class AddKeepAlivesStep : BaseStep
 	{
 
-#if NET5_LINKER
+#if ILLINK
 		protected override void Process ()
 		{
 			cache = Context;
 		}
-#else   // !NET5_LINKER
+#else   // !ILLINK
 		public AddKeepAlivesStep (IMetadataResolver cache)
 		{
 			this.cache = cache;
 		}
 
 		readonly
-#endif  // !NET5_LINKER
+#endif  // !ILLINK
 		IMetadataResolver cache;
 
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
