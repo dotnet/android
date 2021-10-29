@@ -291,10 +291,12 @@ namespace Xamarin.ProjectTools
 			} else if (AutomaticNuGetRestore && restore) {
 				args.Append (" /restore");
 			}
+
+			args.Append (" -nodeReuse:false"); // Disable the MSBuild daemon everywhere!
+
 			if (MaxCpuCount != null) {
 				if (!string.Equals (Path.GetFileNameWithoutExtension (psi.FileName), "xabuild", StringComparison.OrdinalIgnoreCase)) {
 					args.Append ($" /maxCpuCount:{MaxCpuCount}");
-					args.Append (" /nodeReuse:false"); // Disable the MSBuild daemon
 				} else {
 					Console.WriteLine ($"Ignoring MaxCpuCount={MaxCpuCount}, running with xabuild.");
 				}
@@ -351,7 +353,7 @@ namespace Xamarin.ProjectTools
 			}
 
 			psi.Arguments = args.ToString ();
-			
+
 			psi.CreateNoWindow = true;
 			psi.UseShellExecute = false;
 			psi.RedirectStandardOutput = true;
