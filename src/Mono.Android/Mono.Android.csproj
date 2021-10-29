@@ -361,8 +361,8 @@
     <Compile Include="System.IO\AndroidExtensions.cs" />
     <Compile Include="System.Linq\Extensions.cs" />
     <Compile Condition=" '$(TargetFramework)' != 'monoandroid10' " Include="Xamarin.Android.Net\AndroidClientHandler.cs" />
+    <Compile Condition=" '$(TargetFramework)' != 'monoandroid10' " Include="Xamarin.Android.Net\AndroidMessageHandler.cs" />
     <Compile Condition=" '$(TargetFramework)' == 'monoandroid10' " Include="Xamarin.Android.Net\AndroidClientHandler.Legacy.cs" />
-    <Compile Include="Xamarin.Android.Net\AndroidMessageHandler.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidHttpResponseMessage.cs" />
     <Compile Include="Xamarin.Android.Net\AuthDigestHeaderParser.cs" />
     <Compile Include="Xamarin.Android.Net\AuthDigestSession.cs" />

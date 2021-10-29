@@ -112,6 +112,9 @@ namespace UnnamedProject
 				Android.Util.Log.Info(TAG, $"[LINKALLPASS] Unable to create instance of 'NonPreserved' as expected.\n{ex}");
 			}
 
+			// [Test] NewHttpClient
+			Android.Util.Log.Info(TAG, HttpClientTest.NewHttpClient ());
+
 			var cldt = new CustomLinkerDescriptionTests();
 			Android.Util.Log.Info(TAG, cldt.TryAccessNonXmlPreservedMethodOfLinkerModeFullClass());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped());

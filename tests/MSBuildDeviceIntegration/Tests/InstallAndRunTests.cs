@@ -394,6 +394,12 @@ namespace Library1 {
 								return sr.ReadToEnd ();
 						},
 					},
+					new BuildItem.Source ("HttpClientTest.cs") {
+						TextContent = () => {
+							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.HttpClientTest.cs")))
+								return sr.ReadToEnd ();
+						},
+					},
 				},
 			};
 
