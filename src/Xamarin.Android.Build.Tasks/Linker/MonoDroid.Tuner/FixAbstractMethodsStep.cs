@@ -56,9 +56,9 @@ namespace MonoDroid.Tuner
 
 			CheckAppDomainUsage (assembly, (string msg) =>
 #if ILLINK
-				Context.LogMessage (msg)
+				Context.LogMessage (MessageContainer.CreateCustomWarningMessage (Context, msg, 6200, new MessageOrigin (), WarnVersion.ILLink5))
 #else   // !ILLINK
-				Context.LogMessage (MessageImportance.High, msg)
+				Context.LogMessage (MessageImportance.High, "warning XA2000: " + msg)
 #endif  // !ILLINK
 			);
 
@@ -111,14 +111,18 @@ namespace MonoDroid.Tuner
 		}
 #endif  // !ILLINK
 
+		readonly HashSet<string> warnedAssemblies = new (StringComparer.Ordinal);
+
 		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
 		{
+			if (!warnedAssemblies.Add (assembly.Name.Name))
+				return;
 			if (!assembly.MainModule.HasTypeReference ("System.AppDomain"))
 				return;
 
 			foreach (var mr in assembly.MainModule.GetMemberReferences ()) {
 				if (mr.ToString ().Contains ("System.AppDomain System.AppDomain::CreateDomain")) {
-					warn (string.Format ("warning XA2000: " + Resources.XA2000, assembly));
+					warn (string.Format (Resources.XA2000, assembly));
 					break;
 				}
 			}
