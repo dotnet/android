@@ -233,8 +233,6 @@ namespace Java.Interop {
 
 		internal static Type? TypeRegistrationFallback (string class_name)
 		{
-			__TypeRegistrations.RegisterPackages ();
-
 			Type? type = null;
 			int ls = class_name.LastIndexOf ('/');
 			var package = ls >= 0 ? class_name.Substring (0, ls) : "";
