@@ -46,7 +46,7 @@ namespace Xamarin.Android.NetTests {
 	[Category("InetAccess")]
 	public abstract class HttpClientHandlerTestBase
 	{
-		protected abstract HttpClientHandler CreateHandler ();
+		protected abstract HttpMessageHandler CreateHandler ();
 
 		class Proxy : IWebProxy
 		{
@@ -73,7 +73,12 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Properties_Defaults ()
 		{
-			var h = CreateHandler ();
+			var obj = CreateHandler ();
+			if (obj is not HttpClientHandler h) {
+				Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
+				return;
+			}
+
 			Assert.IsTrue (h.AllowAutoRedirect, "#1");
 			Assert.AreEqual (DecompressionMethods.None, h.AutomaticDecompression, "#2");
 			Assert.AreEqual (0, h.CookieContainer.Count, "#3");
@@ -95,7 +100,12 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Properties_Invalid ()
 		{
-			var h = CreateHandler ();
+			var obj = CreateHandler ();
+			if (obj is not HttpClientHandler h) {
+				Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
+				return;
+			}
+
 			try {
 				h.MaxAutomaticRedirections = 0;
 				Assert.Fail ("#1");
@@ -112,7 +122,12 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Properties_AfterClientCreation ()
 		{
-			var h = CreateHandler ();
+			var obj = CreateHandler ();
+			if (obj is not HttpClientHandler h) {
+				Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
+				return;
+			}
+
 			h.AllowAutoRedirect = true;
 
 			// We may modify properties after creating the HttpClient.
@@ -195,15 +210,9 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
-	[TestFixture]
-	public class AndroidClientHandlerTests : HttpClientHandlerTestBase
+	public abstract class AndroidHandlerTestBase : HttpClientHandlerTestBase
 	{
 		const string Tls_1_2_Url = "https://tls-test.internalx.com";
-
-		protected override HttpClientHandler CreateHandler ()
-		{
-			return new Xamarin.Android.Net.AndroidClientHandler ();
-		}
 
 		[Test]
 		public void Tls_1_2_Url_Works ()
@@ -396,6 +405,24 @@ namespace Xamarin.Android.NetTests {
 
 				response.EnsureSuccessStatusCode ();
 				Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
+			}
+		}
+
+		[TestFixture]
+		public class AndroidClientHandlerTests : AndroidHandlerTestBase
+		{
+			protected override HttpMessageHandler CreateHandler ()
+			{
+				return new Xamarin.Android.Net.AndroidClientHandler ();
+			}
+		}
+
+		[TestFixture]
+		public class AndroidMessageHandlerTests : AndroidHandlerTestBase
+		{
+			protected override HttpMessageHandler CreateHandler ()
+			{
+				return new Xamarin.Android.Net.AndroidMessageHandler ();
 			}
 		}
 	}
