@@ -16,7 +16,7 @@
       DependsOnTargets="GitVersion"
       Condition="!Exists ('$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Version.props')">
     <ItemGroup>
-      <Replacements Include="@VERSION@" Replacement="$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)"/>
+      <Replacements Include="@VERSION@" Replacement="$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch).0"/>
       <Replacements Include="@COMMIT@" Replacement="$(GitCommit)"/>
       <Replacements Include="@BRANCH@" Replacement="$(GitBranch)"/>
     </ItemGroup>

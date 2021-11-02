@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Microsoft Corporation")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("@CONFIGURATION@")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Microsoft Corporation")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("@VERSION@.0")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("@VERSION@")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("@INFORMATIONALVERSION@")]
 [assembly: System.Reflection.AssemblyProductAttribute("@PRODUCT@")]
 [assembly: System.Reflection.AssemblyTitleAttribute("@TITLE@")]
