@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Security;
 using System.Runtime.ExceptionServices;
@@ -341,6 +342,9 @@ namespace Android.Runtime {
 		// This is invoked by
 		// System.Net.Http.dll!System.Net.Http.HttpClient.cctor
 		// DO NOT REMOVE
+#if !MONOANDROID1_0
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (Xamarin.Android.Net.AndroidMessageHandler))]
+#endif
 		static object? GetHttpMessageHandler ()
 		{
 			var envvar = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
