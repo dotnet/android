@@ -282,7 +282,7 @@
   <Target Name="_UpdateExternalDocumentation">
     <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
     <PropertyGroup>
-      <_Binlog>UpdateExternalDocumentation-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).binlog</_Binlog>
+      <_Binlog>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateExternalDocumentation-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).binlog</_Binlog>
     </PropertyGroup>
     <Exec
         Condition=" '$(HostOS)' != 'Windows' "
