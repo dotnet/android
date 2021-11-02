@@ -33,9 +33,10 @@ stages:
       inputs:
         forceReinstallCredentialProvider: true
 
-    - script: make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: make prepare-update-mono
+    - template: yaml-templates/run-xaprepare.yaml
+      parameters:
+        displayName: update mono
+        arguments: --s=UpdateMono
 
     - script: make prepare CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
