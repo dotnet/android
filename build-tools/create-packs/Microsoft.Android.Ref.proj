@@ -25,7 +25,7 @@ by projects that use the Microsoft.Android framework in .NET 5.
   </PropertyGroup>
 
   <Target Name="_GetTargetingPackItems"
-      DependsOnTargets="_GetLicense">
+      DependsOnTargets="AssembleApiDocs;_GetLicense">
     <PropertyGroup>
       <FrameworkListFile>$(IntermediateOutputPath)FrameworkList.xml</FrameworkListFile>
     </PropertyGroup>
@@ -40,11 +40,7 @@ by projects that use the Microsoft.Android framework in .NET 5.
     <ItemGroup>
       <_PackageFiles Include="@(_AndroidRefPackAssemblies)" PackagePath="$(_AndroidRefPackAssemblyPath)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(_MonoAndroidNETOutputDir)Java.Interop.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
-      <_PackageFiles
-          Condition=" '$(CONVERT_JAVADOC_TO_XMLDOC)' == 'true' "
-          Include="$(_MonoAndroidNETOutputDir)Mono.Android.xml"
-          PackagePath="$(_AndroidRefPackAssemblyPath)"
-      />
+      <_PackageFiles Include="$(_MonoAndroidNETOutputDir)Mono.Android.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(_MonoAndroidNETOutputDir)mono.android.jar" PackagePath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(_MonoAndroidNETOutputDir)mono.android.dex" PackagePath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(_MonoAndroidNETOutputDir)AndroidApiInfo.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
