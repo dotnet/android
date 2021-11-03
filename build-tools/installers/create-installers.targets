@@ -58,6 +58,7 @@
         SourceFiles="$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml"
         DestinationFolder="$(_MonoAndroidNETOutputDir)"
     />
+    <Touch Files="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml');@(_MsxDocAssembly->'$(_MonoAndroidNETOutputDir)%(Identity).xml')" />
   </Target>
   <Target Name="_GenerateMsxDocXmlRedirects"
       DependsOnTargets="_FindFrameworkDirs"
