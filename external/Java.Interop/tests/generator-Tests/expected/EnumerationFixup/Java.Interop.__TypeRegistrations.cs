@@ -23,6 +23,9 @@ namespace Java.Interop {
 #endif // def MONODROID_TIMING
 		}
 
+#if NET5_0_OR_GREATER
+		[System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage ("Trimming", "IL2057")]
+#endif
 		static Type Lookup (string[] mappings, string javaType)
 		{
 			var managedType = Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);
