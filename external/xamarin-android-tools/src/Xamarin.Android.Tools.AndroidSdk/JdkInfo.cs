@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -42,7 +42,14 @@ namespace Xamarin.Android.Tools
 		Lazy<Dictionary<string, List<string>>>      javaProperties;
 		Lazy<Version?>                              javaVersion;
 
+		Action<TraceLevel, string>                  logger;
+
 		public JdkInfo (string homePath)
+			: this (homePath, null, null)
+		{
+		}
+
+		public JdkInfo (string homePath, string? locator = null, Action<TraceLevel, string>? logger = null)
 		{
 			if (homePath == null)
 				throw new ArgumentNullException (nameof (homePath));
@@ -50,6 +57,8 @@ namespace Xamarin.Android.Tools
 				throw new ArgumentException ("Not a directory", nameof (homePath));
 
 			HomePath            = homePath;
+			Locator             = locator;
+			this.logger         = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 
 			var binPath         = Path.Combine (HomePath, "bin");
 			JarPath             = ProcessUtils.FindExecutablesInDirectory (binPath, "jar").FirstOrDefault ();
@@ -78,14 +87,15 @@ namespace Xamarin.Android.Tools
 
 			IncludePath         = new ReadOnlyCollection<string> (includes);
 
-			javaProperties      = new Lazy<Dictionary<string, List<string>>> (GetJavaProperties, LazyThreadSafetyMode.ExecutionAndPublication);
+			javaProperties      = new Lazy<Dictionary<string, List<string>>> (
+				() => GetJavaProperties (this.logger),
+				LazyThreadSafetyMode.ExecutionAndPublication);
 			javaVersion         = new Lazy<Version?> (GetJavaVersion, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 
 		public JdkInfo (string homePath, string locator)
-			: this (homePath)
+			: this (homePath, locator, null)
 		{
-			Locator             = locator;
 		}
 
 		public override string ToString()
@@ -217,9 +227,11 @@ namespace Xamarin.Android.Tools
 			return new ReadOnlyDictionary<string, string>(props);
 		}
 
-		Dictionary<string, List<string>> GetJavaProperties ()
+		Dictionary<string, List<string>> GetJavaProperties (Action<TraceLevel, string> logger)
 		{
-			return GetJavaProperties (ProcessUtils.FindExecutablesInDirectory (Path.Combine (HomePath, "bin"), "java").First ());
+			return GetJavaProperties (
+					logger,
+					ProcessUtils.FindExecutablesInDirectory (Path.Combine (HomePath, "bin"), "java").First ());
 		}
 
 		static bool AnySystemJavasInstalled ()
@@ -239,7 +251,7 @@ namespace Xamarin.Android.Tools
 			return true;
 		}
 
-		static Dictionary<string, List<string>> GetJavaProperties (string java)
+		static Dictionary<string, List<string>> GetJavaProperties (Action<TraceLevel, string> logger, string java)
 		{
 			var javaProps   = new ProcessStartInfo {
 				FileName    = java,
@@ -248,19 +260,32 @@ namespace Xamarin.Android.Tools
 
 			var     props   = new Dictionary<string, List<string>> ();
 			string? curKey  = null;
+			bool    foundPS = false;
+			var     output  = new StringBuilder ();
 
 			if (!AnySystemJavasInstalled () && (java == "/usr/bin/java" || java == "java"))
 				return props;
+
+			const string PropertySettings = "Property settings:";
 
 			ProcessUtils.Exec (javaProps, (o, e) => {
 					const string ContinuedValuePrefix   = "        ";
 					const string NewValuePrefix         = "    ";
 					const string NameValueDelim         = " = ";
+					output.AppendLine (e.Data);
 					if (string.IsNullOrEmpty (e.Data))
 						return;
+					if (e.Data.StartsWith (PropertySettings, StringComparison.Ordinal)) {
+						foundPS = true;
+						return;
+					}
+					if (!foundPS) {
+						return;
+					}
 					if (e.Data.StartsWith (ContinuedValuePrefix, StringComparison.Ordinal)) {
-						if (curKey == null)
-							throw new InvalidOperationException ($"Unknown property key for value {e.Data}!");
+						if (curKey == null) {
+							logger (TraceLevel.Error, $"No Java property previously seen for continued value `{e.Data}`.");
+						}
 						props [curKey].Add (e.Data.Substring (ContinuedValuePrefix.Length));
 						return;
 					}
@@ -276,6 +301,9 @@ namespace Xamarin.Android.Tools
 						values.Add (value);
 					}
 			});
+			if (!foundPS) {
+				logger (TraceLevel.Warning, $"No Java properties found; did not find `{PropertySettings}` in `{java} -XshowSettings:properties -version` output: ```{output.ToString ()}```");
+			}
 
 			return props;
 		}
@@ -443,16 +471,16 @@ namespace Xamarin.Android.Tools
 		// Last-ditch fallback!
 		static IEnumerable<JdkInfo> GetPathEnvironmentJdks (Action<TraceLevel, string> logger)
 		{
-			return GetPathEnvironmentJdkPaths ()
+			return GetPathEnvironmentJdkPaths (logger)
 				.Select (p => TryGetJdkInfo (p, logger, "$PATH"))
 				.Where (jdk => jdk != null)
 				.Select (jdk => jdk!);
 		}
 
-		static IEnumerable<string> GetPathEnvironmentJdkPaths ()
+		static IEnumerable<string> GetPathEnvironmentJdkPaths (Action<TraceLevel, string> logger)
 		{
 			foreach (var java in ProcessUtils.FindExecutablesInPath ("java")) {
-				var props   = GetJavaProperties (java);
+				var props   = GetJavaProperties (logger, java);
 				if (props.TryGetValue ("java.home", out var java_homes)) {
 					var java_home   = java_homes [0];
 					// `java -XshowSettings:properties -version 2>&1 | grep java.home` ends with `/jre` on macOS.

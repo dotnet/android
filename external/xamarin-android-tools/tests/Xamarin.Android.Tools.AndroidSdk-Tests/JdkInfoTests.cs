@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tools.Tests
 
 			string quote = OS.IsWindows ? "" : "\"";
 			string java =
-				$"echo Property settings:{Environment.NewLine}" +
+				$"echo {quote}Property settings:{quote}{Environment.NewLine}" +
 				$"echo {quote}    java.home = {dir}{quote}{Environment.NewLine}" +
 				$"echo {quote}    java.vendor = Xamarin.Android Unit Tests{quote}{Environment.NewLine}" +
 				$"echo {quote}    java.version = {javaVersion}{quote}{Environment.NewLine}" +
