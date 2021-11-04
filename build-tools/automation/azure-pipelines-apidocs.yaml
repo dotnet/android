@@ -1,0 +1,74 @@
+# Pipeline for updating and uploading android-api-docs/docs/Mono.Android/en/*
+# https://dev.azure.com/devdiv/DevDiv/_build?definitionId=15262
+
+# This pipeline can be manually ran against a given branch to generate a new set of Mono.Android docs.
+# The `Mono.Android Docs` artifact can be downloaded and copied into a local android-api-docs checkout
+# for manual review and pull request creation.
+
+trigger: none
+pr: none
+
+# Global variables
+variables:
+- template: yaml-templates/variables.yaml
+
+stages:
+- stage: mac_build
+  displayName: Build
+  dependsOn: []
+  jobs:
+  - job: mac_build_update_docs
+    displayName: Update API Docs
+    pool:
+      vmImage: macOS-11
+    timeoutInMinutes: 120
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
+      displayName: set JI_JAVA_HOME
+
+    - template: yaml-templates/use-dot-net.yaml
+
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
+    - template: yaml-templates/run-xaprepare.yaml
+      parameters:
+        displayName: update mono
+        arguments: --s=UpdateMono
+
+    - script: make prepare CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: make prepare
+
+    - task: MSBuild@1
+      displayName: build jnienv-gen.csproj
+      inputs:
+        solution: $(Build.SourcesDirectory)/external/Java.Interop/build-tools/jnienv-gen/jnienv-gen.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /restore
+
+    - task: MSBuild@1
+      displayName: update android-api-docs
+      inputs:
+        solution: $(Build.SourcesDirectory)/src/Mono.Android/Mono.Android.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /restore /t:UpdateExternalDocumentation
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        artifactName: Build Results - API Docs Update
+        includeBuildResults: true
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload Mono.Android docs
+      inputs:
+        artifactName: Mono.Android Docs
+        targetPath: $(Build.SourcesDirectory)/external/android-api-docs/docs/Mono.Android/en/
