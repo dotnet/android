@@ -126,7 +126,7 @@ namespace Xamarin.Android.Tasks
 		{
 			JdkInfo info = null;
 			try {
-				info = new JdkInfo (javaSdkPath);
+				info = new JdkInfo (javaSdkPath, logger:logger);
 			} catch {
 				info = JdkInfo.GetKnownSystemJdkInfos (logger)
 					.Where (jdk => jdk.Version >= minSupportedVersion && jdk.Version <= maxSupportedVersion)
