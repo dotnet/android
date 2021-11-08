@@ -5,8 +5,8 @@ namespace Xamarin.Android.Prepare
 {
 	class BuildAndroidPlatforms
 	{
-		public const string AndroidNdkVersion = "23b";
-		public const string AndroidNdkPkgRevision = "23.1.7779620";
+		public const string AndroidNdkVersion = "24-beta1";
+		public const string AndroidNdkPkgRevision = "24.0.7856742-beta1";
 
 		public static readonly List<AndroidPlatform> AllPlatforms = new List<AndroidPlatform> {
 			new AndroidPlatform (apiName: "",                       apiLevel: 1,  platformID: "1"),
