@@ -93,6 +93,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			UpdateParametersFromMethodParametersAttribute (parameters);
 			return parameters;
 		}
+
 		static IEnumerable<string> ExtractTypesFromSignature (string signature)
 		{
 			if (signature == null || signature.Length < "()V".Length)
@@ -106,6 +107,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				yield return Signature.ExtractType (signature, ref index);
 			}
 		}
+
 		List<ParameterInfo> GetParametersFromDescriptor (out int endParams)
 		{
 			var signature   = Descriptor;
@@ -165,43 +167,18 @@ namespace Xamarin.Android.Tools.Bytecode {
 				return;
 
 			var names = locals.LocalVariables.Where (p => p.StartPC == 0).ToList ();
-			int namesStart  = 0;
-			if (!AccessFlags.HasFlag (MethodAccessFlags.Static) &&
-					names.Count > namesStart &&
-					names [namesStart].Descriptor == DeclaringType.FullJniName) {
-				namesStart++;   // skip `this` parameter
-			}
-			if (!DeclaringType.IsStatic &&
-					IsConstructor &&
-					names.Count > namesStart &&
-					DeclaringType.InnerClass != null && DeclaringType.InnerClass.OuterClassName != null &&
-					names [namesStart].Descriptor == "L" + DeclaringType.InnerClass.OuterClassName + ";") {
-				namesStart++;   // "outer `this`", for non-static inner classes
-			}
-			if (!DeclaringType.IsStatic &&
-					IsConstructor &&
-					names.Count > namesStart &&
-					DeclaringType.TryGetEnclosingMethodInfo (out var declaringClass, out var _, out var _) &&
-					names [namesStart].Descriptor == "L" + declaringClass + ";") {
-				namesStart++;   // "outer `this`", for non-static inner classes
-			}
-
-			// For JvmOverloadsConstructor.<init>.(LJvmOverloadsConstructor;IILjava/lang/String;)V
-			if (namesStart > 0 &&
-					names.Count > namesStart &&
-					parameters.Length > 0 &&
-					names [namesStart].Descriptor   != parameters [0].Type.BinaryName &&
-					names [namesStart-1].Descriptor == parameters [0].Type.BinaryName) {
-				namesStart--;
-			}
 
 			int parametersCount = GetDeclaredParametersCount (parameters);
-			CheckDescriptorVariablesToLocalVariables (parameters, parametersCount, names, namesStart);
 
-			int max = Math.Min (parametersCount,    names.Count - namesStart);
-			for (int i = 0; i < max; ++i) {
-				parameters [i].Name = names [namesStart+i].Name;
-				CheckLocalVariableTypeToDescriptorType (i, parameters, names, namesStart);
+			for (int pi = parametersCount-1; pi >= 0; --pi) {
+				for (int ni = names.Count-1; ni >= 0; --ni) {
+					if (parameters [pi].Type.BinaryName != names [ni].Descriptor) {
+						continue;
+					}
+					parameters [pi].Name = names [ni].Name;
+					names.RemoveAt (ni);
+					break;
+				}
 			}
 		}
 
@@ -271,60 +248,6 @@ namespace Xamarin.Android.Tools.Bytecode {
 			for (int i = 0; i < max; ++i) {
 				parameters [i].Type.TypeSignature  = sig.Parameters [i];
 			}
-		}
-
-		void CheckDescriptorVariablesToLocalVariables (ParameterInfo[] parameters, int parametersCount, List<LocalVariableTableEntry> names, int namesStart)
-		{
-			if (AccessFlags.HasFlag (MethodAccessFlags.Synthetic))
-				return;
-			if ((names.Count - namesStart) == parametersCount)
-				return;
-			if (IsEnumCtor)
-				return;
-
-			var paramsDesc  = CreateParametersList (parameters, (v, i) => $"`{v.Type.BinaryName}` {v.Name}{(i >= parametersCount ? " /* abi; ignored */" : "")}");
-			var localsDesc  = CreateParametersList (names,      (v, i) => $"`{v.Descriptor}` {v.Name}{(i < namesStart ? " /* abi; skipped */" : "")}");
-
-			Log.Debug ($"class-parse: method {DeclaringType.ThisClass.Name.Value}.{Name}.{Descriptor}: namesStart={namesStart}; " +
-					$"Local variables array has {names.Count - namesStart} entries {localsDesc}; " +
-					$"descriptor has {parametersCount} entries {paramsDesc}!");
-		}
-
-		static string CreateParametersList<T>(IEnumerable<T> values, Func<T, int, string> createElement)
-		{
-			var description = new StringBuilder ()
-				.Append ("(");
-
-			int index   = 0;
-			var first   = true;
-			foreach (var v in values) {
-				if (!first) {
-					description.Append (", ");
-				}
-				first   = false;
-				description.Append (createElement (v, index));
-				index++;
-			}
-			description.Append (")");
-
-			return description.ToString ();
-		}
-
-		void CheckLocalVariableTypeToDescriptorType (int index, ParameterInfo[] parameters, List<LocalVariableTableEntry> names, int namesStart)
-		{
-			if (AccessFlags.HasFlag (MethodAccessFlags.Synthetic))
-				return;
-
-			var parameterType   = parameters [index].Type.BinaryName;
-			var descriptorType  = names [index + namesStart].Descriptor;
-			if (parameterType == descriptorType)
-				return;
-
-			var paramsDesc  = CreateParametersList (parameters, (v, i) => $"`{v.Type.BinaryName}` {v.Name}");
-			var localsDesc  = CreateParametersList (names,      (v, i) => $"`{v.Descriptor}` {v.Name}{(i < namesStart ? " /* abi; skipped */" : "")}");
-
-			Log.Debug ($"class-parse: method {DeclaringType.ThisClass.Name.Value}.{Name}.{Descriptor}: " +
-					$"Local variables array {localsDesc} element {index+namesStart} with type `{descriptorType}` doesn't match expected descriptor list {paramsDesc} element {index} with type `{parameterType}`.");
 		}
 
 		void CheckDescriptorVariablesToSignatureParameters (ParameterInfo[] parameters, int parametersCount, MethodTypeSignature sig)

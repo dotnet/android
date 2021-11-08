@@ -1,15 +1,21 @@
 <Project>
 
   <ItemGroup>
-    <TestJar Include="java\**\*.java" Exclude="java\java\util\Collection.java,java\android\annotation\NonNull.java" />
-    <TestJarNoParameters Include="java\java\util\Collection.java" />
+    <TestJarNoParameters Include="java/java/util/Collection.java" />
+    <TestJarNoParameters Include="java/**/*NoParameters.java" />
+    <TestJar Include="java\**\*.java" Exclude="@(TestJarNoParameters);java\android\annotation\NonNull.java" />
     <TestKotlinJar Include="kotlin\**\*.kt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_BuildClassOutputs Include="@(TestJar->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')" />
+    <_BuildClassOutputs Include="@(TestJarNoParameters->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')" />
   </ItemGroup>
 
   <Target Name="BuildClasses"
         BeforeTargets="BeforeBuild"
-        Inputs="@(TestJar)"
-        Outputs="@(TestJar->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')">
+        Inputs="@(TestJar);@(TestJarNoParameters)"
+        Outputs="@(_BuildClassOutputs)">
     <MakeDir Directories="$(IntermediateOutputPath)classes" />
     <Exec Command="&quot;$(JavaCPath)&quot; -parameters $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; java/android/annotation/NonNull.java @(TestJar->'%(Identity)', ' ')" />
     <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters->'%(Identity)', ' ')" />

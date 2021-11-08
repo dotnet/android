@@ -1,0 +1,34 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <class
+      abstract="false"
+      deprecated="not deprecated"
+      jni-extends="Ljava/lang/Object;"
+      extends="java.lang.Object"
+      extends-generic-aware="java.lang.Object"
+      final="false"
+      name="JavaTypeNoParameters"
+      jni-signature="Lcom/xamarin/JavaTypeNoParameters;"
+      source-file-name="JavaTypeNoParameters.java"
+      static="false"
+      visibility="public">
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaTypeNoParameters"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Lcom/xamarin/JavaTypeNoParameters;)V">
+        <parameter
+          name="copy"
+          type="com.xamarin.JavaTypeNoParameters"
+          jni-type="Lcom/xamarin/JavaTypeNoParameters;" />
+      </constructor>
+    </class>
+  </package>
+</api>

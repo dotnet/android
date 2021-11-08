@@ -38,6 +38,7 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24RNC%24RPNC.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24RNC.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaTypeNoParameters.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NestedInterface%24DnsSdTxtRecordListener.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NestedInterface.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterAbstractClass.class" />
