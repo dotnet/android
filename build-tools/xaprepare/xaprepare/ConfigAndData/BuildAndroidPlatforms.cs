@@ -51,9 +51,9 @@ namespace Xamarin.Android.Prepare
 		public const string AndroidX86_64_NET6 = AbiNames.TargetJit.AndroidX86_64 + "_NET6";
 
 		public static readonly Dictionary<string, uint> NdkMinimumAPI = new Dictionary<string, uint> {
-			{ AbiNames.TargetJit.AndroidArmV7a, 16 }, { AndroidArmV7a_NET6, 21 },
+			{ AbiNames.TargetJit.AndroidArmV7a, 19 }, { AndroidArmV7a_NET6, 21 },
 			{ AbiNames.TargetJit.AndroidArmV8a, 21 }, { AndroidArmV8a_NET6, 21 },
-			{ AbiNames.TargetJit.AndroidX86,    16 }, { AndroidX86_NET6, 21 },
+			{ AbiNames.TargetJit.AndroidX86,    19 }, { AndroidX86_NET6, 21 },
 			{ AbiNames.TargetJit.AndroidX86_64, 21 }, { AndroidX86_64_NET6, 21 },
 		};
 	}
