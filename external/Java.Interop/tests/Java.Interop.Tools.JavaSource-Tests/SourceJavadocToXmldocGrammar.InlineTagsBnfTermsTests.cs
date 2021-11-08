@@ -52,7 +52,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			var r = p.Parse ("{@link #ctor}");
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
 			var c = (XElement) r.Root.AstNode;
-			Assert.AreEqual ("<c><see cref=\"#ctor\" /></c>", c.ToString (SaveOptions.DisableFormatting));
+			Assert.AreEqual ("<c>#ctor</c>", c.ToString (SaveOptions.DisableFormatting));
 		}
 
 		[Test]
@@ -62,7 +62,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 
 			var r = p.Parse ("{@linkplain #ctor}");
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
-			Assert.AreEqual ("<see cref=\"#ctor\" />", r.Root.AstNode.ToString ());
+			Assert.AreEqual ("#ctor", r.Root.AstNode.ToString ());
 		}
 
 		[Test]

@@ -51,7 +51,9 @@ namespace Java.Interop.Tools.JavaSource.Tests
 
 			var r = p.Parse ("@exception Throwable Just Because.\n");
 			Assert.IsFalse (r.HasErrors (), "@exception: " + DumpMessages (r, p));
-			Assert.AreEqual ("<exception cref=\"Throwable\">Just Because.</exception>", r.Root.AstNode.ToString ());
+			Assert.IsNull (r.Root.AstNode, "@exception should be ignored, but node was not null.");
+			// TODO: Re-enable when we can generate valid crefs
+			//Assert.AreEqual ("<exception cref=\"Throwable\">Just Because.</exception>", r.Root.AstNode.ToString ());
 		}
 
 		[Test]
@@ -97,7 +99,9 @@ namespace Java.Interop.Tools.JavaSource.Tests
 
 			var r = p.Parse ("@see \"Insert Book Name Here\"");
 			Assert.IsFalse (r.HasErrors (), "@see: " + DumpMessages (r, p));
-			Assert.AreEqual ("<seealso cref=\"&quot;Insert Book Name Here&quot;\" />", r.Root.AstNode.ToString ());
+			Assert.IsNull (r.Root.AstNode, "@see should be ignored, but node was not null.");
+			// TODO: Re-enable when we can generate valid crefs
+			//Assert.AreEqual ("<seealso cref=\"&quot;Insert Book Name Here&quot;\" />", r.Root.AstNode.ToString ());
 		}
 
 		[Test]
@@ -117,11 +121,15 @@ namespace Java.Interop.Tools.JavaSource.Tests
 
 			var r = p.Parse ("@throws Throwable the {@code Exception} raised by this method");
 			Assert.IsFalse (r.HasErrors (), "@throws: " + DumpMessages (r, p));
-			Assert.AreEqual ("<exception cref=\"Throwable\">the <c>Exception</c> raised by this method</exception>", r.Root.AstNode.ToString ());
+			Assert.IsNull (r.Root.AstNode, "@throws should be ignored, but node with code block was not null.");
+			// TODO: Re-enable when we can generate valid crefs
+			//Assert.AreEqual ("<exception cref=\"Throwable\">the <c>Exception</c> raised by this method</exception>", r.Root.AstNode.ToString ());
 
 			r = p.Parse ("@throws Throwable something <i>or other</i>!");
 			Assert.IsFalse (r.HasErrors (), "@throws: " + DumpMessages (r, p));
-			Assert.AreEqual ("<exception cref=\"Throwable\">something <i>or other</i>!</exception>", r.Root.AstNode.ToString ());
+			Assert.IsNull (r.Root.AstNode, "@throws should be ignored, but node was not null.");
+			// TODO: Re-enable when we can generate valid crefs
+			//Assert.AreEqual ("<exception cref=\"Throwable\">something <i>or other</i>!</exception>", r.Root.AstNode.ToString ());
 		}
 
 		[Test]

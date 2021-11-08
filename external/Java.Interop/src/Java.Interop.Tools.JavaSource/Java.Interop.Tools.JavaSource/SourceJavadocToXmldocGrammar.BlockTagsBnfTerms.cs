@@ -89,12 +89,14 @@ namespace Java.Interop.Tools.JavaSource {
 					if (!grammar.ShouldImport (ImportJavadoc.ExceptionTag)) {
 						return;
 					}
-					// TODO: convert `nonSpaceTerm` into a proper CREF
+					/* TODO: convert `nonSpaceTerm` into a proper CREF
 					var e = new XElement ("exception",
 							new XAttribute ("cref", string.Join ("", AstNodeToXmlContent (parseNode.ChildNodes [1]))),
 							AstNodeToXmlContent (parseNode.ChildNodes [2]));
 					FinishParse (context, parseNode).Exceptions.Add (e);
 					parseNode.AstNode   = e;
+					*/
+					FinishParse (context, parseNode);
 				};
 
 				ParamDeclaration.Rule = "@param" + nonSpaceTerm + BlockValues;
@@ -135,11 +137,15 @@ namespace Java.Interop.Tools.JavaSource {
 					if (!grammar.ShouldImport (ImportJavadoc.SeeTag)) {
 						return;
 					}
-					// TODO: @see supports multiple forms; see: https://docs.oracle.com/javase/7/docs/technotes/tools/windows/javadoc.html#see
+					/* TODO: @see supports multiple forms; see: https://docs.oracle.com/javase/7/docs/technotes/tools/windows/javadoc.html#see
+					// Also need to convert to appropriate CREF value, ignore for now
 					var e = new XElement ("seealso",
 							new XAttribute ("cref", string.Join ("", AstNodeToXmlContent (parseNode.ChildNodes [1]))));
 					FinishParse (context, parseNode).Extra.Add (e);
 					parseNode.AstNode   = e;
+					*/
+					FinishParse (context, parseNode);
+
 				};
 
 				SinceDeclaration.Rule = "@since" + BlockValues;
@@ -157,12 +163,14 @@ namespace Java.Interop.Tools.JavaSource {
 					if (!grammar.ShouldImport (ImportJavadoc.ExceptionTag)) {
 						return;
 					}
-					// TODO: convert `nonSpaceTerm` into a proper CREF
+					/* TODO: convert `nonSpaceTerm` into a proper CREF
 					var e = new XElement ("exception",
 							new XAttribute ("cref", string.Join ("", AstNodeToXmlContent (parseNode.ChildNodes [1]))),
 							AstNodeToXmlContent (parseNode.ChildNodes [2]));
 					FinishParse (context, parseNode).Exceptions.Add (e);
 					parseNode.AstNode   = e;
+					*/
+					FinishParse (context, parseNode);
 				};
 
 				// Ignore serialization informatino

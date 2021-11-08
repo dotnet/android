@@ -111,7 +111,6 @@ more description here.</para>
     <para>What about <i>hard</i> paragraphs?</para>
     <para>Added in API level 1.</para>
   </remarks>
-  <seealso cref=""#method()"" />
 </member>",
 				IntelliSenseXml = @"<member>
   <param name=""a"">something</param>
@@ -135,14 +134,14 @@ more description here.</para>
 			new ParseResult {
 				Javadoc = "Something {@link #method}: description, \"<code>declaration</code>\" or \"<code>another declaration</code>\".\n\n@apiSince 1\n",
 				FullXml = @"<member>
-  <summary>Something <c><see cref=""#method"" /></c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</summary>
+  <summary>Something <c>#method</c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</summary>
   <remarks>
-    <para>Something <c><see cref=""#method"" /></c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</para>
+    <para>Something <c>#method</c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</para>
     <para>Added in API level 1.</para>
   </remarks>
 </member>",
 				IntelliSenseXml = @"<member>
-  <summary>Something <c><see cref=""#method"" /></c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</summary>
+  <summary>Something <c>#method</c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</summary>
 </member>",
 			},
 			new ParseResult {
@@ -166,11 +165,9 @@ more description here.</para>
   <remarks>
     <para>Summary.</para>
   </remarks>
-  <exception cref=""Throwable"">insert <i>description</i> here.</exception>
 </member>",
 				IntelliSenseXml = @"<member>
   <summary>Summary.</summary>
-  <exception cref=""Throwable"">insert <i>description</i> here.</exception>
 </member>",
 			},
 		};

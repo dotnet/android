@@ -256,7 +256,7 @@ namespace MonoDroid.Generation
 						new XAttribute ("href", new Uri (url.ToString ()).AbsoluteUri),
 						new XAttribute ("title", "Reference documentation"),
 						"Java documentation for ",
-						new XElement ("tt", java.ToString ()),
+						new XElement ("code", java.ToString ()),
 						"."));
 			return new XElement ("para", format);
 		}

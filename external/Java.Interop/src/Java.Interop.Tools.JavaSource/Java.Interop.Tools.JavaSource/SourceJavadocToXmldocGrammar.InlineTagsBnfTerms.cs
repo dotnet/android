@@ -47,18 +47,17 @@ namespace Java.Interop.Tools.JavaSource {
 				LinkDeclaration.Rule = grammar.ToTerm ("{@link") + InlineValue + "}";
 				LinkDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					// TODO: *everything*; {@link target label}, but target can contain spaces!
-					// Also need to convert to appropriate CREF value
+					// Also need to convert to appropriate CREF value, use code text for now.
 					var target = parseNode.ChildNodes [1].AstNode;
-					var x = new XElement ("c");
-					parseNode.AstNode = new XElement ("c", new XElement ("see", new XAttribute ("cref", target)));
+					parseNode.AstNode = new XElement ("c", target);
 				};
 
 				LinkplainDeclaration.Rule = grammar.ToTerm ("{@linkplain") + InlineValue + "}";
 				LinkplainDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					// TODO: *everything*; {@link target label}, but target can contain spaces!
-					// Also need to convert to appropriate CREF value
-					var target = parseNode.ChildNodes [1].AstNode;
-					parseNode.AstNode = new XElement ("see", new XAttribute ("cref", target));
+					// Also need to convert to appropriate CREF value, use text for now.
+					var target = parseNode.ChildNodes [1].AstNode.ToString ();
+					parseNode.AstNode = new XText (target);
 				};
 
 				LiteralDeclaration.Rule = grammar.ToTerm ("{@literal") + InlineValue + "}";
