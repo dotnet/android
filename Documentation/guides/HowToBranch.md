@@ -30,11 +30,15 @@ See [eng/README.md][2] for details on `darc` commands.
    `$(AndroidPackVersionSuffix)` in `Directory.Build.props` is
    incremented to the *next* version: `preview.43`. You may also need
    to update `$(AndroidPackVersion)` if `main` needs to target a new
-   .NET version band. In the same PR, update `azure-pipelines-nightly.yaml`
-   to build the new release branch.
+   .NET version band.
 
 Note that release candidates will use values such as `rc.1`, `rc.2`, etc.
+
+7. Update the [Xamarin.Android Nightly job][3], so the schedule only
+   runs on desired branches. We likely only need a single .NET 6+
+   branch to be on this schedule at a time.
 
 [0]: https://github.com/dotnet/maui/issues/598
 [1]: https://github.com/dotnet/installer
 [2]: ../../eng/README.md
+[3]: https://devdiv.visualstudio.com/DevDiv/_apps/hub/ms.vss-ciworkflow.build-ci-hub?_a=edit-build-definition&id=14072&view=Tab_Triggers
