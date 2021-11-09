@@ -36,20 +36,20 @@ namespace Xamarin.Android.Prepare
 
 	    public ProcessStandardStreamWrapper (IFormatProvider formatProvider)
 		    : base (formatProvider)
-        {}
+	    {}
 
-	    public override void WriteLine (string value)
+	    public override void WriteLine (string? value)
 	    {
 		    DoWrite (value, true);
 	    }
 
-	    protected virtual string PreprocessMessage (string message, ref bool writeLine, out bool ignoreLine)
+	    protected virtual string? PreprocessMessage (string? message, ref bool writeLine, out bool ignoreLine)
 	    {
 		    ignoreLine = false;
 		    return message;
 	    }
 
-	    void DoWrite (string message, bool writeLine)
+	    void DoWrite (string? message, bool writeLine)
 	    {
 		    Action<string, ConsoleColor, bool, string> writer;
 		    ConsoleColor color;

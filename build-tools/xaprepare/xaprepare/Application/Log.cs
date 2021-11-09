@@ -88,12 +88,16 @@ namespace Xamarin.Android.Prepare
 		public void Todo (string text)
 		{
 			var caller = new StackFrame (1, true);
-			MethodBase method = caller.GetMethod ();
+			MethodBase? method = caller.GetMethod ();
 
 			var sb = new StringBuilder ();
-			sb.Append (method.DeclaringType.FullName);
-			sb.Append ('.');
-			sb.Append (method.Name);
+			if (method != null) {
+				sb.Append (method.DeclaringType?.FullName ?? "UnknownType");
+				sb.Append ('.');
+				sb.Append (method.Name);
+			} else {
+				sb.Append ("Unknown Method");
+			}
 
 			if (!String.IsNullOrEmpty (caller.GetFileName ())) {
 				int lineNumber = caller.GetFileLineNumber ();

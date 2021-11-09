@@ -14,13 +14,6 @@ namespace Xamarin.Android.Prepare
 			{
 				Log.Todo ("Implement parsing, if necessary");
 			}
-
-			public override void WriteLine (string value)
-			{
-				base.WriteLine (value);
-				if (String.IsNullOrEmpty (value))
-					return;
-			}
 		}
 	}
 }

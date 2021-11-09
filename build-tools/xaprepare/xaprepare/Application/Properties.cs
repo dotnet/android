@@ -12,7 +12,7 @@ namespace Xamarin.Android.Prepare
 
 		public int Count => properties.Count;
 		public bool IsDefined (string propertyName) => properties.ContainsKey (EnsureName (propertyName));
-		public bool IsEmpty (string propertyName) => IsDefined (propertyName) && properties.TryGetValue (propertyName, out string v) && v != null;
+		public bool IsEmpty (string propertyName) => IsDefined (propertyName) && properties.TryGetValue (propertyName, out string? v) && v != null;
 		public string? this [string name] => GetValue (name);
 
 		public Properties ()
@@ -22,7 +22,7 @@ namespace Xamarin.Android.Prepare
 
 		public string? GetValue (string propertyName, string? defaultValue = null)
 		{
-			if (!properties.TryGetValue (EnsureName (propertyName), out string value))
+			if (!properties.TryGetValue (EnsureName (propertyName), out string? value))
 				return defaultValue;
 
 			return value;

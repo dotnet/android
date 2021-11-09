@@ -4,7 +4,7 @@ namespace Xamarin.Android.Prepare
 {
 	abstract class Runtime : AppObject
 	{
-		string displayName;
+		string displayName = String.Empty;
 		Func<Context, bool> enabledCheck;
 
 		/// <summary>
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public string DisplayName {
 			get => String.IsNullOrEmpty (displayName) ? Name : displayName;
-			set => displayName = value;
+			set => displayName = value ?? String.Empty;
 		}
 
 		/// <summary>

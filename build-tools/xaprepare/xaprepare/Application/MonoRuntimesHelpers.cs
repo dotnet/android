@@ -122,7 +122,7 @@ namespace Xamarin.Android.Prepare
 			if (bf.ExcludeDebugSymbols)
 				return (destFile, String.Empty);
 
-			return (destFile, Path.Combine (destDir, Path.GetFileName (bf.DebugSymbolsPath)));
+			return (destFile, Path.Combine (destDir, Path.GetFileName (bf.DebugSymbolsPath) ?? String.Empty));
 		}
 
 		public static (string assembly, string debugSymbols) GetDestinationPaths (TestAssembly tasm)
@@ -146,7 +146,7 @@ namespace Xamarin.Android.Prepare
 
 			string destDir;
 			if (tasm.Name.IndexOf (Path.DirectorySeparatorChar) >= 0)
-				destDir = Path.Combine (BCLTestsDestinationDir, Path.GetDirectoryName (tasm.Name));
+				destDir = Path.Combine (BCLTestsDestinationDir, Path.GetDirectoryName (tasm.Name) ?? String.Empty);
 			else
 				destDir = BCLTestsDestinationDir;
 

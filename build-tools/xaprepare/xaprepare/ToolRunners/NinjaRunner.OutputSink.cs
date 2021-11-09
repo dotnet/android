@@ -14,11 +14,11 @@ namespace Xamarin.Android.Prepare
 				: base (log, logFilePath)
 			{}
 
-			public override void WriteLine (string value)
+			public override void WriteLine (string? value)
 			{
 				base.WriteLine (value);
 
-				if (!writeToStderr && value.StartsWith ("FAILED:", StringComparison.Ordinal)) {
+				if (!writeToStderr && value != null && value.StartsWith ("FAILED:", StringComparison.Ordinal)) {
 					writeToStderr = true;
 				}
 

@@ -356,9 +356,9 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public bool IsRunningOnHostedAzureAgent {
 			get {
-				string agentNameValue = Environment.GetEnvironmentVariable ("AGENT_NAME");
+				string? agentNameValue = Environment.GetEnvironmentVariable ("AGENT_NAME");
 				bool hasHostedAgentName = !string.IsNullOrEmpty (agentNameValue) && agentNameValue.ToUpperInvariant ().Contains ("AZURE PIPELINES");
-				string serverTypeValue = Environment.GetEnvironmentVariable ("SYSTEM_SERVERTYPE");
+				string? serverTypeValue = Environment.GetEnvironmentVariable ("SYSTEM_SERVERTYPE");
 				bool isHostedServerType = !string.IsNullOrEmpty (serverTypeValue) && serverTypeValue.ToUpperInvariant ().Contains ("HOSTED");
 				return hasHostedAgentName || isHostedServerType;
 			}
@@ -421,7 +421,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		void PropertiesChanged (object sender, PropertiesChangedEventArgs args)
+		void PropertiesChanged (object? sender, PropertiesChangedEventArgs args)
 		{
 			if (String.Compare (KnownProperties.AndroidSupportedTargetJitAbis, args.Name, StringComparison.Ordinal) == 0) {
 				targetJitAbis = null;

@@ -7,7 +7,7 @@
     <RootNamespace>Xamarin.Android.Prepare</RootNamespace>
     <AssemblyName>xaprepare</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Nullable>annotations</Nullable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net472' ">

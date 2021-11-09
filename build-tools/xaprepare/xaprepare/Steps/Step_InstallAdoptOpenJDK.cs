@@ -44,9 +44,9 @@ namespace Xamarin.Android.Prepare
 			}
 
 			string jdkInstallDir = JdkInstallDir;
-			if (OpenJDKExistsAndIsValid (jdkInstallDir, out string installedVersion)) {
+			if (OpenJDKExistsAndIsValid (jdkInstallDir, out string? installedVersion)) {
 				Log.Status ($"{ProductName} version ");
-				Log.Status (installedVersion, ConsoleColor.Yellow);
+				Log.Status (installedVersion ?? "Unknown", ConsoleColor.Yellow);
 				Log.StatusLine (" already installed in: ", jdkInstallDir, tailColor: ConsoleColor.Cyan);
 				return true;
 			}
@@ -149,7 +149,7 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		bool OpenJDKExistsAndIsValid (string installDir, out string installedVersion)
+		bool OpenJDKExistsAndIsValid (string installDir, out string? installedVersion)
 		{
 			installedVersion = null;
 			if (!Directory.Exists (installDir)) {
@@ -175,7 +175,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			string cv = null;
+			string? cv = null;
 			foreach (string l in lines) {
 				string line = l.Trim ();
 				if (!line.StartsWith ("JAVA_VERSION=", StringComparison.Ordinal)) {
@@ -213,7 +213,7 @@ namespace Xamarin.Android.Prepare
 
 			installedVersion = $"{cv} r{rv}";
 
-			if (!Version.TryParse (cv, out Version cversion)) {
+			if (!Version.TryParse (cv, out Version? cversion) || cversion == null) {
 				Log.DebugLine ($"Unable to parse {ProductName} version from: {cv}");
 				return false;
 			}

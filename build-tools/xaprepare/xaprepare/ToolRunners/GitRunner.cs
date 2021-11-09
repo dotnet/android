@@ -12,11 +12,11 @@ namespace Xamarin.Android.Prepare
 		{
 			public readonly List<string> Messages = new List<string> ();
 
-			protected override string PreprocessMessage (string message, ref bool writeLine, out bool ignoreLine)
+			protected override string? PreprocessMessage (string? message, ref bool writeLine, out bool ignoreLine)
 			{
 				ignoreLine = true;
 
-				if (message.Length == 0)
+				if (message == null || message.Length == 0)
 					return message;
 
 				Messages.Add (message);
@@ -84,8 +84,8 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (destinationDirectoryPath))
 				throw new ArgumentException ("must not be null or empty", nameof (destinationDirectoryPath));
 
-			string parentDir = Path.GetDirectoryName (destinationDirectoryPath);
-			string dirName = Path.GetFileName (destinationDirectoryPath);
+			string? parentDir = Path.GetDirectoryName (destinationDirectoryPath);
+			string? dirName = Path.GetFileName (destinationDirectoryPath);
 			Utilities.CreateDirectory (parentDir);
 			var runner = CreateGitRunner (parentDir, useCustomStderrWrapper: true);
 			runner.AddArgument ("clone");
@@ -108,7 +108,7 @@ namespace Xamarin.Android.Prepare
 			bool success = await RunTool (
 				() => {
 					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string line) => lines.Add (line);
+						outputSink.LineCallback = (string? line) => lines.Add (line ?? String.Empty);
 						return runner.Run ();
 					}
 				}
@@ -147,10 +147,10 @@ namespace Xamarin.Android.Prepare
 
 			string hash = String.Empty;
 			using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-				outputSink.LineCallback = (string line) => {
+				outputSink.LineCallback = (string? line) => {
 					if (!String.IsNullOrEmpty (hash))
 						return;
-					hash = line.Trim ();
+					hash = line?.Trim () ?? String.Empty;
 				};
 
 				if (!runner.Run ())
@@ -189,7 +189,7 @@ namespace Xamarin.Android.Prepare
 			bool success = await RunTool (
 				() => {
 					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string line) => ParseBlameLine (line, parserState);
+						outputSink.LineCallback = (string? line) => ParseBlameLine (line, parserState);
 						runner.WorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
 						return runner.Run ();
 					}
@@ -215,7 +215,7 @@ namespace Xamarin.Android.Prepare
 			bool success = await RunTool (
 				() => {
 					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string line) => lines.Add (line);
+						outputSink.LineCallback = (string? line) => lines.Add (line ?? String.Empty);
 						return runner.Run ();
 					}
 				}
@@ -242,8 +242,8 @@ namespace Xamarin.Android.Prepare
 			bool success = await RunTool (
 				() => {
 					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string line) => {
-							containsHttps = !string.IsNullOrEmpty (line) && line.Contains ("https://");
+						outputSink.LineCallback = (string? line) => {
+							containsHttps = !string.IsNullOrEmpty (line) && line!.Contains ("https://");
 						};
 						runner.WorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
 						return runner.Run ();
@@ -257,7 +257,7 @@ namespace Xamarin.Android.Prepare
 			return containsHttps;
 		}
 
-		public async Task<List<string>> RunCommandForOutputAsync (string workingDirectory, params string[] args)
+		public async Task<List<string>?> RunCommandForOutputAsync (string workingDirectory, params string[] args)
 		{
 			if (!Directory.Exists (workingDirectory))
 				throw new ArgumentException ("must exist", nameof (workingDirectory));
@@ -267,13 +267,13 @@ namespace Xamarin.Android.Prepare
 			return await RunForOutputAsync (runner);
 		}
 
-		async Task<List<string>> RunForOutputAsync (ProcessRunner runner)
+		async Task<List<string>?> RunForOutputAsync (ProcessRunner runner)
 		{
 			var lines = new List<string> ();
 			bool success = await RunTool (
 				() => {
 					using (var outputSink = (OutputSink) SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string line) => lines.Add (line);
+						outputSink.LineCallback = (string? line) => lines.Add (line ?? String.Empty);
 						return runner.Run ();
 					}
 				}
@@ -322,7 +322,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		void ParseBlameLine (string line, BlameParserState state)
+		void ParseBlameLine (string? line, BlameParserState state)
 		{
 			if (state.CurrentEntry == null)
 				state.CurrentEntry = new BlamePorcelainEntry ();

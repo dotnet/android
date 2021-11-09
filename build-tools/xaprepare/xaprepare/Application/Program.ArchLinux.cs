@@ -41,8 +41,12 @@ namespace Xamarin.Android.Prepare
 		protected override bool DeterminePackageVersion()
 		{
 			var output = Utilities.GetStringFromStdout ("pacman", "-Q", PackageName).Split(' ');
-			CurrentVersion = output.Length == 2 ? output[1] : null;
-			return !String.IsNullOrEmpty (CurrentVersion);
+			if (output.Length == 2) {
+				CurrentVersion = output[1];
+				return true;
+			}
+
+			return false;
 		}
 	}
 }

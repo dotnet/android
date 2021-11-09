@@ -35,7 +35,7 @@ namespace Xamarin.Android.Prepare
 		};
 
 		readonly Context context;
-		readonly string[] twiddler;
+		readonly string[]? twiddler;
 		readonly long twiddleInterval;
 		readonly int twiddleSteps;
 		readonly bool dullMode;
@@ -99,9 +99,9 @@ namespace Xamarin.Android.Prepare
 				WriteTwiddler ("        ", showElapsed: false);
 		}
 
-		void Twiddle (object state)
+		void Twiddle (object? state)
 		{
-			if (dullMode) {
+			if (dullMode || twiddler == null) {
 				string wittyMessage = alternateTwiddlerMessages[random!.Next (0, alternateTwiddlerMessages.Count - 1)];
 				Log.StatusLine ($"{wittyMessage}... {GetElapsedTime ()}", ConsoleColor.Gray, skipLogFile: true);
 				return;

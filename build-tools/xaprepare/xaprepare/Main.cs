@@ -190,7 +190,7 @@ namespace Xamarin.Android.Prepare
 			if (String.Compare (cfName, Configurables.Defaults.DefaultCompressionFormat.Name, StringComparison.OrdinalIgnoreCase) == 0)
 				return true;
 
-			if (!Configurables.Defaults.CompressionFormats.TryGetValue (cfName, out CompressionFormat cf)) {
+			if (!Configurables.Defaults.CompressionFormats.TryGetValue (cfName, out CompressionFormat? cf)) {
 				Log.Instance.ErrorLine ($"Unknown compression format name: {cfName}");
 				return false;
 			}

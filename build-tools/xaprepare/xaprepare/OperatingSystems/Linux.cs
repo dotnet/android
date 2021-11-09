@@ -165,8 +165,9 @@ and re-enable it after building with the following command:
 			if (String.IsNullOrEmpty (id))
 				return false;
 
-			if (!distroIdMap.TryGetValue (id, out string val))
+			if (!distroIdMap.TryGetValue (id, out string? val) || val == null) {
 				return false;
+			}
 
 			distro = val;
 			return true;
@@ -228,9 +229,9 @@ and re-enable it after building with the following command:
 			if (usingBaseDistro)
 				Log.Instance.InfoLine ($"Distribution supported via its base distribution: {idLike}");
 
-			Func<Context, Linux> creator;
-			if (!distroMap.TryGetValue (distro, out creator))
+			if (!distroMap.TryGetValue (distro, out Func<Context, Linux>? creator) || creator == null) {
 				throw new InvalidOperationException ($"Your Linux distribution ({name} {release}) is not supported at this time.");
+			}
 
 			Linux linux = creator (context);
 			linux.Name = name;

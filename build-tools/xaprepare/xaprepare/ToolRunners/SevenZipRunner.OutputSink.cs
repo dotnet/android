@@ -13,7 +13,7 @@ namespace Xamarin.Android.Prepare
 				: base (log, logFilePath)
 			{}
 
-			public override void WriteLine (string value)
+			public override void WriteLine (string? value)
 			{
 				base.WriteLine (value);
 				if (String.IsNullOrEmpty (value))

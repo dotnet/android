@@ -20,7 +20,7 @@ namespace Xamarin.Android.Prepare
 					Writer = new StreamWriter (File.Open (logFilePath, FileMode.Create, FileAccess.Write), Utilities.UTF8NoBOM);
 			}
 
-			public override void WriteLine (string value)
+			public override void WriteLine (string? value)
 			{
 				Writer?.WriteLine (value ?? String.Empty);
 			}

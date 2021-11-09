@@ -147,8 +147,8 @@ namespace Xamarin.Android.Prepare
 
 		public  override    string      Type    => "Git";
 
-		public  string      RepositoryUrl   {get; private set;}
-		public  string      CommitHash      {get; private set;}
+		public  string      RepositoryUrl   {get; private set;} = String.Empty;
+		public  string      CommitHash      {get; private set;} = String.Empty;
 
 		GitSubmoduleInfo ()
 		{
@@ -162,13 +162,17 @@ namespace Xamarin.Android.Prepare
 
 		const string Submodule = "submodule.external/";
 
-		public static IEnumerable<GitSubmoduleInfo> GetGitSubmodules (List<string> config, List<string> submoduleStatus)
+		public static IEnumerable<GitSubmoduleInfo> GetGitSubmodules (List<string>? config, List<string>? submoduleStatus)
 		{
+			if (config == null) {
+				yield return CreateEmptySubmoduleInfo ();
+			}
+
 			string? entryId = null;
 			string? path = null;
 			string? url = null;
 
-			foreach (var line in config) {
+			foreach (var line in config!) {
 				if (!line.StartsWith (Submodule, StringComparison.Ordinal))
 					continue;
 
@@ -208,6 +212,10 @@ namespace Xamarin.Android.Prepare
 
 			GitSubmoduleInfo CreateSubmoduleInfo (string url, string path)
 			{
+				if (submoduleStatus == null) {
+					return CreateEmptySubmoduleInfo ();
+				}
+
 				string? hash = null;
 				foreach (var e in submoduleStatus) {
 					int pi  = e.IndexOf (path, StringComparison.OrdinalIgnoreCase);
@@ -218,7 +226,15 @@ namespace Xamarin.Android.Prepare
 				}
 				return new GitSubmoduleInfo () {
 					RepositoryUrl   = url,
-					CommitHash      = hash,
+					CommitHash      = hash ?? String.Empty,
+				};
+			}
+
+			GitSubmoduleInfo CreateEmptySubmoduleInfo ()
+			{
+				return new GitSubmoduleInfo {
+					RepositoryUrl = String.Empty,
+					CommitHash = String.Empty,
 				};
 			}
 		}

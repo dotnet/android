@@ -102,8 +102,8 @@ implication, estoppel or otherwise."			}
 			if (licenses.Count == 0)
 				return;
 
-			string blurb;
-			if (!tpnBlurbs.TryGetValue (licenseType, out blurb))
+			string? blurb;
+			if (!tpnBlurbs.TryGetValue (licenseType, out blurb) || blurb == null)
 				throw new InvalidOperationException ($"Unknown license type {licenseType}");
 
 			using (StreamWriter sw = Utilities.OpenStreamWriter (outputPath)) {

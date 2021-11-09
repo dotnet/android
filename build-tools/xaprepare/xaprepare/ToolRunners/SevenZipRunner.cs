@@ -21,8 +21,11 @@ namespace Xamarin.Android.Prepare
 			ProcessTimeout = TimeSpan.FromMinutes (DefaultTimeout);
 
 			string vs = VersionString.Trim ();
-			if (String.IsNullOrEmpty (vs) || !Version.TryParse (vs, out version))
+			if (String.IsNullOrEmpty (vs) || !Version.TryParse (vs, out Version? ver) || ver == null) {
 				version = new Version (0, 0);
+			} else {
+				version = ver;
+			}
 		}
 
 		public async Task<bool> Extract (string archivePath, string outputDirectory, List<string>? extraArguments = null)

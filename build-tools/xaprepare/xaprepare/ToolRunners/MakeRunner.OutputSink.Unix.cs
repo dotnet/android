@@ -9,11 +9,6 @@ namespace Xamarin.Android.Prepare
 			public OutputSink (Log log, string? logFilePath)
 				: base (log, logFilePath)
 			{}
-
-			public override void WriteLine (string value)
-			{
-				base.WriteLine (value);
-			}
 		}
 	}
 }
