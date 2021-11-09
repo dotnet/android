@@ -440,7 +440,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
 				/* props */ null,
 				/* shouldBuild */ true,
-				/* expected */ "219012;316012",
+				/* expected */ "219012;319012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -450,7 +450,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
 				/* props */ "screen=24",
 				/* shouldBuild */ true,
-				/* expected */ "21924012;31624012",
+				/* expected */ "21924012;31924012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -460,7 +460,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ true,
-				/* expected */ "219241012;316241012",
+				/* expected */ "219241012;319241012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -470,7 +470,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ false,
-				/* expected */ "2192401012;3162401012",
+				/* expected */ "2192401012;3192401012",
 			},
 		};
 
