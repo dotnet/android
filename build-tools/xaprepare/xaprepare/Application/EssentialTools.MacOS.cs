@@ -4,8 +4,8 @@ namespace Xamarin.Android.Prepare
 {
 	partial class EssentialTools : AppObject
 	{
-		string brewPath;
-		string pkgutilPath;
+		string brewPath = String.Empty;
+		string pkgutilPath = String.Empty;
 
 		public string BrewPath {
 			get => GetRequiredValue (brewPath, "brew");

@@ -18,7 +18,7 @@ namespace Xamarin.Android.Prepare
 
 		string BrewPath => Context.Instance?.Tools?.BrewPath ?? "brew";
 
-		public BrewRunner (Context context, Log log = null, string toolPath = null)
+		public BrewRunner (Context context, Log? log = null, string? toolPath = null)
 			: base (context, log, toolPath)
 		{
 			ProcessTimeout = TimeSpan.FromMinutes (30);
@@ -121,17 +121,17 @@ namespace Xamarin.Android.Prepare
 			return await RunBrew (echoOutput, echoError, "unpin", packageName);;
 		}
 
-		public bool List (string packageName, out List<string> lines)
+		public bool List (string packageName, out List<string>? lines)
 		{
 			if (String.IsNullOrEmpty (packageName))
 				throw new ArgumentException ("must not be null or empty", nameof (packageName));
 
 			lines = null;
-			string listing = CaptureBrewOutput ("ls", packageName)?.Trim ();
+			string? listing = CaptureBrewOutput ("ls", packageName)?.Trim ();
 			if (String.IsNullOrEmpty (listing))
 				return false;
 
-			lines = new List <string> (listing.Split (lineSplit, StringSplitOptions.RemoveEmptyEntries));
+			lines = new List <string> (listing!.Split (lineSplit, StringSplitOptions.RemoveEmptyEntries));
 			return true;
 		}
 
@@ -156,6 +156,9 @@ namespace Xamarin.Android.Prepare
 			bool success = await RunTool (() => runner.Run ());
 			if (!success) {
 				var os = Context.Instance.OS as MacOS;
+				if (os == null) {
+					throw new InvalidOperationException ("Context.Instance.OS is not MacOS!");
+				}
 				os.HomebrewErrors = true;
 			}
 

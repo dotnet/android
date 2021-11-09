@@ -8,10 +8,10 @@ namespace Xamarin.Android.Prepare
 	{
 		public override bool NeedsSudoToInstall => false;
 		public string PackageId                { get; }
-		public Uri PackageUrl                  { get; set; }
+		public Uri? PackageUrl                 { get; set; }
 		protected bool SkipPkgUtilVersionCheck { get; set; }
 
-		public PkgProgram (string name, string packageId, Uri packageUrl = null)
+		public PkgProgram (string name, string packageId, Uri? packageUrl = null)
 		{
 			if (String.IsNullOrEmpty (name))
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -82,7 +82,7 @@ namespace Xamarin.Android.Prepare
 
 			var runner = new PkgutilRunner (Context.Instance);
 
-			Version ver = await GetVersion (echoError: true);
+			Version? ver = await GetVersion (echoError: true);
 			if (ver == null)
 				return false;
 
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		async Task<Version> GetVersion (bool echoError)
+		async Task<Version?> GetVersion (bool echoError)
 		{
 			var runner = new PkgutilRunner (Context.Instance);
 			return await runner.GetPackageVersion (PackageId, echoError: echoError);

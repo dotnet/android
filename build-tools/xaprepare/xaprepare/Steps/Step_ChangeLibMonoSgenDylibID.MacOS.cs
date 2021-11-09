@@ -29,7 +29,7 @@ namespace Xamarin.Android.Prepare
 					continue;
 				}
 
-				if (!ChangeID (libPath)) {
+				if (!await ChangeID (libPath)) {
 					Log.StatusLine ("    failed", ConsoleColor.Magenta);
 					result = false;
 				}
@@ -37,12 +37,14 @@ namespace Xamarin.Android.Prepare
 
 			return result;
 
-			bool ChangeID (string path)
+			Task<bool> ChangeID (string path)
 			{
-				Log.DebugLine ($"Changing dylib id for {path}");
-				Log.StatusLine ($"  {context.Characters.Bullet} {Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, path)}");
-				var runner = new ProcessRunner (xcrun, "install_name_tool", "-id", "@loader_path/libmonosgen-2.0.dylib", path);
-				return runner.Run ();
+				return Task.Run(() => {
+					Log.DebugLine ($"Changing dylib id for {path}");
+					Log.StatusLine ($"  {context.Characters.Bullet} {Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, path)}");
+					var runner = new ProcessRunner (xcrun, "install_name_tool", "-id", "@loader_path/libmonosgen-2.0.dylib", path);
+					return runner.Run ();
+				});
 			}
 		}
 	}
