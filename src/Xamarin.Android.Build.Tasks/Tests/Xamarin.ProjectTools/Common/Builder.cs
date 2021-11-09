@@ -172,6 +172,11 @@ namespace Xamarin.ProjectTools
 
 		public string LatestTargetFrameworkVersion (out string apiLevel) {
 			GetTargetFrameworkVersionRange (out string _, out string _, out apiLevel, out string lastFrameworkVersion, out string [] _);
+			// TODO: We aren't sure how to support preview bindings in .NET6 yet.
+			if (UseDotNet && apiLevel == "32") {
+				apiLevel = "31";
+				return "v12.0";
+			}
 			return lastFrameworkVersion;
 		}
 
