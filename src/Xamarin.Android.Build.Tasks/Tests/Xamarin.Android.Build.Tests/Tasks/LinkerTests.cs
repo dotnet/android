@@ -193,6 +193,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			var app = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			app.SetAndroidSupportedAbis ("arm64-v8a");
 			app.AddReference (lib);
 			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName));
 			Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
@@ -202,11 +203,11 @@ namespace Xamarin.Android.Build.Tests
 			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
 			Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
 
-			if (Builder.UseDotNet) {
-				appBuilder.AssertHasNoWarnings ();
-			} else {
+			// NOTE: in .NET 6, we only emit IL6200 for Release builds
+			if (!Builder.UseDotNet || isRelease) {
+				string code = Builder.UseDotNet ? "IL6200" : "XA2000";
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "1 Warning(s)"), "MSBuild should count 1 warnings.");
-				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "warning XA2000: Use of AppDomain.CreateDomain()"), "Should warn XA2000 about creating AppDomain.");
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, $"warning {code}: Use of AppDomain.CreateDomain()"), $"Should warn {code} about creating AppDomain.");
 			}
 		}
 
