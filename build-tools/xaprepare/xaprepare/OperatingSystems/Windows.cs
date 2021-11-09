@@ -52,7 +52,7 @@ namespace Xamarin.Android.Prepare
 		public override string Which (string programPath, bool required = true)
 		{
 			if (String.Compare ("7za", programPath, StringComparison.OrdinalIgnoreCase) == 0) {
-				string packagePath = Context.Instance.Properties.GetValue (KnownProperties.Pkg7Zip_CommandLine);
+				string? packagePath = Context.Instance.Properties.GetValue (KnownProperties.Pkg7Zip_CommandLine);
 				if (String.IsNullOrEmpty (packagePath)) {
 					packagePath = Path.Combine (Configurables.Paths.XAPackagesDir, "7-zip.commandline", "18.1.0");
 				}
@@ -119,11 +119,11 @@ namespace Xamarin.Android.Prepare
 
 		string GetHomeDir ()
 		{
-			string homeDir = Environment.GetEnvironmentVariable ("USERPROFILE");
+			string? homeDir = Environment.GetEnvironmentVariable ("USERPROFILE");
 			if (!String.IsNullOrEmpty (homeDir))
 				return homeDir;
 
-			string homeDrive = Environment.GetEnvironmentVariable ("HOMEDRIVE");
+			string? homeDrive = Environment.GetEnvironmentVariable ("HOMEDRIVE");
 			if (String.IsNullOrEmpty (homeDrive))
 				throw new InvalidOperationException ("Unable to determine user's home directory, missing HOMEDRIVE environment variable");
 

@@ -4,7 +4,7 @@ namespace Xamarin.Android.Prepare
 {
 	partial class MakeRunner
 	{
-		static string executableName;
+		static string executableName = String.Empty;
 
 		protected override string DefaultToolExecutableName => EnsureExecutableName ();
 

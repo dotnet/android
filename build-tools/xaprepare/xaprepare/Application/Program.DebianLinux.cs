@@ -14,7 +14,7 @@ namespace Xamarin.Android.Prepare
 				LoggingLevel = ProcessStandardStreamWrapper.LogLevel.Message;
 			}
 
-			protected override string PreprocessMessage (string message, ref bool writeLine, out bool ignoreLine)
+			protected override string? PreprocessMessage (string? message, ref bool writeLine, out bool ignoreLine)
 			{
 				ignoreLine = false;
 				// apt-get calls `dpkg` which can't be persuaded to not show any progress and it shows the progress by
@@ -23,7 +23,7 @@ namespace Xamarin.Android.Prepare
 				// line to us... So in order to keep the display straight we need to reset the cursor position blindly
 				// here.
 				Console.CursorLeft = 1;
-				return message.TrimEnd ();
+				return message?.TrimEnd ();
 			}
 		}
 

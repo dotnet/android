@@ -5,7 +5,7 @@ namespace Xamarin.Android.Prepare
 {
 	abstract class Program : AppObject
 	{
-		const string DefaultCurrentVersion = "0.0.0";
+		protected const string DefaultCurrentVersion = "0.0.0";
 
 		bool? installed;
 

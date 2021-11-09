@@ -6,7 +6,7 @@ namespace Xamarin.Android.Prepare
 {
 	class MonoPkgProgram : PkgProgram
 	{
-		public MonoPkgProgram (string name, string packageId, Uri packageUrl = null)
+		public MonoPkgProgram (string name, string packageId, Uri? packageUrl = null)
 			: base (name, packageId, packageUrl)
 		{
 			ExecutableName = "mono";

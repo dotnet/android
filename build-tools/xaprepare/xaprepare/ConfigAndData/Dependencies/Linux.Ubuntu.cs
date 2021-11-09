@@ -40,8 +40,7 @@ namespace Xamarin.Android.Prepare
 
 		protected override bool EnsureVersionInformation (Context context)
 		{
-			Version ubuntuRelease;
-			if (!Version.TryParse (Release, out ubuntuRelease)) {
+			if (!Version.TryParse (Release, out Version? ubuntuRelease) || ubuntuRelease == null) {
 				if (Int32.TryParse (Release, out int singleNumberVersion)) {
 					ubuntuRelease = new Version (singleNumberVersion, 0);
 				} else {

@@ -10,7 +10,7 @@ namespace Xamarin.Android.Prepare
 		protected override string DefaultToolExecutableName => GetToolExecutableName ();
 		protected override string ToolName                  => "PkgUtil";
 
-		public PkgutilRunner (Context context, Log log = null, string toolPath = null)
+		public PkgutilRunner (Context context, Log? log = null, string? toolPath = null)
 			: base (context, log, toolPath)
 		{}
 
@@ -22,16 +22,16 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		public async Task<Version> GetPackageVersion (string packageId, bool echoOutput = false, bool echoError = true)
+		public async Task<Version?> GetPackageVersion (string packageId, bool echoOutput = false, bool echoError = true)
 		{
 			if (String.IsNullOrEmpty (packageId))
 				throw new ArgumentException ("must not be null or empty", nameof (packageId));
 
-			string output = Utilities.GetStringFromStdout (GetRunner (echoOutput, echoError, "--pkg-info", packageId))?.Trim ();
+			string output = Utilities.GetStringFromStdout (GetRunner (echoOutput, echoError, "--pkg-info", packageId)).Trim ();
 			if (String.IsNullOrEmpty (output))
 				return null;
 
-			string v = null;
+			string? v = null;
 			foreach (string l in output.Split ('\n')) {
 				if (GetFieldValue (l.Trim (), "version:", out v))
 					break;
@@ -42,7 +42,7 @@ namespace Xamarin.Android.Prepare
 				return null;
 			}
 
-			if (!Version.TryParse (v, out Version pkgVer)) {
+			if (!Version.TryParse (v, out Version? pkgVer) || pkgVer == null) {
 				Log.ErrorLine ($"Failed to parse package {packageId} version from '{v}'");
 				return null;
 			}
@@ -51,7 +51,7 @@ namespace Xamarin.Android.Prepare
 		}
 #pragma warning restore CS1998
 
-		bool GetFieldValue (string line, string name, out string v)
+		bool GetFieldValue (string line, string name, out string? v)
 		{
 			v = null;
 			if (String.IsNullOrEmpty (line))
@@ -83,7 +83,7 @@ namespace Xamarin.Android.Prepare
 
 		string GetToolExecutableName ()
 		{
-			EssentialTools tools = Context.Instance?.Tools;
+			EssentialTools? tools = Context.Instance?.Tools;
 
 			if (tools != null && tools.IsInitialized)
 				return tools.PkgutilPath;

@@ -90,6 +90,11 @@ namespace Xamarin.Android.Prepare
 			HashSet<string>? currentAbis = null;
 			FillCurrentAbis (context, ref currentAbis);
 
+			if (currentAbis == null || currentAbis.Count == 0) {
+				Log.WarningLine ("Cannot save ABI choice, no current ABIs");
+				return;
+			}
+
 			string cacheFile = Configurables.Paths.MonoRuntimesEnabledAbisCachePath;
 			Log.DebugLine ($"Writing ABI cache file {cacheFile}");
 			File.WriteAllLines (cacheFile, currentAbis);
@@ -243,7 +248,8 @@ namespace Xamarin.Android.Prepare
 			if (String.Compare (".mdb", extension, StringComparison.Ordinal) == 0)
 				return Path.Combine (executablePath, extension);
 
-			return Path.Combine (Path.GetDirectoryName (executablePath), $"{Path.GetFileNameWithoutExtension (executablePath)}{extension}");
+			string dirName = Path.GetDirectoryName (executablePath) ?? Environment.CurrentDirectory;
+			return Path.Combine (dirName, $"{Path.GetFileNameWithoutExtension (executablePath)}{extension}");
 		}
 
 		public static (bool success, string version) GetProgramVersion (string programPath)
@@ -251,9 +257,9 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (programPath))
 				throw new ArgumentException ("must not be null or empty", nameof (programPath));
 
-			string version;
-			if (versionCache.TryGetValue (programPath, out version))
+			if (versionCache.TryGetValue (programPath, out string? version) && version != null) {
 				return (true, version);
+			}
 
 			bool fetcherPresent;
 
@@ -283,8 +289,7 @@ namespace Xamarin.Android.Prepare
 		static (bool fetcherPresent, string version) RunVersionFetcher (string program, string programPath)
 		{
 			Log.DebugLine ($"Attempting to find version fetcher for: {program} ({programPath})");
-			ProgramVersionParser vp;
-			if (Context.Instance.VersionFetchers.Fetchers.TryGetValue (program, out vp)) {
+			if (Context.Instance.VersionFetchers.Fetchers.TryGetValue (program, out ProgramVersionParser? vp) && vp != null) {
 				Log.DebugLine ("Fetcher found");
 				string version = vp.GetVersion (Context.Instance, programPath);
 				Log.DebugLine ($"{program} version: {version}");
@@ -357,7 +362,7 @@ namespace Xamarin.Android.Prepare
 			DeleteFile (filePath, true);
 		}
 
-		public static void CreateDirectory (string directoryPath)
+		public static void CreateDirectory (string? directoryPath)
 		{
 			if (String.IsNullOrEmpty (directoryPath))
 				throw new ArgumentException ("must not be null or empty", nameof (directoryPath));
@@ -403,15 +408,23 @@ namespace Xamarin.Android.Prepare
 			CopyFileInternal (sourceFilePath, destinationDirectory, destinationFileName ?? String.Empty, overwriteDestinationFile);
 		}
 
-		static void CopyFileInternal (string sourceFilePath, string destinationDirectory, string destinationFileName, bool overwriteDestinationFile)
+		static void CopyFileInternal (string? sourceFilePath, string? destinationDirectory, string? destinationFileName, bool overwriteDestinationFile)
 		{
+			if (String.IsNullOrEmpty (sourceFilePath)) {
+				throw new ArgumentException ("must not be null or empty", nameof (sourceFilePath));
+			}
+
+			if (String.IsNullOrEmpty (destinationDirectory)) {
+				throw new ArgumentException ("must not be null or empty", nameof (destinationDirectory));
+			}
+
 			string targetFileName;
 			if (String.IsNullOrEmpty (destinationFileName))
 				targetFileName = Path.GetFileName (sourceFilePath);
 			else
-				targetFileName = destinationFileName;
+				targetFileName = destinationFileName!;
 
-			if (!FileExists (sourceFilePath))
+			if (!FileExists (sourceFilePath!))
 				throw new InvalidOperationException ($"Location '{sourceFilePath}' does not point to a file");
 
 			CreateDirectory (destinationDirectory);
@@ -512,7 +525,7 @@ namespace Xamarin.Android.Prepare
 				Log.DebugLine ("GetAsync finished");
 
 				resp.EnsureSuccessStatusCode ();
-				string dir = Path.GetDirectoryName (targetFile);
+				string? dir = Path.GetDirectoryName (targetFile);
 				CreateDirectory (dir);
 				using (var fs = File.Open (targetFile, FileMode.Create, FileAccess.Write)) {
 					using (var webStream = await resp.Content.ReadAsStreamAsync ()) {
@@ -590,7 +603,7 @@ namespace Xamarin.Android.Prepare
 				}
 
 				destination = Path.Combine (destinationDir, Path.GetFileName (entry));
-				string dir = Path.GetDirectoryName (destination);
+				string? dir = Path.GetDirectoryName (destination);
 				CreateDirectory (dir);
 				MoveFileWithRetry (entry, destination, resetFileTimestamp);
 			}
@@ -731,7 +744,7 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (outputPath))
 				throw new ArgumentException ("must not be null or empty", nameof (outputPath));
 
-			string dir = Path.GetDirectoryName (outputPath);
+			string? dir = Path.GetDirectoryName (outputPath);
 			CreateDirectory (dir);
 
 			if (File.Exists (outputPath))

@@ -18,8 +18,8 @@ namespace Xamarin.Android.Prepare
 
 			var runAllTestsLoggingCommand = "##vso[task.setvariable variable=TestAreas;isOutput=true]MSBuild,MSBuildDevice,BCL,Designer";
 
-			string commitRevision = Environment.GetEnvironmentVariable ("BUILD_SOURCEVERSION");
-			string commitMessage = Environment.GetEnvironmentVariable ("BUILD_SOURCEVERSIONMESSAGE");
+			string? commitRevision = Environment.GetEnvironmentVariable ("BUILD_SOURCEVERSION");
+			string? commitMessage = Environment.GetEnvironmentVariable ("BUILD_SOURCEVERSIONMESSAGE");
 			if (string.IsNullOrEmpty (commitRevision) || string.IsNullOrEmpty (commitMessage)) {
 				Log.WarningLine ("One or more source version variable values were empty:");
 				Log.WarningLine ($"BUILD_SOURCEVERSION='{commitRevision}' BUILD_SOURCEVERSIONMESSAGE='{commitMessage}'.");

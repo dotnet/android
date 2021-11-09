@@ -21,7 +21,7 @@ namespace Xamarin.Android.Prepare
 				packageBullet = Context.Instance.Characters.Package;
 			}
 
-			public override void WriteLine (string value)
+			public override void WriteLine (string? value)
 			{
 				const string RestoringPackagePrefix = "Restoring NuGet package";
 				const string AllPackagesRestoredPrefix = "All packages listed in";
@@ -31,7 +31,7 @@ namespace Xamarin.Android.Prepare
 					return;
 
 				string? consoleMessage = null;
-				if (value.StartsWith (RestoringPackagePrefix, StringComparison.OrdinalIgnoreCase)) {
+				if (value!.StartsWith (RestoringPackagePrefix, StringComparison.OrdinalIgnoreCase)) {
 					consoleMessage = $"{packageBullet} {value.Substring (RestoringPackagePrefix.Length).Trim ().TrimEnd ('.')}";
 				} else if (value.StartsWith (AllPackagesRestoredPrefix, StringComparison.OrdinalIgnoreCase)) {
 					consoleMessage = value.Trim ();

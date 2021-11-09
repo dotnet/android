@@ -185,7 +185,7 @@ namespace Xamarin.Android.Prepare
 		{
 			JavaHome = Context.Instance.Properties.GetValue (KnownProperties.JavaSdkDirectory)?.Trim () ?? String.Empty;
 			if (String.IsNullOrEmpty (JavaHome)) {
-				var androidToolchainDirectory = Context.Instance.Properties.GetValue (KnownProperties.AndroidToolchainDirectory)?.Trim ();
+				var androidToolchainDirectory = Context.Instance.Properties.GetValue (KnownProperties.AndroidToolchainDirectory)?.Trim () ?? String.Empty;
 				JavaHome = Path.Combine (androidToolchainDirectory, Configurables.Defaults.JdkFolder);
 			}
 

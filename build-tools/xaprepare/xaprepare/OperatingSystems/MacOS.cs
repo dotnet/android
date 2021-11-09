@@ -24,7 +24,7 @@ After all the issues are fixed, please re-run the bootstrapper.
 
 		public Version Version         { get; }
 		public string Build            { get; }
-		public Version HomebrewVersion { get; private set; }
+		public Version? HomebrewVersion { get; private set; }
 		public bool HomebrewErrors     { get; set; }
 
 		bool processIsTranslated;
@@ -45,7 +45,7 @@ After all the issues are fixed, please re-run the bootstrapper.
 				Build = build;
 				Release = $"{release} ({build})";
 
-				if (!Version.TryParse (release, out Version ver)) {
+				if (!Version.TryParse (release, out Version? ver) || ver == null) {
 					Log.WarningLine ($"Unable to parse macOS version: {release}");
 					Version = new Version (0, 0, 0);
 				} else
@@ -94,7 +94,7 @@ After all the issues are fixed, please re-run the bootstrapper.
 			HomebrewPrefix = Utilities.GetStringFromStdout (brewPath, "--prefix");
 
 			(bool success, string bv) = Utilities.GetProgramVersion (brewPath);
-			if (!success || !Version.TryParse (bv, out Version brewVersion)) {
+			if (!success || !Version.TryParse (bv, out Version? brewVersion) || brewVersion == null) {
 				Log.ErrorLine ("Failed to obtain Homebrew version");
 				return false;
 			}
@@ -105,7 +105,7 @@ After all the issues are fixed, please re-run the bootstrapper.
 			// `HostHomebrewPrefix` property which is defined in `Configuration.OperatingSystem.props` but we're here to
 			// *generate* the latter file, so when the bootstrapper is built `HostHomebrewPrefix` is empty and we can't
 			// access mingw utilities. So, we need to cheat here.
-			string mxePath = Context.Instance.Properties.GetValue (KnownProperties.AndroidMxeFullPath);
+			string? mxePath = Context.Instance.Properties.GetValue (KnownProperties.AndroidMxeFullPath);
 			if (String.IsNullOrEmpty (mxePath))
 				Context.Instance.Properties.Set (KnownProperties.AndroidMxeFullPath, HomebrewPrefix);
 

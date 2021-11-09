@@ -8,32 +8,32 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly char[] lineSplit = new [] { '\n' };
 
-		string cachedVersionOutput;
+		string? cachedVersionOutput;
 		bool brewNeedsSudo = false;
 		bool multipleVersionsPickle = false;
-		
+
 		public override bool NeedsSudoToInstall => brewNeedsSudo;
-		public string HomebrewTapName           { get; }
-		public Uri HomebrewFormulaUrl           { get; }
+		public string HomebrewTapName           { get; } = String.Empty;
+		public Uri? HomebrewFormulaUrl           { get; }
 		public bool Pin                         { get; set; }
 
-		public HomebrewProgram (string homebrewPackageName, string executableName = null)
+		public HomebrewProgram (string homebrewPackageName, string? executableName = null)
 			: this (homebrewPackageName, homebrewTap: null, executableName: executableName)
 		{}
 
-		public HomebrewProgram (string homebrewPackageName, Uri homebrewFormulaUrl, string executableName = null)
+		public HomebrewProgram (string homebrewPackageName, Uri homebrewFormulaUrl, string? executableName = null)
 			: this (homebrewPackageName, homebrewTap: null, executableName: executableName)
 		{
 			HomebrewFormulaUrl = homebrewFormulaUrl ?? throw new ArgumentNullException (nameof (homebrewFormulaUrl));
 		}
 
-		public HomebrewProgram (string homebrewPackageName, string homebrewTap, string executableName)
+		public HomebrewProgram (string homebrewPackageName, string? homebrewTap, string? executableName)
 		{
 			if (String.IsNullOrEmpty (homebrewPackageName))
 				throw new ArgumentException ("must not be null or empty", nameof (homebrewPackageName));
 			Name = homebrewPackageName;
-			HomebrewTapName = homebrewTap?.Trim ();
-			ExecutableName = executableName?.Trim ();
+			HomebrewTapName = homebrewTap?.Trim () ?? String.Empty;
+			ExecutableName = executableName?.Trim () ?? String.Empty;
 		}
 
 		public override async Task<bool> Install ()
@@ -50,10 +50,10 @@ namespace Xamarin.Android.Prepare
 				Log.InfoLine ($"{Name} has multiple versions installed, let's get out of this pickle");
 				// 1. unpin
 				success = await runner.UnPin (Name);
-				
+
 				// 2. unlink
 				success = await runner.Unlink (Name);
-				
+
 				// 3. uninstall --ignore-dependencies
 				success = await runner.Uninstall (Name, ignoreDependencies: true, force: true);
 				install = true;
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Prepare
 			return multipleVersionsPickle;
 		}
 
-		protected override bool ParseVersion (string version, out Version ver)
+		protected override bool ParseVersion (string? version, out Version? ver)
 		{
 			if (base.ParseVersion (version, out ver))
 				return true;
@@ -105,14 +105,14 @@ namespace Xamarin.Android.Prepare
 			//
 			// We need to handle it here *and* on install time (see Install above)
 
-			int pos = version.IndexOf (' ');
+			int pos = version!.IndexOf (' ');
 			if (pos > 0) {
 				Log.DebugLine ($"Brew reported more than one version of {Name} is installed: {version}");
 				multipleVersionsPickle = true;
 				var versions = new List<Version> ();
 				foreach (string v in version.Split (' ')) {
 					string cvs = GetCleanedUpVersion (v);
-					if (Version.TryParse (cvs, out Version tempVer)) {
+					if (Version.TryParse (cvs, out Version? tempVer) && tempVer != null) {
 						versions.Add (tempVer);
 					}
 				}
@@ -159,7 +159,7 @@ namespace Xamarin.Android.Prepare
 					return false;
 			}
 
-			string[] parts = cachedVersionOutput.Split (new [] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+			string[] parts = cachedVersionOutput!.Split (new [] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
 			if (parts.Length != 2) {
 				Log.DebugLine ($"Unable to parse {Name} version from Homebrew output: '{cachedVersionOutput}'");
 				return false;

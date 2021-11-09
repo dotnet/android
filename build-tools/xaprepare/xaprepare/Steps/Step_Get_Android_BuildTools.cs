@@ -13,7 +13,7 @@ namespace Xamarin.Android.Prepare
 		public Step_Get_Android_BuildTools ()
 			: base ("Downloading build-tools archive")
 		{
-			string XABuildToolsVersion     = Context.Instance.Properties [KnownProperties.XABuildToolsVersion];
+			string XABuildToolsVersion     = Context.Instance.Properties [KnownProperties.XABuildToolsVersion] ?? String.Empty;
 			string XABuildToolsPackagePrefixMacOS = Context.Instance.Properties [KnownProperties.XABuildToolsPackagePrefixMacOS] ?? string.Empty;
 			string XABuildToolsPackagePrefixWindows = Context.Instance.Properties [KnownProperties.XABuildToolsPackagePrefixWindows] ?? string.Empty;
 			string XABuildToolsPackagePrefixLinux = Context.Instance.Properties [KnownProperties.XABuildToolsPackagePrefixLinux] ?? string.Empty;

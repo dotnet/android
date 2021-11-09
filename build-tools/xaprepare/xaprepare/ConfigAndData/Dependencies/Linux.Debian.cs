@@ -54,7 +54,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return
-				version.IndexOf ("bullseye", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				version!.IndexOf ("bullseye", StringComparison.OrdinalIgnoreCase) >= 0 ||
 				version.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0 ||
 				version.IndexOf ("sid", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
@@ -86,13 +86,12 @@ namespace Xamarin.Android.Prepare
 				// VERSION_ID and VERSION_CODENAME from /etc/os-release, so we need to
 				// fake it
 				debian_version = ReadDebianVersion ();
-				if (IsBookwormSidOrNewer (debian_version) && DebianUnstableVersionMap.TryGetValue (debian_version!, out string unstable_version)) {
+				if (IsBookwormSidOrNewer (debian_version) && DebianUnstableVersionMap.TryGetValue (debian_version!, out string? unstable_version) && unstable_version != null) {
 					Release = unstable_version;
 				};
 			}
 
-			Version debianRelease;
-			if (!Version.TryParse (Release, out debianRelease)) {
+			if (!Version.TryParse (Release, out Version? debianRelease) || debianRelease == null) {
 				if (Int32.TryParse (Release, out int singleNumberVersion)) {
 					debianRelease = new Version (singleNumberVersion, 0);
 				} else {
@@ -102,6 +101,7 @@ namespace Xamarin.Android.Prepare
 					}
 
 					IsTesting = true;
+					debianRelease = new Version (12, 0); // Assume testing is newer than bullseye (11)
 				}
 			}
 

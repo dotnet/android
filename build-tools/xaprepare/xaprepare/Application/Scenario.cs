@@ -29,7 +29,7 @@ namespace Xamarin.Android.Prepare
 			if (log != null)
 				Log = log;
 			foreach (Step step in Steps) {
-				context.Banner (step.Description ?? step.GetType ().FullName);
+				context.Banner (step.Description ?? step.GetType ().FullName ?? "Unnamed Step");
 
 				bool success;
 				Exception? stepEx = null;

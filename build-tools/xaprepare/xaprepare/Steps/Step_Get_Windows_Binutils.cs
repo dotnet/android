@@ -214,7 +214,7 @@ namespace Xamarin.Android.Prepare
 						return false;
 					}
 
-					if (!neededFiles.TryGetValue (cdh.FileName, out string destinationFileName))
+					if (!neededFiles.TryGetValue (cdh.FileName, out string? destinationFileName))
 						continue;
 
 					foundFiles.Add (cdh.FileName);
@@ -315,7 +315,11 @@ namespace Xamarin.Android.Prepare
 
 		void Extract (string compressedFilePath, uint crc32FromHeader)
 		{
-			string outputFile = Path.Combine (Path.GetDirectoryName (compressedFilePath), Path.GetFileNameWithoutExtension (compressedFilePath));
+			if (String.IsNullOrEmpty (compressedFilePath)) {
+				throw new ArgumentException ("must not be null or empty", nameof (compressedFilePath));
+			}
+
+			string outputFile = Path.Combine (Path.GetDirectoryName (compressedFilePath) ?? String.Empty, Path.GetFileNameWithoutExtension (compressedFilePath) ?? String.Empty);
 			using (var fs = File.OpenRead (compressedFilePath)) {
 				using (var dfs = File.OpenWrite (outputFile)) {
 					Extract (fs, dfs, crc32FromHeader);
@@ -571,7 +575,7 @@ namespace Xamarin.Android.Prepare
 
 			if (cdh.FileCommentLength > 0) {
 				bytes = ReadBytes (cdr, cdh.FileCommentLength, dataLength, ref nread, out worked);
-				if (!worked) {
+				if (!worked || bytes == null) {
 					goto failed;
 				}
 				cdh.FileComment = Encoding.ASCII.GetString (bytes);

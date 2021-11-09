@@ -60,7 +60,7 @@ namespace Xamarin.Android.Prepare
 				string rev = parts [1].Trim ();
 				NDKRevision = rev;
 
-				if (!Utilities.ParseAndroidPkgRevision (rev, out Version? ver, out string tag)) {
+				if (!Utilities.ParseAndroidPkgRevision (rev, out Version? ver, out string? tag) || ver == null) {
 					Log.ErrorLine ($"Unable to parse NDK revision '{rev}' as a valid version string");
 					return false;
 				}
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Prepare
 				NDKVersionMajor = ver.Major.ToString ();
 				NDKVersionMinor = ver.Minor.ToString ();
 				NDKVersionMicro = ver.Build.ToString ();
-				NDKVersionTag = tag;
+				NDKVersionTag = tag ?? String.Empty;
 				break;
 			}
 

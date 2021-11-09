@@ -107,7 +107,7 @@ namespace Xamarin.Android.Prepare
 		bool AcceptLicenses (Context context, string sdkRoot)
 		{
 			string[] sdkManagerPaths = new[]{
-				Path.Combine (sdkRoot, "cmdline-tools", context.Properties [KnownProperties.CommandLineToolsFolder], "bin", "sdkmanager"),
+				Path.Combine (sdkRoot, "cmdline-tools", context.Properties [KnownProperties.CommandLineToolsFolder] ?? String.Empty, "bin", "sdkmanager"),
 				Path.Combine (sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager"),
 			};
 			string sdkManager = "";
@@ -136,10 +136,15 @@ namespace Xamarin.Android.Prepare
 				psi.EnvironmentVariables.Add ("JAVA_HOME", jdkDir);
 
 			Log.DebugLine ($"Starting {psi.FileName} {psi.Arguments}");
-			var proc = Process.Start (psi);
-			for (int i = 0; i < 10; i++)
-				proc.StandardInput.WriteLine ('y');
-			proc.WaitForExit ();
+			Process? proc = Process.Start (psi);
+			if (proc != null) {
+				for (int i = 0; i < 10; i++)
+					proc.StandardInput.WriteLine ('y');
+
+				proc.WaitForExit ();
+			} else {
+				Log.DebugLine ("Failed to start process");
+			}
 
 			return true;
 		}
@@ -307,12 +312,12 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			if (!Utilities.ParseAndroidPkgRevision (pkgRevision, out Version? pkgVer, out string pkgTag) || pkgVer == null) {
+			if (!Utilities.ParseAndroidPkgRevision (pkgRevision, out Version? pkgVer, out string? pkgTag) || pkgVer == null) {
 				Log.DebugLine ($"Failed to parse a valid version from Pkg.Revision ({pkgRevision}) for component '{component.Name}'. Component will be reinstalled.");
 				return false;
 			}
 
-			if (!Utilities.ParseAndroidPkgRevision (component.PkgRevision, out Version? expectedPkgVer, out string expectedTag) || expectedPkgVer == null)
+			if (!Utilities.ParseAndroidPkgRevision (component.PkgRevision, out Version? expectedPkgVer, out string? expectedTag) || expectedPkgVer == null)
 				throw new InvalidOperationException ($"Invalid expected package version for component '{component.Name}': {component.PkgRevision}");
 
 			bool equal = (pkgVer == expectedPkgVer) && (pkgTag == expectedTag);

@@ -430,8 +430,6 @@ namespace Xamarin.Android.Prepare
 			static string? mingw64CmakeTemplatePath;
 			static string? monoRuntimesEnabledAbisCachePath;
 			static string? frameworkListInstallPath;
-			static string? correttoCacheDir;
-			static string? correttoInstallDir;
 			static string? profileAssembliesProjitemsPath;
 			static string? bclTestsSourceDir;
 			static string? installHostBCLDir;

@@ -237,15 +237,15 @@ namespace Xamarin.Android.Prepare
 					throw new InvalidOperationException ($"Unsupported BCL file type {bcf.Type}");
 
 				AssemblyName aname = AssemblyName.GetAssemblyName (fullFilePath);
-				string version = bcf.Version ?? String.Empty;
-				if (String.IsNullOrEmpty (version) && !Runtimes.FrameworkListVersionOverrides.TryGetValue (bcf.Name, out version))
-					version = aname.Version.ToString ();
+				string? version = bcf.Version ?? String.Empty;
+				if (String.IsNullOrEmpty (version) && !Runtimes.FrameworkListVersionOverrides.TryGetValue (bcf.Name, out version) || version == null)
+					version = aname.Version?.ToString () ?? "0.0.0";
 
 				return new XElement (
 					"File",
-					new XAttribute ("AssemblyName", aname.Name),
+					new XAttribute ("AssemblyName", aname.Name ?? "Unknown"),
 					new XAttribute ("Version", version),
-					new XAttribute ("PublicKeyToken", String.Join (String.Empty, aname.GetPublicKeyToken ().Select (b => b.ToString ("x2")))),
+					new XAttribute ("PublicKeyToken", String.Join (String.Empty, aname.GetPublicKeyToken ()?.Select (b => b.ToString ("x2")) ?? new string[]{})),
 					new XAttribute ("ProcessorArchitecture", aname.ProcessorArchitecture.ToString ())
 				);
 			}

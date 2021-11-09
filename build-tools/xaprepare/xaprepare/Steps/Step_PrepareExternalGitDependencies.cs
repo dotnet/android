@@ -81,7 +81,7 @@ namespace Xamarin.Android.Prepare
 
 		async Task<string> GetGitHubURL (ExternalGitDependency egd, GitRunner git)
 		{
-			string ghToken = Environment.GetEnvironmentVariable("GH_AUTH_SECRET");
+			string? ghToken = Environment.GetEnvironmentVariable("GH_AUTH_SECRET");
 			if (!String.IsNullOrEmpty (ghToken)) {
 				return  $"https://{ghToken}@github.com:/{egd.Owner}/{egd.Name}";
 			} else {

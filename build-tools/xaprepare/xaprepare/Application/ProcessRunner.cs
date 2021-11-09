@@ -173,7 +173,7 @@ namespace Xamarin.Android.Prepare
 		///   than the default one (created when <see cref="EchoStandardOutput"/> is set to <c>true</c>) or the one
 		///   specified by the caller by setting the <see cref="StandardErrorEchoWrapper" />.
 		/// </summary>
-		public void WriteStderrLine (string line)
+		public void WriteStderrLine (string? line)
 		{
 			if (StandardErrorEchoWrapper != null) {
 				StandardErrorEchoWrapper.WriteLine (line);
@@ -188,7 +188,7 @@ namespace Xamarin.Android.Prepare
 			if (guardCache == null)
 				guardCache = new Dictionary<TextWriter, WriterGuard> ();
 
-			if (guardCache.TryGetValue (writer, out WriterGuard ret) && ret != null)
+			if (guardCache.TryGetValue (writer, out WriterGuard? ret) && ret != null)
 				return ret;
 
 			ret = new WriterGuard (writer);

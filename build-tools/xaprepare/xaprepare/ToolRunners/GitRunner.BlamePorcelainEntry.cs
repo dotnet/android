@@ -43,7 +43,7 @@ namespace Xamarin.Android.Prepare
 			// Contents of the changed line
 			public string Line                              { get; private set; } = String.Empty;
 
-			public bool ProcessLine (string line)
+			public bool ProcessLine (string? line)
 			{
 				if (String.IsNullOrEmpty (line))
 					return false;
@@ -53,7 +53,7 @@ namespace Xamarin.Android.Prepare
 					return false;
 				}
 
-				if (line [0] == '\t') {
+				if (line! [0] == '\t') {
 					Line = line.Substring (1);
 					// Means we've parsed the last line in the record and our job is done
 					return true;
@@ -146,9 +146,13 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
-			void ParseCommit (string line)
+			void ParseCommit (string? line)
 			{
-				string[] parts = line.Split (FieldSeparator, StringSplitOptions.RemoveEmptyEntries);
+				if (String.IsNullOrEmpty (line)) {
+					return;
+				}
+
+				string[] parts = line!.Split (FieldSeparator, StringSplitOptions.RemoveEmptyEntries);
 				if (parts.Length < 3)
 					throw new InvalidOperationException ($"Unexpected commit line format (not enough fields): {line}");
 

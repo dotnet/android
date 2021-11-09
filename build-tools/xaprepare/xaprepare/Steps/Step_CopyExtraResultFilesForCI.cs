@@ -19,8 +19,10 @@ namespace Xamarin.Android.Prepare
 			if (!Directory.Exists (rootDir))
 				return false;
 
-			CopyExtraTestFiles (Path.Combine (rootDir, $"Test{context.Configuration}"), context);
-			CopyExtraBuildFiles (Path.Combine (rootDir, $"Build{context.Configuration}"), context);
+			await Task.Run (() => {
+				CopyExtraTestFiles (Path.Combine (rootDir, $"Test{context.Configuration}"), context);
+				CopyExtraBuildFiles (Path.Combine (rootDir, $"Build{context.Configuration}"), context);
+			});
 			return true;
 		}
 
