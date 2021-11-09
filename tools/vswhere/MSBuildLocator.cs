@@ -54,8 +54,8 @@ namespace Xamarin.Android.Tools.VSWhere
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
 			using (var p = Process.Start (info)) {
-				p.WaitForExit ();
-				return p.StandardOutput.ReadToEnd ().Trim ();
+				p?.WaitForExit ();
+				return p?.StandardOutput.ReadToEnd ().Trim () ?? String.Empty;
 			}
 		}
 	}
