@@ -217,6 +217,15 @@ namespace xamarin::android
 			return strdup_new (s, strlen (s));
 		}
 
+		char *strdup_new (xamarin::android::internal::string_segment const& s, size_t from_index = 0) noexcept
+		{
+			if (from_index >= s.length ()) {
+				return nullptr;
+			}
+
+			return strdup_new (s.start () + from_index, s.length () - from_index);
+		}
+
 		template<typename CharType = char, typename ...Strings>
 		char* string_concat (const char *s1, const CharType* s2, Strings... strings)
 		{
@@ -285,8 +294,6 @@ namespace xamarin::android
 		}
 
 	private:
-		void  add_to_vector (char ***vector, size_t size, char *token);
-
 		template<typename CharType>
 		static constexpr void assert_char_type ()
 		{
