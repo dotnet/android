@@ -12,6 +12,7 @@ PREPARE_BUILD_LOG = bin/Build$(CONFIGURATION)/bootstrap-build.binlog
 PREPARE_RESTORE_LOG = bin/Build$(CONFIGURATION)/bootstrap-restore.binlog
 PREPARE_SOURCE_DIR = build-tools/xaprepare
 PREPARE_SOLUTION = $(PREPARE_SOURCE_DIR)/xaprepare.sln
+PREPARE_PROJECT = $(PREPARE_SOURCE_DIR)/xaprepare/xaprepare.csproj
 PREPARE_EXE = $(PREPARE_SOURCE_DIR)/xaprepare/bin/$(CONFIGURATION)/xaprepare.exe
 PREPARE_COMMON_MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(PREPARE_MSBUILD_ARGS) $(MSBUILD_ARGS)
 PREPARE_MSBUILD_FLAGS = /binaryLogger:"$(PREPARE_BUILD_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
@@ -225,8 +226,8 @@ shutdown-compiler-server:
 	fi
 
 .PHONY: prepare-update-mono
-prepare-update-mono: prepare-build shutdown-compiler-server
-	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:UpdateMono
+prepare-update-mono: shutdown-compiler-server
+	dotnet run -c $(CONFIGURATION) -v:n --project "$(PREPARE_PROJECT)" --framework net6.0 -- "-s:UpdateMono" $(_PREPARE_ARGS)
 
 prepare-external-git-dependencies: prepare-build
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:PrepareExternalGitDependencies
