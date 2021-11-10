@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Java.Interop.Tools.Diagnostics;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -12,12 +11,10 @@ namespace Xamarin.Android.Tasks
 {
 	/// <summary>
 	/// The <Aot/> task subclasses this in "legacy" Xamarin.Android.
-	/// Called directly in .NET 5 to populate %(AotArguments) metadata.
+	/// The <GetAotAssemblies/> task subclasses this in .NET 6+.
 	/// </summary>
-	public class GetAotArguments : AndroidAsyncTask
+	public abstract class GetAotArguments : AndroidAsyncTask
 	{
-		public override string TaskPrefix => "GAOT";
-
 		[Required]
 		public string AndroidApiLevel { get; set; }
 
@@ -29,6 +26,9 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
+
+		[Required]
+		public string TargetName { get; set; }
 
 		/// <summary>
 		/// Will be blank in .NET 6+
@@ -54,11 +54,8 @@ namespace Xamarin.Android.Tasks
 
 		public string AotAdditionalArguments { get; set; }
 
-		[Output]
-		public string Arguments { get; set; }
-
-		[Output]
-		public string OutputDirectory { get; set; }
+		[Required, Output]
+		public ITaskItem [] ResolvedAssemblies { get; set; }
 
 		protected AotMode AotMode;
 		protected SequencePointsMode SequencePointsMode;
@@ -108,42 +105,6 @@ namespace Xamarin.Android.Tasks
 				return true;
 			}
 			return false;
-		}
-
-		public override Task RunTaskAsync ()
-		{
-			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
-			if (ndk == null) {
-				return Task.CompletedTask; // NdkTools.Create will log appropriate error
-			}
-
-			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
-			if (!hasValidAotMode) {
-				LogCodedError ("XA3002", Properties.Resources.XA3002, AndroidAotMode);
-				return Task.CompletedTask;
-			}
-
-			if (AotMode == AotMode.Interp) {
-				LogDebugMessage ("Interpreter AOT mode enabled");
-				return Task.CompletedTask;
-			}
-
-			TryGetSequencePointsMode (AndroidSequencePointsMode, out SequencePointsMode);
-
-			SdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
-
-			var abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (RuntimeIdentifier);
-			if (string.IsNullOrEmpty (abi)) {
-				Log.LogCodedError ("XA0035", Properties.Resources.XA0035, RuntimeIdentifier);
-				return Task.CompletedTask;
-			}
-
-			(_, string outdir, string mtriple, AndroidTargetArch arch) = GetAbiSettings (abi);
-			string toolPrefix = GetToolPrefix (ndk, arch, out int level);
-
-			Arguments = string.Join (",", GetAotOptions (ndk, arch, level, outdir, mtriple, toolPrefix));
-			OutputDirectory = outdir;
-			return Task.CompletedTask;
 		}
 
 		protected string GetToolPrefix (NdkTools ndk, AndroidTargetArch arch, out int level)
@@ -252,13 +213,6 @@ namespace Xamarin.Android.Tasks
 		{
 			List<string> aotOptions = new List<string> ();
 
-			if (Profiles != null && Profiles.Length > 0) {
-				aotOptions.Add ("profile-only");
-				foreach (var p in Profiles) {
-					var fp = Path.GetFullPath (p.ItemSpec);
-					aotOptions.Add ($"profile={fp}");
-				}
-			}
 			if (!string.IsNullOrEmpty (AotAdditionalArguments))
 				aotOptions.Add (AotAdditionalArguments);
 			if (SequencePointsMode == SequencePointsMode.Offline)

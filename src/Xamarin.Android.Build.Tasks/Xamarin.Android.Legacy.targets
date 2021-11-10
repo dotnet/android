@@ -700,6 +700,7 @@ projects. .NET 5 projects will not import this file.
         AndroidSequencePointsMode="$(_SequencePointsMode)"
         AotAdditionalArguments="$(AndroidAotAdditionalArguments)"
         ExtraAotOptions="$(AndroidExtraAotOptions)"
+        TargetName="$(TargetName)"
         ResolvedAssemblies="@(_ShrunkAssemblies)"
         AotOutputDirectory="$(_AndroidAotBinDirectory)"
         IntermediateAssemblyDir="$(MonoAndroidIntermediateAssemblyDir)"
