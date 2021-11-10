@@ -59,6 +59,7 @@
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all" />
     <PackageReference Include="K4os.Hash.xxHash" Version="1.0.6" />
+    <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
   </ItemGroup>
 
   <ItemGroup>

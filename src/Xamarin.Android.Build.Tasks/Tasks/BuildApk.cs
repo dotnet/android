@@ -772,7 +772,12 @@ namespace Xamarin.Android.Tasks
 				Log.LogCodedWarning ("XA4301", path, 0, Properties.Resources.XA4301, item.archivePath);
 				return;
 			}
-			files.Add (item);
+
+			if (!ELFHelper.IsEmptyAOTLibrary (Log, item.filePath)) {
+				files.Add (item);
+			} else {
+				Log.LogDebugMessage ($"{item.filePath} is an empty (no executable code) AOT assembly, not including it in the archive");
+			}
 		}
 
 		// This method is used only for internal warnings which will never be shown to the end user, therefore there's
