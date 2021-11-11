@@ -70,11 +70,11 @@ namespace Java.Interop.Tools.Generator.Transformation
 			foreach (var property in type.Properties) {
 				if (property.Getter != null && property.Getter.JavadocInfo == null) {
 					var getterJavadoc           = GetMemberJavadoc (typeJavadoc, "method", property.Getter.JavaName, property.Getter.JniSignature);
-					property.Getter.JavadocInfo = JavadocInfo.CreateInfo (getterJavadoc?.Parent, style);
+					property.Getter.JavadocInfo = JavadocInfo.CreateInfo (getterJavadoc?.Parent, style, appendCopyrightExtra: false);
 				}
 				if (property.Setter != null && property.Setter.JavadocInfo == null) {
 					var setterJavadoc           = GetMemberJavadoc (typeJavadoc, "method", property.Setter.JavaName, property.Setter.JniSignature);
-					property.Setter.JavadocInfo = JavadocInfo.CreateInfo (setterJavadoc?.Parent, style);
+					property.Setter.JavadocInfo = JavadocInfo.CreateInfo (setterJavadoc?.Parent, style, appendCopyrightExtra: false);
 				}
 			}
 

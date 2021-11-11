@@ -158,18 +158,28 @@ namespace generator.SourceWriters
 				return;
 
 			var memberDocs = new XElement ("member");
+			XElement[] copyrightExtra = null;
 
 			if (property.Getter?.JavadocInfo != null) {
 				memberDocs.Add (property.Getter.JavadocInfo.ParseJavadoc ());
+				copyrightExtra = property.Getter.JavadocInfo.Copyright;
 			}
 
 			if (property.Setter?.JavadocInfo != null) {
 				var setterDocs  = new XElement ("member", property.Setter.JavadocInfo.ParseJavadoc ());
+				if (copyrightExtra == null) {
+					copyrightExtra = property.Setter.JavadocInfo.Copyright;
+				}
 
 				MergeSummary (memberDocs, setterDocs);
 				MergeRemarks (memberDocs, setterDocs);
 
-				memberDocs.Add (setterDocs.DescendantNodes ());
+				memberDocs.Add (setterDocs.Nodes ());
+			}
+
+			if (copyrightExtra != null) {
+				var remarks = memberDocs.Element ("remarks");
+				remarks?.Add (copyrightExtra);
 			}
 
 			JavadocInfo.AddComments (Comments, memberDocs.Elements ());
@@ -187,7 +197,7 @@ namespace generator.SourceWriters
 			else if (toContent != null && fromContent != null) {
 				fromContent.Remove ();
 				toContent.Add (" -or- ");
-				toContent.Add (fromContent.DescendantNodes ());
+				toContent.Add (fromContent.Nodes ());
 			}
 		}
 
@@ -204,7 +214,7 @@ namespace generator.SourceWriters
 				fromContent.Remove ();
 				toContent.AddFirst (new XElement ("para", "Property getter documentation:"));
 				toContent.Add (new XElement ("para", "Property setter documentation:"));
-				toContent.Add (fromContent.DescendantNodes ());
+				toContent.Add (fromContent.Nodes ());
 			}
 		}
 	}

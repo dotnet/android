@@ -22,11 +22,13 @@ namespace MonoDroid.Generation
 
 		public  XElement[]      ExtraRemarks        { get; set; }
 
+		public  XElement[]      Copyright           { get; set; }
+
 		public  XmldocStyle     XmldocStyle         { get; set; }
 
 		string  MemberDescription;
 
-		public static JavadocInfo CreateInfo (XElement element, XmldocStyle style)
+		public static JavadocInfo CreateInfo (XElement element, XmldocStyle style, bool appendCopyrightExtra = true)
 		{
 			if (element == null) {
 				return null;
@@ -39,13 +41,16 @@ namespace MonoDroid.Generation
 			string declaringMemberName      = desc.DeclaringMemberName;
 			var declaringMemberJniSignature = desc.DeclaringMemberJniSignature;
 
-			XElement[]  extra               = GetExtra (element, style, declaringJniType, declaringMemberName, declaringMemberJniSignature);
+			var extras                      = GetExtra (element, style, declaringJniType, declaringMemberName, declaringMemberJniSignature, appendCopyrightExtra);
+			XElement[] extra                = extras.Extras;
+			XElement[] copyright            = extras.Copyright;
 
 			if (string.IsNullOrEmpty (javadoc) && extra == null)
 				return null;
 
 			var info = new JavadocInfo () {
 				ExtraRemarks        = extra,
+				Copyright           = copyright,
 				Javadoc             = javadoc,
 				MemberDescription   = declaringMemberName == null
 					? declaringJniType
@@ -78,10 +83,10 @@ namespace MonoDroid.Generation
 			return (declaringJniType, declaringMemberName, declaringMemberJniSignature);
 		}
 
-		static XElement[] GetExtra (XElement element, XmldocStyle style, string declaringJniType, string declaringMemberName, string declaringMemberJniSignature)
+		static (XElement[] Extras, XElement[] Copyright) GetExtra (XElement element, XmldocStyle style, string declaringJniType, string declaringMemberName, string declaringMemberJniSignature, bool appendCopyrightExtra)
 		{
 			if (!style.HasFlag (XmldocStyle.IntelliSenseAndExtraRemarks))
-				return null;
+				return (null, null);
 
 			XElement javadocMetadata    = null;
 			while (element != null) {
@@ -93,6 +98,7 @@ namespace MonoDroid.Generation
 			}
 
 			List<XElement>  extra   = null;
+			IEnumerable<XElement>  copyright = null;
 			if (javadocMetadata != null) {
 				var link            = javadocMetadata.Element ("link");
 				var urlPrefix       = (string) link.Attribute ("prefix");
@@ -105,9 +111,12 @@ namespace MonoDroid.Generation
 				}
 				extra           = new List<XElement> ();
 				extra.Add (docLink);
-				extra.AddRange (javadocMetadata.Element ("copyright").Elements ());
+				copyright = javadocMetadata.Element ("copyright").Elements ();
+				if (appendCopyrightExtra) {
+					extra.AddRange (copyright);
+				}
 			}
-			return extra?.ToArray ();
+			return (extra?.ToArray (), copyright?.ToArray ());
 		}
 
 		static ApiLinkStyle ParseApiLinkStyle (string style)
