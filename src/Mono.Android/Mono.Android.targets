@@ -9,7 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mdoc"
-        PackageVersion="5.8.0"
+        Version="5.8.5"
         GeneratePathProperty="True"
         ReferenceOutputAssembly="False"
         SkipGetTargetFrameworkProperties="True"
@@ -313,7 +313,7 @@
       <_Assembly>$(_AssemblyBasename).dll</_Assembly>
       <_Output>-o "$(MSBuildThisFileDirectory)../../external/android-api-docs/docs/Mono.Android/en"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
-      <_LatestFxMoniker>xamarin-android-sdk-12</_LatestFxMoniker>
+      <_FxMoniker>xamarin-android-sdk-12</_FxMoniker>
       <_RootFxDir>$(BaseIntermediateOutputPath)docs-gen-temp/</_RootFxDir>
       <_FxConfig>-fx "$(_RootFxDir)"</_FxConfig>
       <!-- $(FrameworksXmlContent) describes the docs versions found at android-api-docs/tree/master/docs/Mono.Android/en/FrameworksIndex/
@@ -321,8 +321,7 @@
       <FrameworksXmlContent>
 <![CDATA[
 <Frameworks>
-  <Framework Name="$(_LatestFxMoniker)" Source="$(_LatestFxMoniker)" />
-  <Framework Name="xamarin-android-sdk-9" Source="xamarin-android-sdk-9" />
+  <Framework Name="$(_FxMoniker)" Source="$(_FxMoniker)" />
 </Frameworks>
 ]]>
       </FrameworksXmlContent>
@@ -331,10 +330,10 @@
          Copy Mono.Android.dll to the %(Source) path described in frameworks.xml (e.g. xamarin-android-sdk-12) -->
     <RemoveDir Directories="$(_RootFxDir)" />
     <MakeDir Directories="$(_RootFxDir)" />
-    <MakeDir Directories="$(_RootFxDir)$(_LatestFxMoniker)" />
+    <MakeDir Directories="$(_RootFxDir)$(_FxMoniker)" />
     <Copy
         SourceFiles="$(_Assembly)"
-        DestinationFolder="$(_RootFxDir)$(_LatestFxMoniker)"
+        DestinationFolder="$(_RootFxDir)$(_FxMoniker)"
     />
     <WriteLinesToFile
         File="$(_RootFxDir)frameworks.xml"
