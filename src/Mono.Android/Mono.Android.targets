@@ -311,6 +311,7 @@
       <_AssemblyBasename>$(OutputPath)Mono.Android</_AssemblyBasename>
       <_ImportXml>-i "$(_AssemblyBasename).xml"</_ImportXml>
       <_Assembly>$(_AssemblyBasename).dll</_Assembly>
+      <_JIAssembly>$(OutputPath)../v1.0/Java.Interop.dll</_JIAssembly>
       <_Output>-o "$(MSBuildThisFileDirectory)../../external/android-api-docs/docs/Mono.Android/en"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
       <_FxMoniker>xamarin-android-sdk-12</_FxMoniker>
@@ -327,12 +328,12 @@
       </FrameworksXmlContent>
     </PropertyGroup>
     <!-- Create a temporary directory which contains frameworks.xml and our framework assembly.
-         Copy Mono.Android.dll to the %(Source) path described in frameworks.xml (e.g. xamarin-android-sdk-12) -->
+         Copy Mono.Android.dll and Java.Interop.dll to the %(Source) path described in frameworks.xml (e.g. xamarin-android-sdk-12) -->
     <RemoveDir Directories="$(_RootFxDir)" />
     <MakeDir Directories="$(_RootFxDir)" />
     <MakeDir Directories="$(_RootFxDir)$(_FxMoniker)" />
     <Copy
-        SourceFiles="$(_Assembly)"
+        SourceFiles="$(_Assembly);$(_JIAssembly)"
         DestinationFolder="$(_RootFxDir)$(_FxMoniker)"
     />
     <WriteLinesToFile
