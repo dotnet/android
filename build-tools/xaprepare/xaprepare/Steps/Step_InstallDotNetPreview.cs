@@ -19,18 +19,12 @@ namespace Xamarin.Android.Prepare
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
 			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
 			var dotnetPreviewVersion = context.Properties.GetRequiredValue (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion);
-			var dotnetTestRuntimeVersion = Configurables.Defaults.DotNetTestRuntimeVersion;
 
 			// Always delete the ~/android-toolchain/dotnet/ directory
 			Utilities.DeleteDirectory (dotnetPath);
 
 			if (!await InstallDotNetAsync (context, dotnetPath, dotnetPreviewVersion)) {
 				Log.ErrorLine ($"Installation of dotnet SDK {dotnetPreviewVersion} failed.");
-				return false;
-			}
-
-			if (!await InstallDotNetAsync (context, dotnetPath, dotnetTestRuntimeVersion, runtimeOnly: true)) {
-				Log.ErrorLine ($"Installation of dotnet runtime {dotnetTestRuntimeVersion} failed.");
 				return false;
 			}
 

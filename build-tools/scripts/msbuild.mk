@@ -49,9 +49,9 @@ define MSBUILD_BINLOG
 		/binaryLogger:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/$(if $(3),$(3),Build)$(CONFIGURATION)/msbuild-`date +%Y%m%dT%H%M%S`-$(1).binlog"
 endef
 
-# $(call DOTNET_BINLOG,name,dotnet=$(DOTNET_TOOL)) build=$(DOTNET_VERB)
+# $(call DOTNET_BINLOG,name,build=$(DOTNET_VERB),dotnet=$(DOTNET_TOOL))
 define DOTNET_BINLOG
-	$(if $(2),$(2),$(DOTNET_TOOL)) $(DOTNET_VERB) -c $(CONFIGURATION) -v:n \
+	$(if $(3),$(3),$(DOTNET_TOOL)) $(if $(2),$(2),$(DOTNET_VERB)) -c $(CONFIGURATION) -v:n \
 		-bl:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/Build$(CONFIGURATION)/msbuild-`date +%Y%m%dT%H%M%S`-$(1).binlog"
 endef
 
