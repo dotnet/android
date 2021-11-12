@@ -5,11 +5,9 @@
     <RootNamespace>HelloWorld</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="HelloLibrary\HelloLibrary.DotNet.csproj" />
+    <ProjectReference Include="..\HelloLibrary\HelloLibrary.DotNet.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Properties\AssemblyInfo.cs" />
-    <!-- <Compile Remove="Resources\Resource.designer.cs" /> -->
-    <Compile Remove="HelloLibrary\**\*.cs" />
   </ItemGroup>
 </Project>

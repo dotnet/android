@@ -9,6 +9,7 @@
     <RootNamespace>HelloWorld</RootNamespace>
     <AssemblyName>HelloWorld</AssemblyName>
     <AndroidApplication>True</AndroidApplication>
+    <AndroidUseIntermediateDesignerFile>True</AndroidUseIntermediateDesignerFile>
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AndroidResgenClass>Resource</AndroidResgenClass>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
@@ -18,10 +19,10 @@
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <Import
-      Condition="Exists('..\..\Configuration.props')"
-      Project="..\..\Configuration.props"
+      Condition="Exists('..\..\..\Configuration.props')"
+      Project="..\..\..\Configuration.props"
   />
-  <PropertyGroup Condition="Exists('..\..\Configuration.props')">
+  <PropertyGroup Condition="Exists('..\..\..\Configuration.props')">
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -48,14 +49,13 @@
     <Reference Include="Mono.Android" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="HelloLibrary\HelloLibrary.csproj">
+    <ProjectReference Include="..\HelloLibrary\HelloLibrary.csproj">
       <Project>{6BE66B30-9346-4DA6-B09A-0CDC1DFE33C2}</Project>
       <Name>HelloLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
-    <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
