@@ -1,5 +1,5 @@
 parameters:
-  version: '0.0.14'
+  version: '0.0.15'
   condition: succeeded()
   continueOnError: true
 
