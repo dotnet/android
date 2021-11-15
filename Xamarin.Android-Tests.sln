@@ -4,7 +4,7 @@ VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-Tests", "tests\Mono.Android-Tests\Mono.Android-Tests.csproj", "{40EAD437-216B-4DF4-8258-3F47E1672C3A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld", "samples\HelloWorld\HelloWorld.csproj", "{2305B00D-DE81-4744-B0DA-357835CAFE5A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld", "samples\HelloWorld\HelloWorld\HelloWorld.csproj", "{2305B00D-DE81-4744-B0DA-357835CAFE5A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloLibrary", "samples\HelloWorld\HelloLibrary\HelloLibrary.csproj", "{6BE66B30-9346-4DA6-B09A-0CDC1DFE33C2}"
 EndProject

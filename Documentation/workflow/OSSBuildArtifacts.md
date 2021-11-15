@@ -30,7 +30,7 @@ Download the `Xamarin.Android.Sdk-OSS*.pkg` package and double click to install.
 ## Windows Installation
 
 The `Xamarin.Android.Sdk-OSS*.vsix` file can be installed into
-Visual Studio 2019. This requires that the **Mobile development with .NET** 
+Visual Studio 2019. This requires that the **Mobile development with .NET**
 workload be previously installed within Visual Studio 2019.
 
 Installing the `Xamarin.Android.Sdk-OSS*.vsix` file is easy:
@@ -70,7 +70,7 @@ button to install the Xamarin.Android SDK extension into Visual Studio 2019.
 
 # Using OSS Build Artifacts
 
-OSS artifacts can be used in the same way commercial artifacts are used, from within 
+OSS artifacts can be used in the same way commercial artifacts are used, from within
 Visual Studio, Visual Studio for Mac, or command line.  Do note however that there are
 various limitations with debugging and debug deployment options when using OSS artifacts.
 
@@ -101,7 +101,7 @@ projects.
 	# macOS users: build the xamarin-android HelloWorld.csproj sample
 	$HOME/Downloads/oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd/bin/Debug/bin/xabuild \
 		/t:SignAndroidPackage \
-		samples/HelloWorld/HelloWorld.csproj
+		samples/HelloWorld/HelloWorld/HelloWorld.csproj
 
 <a name="cmd-use-Windows" />
 
@@ -120,7 +120,7 @@ For example (using the paths from [Android SDK Setup](#Android_SDK_Setup)):
 	msbuild /p:AndroidSdkDirectory="C:\xa-sdk\android-sdk" ^
 		/p:AndroidNdkDirectory="C:\xa-sdk\android-ndk\android-ndk-r14" ^
 		/t:SignAndroidPackage ^
-		samples\HelloWorld\HelloWorld.csproj
+		samples\HelloWorld\HelloWorld\HelloWorld.csproj
 
 <a name="Android_SDK_Setup" />
 
@@ -157,7 +157,7 @@ to create a new Android SDK & NDK within `$HOME/xa-sdk`:
 	tools/bin/sdkmanager "build-tools;25.0.2"
 	tools/bin/sdkmanager "platform-tools"
 	tools/bin/sdkmanager "platforms;android-25"
-	
+
 	mkdir -p $HOME/xa-sdk/android-ndk
 	cd $HOME/xa-sdk/android-ndk
 	unzip $HOME/Downloads/android-ndk-r14-darwin-x86_64.zip

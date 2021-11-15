@@ -116,11 +116,11 @@ in `.vscode/tasks.json`.
     // in vscode.
     "id": "project",
     "type": "pickString",
-    "default": "samples/HelloWorld/HelloWorld.csproj",
+    "default": "samples/HelloWorld/HelloWorld/HelloWorld.csproj",
     "description": "Pick the Project you want to build.",
     "options": [
-        "samples/HelloWorld/HelloWorld.csproj",
-        "samples/HelloWorld/HelloWorld.DotNet.csproj",
+        "samples/HelloWorld/HelloWorld/HelloWorld.csproj",
+        "samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj",
         "samples/VSAndroidApp/VSAndroidApp.csproj"
     ]
 },
