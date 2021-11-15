@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.TypeNameMappings;
 using Mono.Cecil;
 using Mono.Collections.Generic;
@@ -101,6 +102,7 @@ namespace MonoDroid.Generation
 				IsStatic = f.IsStatic,
 				JavaName = reg_attr != null ? ((string) reg_attr.ConstructorArguments [0].Value).Replace ('/', '.') : f.Name,
 				Name = f.Name,
+				NotNull = f.GetTypeNullability () == Nullability.NotNull,
 				TypeName = f.FieldType.FullNameCorrected ().StripArity (),
 				Value = f.Constant == null ? null : f.FieldType.FullName == "System.String" ? '"' + f.Constant.ToString () + '"' : f.Constant.ToString (),
 				Visibility = f.IsPublic ? "public" : f.IsFamilyOrAssembly ? "protected internal" : f.IsFamily ? "protected" : f.IsAssembly ? "internal" : "private"
@@ -198,6 +200,7 @@ namespace MonoDroid.Generation
 				JavaName = reg_attr != null ? ((string) reg_attr.ConstructorArguments [0].Value) : m.Name,
 				ManagedReturn = m.ReturnType.FullNameCorrected ().StripArity ().FilterPrimitive (),
 				Return = m.ReturnType.FullNameCorrected ().StripArity ().FilterPrimitive (),
+				ReturnNotNull = m.GetReturnTypeNullability () == Nullability.NotNull,
 				Visibility = m.Visibility ()
 			};
 
@@ -221,12 +224,12 @@ namespace MonoDroid.Generation
 			return method;
 		}
 
-		public static Parameter CreateParameter (ParameterDefinition p, string jnitype, string rawtype)
+		public static Parameter CreateParameter (ParameterDefinition p, string jnitype, string rawtype, bool isNotNull)
 		{
 			// FIXME: safe to use CLR type name? assuming yes as we often use it in metadatamap.
 			// FIXME: IsSender?
 			var isEnumType = GetGeneratedEnumAttribute (p.CustomAttributes) != null;
-			return new Parameter (TypeNameUtilities.MangleName (p.Name), jnitype ?? p.ParameterType.FullNameCorrected ().StripArity (), null, isEnumType, rawtype);
+			return new Parameter (TypeNameUtilities.MangleName (p.Name), jnitype ?? p.ParameterType.FullNameCorrected ().StripArity (), null, isEnumType, rawtype, isNotNull);
 		}
 
 		public static Parameter CreateParameter (string managedType, string javaType)

@@ -1,4 +1,5 @@
-﻿using Java.Interop.Tools.TypeNameMappings;
+using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.TypeNameMappings;
 using Mono.Cecil;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +43,9 @@ namespace MonoDroid.Generation
 				// custom enum types and cannot simply use JNI signature here.
 				var rawtype = e?.Current.Type;
 				var type = p.ParameterType.FullName == "System.IO.Stream" && e != null ? e.Current.Type : null;
-				yield return CecilApiImporter.CreateParameter (p, type, rawtype);
+				var isNotNull = p.GetTypeNullability (m) == Nullability.NotNull;
+
+				yield return CecilApiImporter.CreateParameter (p, type, rawtype, isNotNull);
 			}
 		}
 

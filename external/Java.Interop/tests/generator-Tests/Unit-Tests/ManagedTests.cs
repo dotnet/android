@@ -64,6 +64,28 @@ namespace GenericTestClasses
 	}
 }
 
+namespace NullableTestTypes
+{
+#nullable enable
+	public class NullableClass
+	{
+		[Register ("<init>", "(Ljava/lang/String;Ljava/lang/String;)", "")]
+		public NullableClass (string notnull, string? nullable)
+		{
+		}
+
+		public string? null_field;
+		public string not_null_field = string.Empty;
+
+		[Register ("nullable_return_method", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", "")]
+		public string? NullableReturnMethod (string notnull, string? nullable) => null;
+
+		[Register ("not_null_return_method", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", "")]
+		public string NotNullReturnMethod (string notnull, string? nullable) => string.Empty;
+	}
+}
+#nullable disable
+
 namespace generatortests
 {
 	[TestFixture]
@@ -249,6 +271,33 @@ namespace generatortests
 			Assert.AreEqual ("System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<T,System.Collections.Generic.List<System.Collections.Generic.List<T>>>>", @class.Methods [0].Parameters [0].RawNativeType);
 			Assert.AreEqual ("System.Collections.Generic.Dictionary<T,System.Collections.Generic.List<System.String>>", @class.Methods [0].ReturnType);
 			Assert.AreEqual ("System.Collections.Generic.Dictionary<T,System.Collections.Generic.List<System.String>>", @class.Methods [0].ManagedReturn);
+		}
+
+		[Test]
+		public void TypeNullability ()
+		{
+			var type = module.GetType ("NullableTestTypes.NullableClass");
+			var gen = CecilApiImporter.CreateClass (module.GetType ("NullableTestTypes.NullableClass"), options);
+
+			var not_null_field = CecilApiImporter.CreateField (type.Fields.First (f => f.Name == "not_null_field"));
+			Assert.AreEqual (true, not_null_field.NotNull);
+
+			var null_field = CecilApiImporter.CreateField (type.Fields.First (f => f.Name == "null_field"));
+			Assert.AreEqual (false, null_field.NotNull);
+
+			var null_method = CecilApiImporter.CreateMethod (gen, type.Methods.First (f => f.Name == "NullableReturnMethod"));
+			Assert.AreEqual (false, null_method.ReturnNotNull);
+			Assert.AreEqual (true, null_method.Parameters.First (f => f.Name == "notnull").NotNull);
+			Assert.AreEqual (false, null_method.Parameters.First (f => f.Name == "nullable").NotNull);
+
+			var not_null_method = CecilApiImporter.CreateMethod (gen, type.Methods.First (f => f.Name == "NotNullReturnMethod"));
+			Assert.AreEqual (true, not_null_method.ReturnNotNull);
+			Assert.AreEqual (true, not_null_method.Parameters.First (f => f.Name == "notnull").NotNull);
+			Assert.AreEqual (false, not_null_method.Parameters.First (f => f.Name == "nullable").NotNull);
+
+			var ctor = CecilApiImporter.CreateCtor (gen, type.Methods.First (f => f.Name == ".ctor"));
+			Assert.AreEqual (true, ctor.Parameters.First (f => f.Name == "notnull").NotNull);
+			Assert.AreEqual (false, ctor.Parameters.First (f => f.Name == "nullable").NotNull);
 		}
 	}
 }
