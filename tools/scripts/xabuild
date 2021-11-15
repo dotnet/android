@@ -25,13 +25,13 @@
 #
 # Examples:
 #   To create a .apk for the HelloWorld sample:
-#     tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
+#     tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld/HelloWorld.csproj
 #
 #   To explicitly use `msbuild` for builds:
-#     MSBUILD=msbuild tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
+#     MSBUILD=msbuild tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld/HelloWorld.csproj
 #
 #   To explicitly use `xbuild` for builds:
-#     MSBUILD=xbuild tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
+#     MSBUILD=xbuild tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld/HelloWorld.csproj
 #
 
 name=$(basename "$0")
@@ -135,7 +135,7 @@ case "$MSBUILD" in
 	*xbuild*)
 		if [ -z "$XBUILD_FRAMEWORK_FOLDERS_PATH" ]; then
 			export XBUILD_FRAMEWORK_FOLDERS_PATH="$TARGETS_DIR-frameworks"
-		else 
+		else
 			export XBUILD_FRAMEWORK_FOLDERS_PATH="$XBUILD_FRAMEWORK_FOLDERS_PATH"
 		fi
 		;;
