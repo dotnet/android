@@ -3,12 +3,14 @@
 trigger:
   - main
   - d16-*
+  - d17-*
 
 pr:
   branches:
     include:
     - main
     - d16-*
+    - d17-*
   paths:
     exclude:
     - README.md
@@ -21,14 +23,15 @@ variables:
   MaxJdkVersion: 8
   DotNetCoreVersion: 6.0.x
   HostedMacImage: macOS-10.15
-  HostedWinVS2019: Hosted Windows 2019 with VS2019
+  HostedWinImage: windows-2022
   NetCoreTargetFrameworkPathSuffix: -net6.0
-  VSInstallRoot: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
+  VSInstallRoot: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
 
 jobs:
 - job: windows_build
   displayName: Windows - .NET Framework
-  pool: $(HostedWinVS2019)
+  pool:
+    vmImage: $(HostedWinImage)
   timeoutInMinutes: 20
   workspace:
     clean: all
@@ -76,7 +79,8 @@ jobs:
 
 - job: windows_dotnet_build
   displayName: Windows - .NET Core
-  pool: $(HostedWinVS2019)
+  pool:
+    vmImage: $(HostedWinImage)
   timeoutInMinutes: 20
   workspace:
     clean: all
