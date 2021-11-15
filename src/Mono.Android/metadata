@@ -1670,6 +1670,8 @@
   <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-R.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="31" path="/api/package/interface[contains(@merge.SourceFile,'api-31.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="31" path="/api/package/interface[contains(@merge.SourceFile,'api-S.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="32" path="/api/package/interface[contains(@merge.SourceFile,'api-32.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="32" path="/api/package/interface[contains(@merge.SourceFile,'api-Sv2.xml.in')]" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -1684,4 +1686,6 @@
   <attr api-since="30" path="/api//*[contains(@merge.SourceFile,'api-R.xml.in')]" name="api-since">30</attr>
   <attr api-since="31" path="/api//*[contains(@merge.SourceFile,'api-31.xml.in')]" name="api-since">31</attr>
   <attr api-since="31" path="/api//*[contains(@merge.SourceFile,'api-S.xml.in')]" name="api-since">31</attr>
+  <attr api-since="32" path="/api//*[contains(@merge.SourceFile,'api-32.xml.in')]" name="api-since">32</attr>
+  <attr api-since="32" path="/api//*[contains(@merge.SourceFile,'api-Sv2.xml.in')]" name="api-since">32</attr>
 </metadata>
