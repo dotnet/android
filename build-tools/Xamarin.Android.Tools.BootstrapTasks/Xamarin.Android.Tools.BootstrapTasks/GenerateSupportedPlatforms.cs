@@ -14,10 +14,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 	public class GenerateSupportedPlatforms : Task
 	{
 		/// <summary>
-		/// A list of AndroidApiInfo.xml files produced by Mono.Android.targets
+		/// @(AndroidApiInfo) from .\bin\Build$(Configuration)\Mono.Android.Apis.projitems
 		/// </summary>
 		[Required]
-		public string [] AndroidApiInfo { get; set; }
+		public ITaskItem [] AndroidApiInfo { get; set; }
 
 		/// <summary>
 		/// The output file to generate
@@ -33,13 +33,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public override bool Execute ()
 		{
-			if (AndroidApiInfo.Length == 0) {
-				Log.LogError ("This task requires at least one AndroidApiInfo.xml file!");
-				return false;
-			}
-
-			var versions = new AndroidVersions (
-				AndroidApiInfo.Select (d => Path.GetDirectoryName (d)));
+			var versions = new AndroidVersions (AndroidApiInfo.Select (ToVersion));
 			var settings = new XmlWriterSettings {
 				OmitXmlDeclaration = true,
 				Indent = true,
@@ -71,11 +65,13 @@ Specifies the supported Android platform versions for this SDK.
 				writer.WriteEndElement (); // </PropertyGroup>
 
 				writer.WriteStartElement ("ItemGroup");
-				foreach (AndroidVersion version in versions.InstalledBindingVersions
+				foreach (int apiLevel in versions.InstalledBindingVersions
 						.Where (v => v.ApiLevel >= MinimumApiLevel)
-						.OrderBy (v => v.ApiLevel)) {
+						.Select (v => v.ApiLevel)
+						.Distinct ()
+						.OrderBy (v => v)) {
 					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatformVersion");
-					writer.WriteAttributeString ("Include", version.ApiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
+					writer.WriteAttributeString ("Include", apiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
 					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatformVersion>
 				}
 				writer.WriteStartElement ("SdkSupportedTargetPlatformVersion");
@@ -85,6 +81,23 @@ Specifies the supported Android platform versions for this SDK.
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		static AndroidVersion ToVersion (ITaskItem item)
+		{
+			/*
+			<AndroidApiInfo Include="v12.0.99">
+				<Name>Sv2</Name>
+				<Level>32</Level>
+				<Id>Sv2</Id>
+				<Stable>False</Stable>
+			</AndroidApiInfo>
+			*/
+
+			int.TryParse (item.GetMetadata ("Level"), out int apiLevel);
+			bool.TryParse (item.GetMetadata ("Stable"), out bool stable);
+
+			return new AndroidVersion (apiLevel, item.ItemSpec.TrimStart ('v'), item.GetMetadata ("Name"), item.GetMetadata ("Id"), stable);
 		}
 	}
 }

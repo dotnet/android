@@ -773,11 +773,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MauiTargetFramework ([Values ("net6.0-android", "net6.0-android31", "net6.0-android31.0")] string targetFramework)
+		public void MauiTargetFramework ([Values ("net6.0-android", "net6.0-android31", "net6.0-android31.0", "net6.0-android32.0")] string targetFramework)
 		{
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 			};
+			bool preview = targetFramework.Contains("32");
+			if (preview) {
+				library.SetProperty ("EnablePreviewFeatures", "true");
+			}
 			library.Sources.Clear ();
 			library.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () =>
@@ -798,7 +802,10 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 
 			var dotnet = CreateDotNetBuilder (library);
 			Assert.IsTrue (dotnet.Build (), $"{library.ProjectName} should succeed");
-			dotnet.AssertHasNoWarnings ();
+			// NOTE: Preview API levels emit XA4211
+			if (!preview) {
+				dotnet.AssertHasNoWarnings ();
+			}
 		}
 
 		[Test]

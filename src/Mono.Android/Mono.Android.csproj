@@ -33,7 +33,8 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(TargetFramework)\</OutputPath>
+    <DefineConstants Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
+    <OutputPath>$(_MonoAndroidNETOutputDir)</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
@@ -376,8 +377,8 @@
   <Target Name="GetTargetPath" />
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <!-- Only build the 'net6.0' version of 'Mono.Android.dll' once for the latest stable Android version. -->
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
+  <!-- Only build the 'net6.0' version of 'Mono.Android.dll' for the latest stable Android version or higher. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &lt; '$(AndroidLatestStableApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 

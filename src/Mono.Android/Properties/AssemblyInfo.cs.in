@@ -9,6 +9,7 @@
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 
 [assembly: AssemblyInformationalVersion ("@PACKAGE_VERSION@.@PACKAGE_VERSION_BUILD@; git-rev-head:@PACKAGE_HEAD_REV@; git-branch:@PACKAGE_HEAD_BRANCH@")]
 [assembly: AssemblyTitle ("Mono.Android.dll")]
@@ -17,6 +18,13 @@ using System.Runtime.CompilerServices;
 // [assembly: AssemblyCopyright ("Copyright 2011-2014 Xamarin Inc.")]
 [assembly: AssemblyCompany ("Microsoft Corporation")]
 [assembly: AssemblyMetadata ("IsTrimmable", "True")]
+#if ANDROID_UNSTABLE
+[assembly: RequiresPreviewFeatures("This is an unstable Android API level. Opt into preview features by adding <EnablePreviewFeatures>True</EnablePreviewFeatures> to your project file.")]
+#endif
+#if !MONOANDROID1_0
+[assembly: TargetPlatform("Android@API_LEVEL@.0")]
+[assembly: SupportedOSPlatform("Android@MIN_API_LEVEL@.0")]
+#endif
 
 [assembly: System.Runtime.CompilerServices.TypeForwardedToAttribute(typeof(System.Drawing.Color))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedToAttribute(typeof(System.Drawing.ColorConverter))]

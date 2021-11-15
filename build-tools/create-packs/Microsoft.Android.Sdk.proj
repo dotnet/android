@@ -62,6 +62,8 @@ core workload SDK packs imported by WorkloadManifest.targets.
     />
 
     <ItemGroup>
+      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" />
+      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml" Condition="Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml')" />
       <!-- Microsoft.Android.Sdk.ILLink output -->
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
@@ -78,6 +80,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" PackagePath="targets" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\dotnet.aotprofile" PackagePath="targets" />
+      <_PackageFiles Include="@(_AndroidApiInfo)" DirectoryName="$([System.IO.Path]::GetDirectoryName ('%(Identity)'))" PackagePath="data\$([System.IO.Path]::GetFileName ('%(_PackageFiles.DirectoryName)'))" />
       <_PackageFiles Include="$(IntermediateOutputPath)UnixFilePermissions.xml" PackagePath="data" Condition=" '$(HostOS)' != 'Windows' " />
       <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
@@ -112,6 +115,8 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
   <PropertyGroup>
     <AndroidNETSdkVersion>$(AndroidPackVersionLong)</AndroidNETSdkVersion>
     <XamarinAndroidVersion>$(AndroidPackVersionLong)</XamarinAndroidVersion>
+    <_AndroidRuntimePackId Condition=" '%24(TargetPlatformVersion)' != '$(AndroidLatestUnstableApiLevel).0' ">$(AndroidLatestStableApiLevel)</_AndroidRuntimePackId>
+    <_AndroidRuntimePackId Condition=" '%24(TargetPlatformVersion)' == '$(AndroidLatestUnstableApiLevel).0' ">$(AndroidLatestUnstableApiLevel)</_AndroidRuntimePackId>
   </PropertyGroup>
   <ItemGroup>
     <KnownFrameworkReference
@@ -120,9 +125,9 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         RuntimeFrameworkName="Microsoft.Android"
         DefaultRuntimeFrameworkVersion="**FromWorkload**"
         LatestRuntimeFrameworkVersion="**FromWorkload**"
-        TargetingPackName="Microsoft.Android.Ref"
+        TargetingPackName="Microsoft.Android.%24(_AndroidRuntimePackId).Ref"
         TargetingPackVersion="**FromWorkload**"
-        RuntimePackNamePatterns="Microsoft.Android.Runtime.**RID**"
+        RuntimePackNamePatterns="Microsoft.Android.%24(_AndroidRuntimePackId).Runtime.**RID**"
         RuntimePackRuntimeIdentifiers="@(_AndroidNETAppRuntimePackRids, '%3B')"
         Profile="Android"
     />
