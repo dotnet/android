@@ -187,6 +187,12 @@ namespace Xamarin.Android.Build.Tests
 			return entries;
 		}
 
+		public int GetNumberOfAssemblies (bool forceRefresh = false)
+		{
+			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh);
+			return contents.Where (x => x.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)).Count ();
+		}
+
 		public bool Exists (string entryPath, bool forceRefresh = false)
 		{
 			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh);
