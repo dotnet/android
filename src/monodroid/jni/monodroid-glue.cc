@@ -1958,11 +1958,8 @@ MonodroidRuntime::get_my_location (bool remove_file_name)
 
 #if defined (ANDROID)
 force_inline void
-MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
+MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask, bool have_log_assembly, bool have_log_gc)
 {
-	bool have_log_assembly = (log_categories & LOG_ASSEMBLY) != 0;
-	bool have_log_gc = (log_categories & LOG_GC) != 0;
-
 	constexpr char   MASK_ASM[] = "asm";
 	constexpr size_t MASK_ASM_LEN = sizeof(MASK_ASM) - 1;
 	constexpr char   MASK_DLL[] = "dll";
@@ -1991,14 +1988,17 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
 		return;
 	}
 
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> input_log_mask;
+	input_log_mask.assign_c (mono_log_mask);
+	delete[] mono_log_mask;
+	input_log_mask.replace (':', ',');
+
 	if (!have_log_assembly && !have_log_gc)  {
-		mono_trace_set_mask_string (mono_log_mask);
+		mono_trace_set_mask_string (input_log_mask.get ());
 		return;
 	}
 
 	bool need_asm = have_log_assembly, need_dll = have_log_assembly, need_gc = have_log_gc;
-	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> input_log_mask;
-	input_log_mask.assign_c (mono_log_mask);
 
 	string_segment token;
 	while (input_log_mask.next_token (',', token)) {
@@ -2011,7 +2011,7 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
 		}
 
 		if (!need_asm && !need_dll && !need_gc) {
-			mono_trace_set_mask_string (mono_log_mask);
+			mono_trace_set_mask_string (input_log_mask.get ());
 			return;
 		}
 	}
@@ -2118,14 +2118,17 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif
 
 #if defined (ANDROID)
+	bool have_log_assembly = (log_categories & LOG_ASSEMBLY) != 0;
+	bool have_log_gc = (log_categories & LOG_GC) != 0;
+
 	if (mono_log_level == nullptr || *mono_log_level == '\0') {
-		mono_trace_set_level_string ("error");
+		mono_trace_set_level_string ((have_log_assembly || have_log_gc) ? "info" : "error");
 	} else {
 		// `mono_log_level` cannot be freed here, Mono VM stores it internally
 		mono_trace_set_level_string (mono_log_level);
 	}
 
-	setup_mono_tracing (mono_log_mask);
+	setup_mono_tracing (mono_log_mask, have_log_assembly, have_log_gc);
 
 #if defined (NET6)
 	install_logging_handlers ();

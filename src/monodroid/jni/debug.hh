@@ -35,7 +35,6 @@ namespace xamarin::android
 		static const char DEBUG_MONO_EXTRA_PROPERTY[];
 		static const char DEBUG_MONO_GC_PROPERTY[];
 		static const char DEBUG_MONO_GDB_PROPERTY[];
-		static const char DEBUG_MONO_GDBPORT_PROPERTY[];
 		static const char DEBUG_MONO_LOG_PROPERTY[];
 		static const char DEBUG_MONO_MAX_GREFC[];
 		static const char DEBUG_MONO_PROFILE_PROPERTY[];
