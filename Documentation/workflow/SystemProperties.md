@@ -1,3 +1,24 @@
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Custom Android system properties used by Xamarin.Android](#custom-android-system-properties-used-by-xamarinandroid)
+    - [Introduction](#introduction)
+    - [Known properties](#known-properties)
+        - [debug.mono.connect](#debugmonoconnect)
+        - [debug.mono.debug](#debugmonodebug)
+        - [debug.mono.env](#debugmonoenv)
+        - [debug.mono.extra](#debugmonoextra)
+        - [debug.mono.gc](#debugmonogc)
+        - [debug.mono.gdb](#debugmonogdb)
+        - [debug.mono.log](#debugmonolog)
+        - [debug.mono.max_grefc](#debugmonomax_grefc)
+        - [debug.mono.profile](#debugmonoprofile)
+        - [debug.mono.runtime_args](#debugmonoruntime_args)
+        - [debug.mono.soft_breakpoints](#debugmonosoft_breakpoints)
+        - [debug.mono.trace](#debugmonotrace)
+        - [debug.mono.wref](#debugmonowref)
+
+<!-- markdown-toc end -->
 # Custom Android system properties used by Xamarin.Android
 
 ## Introduction
