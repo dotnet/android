@@ -7,13 +7,13 @@ namespace Xamarin.Android.Prepare
 	{
 		public Scenario_CopyExtraResultFilesForCI () 
 			: base ("CopyExtraResultFilesForCI", "Copy extra result files to artifact directory")
-		{
-			// Do not create a log that we would attempt to copy during this scenario.
-			Log.Instance.SetLogFile (Path.Combine (Context.Instance.LogDirectory, $"package-results-{Context.Instance.BuildTimeStamp}.txt"));
-		}
+		{}
 
 		protected override void AddSteps (Context context)
 		{
+			// Do not write to a log that we would attempt to copy during this scenario.
+			Log.Instance.SetLogFile (Path.Combine (context.LogDirectory, $"package-results-{context.BuildTimeStamp}.txt"));
+
 			Steps.Add (new Step_CopyExtraResultFilesForCI ());
 
 			// disable installation of missing programs...

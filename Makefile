@@ -7,16 +7,10 @@ RUNTIME       := $(shell which mono64 2> /dev/null && echo mono64 || echo mono) 
 SOLUTION       = Xamarin.Android.sln
 TEST_TARGETS   = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
+PREPARE_NET_FX = net6.0
 PREPARE_ARGS =
-PREPARE_BUILD_LOG = bin/Build$(CONFIGURATION)/bootstrap-build.binlog
-PREPARE_RESTORE_LOG = bin/Build$(CONFIGURATION)/bootstrap-restore.binlog
-PREPARE_SOURCE_DIR = build-tools/xaprepare
-PREPARE_SOLUTION = $(PREPARE_SOURCE_DIR)/xaprepare.sln
-PREPARE_PROJECT = $(PREPARE_SOURCE_DIR)/xaprepare/xaprepare.csproj
-PREPARE_EXE = $(PREPARE_SOURCE_DIR)/xaprepare/bin/$(CONFIGURATION)/xaprepare.exe
-PREPARE_COMMON_MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(PREPARE_MSBUILD_ARGS) $(MSBUILD_ARGS)
-PREPARE_MSBUILD_FLAGS = /binaryLogger:"$(PREPARE_BUILD_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
-PREPARE_RESTORE_FLAGS = /binaryLogger:"$(PREPARE_RESTORE_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
+PREPARE_PROJECT = build-tools/xaprepare/xaprepare/xaprepare.csproj
+PREPARE_MSBUILD_FLAGS = $(PREPARE_MSBUILD_ARGS) $(MSBUILD_ARGS)
 PREPARE_SCENARIO =
 PREPARE_CI_PR ?= 0
 PREPARE_CI ?= 0
@@ -26,10 +20,6 @@ PREPARE_IGNORE_MONO_VERSION ?= 1
 _PREPARE_CI_MODE_PR_ARGS = --no-emoji --run-mode=CI
 _PREPARE_CI_MODE_ARGS = $(_PREPARE_CI_MODE_PR_ARGS) -a
 _PREPARE_ARGS =
-
-BOOTSTRAP_SOLUTION = Xamarin.Android.BootstrapTasks.sln
-BOOTSTRAP_BUILD_LOG = bin/Build$(CONFIGURATION)/bootstrap-build.binlog
-BOOTSTRAP_MSBUILD_FLAGS = /t:Restore,Build /binaryLogger:"$(BOOTSTRAP_BUILD_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
 
 all:
 	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) $(SOLUTION)
@@ -189,23 +179,14 @@ list-nunit-tests:
 
 include build-tools/scripts/runtime-helpers.mk
 
-.PHONY: prepare-build-init
-prepare-build-init:
-	mkdir -p $(dir $(PREPARE_BUILD_LOG))
-	msbuild $(PREPARE_RESTORE_FLAGS) $(PREPARE_SOLUTION) /t:Restore
-
-.PHONY: prepare-build
-prepare-build: prepare-build-init
-	msbuild $(PREPARE_MSBUILD_FLAGS) $(PREPARE_SOLUTION)
-
 .PHONY: prepare
-prepare: prepare-build
-	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS)
-	msbuild $(BOOTSTRAP_MSBUILD_FLAGS) $(BOOTSTRAP_SOLUTION)
+prepare:
+	$(call DOTNET_BINLOG,prepare-run,run) $(PREPARE_MSBUILD_FLAGS) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- $(_PREPARE_ARGS)
+	$(call DOTNET_BINLOG,prepare-bootstrap) Xamarin.Android.BootstrapTasks.sln
 
 .PHONY: prepare-help
-prepare-help: prepare-build
-	mono --debug $(PREPARE_EXE) -h
+prepare-help:
+	$(call DOTNET_BINLOG,prepare-help,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- -h
 
 .PHONY: shutdown-compiler-server
 shutdown-compiler-server:
@@ -227,10 +208,12 @@ shutdown-compiler-server:
 
 .PHONY: prepare-update-mono
 prepare-update-mono: shutdown-compiler-server
-	dotnet run -c $(CONFIGURATION) -v:n --project "$(PREPARE_PROJECT)" --framework net6.0 -- "-s:UpdateMono" $(_PREPARE_ARGS)
+	$(call DOTNET_BINLOG,prepare-update-mono,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \
+		-- -s:UpdateMono $(_PREPARE_ARGS)
 
-prepare-external-git-dependencies: prepare-build
-	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:PrepareExternalGitDependencies
+prepare-external-git-dependencies:
+	$(call DOTNET_BINLOG,prepare-external-git-dependencies,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \
+		-- -s:PrepareExternalGitDependencies $(_PREPARE_ARGS)
 
 APK_SIZES_REFERENCE_DIR=tests/apk-sizes-reference
 
