@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 using Mono.Options;
 
@@ -50,13 +52,56 @@ namespace Xamarin.Android.AssemblyStore
 				Console.WriteLine ();
 			}
 
+			AssemblyStoreReader? indexStore = null;
+			foreach (var kvp in explorer.Stores) {
+				List<AssemblyStoreReader> storeList = kvp.Value;
+				foreach (AssemblyStoreReader store in storeList) {
+					if (!store.HasGlobalIndex) {
+						continue;
+					}
+
+					indexStore = store;
+					break;
+				}
+			}
+
+			if (indexStore == null) {
+				Console.WriteLine ("Index store not found in the set, not showing hash tables.");
+				return;
+			}
+
+			Console.WriteLine ("Hash tables:");
+			WriteHashTable ("32", indexStore.GlobalIndex32, "x08");
+			WriteHashTable ("64", indexStore.GlobalIndex64, "x016");
+
+			void WriteHashTable (string bitness, List<AssemblyStoreHashEntry> table, string hashFormat)
+			{
+				Console.WriteLine ($"  {bitness}-bit:");
+				var sb = new StringBuilder ();
+				ulong prev = 0;
+
+				for (int i = 0; i < table.Count; i++) {
+					AssemblyStoreHashEntry entry = table[i];
+
+					if (entry.Hash < prev) {
+						Console.WriteLine ($"{infoIndent}* entry {i} is smaller than the previous one");
+					} else if (entry.Hash == prev) {
+						Console.WriteLine ($"{infoIndent}* entry {i} is a duplicate of the previous one");
+					}
+					sb.Append ($"{infoIndent}0x");
+					sb.AppendLine (entry.Hash.ToString (hashFormat));
+					prev = entry.Hash;
+				}
+				Console.WriteLine (sb.ToString ());
+			}
+
 			void WriteOptionalDataLine (string label, uint offset, uint size)
 			{
 				Console.Write ($"{infoIndent}{label}: ");
 				if (offset == 0) {
 					Console.WriteLine ("absent");
 				} else {
-					Console.WriteLine ("offset == {offset}; size == {size}");
+					Console.WriteLine ($"offset == {offset}; size == {size}");
 				}
 			}
 
