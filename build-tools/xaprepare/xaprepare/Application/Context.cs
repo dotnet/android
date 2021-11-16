@@ -398,11 +398,15 @@ namespace Xamarin.Android.Prepare
 			}
 
 			Properties.PropertiesChanged += PropertiesChanged;
-			canConsoleUseUnicode =
-				Console.OutputEncoding is UTF7Encoding ||
-				Console.OutputEncoding is UTF8Encoding ||
-				Console.OutputEncoding is UTF32Encoding ||
-				Console.OutputEncoding is UnicodeEncoding;
+			if (Console.OutputEncoding.EncodingName.IndexOf ("Unicode", StringComparison.OrdinalIgnoreCase) >= 0) {
+				canConsoleUseUnicode = true;
+			} else {
+				canConsoleUseUnicode =
+					Console.OutputEncoding is UTF7Encoding ||
+					Console.OutputEncoding is UTF8Encoding ||
+					Console.OutputEncoding is UTF32Encoding ||
+					Console.OutputEncoding is UnicodeEncoding;
+			}
 
 			Log.Todo ("better checks for interactive session (isatty?)");
 			InteractiveSession = !Console.IsOutputRedirected;
