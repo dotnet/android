@@ -5,7 +5,7 @@ namespace Xamarin.Android.Tools.Bytecode
 {
 	public class Log
 	{
-		public static Action<TraceLevel, int, string, object[]> OnLog;
+		public static Action<TraceLevel, int, string, object[]>? OnLog;
 
 		public static void Warning (int verbosity, string format, params object[] args)
 		{

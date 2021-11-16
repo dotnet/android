@@ -25,17 +25,17 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		IList<ClassFile> classFiles = new List<ClassFile> ();
 
-		public string ApiSource { get; set; }
+		public string? ApiSource { get; set; }
 
-		public IEnumerable<string> DocumentationPaths { get; set; }
+		public IEnumerable<string>? DocumentationPaths { get; set; }
 
-		public string AndroidFrameworkPlatform { get; set; }
+		public string? AndroidFrameworkPlatform { get; set; }
 
 		public bool AutoRename { get; set; }
 
-		public ClassPath (string path = null)
+		public ClassPath (string? path = null)
 		{
-			if (string.IsNullOrEmpty (path))
+			if (path == null || string.IsNullOrEmpty (path))
 				return;
 
 			Load (path);
@@ -138,14 +138,14 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
-		XAttribute GetApiSource ()
+		XAttribute? GetApiSource ()
 		{
 			if (string.IsNullOrEmpty (ApiSource))
 				return null;
 			return new XAttribute ("api-source", ApiSource);
 		}
 
-		XAttribute GetPlatform ()
+		XAttribute? GetPlatform ()
 		{
 			if (string.IsNullOrEmpty (AndroidFrameworkPlatform))
 				return null;
@@ -286,20 +286,27 @@ namespace Xamarin.Android.Tools.Bytecode {
 			var elements = api.XPathSelectElements ("./package/class[@visibility = 'public' or @visibility = 'protected']").ToList ();
 			elements.AddRange (api.XPathSelectElements ("./package/interface[@visibility = 'public' or @visibility = 'protected']"));
 			foreach (var elem in elements) {
-				var currentpackage = elem.Parent.Attribute ("name").Value;
-				var className = elem.Attribute ("name").Value;
+				var currentpackage = elem.Parent?.Attribute ("name")?.Value ?? "";
+				var className = elem.Attribute ("name")?.Value;
+
+				if (className == null)
+					continue;
 
 				var methodsAndConstructors = elem.XPathSelectElements ("./method[@visibility = 'public' or @visibility = 'protected']").ToList ();
 				methodsAndConstructors.AddRange (elem.XPathSelectElements ("./constructor[@visibility = 'public' or @visibility = 'protected']"));
 
 				foreach (var method in methodsAndConstructors) {
-					var currentMethod = method.Attribute ("name").Value;
-
-					var parameterElements = method.Elements ("parameter").ToList ();
-					if (!parameterElements.Select (x => x.Attribute ("name").Value).Any (p => IsGeneratedName (p)))
+					var currentMethod = method.Attribute ("name")?.Value;
+					if (currentMethod == null)
 						continue;
 
-					var parameters = parameterElements.Select (p => p.Attribute ("type").Value);
+					var parameterElements = method.Elements ("parameter").ToList ();
+					if (!parameterElements.Select (x => x.Attribute ("name")?.Value).Any (p => p != null && IsGeneratedName (p)))
+						continue;
+
+					var parameters = parameterElements
+						.Select (p => p.Attribute ("type")?.Value!)
+						.Where (p => p != null);
 
 					if (!parameters.Any ())
 						continue;
@@ -308,7 +315,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 					if (pnames == null || pnames.Length != parameterElements.Count)
 						continue;
 					for (int i = 0; i < parameterElements.Count; i++) {
-						parameterElements [i].Attribute ("name").Value = pnames [i];
+						var a = parameterElements [i].Attribute ("name");
+						if (a == null)
+							continue;
+						a.Value = pnames [i];
 					}
 				}
 			}

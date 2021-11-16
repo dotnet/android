@@ -9,9 +9,9 @@ namespace Xamarin.Android.Tools.Bytecode
 	// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.16.1
 	public abstract class AnnotationElementValue
 	{
-		public virtual string ToEncodedString () => ToString ();
+		public virtual string? ToEncodedString () => ToString ();
 
-		public static AnnotationElementValue Create (ConstantPool constantPool, Stream stream)
+		public static AnnotationElementValue? Create (ConstantPool constantPool, Stream stream)
 		{
 			var tag = stream.ReadNetworkByte ();
 
@@ -38,8 +38,12 @@ namespace Xamarin.Android.Tools.Bytecode
 
 						var values = new List<AnnotationElementValue> ();
 
-						for (var i = 0; i < numValues; i++)
-							values.Add (Create (constantPool, stream));
+						for (var i = 0; i < numValues; i++) {
+							var v = Create (constantPool, stream);
+							if (v == null)
+								continue;
+							values.Add (v);
+						}
 
 						return new AnnotationElementArray { Values = values.ToArray () };
 					}
@@ -79,49 +83,53 @@ namespace Xamarin.Android.Tools.Bytecode
 
 	public class AnnotationElementEnum : AnnotationElementValue
 	{
-		public string TypeName { get; set; }
-		public string ConstantName { get; set; }
+		public string? TypeName { get; set; }
+		public string? ConstantName { get; set; }
 
 		public override string ToString () => $"Enum({TypeName}.{ConstantName})";
 	}
 
 	public class AnnotationElementClassInfo : AnnotationElementValue
 	{
-		public string ClassInfo { get; set; }
+		public string? ClassInfo { get; set; }
 
-		public override string ToString () => ClassInfo;
+		public override string? ToString () => ClassInfo;
 	}
 
 	public class AnnotationElementAnnotation : AnnotationElementValue
 	{
-		public Annotation Annotation { get; set; }
+		public Annotation? Annotation { get; set; }
 
-		public override string ToString () => Annotation.ToString ();
+		public override string? ToString () => Annotation?.ToString ();
 	}
 
 	public class AnnotationElementArray : AnnotationElementValue
 	{
-		public AnnotationElementValue[] Values { get; set; }
+		public AnnotationElementValue[]? Values { get; set; }
 
-		public override string ToString () => $"[{string.Join (", ", Values.Select (v => v.ToString ()))}]";
+		public override string ToString () => Values == null
+			? "[]"
+			: $"[{string.Join (", ", Values.Select (v => v.ToString ()))}]";
 
-		public override string ToEncodedString () => $"[{string.Join (", ", Values.Select (v => v.ToEncodedString ()))}]";
+		public override string? ToEncodedString () => Values == null
+			? "[]"
+			: $"[{string.Join (", ", Values.Select (v => v.ToEncodedString ()))}]";
 	}
 
 	public class AnnotationElementConstant : AnnotationElementValue
 	{
-		public string Value { get; set; }
+		public string? Value { get; set; }
 
-		public override string ToString () => Value;
+		public override string? ToString () => Value;
 	}
 
 	public class AnnotationStringElementConstant : AnnotationElementConstant
 	{
 		public override string ToString () => $"\"{Value}\"";
 
-		public override string ToEncodedString ()
+		public override string? ToEncodedString ()
 		{
-			return $"\"{Convert.ToBase64String (Encoding.UTF8.GetBytes (Value))}\"";
+			return $"\"{Convert.ToBase64String (Encoding.UTF8.GetBytes (Value ?? ""))}\"";
 		}
 	}
 }

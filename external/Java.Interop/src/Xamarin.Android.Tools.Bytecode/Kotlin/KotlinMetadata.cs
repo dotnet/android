@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using ProtoBuf;
@@ -11,23 +12,24 @@ namespace Xamarin.Android.Tools.Bytecode
 		public KotlinMetadataKind Kind { get; set; }
 
 		// The version of the metadata provided in the arguments of this annotation.
-		public Version MetadataVersion { get; set; }
+		public Version? MetadataVersion { get; set; }
 
 		// The version of the bytecode interface (naming conventions, signatures) of the class file annotated with this annotation.
-		public Version ByteCodeVersion { get; set; }
+		public Version? ByteCodeVersion { get; set; }
 
 		// Metadata in a custom format. The format may be different (or even absent) for different kinds.
-		public string [] Data1 { get; set; }
+		public string[]? Data1 { get; set; }
 
 		// An addition to [d1]: array of strings which occur in metadata, written in plain text so that strings already present
 		// in the constant pool are reused. These strings may be then indexed in the metadata by an integer index in this array.
-		public string [] Data2 { get; set; }
+		public string[]? Data2 { get; set; }
 
 		public static KotlinMetadata FromAnnotation (Annotation annotation)
 		{
+			var k = GetValue (annotation, "k");
 			var km = new KotlinMetadata {
 				ByteCodeVersion = ParseVersion (annotation, "bv"),
-				Kind = (KotlinMetadataKind) ParseInteger (GetValue (annotation, "k")),
+				Kind = k == null ? (KotlinMetadataKind) 0 : (KotlinMetadataKind) ParseInteger (k),
 				MetadataVersion = ParseVersion (annotation, "mv")
 			};
 
@@ -37,7 +39,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			return km;
 		}
 
-		public KotlinFile ParseMetadata ()
+		public KotlinFile? ParseMetadata ()
 		{
 			switch (Kind) {
 				case KotlinMetadataKind.Class:
@@ -49,26 +51,36 @@ namespace Xamarin.Android.Tools.Bytecode
 			}
 		}
 
-		public KotlinClass AsClassMetadata ()
+		public KotlinClass? AsClassMetadata ()
 		{
 			if (Kind != KotlinMetadataKind.Class)
 				return null;
 
 			var data = ParseStream<org.jetbrains.kotlin.metadata.jvm.Class> ();
+			if (data == null) {
+				return null;
+			}
 			return KotlinClass.FromProtobuf (data.Item1, data.Item2);
 		}
 
-		public KotlinFile AsFileMetadata ()
+		public KotlinFile? AsFileMetadata ()
 		{
 			if (Kind != KotlinMetadataKind.File)
 				return null;
 
 			var data = ParseStream<org.jetbrains.kotlin.metadata.jvm.Package> ();
+			if (data == null) {
+				return null;
+			}
 			return KotlinFile.FromProtobuf (data.Item1, data.Item2);
 		}
 
-		Tuple<T, JvmNameResolver> ParseStream<T> ()
+		Tuple<T, JvmNameResolver>? ParseStream<T> ()
 		{
+			if (Data1 == null || Data2 == null) {
+				throw new InvalidOperationException ("Data1 is null; should not be reached.");
+			}
+
 			var md = KotlinBitEncoding.DecodeBytes (Data1);
 
 			using (var ms = ToMemoryStream (md)) {
@@ -100,7 +112,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		static MemoryStream ToMemoryStream (byte [] bytes) => new MemoryStream (bytes);
 
-		static Version ParseVersion (Annotation annotation, string key)
+		static Version? ParseVersion (Annotation annotation, string key)
 		{
 			var value = GetValue (annotation, key);
 
@@ -112,14 +124,21 @@ namespace Xamarin.Android.Tools.Bytecode
 			return new Version (values [0], values [1], values [2]);
 		}
 
-		static string GetValue (Annotation annotation, string key)
+		static string? GetValue (Annotation annotation, string key)
 		{
 			return annotation.Values.FirstOrDefault (v => v.Key == key).Value?.ToString ();
 		}
 
-		static string[] GetValues (Annotation annotation, string key)
+		static string[]? GetValues (Annotation annotation, string key)
 		{
-			return (annotation.Values.FirstOrDefault (v => v.Key == key).Value as AnnotationElementArray)?.Values.Cast<AnnotationElementConstant> ().Select (c => c.Value).ToArray ();
+			var array = annotation.Values.FirstOrDefault (v => v.Key == key).Value as AnnotationElementArray;
+			if (array == null || array.Values == null) {
+				return null;
+			}
+			var constants = array.Values.Cast<AnnotationElementConstant> ();
+			return constants.Select (c => c.Value!)
+				.Where (v => v != null)
+				.ToArray ();
 		}
 
 		static int ParseInteger (string value)

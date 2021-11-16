@@ -25,8 +25,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 				FullName            = "com/xamarin/JavaType",
 				Superclass          = new TypeInfo ("java/lang/Object", "Ljava/lang/Object;"),
 				TypeParameters = {
-					new TypeParameterInfo {
-						Identifier  = "E",
+					new TypeParameterInfo ("E") {
 						ClassBound  = "Ljava/lang/Object;",
 					},
 				},
@@ -249,7 +248,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						ReturnDescriptor        = "V",
 						Deprecated              = true,
 						Parameters = {
-							new ParameterInfo { Name = "value", Type = new TypeInfo ("Ljava/lang/Object;", "Ljava/lang/Object;") },
+							new ParameterInfo ("value",     "Ljava/lang/Object;", "Ljava/lang/Object;"),
 						},
 					},
 					new ExpectedMethodDeclaration {

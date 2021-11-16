@@ -55,13 +55,13 @@ namespace Xamarin.Android.Tools.Bytecode
 			ShouldEscapeBrackets = true;
 		}
 
-		string prev_path;
-		string [] prev_contents;
+		string? prev_path;
+		string[]? prev_contents;
 
 		protected override IEnumerable<string> GetContentLines (string path)
 		{
 			if (prev_path == path)
-				return prev_contents;
+				return prev_contents!;
 			else {
 				prev_path = path;
 				string all = File.ReadAllText (path).Replace ('\r', ' ').Replace ('\n', ' ');
@@ -123,8 +123,10 @@ namespace Xamarin.Android.Tools.Bytecode
 		protected override string StripTagsFromParameters (string value)
 		{
 			// Java8 javadoc contains possibly linked types with <a> tags, so remove all of them.
-			while (value.IndexOf ('<') >= 0 && value.IndexOf ('>') > value.IndexOf ('<'))
-				value = value.Substring (0, value.IndexOf ('<')) + value.Substring (value.IndexOf ('>') + 1);
+			while (value.IndexOf ("<", StringComparison.Ordinal) >= 0 &&
+					value.IndexOf (">", StringComparison.Ordinal) > value.IndexOf ("<", StringComparison.Ordinal))
+				value = value.Substring (0, value.IndexOf ("<", StringComparison.Ordinal)) +
+					value.Substring (value.IndexOf (">", StringComparison.Ordinal) + 1);
 			return value;
 		}
 	}
@@ -132,21 +134,21 @@ namespace Xamarin.Android.Tools.Bytecode
 	public abstract class AndroidDocScraper : IJavaMethodParameterNameProvider
 	{
 		readonly String pattern_head;
-		readonly String reset_pattern_head;
+		readonly String? reset_pattern_head;
 		readonly string [] parameter_pair_splitter;
 		readonly bool continuous_param_lines;
 		readonly String open_method;
 		readonly String param_sep;
 		readonly String close_method;	
-		readonly String post_close_method_parens;
+		readonly String? post_close_method_parens;
 		string root;
 
-		protected AndroidDocScraper (string dir, String patternHead, String resetPatternHead, String parameterPairSplitter, bool continuousParamLines)
+		protected AndroidDocScraper (string dir, String patternHead, String? resetPatternHead, String parameterPairSplitter, bool continuousParamLines)
 			: this (dir, patternHead, resetPatternHead, parameterPairSplitter, continuousParamLines, "\\(", ", ", "\\)", null)
 		{
 		}
 
-		protected AndroidDocScraper (string dir, String patternHead, String resetPatternHead, String parameterPairSplitter, bool continuousParamLines, string openMethod, string paramSep, string closeMethod, string postCloseMethodParens)
+		protected AndroidDocScraper (string dir, String patternHead, String? resetPatternHead, String parameterPairSplitter, bool continuousParamLines, string openMethod, string paramSep, string closeMethod, string? postCloseMethodParens)
 		{
 			if (dir == null)
 				throw new ArgumentNullException ("dir");
@@ -192,7 +194,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			return value;
 		}
 	
-		public virtual String[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
+		public virtual String[]? GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
 		{
 			string path = package.Replace ('.', '/') + '/' + type.Replace ('$', '.') + ".html";
 			string file = Path.Combine (root, path);
@@ -212,8 +214,10 @@ namespace Xamarin.Android.Tools.Bytecode
 					buffer.Append (param_sep);
 				var ptype = ptypes [i];
 				if (ShouldEliminateGenericArguments)
-					while (ptype.IndexOf ('<') > 0 && ptype.IndexOf ('>') > ptype.IndexOf ('<'))
-						ptype = ptype.Substring (0, ptype.IndexOf ('<')) + ptype.Substring (ptype.IndexOf ('>') + 1);
+					while (ptype.IndexOf ("<", StringComparison.Ordinal) > 0 &&
+							ptype.IndexOf (">", StringComparison.Ordinal) > ptype.IndexOf ("<", StringComparison.Ordinal))
+						ptype = ptype.Substring (0, ptype.IndexOf ("<", StringComparison.Ordinal)) +
+							ptype.Substring (ptype.IndexOf (">", StringComparison.Ordinal) + 1);
 				buffer.Append (ptype.Replace ('$', '.'));
 			}
 			if (ShouldEscapeBrackets)
@@ -228,7 +232,7 @@ namespace Xamarin.Android.Tools.Bytecode
 	
 			try {
 				String text = "";
-				String prev = null;
+				String? prev = null;
 				foreach (var _text in GetContentLines (file)) {
 					text = _text.TrimEnd ('\r');
 					if (prev != null)
@@ -262,25 +266,30 @@ namespace Xamarin.Android.Tools.Bytecode
 			return null;
 		}
 		
-		static Dictionary<String,List<String>> deprecatedFields;
-		static Dictionary<String,List<String>> deprecatedMethods;
+		static Dictionary<String,List<String>>? deprecatedFields;
+		static Dictionary<String,List<String>>? deprecatedMethods;
 		
 		public static void LoadXml (String filename)
 		{
 			try {
 				var doc = XDocument.Load (filename);
+				if (doc.Root == null)
+					return;
 				deprecatedFields = new Dictionary<String,List<String>> ();
 				deprecatedMethods = new Dictionary<String,List<String>> ();
 				var files = doc.Root.Descendants ("file");
 				foreach (var file in files) {
 					var f = new List<String> ();
-					deprecatedFields [file.Attribute ("name").Value] = f;
+					var k = file.Attribute ("name")?.Value;
+					if (k == null)
+						continue;
+					deprecatedFields [k] = f;
 					var fields = file.Descendants ("field");
 					foreach (var fld in fields)
 						f.Add (fld.Value);
 	
 					var m = new List<String> ();
-					deprecatedMethods [file.Attribute ("name").Value] = m;
+					deprecatedMethods [k] = m;
 					var methods = file.Descendants ("method");
 					foreach (var meh in methods)
 						m.Add (meh.Value);
@@ -294,7 +303,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 	public interface IJavaMethodParameterNameProvider
 	{
-		String[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs);
+		String[]? GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs);
 	}
 
 	public static class JavaMethodParameterNameProvider {
@@ -305,7 +314,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			char[] buf = new char[500];
 
 			string packagesHtml = Path.Combine (path, "packages.html");
-			if (File.Exists (packagesHtml) && File.ReadAllText (packagesHtml).Contains ("<body class=\"gc-documentation develop reference api "))
+			if (File.Exists (packagesHtml) &&
+					File.ReadAllText (packagesHtml).IndexOf ("<body class=\"gc-documentation develop reference api ", StringComparison.Ordinal) >= 0)
 				kind = JavaDocletType.DroidDoc2;
 
 			string indexHtml = Path.Combine (path, "index.html");
@@ -313,22 +323,23 @@ namespace Xamarin.Android.Tools.Bytecode
 				using (var reader = File.OpenText (indexHtml))
 					reader.ReadBlock (buf, 0, buf.Length);
 				string rawHTML = new string (buf);
-				if (rawHTML.Contains ("Generated by javadoc (build 1.6"))
+				if (rawHTML.IndexOf ("Generated by javadoc (build 1.6", StringComparison.Ordinal) >= 0)
 					kind = JavaDocletType.Java6;
-				else if (rawHTML.Contains ("Generated by javadoc (version 1.7"))
+				else if (rawHTML.IndexOf ("Generated by javadoc (version 1.7", StringComparison.Ordinal) >= 0)
 					kind = JavaDocletType.Java7;
-				else if (rawHTML.Contains ("Generated by javadoc (1.8"))
+				else if (rawHTML.IndexOf ("Generated by javadoc (1.8", StringComparison.Ordinal) >= 0)
 					kind = JavaDocletType.Java8;
 			}
 
 			// Check to see if it's an api.xml formatted doc
 			if (File.Exists (path)) {
-				string rawXML = null;
+				string rawXML;
 				using (var reader = File.OpenText (path)) {
 					int len = reader.ReadBlock (buf, 0, buf.Length);
 					rawXML = new string (buf, 0, len).Trim ();
 				}
-				if (rawXML.Contains ("<api") && rawXML.Contains ("<package"))
+				if (rawXML.IndexOf ("<api", StringComparison.Ordinal) >= 0 &&
+						rawXML.IndexOf ("<package", StringComparison.Ordinal) >= 0)
 					kind = JavaDocletType._ApiXml;
 				else if (rawXML.StartsWith ("package", StringComparison.Ordinal) ||
 						rawXML.StartsWith (";", StringComparison.Ordinal)) {
@@ -349,7 +360,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		XDocument xdoc;
 
-		public string[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
+		public string[]? GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
 		{
 			var methodOrCtor = method == "constructor" ?
 				"constructor[" : $"method[@name='{method}'";
@@ -377,9 +388,11 @@ namespace Xamarin.Android.Tools.Bytecode
 			var methodElem = xdoc.XPathSelectElement (xpath.ToString ());
 
 			if (methodElem != null)
-				return methodElem.Elements ("parameter").Select (pe => pe.Attribute ("name")?.Value).ToArray ();
+				return methodElem.Elements ("parameter")
+					.Select (pe => pe.Attribute ("name")?.Value ?? "")
+					.ToArray ();
 
-			return new string[0];
+			return null;
 		}
 	}
 }

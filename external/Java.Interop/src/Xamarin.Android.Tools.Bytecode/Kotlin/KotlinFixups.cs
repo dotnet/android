@@ -34,6 +34,8 @@ namespace Xamarin.Android.Tools.Bytecode
 
 						if (!c.AccessFlags.IsPubliclyVisible ())
 							continue;
+						if (class_metadata.Constructors == null)
+							continue;
 
 						foreach (var con in class_metadata.Constructors)
 							FixupConstructor (FindJavaConstructor (class_metadata, con, c), con);
@@ -44,16 +46,21 @@ namespace Xamarin.Android.Tools.Bytecode
 					// used for generic type resolution if available for class types)
 					FixupJavaMethods (c.Methods);
 
-					foreach (var met in metadata.Functions)
-						FixupFunction (FindJavaMethod (metadata, met, c), met, class_metadata);
+					if (metadata.Functions != null) {
+						foreach (var met in metadata.Functions)
+							FixupFunction (FindJavaMethod (metadata, met, c), met, class_metadata);
+					}
 
-					foreach (var prop in metadata.Properties) {
-						var getter = FindJavaPropertyGetter (metadata, prop, c);
-						var setter = FindJavaPropertySetter (metadata, prop, c);
 
-						FixupProperty (getter, setter, prop);
+					if (metadata.Properties != null) {
+						foreach (var prop in metadata.Properties) {
+							var getter = FindJavaPropertyGetter (metadata, prop, c);
+							var setter = FindJavaPropertySetter (metadata, prop, c);
 
-						FixupField (FindJavaFieldProperty (metadata, prop, c), prop);
+							FixupProperty (getter, setter, prop);
+
+							FixupField (FindJavaFieldProperty (metadata, prop, c), prop);
+						}
 					}
 
 				} catch (Exception ex) {
@@ -128,7 +135,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			// not just ones that have corresponding Kotlin metadata, like FixupFunction does.
 
 			// Hide Kotlin generated methods like "add-impl" that aren't intended for end users
-			foreach (var method in methods.Where (m => m.IsPubliclyVisible && m.Name.Contains ("-impl"))) {
+			foreach (var method in methods.Where (m => m.IsPubliclyVisible && m.Name.IndexOf ("-impl", StringComparison.Ordinal) >= 0)) {
 				Log.Debug ($"Kotlin: Hiding implementation method {method.DeclaringType?.ThisClass.Name.Value} - {method.Name}");
 				method.AccessFlags = MethodAccessFlags.Private;
 			}
@@ -144,7 +151,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				FixupExtensionMethod (method);
 		}
 
-		static void FixupConstructor (MethodInfo method, KotlinConstructor metadata)
+		static void FixupConstructor (MethodInfo? method, KotlinConstructor metadata)
 		{
 			if (method is null)
 				return;
@@ -156,7 +163,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			}
 		}
 
-		static void FixupFunction (MethodInfo method, KotlinFunction metadata, KotlinClass kotlinClass)
+		static void FixupFunction (MethodInfo? method, KotlinFunction metadata, KotlinClass? kotlinClass)
 		{
 			if (method is null || !method.IsPubliclyVisible)
 				return;
@@ -172,7 +179,9 @@ namespace Xamarin.Android.Tools.Bytecode
 
 			for (var i = 0; i < java_parameters.Length; i++) {
 				var java_p = java_parameters [i];
-				var kotlin_p = metadata.ValueParameters [i];
+				var kotlin_p = metadata.ValueParameters == null ? null : metadata.ValueParameters [i];
+				if (kotlin_p == null || kotlin_p.Type == null || kotlin_p.Name == null)
+					continue;
 
 				// Kotlin provides actual parameter names
 				if (TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass) && java_p.IsUnnamedParameter () && !kotlin_p.IsUnnamedParameter ()) {
@@ -185,7 +194,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			}
 
 			// Handle erasure of Kotlin unsigned types
-			method.KotlinReturnType = GetKotlinType (method.ReturnType.TypeSignature, metadata.ReturnType.ClassName);
+			method.KotlinReturnType = GetKotlinType (method.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
 		}
 
 		static void FixupExtensionMethod (MethodInfo method)
@@ -200,7 +209,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			}
 		}
 
-		static void FixupProperty (MethodInfo getter, MethodInfo setter, KotlinProperty metadata)
+		static void FixupProperty (MethodInfo? getter, MethodInfo? setter, KotlinProperty metadata)
 		{
 			if (getter is null && setter is null)
 				return;
@@ -223,7 +232,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 			// Handle erasure of Kotlin unsigned types
 			if (getter != null)
-				getter.KotlinReturnType = GetKotlinType (getter.ReturnType.TypeSignature, metadata.ReturnType.ClassName);
+				getter.KotlinReturnType = GetKotlinType (getter.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
 
 			if (setter != null) {
 				var setter_parameter = setter.GetParameters ().First ();
@@ -234,42 +243,44 @@ namespace Xamarin.Android.Tools.Bytecode
 				}
 
 				// Handle erasure of Kotlin unsigned types
-				setter_parameter.KotlinType = GetKotlinType (setter_parameter.Type.TypeSignature, metadata.ReturnType.ClassName);
+				setter_parameter.KotlinType = GetKotlinType (setter_parameter.Type.TypeSignature, metadata.ReturnType?.ClassName);
 			}
 		}
 
-		static void FixupField (FieldInfo field, KotlinProperty metadata)
+		static void FixupField (FieldInfo? field, KotlinProperty metadata)
 		{
 			if (field is null)
 				return;
 
 			// Handle erasure of Kotlin unsigned types
-			field.KotlinType = GetKotlinType (field.Descriptor, metadata.ReturnType.ClassName);
+			field.KotlinType = GetKotlinType (field.Descriptor, metadata.ReturnType?.ClassName);
 		}
 
-		static MethodInfo FindJavaConstructor (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
+		static MethodInfo? FindJavaConstructor (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
 		{
 			var all_constructors = klass.Methods.Where (method => method.Name == "<init>" || method.Name == "<clinit>");
-			var possible_constructors = all_constructors.Where (method => method.GetFilteredParameters ().Length == constructor.ValueParameters.Count);
+			var possible_constructors = all_constructors.Where (method => method.GetFilteredParameters ().Length == constructor.ValueParameters?.Count);
 
 			foreach (var method in possible_constructors) {
-				if (ParametersMatch (kotlinClass, method, constructor.ValueParameters))
+				if (ParametersMatch (kotlinClass, method, constructor.ValueParameters!))
 					return method;
 			}
 
 			return null;
 		}
 
-		static MethodInfo FindJavaMethod (KotlinFile kotlinFile, KotlinFunction function, ClassFile klass)
+		static MethodInfo? FindJavaMethod (KotlinFile kotlinFile, KotlinFunction function, ClassFile klass)
 		{
 			var possible_methods = klass.Methods.Where (method => method.Name == function.JvmName &&
-									      method.GetFilteredParameters ().Length == function.ValueParameters.Count);
+									      method.GetFilteredParameters ().Length == function.ValueParameters?.Count);
 
 			foreach (var method in possible_methods) {
+				if (function.ReturnType == null)
+					continue;
 				if (!TypesMatch (method.ReturnType, function.ReturnType, kotlinFile))
 					continue;
 
-				if (!ParametersMatch (kotlinFile, method, function.ValueParameters))
+				if (!ParametersMatch (kotlinFile, method, function.ValueParameters!))
 					continue;
 
 				return method;
@@ -278,24 +289,26 @@ namespace Xamarin.Android.Tools.Bytecode
 			return null;
 		}
 
-		static FieldInfo FindJavaFieldProperty (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
+		static FieldInfo? FindJavaFieldProperty (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
 		{
 			var possible_methods = klass.Fields.Where (field => field.Name == property.Name &&
-									     TypesMatch (new TypeInfo (field.Descriptor, field.Descriptor), property.ReturnType, kotlinClass));
+					property.ReturnType != null &&
+					TypesMatch (new TypeInfo (field.Descriptor, field.Descriptor), property.ReturnType, kotlinClass));
 
 			return possible_methods.FirstOrDefault ();
 		}
 
-		static MethodInfo FindJavaPropertyGetter (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
+		static MethodInfo? FindJavaPropertyGetter (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
 		{
 			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"get{property.Name}", StringComparison.OrdinalIgnoreCase) == 0 &&
-									      method.GetParameters ().Length == 0 &&
-									      TypesMatch (method.ReturnType, property.ReturnType, kotlinClass));
+					method.GetParameters ().Length == 0 &&
+					property.ReturnType != null &&
+					TypesMatch (method.ReturnType, property.ReturnType, kotlinClass));
 
 			return possible_methods.FirstOrDefault ();
 		}
 
-		static MethodInfo FindJavaPropertySetter (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
+		static MethodInfo? FindJavaPropertySetter (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
 		{
 			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"set{property.Name}", StringComparison.OrdinalIgnoreCase) == 0 &&
 									      property.ReturnType != null &&
@@ -317,14 +330,14 @@ namespace Xamarin.Android.Tools.Bytecode
 				var java_p = java_parameters [i];
 				var kotlin_p = kotlinParameters [i];
 
-				if (!TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass))
+				if (kotlin_p.Type == null || !TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass))
 					return false;
 			}
 
 			return true;
 		}
 
-		static bool TypesMatch (TypeInfo javaType, KotlinType kotlinType, KotlinFile kotlinFile)
+		static bool TypesMatch (TypeInfo javaType, KotlinType kotlinType, KotlinFile? kotlinFile)
 		{
 			// Generic type
 			if (!string.IsNullOrWhiteSpace (kotlinType.TypeParameterName) && $"T{kotlinType.TypeParameterName};" == javaType.TypeSignature)
@@ -353,7 +366,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			return false;
 		}
 
-		static string GetKotlinType (string jvmType, string kotlinClass)
+		static string? GetKotlinType (string? jvmType, string? kotlinClass)
 		{
 			// Handle erasure of Kotlin unsigned types
 			if (jvmType == "I" && kotlinClass == "kotlin/UInt;")

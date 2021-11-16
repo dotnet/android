@@ -26,10 +26,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return this.Where (a => a.Name == name);
 		}
 
-		public T Get<T> ()
+		public T? Get<T> ()
 			where T : AttributeInfo
 		{
-			return (T) GetInfos (AttributeInfo.GetAttributeName<T>()).SingleOrDefault ();
+			return (T?) GetInfos (AttributeInfo.GetAttributeName<T>()).SingleOrDefault ();
 		}
 	}
 
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		internal static string GetAttributeName<T>()
 		{
-			string value;
+			string? value;
 			if (AttributeNames.TryGetValue (typeof(T), out value)) {
 				return value;
 			}
@@ -244,7 +244,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			get {return (ConstantPoolClassItem) ConstantPool [classIndex];}
 		}
 
-		public ConstantPoolNameAndTypeItem      Method {
+		public ConstantPoolNameAndTypeItem?     Method {
 			get {return methodIndex == 0 ? null : (ConstantPoolNameAndTypeItem) ConstantPool [methodIndex];}
 		}
 
@@ -351,7 +351,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			get {return (ConstantPoolClassItem) ConstantPool [outerClassInfoIndex];}
 		}
 
-		public string InnerName {
+		public string? InnerName {
 			get {
 				if (innerNameIndex == 0)
 					// anonymous class
@@ -360,7 +360,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
-		public string OuterClassName => OuterClass?.Name?.Value;
+		public string? OuterClassName => OuterClass?.Name?.Value;
 
 		public override string ToString ()
 		{
@@ -447,7 +447,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			ConstantPool    = constantPool;
 		}
 
-		public string Name {
+		public string? Name {
 			get {
 				if (nameIndex == 0)
 					return null;

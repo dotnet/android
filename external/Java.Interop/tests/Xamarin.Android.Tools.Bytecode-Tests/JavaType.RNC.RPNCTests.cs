@@ -23,8 +23,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 				FullName            = "com/xamarin/JavaType$RNC$RPNC",
 				Superclass          = new TypeInfo ("java/lang/Object", "Ljava/lang/Object;"),
 				TypeParameters = {
-					new TypeParameterInfo {
-						Identifier  = "E3",
+					new TypeParameterInfo ("E3") {
 						ClassBound  = "Ljava/lang/Object;",
 					},
 				},

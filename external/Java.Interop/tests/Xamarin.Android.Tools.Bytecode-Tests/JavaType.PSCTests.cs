@@ -23,22 +23,19 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 				FullName            = "com/xamarin/JavaType$PSC",
 				Superclass          = new TypeInfo ("java/lang/Object", "Ljava/lang/Object;"),
 				TypeParameters = {
-					new TypeParameterInfo {
-						Identifier  = "TString",
+					new TypeParameterInfo ("TString") {
 						InterfaceBounds = {
 							"Ljava/lang/CharSequence;",
 							"Ljava/lang/Appendable;",
 						},
 					},
-					new TypeParameterInfo {
-						Identifier  = "TStringList",
+					new TypeParameterInfo ("TStringList") {
 						ClassBound  = "Ljava/util/ArrayList<TTString;>;",
 						InterfaceBounds = {
 							"Ljava/util/List<TTString;>;",
 						},
 					},
-					new TypeParameterInfo {
-						Identifier  = "TReturn",
+					new TypeParameterInfo ("TReturn") {
 						ClassBound  = "Ljava/lang/Object;",
 					},
 				},

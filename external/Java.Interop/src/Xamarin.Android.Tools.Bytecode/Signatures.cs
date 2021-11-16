@@ -94,9 +94,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			index++;
 			string t;
 			while ((t = ExtractIdentifier (signature, ref index)) != null) {
-				var bounds = new TypeParameterInfo {
-					Identifier  = t,
-				};
+				var bounds = new TypeParameterInfo (t);
 				typeParameters.Add (bounds);
 
 				AssertSignatureIndex (signature, index);
@@ -131,10 +129,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 	public sealed class TypeParameterInfo {
 
 		public  string          Identifier;
-		public  string          ClassBound;
+		public  string?         ClassBound;
 		public  List<string>    InterfaceBounds = new List<string> ();
 
-		public TypeParameterInfo (string identifier = null, string classBound = null, string[] interfaceBounds = null)
+		public TypeParameterInfo (string identifier, string? classBound = null, string[]? interfaceBounds = null)
 		{
 			Identifier  = identifier;
 			ClassBound  = classBound;

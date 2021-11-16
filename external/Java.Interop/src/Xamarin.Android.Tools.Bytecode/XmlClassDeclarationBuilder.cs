@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 	public class XmlClassDeclarationBuilder {
 
 		ClassFile       classFile;
-		ClassSignature  signature;
+		ClassSignature? signature;
 
 		bool IsInterface {
 			get {return (classFile.AccessFlags & ClassAccessFlags.Interface) != 0;}
@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		IEnumerable<XAttribute> GetEnclosingMethod ()
 		{
-			string declaringClass, declaringMethod, declaringDescriptor;
+			string? declaringClass, declaringMethod, declaringDescriptor;
 			if (!classFile.TryGetEnclosingMethodInfo (out declaringClass, out declaringMethod, out declaringDescriptor)) {
 				yield break;
 			}
@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				yield return new XAttribute ("enclosing-method-signature",   declaringDescriptor);
 		}
 
-		XAttribute[] GetExtends ()
+		XAttribute[]? GetExtends ()
 		{
 			if (IsInterface)
 				return null;
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			};
 		}
 
-		XAttribute GetExtendsGenericAware ()
+		XAttribute? GetExtendsGenericAware ()
 		{
 			if (IsInterface)
 				return null;
@@ -125,16 +125,16 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return value.Replace ('$', '.');
 		}
 
-		static string BinaryNameToJavaClassName (string value)
+		static string BinaryNameToJavaClassName (string? value)
 		{
-			if (string.IsNullOrEmpty (value))
+			if (value == null || string.IsNullOrEmpty (value))
 				return string.Empty;
 			return value.Replace ('/', '.').Replace ('$', '.');
 		}
 
-		string SignatureToJavaTypeName (string value)
+		string SignatureToJavaTypeName (string? value)
 		{
-			if (string.IsNullOrEmpty (value))
+			if (value == null || string.IsNullOrEmpty (value))
 				return string.Empty;
 			int index   = 0;
 			var array   = GetArraySuffix (value, ref index);
@@ -174,9 +174,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return value;
 		}
 
-		static string SignatureToGenericJavaTypeName (string value)
+		static string SignatureToGenericJavaTypeName (string? value)
 		{
-			if (string.IsNullOrEmpty (value))
+			if (value == null || string.IsNullOrEmpty (value))
 				return string.Empty;
 			int index   = 0;
 			var type    = new StringBuilder ();
@@ -240,7 +240,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return typeBuilder;
 		}
 
-		static string GetArraySuffix (string value, ref int index)
+		static string? GetArraySuffix (string value, ref int index)
 		{
 			int o   = index;
 			while (value [index] == '[') {
@@ -251,7 +251,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return string.Join ("", Enumerable.Repeat ("[]", index - o));
 		}
 
-		static string GetBuiltinName (string value, ref int index)
+		static string? GetBuiltinName (string value, ref int index)
 		{
 			switch (value [index]) {
 			case 'B':   index++;    return "byte";
@@ -267,7 +267,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return null;
 		}
 
-		XAttribute GetSourceFile ()
+		XAttribute? GetSourceFile ()
 		{
 			var sourceFile  = classFile.SourceFileName;
 			if (sourceFile == null)
@@ -275,7 +275,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return new XAttribute ("source-file-name", sourceFile);
 		}
 
-		XElement GetTypeParmeters (TypeParameterInfoCollection typeParameters)
+		XElement? GetTypeParmeters (TypeParameterInfoCollection? typeParameters)
 		{
 			if (typeParameters == null || typeParameters.Count == 0)
 				return null;
@@ -321,7 +321,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				.Select (c => GetMethod ("constructor", GetThisClassName (), c, null));
 		}
 
-		XElement GetMethod (string element, string name, MethodInfo method, string returns = null)
+		XElement GetMethod (string element, string name, MethodInfo method, string? returns = null)
 		{
 			var abstr   = element == "method"
 				? new XAttribute ("abstract", (method.AccessFlags & MethodAccessFlags.Abstract) != 0)
@@ -355,14 +355,14 @@ namespace Xamarin.Android.Tools.Bytecode {
 				GetExceptions (method));
 		}
 
-		static XAttribute GetNative (MethodInfo method)
+		static XAttribute? GetNative (MethodInfo method)
 		{
 			if (method.IsConstructor)
 				return null;
 			return new XAttribute ("native",    (method.AccessFlags & MethodAccessFlags.Native) != 0);
 		}
 
-		static XAttribute GetSynchronized (MethodInfo method)
+		static XAttribute? GetSynchronized (MethodInfo method)
 		{
 			if (method.IsConstructor)
 				return null;
@@ -395,10 +395,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 				if (varargArray) {
 					Debug.Assert (p.Type.BinaryName.StartsWith ("[", StringComparison.Ordinal),
 							"Varargs parameters MUST be arrays!");
-					Debug.Assert (p.Type.TypeSignature.StartsWith ("[", StringComparison.Ordinal),
+					Debug.Assert (p.Type.TypeSignature != null && p.Type.TypeSignature.StartsWith ("[", StringComparison.Ordinal),
 							"Varargs parameters MUST be arrays!");
 					type        = type.Substring (1);
-					genericType = genericType.Substring (1);
+					genericType = genericType?.Substring (1);
 				}
 				genericType = SignatureToGenericJavaTypeName (genericType);
 				if (!string.IsNullOrWhiteSpace (p.KotlinType))
@@ -410,7 +410,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				yield return new XElement ("parameter",
 						new XAttribute ("name", p.Name),
 						new XAttribute ("type",     genericType),
-						new XAttribute ("jni-type", p.Type.TypeSignature),
+						new XAttribute ("jni-type", p.Type.TypeSignature ?? p.Type.BinaryName),
 						GetNotNull (annotations, i));
 			}
 		}
@@ -427,7 +427,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
-		static XAttribute GetNotNull (MethodInfo method)
+		static XAttribute? GetNotNull (MethodInfo method)
 		{
 			var annotations = method.Attributes?.OfType<RuntimeInvisibleAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
 
@@ -437,7 +437,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return null;
 		}
 
-		static XAttribute GetNotNull (IList<ParameterAnnotation> annotations, int parameterIndex)
+		static XAttribute? GetNotNull (IList<ParameterAnnotation>? annotations, int parameterIndex)
 		{
 			var ann = annotations?.FirstOrDefault (a => a.ParameterIndex == parameterIndex)?.Annotations;
 
@@ -447,7 +447,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return null;
 		}
 
-		static XAttribute GetNotNull (FieldInfo field)
+		static XAttribute? GetNotNull (FieldInfo field)
 		{
 			var annotations = field.Attributes?.OfType<RuntimeInvisibleAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
 
@@ -512,9 +512,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return SignatureToGenericJavaTypeName (signature);
 		}
 
-		static XAttribute GetValue (FieldInfo field)
+		static XAttribute? GetValue (FieldInfo field)
 		{
-			var constantValue = (ConstantValueAttribute) field.Attributes.FirstOrDefault (a => a.Name == "ConstantValue");
+			var constantValue = (ConstantValueAttribute?) field.Attributes.FirstOrDefault (a => a.Name == "ConstantValue");
 			if (constantValue == null)
 				return null;
 			var value       = "";

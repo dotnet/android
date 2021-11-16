@@ -12,8 +12,8 @@ namespace Xamarin.Android.Tools.Bytecode
 		ushort typeIndex;
 		public string Type => ((ConstantPoolUtf8Item) ConstantPool [typeIndex]).Value;
 
-		public IList<KeyValuePair<string, AnnotationElementValue>>
-			Values { get; } = new List<KeyValuePair<string, AnnotationElementValue>> ();
+		public IList<KeyValuePair<string, AnnotationElementValue?>>
+			Values { get; } = new List<KeyValuePair<string, AnnotationElementValue?>> ();
 
 		public Annotation (ConstantPool constantPool, Stream stream)
 		{
@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				var elementNameIndex = stream.ReadNetworkUInt16 ();
 				var elementName = ((ConstantPoolUtf8Item) ConstantPool [elementNameIndex]).Value;
 				var elementValue = AnnotationElementValue.Create (constantPool, stream);
-				Values.Add (new KeyValuePair<string, AnnotationElementValue> (elementName, elementValue));
+				Values.Add (new KeyValuePair<string, AnnotationElementValue?> (elementName, elementValue));
 			}
 		}
 
@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			values.Append ("}");
 			return $"Annotation('{Type}', {values})";
 
-			void Append (KeyValuePair<string, AnnotationElementValue> value)
+			void Append (KeyValuePair<string, AnnotationElementValue?> value)
 			{
 				values.Append (value.Key).Append (": ");
 				values.Append (value.Value);

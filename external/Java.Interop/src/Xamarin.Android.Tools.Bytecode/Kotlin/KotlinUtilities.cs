@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tools.Bytecode
 {
 	public static class KotlinUtilities
 	{
-		public static string ConvertKotlinTypeSignature (KotlinType type, KotlinFile metadata = null)
+		public static string ConvertKotlinTypeSignature (KotlinType? type, KotlinFile? metadata = null)
 		{
 			if (type is null)
 				return string.Empty;
@@ -18,9 +18,9 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (string.IsNullOrWhiteSpace (class_name)) {
 				if (metadata is KotlinClass klass) {
 
-				var tp = klass.TypeParameters.FirstOrDefault (t => t.Id == type.TypeParameter);
+					var tp = klass.TypeParameters?.FirstOrDefault (t => t.Id == type.TypeParameter);
 
-					if (tp?.UpperBounds.FirstOrDefault ()?.ClassName != null)
+					if (tp?.UpperBounds?.FirstOrDefault ()?.ClassName != null)
 						return ConvertKotlinClassToJava (tp.UpperBounds.FirstOrDefault ()?.ClassName);
 				}
 				
@@ -30,15 +30,15 @@ namespace Xamarin.Android.Tools.Bytecode
 			var result = ConvertKotlinClassToJava (class_name);
 
 			if (result == "[")
-				result += ConvertKotlinTypeSignature (type.Arguments.FirstOrDefault ()?.Type);
+				result += ConvertKotlinTypeSignature (type.Arguments?.FirstOrDefault ()?.Type);
 
 			return result;
 		}
 
-		public static string ConvertKotlinClassToJava (string className)
+		public static string ConvertKotlinClassToJava (string? className)
 		{
-			if (string.IsNullOrWhiteSpace (className))
-				return className;
+			if (className == null || string.IsNullOrWhiteSpace (className))
+				return string.Empty;
 
 			className = className.Replace ('.', '$');
 
@@ -92,6 +92,16 @@ namespace Xamarin.Android.Tools.Bytecode
 				parameters [parameters.Length - 1].Type.TypeSignature == "Lkotlin/jvm/internal/DefaultConstructorMarker;";
 		}
 
+		internal static List<TResult>? ToList<TSource, TResult> (this IEnumerable<TSource>? self, JvmNameResolver resolver, Func<TSource, JvmNameResolver, TResult?> creator)
+			where TResult: class
+		{
+			if (self == null)
+				return null;
+			return self.Select (v => creator (v, resolver)!)
+				.Where (v => v != null)
+				.ToList ();
+		}
+
 		public static bool IsPubliclyVisible (this ClassAccessFlags flags) => flags.HasFlag (ClassAccessFlags.Public) || flags.HasFlag (ClassAccessFlags.Protected);
 
 		public static bool IsPubliclyVisible (this KotlinClassVisibility flags) => flags == KotlinClassVisibility.Public || flags == KotlinClassVisibility.Protected;
@@ -104,7 +114,9 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		public static bool IsUnnamedParameter (this ParameterInfo parameter) => parameter.Name.Length > 1 && parameter.Name.StartsWith ("p", StringComparison.Ordinal) && int.TryParse (parameter.Name.Substring (1), out var _);
 
-		public static bool IsUnnamedParameter (this KotlinValueParameter parameter) => parameter.Name.Length > 1 && parameter.Name.StartsWith ("p", StringComparison.Ordinal) && int.TryParse (parameter.Name.Substring (1), out var _);
+		public static bool IsUnnamedParameter (this KotlinValueParameter parameter) => parameter.Name?.Length > 1 &&
+			parameter.Name.StartsWith ("p", StringComparison.Ordinal) &&
+			int.TryParse (parameter.Name.Substring (1), out var _);
 
 		static Dictionary<string, string> type_map = new Dictionary<string, string> {
 			{ "kotlin/Int", "I" },

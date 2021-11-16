@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -32,7 +33,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  ClassFile           DeclaringType   {get; private set;}
 		public  MethodAccessFlags   AccessFlags     {get; set;}
 		public  AttributeCollection Attributes      {get; private set;}
-		public  string              KotlinReturnType {get; set;}
+		public  string?             KotlinReturnType {get; set;}
 
 		public MethodInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
 		{
@@ -67,9 +68,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				int endParams;
 				GetParametersFromDescriptor (out endParams);
 				endParams++;
-				var r = new TypeInfo {
-					BinaryName = Descriptor.Substring (endParams),
-				};
+				var r = new TypeInfo (Descriptor.Substring (endParams));
 				r.TypeSignature = r.BinaryName;
 				var s = GetSignature ();
 				if (s != null)
@@ -80,7 +79,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		bool    IsEnumCtor  => IsConstructor && DeclaringType.IsEnum;
 
-		ParameterInfo[] parameters = null;
+		ParameterInfo[]? parameters = null;
 
 		public ParameterInfo[] GetParameters ()
 		{
@@ -148,12 +147,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 					continue;
 				}
 
-				var p       = new ParameterInfo {
-					Position    = c,
-					Name        = "p" + (c++),
-				};
-				p.Type.BinaryName       = type;
-				p.Type.TypeSignature    = type;
+				var p       = new ParameterInfo ("p" + c, type, type, c);
+				c++;
 				ps.Add (p);
 			}
 			endParams = index;
@@ -182,12 +177,12 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
-		LocalVariableTableAttribute GetLocalVariables ()
+		LocalVariableTableAttribute? GetLocalVariables ()
 		{
 			var code    = Attributes.Get<CodeAttribute> ();
 			if (code == null)
 				return null;
-			var locals = (LocalVariableTableAttribute) code.Attributes.FirstOrDefault (a => a.Name == "LocalVariableTable");
+			var locals = (LocalVariableTableAttribute?) code.Attributes.FirstOrDefault (a => a.Name == "LocalVariableTable");
 			return locals;
 		}
 
@@ -209,6 +204,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (parametersEnd == 0 ||
 					!IsConstructor ||
 					!DeclaringType.TryGetEnclosingMethodInfo (out var declaringClass, out var declaringMethodName, out var declaringMethodDescriptor) ||
+					declaringMethodDescriptor == null ||
 					string.IsNullOrEmpty (declaringMethodDescriptor))
 				return parametersEnd;
 
@@ -284,9 +280,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return throws;
 		}
 
-		public MethodTypeSignature GetSignature ()
+		public MethodTypeSignature? GetSignature ()
 		{
-			var signature = (SignatureAttribute) Attributes.SingleOrDefault (a => a.Name == "Signature");
+			var signature = (SignatureAttribute?) Attributes.SingleOrDefault (a => a.Name == "Signature");
 			return signature != null
 				? new MethodTypeSignature (signature.Value)
 				: null;
@@ -294,7 +290,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		void UpdateParametersFromMethodParametersAttribute (ParameterInfo[] parameters)
 		{
-			var methodParams = (MethodParametersAttribute) Attributes.SingleOrDefault (a => a.Name == AttributeInfo.MethodParameters);
+			var methodParams = (MethodParametersAttribute?) Attributes.SingleOrDefault (a => a.Name == AttributeInfo.MethodParameters);
 			if (methodParams == null)
 				return;
 
@@ -314,7 +310,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				var p = pinfo [i + startIndex];
 
 				parameters [i].AccessFlags = p.AccessFlags;
-				if (p != null) {
+				if (p.Name != null) {
 					parameters [i].Name = p.Name;
 				}
 			}
@@ -331,9 +327,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		// FieldTypeSignature, as extracted from the Signature attribute, which contains
 		// generic type information.
-		public  string  TypeSignature;
+		public  string? TypeSignature;
 
-		public TypeInfo (string binaryName = null, string typeSignature = null)
+		public TypeInfo (string binaryName, string? typeSignature = null)
 		{
 			BinaryName      = binaryName;
 			TypeSignature   = typeSignature;
@@ -344,7 +340,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return (BinaryName ?? "").GetHashCode () ^ (TypeSignature ?? "").GetHashCode ();
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			var o = obj as TypeInfo;
 			if (o == null)
@@ -352,7 +348,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return Equals (o);
 		}
 
-		public bool Equals (TypeInfo other)
+		public bool Equals (TypeInfo? other)
 		{
 			if (other == null)
 				return false;
@@ -374,26 +370,25 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public  string      Name;
 		public  int         Position;
-		public  TypeInfo    Type    = new TypeInfo ();
-		public  string      KotlinType;
+		public  TypeInfo    Type;
+		public  string?     KotlinType;
 
 		public  MethodParameterAccessFlags      AccessFlags;
 
-		public ParameterInfo (string name = null, string binaryName = null, string typeSignature = null, int position = 0)
+		public ParameterInfo (string name, string binaryName, string? typeSignature = null, int position = 0)
 		{
 			Name                = name;
-			Type.BinaryName     = binaryName;
-			Type.TypeSignature  = typeSignature;
 			Position            = position;
+			Type                = new TypeInfo (binaryName, typeSignature);
 		}
 
 		public override int GetHashCode ()
 		{
 			return (Name ?? "").GetHashCode () ^ Position.GetHashCode () ^
-				(Type ?? new TypeInfo ()).GetHashCode ();
+				(Type ?? new TypeInfo ("")).GetHashCode ();
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			var o = obj as ParameterInfo;
 			if (o == null)
@@ -401,7 +396,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return Equals (o);
 		}
 
-		public bool Equals (ParameterInfo other)
+		public bool Equals (ParameterInfo? other)
 		{
 			if (other == null)
 				return false;

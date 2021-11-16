@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
@@ -23,7 +24,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public Methods              Methods;
 		public AttributeCollection  Attributes;
 
-		ClassSignature              signature;
+		ClassSignature?             signature;
 
 
 		public ClassFile (Stream stream)
@@ -100,14 +101,17 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public string FullJniName => "L" + ThisClass.Name.Value + ";";
 
-		public string SourceFileName {
+		public string? SourceFileName {
 			get {
 				var sourceFile  = Attributes.Get<SourceFileAttribute> ();
 				return sourceFile == null ? null : sourceFile.FileName;
 			}
 		}
 
-		public bool TryGetEnclosingMethodInfo (out string declaringClass, out string declaringMethod, out string declaringDescriptor)
+		public bool TryGetEnclosingMethodInfo (
+				[NotNullWhen (true)] out string? declaringClass,
+				out string? declaringMethod,
+				out string? declaringDescriptor)
 		{
 			declaringClass = declaringMethod = declaringDescriptor = null;
 
@@ -122,7 +126,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return true;
 		}
 
-		public ClassSignature GetSignature ()
+		public ClassSignature? GetSignature ()
 		{
 			if (this.signature != null)
 				return this.signature;
@@ -161,7 +165,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
-		public InnerClassInfo InnerClass {
+		public InnerClassInfo? InnerClass {
 			get {
 				return InnerClasses.SingleOrDefault (c => c.InnerClass == ThisClass);
 			}
@@ -189,7 +193,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			get {return (AccessFlags & ClassAccessFlags.Enum) != 0;}
 		}
 
-		public override string ToString () => ThisClass?.Name.Value;
+		public override string? ToString () => ThisClass?.Name.Value;
 	}
 
 	[Flags]
