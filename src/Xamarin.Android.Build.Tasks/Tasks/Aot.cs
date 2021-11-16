@@ -32,9 +32,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "AOT";
 
-		[Required]
-		public ITaskItem[] ResolvedAssemblies { get; set; }
-
 		// Which ABIs to include native libs for
 		[Required]
 		public string [] SupportedAbis { get; set; }
@@ -145,6 +142,17 @@ namespace Xamarin.Android.Tasks
 					aotOptions.Insert (0, $"outfile={outputFile}");
 					aotOptions.Insert (0, $"llvm-path={SdkBinDirectory}");
 					aotOptions.Insert (0, $"temp-path={tempDir}");
+					if (Profiles != null && Profiles.Length > 0) {
+						if (Path.GetFileNameWithoutExtension (assembly.ItemSpec) == TargetName) {
+							LogDebugMessage ($"Not using profile(s) for main assembly: {assembly.ItemSpec}");
+						} else {
+							aotOptions.Add ("profile-only");
+							foreach (var p in Profiles) {
+								var fp = Path.GetFullPath (p.ItemSpec);
+								aotOptions.Add ($"profile={fp}");
+							}
+						}
+					}
 
 					// we need to quote the entire --aot arguments here to make sure it is parsed
 					// on windows as one argument. Otherwise it will be split up into multiple

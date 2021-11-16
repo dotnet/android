@@ -30,7 +30,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-arm64" />
   </ImportGroup>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.GetAotArguments" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetAotAssemblies" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Target Name="_AndroidAotInputs">
     <ItemGroup>
@@ -43,7 +43,10 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
       DependsOnTargets="_AndroidAotInputs"
       Inputs="@(_AndroidAotInputs)"
       Outputs="$(_AndroidStampDirectory)_AndroidAot.stamp">
-    <GetAotArguments
+    <ItemGroup>
+      <AndroidAotProfile Include="$(MSBuildThisFileDirectory)dotnet.aotprofile" Condition=" '$(AndroidEnableProfiledAot)' == 'true' and '$(AndroidUseDefaultAotProfile)' != 'false' " />
+    </ItemGroup>
+    <GetAotAssemblies
         AndroidAotMode="$(AndroidAotMode)"
         AndroidNdkDirectory="$(_AndroidNdkDirectory)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
@@ -51,31 +54,23 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         MinimumSupportedApiLevel="$(AndroidMinimumSupportedApiLevel)"
         AndroidSequencePointsMode="$(_SequencePointsMode)"
         AotAdditionalArguments="$(AndroidAotAdditionalArguments)"
+        TargetName="$(TargetName)"
+        ResolvedAssemblies="@(_AndroidAotInputs)"
         AotOutputDirectory="$(_AndroidAotBinDirectory)"
         RuntimeIdentifier="$(RuntimeIdentifier)"
         EnableLLVM="$(EnableLLVM)"
         UsingAndroidNETSdk="true"
-        Profiles="@(_AotProfiles)">
-      <Output PropertyName="_AotArguments" TaskParameter="Arguments" />
-      <Output PropertyName="_AotOutputDirectory" TaskParameter="OutputDirectory" />
-    </GetAotArguments>
+        Profiles="@(AndroidAotProfile)">
+      <Output ItemName="_MonoAOTAssemblies" TaskParameter="ResolvedAssemblies" />
+    </GetAotAssemblies>
     <PropertyGroup>
       <_MonoAOTCompilerPath>@(MonoAotCrossCompiler->WithMetadataValue('RuntimeIdentifier', '$(RuntimeIdentifier)'))</_MonoAOTCompilerPath>
       <_LLVMPath Condition=" '$(EnableLLVM)' == 'true' ">$([System.IO.Path]::GetDirectoryName ('$(_MonoAOTCompilerPath)'))</_LLVMPath>
     </PropertyGroup>
-    <ItemGroup>
-      <_MonoAOTAssemblies
-          Include="@(_AndroidAotInputs->'%(FullPath)')"
-          TempDirectory="$([MSBuild]::EnsureTrailingSlash($(_AotOutputDirectory)))%(FileName)"
-          AotArguments="$(_AotArguments),temp-path=$([System.IO.Path]::GetFullPath(%(_MonoAOTAssemblies.TempDirectory)))"
-      />
-      <AndroidAotProfile Include="$(MSBuildThisFileDirectory)dotnet.aotprofile" Condition=" '$(AndroidEnableProfiledAot)' == 'true' and '$(AndroidUseDefaultAotProfile)' != 'false' " />
-    </ItemGroup>
-    <MakeDir Directories="$(IntermediateOutputPath)aot\;@(_MonoAOTAssemblies->'%(TempDirectory)')" />
+    <MakeDir Directories="$(IntermediateOutputPath)aot\" />
     <MonoAOTCompiler
-        Assemblies="@(_MonoAOTAssemblies)"
+        Assemblies="@(_MonoAOTAssemblies->'%(FullPath)')"
         CompilerBinaryPath="$(_MonoAOTCompilerPath)"
-        AotProfilePath="@(AndroidAotProfile->'%(FullPath)')"
         DisableParallelAot="$(_DisableParallelAot)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         LibraryFormat="So"

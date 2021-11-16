@@ -245,7 +245,7 @@
       "Size": 13656
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
-      "Size": 10648
+      "Size": 260040
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.Android.dll.so": {
       "Size": 1333820
@@ -389,7 +389,7 @@
       "Size": 21520
     },
     "lib/x86/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
-      "Size": 14488
+      "Size": 178024
     },
     "lib/x86/libaot-Xamarin.Forms.Platform.Android.dll.so": {
       "Size": 1182700
@@ -2243,5 +2243,5 @@
       "Size": 347268
     }
   },
-  "PackageSize": 17233092
+  "PackageSize": 17417412
 }
