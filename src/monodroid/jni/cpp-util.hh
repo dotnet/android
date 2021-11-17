@@ -5,6 +5,7 @@
 #include <cstdarg>
 #include <cstdlib>
 #include <memory>
+#include <type_traits>
 
 #include <semaphore.h>
 
@@ -123,5 +124,50 @@ namespace xamarin::android
 		return ret;
 	};
 
+	template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
+	constexpr TEnum operator & (TEnum l, TEnum r) noexcept
+	{
+		using etype = std::underlying_type_t<TEnum>;
+		return static_cast<TEnum>(static_cast<etype>(l) & static_cast<etype>(r));
+	}
+
+	template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
+	constexpr TEnum& operator &= (TEnum& l, TEnum r) noexcept
+	{
+		return l = (l & r);
+	}
+
+	template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
+	constexpr TEnum operator | (TEnum l, TEnum r) noexcept
+	{
+		using etype = std::underlying_type_t<TEnum>;
+		return static_cast<TEnum>(static_cast<etype>(l) | static_cast<etype>(r));
+	}
+
+	template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
+	constexpr TEnum& operator |= (TEnum& l, TEnum r) noexcept
+	{
+		return l = (l | r);
+	}
+
+	template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
+	constexpr TEnum operator ~ (TEnum r) noexcept
+	{
+		using etype = std::underlying_type_t<TEnum>;
+		return static_cast<TEnum> (~static_cast<etype>(r));
+	}
+
+	template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
+	constexpr TEnum operator ^ (TEnum l, TEnum r) noexcept
+	{
+		using etype = std::underlying_type_t<TEnum>;
+		return static_cast<TEnum>(static_cast<etype>(l) ^ static_cast<etype>(r));
+	}
+
+	template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
+	constexpr TEnum& operator ^= (TEnum& l, TEnum r) noexcept
+	{
+		return l = (l ^ r);
+	}
 }
 #endif // !def __CPP_UTIL_HH

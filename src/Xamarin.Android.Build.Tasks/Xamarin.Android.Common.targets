@@ -1566,6 +1566,7 @@ because xbuild doesn't support framework reference assemblies.
     _PrepareAssemblies;
     _PrepareEnvironmentAssemblySources;
     _GenerateEnvironmentFiles;
+    _IncludeNativeSystemLibraries;
   </_GeneratePackageManagerJavaDependsOn>
 </PropertyGroup>
 
@@ -1578,6 +1579,7 @@ because xbuild doesn't support framework reference assemblies.
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
     SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
+    MonoComponents="@(_MonoComponent)"
     MainAssembly="$(TargetPath)"
     OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
     EnvironmentOutputDirectory="$(IntermediateOutputPath)android"

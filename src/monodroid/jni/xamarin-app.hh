@@ -189,6 +189,14 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 	AssemblyStoreAssemblyDescriptor *descriptor;
 };
 
+enum class MonoComponent : uint32_t
+{
+	None      = 0x00,
+	Debugger  = 0x01,
+	HotReload = 0x02,
+	Tracing   = 0x04,
+};
+
 struct ApplicationConfig
 {
 	bool uses_mono_llvm;
@@ -207,6 +215,7 @@ struct ApplicationConfig
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_assembly_store_files;
+	MonoComponent mono_components_mask;
 	const char *android_package_name;
 };
 

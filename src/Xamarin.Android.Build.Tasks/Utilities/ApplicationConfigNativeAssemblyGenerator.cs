@@ -6,6 +6,16 @@ using Java.Interop.Tools.TypeNameMappings;
 
 namespace Xamarin.Android.Tasks
 {
+	// Must match the MonoComponent enum in src/monodroid/jni/xamarin-app.hh
+	[Flags]
+	enum MonoComponent
+	{
+		None      = 0x00,
+		Debugger  = 0x01,
+		HotReload = 0x02,
+		Tracing   = 0x04,
+	}
+
 	class ApplicationConfigNativeAssemblyGenerator : NativeAssemblyGenerator
 	{
 		SortedDictionary <string, string> environmentVariables;
@@ -28,6 +38,7 @@ namespace Xamarin.Android.Tasks
 		public int NumberOfAssembliesInApk { get; set; }
 		public int NumberOfAssemblyStoresInApks { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
+		public MonoComponent MonoComponents { get; set; }
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
@@ -102,6 +113,9 @@ namespace Xamarin.Android.Tasks
 
 				WriteCommentLine (output, "number_of_assembly_store_files");
 				size += WriteData (output, NumberOfAssemblyStoresInApks);
+
+				WriteCommentLine (output, "mono_components_mask");
+				size += WriteData (output, (uint)MonoComponents);
 
 				WriteCommentLine (output, "android_package_name");
 				size += WritePointer (output, MakeLocalLabel (stringLabel));

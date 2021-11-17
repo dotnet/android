@@ -189,7 +189,7 @@ force_inline void
 EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
 {
 	md_mmap_info map_info = md_mmap_apk_file (file.apk_fd, file.data_offset, file.data_size, file.name);
-	if (monodroidRuntime.is_startup_in_progress ()) {
+	if (MonodroidRuntime::is_startup_in_progress ()) {
 		file.data = static_cast<uint8_t*>(map_info.area);
 	} else {
 		uint8_t *expected_null = nullptr;

@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResolvedUserAssemblies { get; set; }
 
+		public ITaskItem[] MonoComponents { get; set; }
+
 		public ITaskItem[] SatelliteAssemblies { get; set; }
 
 		public bool UseAssemblyStore { get; set; }
@@ -332,6 +334,19 @@ namespace Xamarin.Android.Tasks
 				assemblyNameWidth += abiNameLength + 2; // room for '/' and the terminating NUL
 			}
 
+			MonoComponent monoComponents = MonoComponent.None;
+			if (MonoComponents != null && MonoComponents.Length > 0) {
+				foreach (ITaskItem item in MonoComponents) {
+					if (String.Compare ("diagnostics_tracing", item.ItemSpec, StringComparison.OrdinalIgnoreCase) == 0) {
+						monoComponents |= MonoComponent.Tracing;
+					} else if (String.Compare ("hot_reload", item.ItemSpec, StringComparison.OrdinalIgnoreCase) == 0) {
+						monoComponents |= MonoComponent.HotReload;
+					} else if (String.Compare ("debugger", item.ItemSpec, StringComparison.OrdinalIgnoreCase) == 0) {
+						monoComponents |= MonoComponent.Debugger;
+					}
+				}
+			}
+
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 
@@ -359,6 +374,7 @@ namespace Xamarin.Android.Tasks
 									  // and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
 									  // runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
 									  // and in the same order.
+					MonoComponents = monoComponents,
 					HaveAssemblyStore = UseAssemblyStore,
 				};
 

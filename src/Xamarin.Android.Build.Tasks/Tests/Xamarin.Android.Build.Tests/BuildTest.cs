@@ -23,6 +23,66 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest : BaseTest
 	{
+		static object [] MonoComponentMaskChecks () => new object [] {
+			new object[] {
+				true,  // enableProfiler
+				true,  // useInterpreter
+				true,  // debugBuild
+				0x07U, // expectedMask
+			},
+
+			new object[] {
+				true,  // enableProfiler
+				false, // useInterpreter
+				true,  // debugBuild
+				0x05U, // expectedMask
+			},
+
+			new object[] {
+				false, // enableProfiler
+				false, // useInterpreter
+				true,  // debugBuild
+				0x01U, // expectedMask
+			},
+
+			new object[] {
+				true,  // enableProfiler
+				false, // useInterpreter
+				false, // debugBuild
+				0x04U, // expectedMask
+			},
+		};
+
+		[Test]
+		[TestCaseSource (nameof (MonoComponentMaskChecks))]
+		public void CheckMonoComponentsMask (bool enableProfiler, bool useInterpreter, bool debugBuild, uint expectedMask)
+		{
+			if (!Builder.UseDotNet) {
+				Assert.Ignore ("Valid only for NET6+ builds");
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = !debugBuild,
+			};
+
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidEnableProfiler", enableProfiler.ToString ());
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseInterpreter", useInterpreter.ToString ());
+
+			var abis = new [] { "armeabi-v7a", "x86" };
+			proj.SetAndroidSupportedAbis (abis);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+
+				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
+				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+				Assert.IsTrue (app_config.mono_components_mask == expectedMask, "Expected Mono Components mask 0x{expectedMask:x}, got 0x{app_config.mono_components_mask:x}");
+			}
+		}
+
 		[Test]
 		[Category ("SmokeTests")]
 		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms)
