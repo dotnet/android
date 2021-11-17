@@ -228,6 +228,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 		}
 
 		if (param.starts_with ("timing=bare")) {
+			log_categories |= LOG_TIMING;
 			log_timing_categories |= LOG_TIMING_BARE;
 			continue;
 		}
