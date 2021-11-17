@@ -1958,7 +1958,7 @@ MonodroidRuntime::get_my_location (bool remove_file_name)
 
 #if defined (ANDROID)
 force_inline void
-MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask, bool have_log_assembly, bool have_log_gc)
+MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_mask, bool have_log_assembly, bool have_log_gc)
 {
 	constexpr char   MASK_ASM[] = "asm";
 	constexpr size_t MASK_ASM_LEN = sizeof(MASK_ASM) - 1;
@@ -1969,7 +1969,7 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask, bool hav
 	constexpr char   COMMA[] = ",";
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> log_mask;
-	if (mono_log_mask == nullptr || *mono_log_mask == '\0') {
+	if (mono_log_mask == nullptr || *mono_log_mask.get () == '\0') {
 		if (have_log_assembly) {
 			log_mask.append (MASK_ASM);
 			log_mask.append (COMMA);
@@ -1989,8 +1989,7 @@ MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask, bool hav
 	}
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> input_log_mask;
-	input_log_mask.assign_c (mono_log_mask);
-	delete[] mono_log_mask;
+	input_log_mask.assign_c (mono_log_mask.get ());
 	input_log_mask.replace (':', ',');
 
 	if (!have_log_assembly && !have_log_gc)  {
@@ -2050,10 +2049,12 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
                                                           jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {
-	char *mono_log_mask = nullptr;
+	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level = nullptr;
 
-	init_logging_categories (mono_log_mask, mono_log_level);
+	init_logging_categories (mono_log_mask_raw, mono_log_level);
+
+	std::unique_ptr<char[]> mono_log_mask (mono_log_mask_raw);
 
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
