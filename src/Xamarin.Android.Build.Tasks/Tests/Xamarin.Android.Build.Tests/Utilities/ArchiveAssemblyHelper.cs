@@ -164,7 +164,7 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var asm in explorer.Assemblies) {
 				string prefix = storeEntryPrefix;
 
-				if (haveMultipleRids &&!String.IsNullOrEmpty (asm.Store.Arch)) {
+				if (haveMultipleRids && !String.IsNullOrEmpty (asm.Store.Arch)) {
 					string arch = ArchToAbi[asm.Store.Arch];
 					prefix = $"{prefix}{arch}/";
 				}
@@ -187,10 +187,25 @@ namespace Xamarin.Android.Build.Tests
 			return entries;
 		}
 
-		public int GetNumberOfAssemblies (bool forceRefresh = false)
+		public int GetNumberOfAssemblies (bool countAbiAssembliesOnce = true, bool forceRefresh = false)
 		{
 			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh);
-			return contents.Where (x => x.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)).Count ();
+			var dlls = contents.Where (x => x.EndsWith (".dll", StringComparison.OrdinalIgnoreCase));
+
+			if (!countAbiAssembliesOnce) {
+				return dlls.Count ();
+			}
+
+			var cache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			return dlls.Where (x => {
+				string name = Path.GetFileName (x);
+				if (cache.Contains (name)) {
+					return false;
+				}
+
+				cache.Add (name);
+				return true;
+			}).Count ();
 		}
 
 		public bool Exists (string entryPath, bool forceRefresh = false)
