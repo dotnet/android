@@ -413,6 +413,21 @@ namespace xamarin::android::internal
 			buffer.get ()[idx] = NUL;
 		}
 
+		force_inline string_base& replace (const TChar c1, const TChar c2) noexcept
+		{
+			if (empty ()) {
+				return *this;
+			}
+
+			for (size_t i = 0; i < length (); i++) {
+				if (buffer.get ()[i] == c1) {
+					buffer.get ()[i] = c2;
+				}
+			}
+
+			return *this;
+		}
+
 		force_inline string_base& append (const TChar* s, size_t length) noexcept
 		{
 			if (s == nullptr || length == 0)

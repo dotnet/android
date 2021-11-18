@@ -477,7 +477,13 @@ $ adb shell setprop debug.mono.log mono_log_level=debug,mono_log_mask=aot
 
 You could use `mono_log_mask=all` to enable all logging. See the [Mono
 documentation][mono-logging] for more information about
-`MONO_LOG_LEVEL` and `MONO_LOG_MASK`.
+`MONO_LOG_LEVEL` and `MONO_LOG_MASK`.  You can specify more than one
+category as the value of `mono_log-mask`, in which case individual
+categories need to be separated with `:`, for instance:
+
+```bash
+$ adb shell setprop debug.mono.log mono_log_level=debug,mono_log_mask=gc:asm:dll
+```
 
 There is further logging produced by `libmonodroid.so` you can enable with:
 

@@ -11,7 +11,6 @@ const char Debug::DEBUG_MONO_ENV_PROPERTY[]          = "debug.mono.env";
 const char Debug::DEBUG_MONO_EXTRA_PROPERTY[]        = "debug.mono.extra";
 const char Debug::DEBUG_MONO_GC_PROPERTY[]           = "debug.mono.gc";
 const char Debug::DEBUG_MONO_GDB_PROPERTY[]          = "debug.mono.gdb";
-const char Debug::DEBUG_MONO_GDBPORT_PROPERTY[]      = "debug.mono.gdbport";
 const char Debug::DEBUG_MONO_LOG_PROPERTY[]          = "debug.mono.log";
 const char Debug::DEBUG_MONO_MAX_GREFC[]             = "debug.mono.max_grefc";
 const char Debug::DEBUG_MONO_PROFILE_PROPERTY[]      = "debug.mono.profile";
