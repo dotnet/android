@@ -29,7 +29,6 @@
     <!-- The min API level supported by Microsoft.Android.Sdk, should refactor/remove when this value is the same as $(AndroidFirstApiLevel) -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <AndroidFirstPlatformId Condition="'$(AndroidFirstPlatformId)' == ''">$(AndroidFirstApiLevel)</AndroidFirstPlatformId>
-    <_IsRunningNuGetRestore Condition="$(RestoreTaskAssemblyFile.EndsWith('NuGet.exe', StringComparison.InvariantCultureIgnoreCase))">True</_IsRunningNuGetRestore>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">31</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
@@ -37,8 +36,8 @@
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
-    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' != 'True' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
-    <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' == 'True' ">True</AndroidUseLatestPlatformSdk>
+    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
+    <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' ">True</AndroidUseLatestPlatformSdk>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
