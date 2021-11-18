@@ -2050,11 +2050,12 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
                                                           jboolean haveSplitApks)
 {
 	char *mono_log_mask_raw = nullptr;
-	char *mono_log_level = nullptr;
+	char *mono_log_level_raw = nullptr;
 
-	init_logging_categories (mono_log_mask_raw, mono_log_level);
+	init_logging_categories (mono_log_mask_raw, mono_log_level_raw);
 
 	std::unique_ptr<char[]> mono_log_mask (mono_log_mask_raw);
+	std::unique_ptr<char[]> mono_log_level (mono_log_level_raw);
 
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
@@ -2122,11 +2123,10 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	bool have_log_assembly = (log_categories & LOG_ASSEMBLY) != 0;
 	bool have_log_gc = (log_categories & LOG_GC) != 0;
 
-	if (mono_log_level == nullptr || *mono_log_level == '\0') {
+	if (mono_log_level == nullptr || *mono_log_level.get () == '\0') {
 		mono_trace_set_level_string ((have_log_assembly || have_log_gc) ? "info" : "error");
 	} else {
-		// `mono_log_level` cannot be freed here, Mono VM stores it internally
-		mono_trace_set_level_string (mono_log_level);
+		mono_trace_set_level_string (mono_log_level.get ());
 	}
 
 	setup_mono_tracing (mono_log_mask, have_log_assembly, have_log_gc);
