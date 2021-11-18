@@ -15,9 +15,7 @@ fi
 
 if [ -z "${PACKAGES_PATH}" ]; then
 	NUGET_PATH="dotnet nuget"
-	if [ -f "${NUGET_PATH}" ]; then
-		PACKAGES_PATH="$(get_path $(${NUGET_PATH} locals --list global-packages))"
-	fi
+	PACKAGES_PATH="$(get_path $(${NUGET_PATH} locals --list global-packages))"
 fi
 
 if [ -z "${PACKAGES_PATH}" ]; then
