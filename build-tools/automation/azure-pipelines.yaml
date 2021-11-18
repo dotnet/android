@@ -77,6 +77,8 @@ stages:
     - template: security\policheck\v1.yml@yaml
       parameters:
         exclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
+        pE: 1|2|3|4
+        rulesDBPath: $(System.DefaultWorkingDirectory)\build-tools\automation\policheck-rules-db.mdb
 
     - task: securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@3
       displayName: Run AntiMalware (Defender) Scan
