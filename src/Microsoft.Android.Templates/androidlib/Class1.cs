@@ -1,6 +1,5 @@
-namespace AndroidLib1
+namespace AndroidLib1;
+
+public class Class1
 {
-    public class Class1
-    {
-    }
 }
