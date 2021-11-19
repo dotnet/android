@@ -68,7 +68,13 @@ namespace Xamarin.Android.Tasks
 				os = e.Data.Trim ();
 			};
 			DataReceivedEventHandler error = (o, e) => {};
-			int r = RunProcess ("uname", "-s", output, error);
+
+			string uname = "/usr/bin/uname";
+			if (!File.Exists (uname)) {
+				uname = "uname";
+			}
+
+			int r = RunProcess (uname, "-s", output, error);
 			if (r == 0)
 				return os;
 			return null;
