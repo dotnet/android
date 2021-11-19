@@ -28,7 +28,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		public void CheckAssemblyCounts ([Values (false, true)] bool isRelease)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
 			};
@@ -39,6 +39,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
 			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
 			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
+			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
 
 			var abis = new [] { "armeabi-v7a", "x86" };
 			proj.SetAndroidSupportedAbis (abis);
