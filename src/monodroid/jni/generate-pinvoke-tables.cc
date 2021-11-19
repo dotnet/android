@@ -824,14 +824,14 @@ int main (int argc, char **argv)
 	print (output, "64-bit internal p/invoke table", "internal_pinvokes", internal_pinvokes64);
 	print (output, "64-bit DotNet p/invoke table", "dotnet_pinvokes", dotnet_pinvokes64);
 	output << std::endl;
-	write_library_name_hashes (xxhash64::hash, output);
+	write_library_name_hashes<uint64_t> (xxhash64::hash, output);
 
 	output << "#else" << std::endl;
 
 	print (output, "32-bit internal p/invoke table", "internal_pinvokes", internal_pinvokes32);
 	print (output, "32-bit DotNet p/invoke table", "dotnet_pinvokes", dotnet_pinvokes32);
 	output << std::endl;
-	write_library_name_hashes (xxhash32::hash, output);
+	write_library_name_hashes<uint32_t> (xxhash32::hash, output);
 
 	output << "#endif" << std::endl << std::endl;
 
