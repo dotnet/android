@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		protected override string ToolName => Path.GetFileName (ApkDiffTool);
 		protected override string GenerateFullPathToTool () => ApkDiffTool;
 
-		const int ApkSizeThreshold = 50*1024;
+		const int ApkSizeThreshold = 48*1024;
 		const int AssemblySizeThreshold = 50*1024;
 
 		StringBuilder logCopy = new StringBuilder ();
