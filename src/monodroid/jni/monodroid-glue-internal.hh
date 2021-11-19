@@ -136,6 +136,15 @@ namespace xamarin::android::internal
 		true;
 #endif
 
+		static constexpr char mono_component_debugger_name[]            = "libmono-component-debugger.so";
+		static constexpr hash_t mono_component_debugger_hash            = xxhash::hash (mono_component_debugger_name);
+
+		static constexpr char mono_component_hot_reload_name[]          = "libmono-component-hot_reload.so";
+		static constexpr hash_t mono_component_hot_reload_hash          = xxhash::hash (mono_component_hot_reload_name);
+
+		static constexpr char mono_component_diagnostics_tracing_name[] = "libmono-component-diagnostics_tracing.so";
+		static constexpr hash_t mono_component_diagnostics_tracing_hash = xxhash::hash (mono_component_diagnostics_tracing_name);
+
 #if !defined (NET6)
 #define MAKE_API_DSO_NAME(_ext_) "libxa-internal-api." # _ext_
 #if defined (WINDOWS)
@@ -164,7 +173,7 @@ namespace xamarin::android::internal
 #endif
 		jint Java_JNI_OnLoad (JavaVM *vm, void *reserved);
 
-		bool is_startup_in_progress () const noexcept
+		static bool is_startup_in_progress () noexcept
 		{
 			return startup_in_progress;
 		}
@@ -360,7 +369,7 @@ namespace xamarin::android::internal
 		 * able to switch our different contexts from different threads.
 		 */
 		int                 current_context_id = -1;
-		bool                startup_in_progress = true;
+		static bool         startup_in_progress;
 
 #if defined (NET6)
 		MonoAssemblyLoadContextGCHandle default_alc = nullptr;

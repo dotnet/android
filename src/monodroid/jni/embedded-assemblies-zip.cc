@@ -297,6 +297,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		.prefix              = get_assemblies_prefix (),
 		.prefix_len          = get_assemblies_prefix_length (),
 		.buf_offset          = 0,
+		.compression_method  = 0,
 		.local_header_offset = 0,
 		.data_offset         = 0,
 		.file_size           = 0,

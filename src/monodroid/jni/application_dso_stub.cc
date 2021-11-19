@@ -55,6 +55,7 @@ ApplicationConfig application_config = {
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
 	.number_of_assembly_store_files = 2,
+	.mono_components_mask = MonoComponent::None,
 	.android_package_name = "com.xamarin.test",
 };
 

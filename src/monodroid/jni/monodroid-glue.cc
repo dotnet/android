@@ -117,6 +117,8 @@ MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
 
 #endif // def NET6
 
+bool MonodroidRuntime::startup_in_progress = true;
+
 #ifdef WINDOWS
 static const char* get_xamarin_android_msbuild_path (void);
 const char *BasicAndroidSystem::SYSTEM_LIB_PATH = get_xamarin_android_msbuild_path();
@@ -1302,6 +1304,39 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 force_inline void*
 MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err)
 {
+	if (startup_in_progress) {
+		hash_t name_hash = xxhash::hash (name, strlen (name));
+
+		auto ignore_component = [&](const char *label, MonoComponent component) -> bool {
+			if ((application_config.mono_components_mask & component) != component) {
+				log_info (LOG_ASSEMBLY, "Mono '%s' component requested but not packaged, ignoring", label);
+				return true;
+			}
+
+			return false;
+		};
+
+		switch (name_hash) {
+			case mono_component_debugger_hash:
+				if (ignore_component ("Debugger", MonoComponent::Debugger)) {
+					return nullptr;
+				}
+				break;
+
+			case mono_component_hot_reload_hash:
+				if (ignore_component ("Hot Reload", MonoComponent::HotReload)) {
+					return nullptr;
+				}
+				break;
+
+			case mono_component_diagnostics_tracing_hash:
+				if (ignore_component ("Diagnostics Tracing", MonoComponent::Tracing)) {
+					return nullptr;
+				}
+				break;
+		}
+	}
+
 	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	void *h = androidSystem.load_dso_from_any_directories (name, dl_flags);
 	if (h != nullptr) {

@@ -58,6 +58,12 @@ namespace xamarin::android
 			);
 		}
 
+		template<size_t Size, uint32_t Seed = 0>
+		force_inline static constexpr uint32_t hash (const char (&input)[Size]) noexcept
+		{
+			return hash<Seed> (input, Size - 1);
+		}
+
 	private:
 		// 32-bit rotate left.
 		template<int Bits>
@@ -144,6 +150,12 @@ namespace xamarin::android
 		force_inline static constexpr uint64_t hash (const char *p, size_t len) noexcept
 		{
 			return finalize ((len >= 32 ? h32bytes<Seed> (p, len) : Seed + PRIME5) + len, p + (len & ~0x1FU), len & 0x1F);
+		}
+
+		template<size_t Size, uint64_t Seed = 0>
+		force_inline static constexpr uint64_t hash (const char (&input)[Size]) noexcept
+		{
+			return hash<Seed> (input, Size - 1);
 		}
 
 	private:
