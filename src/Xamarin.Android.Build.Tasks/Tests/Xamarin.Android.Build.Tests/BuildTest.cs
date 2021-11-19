@@ -24,10 +24,11 @@ namespace Xamarin.Android.Build.Tests
 	public partial class BuildTest : BaseTest
 	{
 		[Test]
+		[NonParallelizable]
 		[Category ("SmokeTests")]
 		public void CheckAssemblyCounts ([Values (false, true)] bool isRelease)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
 			};
