@@ -845,6 +845,19 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			Assert.IsTrue (builder.Build ("SignAndroidPackage", parameters), $"{proj.ProjectName} should succeed");
 		}
 
+		[Test]
+		public void BenchmarkDotNet ()
+		{
+			var proj = new XASdkProject {
+				PackageReferences = {
+					new Package { Id = "BenchmarkDotNet", Version = "0.13.1" },
+				}
+			};
+			var builder = CreateDotNetBuilder (proj);
+			Assert.IsTrue (builder.Build (), $"{proj.ProjectName} should succeed");
+			builder.AssertHasNoWarnings ();
+		}
+
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
 		{
 			if (string.IsNullOrEmpty (relativeProjectDir)) {
