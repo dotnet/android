@@ -95,12 +95,11 @@ namespace Xamarin.Android.Prepare
 		void CopyExtraTestFiles (string destinationRoot, Context context)
 		{
 			Directory.CreateDirectory (destinationRoot);
-			var filesToCopy = new List<string> ();
 
 			var testConfigDir = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "bin", $"Test{context.Configuration}");
 			if (Directory.Exists (testConfigDir)) {
 				foreach (var fileMatch in testConfigFiles) {
-					filesToCopy.AddRange (Directory.GetFiles (testConfigDir, fileMatch));
+					Utilities.CopyFilesSimple (Directory.GetFiles (testConfigDir, fileMatch), destinationRoot, false);
 				}
 			}
 
