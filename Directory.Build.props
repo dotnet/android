@@ -36,6 +36,7 @@
     <MonoOptionsVersion>6.12.0.148</MonoOptionsVersion>
     <SystemCollectionsImmutableVersion>1.7.1</SystemCollectionsImmutableVersion>
     <XliffTasksVersion>1.0.0-beta.20420.1</XliffTasksVersion>
+    <ELFSharpVersion>2.13.1</ELFSharpVersion>
   </PropertyGroup>
 
   <!-- Properties to help us run managed assemblies on various runtimes.
