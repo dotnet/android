@@ -297,6 +297,10 @@ namespace Xamarin.Android.Tasks
 					return;
 				}
 
+				if (Boolean.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
+					return;
+				}
+
 				string abi = assembly.GetMetadata ("Abi");
 				if (String.IsNullOrEmpty (abi)) {
 					assemblyCount++;

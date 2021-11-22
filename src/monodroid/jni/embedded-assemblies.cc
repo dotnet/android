@@ -349,7 +349,7 @@ EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreH
 {
 #if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 	hash_t entry_hash;
-	const AssemblyStoreHashEntry *ret;
+	const AssemblyStoreHashEntry *ret = nullptr;
 
 	while (entry_count > 0) {
 		ret = entries + (entry_count / 2);
@@ -358,8 +358,7 @@ EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreH
 		} else {
 			entry_hash = ret->hash32;
 		}
-
-		std::strong_ordering result = hash <=> entry_hash;
+		auto result = hash <=> entry_hash;
 
 		if (result < 0) {
 			entry_count /= 2;

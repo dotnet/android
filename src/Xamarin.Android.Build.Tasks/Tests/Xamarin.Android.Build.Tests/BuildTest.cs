@@ -84,6 +84,43 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[NonParallelizable]
+		[Category ("SmokeTests")]
+		public void CheckAssemblyCounts ([Values (false, true)] bool isRelease)
+		{
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+				EmbedAssembliesIntoApk = true,
+			};
+			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompatResources);
+			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
+			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
+			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
+			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
+			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
+
+			var abis = new [] { "armeabi-v7a", "x86" };
+			proj.SetAndroidSupportedAbis (abis);
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+
+				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
+				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+
+				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+
+				Assert.IsTrue (app_config.number_of_assemblies_in_apk == (uint)helper.GetNumberOfAssemblies (), "Assembly count must be equal between ApplicationConfig and the archive contents");
+			}
+		}
+
+		[Test]
 		[Category ("SmokeTests")]
 		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms)
 		{
