@@ -9,9 +9,9 @@ if defined NUGET_PACKAGES (
   goto got_location
 )
 
-set NUGET_PATH=%MYDIR%..\..\.nuget\NuGet.exe
+set NUGET_PATH=dotnet nuget
 if exist "%NUGET_PATH%" (
-  for /f "tokens=1,2" %%a in ('"%NUGET_PATH%" locals -list global-packages') do set PACKAGES_PATH=%%b
+  for /f "tokens=1,2" %%a in ('"%NUGET_PATH%" locals --list global-packages') do set PACKAGES_PATH=%%b
   goto got_location
 )
 

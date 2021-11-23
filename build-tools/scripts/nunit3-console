@@ -14,10 +14,8 @@ if [ -n "${NUGET_PACKAGES}" ]; then
 fi
 
 if [ -z "${PACKAGES_PATH}" ]; then
-	NUGET_PATH="${MYDIR}/../../.nuget/NuGet.exe"
-	if [ -f "${NUGET_PATH}" ]; then
-		PACKAGES_PATH="$(get_path $(mono ${NUGET_PATH} locals -list global-packages))"
-	fi
+	NUGET_PATH="dotnet nuget"
+	PACKAGES_PATH="$(get_path $(${NUGET_PATH} locals --list global-packages))"
 fi
 
 if [ -z "${PACKAGES_PATH}" ]; then

@@ -46,11 +46,12 @@ namespace Xamarin.ProjectTools
 			}
 
 			bool isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
-			string nugetPath = Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "nuget", "NuGet.exe");
 
-			if (File.Exists (nugetPath)) {
-				var psi = new ProcessStartInfo (isWindows ? nugetPath : "mono") {
-					Arguments = $"{(isWindows ? "" : "\"" + nugetPath + "\"")} locals -list global-packages",
+			string dotnet = Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), isWindows ? "dotnet.exe" : "dotnet");
+
+			if (File.Exists (dotnet)) {
+				var psi = new ProcessStartInfo (dotnet) {
+					Arguments = $"nuget locals --list global-packages",
 					CreateNoWindow = true,
 					UseShellExecute = false,
 					WindowStyle = ProcessWindowStyle.Hidden,
@@ -129,7 +130,7 @@ namespace Xamarin.ProjectTools
 					return Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), ".nuget", "packages");
 				}
 			}
-			
+
 			return String.Empty;
 		}
 	}

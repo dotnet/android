@@ -103,10 +103,6 @@
         ToolPath="$(GitToolPath)"
         ToolExe="$(GitToolExe)"
     />
-    <Exec 
-        Condition=" '%(XACaptureBuildTimingProject.Restore)' != '' "
-        Command="$(_TopDir).nuget\NuGet.exe restore &quot;%(XACaptureBuildTimingProject.Restore)&quot;"
-    />
     <MSBuild 
         Condition=" '%(XACaptureBuildTimingProject.Restore)' != '' "
         Projects="%(XACaptureBuildTimingProject.Restore)"

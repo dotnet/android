@@ -62,11 +62,6 @@ namespace Xamarin.Android.Prepare
 				return Path.Combine (packagePath, "7za.exe");
 			}
 
-			if (String.Compare ("nuget", programPath, StringComparison.OrdinalIgnoreCase) == 0) {
-				// NuGet is downloaded at the very beginning, before anything uses it
-				return Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".nuget", "NuGet.exe");
-			}
-
 			if (String.Compare ("msbuild", programPath, StringComparison.OrdinalIgnoreCase) == 0) {
 				return vsInstance.MSBuildPath;
 			}
