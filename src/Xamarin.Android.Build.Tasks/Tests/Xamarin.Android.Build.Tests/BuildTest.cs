@@ -901,12 +901,14 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				} else {
 					app.Packages.Add (KnownPackages.Microsoft_Azure_EventHubs);
 				}
-				Assert.IsFalse (appBuilder.Build (app), "Build should have failed.");
+
+				bool shouldBuild = usePackageReference;
+				Assert.AreEqual (shouldBuild ,appBuilder.Build (app), $"Build should have {(shouldBuild ? "built" : "failed")}.");
 
 				//NOTE: we get a different message when using <PackageReference /> due to automatically getting the Microsoft.Azure.Amqp (and many other) transient dependencies
 				if (usePackageReference) {
-					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Services.AppAuthentication`, referenced by `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Services.AppAuthentication`, or remove the reference to `Microsoft.Azure.EventHubs`."),
-						$"Should recieve '{error}' regarding `Microsoft.Azure.Services.AppAuthentication`!");
+					Assert.IsFalse (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Services.AppAuthentication`, referenced by `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Services.AppAuthentication`, or remove the reference to `Microsoft.Azure.EventHubs`."),
+						$"Should not recieve '{error}' regarding `Microsoft.Azure.Services.AppAuthentication`!");
 				} else {
 					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Amqp`, referenced by `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Amqp`, or remove the reference to `Microsoft.Azure.EventHubs`."),
 						$"Should recieve '{error}' regarding `Microsoft.Azure.Services.Amqp`!");
