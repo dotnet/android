@@ -229,6 +229,10 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				isBridge: element.XGetAttributeAsBool ("bridge")
 			);
 
+			// Yes, constructors in Java can have generic type parameters ¯\_(ツ)_/¯
+			if (element.Element ("typeParameters") is XElement tp)
+				ParseTypeParameters (method.TypeParameters, tp);
+
 			foreach (var child in element.Elements ("exception"))
 				method.Exceptions.Add (ParseException (child));
 
