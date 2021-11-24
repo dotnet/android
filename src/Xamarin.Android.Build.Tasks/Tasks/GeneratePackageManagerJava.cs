@@ -28,6 +28,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResolvedUserAssemblies { get; set; }
 
+		[Required]
+		public ITaskItem[] NativeLibraries { get; set; }
+
 		public ITaskItem[] MonoComponents { get; set; }
 
 		public ITaskItem[] SatelliteAssemblies { get; set; }
@@ -351,6 +354,19 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			var uniqueNativeLibraries = new List<ITaskItem> ();
+			var seenNativeLibraryNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			foreach (ITaskItem item in NativeLibraries) {
+				// We don't care about different ABIs here, just the file name
+				string name = Path.GetFileName (item.ItemSpec);
+				if (seenNativeLibraryNames.Contains (name)) {
+					continue;
+				}
+
+				seenNativeLibraryNames.Add (name);
+				uniqueNativeLibraries.Add (item);
+			}
+
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 
@@ -359,7 +375,7 @@ namespace Xamarin.Android.Tasks
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
 				string asmFilePath = $"{baseAsmFilePath}.s";
 
-				var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, baseAsmFilePath, environmentVariables, systemProperties) {
+				var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, baseAsmFilePath, environmentVariables, systemProperties, Log) {
 					IsBundledApp = IsBundledApplication,
 					UsesMonoAOT = usesMonoAOT,
 					UsesMonoLLVM = EnableLLVM,
@@ -379,6 +395,7 @@ namespace Xamarin.Android.Tasks
 									  // runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
 									  // and in the same order.
 					MonoComponents = monoComponents,
+					NativeLibraries = uniqueNativeLibraries,
 					HaveAssemblyStore = UseAssemblyStore,
 				};
 

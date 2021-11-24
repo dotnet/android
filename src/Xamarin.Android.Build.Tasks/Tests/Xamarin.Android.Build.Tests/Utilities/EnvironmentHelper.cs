@@ -33,11 +33,12 @@ namespace Xamarin.Android.Build.Tests
 			public uint   system_property_count;
 			public uint   number_of_assemblies_in_apk;
 			public uint   bundled_assembly_name_width;
-			public uint   number_of_assembly_blobs;
+			public uint   number_of_assembly_store_files;
+			public uint   number_of_dso_cache_entries;
 			public uint   mono_components_mask;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 18;
+		const uint ApplicationConfigFieldCount = 19;
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -196,17 +197,22 @@ namespace Xamarin.Android.Build.Tests
 						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile, i, field [1]);
 						break;
 
-					case 15: // number_of_assembly_blobs: uint32_t / .word | .long
+					case 15: // number_of_assembly_store_files: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.number_of_assembly_blobs = ConvertFieldToUInt32 ("number_of_assembly_blobs", envFile, i, field [1]);
+						ret.number_of_assembly_store_files = ConvertFieldToUInt32 ("number_of_assembly_store_files", envFile, i, field [1]);
 						break;
 
-					case 16: // mono_components_mask: uint32_t / .word | .long
+					case 16: // number_of_dso_cache_entries: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
+						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile, i, field [1]);
+						break;
+
+					case 17: // mono_components_mask: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.mono_components_mask = ConvertFieldToUInt32 ("mono_components_mask", envFile, i, field [1]);
 						break;
 
-					case 17: // android_package_name: string / [pointer type]
+					case 18: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;

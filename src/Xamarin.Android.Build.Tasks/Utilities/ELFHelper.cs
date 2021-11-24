@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 
 using ELFSharp;
@@ -11,14 +12,22 @@ namespace Xamarin.Android.Tasks
 {
 	static class ELFHelper
 	{
+		static ConcurrentDictionary<string, bool> checkedDSOs = new ConcurrentDictionary<string, bool> (StringComparer.OrdinalIgnoreCase);
+
 		public static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path)
 		{
 			if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
 				return false;
 			}
 
+			if (checkedDSOs.TryGetValue (path, out bool isEmpty)) {
+				return isEmpty;
+			}
+
 			try {
-				return IsEmptyAOTLibrary (log, path, ELFReader.Load (path));
+				isEmpty = IsEmptyAOTLibrary (log, path, ELFReader.Load (path));
+				checkedDSOs.TryAdd (path, isEmpty); // it's possible some other thread already added it, thus we don't care about the return value
+				return isEmpty;
 			} catch (Exception ex) {
 				log.LogWarning ($"Attempt to check whether '{path}' is a valid ELF file failed with exception, ignoring AOT check for the file.");
 				log.LogWarningFromException (ex, showStackTrace: true);

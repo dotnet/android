@@ -55,6 +55,7 @@ ApplicationConfig application_config = {
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
 	.number_of_assembly_store_files = 2,
+	.number_of_dso_cache_entries = 1,
 	.mono_components_mask = MonoComponent::None,
 	.android_package_name = "com.xamarin.test",
 };
@@ -115,5 +116,15 @@ AssemblyStoreRuntimeData assembly_stores[] = {
 		.data_start = nullptr,
 		.assembly_count = 0,
 		.assemblies = nullptr,
+	},
+};
+
+static const char *fake_dso_name = "libaot-Some.Assembly.dll.so";
+
+DSOCacheEntry dso_cache[] = {
+	{
+		.hash = 0,
+		.name = fake_dso_name,
+		.handle = nullptr,
 	},
 };

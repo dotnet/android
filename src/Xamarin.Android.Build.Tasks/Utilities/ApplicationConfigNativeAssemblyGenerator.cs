@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 using Java.Interop.Tools.TypeNameMappings;
+using K4os.Hash.xxHash;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
@@ -14,6 +18,14 @@ namespace Xamarin.Android.Tasks
 		Debugger  = 0x01,
 		HotReload = 0x02,
 		Tracing   = 0x04,
+	}
+
+	class DSOCacheEntry
+	{
+		public ulong Hash;
+		public bool Ignore;
+		public string Name;
+		public int NameIndex;
 	}
 
 	class ApplicationConfigNativeAssemblyGenerator : NativeAssemblyGenerator
@@ -39,16 +51,21 @@ namespace Xamarin.Android.Tasks
 		public int NumberOfAssemblyStoresInApks { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 		public MonoComponent MonoComponents { get; set; }
+		public List<ITaskItem> NativeLibraries { get; set; }
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
-		public ApplicationConfigNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, string baseFileName, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties)
+		TaskLoggingHelper log;
+
+		public ApplicationConfigNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, string baseFileName, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 			: base (targetProvider, baseFileName)
 		{
 			if (environmentVariables != null)
 				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
 			if (systemProperties != null)
-				this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
+			this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
+
+			this.log = log;
 		}
 
 		protected override void WriteSymbols (StreamWriter output)
@@ -60,6 +77,19 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ("Mono AOT enabled but no AOT mode specified");
 
 			string stringLabel = GetStringLabel ();
+			WriteData (output, MonoAOTMode ?? String.Empty, stringLabel);
+			WriteDataSection (output, "mono_aot_mode_name");
+			WritePointer (output, MakeLocalLabel (stringLabel), "mono_aot_mode_name", isGlobal: true);
+
+			WriteNameValueStringArray (output, "app_environment_variables", environmentVariables);
+			WriteNameValueStringArray (output, "app_system_properties", systemProperties);
+
+			WriteBundledAssemblies (output);
+			WriteAssemblyStoreAssemblies (output);
+
+			uint dsoCacheEntries = WriteDSOCache (output);
+
+			stringLabel = GetStringLabel ();
 			WriteData (output, AndroidPackageName, stringLabel);
 
 			WriteDataSection (output, "application_config");
@@ -114,6 +144,9 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "number_of_assembly_store_files");
 				size += WriteData (output, NumberOfAssemblyStoresInApks);
 
+				WriteCommentLine (output, "number_of_dso_cache_entries");
+				size += WriteData (output, dsoCacheEntries);
+
 				WriteCommentLine (output, "mono_components_mask");
 				size += WriteData (output, (uint)MonoComponents);
 
@@ -122,17 +155,112 @@ namespace Xamarin.Android.Tasks
 
 				return size;
 			});
+		}
 
-			stringLabel = GetStringLabel ();
-			WriteData (output, MonoAOTMode ?? String.Empty, stringLabel);
-			WriteDataSection (output, "mono_aot_mode_name");
-			WritePointer (output, MakeLocalLabel (stringLabel), "mono_aot_mode_name", isGlobal: true);
+		uint WriteDSOCache (StreamWriter output)
+		{
+			output.WriteLine ();
 
-			WriteNameValueStringArray (output, "app_environment_variables", environmentVariables);
-			WriteNameValueStringArray (output, "app_system_properties", systemProperties);
+			var dsos = new List<(string name, string nameLabel, bool ignore)> ();
+			var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
-			WriteBundledAssemblies (output);
-			WriteAssemblyStoreAssemblies (output);
+			foreach (ITaskItem item in NativeLibraries) {
+				string? name = item.GetMetadata ("ArchiveFileName");
+				if (String.IsNullOrEmpty (name)) {
+					name = item.ItemSpec;
+				}
+				name = Path.GetFileName (name);
+
+				if (nameCache.Contains (name)) {
+					continue;
+				}
+
+				dsos.Add ((name, $"dsoName{dsos.Count}", ELFHelper.IsEmptyAOTLibrary (log, item.ItemSpec)));
+			}
+
+			var dsoCache = new List<DSOCacheEntry> ();
+			var nameMutations = new List<string> ();
+
+			for (int i = 0; i < dsos.Count; i++) {
+				string name = dsos[i].name;
+				nameMutations.Clear();
+				AddNameMutations (name);
+				foreach (string entryName in nameMutations) {
+					dsoCache.Add (
+						new DSOCacheEntry {
+							Hash = HashName (entryName),
+							Ignore = dsos[i].ignore,
+							Name = entryName,
+							NameIndex = i,
+						}
+					);
+				}
+			}
+
+			dsoCache.Sort ((DSOCacheEntry a, DSOCacheEntry b) => a.Hash.CompareTo (b.Hash));
+			WriteCommentLine (output, "DSO names");
+			foreach (var dso in dsos) {
+				WriteData (output, dso.name, dso.nameLabel, isGlobal: false);
+				output.WriteLine ();
+			}
+
+			string label = "dso_cache";
+			WriteCommentLine (output, "DSO name hash table/cache");
+			WriteDataSection (output, label);
+			WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
+
+			uint size = 0;
+			foreach (DSOCacheEntry entry in dsoCache) {
+				size += WriteStructure (output, packed: false, structureWriter: () => WriteDSOCacheEntry (output, entry, dsos[entry.NameIndex].nameLabel));
+			}
+			WriteStructureSize (output, label, size);
+			output.WriteLine ();
+
+			return (uint)dsoCache.Count;
+
+			ulong HashName (string name)
+			{
+				byte[] nameBytes = Encoding.UTF8.GetBytes (name);
+				if (TargetProvider.Is64Bit) {
+					return XXH64.DigestOf (nameBytes, 0, nameBytes.Length);
+				}
+
+				return (ulong)XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
+			}
+
+			void AddNameMutations (string name)
+			{
+				nameMutations.Add (name);
+				if (name.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
+					nameMutations.Add (Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name))!);
+				} else {
+					nameMutations.Add (Path.GetFileNameWithoutExtension (name)!);
+				}
+
+				const string aotPrefix = "libaot-";
+				if (name.StartsWith (aotPrefix, StringComparison.OrdinalIgnoreCase)) {
+					AddNameMutations (name.Substring (aotPrefix.Length));
+				}
+			}
+		}
+
+		uint WriteDSOCacheEntry (StreamWriter output, DSOCacheEntry entry, string nameLabel)
+		{
+			// Each entry must be identical to src/monodroid/jni/xamarin-app.hh DSOCacheEntry structure
+			uint size = 0;
+
+			WriteCommentLine (output, $"hash: 0x{entry.Hash:x} ('{entry.Name}')");
+			size += WriteData (output, entry.Hash);
+
+			WriteCommentLine (output, "ignore");
+			size += WriteData (output, entry.Ignore);
+
+			WriteCommentLine (output, "name");
+			size += WritePointer (output, MakeLocalLabel (nameLabel));
+
+			WriteCommentLine (output, "handle");
+			size += WritePointer (output);
+			return size;
 		}
 
 		void WriteAssemblyStoreAssemblies (StreamWriter output)
