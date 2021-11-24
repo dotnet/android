@@ -1485,6 +1485,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 	}
 
 	if (!utils.ends_with (name, ".dll.so") && !utils.ends_with (name, ".exe.so")) {
+		h = androidSystem.load_dso (name, dl_flags, true /* skip_existing_check */);
 		return monodroid_dlopen_log_and_return (h, err, name, name_needs_free);
 	}
 
