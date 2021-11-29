@@ -114,8 +114,13 @@ namespace Xamarin.Android.Tools.Bytecode
 			return fixup;
 		}
 
-		public string[]? GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
+		public string[]? GetParameterNames (JavaMethodParameterNameInfo info)
 		{
+			var package = info.PackageName;
+			var type    = info.TypeName;
+			var method  = info.MethodName;
+			var ptypes  = info.ParameterTypes.Select (p => p.JavaType).ToArray ();
+
 			var methods = this.packages
 				.Where(p => p.Name == package && p.Types != null)
 				.SelectMany(p => p.Types!)

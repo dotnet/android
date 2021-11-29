@@ -1,0 +1,75 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <interface
+      abstract="true"
+      deprecated="not deprecated"
+      final="false"
+      name="JavaInterfaceNoParameters"
+      jni-signature="Lcom/xamarin/JavaInterfaceNoParameters;"
+      source-file-name="JavaInterfaceNoParameters.java"
+      static="false"
+      visibility="public">
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="asList"
+        native="false"
+        return="java.util.List&lt;T&gt;"
+        jni-return="Ljava/util/List&lt;TT;&gt;;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="([Ljava/lang/Object;)Ljava/util/List;">
+        <typeParameters>
+          <typeParameter
+            name="T"
+            jni-classBound="Ljava/lang/Object;"
+            classBound="java.lang.Object"
+            interfaceBounds=""
+            jni-interfaceBounds="" />
+        </typeParameters>
+        <parameter
+          name="a"
+          type="T..."
+          jni-type="[TT;" />
+      </method>
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="binarySearch"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="([Ljava/lang/Object;IILjava/lang/Object;)I">
+        <parameter
+          name="a"
+          type="java.lang.Object[]"
+          jni-type="[Ljava/lang/Object;" />
+        <parameter
+          name="fromIndex"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="toIndex"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="key"
+          type="java.lang.Object"
+          jni-type="Ljava/lang/Object;" />
+      </method>
+    </interface>
+  </package>
+</api>

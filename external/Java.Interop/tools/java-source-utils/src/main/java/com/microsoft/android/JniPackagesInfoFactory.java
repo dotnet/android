@@ -159,7 +159,7 @@ public final class JniPackagesInfoFactory {
 		for (TypeParameter typeParameter : typeDecl.getTypeParameters()) {
 			typeInfo.addTypeParameter(
 					typeParameter.getNameAsString(),
-					getJniType(typeInfo, null, getTypeParameterBound(typeParameter)));
+					getJniType(typeInfo, null, getTypeParameterBound(typeParameter), false));
 		}
 		return typeInfo;
 	}
@@ -284,8 +284,8 @@ public final class JniPackagesInfoFactory {
 		typeInfo.add(methodInfo);
 
 		methodInfo.setReturnType(
-				getJavaType(typeInfo, methodInfo, memberDecl.getType()),
-				getJniType(typeInfo, methodInfo, memberDecl.getType()));
+				getJavaType(typeInfo, methodInfo, memberDecl.getType(), false),
+				getJniType(typeInfo, methodInfo, memberDecl.getType(), false));
 
 		fillJavadoc(methodInfo, memberDecl);
 	}
@@ -293,7 +293,7 @@ public final class JniPackagesInfoFactory {
 	private final void parseFieldDecl(final JniTypeInfo typeInfo, final FieldDeclaration fieldDecl) {
 		for (VariableDeclarator f : fieldDecl.getVariables()) {
 			final   JniFieldInfo    fieldInfo   = new JniFieldInfo(typeInfo, f.getNameAsString());
-			fieldInfo.setJniType(getJniType(typeInfo, null, f.getType()));
+			fieldInfo.setJniType(getJniType(typeInfo, null, f.getType(), false));
 
 			typeInfo.add(fieldInfo);
 
@@ -316,11 +316,11 @@ public final class JniPackagesInfoFactory {
 		for (TypeParameter typeParameter : methodDecl.getTypeParameters()) {
 			methodInfo.addTypeParameter(
 					typeParameter.getNameAsString(),
-					getJniType(typeInfo, methodInfo, getTypeParameterBound(typeParameter)));
+					getJniType(typeInfo, methodInfo, getTypeParameterBound(typeParameter), false));
 		}
 		methodInfo.setReturnType(
-				getJavaType(typeInfo, methodInfo, methodDecl.getType()),
-				getJniType(typeInfo, methodInfo, methodDecl.getType()));
+				getJavaType(typeInfo, methodInfo, methodDecl.getType(), false),
+				getJniType(typeInfo, methodInfo, methodDecl.getType(), false));
 
 		fillMethodBase(methodInfo, methodDecl);
 		fillJavadoc(methodInfo, methodDecl);
@@ -345,43 +345,43 @@ public final class JniPackagesInfoFactory {
 		NodeWithParameters<?> params = callableDecl;
 		for (final Parameter p : params.getParameters()) {
 			String name = p.getNameAsString();
-			String javaType = getJavaType(methodBaseInfo.getDeclaringType(), methodInfo, p.getType());
-			String jniType  = getJniType(methodBaseInfo.getDeclaringType(), methodInfo, p.getType());
+			String javaType = getJavaType(methodBaseInfo.getDeclaringType(), methodInfo, p.getType(), p.isVarArgs());
+			String jniType  = getJniType(methodBaseInfo.getDeclaringType(), methodInfo, p.getType(), p.isVarArgs());
 			methodBaseInfo.addParameter(new JniParameterInfo(name, javaType, jniType));
 		}
 	}
 
-	static String getJavaType(JniTypeInfo typeInfo, JniMethodInfo methodInfo, Type type) {
+	static String getJavaType(JniTypeInfo typeInfo, JniMethodInfo methodInfo, Type type, boolean isVarArgs) {
 		String typeName = type.asString();
 		if (methodInfo != null && methodInfo.getTypeParameters().contains(typeName))
-			return typeName;
+			return typeName + (isVarArgs ? "..." : "");
 		if (typeInfo.getTypeParameters().contains(typeName))
-			return typeName;
+			return typeName + (isVarArgs ? "..." : "");
 		try {
 			final ResolvedType rt = type.resolve();
-			return rt.describe();
+			return rt.describe() + (isVarArgs ? "..." : "");
 		} catch (final Throwable thr) {
-			return getUnresolvedJavaType(type);
+			return getUnresolvedJavaType(type) + (isVarArgs ? "..." : "");
 		}
 	}
 
-	static String getJniType(JniTypeInfo typeInfo, JniMethodInfo methodInfo, Type type) {
+	static String getJniType(JniTypeInfo typeInfo, JniMethodInfo methodInfo, Type type, boolean isVarArgs) {
 		if (type == null) {
 			return "Ljava/lang/Object;";
 		}
 
 		if (type.isArrayType()) {
-			return getJniType(typeInfo, methodInfo, type.asArrayType());
+			return (isVarArgs ? "[" : "") + getJniType(typeInfo, methodInfo, type.asArrayType());
 		}
 		if (type.isPrimitiveType()) {
-			return getPrimitiveJniType(type.asString());
+			return (isVarArgs ? "[" : "") + getPrimitiveJniType(type.asString());
 		}
 
 		if (methodInfo != null && methodInfo.getTypeParameters().contains(type.asString())) {
-			return methodInfo.getTypeParameterJniType(type.asString());
+			return (isVarArgs ? "[" : "") + methodInfo.getTypeParameterJniType(type.asString());
 		}
 		if (typeInfo.getTypeParameters().contains(type.asString())) {
-			return typeInfo.getTypeParameterJniType(type.asString());
+			return (isVarArgs ? "[" : "") + typeInfo.getTypeParameterJniType(type.asString());
 		}
 
 		try {
@@ -390,7 +390,7 @@ public final class JniPackagesInfoFactory {
 		catch (final Exception thr) {
 		}
 
-		return getUnresolvedJniType(type);
+		return (isVarArgs ? "[" : "") + getUnresolvedJniType(type);
 	}
 
 	static String getJniType(JniTypeInfo typeInfo, JniMethodInfo methodInfo, ArrayType type) {
@@ -398,7 +398,7 @@ public final class JniPackagesInfoFactory {
 		final   StringBuilder depth = new StringBuilder();
 		for (int i = 0; i < level; ++i)
 			depth.append("[");
-		return depth.toString() + getJniType(typeInfo, methodInfo, type.getElementType());
+		return depth.toString() + getJniType(typeInfo, methodInfo, type.getElementType(), false);
 	}
 
 	static String getPrimitiveJniType(String javaType) {

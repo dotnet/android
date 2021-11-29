@@ -193,9 +193,14 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			return value;
 		}
-	
-		public virtual String[]? GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
+
+		public virtual string[]? GetParameterNames (JavaMethodParameterNameInfo info)
 		{
+			var package = info.PackageName;
+			var type    = info.TypeName;
+			var method  = info.MethodName;
+			var ptypes  = info.ParameterTypes.Select (p => p.JavaType).ToArray ();
+
 			string path = package.Replace ('.', '/') + '/' + type.Replace ('$', '.') + ".html";
 			string file = Path.Combine (root, path);
 			if (!File.Exists (file)) {
@@ -301,9 +306,39 @@ namespace Xamarin.Android.Tools.Bytecode
 		}
 	}
 
+	public readonly struct JavaMethodParameterTypeInfo {
+		public  string  JniType     {get;}
+		public  string  JavaType    {get;}
+
+		public JavaMethodParameterTypeInfo (string jniType, string javaType)
+		{
+			JniType     = jniType;
+			JavaType    = javaType;
+		}
+	}
+
+	public readonly struct JavaMethodParameterNameInfo {
+		public  string                          PackageName     {get;}
+		public  string                          TypeName        {get;}
+		public  string                          MethodName      {get;}
+		public  string?                         MethodSignature {get;}
+		public  bool                            IsVarArgs       {get;}
+		public  JavaMethodParameterTypeInfo[]   ParameterTypes  {get;}
+
+		public JavaMethodParameterNameInfo (string packageName, string typeName, string methodName, string? methodSignature, JavaMethodParameterTypeInfo[] parameterTypes, bool isVarArgs)
+		{
+			PackageName     = packageName;
+			TypeName        = typeName;
+			MethodName      = methodName;
+			MethodSignature = methodSignature;
+			ParameterTypes  = parameterTypes;
+			IsVarArgs       = isVarArgs;
+		}
+	}
+
 	public interface IJavaMethodParameterNameProvider
 	{
-		String[]? GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs);
+		string[]? GetParameterNames (JavaMethodParameterNameInfo info);
 	}
 
 	public static class JavaMethodParameterNameProvider {
@@ -360,39 +395,59 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		XDocument xdoc;
 
-		public string[]? GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
+		public string[]? GetParameterNames (JavaMethodParameterNameInfo info)
 		{
-			var methodOrCtor = method == "constructor" ?
-				"constructor[" : $"method[@name='{method}'";
-
-			var pcount = ptypes.Length;
-
-			var xpath = new StringBuilder ();
-
-			xpath.Append ($"/api/package[@name='{package}']/*[self::class or self::interface]/");
-
-			if (method == "constructor")
-				xpath.Append ("constructor[");
-			else
-				xpath.Append ($"method[@name='{method}'");
-
-			xpath.Append ($" and count(parameter)={pcount}");
-
-			if (pcount > 0) {
-				xpath.Append (" and ");
-				xpath.Append (string.Join (" and ", ptypes.Select ((pt, pindex) => $"parameter[{pindex + 1}][@type='{pt}']")));
+			var xtype = xdoc
+				.Elements ("api")
+				.Elements ("package")
+				.Where (p => ((string) p.Attribute ("name")) == info.PackageName)
+				.Elements ()
+				.Where (t => ((string) t.Attribute ("name")) == info.TypeName)
+				.FirstOrDefault ();
+			if (xtype == null) {
+				return null;
 			}
 
-			xpath.Append ("]");
+			var members = info.MethodName == "constructor"
+				? xtype.Elements ("constructor")
+				: xtype.Elements ("method").Where (m => ((string) m.Attribute ("name")) == info.MethodName);
+			var pcount  = info.ParameterTypes.Length;
+			members     = members
+				.Where (m => m.Elements ("parameter").Count () == pcount);
 
-			var methodElem = xdoc.XPathSelectElement (xpath.ToString ());
+			XElement? member =
+				members.FirstOrDefault (m => info.MethodSignature == (string) m.Attribute ("jni-signature"));
+			if (member == null) {
+				foreach (var m in members) {
+					var found   = true;
+					int i       = 0;
+					foreach (var p in m.Elements ("parameter")) {
+						if (!ParameterTypesMatch (p, info.ParameterTypes [i++].JavaType)) {
+							found = false;
+							break;
+						}
+					}
+					if (found) {
+						member = m;
+						break;
+					}
+				}
+			}
+			if (member == null)
+				return null;
+			return member.Elements ("parameter")
+				.Select (p => (string) p.Attribute ("name"))
+				.ToArray ();
 
-			if (methodElem != null)
-				return methodElem.Elements ("parameter")
-					.Select (pe => pe.Attribute ("name")?.Value ?? "")
-					.ToArray ();
-
-			return null;
+			bool ParameterTypesMatch (XElement parameter, string ptype)
+			{
+				var jtype = (string) parameter.Attribute ("type");
+				if (!jtype.StartsWith (".*", StringComparison.Ordinal)) {
+					return jtype == ptype;
+				}
+				jtype = "." + jtype.Substring (".*".Length);
+				return ptype.EndsWith (jtype, StringComparison.Ordinal);
+			}
 		}
 	}
 }

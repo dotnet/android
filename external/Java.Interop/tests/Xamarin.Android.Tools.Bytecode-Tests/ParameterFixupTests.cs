@@ -46,6 +46,21 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		}
 
 		[Test]
+		public void XmlDeclaration_FixedUpFromUnresolvedApiXmlDocumentation ()
+		{
+			string docsPath = null;
+
+			try {
+				docsPath = LoadToTempFile ("ParameterFixup_JavaInterfaceNoParameters_JavaSourceUtils.xml");
+
+				AssertXmlDeclaration ("JavaInterfaceNoParameters.class", "ParameterFixup_JavaInterfaceNoParameters.xml", docsPath);
+			} finally {
+				if (File.Exists (docsPath))
+					File.Delete (docsPath);
+			}
+		}
+
+		[Test]
 		public void XmlDeclaration_DoesNotThrowAnExceptionIfDocumentationNotFound ()
 		{
 			try {

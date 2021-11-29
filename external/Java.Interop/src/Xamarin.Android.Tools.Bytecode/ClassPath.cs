@@ -304,14 +304,23 @@ namespace Xamarin.Android.Tools.Bytecode {
 					if (!parameterElements.Select (x => x.Attribute ("name")?.Value).Any (p => p != null && IsGeneratedName (p)))
 						continue;
 
-					var parameters = parameterElements
-						.Select (p => p.Attribute ("type")?.Value!)
-						.Where (p => p != null);
+					var parameterTypes = parameterElements
+						.Select (p => new JavaMethodParameterTypeInfo ((string) p.Attribute ("jni-type"), (string) p.Attribute ("type")))
+						.ToArray ();
 
-					if (!parameters.Any ())
+					if (!parameterTypes.Any ())
 						continue;
 
-					var pnames = jdoc.GetParameterNames (currentpackage, className, currentMethod, parameters.ToArray (), isVarArgs: false);
+					var nameInfo = new JavaMethodParameterNameInfo (
+							currentpackage,
+							className,
+							currentMethod,
+							(string) method.Attribute ("jni-signature"),
+							parameterTypes,
+							isVarArgs: false
+					);
+
+					var pnames = jdoc.GetParameterNames (nameInfo);
 					if (pnames == null || pnames.Length != parameterElements.Count)
 						continue;
 					for (int i = 0; i < parameterElements.Count; i++) {

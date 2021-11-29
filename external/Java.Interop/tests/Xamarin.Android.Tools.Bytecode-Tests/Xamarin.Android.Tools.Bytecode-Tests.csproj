@@ -32,6 +32,7 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IParameterInterface.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaAnnotation.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaEnum.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaInterfaceNoParameters.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%241.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%241MyStringList.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24ASC.class" />
