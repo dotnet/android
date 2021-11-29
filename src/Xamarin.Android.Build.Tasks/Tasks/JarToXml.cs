@@ -91,9 +91,6 @@ namespace Xamarin.Android.Tasks
 			// N can be in the form of Nm or NGB (e.g 100m or 1GB ) 
 			cmd.AppendSwitchIfNotNull("-Xmx", JavaMaximumHeapSize);
 
-			// See https://bugzilla.xamarin.com/show_bug.cgi?id=21096
-			cmd.AppendSwitch ("-XX:-UseSplitVerifier");
-
 			// Arguments sent to java.exe
 			cmd.AppendSwitchIfNotNull ("-jar ", Path.Combine (MonoAndroidToolsDirectory, "jar2xml.jar"));
 
