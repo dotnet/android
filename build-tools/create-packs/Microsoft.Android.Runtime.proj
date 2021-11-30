@@ -2,7 +2,7 @@
 ***********************************************************************************************
 Microsoft.Android.Runtime.proj
 
-This project file is used to create Microsoft.Android.Runtime NuGets, which are
+This project file is used to create Microsoft.Android.[API].Runtime NuGets, which are
 runtime packs that contain the assets required for a self-contained publish of
 projects that use the Microsoft.Android framework in .NET 5.
 ***********************************************************************************************
@@ -12,8 +12,8 @@ projects that use the Microsoft.Android framework in .NET 5.
   <PropertyGroup>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android-arm64</AndroidRID>
     <AndroidABI Condition=" '$(AndroidABI)' == '' ">arm64-v8a-net6</AndroidABI>
-    <PackageId>Microsoft.Android.Runtime.$(AndroidRID)</PackageId>
-    <Description>Microsoft.Android runtime components. Please do not reference directly.</Description>
+    <PackageId>Microsoft.Android.$(AndroidApiLevel).Runtime.$(AndroidRID)</PackageId>
+    <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
     <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\net6.0</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>
   </PropertyGroup>
@@ -34,9 +34,10 @@ projects that use the Microsoft.Android framework in .NET 5.
     </PropertyGroup>
 
     <ItemGroup>
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputDir)Java.Interop.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(JavaInteropSourceDirectory)\bin\$(Configuration)-net6.0\Java.Interop.dll" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputDir)Mono.Android.dll" />
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputDir)Mono.Android.Export.dll" />
+      <!-- Always include stable Mono.Android.Export.dll -->
+      <_AndroidRuntimePackAssemblies Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
       <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.debug.so" />
       <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />

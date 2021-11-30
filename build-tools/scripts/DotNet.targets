@@ -61,4 +61,17 @@
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; workload install maui-android @(_InstallArguments, ' ')" WorkingDirectory="$(_TempDirectory)" />
     <RemoveDir Directories="$(_TempDirectory)" />
   </Target>
+  <Target Name="BuildDotNetPreviewApiLevel">
+    <ItemGroup>
+      <_DotNetPreviewProperties Include="TargetFramework=net6.0" />
+      <_DotNetPreviewProperties Include="AndroidApiLevel=$(AndroidLatestUnstableApiLevel)" />
+      <_DotNetPreviewProperties Include="AndroidPlatformId=$(AndroidLatestUnstablePlatformId)" />
+      <_DotNetPreviewProperties Include="AndroidFrameworkVersion=$(AndroidLatestUnstableFrameworkVersion)" />
+      <_DotNetPreviewProperties Include="AndroidPreviousFrameworkVersion=$(AndroidLatestStableFrameworkVersion)" />
+    </ItemGroup>
+    <MSBuild
+        Projects="$(XamarinAndroidSourcePath)src\Mono.Android\Mono.Android.csproj"
+        Properties="@(_DotNetPreviewProperties)"
+    />
+  </Target>
 </Project>

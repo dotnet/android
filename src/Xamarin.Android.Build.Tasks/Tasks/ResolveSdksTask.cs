@@ -42,6 +42,10 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RSD";
 
+		/// <summary>
+		/// In Xamarin.Android, this is the path to ReferenceAssemblies\Microsoft\Framework\MonoAndroid\v*.*\ that contains Mono.Android.dll
+		/// In .NET 6, this is dotnet\packs\Microsoft.Android.Sdk.Windows|Darwin\*\data\net6.0-android*\. Only contains AndroidApiInfo.xml
+		/// </summary>
 		public string [] ReferenceAssemblyPaths { get; set; }
 
 		public string CommandLineToolsVersion { get; set; }

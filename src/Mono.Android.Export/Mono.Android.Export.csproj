@@ -1,17 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
 
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <!-- Only build for net6.0 for $(AndroidLatestStableFrameworkVersion) -->
-    <TargetFrameworks Condition=" '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">monoandroid10</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)' ">monoandroid10;net6.0</TargetFrameworks>
+    <TargetFrameworks>monoandroid10;net6.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoStdLib>true</NoStdLib>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -19,11 +19,10 @@
     <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
     <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</OutputPath>
+    <OutputPath>$(_MonoAndroidNETOutputDir)</OutputPath>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -53,12 +52,14 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj" />
   </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <!-- Only build the 'net6.0' version of 'Mono.Android.Export.dll' for the latest stable Android version or higher. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &lt; '$(AndroidLatestStableApiLevel)' ">
+    <BuildDependsOn></BuildDependsOn>
+  </PropertyGroup>
 
 </Project>
