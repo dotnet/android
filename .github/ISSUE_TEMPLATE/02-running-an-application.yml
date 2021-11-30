@@ -1,4 +1,4 @@
-name: \U0001F3C3‍♀️ Running an Application
+name: 🏃‍♀️ Running an Application
 description: Issues trying to run your application, like crashes on device or in the emulator.
 labels: ["Area: App Runtime", "needs-triage"]
 assignees: ["grendello"]
