@@ -6,3 +6,6 @@ contact_links:
   - name: "\U0001F4A1 Feature Request"
     url: https://developercommunity.visualstudio.com
     about: Feature requests are tracked on Visual Studio Developer Community because it provides good prioritization features like voting. Filing there helps ensure new features are properly considered.
+  - name: "🙋‍♀️ Community Support"
+    url: https://docs.microsoft.com/en-us/answers/topics/dotnet-android.html
+    about: For issues that likely aren't bugs, Microsoft Q&A is a good place to ask for help.
