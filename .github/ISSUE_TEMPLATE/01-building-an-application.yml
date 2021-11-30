@@ -1,4 +1,4 @@
-name: \U0001F6E0 Building an Application
+name: 🛠 Building an Application
 description: Issues trying to compile or package your application.
 labels: ["Area: App+Library Build", "needs-triage"]
 assignees: ["jonathanpeppers", "dellis1972"]
