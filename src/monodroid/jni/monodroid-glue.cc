@@ -1291,9 +1291,11 @@ MonodroidRuntime::find_dso_cache_entry (hash_t hash) noexcept
 	size_t entry_count = application_config.number_of_dso_cache_entries;
 	DSOCacheEntry *entries = dso_cache;
 
+	log_warn (LOG_ASSEMBLY, "dso_cache: looking for hash 0x%zx", hash);
 	while (entry_count > 0) {
 		ret = entries + (entry_count / 2);
 		entry_hash = static_cast<hash_t> (ret->hash);
+		log_warn (LOG_ASSEMBLY, "dso_cache: entry_hash == 0x%zx", entry_hash);
 		auto result = hash <=> entry_hash;
 
 		if (result < 0) {
@@ -1364,7 +1366,13 @@ MonodroidRuntime::monodroid_dlopen_ignore_component_or_load (hash_t name_hash, c
 		}
 	}
 #endif
-	void *handle = androidSystem.load_dso (name, monodroidRuntime.convert_dl_flags (flags), false /* skip_existing_check */);
+	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
+	void * handle = androidSystem.load_dso_from_any_directories (name, dl_flags);
+	if (handle != nullptr) {
+		return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
+	}
+
+	handle = androidSystem.load_dso (name, dl_flags, false /* skip_existing_check */);
 	return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
 }
 
@@ -1389,7 +1397,13 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noe
 	}
 
 	StartupAwareLock lock (dso_handle_write_lock);
-	dso->handle = androidSystem.load_dso (dso->name, monodroidRuntime.convert_dl_flags (flags), false /* skip_existing_check */);
+	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
+	dso->handle = androidSystem.load_dso_from_any_directories (name, dl_flags);
+	if (dso->handle != nullptr) {
+		return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
+	}
+
+	dso->handle = androidSystem.load_dso (dso->name, dl_flags, false /* skip_existing_check */);
 	return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
 }
 
@@ -1466,6 +1480,18 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 		name = API_DSO_NAME;
 #endif // WINDOWS
 		libmonodroid_fallback = true;
+	}
+
+	if (!name_is_full_path) {
+		// h = androidSystem.load_dso_from_any_directories (name, dl_flags);
+		h = monodroid_dlopen (name, flags, err);
+		if (h != nullptr) {
+			return h; // already logged by monodroid_dlopen
+		}
+	}
+
+	if (h != nullptr) {
+		return monodroid_dlopen_log_and_return (h, err, name, name_needs_free, libmonodroid_fallback);
 	}
 
 	if (libmonodroid_fallback) {

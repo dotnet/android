@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	class TypeMappingDebugNativeAssemblyGenerator : NativeAssemblyGenerator
+	class TypeMappingDebugNativeAssemblyGenerator : TypeMappingAssemblyGenerator
 	{
 		const string JavaToManagedSymbol = "map_java_to_managed";
 		const string ManagedToJavaSymbol = "map_managed_to_java";
@@ -17,8 +18,8 @@ namespace Xamarin.Android.Tasks
 		readonly bool sharedBitsWritten;
 		readonly TypeMapGenerator.ModuleDebugData data;
 
-		public TypeMappingDebugNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, TypeMapGenerator.ModuleDebugData data, string baseFileName, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix = false)
-			: base (targetProvider, baseFileName, sharedIncludeUsesAbiPrefix)
+		public TypeMappingDebugNativeAssemblyGenerator (AndroidTargetArch arch, TypeMapGenerator.ModuleDebugData data, string baseFileName, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix = false)
+			: base (arch, baseFileName, sharedIncludeUsesAbiPrefix)
 		{
 			if (String.IsNullOrEmpty (baseFileName))
 				throw new ArgumentException("must not be null or empty", nameof (baseFileName));
@@ -28,7 +29,7 @@ namespace Xamarin.Android.Tasks
 			this.sharedBitsWritten = sharedBitsWritten;
 		}
 
-		protected override void WriteSymbols (StreamWriter output)
+		protected override void Write (NativeAssemblyGenerator generator)
 		{
 			bool haveJavaToManaged = data.JavaToManagedMap != null && data.JavaToManagedMap.Count > 0;
 			bool haveManagedToJava = data.ManagedToJavaMap != null && data.ManagedToJavaMap.Count > 0;
@@ -60,7 +61,7 @@ namespace Xamarin.Android.Tasks
 					size += WritePointer (output, entry.JavaLabel);
 				}
 			}
-			WriteStructureSize (output, ManagedToJavaSymbol, size, alwaysWriteSize: true);
+			WriteStructureSize (output, ManagedToJavaSymbol, size, alignBits: TargetProvider.DebugTypeMapAlignBits, alwaysWriteSize: true);
 			WriteCommentLine (output, "Managed to java map: END", indent: false);
 			output.WriteLine ();
 
@@ -76,7 +77,7 @@ namespace Xamarin.Android.Tasks
 					size += WritePointer (output, managedEntry.SkipInJavaToManaged ? null : managedEntry.ManagedLabel);
 				}
 			}
-			WriteStructureSize (output, JavaToManagedSymbol, size, alwaysWriteSize: true);
+			WriteStructureSize (output, JavaToManagedSymbol, size, alignBits: TargetProvider.DebugTypeMapAlignBits, alwaysWriteSize: true);
 			WriteCommentLine (output, "Java to managed map: END", indent: false);
 			output.WriteLine ();
 
@@ -87,7 +88,7 @@ namespace Xamarin.Android.Tasks
 
 			size = WriteStructure (output, packed: false, structureWriter: () => WriteTypeMapStruct (output));
 
-			WriteStructureSize (output, TypeMapSymbol, size);
+			WriteStructureSize (output, TypeMapSymbol, size, alignBits: TargetProvider.DebugTypeMapAlignBits);
 		}
 
 		// MUST match the TypeMap struct from src/monodroid/xamarin-app.hh

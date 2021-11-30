@@ -145,20 +145,20 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		static internal NativeAssemblerTargetProvider GetAssemblyTargetProvider (string abi)
+		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi)
 		{
 			switch (abi.Trim ()) {
 				case "armeabi-v7a":
-					return new ARMNativeAssemblerTargetProvider (false);
+					return AndroidTargetArch.Arm;
 
 				case "arm64-v8a":
-					return new ARMNativeAssemblerTargetProvider (true);
+					return AndroidTargetArch.Arm64;
 
 				case "x86":
-					return new X86NativeAssemblerTargetProvider (false);
+					return AndroidTargetArch.X86;
 
 				case "x86_64":
-					return new X86NativeAssemblerTargetProvider (true);
+					return AndroidTargetArch.X86_64;
 
 				default:
 					throw new InvalidOperationException ($"Unknown ABI {abi}");
@@ -371,11 +371,10 @@ namespace Xamarin.Android.Tasks
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 
 			foreach (string abi in SupportedAbis) {
-				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
 				string asmFilePath = $"{baseAsmFilePath}.s";
 
-				var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, baseAsmFilePath, environmentVariables, systemProperties, Log) {
+				var asmgen = new ApplicationConfigNativeAssemblyGenerator (GetAndroidTargetArchForAbi (abi), environmentVariables, systemProperties, Log) {
 					IsBundledApp = IsBundledApplication,
 					UsesMonoAOT = usesMonoAOT,
 					UsesMonoLLVM = EnableLLVM,
@@ -400,7 +399,7 @@ namespace Xamarin.Android.Tasks
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					asmgen.Write (sw);
+					asmgen.Write (sw, asmFilePath);
 					sw.Flush ();
 					Files.CopyIfStreamChanged (sw.BaseStream, asmFilePath);
 				}
