@@ -42,12 +42,19 @@ _ResolveAssemblies MSBuild target.
       DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;_AndroidAot"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
+        <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
         <ResolvedFileToPublish
             Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
             Update="@(ResolvedFileToPublish)"
             RuntimeIdentifier="$(RuntimeIdentifier)"
         />
       </ItemGroup>
+      <AndroidWarning
+          Code="XA1024"
+          ResourceName="XA1024"
+          FormatArguments="%(_SourceItemsToCopyToPublishDirectory.Identity)"
+          Condition=" '%(Extension)' == '.config' "
+      />
   </Target>
 
   <Target Name="_FixupIntermediateAssembly" Condition=" '$(_OuterIntermediateAssembly)' != '' ">
@@ -95,14 +102,7 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup>
       <_ResolvedAssemblyFiles Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
       <_ResolvedSymbolFiles   Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.pdb' " />
-      <_UnusedConfigFiles     Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.config' " />
     </ItemGroup>
-    <AndroidWarning
-        Code="XA1024"
-        ResourceName="XA1024"
-        FormatArguments="%(_UnusedConfigFiles.Identity)"
-        Condition=" '%(Identity)' != '' "
-    />
     <ProcessAssemblies
         RuntimeIdentifiers="@(_RIDs)"
         InputAssemblies="@(_ResolvedAssemblyFiles->Distinct())"
