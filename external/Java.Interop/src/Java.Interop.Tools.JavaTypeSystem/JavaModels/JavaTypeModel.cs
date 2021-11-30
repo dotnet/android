@@ -106,13 +106,9 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 			foreach (var jtp in TypeParameters)
 				yield return jtp;
 
-			yield break;
-
-			// TODO, this is more correct, but disabled for ApiXmlAdjuster compatibility.
-			// https://github.com/xamarin/java.interop/issues/815
-			//if (DeclaringType != null)
-			//	foreach (var jtp in DeclaringType.GetApplicableTypeParameters ())
-			//		yield return jtp;
+			if (DeclaringType != null)
+				foreach (var jtp in DeclaringType.GetApplicableTypeParameters ())
+					yield return jtp;
 		}
 	}
 }

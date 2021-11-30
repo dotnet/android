@@ -73,5 +73,54 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.AreSame (new_intent_service, api.FindType ("mono.android.app.IntentService"));
 			Assert.AreSame (new_intent_service, api.FindType ("android.app.IntentService"));
 		}
+
+		[Test]
+		public void InheritedGenericTypeParameters ()
+		{
+			// Ensure we can resolve generic type parameters from parent types:
+			// public class MyClass<T>
+			// {
+			//     public class MyNestedClass<U>
+			//     {
+			//       public void DoT (T value) { }
+			//       public void DoU (U value) { }
+			//     }
+			// }
+			var xml = @"
+<api api-source='class-parse'>
+   <package name='example' jni-name='example'>
+      <class abstract='false' deprecated='not deprecated' jni-extends='Ljava/lang/Object;' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='MyClass' jni-signature='Lexample/MyClass;' source-file-name='MyClass.java' static='false' visibility='public'>
+         <typeParameters>
+            <typeParameter name='T' jni-classBound='Ljava/lang/Object;' classBound='java.lang.Object' interfaceBounds='' jni-interfaceBounds='' />
+         </typeParameters>
+         <constructor deprecated='not deprecated' final='false' name='MyClass' static='false' visibility='public' bridge='false' synthetic='false' jni-signature='()V' />
+      </class>
+      <class abstract='false' deprecated='not deprecated' jni-extends='Ljava/lang/Object;' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='MyClass.MyNestedClass' jni-signature='Lexample/MyClass$MyNestedClass;' source-file-name='MyClass.java' static='false' visibility='public'>
+         <typeParameters>
+            <typeParameter name='U' jni-classBound='Ljava/lang/Object;' classBound='java.lang.Object' interfaceBounds='' jni-interfaceBounds='' />
+         </typeParameters>
+         <constructor deprecated='not deprecated' final='false' name='MyClass.MyNestedClass' static='false' visibility='public' bridge='false' synthetic='false' jni-signature='(Lexample/MyClass;)V' />
+         <method abstract='false' deprecated='not deprecated' final='false' name='DoT' native='false' return='void' jni-return='V' static='false' synchronized='false' visibility='public' bridge='false' synthetic='false' jni-signature='(Ljava/lang/Object;)V'>
+            <parameter name='p0' type='T' jni-type='TT;' />
+         </method>
+         <method abstract='false' deprecated='not deprecated' final='false' name='DoU' native='false' return='void' jni-return='V' static='false' synchronized='false' visibility='public' bridge='false' synthetic='false' jni-signature='(Ljava/lang/Object;)V'>
+            <parameter name='p0' type='U' jni-type='TU;' />
+         </method>
+      </class>
+   </package>
+</api>";
+
+			var xapi = JavaApiTestHelper.GetLoadedApi ();
+			JavaXmlApiImporter.ParseString (xml, xapi);
+
+			var results = xapi.ResolveCollection ();
+
+			var t = xapi.Packages ["example"].Types.First (_ => _.Name == "MyClass").NestedTypes.First (_ => _.Name == "MyNestedClass") as JavaClassModel;
+
+			Assert.AreEqual (2, t.Methods.Count);
+
+			Assert.IsNotNull (t.Methods.SingleOrDefault (m => m.Name == "DoT"), "Method with generic T not found");
+			Assert.IsNotNull (t.Methods.SingleOrDefault (m => m.Name == "DoU"), "Method with generic U not found");
+		}
 	}
 }
