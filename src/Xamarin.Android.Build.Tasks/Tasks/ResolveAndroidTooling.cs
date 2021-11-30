@@ -20,6 +20,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RAT";
 
+		public string TargetPlatformVersion { get; set; }
+
 		public string AndroidSdkPath { get; set; }
 
 		public string AndroidSdkBuildToolsVersion { get; set; }
@@ -73,7 +75,12 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
+			// This should be 31.0, 32.0, etc.
+			if (Version.TryParse (TargetPlatformVersion, out Version v)) {
+				AndroidApiLevel = v.Major.ToString ();
+			} else {
+				AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
+			}
 
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);

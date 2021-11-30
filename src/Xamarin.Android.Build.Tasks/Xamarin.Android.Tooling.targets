@@ -54,8 +54,13 @@ projects.
           `C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\5.0.0-preview.6.20264.1\ref\net5.0\`
          See https://github.com/dotnet/sdk/blob/9eeb58e24af894597a534326156d09173d9f0f91/src/Tasks/Microsoft.NET.Build.Tasks/ResolveTargetingPackAssets.cs#L56
     -->
-    <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
+    <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'true' ">
+      <_AndroidApiInfo Include="$(MSBuildThisFileDirectory)..\data\*\AndroidApiInfo.xml" />
+      <_AndroidApiInfoDirectories Include="@(_AndroidApiInfo->'%(RootDir)%(Directory)')" />
       <_ResolveSdksFrameworkRefAssemblyPaths Include="@(Reference->'$([System.String]::Copy('%(RootDir)%(Directory)').TrimEnd('\'))')" Condition=" '%(Reference.FrameworkReferenceName)' != '' " />
+    </ItemGroup>
+    <ItemGroup Condition=" '$(UsingAndroidNETSdk)' != 'true' ">
+      <_AndroidApiInfoDirectories Include="$(_XATargetFrameworkDirectories)" />
     </ItemGroup>
     <PropertyGroup>
       <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
@@ -69,7 +74,7 @@ projects.
         JavaSdkPath="$(JavaSdkDirectory)"
         MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
         LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
-        ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)">
       <Output TaskParameter="CommandLineToolsPath"      PropertyName="_AndroidToolsDirectory" />
       <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
       <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />

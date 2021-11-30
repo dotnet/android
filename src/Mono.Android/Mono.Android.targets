@@ -58,7 +58,7 @@
     <ReplaceFileContents
         SourceFile="Properties\AssemblyInfo.cs.in"
         DestinationFile="$(IntermediateOutputPath)AssemblyInfo.cs"
-        Replacements="@PACKAGE_VERSION@=$(_PackageVersion);@PACKAGE_VERSION_BUILD@=$(_PackageVersionBuild);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch)">
+        Replacements="@PACKAGE_VERSION@=$(_PackageVersion);@PACKAGE_VERSION_BUILD@=$(_PackageVersionBuild);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch);@API_LEVEL@=$(AndroidApiLevel);@MIN_API_LEVEL@=$(AndroidMinimumDotNetApiLevel)">
     </ReplaceFileContents>
   </Target>
   <PropertyGroup>
