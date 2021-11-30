@@ -400,9 +400,9 @@ namespace Xamarin.Android.Tools.Bytecode
 			var xtype = xdoc
 				.Elements ("api")
 				.Elements ("package")
-				.Where (p => ((string) p.Attribute ("name")) == info.PackageName)
+				.Where (p => ((string?) p.Attribute ("name")) == info.PackageName)
 				.Elements ()
-				.Where (t => ((string) t.Attribute ("name")) == info.TypeName)
+				.Where (t => ((string?) t.Attribute ("name")) == info.TypeName)
 				.FirstOrDefault ();
 			if (xtype == null) {
 				return null;
@@ -410,13 +410,13 @@ namespace Xamarin.Android.Tools.Bytecode
 
 			var members = info.MethodName == "constructor"
 				? xtype.Elements ("constructor")
-				: xtype.Elements ("method").Where (m => ((string) m.Attribute ("name")) == info.MethodName);
+				: xtype.Elements ("method").Where (m => ((string?) m.Attribute ("name")) == info.MethodName);
 			var pcount  = info.ParameterTypes.Length;
 			members     = members
 				.Where (m => m.Elements ("parameter").Count () == pcount);
 
 			XElement? member =
-				members.FirstOrDefault (m => info.MethodSignature == (string) m.Attribute ("jni-signature"));
+				members.FirstOrDefault (m => info.MethodSignature == (string?) m.Attribute ("jni-signature"));
 			if (member == null) {
 				foreach (var m in members) {
 					var found   = true;
@@ -436,12 +436,15 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (member == null)
 				return null;
 			return member.Elements ("parameter")
-				.Select (p => (string) p.Attribute ("name"))
+				.Select (p => ((string?) p.Attribute ("name")) ?? "")
 				.ToArray ();
 
 			bool ParameterTypesMatch (XElement parameter, string ptype)
 			{
-				var jtype = (string) parameter.Attribute ("type");
+				var jtype = (string?) parameter.Attribute ("type");
+				if (jtype == null) {
+					return false;
+				}
 				if (!jtype.StartsWith (".*", StringComparison.Ordinal)) {
 					return jtype == ptype;
 				}

@@ -305,7 +305,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 						continue;
 
 					var parameterTypes = parameterElements
-						.Select (p => new JavaMethodParameterTypeInfo ((string) p.Attribute ("jni-type"), (string) p.Attribute ("type")))
+						.Select (p => new JavaMethodParameterTypeInfo (
+								jniType: (string?) p.Attribute ("jni-type") ?? "",
+								javaType: (string?) p.Attribute ("type") ?? ""))
 						.ToArray ();
 
 					if (!parameterTypes.Any ())
@@ -315,7 +317,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 							currentpackage,
 							className,
 							currentMethod,
-							(string) method.Attribute ("jni-signature"),
+							(string?) method.Attribute ("jni-signature"),
 							parameterTypes,
 							isVarArgs: false
 					);
