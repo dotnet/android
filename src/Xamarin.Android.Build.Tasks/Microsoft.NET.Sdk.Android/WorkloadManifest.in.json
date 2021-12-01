@@ -6,11 +6,11 @@
       "packs": [
         "Microsoft.Android.Sdk",
         "Microsoft.Android.Sdk.BundleTool",
-        "Microsoft.Android.31.Ref",
-        "Microsoft.Android.31.Runtime.android-arm",
-        "Microsoft.Android.31.Runtime.android-arm64",
-        "Microsoft.Android.31.Runtime.android-x86",
-        "Microsoft.Android.31.Runtime.android-x64",
+        "Microsoft.Android.Ref.31",
+        "Microsoft.Android.Runtime.31.android-arm",
+        "Microsoft.Android.Runtime.31.android-arm64",
+        "Microsoft.Android.Runtime.31.android-x86",
+        "Microsoft.Android.Runtime.31.android-x64",
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "linux-x64", "osx-x64", "osx-arm64" ],
@@ -19,11 +19,11 @@
     "android-32": {
       "description": "Preview support for Android API-32.",
       "packs": [
-        "Microsoft.Android.32.Ref",
-        "Microsoft.Android.32.Runtime.android-arm",
-        "Microsoft.Android.32.Runtime.android-arm64",
-        "Microsoft.Android.32.Runtime.android-x86",
-        "Microsoft.Android.32.Runtime.android-x64"
+        "Microsoft.Android.Ref.32",
+        "Microsoft.Android.Runtime.32.android-arm",
+        "Microsoft.Android.Runtime.32.android-arm64",
+        "Microsoft.Android.Runtime.32.android-x86",
+        "Microsoft.Android.Runtime.32.android-x64"
       ],
       "platforms": [ "win-x64", "linux-x64", "osx-x64", "osx-arm64" ],
       "extends" : [ "android" ]
@@ -50,43 +50,43 @@
       "kind": "sdk",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.31.Ref": {
+    "Microsoft.Android.Ref.31": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.31.Runtime.android-arm": {
+    "Microsoft.Android.Runtime.31.android-arm": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.31.Runtime.android-arm64": {
+    "Microsoft.Android.Runtime.31.android-arm64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.31.Runtime.android-x86": {
+    "Microsoft.Android.Runtime.31.android-x86": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.31.Runtime.android-x64": {
+    "Microsoft.Android.Runtime.31.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.32.Ref": {
+    "Microsoft.Android.Ref.32": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.32.Runtime.android-arm": {
+    "Microsoft.Android.Runtime.32.android-arm": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.32.Runtime.android-arm64": {
+    "Microsoft.Android.Runtime.32.android-arm64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.32.Runtime.android-x86": {
+    "Microsoft.Android.Runtime.32.android-x86": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.32.Runtime.android-x64": {
+    "Microsoft.Android.Runtime.32.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
