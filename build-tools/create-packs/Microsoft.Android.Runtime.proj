@@ -2,7 +2,7 @@
 ***********************************************************************************************
 Microsoft.Android.Runtime.proj
 
-This project file is used to create Microsoft.Android.[API].Runtime NuGets, which are
+This project file is used to create Microsoft.Android.Runtime.[API].[RID] NuGets, which are
 runtime packs that contain the assets required for a self-contained publish of
 projects that use the Microsoft.Android framework in .NET 5.
 ***********************************************************************************************
@@ -12,7 +12,7 @@ projects that use the Microsoft.Android framework in .NET 5.
   <PropertyGroup>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android-arm64</AndroidRID>
     <AndroidABI Condition=" '$(AndroidABI)' == '' ">arm64-v8a-net6</AndroidABI>
-    <PackageId>Microsoft.Android.$(AndroidApiLevel).Runtime.$(AndroidRID)</PackageId>
+    <PackageId>Microsoft.Android.Runtime.$(AndroidApiLevel).$(AndroidRID)</PackageId>
     <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
     <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\net6.0</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>
