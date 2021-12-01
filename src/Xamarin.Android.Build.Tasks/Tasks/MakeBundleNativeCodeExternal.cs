@@ -23,7 +23,6 @@ namespace Xamarin.Android.Tasks
 
 		const string BundleSharedLibraryName = "libmonodroid_bundle_app.so";
 
-		[Required]
 		public string AndroidNdkDirectory { get; set; }
 
 		[Required]
@@ -57,8 +56,8 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
-			if (ndk == null) {
+			NdkTools ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: true, log: Log);
+			if (Log.HasLoggedErrors) {
 				return false; // NdkTools.Create will log appropriate error
 			}
 
