@@ -7,6 +7,7 @@ using System.Text;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -221,8 +222,8 @@ namespace Xamarin.Android.Tasks
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
 			GenerateNativeAssembly (
-				(NativeAssemblerTargetProvider asmTargetProvider, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
-					return new TypeMappingDebugNativeAssemblyGenerator (asmTargetProvider, new ModuleDebugData (), outputDirectory, sharedBitsWritten);
+				(AndroidTargetArch arch, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
+					return new TypeMappingDebugNativeAssemblyGenerator (arch, new ModuleDebugData (), outputDirectory, sharedBitsWritten);
 				}
 			);
 
@@ -254,8 +255,8 @@ namespace Xamarin.Android.Tasks
 
 			PrepareDebugMaps (data);
 			GenerateNativeAssembly (
-				(NativeAssemblerTargetProvider asmTargetProvider, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
-					return new TypeMappingDebugNativeAssemblyGenerator (asmTargetProvider, data, outputDirectory, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
+				(AndroidTargetArch arch, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
+					return new TypeMappingDebugNativeAssemblyGenerator (arch, data, outputDirectory, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
 				}
 			);
 
@@ -432,8 +433,8 @@ namespace Xamarin.Android.Tasks
 			data = new NativeTypeMappingData (logger, modules, maxJavaNameLength + 1);
 
 			GenerateNativeAssembly (
-				(NativeAssemblerTargetProvider asmTargetProvider, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
-					return new TypeMappingReleaseNativeAssemblyGenerator (asmTargetProvider, data, outputDirectory, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
+				(AndroidTargetArch arch, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
+					return new TypeMappingReleaseNativeAssemblyGenerator (arch, data, outputDirectory, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
 				}
 			);
 
@@ -445,40 +446,40 @@ namespace Xamarin.Android.Tasks
 			return td.IsInterface || td.HasGenericParameters;
 		}
 
-		void GenerateNativeAssembly (Func<NativeAssemblerTargetProvider, bool, bool, NativeAssemblyGenerator> getGenerator)
+		void GenerateNativeAssembly (Func<AndroidTargetArch, bool, bool, TypeMappingAssemblyGenerator> getGenerator)
 		{
-			NativeAssemblerTargetProvider asmTargetProvider;
+			AndroidTargetArch arch;
 			bool sharedBitsWritten = false;
 			bool sharedIncludeUsesAbiPrefix;
 			foreach (string abi in supportedAbis) {
 				sharedIncludeUsesAbiPrefix = false;
 				switch (abi.Trim ()) {
 					case "armeabi-v7a":
-						asmTargetProvider = new ARMNativeAssemblerTargetProvider (is64Bit: false);
+						arch = AndroidTargetArch.Arm;
 						sharedIncludeUsesAbiPrefix = true; // ARMv7a is "special", it uses different directive prefix
 														   // than the others and the "shared" code won't build for it
 						break;
 
 					case "arm64-v8a":
-						asmTargetProvider = new ARMNativeAssemblerTargetProvider (is64Bit: true);
+						arch = AndroidTargetArch.Arm64;
 						break;
 
 					case "x86":
-						asmTargetProvider = new X86NativeAssemblerTargetProvider (is64Bit: false);
+						arch = AndroidTargetArch.X86;
 						break;
 
 					case "x86_64":
-						asmTargetProvider = new X86NativeAssemblerTargetProvider (is64Bit: true);
+						arch = AndroidTargetArch.X86_64;
 						break;
 
 					default:
 						throw new InvalidOperationException ($"Unknown ABI {abi}");
 				}
 
-				NativeAssemblyGenerator generator = getGenerator (asmTargetProvider, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
+				TypeMappingAssemblyGenerator generator = getGenerator (arch, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (outputEncoding)) {
-					generator.Write (sw);
+					generator.Write (sw, generator.MainSourceFile);
 					sw.Flush ();
 					Files.CopyIfStreamChanged (sw.BaseStream, generator.MainSourceFile);
 					if (!sharedIncludeUsesAbiPrefix)

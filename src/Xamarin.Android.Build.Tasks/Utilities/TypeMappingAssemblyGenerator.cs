@@ -5,21 +5,19 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	abstract class TypeMappingAssemblyGenerator
+	abstract class TypeMappingAssemblyGenerator : NativeAssemblyComposer
 	{
-		AndroidTargetArch arch;
-
 		protected string TypemapsIncludeFile { get; }
 		protected string SharedIncludeFile { get; }
 		public string MainSourceFile { get; }
 
 		protected TypeMappingAssemblyGenerator (AndroidTargetArch arch, string baseFilePath, bool sharedIncludeUsesAbiPrefix)
+			: base (arch)
 		{
 			if (String.IsNullOrEmpty (baseFilePath)) {
 				throw new ArgumentException ("must not be null or empty", nameof (baseFilePath));
 			}
 
-			this.arch = arch;
 			string abiName = NativeAssemblyGenerator.GetAbiName (arch);
 
 			if (sharedIncludeUsesAbiPrefix) {
@@ -30,12 +28,5 @@ namespace Xamarin.Android.Tasks
 			TypemapsIncludeFile = $"{baseFilePath}.{abiName}-managed.inc";
 			MainSourceFile = $"{baseFilePath}.{abiName}.s";
 		}
-
-		public void Write (StreamWriter output, string fileName)
-		{
-			Write (NativeAssemblyGenerator.Create (arch, output, fileName));
-		}
-
-		protected abstract void Write (NativeAssemblyGenerator generator);
 	}
 }

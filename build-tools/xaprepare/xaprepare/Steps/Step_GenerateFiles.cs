@@ -167,6 +167,7 @@ namespace Xamarin.Android.Prepare
 				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI [AbiNames.TargetJit.AndroidX86_64].ToString () },
 				{ "@XA_SUPPORTED_ABIS@",         context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Replace (':', ';') },
 				{ "@ANDROID_LATEST_STABLE_API_LEVEL@", context.Properties.GetRequiredValue (KnownProperties.AndroidLatestStableApiLevel) },
+				{ "@XAMARIN_ANDROID_VERSION@",   context.Properties.GetRequiredValue (KnownProperties.ProductVersion) },
 			};
 
 			return new GeneratedPlaceholdersFile (

@@ -59,7 +59,8 @@ namespace Xamarin.Android.Tasks
         public uint   name_length;
         public IntPtr name;
 	};
-	class ApplicationConfigNativeAssemblyGenerator
+
+	class ApplicationConfigNativeAssemblyGenerator : NativeAssemblyComposer
 	{
 		SortedDictionary <string, string> environmentVariables;
 		SortedDictionary <string, string> systemProperties;
@@ -87,19 +88,18 @@ namespace Xamarin.Android.Tasks
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
 		TaskLoggingHelper log;
-		AndroidTargetArch arch;
 
 		public ApplicationConfigNativeAssemblyGenerator (AndroidTargetArch arch, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
+			: base (arch)
 		{
 			if (environmentVariables != null)
 				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
 			if (systemProperties != null)
 			this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
 			this.log = log;
-			this.arch = arch;
 		}
 
-		public void Write (StreamWriter output, string fileName)
+		protected override void Write (NativeAssemblyGenerator generator)
 		{
 			if (String.IsNullOrEmpty (AndroidPackageName))
 				throw new InvalidOperationException ("Android package name must be set");
@@ -107,15 +107,7 @@ namespace Xamarin.Android.Tasks
 			if (UsesMonoAOT && String.IsNullOrEmpty (MonoAOTMode))
 				throw new InvalidOperationException ("Mono AOT enabled but no AOT mode specified");
 
-			NativeAssemblyGenerator generator = NativeAssemblyGenerator.Create (arch, output, fileName);
-
-			// string stringLabel = GetStringLabel ();
-			// WriteData (output, MonoAOTMode ?? String.Empty, stringLabel);
-			// WriteDataSection (output, "mono_aot_mode_name");
-			// WritePointer (output, MakeLocalLabel (stringLabel), "mono_aot_mode_name", isGlobal: true);
-
-			generator.WriteFileTop ();
-
+			generator.WriteStringSection ("mono_aot_mode");
 			generator.WriteStringSymbol ("mono_aot_mode_name", MonoAOTMode ?? String.Empty, global: true);
 
 			WriteNameValueStringArray (generator, "app_environment_variables", environmentVariables);
@@ -150,8 +142,6 @@ namespace Xamarin.Android.Tasks
 			NativeAssemblyGenerator.StructureWriteContext structStatus = generator.StartStructure ();
 			generator.WriteStructure (structStatus, application_config);
             generator.WriteSymbol (structStatus, "application_config", local: false);
-
-			generator.WriteFileEnd ();
 		}
 
 		uint WriteDSOCache (NativeAssemblyGenerator generator)
@@ -322,13 +312,15 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
+			NativeAssemblyGenerator.StructureWriteContext nameValueStruct = generator.StartStructure ();
 			foreach (var kvp in entries) {
 				string name = kvp.Key;
 				string value = kvp.Value ?? String.Empty;
 
-				generator.WriteStringPointer (name);
-				generator.WriteStringPointer (value);
+				generator.WriteStringPointer (nameValueStruct, name);
+				generator.WriteStringPointer (nameValueStruct, value);
 			}
+			generator.WriteSymbol (nameValueStruct, label, local: false);
 		}
 	};
 }

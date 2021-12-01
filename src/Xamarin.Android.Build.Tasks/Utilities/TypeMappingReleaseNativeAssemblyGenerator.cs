@@ -71,13 +71,13 @@ namespace Xamarin.Android.Tasks
 			public uint   entry_count;
 			public uint   duplicate_count;
 
-			[NativeAssembler (PointerToSymbol = true)]
+			[NativeAssemblerString (PointerToSymbol = true)]
 			public string map;
 
-			[NativeAssembler (PointerToSymbol = true)]
+			[NativeAssemblerString (PointerToSymbol = true)]
 			public string duplicate_map;
 
-			[NativeAssembler (PointerToSymbol = true, UsesDataProvider = true)]
+			[NativeAssemblerString (PointerToSymbol = true, UsesDataProvider = true)]
 			public string assembly_name;
 			public IntPtr image;
 			public uint   java_name_width;
@@ -95,7 +95,7 @@ namespace Xamarin.Android.Tasks
 			public uint module_index;
 			public uint type_token_id;
 
-			[NativeAssemblerString (Inline = true, NeedsMaxInlineLength = true, PadToMaxLength = true, UsesDataProvider = true)]
+			[NativeAssemblerString (Inline = true, PadToMaxLength = true)]
 			public string  java_name;
 		}
 
@@ -115,6 +115,7 @@ namespace Xamarin.Android.Tasks
 		{
 			WriteHeaderField (generator, "map_module_count", mappingData.MapModuleCount);
 			WriteHeaderField (generator, "java_type_count", mappingData.JavaTypeCount);
+			WriteHeaderField (generator, "java_name_width", mappingData.JavaNameWidth);
 
 			bool haveAssemblyNames = mappingData.AssemblyNames.Count > 0;
 			bool haveModules = mappingData.Modules.Length > 0;
@@ -125,6 +126,7 @@ namespace Xamarin.Android.Tasks
 				generator.WriteCommentLine ($"No shared data present, {Path.GetFileName (SharedIncludeFile)} not generated");
 			}
 
+			generator.WriteEOL ();
 			if (haveModules) {
 				generator.WriteInclude (Path.GetFileName (TypemapsIncludeFile));
 			} else {
@@ -149,11 +151,7 @@ namespace Xamarin.Android.Tasks
 				WriteMapModules (generator, null, "map_modules");
 			}
 
-			// The extra padding is used to make each entry aligned to 4 bytes, we need to take that into account for
-			// correct native code map offset calculations. The padding effectively becomes part of the java_name
-			// member, so we just add it there.
 			WriteJavaMap (generator, "map_java");
-			WriteHeaderField (generator, "java_name_width", mappingData.JavaNameWidth);
 		}
 
 		void WriteAssemblyNames (NativeAssemblyGenerator generator, StreamWriter output)
@@ -195,11 +193,12 @@ namespace Xamarin.Android.Tasks
 				NativeAssemblyGenerator.StructureWriteContext mapEntryStruct = generator.AddStructureArrayElement (mapArray);
 				generator.WriteStructure (mapEntryStruct, map_entry);
 			}
-			generator.WriteSymbol (mapArray, moduleSymbolName);
+			generator.WriteSymbol (output, mapArray, moduleSymbolName, alreadyInSection: true, skipLabelCounter: true);
 		}
 
 		void WriteMapModules (NativeAssemblyGenerator generator, StreamWriter mapOutput, string symbolName)
 		{
+			generator.WriteEOL ();
 			generator.WriteCommentLine ("Managed to Java map: START");
 			generator.WriteDataSection ($"rel.{symbolName}");
 
@@ -228,8 +227,8 @@ namespace Xamarin.Android.Tasks
 				map_module.module_uuid = data.MvidBytes;
 				map_module.entry_count = (uint)data.Types.Length;
 				map_module.duplicate_count = (uint)data.DuplicateTypes.Count;
-				map_module.map = mapName;
-				map_module.duplicate_map = duplicateMapName;
+				map_module.map = generator.MakeLocalLabel (mapName, skipCounter: true);
+				map_module.duplicate_map = duplicateMapName.Length == 0 ? null : generator.MakeLocalLabel (duplicateMapName, skipCounter: true);
 				map_module.assembly_name = data.AssemblyNameLabel;
 
 				NativeAssemblyGenerator.StructureWriteContext mapModuleStruct = generator.AddStructureArrayElement (mapModulesArray);
@@ -237,8 +236,9 @@ namespace Xamarin.Android.Tasks
 
 				if (mapOutput != null) {
 					WriteManagedMaps (generator, mapOutput, mapName, data.Types);
-					if (data.DuplicateTypes.Count > 0)
+					if (data.DuplicateTypes.Count > 0) {
 						WriteManagedMaps (generator, mapOutput, duplicateMapName, data.DuplicateTypes.Values);
+					}
 				}
 			}
 			generator.WriteSymbol (mapModulesArray, symbolName, local: false);
@@ -247,6 +247,7 @@ namespace Xamarin.Android.Tasks
 
 		void WriteJavaMap (NativeAssemblyGenerator generator, string symbolName)
 		{
+			generator.WriteEOL ();
 			generator.WriteCommentLine ("Java to managed map: START");
 			generator.WriteDataSection (symbolName, writable: false);
 
@@ -254,12 +255,12 @@ namespace Xamarin.Android.Tasks
 				MaxJavaNameLength = mappingData.JavaNameWidth,
 			};
 
-			// TODO: add ability to write entry index
+			// TODO: add ability to write entry index as a comment above each entry
 			NativeAssemblyGenerator.StructureWriteContext javaMapArray = generator.StartStructureArray ();
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
 				map_entry.module_index = (uint)entry.ModuleIndex;
 				map_entry.type_token_id = entry.SkipInJavaToManaged ? 0 : entry.Token;
-				map_entry.java_name = entry.JavaName; // TODO: need a way to specify the width of the fixed field
+				map_entry.java_name = entry.JavaName;
 
 				NativeAssemblyGenerator.StructureWriteContext mapEntryStruct = generator.AddStructureArrayElement (javaMapArray);
 				generator.WriteStructure (mapEntryStruct, map_entry);
@@ -270,9 +271,10 @@ namespace Xamarin.Android.Tasks
 
 		void WriteHeaderField (NativeAssemblyGenerator generator, string name, uint value)
 		{
+			generator.WriteEOL ();
 			generator.WriteCommentLine ($"{name}: START");
 			generator.WriteDataSection (name, writable: false);
-			generator.WriteSymbol (name, value, local: false);
+			generator.WriteSymbol (name, value, hex: false, local: false);
 			generator.WriteCommentLine ($"{name}: END");
 		}
 	}

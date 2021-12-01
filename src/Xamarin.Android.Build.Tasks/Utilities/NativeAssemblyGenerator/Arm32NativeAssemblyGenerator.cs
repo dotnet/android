@@ -23,11 +23,11 @@ namespace Xamarin.Android.Tasks
 
 		protected override NativeType GetPointerType () => pointer;
 
-		public override uint WriteData<T> (TextWriter writer, T value, bool hex = true, string? comment = null) where T: struct
+		public override uint WriteData<T> (TextWriter writer, T value, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
 			Type type = typeof(T);
 			if (type != typeof(long) && type != typeof(ulong)) {
-				return base.WriteData<T> (writer, value, hex, comment);
+				return base.WriteData<T> (writer, value, hex, comment, useBlockComment);
 			}
 
 			string nativeTypeName = GetNativeTypeName<T> ();

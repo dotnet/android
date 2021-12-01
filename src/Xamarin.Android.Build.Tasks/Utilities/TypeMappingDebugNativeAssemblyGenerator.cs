@@ -10,6 +10,58 @@ namespace Xamarin.Android.Tasks
 {
 	class TypeMappingDebugNativeAssemblyGenerator : TypeMappingAssemblyGenerator
 	{
+		sealed class TypeMapContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var map_module = data as TypeMap;
+				if (map_module == null) {
+					throw new InvalidOperationException ("Invalid data type, expected an instance of TypeMap");
+				}
+
+				if (String.Compare ("assembly_name", fieldName, StringComparison.Ordinal) == 0) {
+					return "assembly_name (unused in this mode)";
+				}
+
+				if (String.Compare ("data", fieldName, StringComparison.Ordinal) == 0) {
+					return "data (unused in this mode)";
+				}
+
+				return String.Empty;
+			}
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMapEntry structure
+		sealed class TypeMapEntry
+		{
+			[NativeAssemblerString (PointerToSymbol = true)]
+			public string from;
+
+			[NativeAssemblerString (PointerToSymbol = true)]
+			public string to;
+		};
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMap structure
+		[NativeAssemblerStructContextDataProvider (typeof (TypeMapContextDataProvider))]
+		sealed class TypeMap
+		{
+			public uint  entry_count;
+
+			[NativeAssembler (UsesDataProvider = true)]
+			public IntPtr assembly_name = IntPtr.Zero; // unused in Debug mode
+
+			[NativeAssembler (UsesDataProvider = true)]
+			public IntPtr data = IntPtr.Zero; // unused in Debug mode
+
+			[NativeAssemblerString (PointerToSymbol = true)]
+			public string        java_to_managed;
+
+			[NativeAssemblerString (PointerToSymbol = true)]
+			public string        managed_to_java;
+		};
+
 		const string JavaToManagedSymbol = "map_java_to_managed";
 		const string ManagedToJavaSymbol = "map_managed_to_java";
 		const string TypeMapSymbol = "type_map"; // MUST match src/monodroid/xamarin-app.hh
@@ -34,110 +86,93 @@ namespace Xamarin.Android.Tasks
 			bool haveJavaToManaged = data.JavaToManagedMap != null && data.JavaToManagedMap.Count > 0;
 			bool haveManagedToJava = data.ManagedToJavaMap != null && data.ManagedToJavaMap.Count > 0;
 
-			using (var sharedOutput = MemoryStreamPool.Shared.CreateStreamWriter (output.Encoding)) {
-				WriteSharedBits (sharedOutput, haveJavaToManaged, haveManagedToJava);
+			using (var sharedOutput = MemoryStreamPool.Shared.CreateStreamWriter (generator.Output.Encoding)) {
+				WriteSharedBits (generator, sharedOutput, haveJavaToManaged, haveManagedToJava);
 				sharedOutput.Flush ();
 				Files.CopyIfStreamChanged (sharedOutput.BaseStream, SharedIncludeFile);
 			}
 
 			if (haveJavaToManaged || haveManagedToJava) {
-				output.Write (Indent);
-				output.Write (".include");
-				output.Write (Indent);
-				output.Write ('"');
-				output.Write (Path.GetFileName (SharedIncludeFile));
-				output.WriteLine ('"');
-
-				output.WriteLine ();
+				generator.WriteInclude (Path.GetFileName (SharedIncludeFile));
 			}
 
-			uint size = 0;
-			WriteCommentLine (output, "Managed to java map: START", indent: false);
-			WriteSection (output, $".data.rel.{ManagedToJavaSymbol}", hasStrings: false, writable: true);
-			WriteStructureSymbol (output, ManagedToJavaSymbol, alignBits: TargetProvider.DebugTypeMapAlignBits, isGlobal: false);
+			string managedToJavaSymbolName;
+			generator.WriteCommentLine ("Managed to java map: START");
+			generator.WriteDataSection ($"rel.{ManagedToJavaSymbol}");
+
 			if (haveManagedToJava) {
+				NativeAssemblyGenerator.StructureWriteContext mapArray = generator.StartStructureArray ();
+				var map_entry = new TypeMapEntry ();
 				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
-					size += WritePointer (output, entry.ManagedLabel);
-					size += WritePointer (output, entry.JavaLabel);
-				}
-			}
-			WriteStructureSize (output, ManagedToJavaSymbol, size, alignBits: TargetProvider.DebugTypeMapAlignBits, alwaysWriteSize: true);
-			WriteCommentLine (output, "Managed to java map: END", indent: false);
-			output.WriteLine ();
+					map_entry.from = entry.ManagedLabel;
+					map_entry.to = entry.JavaLabel;
 
-			size = 0;
-			WriteCommentLine (output, "Java to managed map: START", indent: false);
-			WriteSection (output, $".data.rel.{JavaToManagedSymbol}", hasStrings: false, writable: true);
-			WriteStructureSymbol (output, JavaToManagedSymbol, alignBits: TargetProvider.DebugTypeMapAlignBits, isGlobal: false);
+					NativeAssemblyGenerator.StructureWriteContext mapEntryStruct = generator.AddStructureArrayElement (mapArray);
+					generator.WriteStructure (mapEntryStruct, map_entry);
+				}
+				managedToJavaSymbolName = generator.WriteSymbol (mapArray, ManagedToJavaSymbol);
+			} else {
+				managedToJavaSymbolName = generator.WriteEmptySymbol (SymbolType.Object, ManagedToJavaSymbol);
+			}
+			generator.WriteCommentLine ("Managed to java map: END");
+
+			string javaToManagedSymbolName;
+			generator.WriteCommentLine ("Java to managed map: START");
+			generator.WriteDataSection ($"rel.{JavaToManagedSymbol}");
+
 			if (haveJavaToManaged) {
+				NativeAssemblyGenerator.StructureWriteContext mapArray = generator.StartStructureArray ();
+				var map_entry = new TypeMapEntry ();
 				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
-					size += WritePointer (output, entry.JavaLabel);
+					map_entry.from = entry.JavaLabel;
 
 					TypeMapGenerator.TypeMapDebugEntry managedEntry = entry.DuplicateForJavaToManaged != null ? entry.DuplicateForJavaToManaged : entry;
-					size += WritePointer (output, managedEntry.SkipInJavaToManaged ? null : managedEntry.ManagedLabel);
+					map_entry.to = managedEntry.SkipInJavaToManaged ? null : managedEntry.ManagedLabel;
+
+					NativeAssemblyGenerator.StructureWriteContext mapEntryStruct = generator.AddStructureArrayElement (mapArray);
+					generator.WriteStructure (mapEntryStruct, map_entry);
 				}
+
+				javaToManagedSymbolName = generator.WriteSymbol (mapArray, JavaToManagedSymbol);
+			} else {
+				javaToManagedSymbolName = generator.WriteEmptySymbol (SymbolType.Object, JavaToManagedSymbol);
 			}
-			WriteStructureSize (output, JavaToManagedSymbol, size, alignBits: TargetProvider.DebugTypeMapAlignBits, alwaysWriteSize: true);
-			WriteCommentLine (output, "Java to managed map: END", indent: false);
-			output.WriteLine ();
+			generator.WriteCommentLine ("Java to managed map: END");
 
-			// MUST match src/monodroid/xamarin-app.hh
-			WriteCommentLine (output, "TypeMap structure");
-			WriteSection (output, $".data.rel.ro.{TypeMapSymbol}", hasStrings: false, writable: true);
-			WriteStructureSymbol (output, TypeMapSymbol, alignBits: TargetProvider.DebugTypeMapAlignBits, isGlobal: true);
+			generator.WriteCommentLine ("TypeMap structure");
+			generator.WriteDataSection ($"rel.ro.{TypeMapSymbol}");
 
-			size = WriteStructure (output, packed: false, structureWriter: () => WriteTypeMapStruct (output));
+			var type_map = new TypeMap {
+				entry_count = (uint)data.EntryCount,
+				java_to_managed = javaToManagedSymbolName,
+				managed_to_java = managedToJavaSymbolName,
+			};
 
-			WriteStructureSize (output, TypeMapSymbol, size, alignBits: TargetProvider.DebugTypeMapAlignBits);
+			NativeAssemblyGenerator.StructureWriteContext typeMapStruct = generator.StartStructure ();
+			generator.WriteStructure (typeMapStruct, type_map);
+			generator.WriteSymbol (typeMapStruct, TypeMapSymbol, local: false);
 		}
 
-		// MUST match the TypeMap struct from src/monodroid/xamarin-app.hh
-		uint WriteTypeMapStruct (StreamWriter output)
+		void WriteSharedBits (NativeAssemblyGenerator generator, StreamWriter output, bool haveJavaToManaged, bool haveManagedToJava)
 		{
-			uint size = 0;
-
-			WriteCommentLine (output, "entry_count");
-			size += WriteData (output, data.EntryCount);
-
-			WriteCommentLine (output, "assembly_name (unused in this mode)");
-			size += WritePointer (output);
-
-			WriteCommentLine (output, "data (unused in this mode)");
-			size += WritePointer (output);
-
-			WriteCommentLine (output, "java_to_managed");
-			size += WritePointer (output, JavaToManagedSymbol);
-
-			WriteCommentLine (output, "managed_to_java");
-			size += WritePointer (output, ManagedToJavaSymbol);
-
-			return size;
-		}
-
-		void WriteSharedBits (StreamWriter output, bool haveJavaToManaged, bool haveManagedToJava)
-		{
-			string label;
-
 			if (haveJavaToManaged) {
-				WriteCommentLine (output, "Java type names: START");
+				generator.WriteStringSection (output, "java_type_names");
+				generator.WriteCommentLine (output, "Java type names: START", useBlockComment: true);
 				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
-					label = $"java_type_name.{entry.JavaIndex}";
-					WriteData (output, entry.JavaName, label, isGlobal: false);
-					entry.JavaLabel = MakeLocalLabel (label);
-					output.WriteLine ();
+					entry.JavaLabel = generator.MakeLocalLabel ("java_type_name");
+					generator.WriteStringSymbol (output, entry.JavaLabel, entry.JavaName, global: false);
 				}
-				WriteCommentLine (output, "Java type names: END");
-				output.WriteLine ();
+				generator.WriteCommentLine (output, "Java type names: END", useBlockComment: true);
 			}
 
 			if (haveManagedToJava) {
-				WriteCommentLine (output, "Managed type names: START");
+				generator.WriteStringSection (output, "managed_type_names");
+				generator.WriteCommentLine (output, "Managed type names: START", useBlockComment: true);
 				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
-					label = $"managed_type_name.{entry.ManagedIndex}";
-					WriteData (output, entry.ManagedName, label, isGlobal: false);
-					entry.ManagedLabel = MakeLocalLabel (label);
+					entry.ManagedLabel = generator.MakeLocalLabel ("managed_type_name");
+					generator.WriteStringSymbol (output, entry.ManagedLabel, entry.ManagedName, global: false);
 				}
-				WriteCommentLine (output, "Managed type names: END");
+				generator.WriteCommentLine (output, "Managed type names: END", useBlockComment: true);
 			}
 		}
 	}

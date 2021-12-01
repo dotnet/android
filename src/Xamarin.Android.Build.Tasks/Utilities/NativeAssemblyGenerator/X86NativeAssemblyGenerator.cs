@@ -6,6 +6,8 @@ namespace Xamarin.Android.Tasks
 {
 	abstract class X86NativeAssemblyGenerator : NativeAssemblyGenerator
 	{
+		protected override string LineCommentStart => "#";
+
         protected X86NativeAssemblyGenerator (StreamWriter output, string fileName)
 			: base (output, fileName)
 		{}

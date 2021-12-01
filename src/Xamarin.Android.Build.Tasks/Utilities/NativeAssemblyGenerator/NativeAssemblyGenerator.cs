@@ -87,6 +87,12 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		sealed class StructureReflectionCacheEntry
+		{
+			public List<StructureMemberInfo> MemberInfos;
+			public NativeAssemblerStructContextDataProvider? ContextDataProvider;
+		}
+
 		string fileName;
 		bool typeMappingConfigured = false;
 
@@ -107,6 +113,8 @@ namespace Xamarin.Android.Tasks
 			{ typeof(ulong),  null },
 			{ typeof(ushort), null },
 		};
+
+		Dictionary<Type, StructureReflectionCacheEntry> structureReflectionCache = new Dictionary<Type, StructureReflectionCacheEntry> ();
 
 		List<LabeledStringSymbol> stringTable = new List<LabeledStringSymbol> ();
 
@@ -216,11 +224,12 @@ namespace Xamarin.Android.Tasks
 				Output.WriteLine ();
 			}
 
-			WriteDirective (".ident", QuoteString ("Xamarin.Android X.Y.Z"));
+			WriteDirective (".ident", QuoteString ($"Xamarin.Android {XABuildConfig.XamarinAndroidVersion}"));
 		}
 
 		NativeType GetNativeType<T> ()
 		{
+			EnsureTypeMapping ();
 			if (!typeMapping.TryGetValue (typeof(T), out NativeType? nativeType) || nativeType == null) {
 				throw new InvalidOperationException ($"Managed nativeType {typeof(T)} has no native mapping");
 			}
@@ -271,47 +280,57 @@ namespace Xamarin.Android.Tasks
 			return ToString (typeof(T), value, hex);
 		}
 
-		public void WriteEOL (string? comment = null)
+		public void WriteEOL (string? comment = null, bool useBlockComment = false)
 		{
-			WriteEOL (Output, comment);
+			WriteEOL (Output, comment, useBlockComment);
 		}
 
-		public void WriteEOL (TextWriter writer, string? comment = null)
+		public void WriteEOL (TextWriter writer, string? comment = null, bool useBlockComment = false)
 		{
 			if (!String.IsNullOrEmpty (comment)) {
-				writer.Write ($"{Indent}{LineCommentStart} {comment}");
+				WriteCommentLine (writer, comment, useBlockComment: useBlockComment);
+				return;
 			}
 			writer.WriteLine ();
 		}
 
-		public void WriteInclude (string filePath, string? comment = null)
+		public void WriteInclude (string filePath, string? comment = null, bool useBlockComment = false)
 		{
-			WriteInclude (Output, filePath, comment);
+			WriteInclude (Output, filePath, comment, useBlockComment);
 		}
 
-		public void WriteInclude (TextWriter writer, string filePath, string? comment = null)
+		public void WriteInclude (TextWriter writer, string filePath, string? comment = null, bool useBlockComment = false)
 		{
-			WriteDirectiveWithComment (writer, ".include", comment, QuoteString (filePath));
+			WriteDirectiveWithComment (writer, ".include", comment, useBlockComment, QuoteString (filePath));
 		}
 
-		public void WriteCommentLine (string? comment = null, bool indent = true)
+		public void WriteCommentLine (string? comment = null, bool indent = true, bool useBlockComment = false)
 		{
 			WriteCommentLine (Output, comment, indent);
 		}
 
-		public void WriteCommentLine (TextWriter writer, string? comment = null, bool indent = true)
+		public void WriteCommentLine (TextWriter writer, string? comment = null, bool indent = true, bool useBlockComment = false)
 		{
 			if (indent) {
 				writer.Write (Indent);
 			}
 
-			writer.Write (LineCommentStart);
-			if (String.IsNullOrEmpty (comment)) {
-				writer.WriteLine ();
-				return;
+			if (useBlockComment) {
+				writer.Write ("/* ");
+			} else {
+				writer.Write (LineCommentStart);
 			}
 
-			writer.WriteLine ($" {comment}");
+			if (!String.IsNullOrEmpty (comment)) {
+				writer.Write (' ');
+				writer.Write (comment);
+			}
+
+			if (useBlockComment) {
+				writer.Write (" */");
+			}
+
+			writer.WriteLine ();
 		}
 
 		public StructureWriteContext StartStructure () => new StructureWriteContext ();
@@ -368,21 +387,36 @@ namespace Xamarin.Android.Tasks
 
 		public void WriteStructure<T> (StructureWriteContext status, IEnumerable<T> collection) where T: class
 		{
-			List<StructureMemberInfo> members = GatherMembers<T> ();
 			status.ArrayOfStructures = new List<StructureWriteContext> ();
 			foreach (T obj in collection) {
 				StructureWriteContext context = StartStructure ();
 				status.ArrayOfStructures.Add (context);
-				WriteStructure<T> (context, members, obj);
+				WriteStructure<T> (context, obj);
 			}
 		}
 
 		public void WriteStructure<T> (StructureWriteContext status, T obj) where T: class
 		{
-			WriteStructure<T> (status, GatherMembers<T> (), obj);
+			Type type = typeof(T);
+			if (!structureReflectionCache.TryGetValue (type, out StructureReflectionCacheEntry entry)) {
+				var providerAttr = type.GetCustomAttribute<NativeAssemblerStructContextDataProviderAttribute> ();
+				NativeAssemblerStructContextDataProvider? contextDataProvider = null;
+
+				if (providerAttr != null) {
+					contextDataProvider = Activator.CreateInstance (providerAttr.Type) as NativeAssemblerStructContextDataProvider;
+				}
+
+				entry = new StructureReflectionCacheEntry {
+					MemberInfos = GatherMembers<T> (),
+					ContextDataProvider = contextDataProvider,
+				};
+				structureReflectionCache.Add (type, entry);
+			}
+
+			WriteStructure<T> (status, entry.MemberInfos, entry.ContextDataProvider, obj);
 		}
 
-		void WriteStructure<T> (StructureWriteContext status, List<StructureMemberInfo> members, T obj) where T: class
+		void WriteStructure<T> (StructureWriteContext status, List<StructureMemberInfo> members, NativeAssemblerStructContextDataProvider? contextDataProvider, T obj) where T: class
 		{
 			status.ReflectedType = typeof(T);
 			foreach (StructureMemberInfo smi in members) {
@@ -394,8 +428,6 @@ namespace Xamarin.Android.Tasks
 
 				// TODO: handle all arrays
 				// TODO: handle IntPtr
-				// TODO: handle the context data provider attribute on members
-				// TODO: handle NativeAssemblyAttribute on the class
 				if (smi.Type == typeof(bool)) {
 					WriteField<bool> (smi, value);
 				} else if (smi.Type == typeof(byte)) {
@@ -425,11 +457,8 @@ namespace Xamarin.Android.Tasks
 				} else if (smi.Type == typeof(char)) {
 					// TODO: handle - convert to UTF8
 				} else if (smi.Type == typeof(string)) {
-					// TODO: handle inline strings (with optional maximum width and padding)
-					if (smi.Attr != null && smi.Attr.PointerToSymbol) {
-						WritePointer (status, (string)(object)value!, smi.Attr.Comment);
-					} else {
-						WriteStringPointer (status, (string)(object)value!, global: false, label: null, comment: GetComment<T> (smi.Info));
+					if (!HandleAttributedStrings (smi, smi.Attr as NativeAssemblerStringAttribute, (string)(object)value!)) {
+						WriteStringPointer (status, (string)(object)value!, global: false, label: null, comment: GetComment<T> (smi));
 					}
 				} else if (smi.Type == typeof(byte[])) {
 					WriteArrayField<byte> (smi, value);
@@ -440,24 +469,66 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			bool HandleAttributedStrings (StructureMemberInfo smi, NativeAssemblerStringAttribute? attr, string value)
+			{
+				if (attr == null) {
+					return false;
+				}
+
+				if (attr.PointerToSymbol) {
+					WritePointer (status, (string)(object)value!, comment: GetComment<T> (smi));
+					return true;
+				}
+
+				if (!attr.Inline) {
+					return false;
+				}
+
+				uint maxLength = 0;
+				if (attr.PadToMaxLength) {
+					EnsureContextDataProvider ();
+					maxLength = contextDataProvider.GetMaxInlineWidth (obj, smi.Info.Name);
+				}
+
+				WriteInlineString (status, value, fixedWidth: maxLength, comment: GetComment<T> (smi));
+				return true;
+			}
+
 			void WriteField<MT> (StructureMemberInfo smi, object? value) where MT: struct
 			{
-				WriteData<MT> (status, (MT)(object)value!, comment: GetComment<MT> (smi.Info));
+				WriteData<MT> (status, (MT)(object)value!, comment: GetComment<MT> (smi));
 			}
 
 			void WriteArrayField<MT> (StructureMemberInfo smi, object? values) where MT: struct
 			{
-				WriteData<MT> (status, (MT[])(object)values!, comment: GetComment<MT> (smi.Info));
+				WriteData<MT> (status, (MT[])(object)values!, comment: GetComment<MT> (smi));
 			}
 
-			string GetComment<MT> (MemberInfo mi)
+			string GetComment<MT> (StructureMemberInfo smi)
 			{
-				// TODO: get from custom attribute
-				return mi.Name;
+				if (smi.Attr != null) {
+					if (smi.Attr.UsesDataProvider) {
+						EnsureContextDataProvider ();
+						return contextDataProvider.GetComment (obj, smi.Info.Name);
+					}
+
+					if (!String.IsNullOrEmpty (smi.Attr.Comment)) {
+						return smi.Attr.Comment;
+					}
+				}
+
+				return smi.Info.Name;
+			}
+
+			void EnsureContextDataProvider ()
+			{
+				if (contextDataProvider == null) {
+					throw new InvalidOperationException ($"Type '{status.ReflectedType}' requires NativeAssemblerStructContextDataProviderAttribute to specify the context data provider");
+				}
 			}
 		}
 
-		void WriteSymbolType (TextWriter writer, string symbolName, SymbolType type, bool local, string? comment = null)
+		void WriteSymbolType (TextWriter writer, string symbolName, SymbolType type, bool local, string? comment = null, bool useBlockComment = false)
 		{
 			string symbolType;
 			switch (type) {
@@ -493,7 +564,7 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Unknown symbol nativeType '{type}'");
 			}
 
-			WriteDirectiveWithComment (writer, ".type", comment ?? symbolName, symbolName, $"{TypeLead}{symbolType}");
+			WriteDirectiveWithComment (writer, ".type", comment, useBlockComment, symbolName, $"{TypeLead}{symbolType}");
 			if (!local) {
 				WriteDirective (writer, ".global", symbolName);
 			}
@@ -509,18 +580,20 @@ namespace Xamarin.Android.Tasks
 			WriteDirective (writer, ".size", symbolName, size);
 		}
 
-		public void WriteEmptySymbol (SymbolType symbolType, string symbolName, bool local = true)
+		public string WriteEmptySymbol (SymbolType symbolType, string symbolName, bool local = true, bool skipLabelCounter = false)
 		{
-			WriteEmptySymbol (Output, symbolType, symbolName, local);
+			return WriteEmptySymbol (Output, symbolType, symbolName, local, skipLabelCounter);
 		}
 
-		public void WriteEmptySymbol (TextWriter writer, SymbolType symbolType, string symbolName, bool local = true)
+		public string WriteEmptySymbol (TextWriter writer, SymbolType symbolType, string symbolName, bool local = true, bool skipLabelCounter = false)
 		{
 			WriteSymbolType (writer, symbolName, symbolType, local);
 
-			string label = local ? MakeLocalLabel (symbolName) : symbolName;
+			string label = local ? MakeLocalLabel (symbolName, skipCounter: skipLabelCounter) : symbolName;
 			WriteSymbolLabel (writer, label);
 			WriteSymbolSize (writer, label, 0);
+
+			return label;
 		}
 
 		public LabeledSymbol WriteCommSymbol (string labelNamespace, uint size, uint alignment)
@@ -540,22 +613,29 @@ namespace Xamarin.Android.Tasks
 			return sym;
 		}
 
-		public void WriteSymbol (TextWriter writer, StructureWriteContext status, string symbolName, bool local = true)
+		public string WriteSymbol (StructureWriteContext status, string symbolName, bool local = true, bool useBlockComment = false, bool alreadyInSection = false, bool skipLabelCounter = false)
 		{
-			string label = local ? MakeLocalLabel (symbolName) : symbolName;
+			return WriteSymbol (Output, status, symbolName, local, useBlockComment, alreadyInSection);
+		}
+
+		public string WriteSymbol (TextWriter writer, StructureWriteContext status, string symbolName, bool local = true, bool useBlockComment = false, bool alreadyInSection = false, bool skipLabelCounter = false)
+		{
+			string label = local ? MakeLocalLabel (symbolName, skipCounter: skipLabelCounter) : symbolName;
 			writer.WriteLine ();
 			if (status.ReflectedType != null) {
-				WriteCommentLine (writer);
-				WriteCommentLine (writer, $"Generated from instance of: {status.ReflectedType.AssemblyQualifiedName}");
-				WriteCommentLine (writer);
+				WriteCommentLine (writer, useBlockComment: useBlockComment);
+				WriteCommentLine (writer, $"Generated from instance of: {status.ReflectedType.AssemblyQualifiedName}", useBlockComment: useBlockComment);
+				WriteCommentLine (writer, useBlockComment: useBlockComment);
 			}
 
 			bool isArray;
 			if (status.ArrayOfStructures != null) {
 				if (status.ArrayOfStructures.Count == 0) {
-					WriteDataSection (writer);
-					WriteEmptySymbol (writer, SymbolType.Object, symbolName, local);
-					return;
+					if (!alreadyInSection) {
+						WriteDataSection (writer);
+					}
+					WriteEmptySymbol (writer, SymbolType.Object, label, local, skipLabelCounter);
+					return label;
 				}
 
 				isArray = true;
@@ -563,11 +643,13 @@ namespace Xamarin.Android.Tasks
 				isArray = false;
 			}
 
-			WriteSymbolType (writer, symbolName, SymbolType.Object, local);
-			WriteDataSection (writer);
+			WriteSymbolType (writer, label, SymbolType.Object, local);
+			if (!alreadyInSection) {
+				WriteDataSection (writer);
+			}
 
 			StructureWriteContext c = isArray ? status.ArrayOfStructures![0] : status;
-			WriteDirective (writer, ".p2align", Math.Log2 (c.ByteAlignement));
+			WriteDirective (writer, ".p2align", Log2 (c.ByteAlignement));
 			WriteSymbolLabel (writer, label);
 
 			uint size = 0;
@@ -581,6 +663,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			WriteSymbolSize (writer, label, size);
+
+			return label;
 
 			uint WriteSingleStructure (StructureWriteContext context)
 			{
@@ -616,17 +700,12 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public void WriteSymbol (StructureWriteContext status, string symbolName, bool local = true)
+		public string  WriteSymbol (LabeledStringSymbol str, bool local = true, bool ownSection = false)
 		{
-			WriteSymbol (Output, status, symbolName, local);
+			return WriteSymbol (Output, str, local, ownSection);
 		}
 
-		public void WriteSymbol (LabeledStringSymbol str, bool local = true, bool ownSection = false)
-		{
-			WriteSymbol (Output, str, local, ownSection);
-		}
-
-		public void WriteSymbol (TextWriter writer, LabeledStringSymbol str, bool local = true, bool ownSection = false)
+		public string WriteSymbol (TextWriter writer, LabeledStringSymbol str, bool local = true, bool ownSection = false)
 		{
 			if (ownSection) {
 				WriteStringSection (writer, str.Label);
@@ -637,69 +716,77 @@ namespace Xamarin.Android.Tasks
 			WriteDirective (writer, ".asciz", QuoteString (str.Contents));
 			WriteSymbolSize (writer, str.Label, (uint)Encoding.UTF8.GetByteCount (str.Contents) + 1);
 			writer.WriteLine ();
+
+			return str.Label;
 		}
 
-		public void WriteSymbol<T> (string symbolName, T value, bool local = true, bool hex = true, string? comment = null) where T: struct
+		public string WriteSymbol<T> (string symbolName, T value, bool local = true, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
-			WriteSymbol<T> (Output, symbolName, value, local, hex, comment);
+			return WriteSymbol<T> (Output, symbolName, value, local, hex, comment, useBlockComment);
 		}
 
-		public void WriteSymbol<T> (TextWriter writer, string symbolName, T value, bool local = true, bool hex = true, string? comment = null) where T: struct
+		public string WriteSymbol<T> (TextWriter writer, string symbolName, T value, bool local = true, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
-			WriteSymbolType (writer, symbolName, SymbolType.Object, local, comment);
+			WriteSymbolType (writer, symbolName, SymbolType.Object, local, comment, useBlockComment);
 			NativeType nativeType = GetNativeType<T> ();
-			WriteDirective (writer, ".p2align", Math.Log2 (nativeType.Alignment));
-			WriteSymbolLabel (writer, symbolName);
+			WriteDirective (writer, ".p2align", Log2 (nativeType.Alignment));
+
+			string label = local ? MakeLocalLabel (symbolName, skipCounter: true) : symbolName;
+			WriteSymbolLabel (writer, label);
 			WriteData<T> (writer, value, hex);
+
+			WriteSymbolSize (writer, label, nativeType.Size);
+
+			return label;
 		}
 
-		public void WriteStringSymbol (string symbolName, string symbolValue, bool global = true)
+		public string WriteStringSymbol (string symbolName, string symbolValue, bool global = true)
 		{
-			WriteStringSymbol (Output, symbolName, symbolValue, global);
+			return WriteStringSymbol (Output, symbolName, symbolValue, global);
 		}
 
-		public void WriteStringSymbol (TextWriter writer, string symbolName, string symbolValue, bool global = true)
+		public string WriteStringSymbol (TextWriter writer, string symbolName, string symbolValue, bool global = true)
 		{
-			WriteSymbol (writer, new LabeledStringSymbol (symbolName, symbolValue, global), !global);
+			return WriteSymbol (writer, new LabeledStringSymbol (symbolName, symbolValue, global), !global);
 		}
 
-		protected void WriteData (TextWriter writer, string typeName, string value, string? comment = null)
+		protected void WriteData (TextWriter writer, string typeName, string value, string? comment = null, bool useBlockComment = false)
 		{
-			WriteDirectiveWithComment (writer, typeName, comment, value);
+			WriteDirectiveWithComment (writer, typeName, comment, useBlockComment, value);
 		}
 
-		protected void WriteData (string typeName, string value, string? comment = null)
+		protected void WriteData (string typeName, string value, string? comment = null, bool useBlockComment = false)
 		{
-			WriteData (Output, typeName, value, comment);
+			WriteData (Output, typeName, value, comment, useBlockComment);
 		}
 
-		public uint WritePointer (string? label, string? comment = null)
+		public uint WritePointer (string? label, string? comment = null, bool useBlockComment = false)
 		{
-			return WritePointer (Output, label, comment);
+			return WritePointer (Output, label, comment, useBlockComment);
 		}
 
-		public uint WritePointer (TextWriter writer, string? label, string? comment = null)
+		public uint WritePointer (TextWriter writer, string? label, string? comment = null, bool useBlockComment = false)
 		{
-			WriteData (writer, GetNativeTypeName<IntPtr> (), label == null ? "0" : label, comment);
+			WriteData (writer, GetNativeTypeName<IntPtr> (), label == null ? "0" : label, comment, useBlockComment);
 			return GetNativeTypeSize<IntPtr> ();
 		}
 
-		public uint WritePointer (StructureWriteContext status, string? label, string? comment = null)
+		public uint WritePointer (StructureWriteContext status, string? label, string? comment = null, bool useBlockComment = false)
 		{
 			status.TempWriter.GetStringBuilder ().Clear ();
 
-			uint ret = WritePointer (status.TempWriter, label, comment);
+			uint ret = WritePointer (status.TempWriter, label, comment, useBlockComment);
 			AddStructureField (status, GetNativeType<IntPtr> (), status.TempWriter.ToString ());
 
 			return ret;
 		}
 
-		public uint WriteStringPointer (string value, bool global = false, string? label = null, string? comment = null)
+		public uint WriteStringPointer (string value, bool global = false, string? label = null, string? comment = null, bool useBlockComment = false)
 		{
-			return WriteStringPointer (Output, value, global, label, comment);
+			return WriteStringPointer (Output, value, global, label, comment, useBlockComment);
 		}
 
-		public uint WriteStringPointer (TextWriter writer, string value, bool global = false, string? label = null, string? comment = null)
+		public uint WriteStringPointer (TextWriter writer, string value, bool global = false, string? label = null, string? comment = null, bool useBlockComment = false)
 		{
 			if (global && String.IsNullOrEmpty (label)) {
 				throw new ArgumentException (nameof (label), "Must not be null or empty for global symbols");
@@ -712,42 +799,52 @@ namespace Xamarin.Android.Tasks
 			var sym = new LabeledStringSymbol (label, value, global);
 			stringTable.Add (sym);
 
-			return WritePointer (writer, sym.Label, comment);
+			return WritePointer (writer, sym.Label, comment, useBlockComment);
 		}
 
-		public uint WriteStringPointer (StructureWriteContext status, string value, bool global = false, string? label = null, string? comment = null)
+		public uint WriteStringPointer (StructureWriteContext status, string value, bool global = false, string? label = null, string? comment = null, bool useBlockComment = false)
 		{
 			status.TempWriter.GetStringBuilder ().Clear ();
 
-			uint ret = WriteStringPointer (status.TempWriter, value, global, label, comment);
+			uint ret = WriteStringPointer (status.TempWriter, value, global, label, comment, useBlockComment);
 			AddStructureField (status, GetNativeType<IntPtr> (), status.TempWriter.ToString ());
 
 			return ret;
 		}
 
-		public uint WriteInlineString (string value, uint fixedWidth = 0, string? comment = null)
+		public uint WriteInlineString (StructureWriteContext status, string value, uint fixedWidth = 0, string? comment = null, bool useBlockComment = false)
 		{
-			return WriteInlineString (Output, value, fixedWidth, comment);
+			status.TempWriter.GetStringBuilder ().Clear ();
+
+			uint ret = WriteInlineString (status.TempWriter, value, fixedWidth, comment, useBlockComment);
+			AddStructureField (status, GetNativeType<byte> (), status.TempWriter.ToString (), arrayElements: ret);
+			return ret;
+		}
+
+		public uint WriteInlineString (string value, uint fixedWidth = 0, string? comment = null, bool useBlockComment = false)
+		{
+			return WriteInlineString (Output, value, fixedWidth, comment, useBlockComment);
 		}
 
 		// fixedWidth includes the terminating 0
-		public uint WriteInlineString (TextWriter writer, string value, uint fixedWidth = 0, string? comment = null)
+		public uint WriteInlineString (TextWriter writer, string value, uint fixedWidth = 0, string? comment = null, bool useBlockComment = false)
 		{
 			int byteCount = Encoding.UTF8.GetByteCount (value);
 			if (fixedWidth > 0 && byteCount > fixedWidth - 1) {
 				throw new InvalidOperationException ($"String is too long, maximum allowed length is {fixedWidth - 1} bytes, the string is {byteCount} bytes long");
 			}
 
-			WriteDirectiveWithComment (writer, ".asciiz", comment, value);
+			WriteDirectiveWithComment (writer, ".asciz", comment, useBlockComment, QuoteString (value));
 			if (fixedWidth == 0) {
 				return (uint)(byteCount + 1);
 			}
 
 			int padding = ((int)fixedWidth - 1) - byteCount;
 			if (padding > 0) {
-				WriteDirective (".zero", padding);
-			} else
+				WriteDirective (writer, ".zero", padding);
+			} else {
 				padding = 0;
+			}
 
 			return (uint)(byteCount + 1 + padding);
 		}
@@ -770,30 +867,30 @@ namespace Xamarin.Android.Tasks
 			return sym;
 		}
 
-		public virtual uint WriteData<T> (TextWriter writer, T value, bool hex = true, string? comment = null) where T: struct
+		public virtual uint WriteData<T> (TextWriter writer, T value, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
-			WriteData (writer, GetNativeTypeName<T> (), ToString (value, hex), comment);
+			WriteData (writer, GetNativeTypeName<T> (), ToString (value, hex), comment, useBlockComment);
 			return GetNativeTypeSize<T> ();
 		}
 
-		public virtual void WriteData<T> (StructureWriteContext status, T value, bool hex = true, string? comment = null) where T: struct
+		public virtual void WriteData<T> (StructureWriteContext status, T value, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
 			status.TempWriter.GetStringBuilder ().Clear ();
-			WriteData (status, status.TempWriter, value, hex, comment);
+			WriteData (status, status.TempWriter, value, hex, comment, useBlockComment);
 		}
 
-		protected void WriteData<T> (StructureWriteContext status, StringWriter sw, T value, bool hex = true, string? comment = null) where T: struct
+		protected void WriteData<T> (StructureWriteContext status, StringWriter sw, T value, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
-			WriteData (sw, value, hex, comment);
+			WriteData (sw, value, hex, comment, useBlockComment);
 			AddStructureField (status, GetNativeType<T> (), sw.ToString ());
 		}
 
-		public virtual uint WriteData<T> (T[] value, bool hex = true, string? comment = null) where T: struct
+		public virtual uint WriteData<T> (T[] value, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
-			return WriteData<T> (Output, value, hex, comment);
+			return WriteData<T> (Output, value, hex, comment, useBlockComment);
 		}
 
-		public virtual uint WriteData<T> (TextWriter writer, T[] value, bool hex = true, string? comment = null) where T: struct
+		public virtual uint WriteData<T> (TextWriter writer, T[] value, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
 			WriteDirectiveName (writer, GetNativeTypeName<T> ());
 			writer.Write (Indent);
@@ -808,25 +905,25 @@ namespace Xamarin.Android.Tasks
 
 				writer.Write (ToString (typeof(T), v, hex));
 			}
-			WriteEOL (writer, comment);
+			WriteEOL (writer, comment, useBlockComment);
 
 			return (uint)(GetNativeTypeSize<T> () * value.Length);
 		}
 
-		public virtual void WriteData<T> (StructureWriteContext status, T[] value, bool hex = true, string? comment = null) where T: struct
+		public virtual void WriteData<T> (StructureWriteContext status, T[] value, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
 			Type type = typeof(T);
 			if (type == typeof(byte) || type == typeof(sbyte)) {
 				status.TempWriter.GetStringBuilder ().Clear ();
 
-				WriteData (status.TempWriter, value, hex, comment);
+				WriteData (status.TempWriter, value, hex, comment, useBlockComment);
 				AddStructureField (status, GetNativeType<T> (), status.TempWriter.ToString (), (uint)value.Length);
 				return;
 			}
 
 			bool first = true;
 			foreach (T v in value) {
-				WriteData (status, v, hex, first ? comment : null);
+				WriteData (status, v, hex, first ? comment : null, useBlockComment);
 				if (first) {
 					first = false;
 				}
@@ -851,9 +948,9 @@ namespace Xamarin.Android.Tasks
 			status.Fields.Add (new StructureField (nativeType, contents, arrayElements));
 		}
 
-		public virtual uint WriteData<T> (T value, bool hex = true, string? comment = null) where T: struct
+		public virtual uint WriteData<T> (T value, bool hex = true, string? comment = null, bool useBlockComment = false) where T: struct
 		{
-			return WriteData<T> (Output, value, hex, comment);
+			return WriteData<T> (Output, value, hex, comment, useBlockComment);
 		}
 
 		public void WriteDataSection (TextWriter writer, string? name = null, bool writable = true)
@@ -868,7 +965,7 @@ namespace Xamarin.Android.Tasks
 				flags |= SectionFlags.Writable;
 			}
 
-			WriteSection (sectionName, flags, SectionType.Data);
+			WriteSection (writer, sectionName, flags, SectionType.Data);
 		}
 
 		public void WriteDataSection (string? name = null, bool writable = true)
@@ -1002,7 +1099,7 @@ namespace Xamarin.Android.Tasks
 
 		public void WriteDirective (TextWriter writer, string name, params object[]? args)
 		{
-			WriteDirectiveWithComment (writer, name, comment: null, args: args);
+			WriteDirectiveWithComment (writer, name, comment: null, useBlockComment: false, args: args);
 		}
 
 		public void WriteDirective (string name, params object[]? args)
@@ -1022,6 +1119,11 @@ namespace Xamarin.Android.Tasks
 
 		public void WriteDirectiveWithComment (TextWriter writer, string name, string? comment, params object[]? args)
 		{
+			WriteDirectiveWithComment (writer, name, comment, useBlockComment: false, args: args);
+		}
+
+		public void WriteDirectiveWithComment (TextWriter writer, string name, string? comment, bool useBlockComment, params object[]? args)
+		{
 			WriteDirectiveName (writer, name);
 
 			if (args != null && args.Length > 0) {
@@ -1029,12 +1131,17 @@ namespace Xamarin.Android.Tasks
 				WriteCommaSeparatedList (writer, args);
 			}
 
-			WriteEOL (writer, comment);
+			WriteEOL (writer, comment, useBlockComment);
 		}
 
 		public void WriteDirectiveWithComment (string name, string? comment, params object[]? args)
 		{
-			WriteDirectiveWithComment (Output, name, comment, args);
+			WriteDirectiveWithComment (name, comment, useBlockComment: false, args: args);
+		}
+
+		public void WriteDirectiveWithComment (string name, string? comment, bool useBlockComment, params object[]? args)
+		{
+			WriteDirectiveWithComment (Output, name, comment, useBlockComment, args);
 		}
 
 		protected void WriteCommaSeparatedList (TextWriter writer, object[]? args)
@@ -1056,16 +1163,32 @@ namespace Xamarin.Android.Tasks
 			return $"\"{s}\"";
 		}
 
-		public string MakeLocalLabel (string labelNamespace)
+		public string MakeLocalLabel (string labelNamespaceOrSymbolName, bool skipCounter = false)
 		{
-			if (!localLabels.TryGetValue (labelNamespace, out ulong counter)) {
-				counter = 0;
-				localLabels[labelNamespace] = counter;
+			string label;
+
+			if (skipCounter) {
+				label = labelNamespaceOrSymbolName;
 			} else {
-				localLabels[labelNamespace] = ++counter;
+				if (!localLabels.TryGetValue (labelNamespaceOrSymbolName, out ulong counter)) {
+					counter = 0;
+					localLabels[labelNamespaceOrSymbolName] = counter;
+				} else {
+					localLabels[labelNamespaceOrSymbolName] = ++counter;
+				}
+				label = $"{labelNamespaceOrSymbolName}.{counter}";
 			}
 
-			return $".L.{labelNamespace}.{counter}";
+			return $".L.{label}";
+		}
+
+		static double Log2 (double x)
+		{
+  #if NETCOREAPP
+			return Math.Log2 (x);
+  #else
+			return Math.Log (x, 2);
+  #endif
 		}
 	}
 }
