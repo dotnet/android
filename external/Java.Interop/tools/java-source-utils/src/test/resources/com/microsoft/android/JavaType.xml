@@ -127,9 +127,9 @@
         <parameter jni-type="Ljava/util/List;" name="superList" type="java.util.List&lt;? super java.lang.Throwable&gt;"/>
         <javadoc><![CDATA[JNI sig: staticActionWithGenerics.(Ljava/lang/Object;Ljava/lang/Number;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V]]></javadoc>
       </method>
-      <method jni-return="I" jni-signature="(II)I" name="sum" return="int">
+      <method jni-return="I" jni-signature="(I[I)I" name="sum" return="int">
         <parameter jni-type="I" name="first" type="int"/>
-        <parameter jni-type="I" name="remaining" type="int"/>
+        <parameter jni-type="[I" name="remaining" type="int..."/>
         <javadoc><![CDATA[JNI sig: sum.(I[I)I]]></javadoc>
       </method>
     </class>

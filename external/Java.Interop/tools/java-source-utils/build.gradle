@@ -54,3 +54,9 @@ jar {
     }
     archiveName 'java-source-utils.jar'
 }
+
+test {
+    reports {
+        junitXml.enabled = true
+    }
+}

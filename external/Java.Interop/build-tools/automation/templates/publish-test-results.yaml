@@ -1,0 +1,16 @@
+steps:
+- task: PublishTestResults@2
+  displayName: Publish NUnit Test Results
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: NUnit
+    testResultsFiles: TestResult-*.xml
+  continueOnError: true
+
+- task: PublishTestResults@2
+  displayName: Publish JUnit Test Results
+  condition: ne('$(Agent.OS)', 'Windows')
+  inputs:
+    testResultsFormat: JUnit
+    testResultsFiles: '**/TEST-*.xml'
+  continueOnError: true

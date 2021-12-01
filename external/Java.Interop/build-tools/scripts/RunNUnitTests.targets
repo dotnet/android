@@ -29,5 +29,10 @@
         WorkingDirectory="$(_TopDir)"
         ContinueOnError="ErrorAndContinue"
     />
+    <MSBuild
+        Condition=" !$([MSBuild]::IsOSPlatform ('windows')) "
+        Projects="$(MSBuildThisFileDirectory)..\..\tools\java-source-utils\java-source-utils.csproj"
+        Targets="RunTests"
+    />
   </Target>
 </Project>

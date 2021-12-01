@@ -1,6 +1,7 @@
 parameters:
   condition: succeeded()
   runNativeTests: false
+  runJavaTests: false
 
 steps:
 - task: DotNetCoreCLI@2
@@ -105,4 +106,20 @@ steps:
   inputs:
     command: test
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-PerformanceTests.dll
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: java-source-utils'
+  condition: eq('${{ parameters.runJavaTests }}', 'true')
+  inputs:
+    command: build
+    arguments: -c $(Build.Configuration) tools/java-source-utils/java-source-utils.csproj -t:RunTests
+  continueOnError: true
+
+- task: PublishTestResults@2
+  displayName: Publish JUnit Test Results
+  condition: eq('${{ parameters.runJavaTests }}', 'true')
+  inputs:
+    testResultsFormat: JUnit
+    testResultsFiles: 'tools/java-source-utils/build/test-results/**/TEST-*.xml'
   continueOnError: true

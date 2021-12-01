@@ -10,7 +10,7 @@ package com.xamarin
     func(java.lang.String[] values)
     <T> instanceActionWithGenerics(T value1, E value2)
     <T, TExtendsNumber, TThrowable> staticActionWithGenerics(T value1, TExtendsNumber value2, java.util.List<?> unboundedList, java.util.List<? extends java.lang.Number> extendsList, java.util.List<? super java.lang.Throwable> superList)
-    sum(int first, int remaining)
+    sum(int first, int... remaining)
   class JavaType.ASC<E>
   class JavaType.PSC<E>
   class JavaType.RNC<E,E2>

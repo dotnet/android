@@ -70,12 +70,7 @@ jobs:
       msbuildArguments: /p:TestAssembly="bin\Test$(Build.Configuration)\generator-Tests.dll;bin\Test$(Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll;bin\Test$(Build.Configuration)\Java.Interop.Tools.Generator-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.SourceWriter-Tests.dll"
     condition: succeededOrFailed()
 
-  - task: PublishTestResults@2
-    displayName: Publish Test Results
-    inputs:
-      testResultsFormat: NUnit
-      testResultsFiles: TestResult-*.xml
-    condition: succeededOrFailed()
+  - template: templates\publish-test-results.yaml
 
 - job: windows_dotnet_build
   displayName: Windows - .NET Core
@@ -145,12 +140,7 @@ jobs:
       exit $r
     displayName: Run Tests
 
-  - task: PublishTestResults@2
-    displayName: Publish Test Results
-    inputs:
-      testResultsFormat: NUnit
-      testResultsFiles: TestResult-*.xml
-    condition: succeededOrFailed()
+  - template: templates\publish-test-results.yaml
 
   - task: CopyFiles@2
     displayName: 'Copy Files to: Artifact Staging Directory'
@@ -189,5 +179,6 @@ jobs:
   - template: templates\core-tests.yaml
     parameters:
       runNativeTests: true
+      runJavaTests: true
 
   - template: templates\fail-on-issue.yaml

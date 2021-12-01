@@ -4,7 +4,7 @@ public class UnresolvedTypes {
 	/**
 	 * Method using unresolvable types.  As such, we make do.
 	 *
-	 * JNI Sig: method.(L.*example.name.UnresolvedParameterType;)L.*UnresolvedReturnType;
+	 * JNI Sig: method.([L.*example.name.UnresolvedParameterType;)L.*UnresolvedReturnType;
 	 */
 	public static UnresolvedReturnType<String, Integer> method(example.name.UnresolvedParameterType<Class>... parameter) {
 	}
