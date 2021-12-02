@@ -135,8 +135,7 @@ namespace Xamarin.Android.Tasks
 			if (UsesMonoAOT && String.IsNullOrEmpty (MonoAOTMode))
 				throw new InvalidOperationException ("Mono AOT enabled but no AOT mode specified");
 
-			generator.WriteStringSection ("mono_aot_mode");
-			generator.WriteStringSymbol ("mono_aot_mode_name", MonoAOTMode ?? String.Empty, global: true);
+			generator.WriteStringPointerSymbol ("mono_aot_mode_name", MonoAOTMode ?? String.Empty, global: true);
 
 			WriteNameValueStringArray (generator, "app_environment_variables", environmentVariables);
 			WriteNameValueStringArray (generator, "app_system_properties", systemProperties);

@@ -24,22 +24,10 @@ const TypeMap type_map = {
 #else
 const uint32_t map_module_count = 0;
 const uint32_t java_type_count = 0;
-const uint32_t java_name_width = 81;
+const uint32_t java_name_width = 0;
 
 const TypeMapModule map_modules[] = {};
-const TypeMapJava map_java[] = {
-	// {
-	// 	.module_index = 3,
-	// 	.type_token_id = 0x2000094,
-	// 	.java_name = { "android/animation/Animator" },
-	// },
-
-	// {
-	// 	.module_index = 3,
-	// 	.type_token_id = 0x2000096,
-	// 	.java_name = { "android/animation/AnimatorListenerAdapter" },
-	// }
-};
+const TypeMapJava map_java[] = {};
 #endif
 
 CompressedAssemblies compressed_assemblies = {
@@ -73,7 +61,7 @@ ApplicationConfig application_config = {
 	.android_package_name = "com.xamarin.test",
 };
 
-const char* mono_aot_mode_name = "";
+const char* mono_aot_mode_name = "normal";
 const char* app_environment_variables[] = {};
 const char* app_system_properties[] = {};
 

@@ -58,7 +58,7 @@ namespace Xamarin.Android.Tasks
 
 		public class StructureWriteContext
 		{
-			internal uint ByteAlignement = 0;
+			internal uint ByteAlignment = 0;
 			internal uint Size = 0;
 			internal Type? ReflectedType = null;
 			internal List<StructureField> Fields = new List<StructureField> ();
@@ -649,7 +649,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			StructureWriteContext c = isArray ? status.ArrayOfStructures![0] : status;
-			WriteDirective (writer, ".p2align", Log2 (c.ByteAlignement));
+			WriteAlignmentDirective (writer, c.ByteAlignment);
 			WriteSymbolLabel (writer, label);
 
 			uint size = 0;
@@ -689,9 +689,9 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				padding = context.Size % context.ByteAlignement;
+				padding = context.Size % context.ByteAlignment;
 				if (padding > 0) {
-					padding = context.ByteAlignement - padding;
+					padding = context.ByteAlignment - padding;
 					WriteDirective (writer, ".zero", padding);
 					context.Size += padding;
 				}
@@ -729,7 +729,7 @@ namespace Xamarin.Android.Tasks
 		{
 			WriteSymbolType (writer, symbolName, SymbolType.Object, local, comment, useBlockComment);
 			NativeType nativeType = GetNativeType<T> ();
-			WriteDirective (writer, ".p2align", Log2 (nativeType.Alignment));
+			WriteAlignmentDirective (writer, nativeType);
 
 			string label = local ? MakeLocalLabel (symbolName, skipCounter: true) : symbolName;
 			WriteSymbolLabel (writer, label);
@@ -738,6 +738,32 @@ namespace Xamarin.Android.Tasks
 			WriteSymbolSize (writer, label, nativeType.Size);
 
 			return label;
+		}
+
+		public void WriteStringPointerSymbol (string symbolName, string symbolValue, bool global = true, bool alreadyInSection = false)
+		{
+			WriteStringPointerSymbol (Output, symbolName, symbolValue, global);
+		}
+
+		public void WriteStringPointerSymbol (TextWriter writer, string symbolName, string symbolValue, bool global = true, bool alreadyInSection = false)
+		{
+			string symbolLabel = global ? symbolName : MakeLocalLabel (symbolName, skipCounter: true);
+			WriteSymbolType (writer, symbolLabel, SymbolType.Object, !global);
+			if (!alreadyInSection) {
+				WriteDataSection (writer, symbolLabel);
+			}
+
+			NativeType nativeType = GetPointerType ();
+			WriteAlignmentDirective (writer, nativeType.Alignment);
+			WriteSymbolLabel (writer, symbolLabel);
+
+			string stringLabel = MakeLocalLabel (AutomaticStringSection);
+
+			var sym = new LabeledStringSymbol (stringLabel, symbolValue, global);
+			stringTable.Add (sym);
+
+			WritePointer (writer, sym.Label);
+			WriteSymbolSize (writer, symbolLabel, nativeType.Size);
 		}
 
 		public string WriteStringSymbol (string symbolName, string symbolValue, bool global = true)
@@ -937,8 +963,8 @@ namespace Xamarin.Android.Tasks
 			//
 			// https://github.com/ARM-software/abi-aa/blob/320a56971fdcba282b7001cf4b84abb4fd993131/aapcs64/aapcs64.rst#59composite-types
 			// https://github.com/ARM-software/abi-aa/blob/320a56971fdcba282b7001cf4b84abb4fd993131/aapcs32/aapcs32.rst#53composite-types
-			if (nativeType.Alignment > status.ByteAlignement) {
-				status.ByteAlignement = nativeType.Alignment;
+			if (nativeType.Alignment > status.ByteAlignment) {
+				status.ByteAlignment = nativeType.Alignment;
 			}
 
 			if (arrayElements > 0) {
@@ -1096,6 +1122,16 @@ namespace Xamarin.Android.Tasks
 		public void WriteSection (string name, SectionFlags flags = SectionFlags.None, SectionType type = SectionType.None, string? flagSpecificArgs = null, string? numberOrCustomFlag = null, string? numberOrCustomType = null)
 		{
 			WriteSection (Output, name, flags, type, flagSpecificArgs, numberOrCustomFlag, numberOrCustomType);
+		}
+
+		void WriteAlignmentDirective (TextWriter writer, NativeType nativeType)
+		{
+			WriteAlignmentDirective (writer, nativeType.Alignment);
+		}
+
+		void WriteAlignmentDirective (TextWriter writer, uint byteAlignment)
+		{
+			WriteDirective (writer, ".p2align", Log2 (byteAlignment));
 		}
 
 		public void WriteDirective (TextWriter writer, string name, params object[]? args)
