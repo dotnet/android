@@ -48,11 +48,11 @@ namespace Xamarin.Android.Tools.LogcatParse {
 			if (files.Count > 0) {
 				if (files.Count > 1)
 					Console.Error.WriteLine ("logcat-parse: More than one file is unsupported. Loading: {0}", files [0]);
-				Console.WriteLine ("var grefs = Grefs.Parse(\"{0}\"{1});", files [0],
+				Console.WriteLine ("var grefs = Grefs.Parse(@\"{0}\"{1});", files [0],
 						pid.HasValue ? ", " + pid.Value : "");
 				eval.Run ("Grefs grefs;");
 				eval.Run (
-						"using (var __source = new System.IO.StreamReader(\"" +
+						"using (var __source = new System.IO.StreamReader(@\"" +
 						files [0] +
 						"\")) grefs = Grefs.Parse(__source" +
 						(pid.HasValue ? (", " + pid.ToString ()) : "") + ");");
