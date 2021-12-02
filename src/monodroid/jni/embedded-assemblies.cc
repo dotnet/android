@@ -2,7 +2,7 @@
 
 #if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 #include <compare>
-#endif
+#endif // ndef MINGW32 || def MINGW32 && GNUC >= 10
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -345,7 +345,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 }
 
 force_inline const AssemblyStoreHashEntry*
-EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept
+EmbeddedAssemblies::find_assembly_store_entry ([[maybe_unused]] hash_t hash, [[maybe_unused]] const AssemblyStoreHashEntry *entries, [[maybe_unused]] size_t entry_count) noexcept
 {
 #if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 	hash_t entry_hash;

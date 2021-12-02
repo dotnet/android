@@ -9,8 +9,9 @@
 #include <strings.h>
 #include <cctype>
 #include <cerrno>
+#if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 #include <compare>
-
+#endif // ndef MINGW32 || def MINGW32 && GNUC >= 10
 #if defined (APPLE_OS_X)
 #include <dlfcn.h>
 #endif  // def APPLE_OX_X
@@ -1284,8 +1285,9 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 #endif // ndef NET6
 
 force_inline DSOCacheEntry*
-MonodroidRuntime::find_dso_cache_entry (hash_t hash) noexcept
+MonodroidRuntime::find_dso_cache_entry ([[maybe_unused]] hash_t hash) noexcept
 {
+#if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 	hash_t entry_hash;
 	DSOCacheEntry *ret = nullptr;
 	size_t entry_count = application_config.number_of_dso_cache_entries;
@@ -1307,7 +1309,7 @@ MonodroidRuntime::find_dso_cache_entry (hash_t hash) noexcept
 			return ret;
 		}
 	}
-
+#endif // ndef MINGW32 || def MINGW32 && GNUC >= 10
 	return nullptr;
 }
 
