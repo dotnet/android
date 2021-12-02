@@ -50,13 +50,12 @@ namespace Xamarin.Android.Net
 	/// by AndroidClientHandler is requested by the server, the application can provide its own authentication module (<see cref="AuthenticationData"/>, 
 	/// <see cref="PreAuthenticationData"/>) to handle the protocol authorization.</para>
 	/// <para>AndroidClientHandler also supports requests to servers with "invalid" (e.g. self-signed) SSL certificates. Since this process is a bit convoluted using
-	/// the Java APIs, AndroidClientHandler defines two ways to handle the situation. First, easier, is to store the necessary certificates (either CA or server certificates)
-	/// in the <see cref="TrustedCerts"/> collection or, after deriving a custom class from AndroidClientHandler, by overriding one or more methods provided for this purpose
-	/// (<see cref="ConfigureTrustManagerFactory"/>, <see cref="ConfigureKeyManagerFactory"/> and <see cref="ConfigureKeyStore"/>). The former method should be sufficient
-	/// for most use cases, the latter allows the application to provide fully customized key store, trust manager and key manager, if needed. Note that the instance of
-	/// AndroidClientHandler configured to accept an "invalid" certificate from the particular server will most likely fail to validate certificates from other servers (even
-	/// if they use a certificate with a fully validated trust chain) unless you store the CA certificates from your Android system in <see cref="TrustedCerts"/> along with
-	/// the self-signed certificate(s).</para>
+	/// the Java APIs, AndroidClientHandler can store the necessary certificates (either CA or server certificates) in the <see cref="TrustedCerts"/> collection.
+	/// If, however, the application requires finer control over the SSL configuration (e.g. it implements its own TrustManager) then it should derive a custom handler
+	/// class from <see cref="System.Net.AndroidMessageHandler"/> instead of using AndroidClientHandler. Note that the instance of AndroidClientHandler configured
+	/// to accept an "invalid" certificate from the particular server will most likely fail to validate certificates from other servers (even if they use a certificate
+	/// with a fully validated trust chain) unless you store the CA certificates from your Android system in <see cref="TrustedCerts"/> along with the self-signed
+	/// certificate(s).</para>
 	/// </remarks>
 	public sealed class AndroidClientHandler : HttpClientHandler
 	{
@@ -132,9 +131,7 @@ namespace Xamarin.Android.Net
 		/// in this property in order for AndroidClientHandler to configure the request to accept the server certificate.</para>
 		/// <para>AndroidClientHandler uses a custom <see cref="KeyStore"/> and <see cref="TrustManagerFactory"/> to configure the connection. 
 		/// If, however, the application requires finer control over the SSL configuration (e.g. it implements its own TrustManager) then
-		/// it should leave this property empty and instead derive a custom class from AndroidClientHandler and override, as needed, the 
-		/// <see cref="ConfigureTrustManagerFactory"/>, <see cref="ConfigureKeyManagerFactory"/> and <see cref="ConfigureKeyStore"/> methods
-		/// instead</para>
+		/// it should derive a custom handler class from <see cref="System.Net.AndroidMessageHandler"/> instead of using AndroidClientHandler.</para>
 		/// </summary>
 		/// <value>The trusted certs.</value>
 		public IList <Certificate>? TrustedCerts

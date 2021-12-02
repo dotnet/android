@@ -23,6 +23,41 @@ using Javax.Net.Ssl;
 
 namespace Xamarin.Android.Net
 {
+	/// <summary>
+	/// A custom implementation of <see cref="System.Net.Http.HttpMessageHandler"/> which internally uses <see cref="Java.Net.HttpURLConnection"/>
+	/// (or its HTTPS incarnation) to send HTTP requests.
+	/// </summary>
+	/// <remarks>
+	/// <para>Instance of this class is used to configure <see cref="System.Net.Http.HttpClient"/> instance
+	/// in the following way:
+	///
+	/// <example>
+	/// var handler = new AndroidMessageHandler {
+	///    UseCookies = true,
+	///    AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip,
+	/// };
+	///
+	/// var httpClient = new HttpClient (handler);
+	/// var response = httpClient.GetAsync ("http://example.com")?.Result as AndroidHttpResponseMessage;
+	/// <para>
+	/// The class supports pre-authentication of requests albeit in a slightly "manual" way. Namely, whenever a request to a server requiring authentication
+	/// is made and no authentication credentials are provided in the <see cref="PreAuthenticationData"/> property (which is usually the case on the first
+	/// request), the <see cref="RequestNeedsAuthorization"/> property will return <c>true</c> and the <see cref="RequestedAuthentication"/> property will
+	/// contain all the authentication information gathered from the server. The application must then fill in the blanks (i.e. the credentials) and re-send
+	/// the request configured to perform pre-authentication. The reason for this manual process is that the underlying Java HTTP client API supports only a
+	/// single, VM-wide, authentication handler which cannot be configured to handle credentials for several requests. AndroidMessageHandler, therefore, implements
+	/// the authentication in managed .NET code. Message handler supports both Basic and Digest authentication. If an authentication scheme that's not supported
+	/// by AndroidMessageHandler is requested by the server, the application can provide its own authentication module (<see cref="AuthenticationData"/>,
+	/// <see cref="PreAuthenticationData"/>) to handle the protocol authorization.</para>
+	/// <para>AndroidMessageHandler also supports requests to servers with "invalid" (e.g. self-signed) SSL certificates. Since this process is a bit convoluted using
+	/// the Java APIs, AndroidMessageHandler defines two ways to handle the situation. First, easier, is to store the necessary certificates (either CA or server certificates)
+	/// in the <see cref="TrustedCerts"/> collection or, after deriving a custom class from AndroidMessageHandler, by overriding one or more methods provided for this purpose
+	/// (<see cref="ConfigureTrustManagerFactory"/>, <see cref="ConfigureKeyManagerFactory"/> and <see cref="ConfigureKeyStore"/>). The former method should be sufficient
+	/// for most use cases, the latter allows the application to provide fully customized key store, trust manager and key manager, if needed. Note that the instance of
+	/// AndroidMessageHandler configured to accept an "invalid" certificate from the particular server will most likely fail to validate certificates from other servers (even
+	/// if they use a certificate with a fully validated trust chain) unless you store the CA certificates from your Android system in <see cref="TrustedCerts"/> along with
+	/// the self-signed certificate(s).</para>
+	/// </remarks>
 	public class AndroidMessageHandler : HttpMessageHandler
 	{
 		sealed class RequestRedirectionState
@@ -151,10 +186,10 @@ namespace Xamarin.Android.Net
 		/// before the request is made. Generally the value can be taken from <see cref="RequestedAuthentication"/>
 		/// after the initial request, without any authentication data, receives the authorization request from the
 		/// server. The application must then store credentials in instance of <see cref="AuthenticationData"/> and
-		/// assign the instance to this propery before retrying the request.
+		/// assign the instance to this property before retrying the request.
 		/// </para>
 		/// <para>
-		/// The property is never set by AndroidClientHandler.
+		/// The property is never set by AndroidMessageHandler.
 		/// </para>
 		/// </summary>
 		/// <value>The pre authentication data.</value>
@@ -163,9 +198,9 @@ namespace Xamarin.Android.Net
 		/// <summary>
 		/// If the website requires authentication, this property will contain data about each scheme supported
 		/// by the server after the response. Note that unauthorized request will return a valid response - you
-		/// need to check the status code and and (re)configure AndroidClientHandler instance accordingly by providing
+		/// need to check the status code and and (re)configure AndroidMessageHandler instance accordingly by providing
 		/// both the credentials and the authentication scheme by setting the <see cref="PreAuthenticationData"/> 
-		/// property. If AndroidClientHandler is not able to detect the kind of authentication scheme it will store an
+		/// property. If AndroidMessageHandler is not able to detect the kind of authentication scheme it will store an
 		/// instance of <see cref="AuthenticationData"/> with its <see cref="AuthenticationData.Scheme"/> property
 		/// set to <c>AuthenticationScheme.Unsupported</c> and the application will be responsible for providing an
 		/// instance of <see cref="IAndroidAuthenticationModule"/> which handles this kind of authorization scheme
@@ -193,10 +228,10 @@ namespace Xamarin.Android.Net
 		/// If the request is to the server protected with a self-signed (or otherwise untrusted) SSL certificate, the request will
 		/// fail security chain verification unless the application provides either the CA certificate of the entity which issued the 
 		/// server's certificate or, alternatively, provides the server public key. Whichever the case, the certificate(s) must be stored
-		/// in this property in order for AndroidClientHandler to configure the request to accept the server certificate.</para>
-		/// <para>AndroidClientHandler uses a custom <see cref="KeyStore"/> and <see cref="TrustManagerFactory"/> to configure the connection. 
+		/// in this property in order for AndroidMessageHandler to configure the request to accept the server certificate.</para>
+		/// <para>AndroidMessageHandler uses a custom <see cref="KeyStore"/> and <see cref="TrustManagerFactory"/> to configure the connection. 
 		/// If, however, the application requires finer control over the SSL configuration (e.g. it implements its own TrustManager) then
-		/// it should leave this property empty and instead derive a custom class from AndroidClientHandler and override, as needed, the 
+		/// it should leave this property empty and instead derive a custom class from AndroidMessageHandler and override, as needed, the 
 		/// <see cref="ConfigureTrustManagerFactory"/>, <see cref="ConfigureKeyManagerFactory"/> and <see cref="ConfigureKeyStore"/> methods
 		/// instead</para>
 		/// </summary>
@@ -797,7 +832,7 @@ namespace Xamarin.Android.Net
 		/// Configure the <see cref="HttpURLConnection"/> before the request is sent. This method is meant to be overriden
 		/// by applications which need to perform some extra configuration steps on the connection. It is called with all
 		/// the request headers set, pre-authentication performed (if applicable) but before the request body is set 
-		/// (e.g. for POST requests). The default implementation in AndroidClientHandler does nothing.
+		/// (e.g. for POST requests). The default implementation in AndroidMessageHandler does nothing.
 		/// </summary>
 		/// <param name="request">Request data</param>
 		/// <param name="conn">Pre-configured connection instance</param>
@@ -810,7 +845,7 @@ namespace Xamarin.Android.Net
 		/// <summary>
 		/// Configures the key store. The <paramref name="keyStore"/> parameter is set to instance of <see cref="KeyStore"/>
 		/// created using the <see cref="KeyStore.DefaultType"/> type and with populated with certificates provided in the <see cref="TrustedCerts"/>
-		/// property. AndroidClientHandler implementation simply returns the instance passed in the <paramref name="keyStore"/> parameter
+		/// property. AndroidMessageHandler implementation simply returns the instance passed in the <paramref name="keyStore"/> parameter
 		/// </summary>
 		/// <returns>The key store.</returns>
 		/// <param name="keyStore">Key store to configure.</param>
@@ -841,7 +876,7 @@ namespace Xamarin.Android.Net
 		/// Create and configure an instance of <see cref="TrustManagerFactory"/>. The <paramref name="keyStore"/> parameter is set to the
 		/// return value of the <see cref="ConfigureKeyStore"/> method, so it might be null if the application overrode the method and provided
 		/// no key store. It will not be <c>null</c> when the default implementation is used. The application can return <c>null</c> from this 
-		/// method in which case AndroidClientHandler will create its own instance of the trust manager factory provided that the <see cref="TrustCerts"/>
+		/// method in which case AndroidMessageHandler will create its own instance of the trust manager factory provided that the <see cref="TrustCerts"/>
 		/// list contains at least one valid certificate. If there are no valid certificates and this method returns <c>null</c>, no custom 
 		/// trust manager will be created since that would make all the HTTPS requests fail.
 		/// </summary>
