@@ -309,7 +309,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>Instance of IHostnameVerifier to be used for this HTTPS connection</returns>
 		/// <param name="connection">HTTPS connection object.</param>
-		internal virtual IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
+		protected virtual IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
 		{
 			return null;
 		}
@@ -380,7 +380,7 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		internal virtual async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
+		protected virtual async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
 		{
 			var proxy = Java.Net.Proxy.NoProxy;
 
@@ -435,7 +435,7 @@ namespace Xamarin.Android.Net
 			}, ct);
 		}
 
-		internal virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
+		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
 			using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
 				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
@@ -836,7 +836,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <param name="request">Request data</param>
 		/// <param name="conn">Pre-configured connection instance</param>
-		internal virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
+		protected virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
 			Action a = AssertSelf;
 			return Task.Run (a);
@@ -849,7 +849,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>The key store.</returns>
 		/// <param name="keyStore">Key store to configure.</param>
-		internal virtual KeyStore? ConfigureKeyStore (KeyStore? keyStore)
+		protected virtual KeyStore? ConfigureKeyStore (KeyStore? keyStore)
 		{
 			AssertSelf ();
 
@@ -865,7 +865,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>The key manager factory or <c>null</c>.</returns>
 		/// <param name="keyStore">Key store.</param>
-		internal virtual KeyManagerFactory? ConfigureKeyManagerFactory (KeyStore? keyStore)
+		protected virtual KeyManagerFactory? ConfigureKeyManagerFactory (KeyStore? keyStore)
 		{
 			AssertSelf ();
 
@@ -882,7 +882,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>The trust manager factory.</returns>
 		/// <param name="keyStore">Key store.</param>
-		internal virtual TrustManagerFactory? ConfigureTrustManagerFactory (KeyStore? keyStore)
+		protected virtual TrustManagerFactory? ConfigureTrustManagerFactory (KeyStore? keyStore)
 		{
 			AssertSelf ();
 
@@ -964,7 +964,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>Instance of SSLSocketFactory ready to use with the HTTPS connection.</returns>
 		/// <param name="connection">HTTPS connection to return socket factory for</param>
-		internal virtual SSLSocketFactory? ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
+		protected virtual SSLSocketFactory? ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
 		{
 			return null;
 		}
