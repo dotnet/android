@@ -862,8 +862,8 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 	}
 
 	const char *ret;
-	const TypeMapJava *java_entry = reinterpret_cast<const TypeMapJava*> (reinterpret_cast<const uint8_t*>(map_java) + ((sizeof(TypeMapJava) + java_name_width) * entry->java_map_index));
-	ret = reinterpret_cast<const char*>(reinterpret_cast<const uint8_t*>(java_entry) + 8);
+	const TypeMapJava *java_entry = reinterpret_cast<const TypeMapJava*> (reinterpret_cast<const uint8_t*>(map_java) + (type_map_java_struct_size * entry->java_map_index));
+	ret = reinterpret_cast<const char*>(java_entry->java_name);
 
 	if (XA_UNLIKELY (ret == nullptr)) {
 		log_warn (LOG_ASSEMBLY, "typemap: empty Java type name returned for entry at index %u", entry->java_map_index);

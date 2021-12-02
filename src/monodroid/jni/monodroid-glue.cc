@@ -1398,13 +1398,14 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noe
 
 	StartupAwareLock lock (dso_handle_write_lock);
 	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
-	dso->handle = androidSystem.load_dso_from_any_directories (name, dl_flags);
+
+	dso->handle = androidSystem.load_dso (dso->name, dl_flags, false /* skip_existing_check */);
 	if (dso->handle != nullptr) {
 		return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
 	}
 
-	dso->handle = androidSystem.load_dso (dso->name, dl_flags, false /* skip_existing_check */);
-	return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
+	dso->handle = androidSystem.load_dso_from_any_directories (name, dl_flags);
+	return monodroid_dlopen_log_and_return (dso->handle, err, name, false /* name_needs_free */);
 }
 
 void*

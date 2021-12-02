@@ -21,47 +21,75 @@ namespace Xamarin.Android.Tasks
 		Tracing   = 0x04,
 	}
 
-	sealed class DSOCacheEntry
-	{
-		public ulong hash;
-		public bool ignore;
-		public string name;
-		public IntPtr handle = IntPtr.Zero;
-	}
-
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/monodroid/jni/xamarin-app.hh AssemblyStoreSingleAssemblyRuntimeData structure
-	sealed class AssemblyStoreSingleAssemblyRuntimeData
-	{
-        public IntPtr  image_data;
-        public IntPtr  debug_info_data;
-        public IntPtr  config_data;
-        public IntPtr  descriptor;
-	};
-
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/monodroid/jni/xamarin-app.hh AssemblyStoreRuntimeData structure
-	sealed class AssemblyStoreRuntimeData
-	{
-        public IntPtr data_start;
-        public uint   assembly_count;
-        public IntPtr assemblies;
-	};
-
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/monodroid/jni/xamarin-app.hh XamarinAndroidBundledAssembly structure
-	sealed class XamarinAndroidBundledAssembly
-	{
-        public int    apk_fd;
-        public uint   data_offset;
-        public uint   data_size;
-        public IntPtr data;
-        public uint   name_length;
-        public IntPtr name;
-	};
-
 	class ApplicationConfigNativeAssemblyGenerator : NativeAssemblyComposer
 	{
+		sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var dso_entry = data as DSOCacheEntry;
+				if (dso_entry == null) {
+					throw new InvalidOperationException ("Invalid data type, expected an instance of DSOCacheEntry");
+				}
+
+				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
+					return $"hash, from name: {dso_entry.HashedName}";
+				}
+
+				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
+					return $"name: {dso_entry.name}";
+				}
+
+				return String.Empty;
+			}
+		}
+
+		[NativeAssemblerStructContextDataProvider (typeof (DSOCacheEntryContextDataProvider))]
+		sealed class DSOCacheEntry
+		{
+			[NativeAssembler (Ignore = true)]
+			public string HashedName;
+
+			[NativeAssembler (UsesDataProvider = true)]
+			public ulong hash;
+			public bool ignore;
+
+			[NativeAssemblerString (UsesDataProvider = true)]
+			public string name;
+			public IntPtr handle = IntPtr.Zero;
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh AssemblyStoreSingleAssemblyRuntimeData structure
+		sealed class AssemblyStoreSingleAssemblyRuntimeData
+		{
+			public IntPtr  image_data;
+			public IntPtr  debug_info_data;
+			public IntPtr  config_data;
+			public IntPtr  descriptor;
+		};
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh AssemblyStoreRuntimeData structure
+		sealed class AssemblyStoreRuntimeData
+		{
+			public IntPtr data_start;
+			public uint   assembly_count;
+			public IntPtr assemblies;
+		};
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh XamarinAndroidBundledAssembly structure
+		sealed class XamarinAndroidBundledAssembly
+		{
+			public int    apk_fd;
+			public uint   data_offset;
+			public uint   data_size;
+			public IntPtr data;
+			public uint   name_length;
+			public IntPtr name;
+		};
+
 		SortedDictionary <string, string> environmentVariables;
 		SortedDictionary <string, string> systemProperties;
 		uint stringCounter = 0;
@@ -170,12 +198,14 @@ namespace Xamarin.Android.Tasks
 				string name = dsos[i].name;
 				nameMutations.Clear();
 				AddNameMutations (name);
+				// All mutations point to the actual library name, but have hash of the mutated one
 				foreach (string entryName in nameMutations) {
 					dsoCache.Add (
 						new DSOCacheEntry {
+							HashedName = entryName,
 							hash = HashName (entryName),
 							ignore = dsos[i].ignore,
-							name = entryName,
+							name = name,
 						}
 					);
 				}

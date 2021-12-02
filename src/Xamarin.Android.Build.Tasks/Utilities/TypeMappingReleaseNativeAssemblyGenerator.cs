@@ -241,7 +241,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 			}
-			generator.WriteSymbol (mapModulesArray, symbolName, local: false);
+			generator.WriteSymbol (mapModulesArray, symbolName, local: false, alreadyInSection: true);
 			generator.WriteCommentLine ("Managed to Java map: END");
 		}
 
@@ -265,7 +265,7 @@ namespace Xamarin.Android.Tasks
 				NativeAssemblyGenerator.StructureWriteContext mapEntryStruct = generator.AddStructureArrayElement (javaMapArray);
 				generator.WriteStructure (mapEntryStruct, map_entry);
 			}
-			generator.WriteSymbol (javaMapArray, symbolName, local: false);
+			generator.WriteSymbol (javaMapArray, symbolName, local: false, alreadyInSection: true);
 			generator.WriteCommentLine ("Java to managed map: END");
 		}
 

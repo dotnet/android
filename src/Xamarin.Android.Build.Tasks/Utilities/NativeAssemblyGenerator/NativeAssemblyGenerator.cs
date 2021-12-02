@@ -826,27 +826,28 @@ namespace Xamarin.Android.Tasks
 			return WriteInlineString (Output, value, fixedWidth, comment, useBlockComment);
 		}
 
-		// fixedWidth includes the terminating 0
+		// fixedWidth excludes the terminating 0
 		public uint WriteInlineString (TextWriter writer, string value, uint fixedWidth = 0, string? comment = null, bool useBlockComment = false)
 		{
 			int byteCount = Encoding.UTF8.GetByteCount (value);
-			if (fixedWidth > 0 && byteCount > fixedWidth - 1) {
-				throw new InvalidOperationException ($"String is too long, maximum allowed length is {fixedWidth - 1} bytes, the string is {byteCount} bytes long");
+			if (fixedWidth > 0 && byteCount > fixedWidth) {
+				throw new InvalidOperationException ($"String is too long, maximum allowed length is {fixedWidth} bytes, the string is {byteCount} bytes long");
 			}
 
-			WriteDirectiveWithComment (writer, ".asciz", comment, useBlockComment, QuoteString (value));
+			WriteDirectiveWithComment (writer, ".ascii", comment, useBlockComment, QuoteString (value));
 			if (fixedWidth == 0) {
+				WriteDirective (writer, ".zero", 1);
 				return (uint)(byteCount + 1);
 			}
 
-			int padding = ((int)fixedWidth - 1) - byteCount;
+			int padding = ((int)fixedWidth) - byteCount;
 			if (padding > 0) {
 				WriteDirective (writer, ".zero", padding);
 			} else {
 				padding = 0;
 			}
 
-			return (uint)(byteCount + 1 + padding);
+			return (uint)(byteCount + padding);
 		}
 
 		public virtual LabeledSymbol WriteEmptyBuffer (uint bufferSize, string symbolLabelOrNamespace, bool local = true)
