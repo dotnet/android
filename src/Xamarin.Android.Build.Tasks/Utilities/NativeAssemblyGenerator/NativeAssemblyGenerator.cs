@@ -852,12 +852,12 @@ namespace Xamarin.Android.Tasks
 			return WriteInlineString (Output, value, fixedWidth, comment, useBlockComment);
 		}
 
-		// fixedWidth excludes the terminating 0
+		// fixedWidth includes the terminating 0
 		public uint WriteInlineString (TextWriter writer, string value, uint fixedWidth = 0, string? comment = null, bool useBlockComment = false)
 		{
 			int byteCount = Encoding.UTF8.GetByteCount (value);
-			if (fixedWidth > 0 && byteCount > fixedWidth) {
-				throw new InvalidOperationException ($"String is too long, maximum allowed length is {fixedWidth} bytes, the string is {byteCount} bytes long");
+			if (fixedWidth > 0 && byteCount >= fixedWidth) {
+				throw new InvalidOperationException ($"String is too long, maximum allowed length is {fixedWidth - 1} bytes, the string is {byteCount} bytes long");
 			}
 
 			WriteDirectiveWithComment (writer, ".ascii", comment, useBlockComment, QuoteString (value));
@@ -866,12 +866,8 @@ namespace Xamarin.Android.Tasks
 				return (uint)(byteCount + 1);
 			}
 
-			int padding = ((int)fixedWidth) - byteCount;
-			if (padding > 0) {
-				WriteDirective (writer, ".zero", padding);
-			} else {
-				padding = 0;
-			}
+			int padding = (((int)fixedWidth) - byteCount);
+			WriteDirectiveWithComment (writer, ".zero", $"byteCount == {byteCount}; fixedWidth == {fixedWidth}; returned size == {byteCount + padding}", padding);
 
 			return (uint)(byteCount + padding);
 		}

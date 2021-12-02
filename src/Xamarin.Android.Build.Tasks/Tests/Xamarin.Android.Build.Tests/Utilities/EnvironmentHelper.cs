@@ -286,7 +286,8 @@ namespace Xamarin.Android.Build.Tests
 				field = GetField (envFile, line, i);
 				if (String.Compare (".size", field [0], StringComparison.Ordinal) == 0) {
 					Assert.IsTrue (field [1].StartsWith ("app_environment_variables", StringComparison.Ordinal), $"Mismatched .size directive in '{envFile}:{i}'");
-					break; // We've reached the end of the environment variable array
+					gatherPointers = false; // We've reached the end of the environment variable array
+					continue;
 				}
 
 				Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");

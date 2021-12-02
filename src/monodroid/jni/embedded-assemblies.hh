@@ -165,10 +165,10 @@ namespace xamarin::android::internal {
 #if defined (RELEASE) && defined (ANDROID)
 		static size_t calc_type_map_java_struct_size ()
 		{
-			size_t struct_size = sizeof(TypeMapJava) + java_name_width + 1;
+			size_t struct_size = sizeof(TypeMapJava) + java_name_width;
 			size_t padding = struct_size % alignof(TypeMapJava);
 			if (padding > 0) {
-				struct_size += padding;
+				struct_size += alignof(TypeMapJava) - padding;
 			}
 
 			return struct_size;

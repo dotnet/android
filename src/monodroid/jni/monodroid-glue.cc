@@ -1334,7 +1334,7 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 }
 
 force_inline void*
-MonodroidRuntime::monodroid_dlopen_ignore_component_or_load (hash_t name_hash, const char *name, int flags, char **err) noexcept
+MonodroidRuntime::monodroid_dlopen_ignore_component_or_load ([[maybe_unused]] hash_t name_hash, const char *name, int flags, char **err) noexcept
 {
 #if defined (NET6)
 	if (startup_in_progress) {
