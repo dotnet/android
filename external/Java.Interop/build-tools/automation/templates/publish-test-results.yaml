@@ -9,7 +9,6 @@ steps:
 
 - task: PublishTestResults@2
   displayName: Publish JUnit Test Results
-  condition: ne('$(Agent.OS)', 'Windows')
   inputs:
     testResultsFormat: JUnit
     testResultsFiles: '**/TEST-*.xml'

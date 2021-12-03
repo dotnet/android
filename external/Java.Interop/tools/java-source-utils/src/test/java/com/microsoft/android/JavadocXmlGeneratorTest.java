@@ -10,6 +10,7 @@ import java.util.Arrays;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import org.junit.Assume;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -19,7 +20,14 @@ import com.microsoft.android.ast.*;
 public final class JavadocXmlGeneratorTest {
 	@Test(expected = FileNotFoundException.class)
 	public void init_invalidFileThrows() throws FileNotFoundException, ParserConfigurationException, TransformerException, UnsupportedEncodingException {
-		try (JavadocXmlGenerator g = new JavadocXmlGenerator("/this/file/does/not/exist")) {
+		String invalidFilePath = "/this/file/does/not/exist";
+		String osName = System.getProperty("os.name");
+		if (osName.startsWith("Windows")) {
+			invalidFilePath = System.getenv("ProgramFiles") + "\\this\\file\\does\\not\\exist";
+			// Ignore if running on an Azure Pipelines Microsoft hosted agent by only running when %AGENT_NAME% is not set.
+			Assume.assumeTrue(System.getenv("AGENT_NAME") == null);
+		}
+		try (JavadocXmlGenerator g = new JavadocXmlGenerator(invalidFilePath)) {
 		}
 	}
 
@@ -40,9 +48,11 @@ public final class JavadocXmlGeneratorTest {
 		generator.writePackages(packages);
 		generator.close();
 
-		final   String  expected =
+		final   String  expected = (
 			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
-			"<api api-source=\"java-source-utils\"/>\n";
+			"<api api-source=\"java-source-utils\"/>\n"
+		).replace("\n", System.lineSeparator());
+
 		assertEquals("no packages", expected, bytes.toString());
 	}
 
@@ -53,7 +63,7 @@ public final class JavadocXmlGeneratorTest {
 		final   JavadocXmlGenerator     generator   = new JavadocXmlGenerator(new PrintStream(bytes));
 		final   JniPackagesInfo         packages    = JniPackagesInfoTest.createDemoInfo();
 
-		final   String                  expected    = 
+		final   String                  expected    = (
 			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
 			"<api api-source=\"java-source-utils\">\n" +
 			"  <package jni-name=\"\" name=\"\">\n" +
@@ -94,7 +104,8 @@ public final class JavadocXmlGeneratorTest {
 			"      </method>\n" +
 			"    </interface>\n" +
 			"  </package>\n" +
-			"</api>\n";
+			"</api>\n"
+		).replace("\n", System.lineSeparator());
 
 		generator.writePackages(packages);
 		generator.close();

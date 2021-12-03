@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
+import org.junit.Assume;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -17,7 +18,14 @@ public class ParameterNameGeneratorTest {
 
 	@Test(expected = FileNotFoundException.class)
 	public void init_invalidFileThrows() throws FileNotFoundException, UnsupportedEncodingException {
-		new ParameterNameGenerator("/this/file/does/not/exist");
+		String invalidFilePath = "/this/file/does/not/exist";
+		String osName = System.getProperty("os.name");
+		if (osName.startsWith("Windows")) {
+			invalidFilePath = System.getenv("ProgramFiles") + "\\this\\file\\does\\not\\exist";
+			// Ignore if running on an Azure Pipelines Microsoft hosted agent by only running when %AGENT_NAME% is not set.
+			Assume.assumeTrue(System.getenv("AGENT_NAME") == null);
+		}
+		new ParameterNameGenerator(invalidFilePath);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -45,7 +53,7 @@ public class ParameterNameGeneratorTest {
 		ParameterNameGenerator  generator   = new ParameterNameGenerator(new PrintStream(bytes));
 		JniPackagesInfo         packages    = JniPackagesInfoTest.createDemoInfo();
 
-		final String expected = 
+		final String expected = (
 			";---------------------------------------\n" +
 			"  class A\n" +
 			"    #ctor(int one, java.lang.String two)\n" +
@@ -60,7 +68,8 @@ public class ParameterNameGeneratorTest {
 			";---------------------------------------\n" +
 			"  interface Exampleable\n" +
 			"    example(java.lang.String e)\n" +
-			"";
+			""
+		).replace("\n", System.lineSeparator());
 
 		generator.writePackages(packages);
 		assertEquals("global package + example packages", expected, bytes.toString());

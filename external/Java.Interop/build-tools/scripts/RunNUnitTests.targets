@@ -30,7 +30,7 @@
         ContinueOnError="ErrorAndContinue"
     />
     <MSBuild
-        Condition=" !$([MSBuild]::IsOSPlatform ('windows')) "
+        Condition=" '$(SkipJSUTests)' != 'true' "
         Projects="$(MSBuildThisFileDirectory)..\..\tools\java-source-utils\java-source-utils.csproj"
         Targets="RunTests"
     />

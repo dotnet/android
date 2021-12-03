@@ -2,6 +2,8 @@ package com.microsoft.android;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -17,6 +19,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -65,10 +68,10 @@ public final class JavadocXmlGenerator implements AutoCloseable {
 	}
 
 	public void close() throws TransformerException {
+		InputStream is = getClass().getClassLoader().getResourceAsStream("transform-style.xsl");
+		InputStreamReader isr = new InputStreamReader(is);
 		Transformer transformer = TransformerFactory.newInstance()
-			.newTransformer();
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+			.newTransformer(new StreamSource (isr));
 		transformer.transform(new DOMSource(document), new StreamResult(output));
 
 		if (output != System.out) {
