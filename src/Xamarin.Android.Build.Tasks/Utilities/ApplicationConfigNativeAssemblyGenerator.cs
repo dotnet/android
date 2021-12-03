@@ -87,7 +87,9 @@ namespace Xamarin.Android.Tasks
 			public uint   data_size;
 			public IntPtr data;
 			public uint   name_length;
-			public IntPtr name;
+
+			[NativeAssemblerString (PointerToSymbol = true)]
+			public string name;
 		};
 
 		SortedDictionary <string, string> environmentVariables;
@@ -319,11 +321,12 @@ namespace Xamarin.Android.Tasks
 					data_size = 0,
 					data = IntPtr.Zero,
 					name_length = 0,
-					name = IntPtr.Zero,
+					name = String.Empty,
 				};
 
 				NativeAssemblyGenerator.StructureWriteContext bundledAssemblyArray = generator.StartStructureArray ();
 				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+					emptyBundledAssemblyData.name = name_labels [i]!.Label;
 					NativeAssemblyGenerator.StructureWriteContext bundledAssemblyStruct = generator.AddStructureArrayElement (bundledAssemblyArray);
 					generator.WriteStructure (bundledAssemblyStruct, emptyBundledAssemblyData);
 				}
