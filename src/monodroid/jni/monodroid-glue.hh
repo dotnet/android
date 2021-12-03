@@ -24,4 +24,6 @@ JNIEnv* get_jnienv (void);
 
 extern  FILE  *gref_log;
 extern  FILE  *lref_log;
+extern  bool    gref_to_logcat;
+extern  bool    lref_to_logcat;
 #endif /* __MONODROID_GLUE_H */
