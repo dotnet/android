@@ -255,7 +255,6 @@ namespace Xamarin.Android.Tasks
 				MaxJavaNameLength = mappingData.JavaNameWidth,
 			};
 
-			// TODO: add ability to write entry index as a comment above each entry
 			NativeAssemblyGenerator.StructureWriteContext javaMapArray = generator.StartStructureArray ();
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
 				map_entry.module_index = (uint)entry.ModuleIndex;

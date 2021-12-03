@@ -426,8 +426,6 @@ namespace Xamarin.Android.Tasks
 					_ => throw new InvalidOperationException ($"Unsupported member nativeType {smi.Info}")
 				};
 
-				// TODO: handle all arrays
-				// TODO: handle IntPtr
 				if (smi.Type == typeof(bool)) {
 					WriteField<bool> (smi, value);
 				} else if (smi.Type == typeof(byte)) {
@@ -454,8 +452,6 @@ namespace Xamarin.Android.Tasks
 					WriteField<nint> (smi, value);
 				} else if (smi.Type == typeof(nuint)) {
 					WriteField<nuint> (smi, value);
-				} else if (smi.Type == typeof(char)) {
-					// TODO: handle - convert to UTF8
 				} else if (smi.Type == typeof(string)) {
 					if (!HandleAttributedStrings (smi, smi.Attr as NativeAssemblerStringAttribute, (string)(object)value!)) {
 						WriteStringPointer (status, (string)(object)value!, global: false, label: null, comment: GetComment<T> (smi));

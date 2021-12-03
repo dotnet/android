@@ -1293,11 +1293,11 @@ MonodroidRuntime::find_dso_cache_entry ([[maybe_unused]] hash_t hash) noexcept
 	size_t entry_count = application_config.number_of_dso_cache_entries;
 	DSOCacheEntry *entries = dso_cache;
 
-	log_warn (LOG_ASSEMBLY, "dso_cache: looking for hash 0x%zx", hash);
+	log_debug (LOG_ASSEMBLY, "dso_cache: looking for hash 0x%zx", hash);
 	while (entry_count > 0) {
 		ret = entries + (entry_count / 2);
 		entry_hash = static_cast<hash_t> (ret->hash);
-		log_warn (LOG_ASSEMBLY, "dso_cache: entry_hash == 0x%zx", entry_hash);
+		log_debug (LOG_ASSEMBLY, "dso_cache: entry_hash == 0x%zx", entry_hash);
 		auto result = hash <=> entry_hash;
 
 		if (result < 0) {
