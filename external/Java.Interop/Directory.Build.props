@@ -3,6 +3,8 @@
   <!-- Note: MUST be imported *after* $(Configuration) is set! -->
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <!-- Mono's MSBuild does not support some implicit .NET6 source generator stuff -->
+    <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' And '$(MSBuildRuntimeType)' != 'Mono' ">true</TreatWarningsAsErrors>
     <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
