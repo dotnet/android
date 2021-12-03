@@ -52,7 +52,7 @@ namespace Xamarin.Android.Net
 	/// <para>AndroidClientHandler also supports requests to servers with "invalid" (e.g. self-signed) SSL certificates. Since this process is a bit convoluted using
 	/// the Java APIs, AndroidClientHandler defines a way to handle the situation. It can store the necessary certificates (either CA or server certificates)
 	/// in the <see cref="TrustedCerts"/> collection. If, however, the application requires finer control over the SSL configuration (e.g. it implements its own
-	/// TrustManager) then it should derive a custom class from <see cref="System.Net.AndroidMessageHandler"/> instead of using AndroidClientHandler.
+	/// TrustManager) then it should derive a custom class from <see cref="Xamarin.Android.Net.AndroidMessageHandler"/> instead of using AndroidClientHandler.
 	/// Note that the instance of AndroidClientHandler configured to accept an "invalid" certificate from the particular server will most likely fail to validate
 	/// certificates from other servers (even if they use a certificate with a fully validated trust chain) unless you store the CA certificates from your Android
 	/// system in <see cref="TrustedCerts"/> along with the self-signed certificate(s).</para>
@@ -134,7 +134,7 @@ namespace Xamarin.Android.Net
 		/// in this property in order for AndroidClientHandler to configure the request to accept the server certificate.</para>
 		/// <para>AndroidClientHandler uses a custom <see cref="KeyStore"/> and <see cref="TrustManagerFactory"/> to configure the connection. 
 		/// If, however, the application requires finer control over the SSL configuration (e.g. it implements its own TrustManager) then
-		/// it should derive a custom class from <see cref="System.Net.AndroidMessageHandler"/> instead of using AndroidClientHandler.</para>
+		/// it should derive a custom class from <see cref="Xamarin.Android.Net.AndroidMessageHandler"/> instead of using AndroidClientHandler.</para>
 		/// </summary>
 		/// <value>The trusted certs.</value>
 		public IList <Certificate>? TrustedCerts
