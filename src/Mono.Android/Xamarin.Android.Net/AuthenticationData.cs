@@ -1,12 +1,12 @@
 namespace Xamarin.Android.Net
 {
 	/// <summary>
-	/// Contains all the information required to perform pre-authentication of HTTP requests. See <see cref="AndroidClientHandler"/>.
+	/// Contains all the information required to perform pre-authentication of HTTP requests. See <see cref="AndroidMessageHandler"/>.
 	/// </summary>
 	public class AuthenticationData
 	{
 		/// <summary>
-		/// Gets the authentication scheme. If instance of AuthenticationData comes from the <see cref="AndroidClientHandler.RequestedAuthentication"/>
+		/// Gets the authentication scheme. If instance of AuthenticationData comes from the <see cref="AndroidMessageHandler.RequestedAuthentication"/>
 		/// collection it will have this property set to the type of authentication as requested by the server, or to <c>AuthenticationScheme.Unsupported</c>/>. 
 		/// In the latter case the application is required to provide the authentication module in <see cref="AuthModule"/>.
 		/// </summary>
@@ -22,7 +22,7 @@ namespace Xamarin.Android.Net
 
 		/// <summary>
 		/// Indicates whether authentication performed using data in this instance should be done for the end server or a proxy. If instance of 
-		/// AuthenticationData comes from the <see cref="AndroidClientHandler.RequestedAuthentication"/> collection it will have this property set to
+		/// AuthenticationData comes from the <see cref="AndroidMessageHandler.RequestedAuthentication"/> collection it will have this property set to
 		/// <c>true</c> if authentication request came from a proxy, <c>false</c> otherwise.
 		/// </summary>
 		/// <value><c>true</c> to use proxy authentication.</value>

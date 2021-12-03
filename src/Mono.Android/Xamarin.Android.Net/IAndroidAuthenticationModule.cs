@@ -5,13 +5,13 @@ using Java.Net;
 namespace Xamarin.Android.Net
 {
 	/// <summary>
-	/// Implement this interface in order to provide support for HTTP authentication scheme not supported by <see cref="AndroidClientHandler"/>
+	/// Implement this interface in order to provide support for HTTP authentication scheme not supported by <see cref="AndroidMessageHandler"/>
 	/// </summary>
 	public interface IAndroidAuthenticationModule
 	{
 		/// <summary>
 		/// The authentication scheme supported by the implementation. Should be set to <c>AuthenticationScheme.Unsupported</c> for
-		/// schemes unsupported by <see cref="AndroidClientHandler"/> natively.
+		/// schemes unsupported by <see cref="AndroidMessageHandler"/> natively.
 		/// </summary>
 		/// <value>The scheme.</value>
 		AuthenticationScheme Scheme { get; }
@@ -29,8 +29,8 @@ namespace Xamarin.Android.Net
 		bool CanPreAuthenticate { get; }
 
 		/// <summary>
-		/// Authenticate using the specified challenge, request and credentials. This is currently not used by <see cref="AndroidClientHandler"/>
-		/// since the requests aren't restarted automatically, but it can be used in the future implementations of <see cref="AndroidClientHandler"/>
+		/// Authenticate using the specified challenge, request and credentials. This is currently not used by <see cref="AndroidMessageHandler"/>
+		/// since the requests aren't restarted automatically, but it can be used in the future implementations of <see cref="AndroidMessageHandler"/>
 		/// </summary>
 		/// <returns><see cref="Authorization"/> instance which contains the value of the response header to authorize the connection</returns>
 		/// <param name="challenge">Challenge.</param>

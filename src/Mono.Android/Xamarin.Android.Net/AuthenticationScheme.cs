@@ -1,7 +1,7 @@
 namespace Xamarin.Android.Net
 {
 	/// <summary>
-	/// Authentication schemes supported by <see cref="AndroidClientHandler"/>
+	/// Authentication schemes supported by <see cref="AndroidMessageHandler"/>
 	/// </summary>
 	public enum AuthenticationScheme
 	{
@@ -11,7 +11,7 @@ namespace Xamarin.Android.Net
 		None,
 
 		/// <summary>
-		/// <see cref="AndroidClientHandler"/> doesn't support this scheme, the application must provide its own value. See <see cref="AuthenticationData.Scheme"/>
+		/// <see cref="AndroidMessageHandler"/> doesn't support this scheme, the application must provide its own value. See <see cref="AuthenticationData.Scheme"/>
 		/// </summary>
 		Unsupported,
 

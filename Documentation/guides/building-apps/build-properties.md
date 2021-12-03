@@ -584,13 +584,13 @@ for use with
 [`System.Type.GetType(string)`](/dotnet/api/system.type.gettype#System_Type_GetType_System_String_).
 The most common values for this property are:
 
-- `Xamarin.Android.Net.AndroidClientHandler`: Use the Android Java APIs
+- `Xamarin.Android.Net.AndroidMessageHandler`: Use the Android Java APIs
   to perform network requests. This allows accessing TLS 1.2 URLs when
   the underlying Android version supports TLS 1.2. Only Android 5.0 and
   later reliably provide TLS 1.2 support through Java.
 
   This corresponds to the **Android** option in the Visual Studio
-  property pages and the **AndroidClientHandler** option in the Visual
+  property pages and the **AndroidMessageHandler** option in the Visual
   Studio for Mac property pages.
 
   The new project wizard selects this option for new projects when the

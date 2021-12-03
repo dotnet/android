@@ -41,7 +41,7 @@ namespace Xamarin.Android.NetTests {
 	[Category ("InetAccess")]
 	public abstract class HttpClientIntegrationTestBase
 	{
-		protected abstract HttpClientHandler CreateHandler ();
+		protected abstract HttpMessageHandler CreateHandler ();
 
 		class CustomStream : Stream
 		{
@@ -1040,9 +1040,18 @@ namespace Xamarin.Android.NetTests {
 	[TestFixture]
 	public class AndroidClientHandlerIntegrationTests : HttpClientIntegrationTestBase
 	{
-		protected override HttpClientHandler CreateHandler ()
+		protected override HttpMessageHandler CreateHandler ()
 		{
 			return new Xamarin.Android.Net.AndroidClientHandler ();
+		}
+	}
+
+	[TestFixture]
+	public class AndroidMessageHandlerIntegrationTests : HttpClientIntegrationTestBase
+	{
+		protected override HttpMessageHandler CreateHandler ()
+		{
+			return new Xamarin.Android.Net.AndroidMessageHandler ();
 		}
 	}
 }
