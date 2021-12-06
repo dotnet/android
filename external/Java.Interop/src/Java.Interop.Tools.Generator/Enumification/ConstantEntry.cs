@@ -145,7 +145,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 		{
 			var entry = new ConstantEntry {
 				Action = ConstantAction.None,
-				ApiLevel = NamingConverter.ParseApiLevel (elem.Attribute ("merge.SourceFile")?.Value),
+				ApiLevel = NamingConverter.ParseApiLevel (elem),
 				JavaSignature = elem.Parent.Parent.Attribute ("name").Value,
 				Value = elem.Attribute ("value")?.Value,
 			};
@@ -190,6 +190,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 			};
 
 		}
+
 		static ConstantAction FromConstantActionString (string value)
 		{
 			return value switch
