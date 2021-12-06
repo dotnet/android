@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,50 +17,50 @@ namespace Xamarin.Android.Tasks
 	public abstract class GetAotArguments : AndroidAsyncTask
 	{
 		[Required]
-		public string AndroidApiLevel { get; set; }
+		public string AndroidApiLevel { get; set; } = "";
 
 		[Required]
-		public string AndroidAotMode { get; set; }
+		public string AndroidAotMode { get; set; } = "";
 
 		[Required]
-		public string AotOutputDirectory { get; set; }
+		public string AotOutputDirectory { get; set; } = "";
 
 		[Required]
-		public string AndroidBinUtilsDirectory { get; set; }
+		public string AndroidBinUtilsDirectory { get; set; } = "";
 
 		[Required]
-		public string TargetName { get; set; }
+		public string TargetName { get; set; } = "";
 
 		/// <summary>
 		/// Will be blank in .NET 6+
 		/// </summary>
-		public string ManifestFile { get; set; }
+		public string ManifestFile { get; set; } = "";
 
 		/// <summary>
 		/// $(AndroidMinimumSupportedApiLevel) in .NET 6+
 		/// </summary>
-		public string MinimumSupportedApiLevel { get; set; }
+		public string MinimumSupportedApiLevel { get; set; } = "";
 
-		public string RuntimeIdentifier { get; set; }
+		public string RuntimeIdentifier { get; set; } = "";
 
-		public string AndroidNdkDirectory { get; set; }
+		public string AndroidNdkDirectory { get; set; } = "";
 
 		public bool EnableLLVM { get; set; }
 
-		public string AndroidSequencePointsMode { get; set; }
+		public string AndroidSequencePointsMode { get; set; } = "";
 
-		public ITaskItem [] Profiles { get; set; }
+		public ITaskItem [] Profiles { get; set; } = Array.Empty<ITaskItem> ();
 
 		public bool UsingAndroidNETSdk { get; set; }
 
-		public string AotAdditionalArguments { get; set; }
+		public string AotAdditionalArguments { get; set; } = "";
 
 		[Required, Output]
-		public ITaskItem [] ResolvedAssemblies { get; set; }
+		public ITaskItem [] ResolvedAssemblies { get; set; } = Array.Empty<ITaskItem> ();
 
 		protected AotMode AotMode;
 		protected SequencePointsMode SequencePointsMode;
-		protected string SdkBinDirectory;
+		protected string SdkBinDirectory = "";
 
 		public static bool GetAndroidAotMode(string androidAotMode, out AotMode aotMode)
 		{
@@ -117,7 +118,7 @@ namespace Xamarin.Android.Tasks
 
 		int GetNdkApiLevel (NdkTools ndk, AndroidTargetArch arch)
 		{
-			AndroidAppManifest manifest = null;
+			AndroidAppManifest? manifest = null;
 			if (!string.IsNullOrEmpty (ManifestFile)) {
 				manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
 			}
@@ -254,10 +255,6 @@ namespace Xamarin.Android.Tasks
 			var toolchainPath = toolPrefix.Substring (0, toolPrefix.LastIndexOf (Path.DirectorySeparatorChar));
 			var ldFlags = string.Empty;
 			if (EnableLLVM) {
-				if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
-					return null;
-				}
-
 				string androidLibPath = string.Empty;
 				try {
 					androidLibPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
