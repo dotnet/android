@@ -1,3 +1,6 @@
+parameters:
+  platformName:
+
 steps:
 - task: PublishTestResults@2
   displayName: Publish NUnit Test Results
@@ -5,6 +8,7 @@ steps:
   inputs:
     testResultsFormat: NUnit
     testResultsFiles: TestResult-*.xml
+    testRunTitle: NUnit test results (${{ parameters.platformName }})
   continueOnError: true
 
 - task: PublishTestResults@2
@@ -12,4 +16,5 @@ steps:
   inputs:
     testResultsFormat: JUnit
     testResultsFiles: '**/TEST-*.xml'
+    testRunTitle: JUnit test results (${{ parameters.platformName }})
   continueOnError: true
