@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation.Utilities;
+using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation
 {
@@ -488,8 +489,11 @@ namespace MonoDroid.Generation
 			return null;
 		}
 
-		public string GetObjectHandleProperty (string variable)
+		public string GetObjectHandleProperty (CodeGenerationOptions opt, string variable)
 		{
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				return $"{variable}.PeerReference";
+			}
 			var handleType = IsThrowable () ? "Java.Lang.Throwable" : "Java.Lang.Object";
 
 			return $"((global::{handleType}) {variable}).Handle";
@@ -715,12 +719,27 @@ namespace MonoDroid.Generation
 		{
 			var rgm = this as IRequireGenericMarshal;
 
+			string format = opt.CodeGenerationTarget switch {
+				CodeGenerationTarget.JavaInterop1 =>
+					"{0} {1} = {5}global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<{4}> (ref {2}, {3});",
+				_ =>
+					"{0} {1} = {5}global::Java.Lang.Object.GetObject<{4}> ({2}, {3});",
+			};
+			string transfer = opt.CodeGenerationTarget switch {
+				CodeGenerationTarget.JavaInterop1 =>    "JniObjectReferenceOptions.CopyAndDispose",
+				_ =>                                    "JniHandleOwnership.TransferLocalRef",
+			};
+			string doNotTransfer = opt.CodeGenerationTarget switch {
+				CodeGenerationTarget.JavaInterop1       => "JniObjectReferenceOptions.Copy",
+				_                                       => "JniHandleOwnership.DoNotTransfer",
+			};
+
 			return new string []{
-				string.Format ("{0} {1} = {5}global::Java.Lang.Object.GetObject<{4}> ({2}, {3});",
+				string.Format (format,
 					       "var",
 					       opt.GetSafeIdentifier (var_name),
 					       opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),
-					       owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer",
+					       owned ? transfer : doNotTransfer,
 					       opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? FullName) : FullName),
 					       rgm != null ? "(" + opt.GetOutputName (FullName) + opt.NullableOperator + ")" : string.Empty)
 			};

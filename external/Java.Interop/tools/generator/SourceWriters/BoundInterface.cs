@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace generator.SourceWriters
 {
 	public class BoundInterface : InterfaceWriter
@@ -48,7 +50,12 @@ namespace generator.SourceWriters
 					? iface.FullName.Replace ('.', '/')
 					: iface.Namespace + "." + iface.FullName.Substring (iface.Namespace.Length + 1).Replace ('.', '/');
 
-				Attributes.Add (new RegisterAttr (iface.RawJniName, string.Empty, signature + "Invoker", additionalProperties: iface.AdditionalAttributeString ()));
+				if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+					Attributes.Add (new JniTypeSignatureAttr (iface.RawJniName, false));
+				}
+				else {
+					Attributes.Add (new RegisterAttr (iface.RawJniName, string.Empty, signature + "Invoker", additionalProperties: iface.AdditionalAttributeString ()));
+				}
 			}
 
 			if (iface.TypeParameters != null && iface.TypeParameters.Any ())
@@ -71,7 +78,10 @@ namespace generator.SourceWriters
 					post_sibling_types.Add (new InterfaceExtensionsClass (iface, null, opt));
 			}
 
-			post_sibling_types.Add (new InterfaceInvokerClass (iface, opt, context));
+			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+				// Worry about later; https://github.com/xamarin/java.interop/issues/910
+				post_sibling_types.Add (new InterfaceInvokerClass (iface, opt, context));
+			}
 
 			AddInterfaceEventHandler (iface, opt, context);
 
@@ -147,8 +157,12 @@ namespace generator.SourceWriters
 				Implements.Add (opt.GetOutputName (isym.FullName));
 			}
 
-			if (Implements.Count == 0 && !iface.IsConstSugar (opt))
-				Implements.AddRange (new [] { "IJavaObject", "IJavaPeerable" });
+			if (Implements.Count == 0 && !iface.IsConstSugar (opt)) {
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+					Implements.Add ("IJavaObject");
+				}
+				Implements.Add ("IJavaPeerable");
+			}
 		}
 
 		void AddClassHandle (InterfaceGen iface, CodeGenerationOptions opt)

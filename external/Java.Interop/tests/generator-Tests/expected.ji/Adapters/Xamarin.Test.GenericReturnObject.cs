@@ -1,18 +1,13 @@
 using System;
 using System.Collections.Generic;
-using Android.Runtime;
 using Java.Interop;
 
 namespace Xamarin.Test {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='GenericReturnObject']"
-	[global::Android.Runtime.Register ("xamarin/test/GenericReturnObject", DoNotGenerateAcw=true)]
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/GenericReturnObject", GenerateJavaPeer=false)]
 	public partial class GenericReturnObject : global::Java.Lang.Object {
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/GenericReturnObject", typeof (GenericReturnObject));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -20,46 +15,17 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
-		}
-
-		protected GenericReturnObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		protected GenericReturnObject (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
 		{
 		}
-
-		static Delegate cb_GenericReturn;
-#pragma warning disable 0169
-		static Delegate GetGenericReturnHandler ()
-		{
-			if (cb_GenericReturn == null)
-				cb_GenericReturn = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GenericReturn);
-			return cb_GenericReturn;
-		}
-
-		static IntPtr n_GenericReturn (IntPtr jnienv, IntPtr native__this)
-		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.GenericReturnObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.ToLocalJniHandle (__this.GenericReturn ());
-		}
-#pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='GenericReturnObject']/method[@name='GenericReturn' and count(parameter)=0]"
-		[Register ("GenericReturn", "()Lxamarin/test/AdapterView;", "GetGenericReturnHandler")]
 		public virtual unsafe global::Xamarin.Test.AdapterView GenericReturn ()
 		{
 			const string __id = "GenericReturn.()Lxamarin/test/AdapterView;";
 			try {
 				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Xamarin.Test.AdapterView> (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 			} finally {
 			}
 		}

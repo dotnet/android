@@ -246,7 +246,7 @@ namespace Xamarin.Android.Binder
 			// Create the .cs files for the enums
 			var enumFiles = enums == null
 				? null
-				: enummap.WriteEnumerations (enumdir, enums, FlattenNestedTypes (gens).ToArray (), opt.UseShortFileNames);
+				: enummap.WriteEnumerations (enumdir, enums, FlattenNestedTypes (gens).ToArray (), opt);
 
 			gen_info.GenerateLibraryProjectFile (options, enumFiles);
 		}

@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);ANDROID_1;ANDROID_2;ANDROID_3;ANDROID_4</DefineConstants>
+  </PropertyGroup>
+  <!-- Classes -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Text.ISpannable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Text.ISpanned.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Text.SpannableString.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Text.SpannableStringInternal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Views.View.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.__TypeRegistrations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Object.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)__NamespaceMapping__.cs" />
+  </ItemGroup>
+  <!-- Enums -->
+  <ItemGroup>
+    <Compile Include="enum\Android.Text.SpanTypes.cs" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !JAVA_INTEROP1
+using System;
 using System.IO;
 
 namespace Android.Runtime
@@ -60,4 +61,4 @@ namespace Android.Runtime
 		}
 	}
 }
-
+#endif // !JAVA_INTEROP1

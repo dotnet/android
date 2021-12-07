@@ -101,7 +101,7 @@ namespace Java.Interop
 			JniEnvironment.Runtime.ValueManager.DisposePeer (this);
 		}
 
-		public void DisposeUnlessReferenced ()
+		public virtual void DisposeUnlessReferenced ()
 		{
 			JniEnvironment.Runtime.ValueManager.DisposePeerUnlessReferenced (this);
 		}

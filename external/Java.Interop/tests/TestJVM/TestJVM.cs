@@ -46,7 +46,7 @@ namespace Java.InteropTests
 			return new StreamWriter (path, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
 		}
 
-		static string GetJvmLibraryPath ()
+		public static string GetJvmLibraryPath ()
 		{
 			var jdkDir  = ReadJavaSdkDirectoryFromJdkInfoProps ();
 			if (jdkDir != null) {

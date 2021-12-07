@@ -1,91 +1,79 @@
 // Metadata.xml XPath class reference: path="/api/package[@name='java.code']/class[@name='MyClass']"
-[global::Android.Runtime.Register ("java/code/MyClass", DoNotGenerateAcw=true)]
+[global::Java.Interop.JniTypeSignature ("java/code/MyClass", GenerateJavaPeer=false)]
 public partial class MyClass {
 	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
 
-	internal static IntPtr class_ref {
-		get { return _members.JniPeerType.PeerReference.Handle; }
-	}
-
-	protected MyClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+	protected MyClass (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
 	{
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='uint[]']]"
-	[Register ("Echo", "([I)[I", "")]
-	public unsafe uint[] Echo (uint[] value)
+	public unsafe System.Collections.Generic.IList<Int32> Echo (uint[] value)
 	{
 		const string __id = "Echo.([I)[I";
-		IntPtr native_value = JNIEnv.NewArray (value);
+		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt32Array (value);
 		try {
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (native_value);
 			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
-			return (uint[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (uint));
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt32Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		} finally {
 			if (value != null) {
-				JNIEnv.CopyArray (native_value, value);
-				JNIEnv.DeleteLocalRef (native_value);
+				native_value.DisposeUnlessReferenced ();
 			}
 			global::System.GC.KeepAlive (value);
 		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ushort[]']]"
-	[Register ("Echo", "([S)[S", "")]
-	public unsafe ushort[] Echo (ushort[] value)
+	public unsafe System.Collections.Generic.IList<Int16> Echo (ushort[] value)
 	{
 		const string __id = "Echo.([S)[S";
-		IntPtr native_value = JNIEnv.NewArray (value);
+		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt16Array (value);
 		try {
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (native_value);
 			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
-			return (ushort[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (ushort));
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt16Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		} finally {
 			if (value != null) {
-				JNIEnv.CopyArray (native_value, value);
-				JNIEnv.DeleteLocalRef (native_value);
+				native_value.DisposeUnlessReferenced ();
 			}
 			global::System.GC.KeepAlive (value);
 		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ulong[]']]"
-	[Register ("Echo", "([J)[J", "")]
-	public unsafe ulong[] Echo (ulong[] value)
+	public unsafe System.Collections.Generic.IList<Int64> Echo (ulong[] value)
 	{
 		const string __id = "Echo.([J)[J";
-		IntPtr native_value = JNIEnv.NewArray (value);
+		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt64Array (value);
 		try {
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (native_value);
 			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
-			return (ulong[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (ulong));
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt64Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		} finally {
 			if (value != null) {
-				JNIEnv.CopyArray (native_value, value);
-				JNIEnv.DeleteLocalRef (native_value);
+				native_value.DisposeUnlessReferenced ();
 			}
 			global::System.GC.KeepAlive (value);
 		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ubyte[]']]"
-	[Register ("Echo", "([B)[B", "")]
-	public unsafe byte[] Echo (byte[] value)
+	public unsafe System.Collections.Generic.IList<SByte> Echo (byte[] value)
 	{
 		const string __id = "Echo.([B)[B";
-		IntPtr native_value = JNIEnv.NewArray (value);
+		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray (value);
 		try {
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (native_value);
 			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
-			return (byte[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (byte));
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaSByteArray>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		} finally {
 			if (value != null) {
-				JNIEnv.CopyArray (native_value, value);
-				JNIEnv.DeleteLocalRef (native_value);
+				native_value.DisposeUnlessReferenced ();
 			}
 			global::System.GC.KeepAlive (value);
 		}

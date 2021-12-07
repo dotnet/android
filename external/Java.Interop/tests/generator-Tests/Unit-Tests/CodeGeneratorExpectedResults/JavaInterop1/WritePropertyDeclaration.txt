@@ -1,0 +1,7 @@
+int MyProperty {
+	// Metadata.xml XPath method reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='get_MyProperty' and count(parameter)=0]"
+	[Register ("get_MyProperty", "()I", "Getget_MyPropertyHandler:ObjectAdapter, ")] get;
+	// Metadata.xml XPath method reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='set_MyProperty' and count(parameter)=1 and parameter[1][@type='int']]"
+	[Register ("set_MyProperty", "(I)V", "Getset_MyProperty_IHandler:ObjectAdapter, ")] set;
+}
+

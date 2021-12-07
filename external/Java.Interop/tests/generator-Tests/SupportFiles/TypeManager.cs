@@ -1,3 +1,5 @@
+#if !JAVA_INTEROP1
+
 #pragma warning disable
 using System;
 using System.Collections.Generic;
@@ -110,3 +112,5 @@ namespace Java.Interop {
 	}
 }
 #pragma warning restore
+
+#endif  // !JAVA_INTEROP1

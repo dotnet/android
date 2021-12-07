@@ -7,6 +7,8 @@ using System.Xml.Schema;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace generator.SourceWriters
 {
 	public class ClassInvokerClass : ClassWriter
@@ -24,25 +26,43 @@ namespace generator.SourceWriters
 			foreach (var igen in klass.GetAllDerivedInterfaces ().Where (i => i.IsGeneric))
 				Implements.Add (opt.GetOutputName (igen.FullName));
 
-			Attributes.Add (new RegisterAttr (klass.RawJniName, noAcw: true, additionalProperties: klass.AdditionalAttributeString ()) { UseGlobal = true });
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				Attributes.Add (new JniTypeSignatureAttr (klass.RawJniName, false));
+			} else {
+				Attributes.Add (new RegisterAttr (klass.RawJniName, noAcw: true, additionalProperties: klass.AdditionalAttributeString ()) { UseGlobal = true });
+			}
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
 
-			var ctor = new ConstructorWriter {
-				Name = Name,
-				IsPublic = true,
-				BaseCall = "base (handle, transfer)"
-			};
-
-			ctor.Parameters.Add (new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr));
-			ctor.Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
+			ConstructorWriter ctor = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1
+				? new ConstructorWriter {
+					Name        = Name,
+					IsPublic    = true,
+					BaseCall    = "base (ref reference, options)",
+					Parameters  = {
+						new MethodParameterWriter ("reference", new TypeReferenceWriter ("ref JniObjectReference")),
+						new MethodParameterWriter ("options", new TypeReferenceWriter ("JniObjectReferenceOptions")),
+					},
+				}
+				: new ConstructorWriter {
+					Name        = Name,
+					IsPublic    = true,
+					BaseCall    = "base (handle, transfer)",
+					Parameters  = {
+						new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr),
+						new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")),
+					},
+				}
+			;
 
 			Constructors.Add (ctor);
 
 			// ClassInvokerHandle
 			Fields.Add (new PeerMembersField (opt, klass.RawJniName, $"{klass.Name}Invoker", false));
 			Properties.Add (new JniPeerMembersGetter ());
-			Properties.Add (new ThresholdTypeGetter ());
+			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+				Properties.Add (new ThresholdTypeGetter ());
+			}
 
 			AddMemberInvokers (klass, opt, new HashSet<string> ());
 		}

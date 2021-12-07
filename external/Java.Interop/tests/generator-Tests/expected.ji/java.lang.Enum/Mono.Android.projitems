@@ -5,7 +5,6 @@
   </PropertyGroup>
   <!-- Classes -->
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.__TypeRegistrations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Enum.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.IComparable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Object.cs" />

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MonoDroid.Generation;
+using Xamarin.Android.Binder;
 using Xamarin.SourceWriter;
 
 namespace generator.SourceWriters
@@ -47,7 +48,12 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
 
-			Attributes.Add (new RegisterAttr (klass.RawJniName, null, null, true, klass.AdditionalAttributeString ()) { UseGlobal = true, UseShortForm = true });
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				Attributes.Add (new JniTypeSignatureAttr (klass.RawJniName, false));
+			}
+			else {
+				Attributes.Add (new RegisterAttr (klass.RawJniName, null, null, true, klass.AdditionalAttributeString ()) { UseGlobal = true, UseShortForm = true });
+			}
 
 			if (klass.TypeParameters != null && klass.TypeParameters.Any ())
 				Attributes.Add (new CustomAttr (klass.TypeParameters.ToGeneratedAttributeString ()));
@@ -83,7 +89,7 @@ namespace generator.SourceWriters
 				sibling_types.Add (new ClassInvokerClass (klass, opt));
 
 			AddNestedTypes (klass, opt, context, generationInfo);
-			AddBindingInfrastructure (klass);
+			AddBindingInfrastructure (klass, opt);
 			AddConstructors (klass, opt, context);
 			AddProperties (klass, opt);
 			AddMethods (klass, opt, context);
@@ -95,7 +101,7 @@ namespace generator.SourceWriters
 			context.ContextTypes.Pop ();
 		}
 
-		void AddBindingInfrastructure (ClassGen klass)
+		void AddBindingInfrastructure (ClassGen klass, CodeGenerationOptions opt)
 		{
 			// @class.InheritsObject is true unless @class refers to java.lang.Object or java.lang.Throwable. (see ClassGen constructor)
 			// If @class's base class is defined in the same api.xml file, then it requires the new keyword to overshadow the internal
@@ -105,12 +111,16 @@ namespace generator.SourceWriters
 			var requireNew = klass.InheritsObject && baseFromSameAssembly;
 
 			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false));
-			Properties.Add (new ClassHandleGetter (requireNew));
+			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+				Properties.Add (new ClassHandleGetter (requireNew));
+			}
 
 			if (klass.BaseGen != null && klass.InheritsObject) {
 				Properties.Add (new JniPeerMembersGetter ());
-				Properties.Add (new ClassThresholdClassGetter ());
-				Properties.Add (new ThresholdTypeGetter ());
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+					Properties.Add (new ClassThresholdClassGetter ());
+					Properties.Add (new ThresholdTypeGetter ());
+				}
 			}
 		}
 
@@ -118,7 +128,7 @@ namespace generator.SourceWriters
 		{
 			// Add required constructor for all JLO inheriting classes
 			if (klass.FullName != "Java.Lang.Object" && klass.InheritsObject)
-				Constructors.Add (new JavaLangObjectConstructor (klass));
+				Constructors.Add (new JavaLangObjectConstructor (klass, opt));
 
 			foreach (var ctor in klass.Ctors) {
 				// Don't bind final or protected constructors

@@ -6,6 +6,8 @@ namespace generatortests
 	[TestFixture]
 	public class Core_Jar2Xml : BaseGeneratorTest
 	{
+		protected override bool TryJavaInterop1 => false;
+
 		[Test]
 		public void GeneratedOK ()
 		{

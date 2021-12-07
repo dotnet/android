@@ -10,5 +10,13 @@
         PropertyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props">
       <Output TaskParameter="JavaHomePath" PropertyName="_JavaHome"/>
     </JdkInfo>
+    <JdkInfo
+        JdksRoot="$(JdksRoot)"
+        PropertyNameModifier="11"
+        MinimumJdkVersion="11.0"
+        MaximumJdkVersion="11.99.0"
+        PropertyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo-11.props">
+      <Output TaskParameter="JavaHomePath" PropertyName="Java11SdkDirectory"/>
+    </JdkInfo>
   </Target>
 </Project>

@@ -5,7 +5,6 @@
   </PropertyGroup>
   <!-- Classes -->
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.__TypeRegistrations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Object.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Test.NotificationCompatBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)__NamespaceMapping__.cs" />

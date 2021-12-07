@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace generator.SourceWriters
 {
 	public class BoundField : FieldWriter
@@ -22,7 +24,9 @@ namespace generator.SourceWriters
 			field.JavadocInfo?.AddJavadocs (Comments);
 			Comments.Add ($"// Metadata.xml XPath field reference: path=\"{type.MetadataXPathReference}/field[@name='{field.JavaName}']\"");
 
-			Attributes.Add (new RegisterAttr (field.JavaName, additionalProperties: field.AdditionalAttributeString ()));
+			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+				Attributes.Add (new RegisterAttr (field.JavaName, additionalProperties: field.AdditionalAttributeString ()));
+			}
 
 			if (field.IsEnumified)
 				Attributes.Add (new GeneratedEnumAttr ());

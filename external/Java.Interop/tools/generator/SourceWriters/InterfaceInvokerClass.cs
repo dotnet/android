@@ -7,6 +7,8 @@ using System.Xml.Schema;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace generator.SourceWriters
 {
 	public class InterfaceInvokerClass : ClassWriter
@@ -22,14 +24,27 @@ namespace generator.SourceWriters
 			Inherits = "global::Java.Lang.Object";
 			Implements.Add (iface.Name);
 
-			Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) { UseGlobal = true });
+			bool ji = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1;
+
+			if (ji) {
+				Attributes.Add (new JniTypeSignatureAttr (iface.RawJniName, false));
+			}
+			else {
+				Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) { UseGlobal = true });
+			}
 
 			Fields.Add (new PeerMembersField (opt, iface.RawJniName, $"{iface.Name}Invoker", false));
 
-			Properties.Add (new InterfaceHandleGetter ());
+			if (!ji) {
+				Properties.Add (new InterfaceHandleGetter ());
+			}
+
 			Properties.Add (new JniPeerMembersGetter ());
-			Properties.Add (new InterfaceThresholdClassGetter ());
-			Properties.Add (new ThresholdTypeGetter ());
+
+			if (!ji) {
+				Properties.Add (new InterfaceThresholdClassGetter ());
+				Properties.Add (new ThresholdTypeGetter ());
+			}
 
 			Fields.Add (new FieldWriter { Name = "class_ref", Type = TypeReferenceWriter.IntPtr, IsShadow = opt.BuildingCoreAssembly });
 
@@ -37,7 +52,7 @@ namespace generator.SourceWriters
 			Methods.Add (new ValidateMethod (iface));
 			Methods.Add (new DisposeMethod ());
 
-			Constructors.Add (new InterfaceInvokerConstructor (iface, context));
+			Constructors.Add (new InterfaceInvokerConstructor (opt, iface, context));
 
 			AddMemberInvokers (iface, new HashSet<string> (), opt, context);
 		}
@@ -171,7 +186,7 @@ namespace generator.SourceWriters
 		//     this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 		//     JNIEnv.DeleteLocalRef (local_ref);
 		// }
-		public InterfaceInvokerConstructor (InterfaceGen iface, CodeGeneratorContext context)
+		public InterfaceInvokerConstructor (CodeGenerationOptions opt, InterfaceGen iface, CodeGeneratorContext context)
 		{
 			Name = iface.Name + "Invoker";
 
@@ -182,7 +197,7 @@ namespace generator.SourceWriters
 
 			BaseCall = "base (Validate (handle), transfer)";
 
-			Body.Add ($"IntPtr local_ref = JNIEnv.GetObjectClass ({context.ContextType.GetObjectHandleProperty ("this")});");
+			Body.Add ($"IntPtr local_ref = JNIEnv.GetObjectClass ({context.ContextType.GetObjectHandleProperty (opt, "this")});");
 			Body.Add ("this.class_ref = JNIEnv.NewGlobalRef (local_ref);");
 			Body.Add ("JNIEnv.DeleteLocalRef (local_ref);");
 		}

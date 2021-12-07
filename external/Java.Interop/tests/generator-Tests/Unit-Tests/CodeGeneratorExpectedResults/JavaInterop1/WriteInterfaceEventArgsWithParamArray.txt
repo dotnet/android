@@ -1,0 +1,14 @@
+// event args for com.xamarin.android.MyListener.onDoSomething
+public partial class MyEventArgs : global::System.EventArgs {
+
+	public MyEventArgs (params Java.Lang.Object[] args)
+	{
+		this.args = args;
+	}
+
+	Java.Lang.Object[] args;
+	public Java.Lang.Object[] Args {
+		get { return args; }
+	}
+}
+

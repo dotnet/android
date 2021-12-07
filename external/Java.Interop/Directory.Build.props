@@ -31,6 +31,10 @@
       Condition="Exists('$(_OutputPath)JdkInfo.props')"
   />
   <Import
+      Project="$(_OutputPath)JdkInfo-11.props"
+      Condition="Exists('$(_OutputPath)JdkInfo-11.props')"
+  />
+  <Import
       Project="$(_OutputPath)MonoInfo.props"
       Condition="Exists('$(_OutputPath)MonoInfo.props')"
   />

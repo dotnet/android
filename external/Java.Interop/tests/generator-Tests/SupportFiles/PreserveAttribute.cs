@@ -1,3 +1,5 @@
+#if !JAVA_INTEROP1
+
 //
 // PreserveAttribute.cs
 //
@@ -53,3 +55,5 @@ namespace Android.Runtime {
 		}
 	}
 }
+
+#endif  // !JAVA_INTEROP1

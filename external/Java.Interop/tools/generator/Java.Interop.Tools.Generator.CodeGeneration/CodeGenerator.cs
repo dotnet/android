@@ -644,7 +644,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ("{0}\t\t\tglobal::Android.Runtime.JNIEnv.StartCreateInstance (\"{1}\", \"()V\"),", indent, jniClass);
 			writer.WriteLine ("{0}\t\t\tJniHandleOwnership.TransferLocalRef)", indent);
 			writer.WriteLine ("{0}\t{{", indent);
-			writer.WriteLine ("{0}\t\tglobal::Android.Runtime.JNIEnv.FinishCreateInstance ({1}, \"()V\");", indent, @interface.GetObjectHandleProperty ("this"));
+			writer.WriteLine ("{0}\t\tglobal::Android.Runtime.JNIEnv.FinishCreateInstance ({1}, \"()V\");", indent, @interface.GetObjectHandleProperty (opt, "this"));
 			if (needs_sender)
 				writer.WriteLine ("{0}\t\tthis.sender = sender;", indent);
 			writer.WriteLine ("{0}\t}}", indent);
@@ -863,7 +863,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 			writer.WriteLine ("{0}\tpublic {1}Invoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)", indent, @interface.Name);
 			writer.WriteLine ("{0}\t{{", indent);
-			writer.WriteLine ("{0}\t\tIntPtr local_ref = JNIEnv.GetObjectClass ({1});", indent, Context.ContextType.GetObjectHandleProperty ("this"));
+			writer.WriteLine ("{0}\t\tIntPtr local_ref = JNIEnv.GetObjectClass ({1});", indent, Context.ContextType.GetObjectHandleProperty (opt, "this"));
 			writer.WriteLine ("{0}\t\tthis.class_ref = JNIEnv.NewGlobalRef (local_ref);", indent);
 			writer.WriteLine ("{0}\t\tJNIEnv.DeleteLocalRef (local_ref);", indent);
 			writer.WriteLine ("{0}\t}}", indent);
@@ -1283,7 +1283,7 @@ namespace MonoDroid.Generation
 			WriteParameterListCallArgs (method.Parameters, indent, invoker: true);
 			string env_method = "Call" + method.RetVal.CallMethodPrefix + "Method";
 			string call = method.RetVal.ReturnCast + "JNIEnv." + env_method + " (" +
-			    Context.ContextType.GetObjectHandleProperty ("this") + ", " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker: true) + ")";
+			    Context.ContextType.GetObjectHandleProperty (opt, "this") + ", " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker: true) + ")";
 			if (method.IsVoid)
 				writer.WriteLine ("{0}{1};", indent, call);
 			else

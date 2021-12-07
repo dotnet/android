@@ -41,7 +41,7 @@ namespace generator.SourceWriters
 				setter_callback = new MethodCallback (iface, property.Setter, opt, property.AdjustedName, false);
 			}
 
-			context_this = context.ContextType.GetObjectHandleProperty ("this");
+			context_this = context.ContextType.GetObjectHandleProperty (opt, "this");
 		}
 
 		public override void Write (CodeWriter writer)

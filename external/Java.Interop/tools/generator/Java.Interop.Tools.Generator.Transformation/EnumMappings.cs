@@ -107,8 +107,9 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		internal List<string> WriteEnumerations (string output_dir, Dictionary<string, EnumDescription> enums, GenBase [] gens, bool useShortFileNames)
+		internal List<string> WriteEnumerations (string output_dir, Dictionary<string, EnumDescription> enums, GenBase [] gens, CodeGenerationOptions opt)
 		{
+			bool useShortFileNames = opt.UseShortFileNames;
 			if (!Directory.Exists (output_dir))
 				Directory.CreateDirectory (output_dir);
 
@@ -120,7 +121,7 @@ namespace MonoDroid.Generation {
 
 				using (var sw = File.CreateText (path)) {
 					var generator = new EnumGenerator (sw);
-					generator.WriteEnumeration (enu, gens);
+					generator.WriteEnumeration (opt, enu, gens);
 				}
 			});
 

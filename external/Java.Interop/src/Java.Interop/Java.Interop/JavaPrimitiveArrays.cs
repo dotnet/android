@@ -3,11 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Java.Interop.Expressions;
 using System.Linq.Expressions;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop {
 
@@ -96,6 +96,25 @@ namespace Java.Interop {
 				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Double>), JavaDoubleArray.ArrayMarshaler),
 				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaDoubleArray),            JavaDoubleArray.ArrayMarshaler),
 			};
+		}
+	}
+
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static JavaBooleanArray? CreateMarshalBooleanArray (System.Collections.Generic.IEnumerable<Boolean>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is JavaBooleanArray c) {
+					return c;
+				}
+				return new JavaBooleanArray (value) {
+					forMarshalCollection = true,
+				};
+			}
 		}
 	}
 
@@ -264,14 +283,33 @@ namespace Java.Interop {
 			}
 
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-	                {
-	                        Func<IntPtr, Type?, object?>  m = JavaBooleanArray.CreateMarshaledValue;
+			{
+				Func<IntPtr, Type?, object?>  m = JavaBooleanArray.CreateMarshaledValue;
 
-	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-	                        return targetType == null
-	                                ? (Expression) call
-	                                : Expression.Convert (call, targetType);
-	                }
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
+		}
+	}
+
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static JavaSByteArray? CreateMarshalSByteArray (System.Collections.Generic.IEnumerable<SByte>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is JavaSByteArray c) {
+					return c;
+				}
+				return new JavaSByteArray (value) {
+					forMarshalCollection = true,
+				};
+			}
 		}
 	}
 
@@ -440,14 +478,33 @@ namespace Java.Interop {
 			}
 
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-	                {
-	                        Func<IntPtr, Type?, object?>  m = JavaSByteArray.CreateMarshaledValue;
+			{
+				Func<IntPtr, Type?, object?>  m = JavaSByteArray.CreateMarshaledValue;
 
-	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-	                        return targetType == null
-	                                ? (Expression) call
-	                                : Expression.Convert (call, targetType);
-	                }
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
+		}
+	}
+
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static JavaCharArray? CreateMarshalCharArray (System.Collections.Generic.IEnumerable<Char>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is JavaCharArray c) {
+					return c;
+				}
+				return new JavaCharArray (value) {
+					forMarshalCollection = true,
+				};
+			}
 		}
 	}
 
@@ -616,14 +673,33 @@ namespace Java.Interop {
 			}
 
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-	                {
-	                        Func<IntPtr, Type?, object?>  m = JavaCharArray.CreateMarshaledValue;
+			{
+				Func<IntPtr, Type?, object?>  m = JavaCharArray.CreateMarshaledValue;
 
-	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-	                        return targetType == null
-	                                ? (Expression) call
-	                                : Expression.Convert (call, targetType);
-	                }
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
+		}
+	}
+
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static JavaInt16Array? CreateMarshalInt16Array (System.Collections.Generic.IEnumerable<Int16>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is JavaInt16Array c) {
+					return c;
+				}
+				return new JavaInt16Array (value) {
+					forMarshalCollection = true,
+				};
+			}
 		}
 	}
 
@@ -792,14 +868,33 @@ namespace Java.Interop {
 			}
 
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-	                {
-	                        Func<IntPtr, Type?, object?>  m = JavaInt16Array.CreateMarshaledValue;
+			{
+				Func<IntPtr, Type?, object?>  m = JavaInt16Array.CreateMarshaledValue;
 
-	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-	                        return targetType == null
-	                                ? (Expression) call
-	                                : Expression.Convert (call, targetType);
-	                }
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
+		}
+	}
+
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static JavaInt32Array? CreateMarshalInt32Array (System.Collections.Generic.IEnumerable<Int32>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is JavaInt32Array c) {
+					return c;
+				}
+				return new JavaInt32Array (value) {
+					forMarshalCollection = true,
+				};
+			}
 		}
 	}
 
@@ -968,14 +1063,33 @@ namespace Java.Interop {
 			}
 
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-	                {
-	                        Func<IntPtr, Type?, object?>  m = JavaInt32Array.CreateMarshaledValue;
+			{
+				Func<IntPtr, Type?, object?>  m = JavaInt32Array.CreateMarshaledValue;
 
-	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-	                        return targetType == null
-	                                ? (Expression) call
-	                                : Expression.Convert (call, targetType);
-	                }
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
+		}
+	}
+
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static JavaInt64Array? CreateMarshalInt64Array (System.Collections.Generic.IEnumerable<Int64>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is JavaInt64Array c) {
+					return c;
+				}
+				return new JavaInt64Array (value) {
+					forMarshalCollection = true,
+				};
+			}
 		}
 	}
 
@@ -1144,14 +1258,33 @@ namespace Java.Interop {
 			}
 
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-	                {
-	                        Func<IntPtr, Type?, object?>  m = JavaInt64Array.CreateMarshaledValue;
+			{
+				Func<IntPtr, Type?, object?>  m = JavaInt64Array.CreateMarshaledValue;
 
-	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-	                        return targetType == null
-	                                ? (Expression) call
-	                                : Expression.Convert (call, targetType);
-	                }
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
+		}
+	}
+
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static JavaSingleArray? CreateMarshalSingleArray (System.Collections.Generic.IEnumerable<Single>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is JavaSingleArray c) {
+					return c;
+				}
+				return new JavaSingleArray (value) {
+					forMarshalCollection = true,
+				};
+			}
 		}
 	}
 
@@ -1320,14 +1453,33 @@ namespace Java.Interop {
 			}
 
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-	                {
-	                        Func<IntPtr, Type?, object?>  m = JavaSingleArray.CreateMarshaledValue;
+			{
+				Func<IntPtr, Type?, object?>  m = JavaSingleArray.CreateMarshaledValue;
 
-	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-	                        return targetType == null
-	                                ? (Expression) call
-	                                : Expression.Convert (call, targetType);
-	                }
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
+		}
+	}
+
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static JavaDoubleArray? CreateMarshalDoubleArray (System.Collections.Generic.IEnumerable<Double>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is JavaDoubleArray c) {
+					return c;
+				}
+				return new JavaDoubleArray (value) {
+					forMarshalCollection = true,
+				};
+			}
 		}
 	}
 
@@ -1496,14 +1648,14 @@ namespace Java.Interop {
 			}
 
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-	                {
-	                        Func<IntPtr, Type?, object?>  m = JavaDoubleArray.CreateMarshaledValue;
+			{
+				Func<IntPtr, Type?, object?>  m = JavaDoubleArray.CreateMarshaledValue;
 
-	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-	                        return targetType == null
-	                                ? (Expression) call
-	                                : Expression.Convert (call, targetType);
-	                }
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
 		}
 	}
 

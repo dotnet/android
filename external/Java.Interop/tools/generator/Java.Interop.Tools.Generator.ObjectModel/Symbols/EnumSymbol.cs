@@ -48,7 +48,7 @@ namespace MonoDroid.Generation {
 
 		public string ReturnCast => string.Empty;
 
-		public string GetObjectHandleProperty (string variable)
+		public string GetObjectHandleProperty (CodeGenerationOptions opt, string variable)
 		{
 			return null;
 		}

@@ -31,6 +31,7 @@
   <ItemGroup>
     <Compile Remove="expected\**\*" />
     <Compile Remove="expected.ji\**\*" />
+    <Compile Remove="expected.xaji\**\*" />
     <Compile Remove="Tests-Core\**\*" />
     <Compile Remove="SupportFiles\**\*" />
     <Compile Include="SupportFiles\RegisterAttribute.cs" />
@@ -38,6 +39,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="expected.ji\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="expected.xaji\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="SupportFiles\**\*">

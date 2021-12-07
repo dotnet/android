@@ -369,6 +369,15 @@ namespace Java.Interop
 		{
 		}
 
+		public override void DisposeUnlessReferenced ()
+		{
+			if (forMarshalCollection) {
+				Dispose ();
+				return;
+			}
+			base.DisposeUnlessReferenced ();
+		}
+
 		public      abstract    void    CopyTo (int sourceIndex, T[] destinationArray, int destinationIndex, int length);
 		public      abstract    void    CopyFrom (T[] sourceArray, int sourceIndex, int destinationIndex, int length);
 

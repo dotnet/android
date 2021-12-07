@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace generator.SourceWriters
 {
 	public class BoundMethod : MethodWriter
@@ -18,7 +20,7 @@ namespace generator.SourceWriters
 		{
 			JavaMethod = method;
 
-			if (generateCallbacks && method.IsVirtual)
+			if (generateCallbacks && method.IsVirtual && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
 				callback = new MethodCallback (type, method, opt, null, method.IsReturnCharSequence);
 
 			Name = method.AdjustedName;
@@ -72,7 +74,9 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.IsVirtual ? method.GetConnectorNameFull (opt) : string.Empty, additionalProperties: method.AdditionalAttributeString ()));
+			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+				Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.IsVirtual ? method.GetConnectorNameFull (opt) : string.Empty, additionalProperties: method.AdditionalAttributeString ()));
+			}
 
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
 			this.AddMethodParameters (method.Parameters, opt);

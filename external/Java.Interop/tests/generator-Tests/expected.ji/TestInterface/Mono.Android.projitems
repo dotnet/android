@@ -7,7 +7,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)ClassWithoutNamespace.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IInterfaceWithoutNamespace.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.__TypeRegistrations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Object.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.String.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Test.ME.GenericImplementation.cs" />

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
 
 namespace MonoDroid.Generation {
 
@@ -65,13 +66,18 @@ namespace MonoDroid.Generation {
 
 		public string ReturnCast => string.Empty;
 
-		public string GetObjectHandleProperty (string variable)
+		public string GetObjectHandleProperty (CodeGenerationOptions opt, string variable)
 		{
 			return null;
 		}
 
 		public string FromNative (CodeGenerationOptions opt, string varname, bool owned)
 		{
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				var transfer = "JniObjectReferenceOptions." + (owned ? "CopyAndDispose" : "Copy");
+				return $"global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<{opt.GetOutputName (FullName)}>" +
+					$"(ref {varname}, {transfer})";
+			}
 			return String.Format ("({0}{4}) global::Java.Lang.Object.GetObject<{3}> ({1}, {2})", opt.GetOutputName (type), varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer", opt.GetOutputName (FullName), opt.NullableOperator);
 		}
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if !JAVA_INTEROP1
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -64,3 +66,4 @@ namespace Java.Interop {
 	}
 }
 
+#endif  // !JAVA_INTEROP1

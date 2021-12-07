@@ -1,19 +1,14 @@
 using System;
 using System.Collections.Generic;
-using Android.Runtime;
 using Java.Interop;
 
 namespace Java.Lang {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.lang']/class[@name='Enum']"
-	[global::Android.Runtime.Register ("java/lang/Enum", DoNotGenerateAcw=true)]
+	[global::Java.Interop.JniTypeSignature ("java/lang/Enum", GenerateJavaPeer=false)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E extends java.lang.Enum<E>"})]
 	public abstract partial class Enum : global::Java.Lang.Object, global::Java.Lang.IComparable {
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/Enum", typeof (Enum));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -21,24 +16,11 @@ namespace Java.Lang {
 			get { return _members; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
-		}
-
-		protected Enum (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		protected Enum (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
 		{
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.lang']/class[@name='Enum']/method[@name='compareTo' and count(parameter)=1 and parameter[1][@type='E']]"
-		[Register ("compareTo", "(Ljava/lang/Enum;)I", "")]
 		public unsafe int CompareTo (global::Java.Lang.Object o)
 		{
 			const string __id = "compareTo.(Ljava/lang/Enum;)I";
@@ -56,9 +38,9 @@ namespace Java.Lang {
 
 	}
 
-	[global::Android.Runtime.Register ("java/lang/Enum", DoNotGenerateAcw=true)]
+	[global::Java.Interop.JniTypeSignature ("java/lang/Enum", GenerateJavaPeer=false)]
 	internal partial class EnumInvoker : Enum, global::Java.Lang.IComparable {
-		public EnumInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		public EnumInvoker (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
 		{
 		}
 
@@ -68,12 +50,6 @@ namespace Java.Lang {
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 	}

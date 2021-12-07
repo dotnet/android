@@ -65,7 +65,7 @@ namespace MonoDroid.Generation {
 
 		public string ReturnCast => return_cast;
 
-		public string GetObjectHandleProperty (string variable)
+		public string GetObjectHandleProperty (CodeGenerationOptions opt, string variable)
 		{
 			return null;
 		}
@@ -77,7 +77,7 @@ namespace MonoDroid.Generation {
 
 		public string FromNative (CodeGenerationOptions opt, string varname, bool owned)
 		{
-			return String.Format (from_fmt, varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
+			return String.Format (from_fmt, varname, owned ? "/* FormatSymbol */ JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
 		}
 
 		public string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)

@@ -123,8 +123,14 @@ namespace MonoDroid.Generation
 				nt.FixupExplicitImplementation ();
 		}
 
-		public override string FromNative (CodeGenerationOptions opt, string varname, bool owned) =>
-			$"global::Java.Lang.Object.GetObject<{opt.GetOutputName (FullName)}> ({varname}, {(owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer")})";
+		public override string FromNative (CodeGenerationOptions opt, string varname, bool owned) => opt.CodeGenerationTarget switch {
+			CodeGenerationTarget.JavaInterop1 =>
+				"global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
+				opt.GetOutputName (FullName) +
+				$"> (ref {varname}, JniObjectReferenceOptions.{(owned ? "CopyAndDispose" : "Copy")})",
+			_ =>
+				$"global::Java.Lang.Object.GetObject<{opt.GetOutputName (FullName)}> ({varname}, {(owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer")})"
+		};
 
 		public bool FromXml { get; set; }
 
@@ -133,7 +139,9 @@ namespace MonoDroid.Generation
 			using (var sw = gen_info.OpenStream (opt.GetFileName (FullName))) {
 				sw.WriteLine ("using System;");
 				sw.WriteLine ("using System.Collections.Generic;");
-				sw.WriteLine ("using Android.Runtime;");
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+					sw.WriteLine ("using Android.Runtime;");
+				}
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.XamarinAndroid) {
 					sw.WriteLine ("using Java.Interop;");
 				}
@@ -163,6 +171,9 @@ namespace MonoDroid.Generation
 
 		public static void GenerateTypeRegistrations (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				return;
+			}
 			using (var sw = gen_info.OpenStream (opt.GetFileName ("Java.Interop.__TypeRegistrations"))) {
 
 				Dictionary<string, List<KeyValuePair<string, string>>> mapping = new Dictionary<string, List<KeyValuePair<string, string>>> ();
@@ -179,7 +190,9 @@ namespace MonoDroid.Generation
 
 				sw.WriteLine ("using System;");
 				sw.WriteLine ("using System.Collections.Generic;");
-				sw.WriteLine ("using Android.Runtime;");
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+					sw.WriteLine ("using Android.Runtime;");
+				}
 				sw.WriteLine ();
 				sw.WriteLine ("namespace Java.Interop {");
 				sw.WriteLine ();

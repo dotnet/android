@@ -6,6 +6,8 @@ namespace generatortests
 	[TestFixture]
 	public class NormalMethods : BaseGeneratorTest
 	{
+		protected override bool TryJavaInterop1 => false;
+
 		[Test]
 		public void GeneratedOK ()
 		{

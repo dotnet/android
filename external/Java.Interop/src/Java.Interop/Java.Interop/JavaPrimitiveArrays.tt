@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Java.Interop.Expressions;
@@ -73,6 +74,25 @@ namespace Java.Interop {
 <#
 	foreach (var info in arrayTypeInfo) {
 #>
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static Java<#= info.TypeModifier #>Array? CreateMarshal<#= info.TypeModifier #>Array (System.Collections.Generic.IEnumerable<<#= info.ManagedType #>>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is Java<#= info.TypeModifier #>Array c) {
+					return c;
+				}
+				return new Java<#= info.TypeModifier #>Array (value) {
+					forMarshalCollection = true,
+				};
+			}
+		}
+	}
+
 	public sealed class Jni<#= info.TypeModifier #>ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
@@ -221,7 +241,7 @@ namespace Java.Interop {
 						(ref JniObjectReference h, JniObjectReferenceOptions o) => new Java<#= info.TypeModifier #>Array (ref h, o));
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<<#= info.TypeModifier #>> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<<#= info.TypeModifier #>> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<<#= info.TypeModifier #>>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -232,20 +252,20 @@ namespace Java.Interop {
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<<#= info.TypeModifier #>> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull] IList<<#= info.TypeModifier #>> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<<#= info.ManagedType #>>.DestroyArgumentState<Java<#= info.TypeModifier #>Array> (value, ref state, synchronize);
 			}
 
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-	                {
-	                        Func<IntPtr, Type?, object?>  m = Java<#= info.TypeModifier #>Array.CreateMarshaledValue;
+			{
+				Func<IntPtr, Type?, object?>  m = Java<#= info.TypeModifier #>Array.CreateMarshaledValue;
 
-	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-	                        return targetType == null
-	                                ? (Expression) call
-	                                : Expression.Convert (call, targetType);
-	                }
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
 		}
 	}
 

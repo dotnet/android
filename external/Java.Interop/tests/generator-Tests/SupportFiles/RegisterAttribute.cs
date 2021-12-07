@@ -1,3 +1,5 @@
+#if !JAVA_INTEROP1
+
 using System;
 
 namespace Android.Runtime {
@@ -35,3 +37,5 @@ namespace Android.Runtime {
 		public bool DoNotGenerateAcw {get; set;}
 	}
 }
+
+#endif  // !JAVA_INTEROP1

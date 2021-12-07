@@ -1,19 +1,14 @@
 // Metadata.xml XPath class reference: path="/api/package[@name='java.code']/class[@name='MyClass']"
-[global::Android.Runtime.Register ("java/code/MyClass", DoNotGenerateAcw=true)]
+[global::Java.Interop.JniTypeSignature ("java/code/MyClass", GenerateJavaPeer=false)]
 public partial class MyClass {
 	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
 
-	internal static IntPtr class_ref {
-		get { return _members.JniPeerType.PeerReference.Handle; }
-	}
-
-	protected MyClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+	protected MyClass (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
 	{
 	}
 
 	public unsafe uint UIntProp {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UIntProp' and count(parameter)=0]"
-		[Register ("get_UIntProp", "()I", "")]
 		get {
 			const string __id = "get_UIntProp.()I";
 			try {
@@ -23,7 +18,6 @@ public partial class MyClass {
 			}
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UIntProp' and count(parameter)=1 and parameter[1][@type='uint']]"
-		[Register ("set_UIntProp", "(I)V", "")]
 		set {
 			const string __id = "set_UIntProp.(I)V";
 			try {
@@ -37,7 +31,6 @@ public partial class MyClass {
 
 	public unsafe ushort UShortProp {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UShortProp' and count(parameter)=0]"
-		[Register ("get_UShortProp", "()S", "")]
 		get {
 			const string __id = "get_UShortProp.()S";
 			try {
@@ -47,7 +40,6 @@ public partial class MyClass {
 			}
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UShortProp' and count(parameter)=1 and parameter[1][@type='ushort']]"
-		[Register ("set_UShortProp", "(S)V", "")]
 		set {
 			const string __id = "set_UShortProp.(S)V";
 			try {
@@ -61,7 +53,6 @@ public partial class MyClass {
 
 	public unsafe ulong ULongProp {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_ULongProp' and count(parameter)=0]"
-		[Register ("get_ULongProp", "()J", "")]
 		get {
 			const string __id = "get_ULongProp.()J";
 			try {
@@ -71,7 +62,6 @@ public partial class MyClass {
 			}
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_ULongProp' and count(parameter)=1 and parameter[1][@type='ulong']]"
-		[Register ("set_ULongProp", "(J)V", "")]
 		set {
 			const string __id = "set_ULongProp.(J)V";
 			try {
@@ -85,7 +75,6 @@ public partial class MyClass {
 
 	public unsafe byte UByteProp {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UByteProp' and count(parameter)=0]"
-		[Register ("get_UByteProp", "()B", "")]
 		get {
 			const string __id = "get_UByteProp.()B";
 			try {
@@ -95,7 +84,6 @@ public partial class MyClass {
 			}
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UByteProp' and count(parameter)=1 and parameter[1][@type='ubyte']]"
-		[Register ("set_UByteProp", "(B)V", "")]
 		set {
 			const string __id = "set_UByteProp.(B)V";
 			try {

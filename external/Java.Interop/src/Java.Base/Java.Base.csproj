@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <NoWarn>8764</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\..\tools\class-parse\class-parse.csproj"  ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\..\tools\generator\generator.csproj"      ReferenceOutputAssembly="False" />
+  </ItemGroup>
+
+  <Import Project="Java.Base.targets" />
+
+</Project>

@@ -1,3 +1,5 @@
+#if !JAVA_INTEROP1
+
 #pragma warning disable
 using System;
 using System.Runtime.InteropServices;
@@ -80,3 +82,5 @@ namespace Android.Runtime {
 	}
 }
 #pragma warning restore
+
+#endif  // !JAVA_INTEROP1

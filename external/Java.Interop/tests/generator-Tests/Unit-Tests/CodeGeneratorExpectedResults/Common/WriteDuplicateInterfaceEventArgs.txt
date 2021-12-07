@@ -13,7 +13,7 @@ public partial interface AnimatorListener : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("java/code/AnimatorListener", DoNotGenerateAcw=true)]
 internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, AnimatorListener {
-	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
+	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
 
 	static IntPtr java_class_ref {
 		get { return _members.JniPeerType.PeerReference.Handle; }

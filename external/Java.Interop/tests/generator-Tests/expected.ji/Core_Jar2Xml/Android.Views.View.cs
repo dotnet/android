@@ -1,103 +1,17 @@
 using System;
 using System.Collections.Generic;
-using Android.Runtime;
 using Java.Interop;
 
 namespace Android.Views {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='android.view']/class[@name='View']"
-	[global::Android.Runtime.Register ("android/view/View", DoNotGenerateAcw=true)]
+	[global::Java.Interop.JniTypeSignature ("android/view/View", GenerateJavaPeer=false)]
 	public partial class View : global::Java.Lang.Object {
 		// Metadata.xml XPath interface reference: path="/api/package[@name='android.view']/interface[@name='View.OnClickListener']"
-		[Register ("android/view/View$OnClickListener", "", "Android.Views.View/IOnClickListenerInvoker")]
-		public partial interface IOnClickListener : IJavaObject, IJavaPeerable {
+		[global::Java.Interop.JniTypeSignature ("android/view/View$OnClickListener", GenerateJavaPeer=false)]
+		public partial interface IOnClickListener : IJavaPeerable {
 			// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/interface[@name='View.OnClickListener']/method[@name='onClick' and count(parameter)=1 and parameter[1][@type='android.view.View']]"
-			[Register ("onClick", "(Landroid/view/View;)V", "GetOnClick_Landroid_view_View_Handler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 			void OnClick (global::Android.Views.View v);
-
-		}
-
-		[global::Android.Runtime.Register ("android/view/View$OnClickListener", DoNotGenerateAcw=true)]
-		internal partial class IOnClickListenerInvoker : global::Java.Lang.Object, IOnClickListener {
-			static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
-
-			static IntPtr java_class_ref {
-				get { return _members.JniPeerType.PeerReference.Handle; }
-			}
-
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-				get { return _members; }
-			}
-
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override IntPtr ThresholdClass {
-				get { return class_ref; }
-			}
-
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override global::System.Type ThresholdType {
-				get { return _members.ManagedPeerType; }
-			}
-
-			new IntPtr class_ref;
-
-			public static IOnClickListener GetObject (IntPtr handle, JniHandleOwnership transfer)
-			{
-				return global::Java.Lang.Object.GetObject<IOnClickListener> (handle, transfer);
-			}
-
-			static IntPtr Validate (IntPtr handle)
-			{
-				if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-					throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'android.view.View.OnClickListener'.");
-				return handle;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				if (this.class_ref != IntPtr.Zero)
-					JNIEnv.DeleteGlobalRef (this.class_ref);
-				this.class_ref = IntPtr.Zero;
-				base.Dispose (disposing);
-			}
-
-			public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-			{
-				IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-				this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-				JNIEnv.DeleteLocalRef (local_ref);
-			}
-
-			static Delegate cb_onClick_Landroid_view_View_;
-#pragma warning disable 0169
-			static Delegate GetOnClick_Landroid_view_View_Handler ()
-			{
-				if (cb_onClick_Landroid_view_View_ == null)
-					cb_onClick_Landroid_view_View_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_OnClick_Landroid_view_View_);
-				return cb_onClick_Landroid_view_View_;
-			}
-
-			static void n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
-			{
-				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				var v = global::Java.Lang.Object.GetObject<global::Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
-				__this.OnClick (v);
-			}
-#pragma warning restore 0169
-
-			IntPtr id_onClick_Landroid_view_View_;
-			public unsafe void OnClick (global::Android.Views.View v)
-			{
-				if (id_onClick_Landroid_view_View_ == IntPtr.Zero)
-					id_onClick_Landroid_view_View_ = JNIEnv.GetMethodID (class_ref, "onClick", "(Landroid/view/View;)V");
-				JValue* __args = stackalloc JValue [1];
-				__args [0] = new JValue ((v == null) ? IntPtr.Zero : ((global::Java.Lang.Object) v).Handle);
-				JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_onClick_Landroid_view_View_, __args);
-			}
 
 		}
 
@@ -105,7 +19,7 @@ namespace Android.Views {
 		internal sealed partial class IOnClickListenerImplementor : global::Java.Lang.Object, IOnClickListener {
 			public IOnClickListenerImplementor () : base (global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/android/view/View_OnClickListenerImplementor", "()V"), JniHandleOwnership.TransferLocalRef)
 			{
-				global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
+				global::Android.Runtime.JNIEnv.FinishCreateInstance (this.PeerReference, "()V");
 			}
 
 			#pragma warning disable 0649
@@ -128,113 +42,43 @@ namespace Android.Views {
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View", typeof (View));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
-		}
-
-		protected View (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		protected View (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
 		{
 		}
-
-		static Delegate cb_setOnClickListener_Landroid_view_View_OnClickListener_;
-#pragma warning disable 0169
-		static Delegate GetSetOnClickListener_Landroid_view_View_OnClickListener_Handler ()
-		{
-			if (cb_setOnClickListener_Landroid_view_View_OnClickListener_ == null)
-				cb_setOnClickListener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetOnClickListener_Landroid_view_View_OnClickListener_);
-			return cb_setOnClickListener_Landroid_view_View_OnClickListener_;
-		}
-
-		static void n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
-		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
-			__this.SetOnClickListener (l);
-		}
-#pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOnClickListener' and count(parameter)=1 and parameter[1][@type='android.view.View.OnClickListener']]"
-		[Register ("setOnClickListener", "(Landroid/view/View$OnClickListener;)V", "GetSetOnClickListener_Landroid_view_View_OnClickListener_Handler")]
 		public virtual unsafe void SetOnClickListener (global::Android.Views.View.IOnClickListener l)
 		{
 			const string __id = "setOnClickListener.(Landroid/view/View$OnClickListener;)V";
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
+				__args [0] = new JniArgumentValue (l);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
 				global::System.GC.KeepAlive (l);
 			}
 		}
 
-		static Delegate cb_setOn123Listener_Landroid_view_View_OnClickListener_;
-#pragma warning disable 0169
-		static Delegate GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler ()
-		{
-			if (cb_setOn123Listener_Landroid_view_View_OnClickListener_ == null)
-				cb_setOn123Listener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetOn123Listener_Landroid_view_View_OnClickListener_);
-			return cb_setOn123Listener_Landroid_view_View_OnClickListener_;
-		}
-
-		static void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
-		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
-			__this.SetOn123Listener (l);
-		}
-#pragma warning restore 0169
-
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOn123Listener' and count(parameter)=1 and parameter[1][@type='android.view.View.OnClickListener']]"
-		[Register ("setOn123Listener", "(Landroid/view/View$OnClickListener;)V", "GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler")]
 		public virtual unsafe void SetOn123Listener (global::Android.Views.View.IOnClickListener l)
 		{
 			const string __id = "setOn123Listener.(Landroid/view/View$OnClickListener;)V";
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
+				__args [0] = new JniArgumentValue (l);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
 				global::System.GC.KeepAlive (l);
 			}
 		}
 
-		static Delegate cb_addTouchables_Ljava_util_ArrayList_;
-#pragma warning disable 0169
-		static Delegate GetAddTouchables_Ljava_util_ArrayList_Handler ()
-		{
-			if (cb_addTouchables_Ljava_util_ArrayList_ == null)
-				cb_addTouchables_Ljava_util_ArrayList_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_AddTouchables_Ljava_util_ArrayList_);
-			return cb_addTouchables_Ljava_util_ArrayList_;
-		}
-
-		static void n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
-		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var views = global::Android.Runtime.JavaList<global::Android.Views.View>.FromJniHandle (native_views, JniHandleOwnership.DoNotTransfer);
-			__this.AddTouchables (views);
-		}
-#pragma warning restore 0169
-
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='addTouchables' and count(parameter)=1 and parameter[1][@type='java.util.ArrayList&lt;android.view.View&gt;']]"
-		[Register ("addTouchables", "(Ljava/util/ArrayList;)V", "GetAddTouchables_Ljava_util_ArrayList_Handler")]
 		public virtual unsafe void AddTouchables (global::System.Collections.Generic.IList<global::Android.Views.View> views)
 		{
 			const string __id = "addTouchables.(Ljava/util/ArrayList;)V";

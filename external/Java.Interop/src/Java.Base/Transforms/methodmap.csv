@@ -1,0 +1,332 @@
+// You are almost not supposed to directly edit this file.
+// See build-tools/enumification-helpers/README.md there for details.
+//
+// Each line represents: [API], [pkg], [type], [method], [param], [C#enum]
+//	API - Platform Name (API Level) Since
+//	pkg - Java package
+//	type - Java type (dotted for nested types)
+//  method - method name (".ctor" for constructors)
+//  param - method parameter name, or "return" for return value
+//  C#enum - C# enum type (full name, dotted)
+//
+// Lines until around 600 are traditional mappings that were not tracked with
+// enumification-helpers tools. There are some marker comment lines over there,
+// and after those lines they are copy of enumification-helpers/methodmap.ext.csv.
+
+// CharBuffer is sort of special to treat ICharSequence.
+// We need to remap it to CharSequence to have valid overrides.
+0, java.nio, CharBuffer, subSequence, return, Java.Lang.ICharSequence
+
+// darn, the docs changed the parameter name.
+// darn, the docs changed the parameter name.
+// On Api level 29, the argument audio_source was renamed from audio_source to audioSource
+// in API Level 16 it was renamed to rangeType. Stupid.
+// This is a mess by api-merge.
+// It brings back some totally obsoleted and even disappeared method.
+// Then it does not exist in droiddoc. Thus, parameter name retrieval fails.
+// Even for that case, we still need enumification, but it does not happen because the "named" parameter here does not exist!
+// To fix this issue, add "nameless" version of the method argument description too.
+
+// lots of Context permission methods (and those in derived types)
+
+// Context send/start methods
+// startIntentSender() int extraFlags parameter is OK
+
+
+
+
+0, org.xmlpull.v1, [Interface]XmlPullParser, getEventType, return, Org.XmlPull.V1.XmlPullParserNode
+0, org.xmlpull.v1, [Interface]XmlPullParser, require, type, Org.XmlPull.V1.XmlPullParserNode
+0, org.xmlpull.v1, [Interface]XmlPullParser, next, return, Org.XmlPull.V1.XmlPullParserNode
+0, org.xmlpull.v1, [Interface]XmlPullParser, nextTag, return, Org.XmlPull.V1.XmlPullParserNode
+0, org.xmlpull.v1, [Interface]XmlPullParser, nextToken, return, Org.XmlPull.V1.XmlPullParserNode
+
+
+
+
+
+
+
+
+
+
+
+// I'm making these changes so far only in this extra mappings.
+// Things will change significantly so it had better be done all at once...
+
+// I don't like this "MatchResults" name and believe it should be renamed...
+0, java.io, ObjectOutputStream, useProtocolVersion, version, Java.IO.ObjectStreamProtocol
+
+
+
+// I don't like this "Stream" name and believe it should be renamed...
+
+
+// ... ArrowKey and Scrolling override are only in lower API levels :(
+
+
+
+
+
+
+
+// I had to find out these flags usage from sources, they lack documentation.
+
+
+
+
+
+// for getMetaState return values, they are chaotic, could be either Keycode, or some non-enumerated 0, 1, 2 value, and possibly MetaKeyStates. I can't help it. The API sucks.
+
+// API Level 17 doc *renamed* some parameters, hence it also needs to be tracked...
+
+
+
+// additional mappings
+
+
+// PackageItemInfo does *not* implement Parcelable, but the subclasses *does* implement.
+// Since we cannot (should not) predict such derivation when we are processing this
+// *base* class, we still leave PackageItemInfo untouched in the automatic upgrade
+// process and need this metadata fixup.
+// These guys does not implement Parcelable(!)
+
+
+0, java.nio.channels, SelectionKey, interestOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, SelectionKey, readyOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, SelectableChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, DatagramChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, Pipe.SinkChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, Pipe.SourceChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, ServerSocketChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, SocketChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, SelectableChannel, register, operations, Java.Nio.Channels.Operations
+0, java.nio.channels, SelectableChannel, register, ops, Java.Nio.Channels.Operations
+0, java.nio.channels.spi, AbstractSelectableChannel, register, interestSet, Java.Nio.Channels.Operations
+
+
+
+// it somehow fails to retrieve parameter name in API Level 17...
+// "Option" sounds too general too...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// FIXME: This does *not* implement Spanned, but the derived type (SpannableString) does
+// implement it, so this needs to change the return type and this method needs to be
+// interpreted as an implementation. A messy factor is, this class is *not* public!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+0, java.awt.font, NumericShaper, getRanges, return, Java.Awt.Font.Ranges
+0, java.awt.font, NumericShaper, getContextualShaper, ranges, Java.Awt.Font.Ranges
+0, java.awt.font, NumericShaper, getShaper, singleRange, Java.Awt.Font.Ranges
+
+0, java.io, StreamTokenizer, nextToken, return, Java.IO.TokenType
+
+0, java.math, RoundingMode, valueOf, mode, Java.Math.RoundOptions
+
+0, java.net, HttpRetryException, ctor, code, Java.Net.HttpStatus
+0, java.net, HttpRetryException, responseCode, return, Java.Net.HttpStatus
+0, java.net, HttpURLConnection, getResponseCode, return, Java.Net.HttpStatus
+0, java.net, IDN, toASCII, flags, Java.Net.IDNFlags
+0, java.net, IDN, toUnicode, flags, Java.Net.IDNFlags
+0, java.nio.channels, SelectionKey, interestOps, operations, Java.Nio.Channels.Operations
+
+0, java.util, Calendar, add, field, Java.Util.CalendarField
+0, java.util, Calendar, clear, field, Java.Util.CalendarField
+0, java.util, Calendar, get, field, Java.Util.CalendarField
+0, java.util, Calendar, getActualMaximum, field, Java.Util.CalendarField
+0, java.util, Calendar, getActualMinimum, field, Java.Util.CalendarField
+// 0, java.util, Calendar, getDisplayName, field, Java.Util.CalendarField
+// 0, java.util, Calendar, getDisplayNames, field, Java.Util.CalendarField
+0, java.util, Calendar, getGreatestMinimum, field, Java.Util.CalendarField
+0, java.util, Calendar, getLeastMaximum, field, Java.Util.CalendarField
+0, java.util, Calendar, getMaximum, field, Java.Util.CalendarField
+0, java.util, Calendar, getMinimum, field, Java.Util.CalendarField
+0, java.util, Calendar, isSet, field, Java.Util.CalendarField
+0, java.util, Calendar, roll, field, Java.Util.CalendarField
+0, java.util, Calendar, set, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, add, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, get, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getActualMaximum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getActualMinimum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getGreatestMinimum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getLeastMaximum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getMaximum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getMinimum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, roll, field, Java.Util.CalendarField
+
+// 0, java.util, Calendar, getDisplayName, style, Java.Util.CalendarStyle
+// 0, java.util, Calendar, getDisplayNames, style, Java.Util.CalendarStyle
+0, java.util, [Interface]Formattable, formatTo, flags, Java.Util.FormatFlags
+0, java.util.regex, Pattern, compile, flags, Java.Util.Regex.RegexOptions
+0, java.util.regex, Pattern, flags, return, Java.Util.Regex.RegexOptions
+0, java.util, TimeZone, getDisplayName, style, Java.Util.TimeZoneStyle
+
+0, javax.crypto, Cipher, unwrap, wrappedKeyType, Javax.Crypto.KeyType
+0, javax.crypto, Cipher, init, opmode, Javax.Crypto.CipherMode
+
+// API Level 16
+
+// huh, visiblity...
+
+// API Level 17
+
+// API Level 18
+// this caused build error - could we get this override automatically changed to use enum?
+
+// API Level 19
+// They were added at API Level 16, but did not come up with corresponding error code until API Level 19 (!)
+
+// API Level 20
+
+// API Level 21
+
+// API Level 22
+
+
+// API Level 23
+
+// this was required for build
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// API Level 24
+
+
+
+
+
+
+
+
+// renamed parameters...
+24, java.nio.channels, SelectionKey, interestOps, ops, Java.Nio.Channels.Operations
+24, java.net, IDN, toASCII, flag, Java.Net.IDNFlags
+24, java.net, IDN, toUnicode, flag, Java.Net.IDNFlags
+
+24, java.util, [Interface]Spliterator, characteristics, return, Java.Util.SpliteratorCharacteristics
+24, java.util, Spliterators, spliterator, characteristics, Java.Util.SpliteratorCharacteristics
+24, java.util, Spliterators, spliterator, additionalCharacteristics, Java.Util.SpliteratorCharacteristics
+24, java.util, Spliterators, spliteratorUnknownSize, characteristics, Java.Util.SpliteratorCharacteristics
+24, java.util, Spliterators.AbstractDoubleSpliterator, characteristics, return, Java.Util.SpliteratorCharacteristics
+24, java.util, Spliterators.AbstractIntSpliterator, characteristics, return, Java.Util.SpliteratorCharacteristics
+24, java.util, Spliterators.AbstractLongSpliterator, characteristics, return, Java.Util.SpliteratorCharacteristics
+24, java.util, Spliterators.AbstractSpliterator, characteristics, return, Java.Util.SpliteratorCharacteristics
+
+// API Level 25
+
+// Use of this enum involves some FAKE. The corresponding constants doesn't exist in API Level 24.
+
+// API Level 26
+
+26, java.lang.invoke, [Interface]MethodHandleInfo, getReferenceKind, return, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, refKindIsField, refKind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, refKindIsValid, refKind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, refKindName, refKind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, referenceKindToString, referenceKind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, toString, kind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, MethodHandles.Lookup, lookupModes, return, Java.Lang.Invoke.MethodLookupModes
+
+// We have problem binding getAccountVisibilityForPackage() and getPackagesAndVisibilityForAccount(). They should be Map<Account,AccountVisibility> and Map<String,AccountVisibility> instead of Map<Account,int> and Map<String,int> respectively, but they require run-time mapping too...
+
+
+
+
+// Those enums in TvContract.*Programs are used only with settings columns.
+// I assume they are replaced by those consts in each FooBarPrograms class?
+
+
+// The setter brings conflict with setFocusable(boolean) so it cannot be simply
+// generated here. The corresponding manual fixup is added to "metadata".
+
+
+// cannot change this at this state.
+
+
+// ScanRecord has different TxPowerLevel context...
+
+
+// MediaCas - the methods lack description so it's impossible to enumify them at this moment.
+// ditto for MediaDescrambler.
+
+
+// workaround doc scraper issue - it somehow failed to retrieve parameter names for this.
+
+26, java.util, Calendar.Builder, set, field, Java.Util.CalendarField
+
+// It was a bit too late to notice this method, or it was added after our final enumification effort for API Level 26.
+// There is AssetInt property (of int) which was removed at API Level 21. We don't/can't enumify it.
+
+
+
+
+// They were too late to get documented.
+
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// We can't enumificate DiscoveryStateListener because it will broke the current fields.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// Cannot change this at this state.
+// 1, java.sql, Connection, getHoldability, return, Java.Sql.HoldabilityMode
+// 1, java.sql, Connection, setHoldability, holdability, Java.Sql.HoldabilityMode
+// 1, java.sql, Connection, getTransactionIsolation, return, Java.Sql.TransactionMode
+// 1, java.sql, Connection, setTransactionIsolation, level, Java.Sql.TransactionMode
+// 9, java.util, Calendar, getDisplayName, style, Java.Util.DisplayNameStyle
+// 9, java.util, Calendar, getDisplayNames, style, Java.Util.DisplayNameStyle

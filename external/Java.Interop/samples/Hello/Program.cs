@@ -1,23 +1,65 @@
 using System;
 using System.Threading;
 
+using Mono.Options;
+
 using Java.Interop;
 
 namespace Hello
 {
-	class MainClass
+	class App
 	{
-		public static unsafe void Main (string[] args)
+		public static void Main (string[] args)
 		{
-			Console.WriteLine ("Hello World!");
-			try {
-				var ignore = JniRuntime.CurrentRuntime;
-			} catch (InvalidOperationException e) {
-				Console.WriteLine (e);
+			string? jvmPath             = global::Java.InteropTests.TestJVM.GetJvmLibraryPath ();
+			bool    createMultipleVMs   = false;
+			bool    showHelp            = false;
+			var options = new OptionSet () {
+				"Using the JVM from C#!",
+				"",
+				"Options:",
+				{ "jvm=",
+				  $"{{PATH}} to JVM to use.  Default is:\n  {jvmPath}",
+				  v => jvmPath = v },
+				{ "m",
+				  "Create multiple Java VMs.  This will likely creash.",
+				  v => createMultipleVMs = v != null },
+				{ "h|help",
+				  "Show this message and exit.",
+				  v => showHelp = v != null },
+			};
+			options.Parse (args);
+			if (showHelp) {
+				options.WriteOptionDescriptions (Console.Out);
+				return;
 			}
+			Console.WriteLine ("Hello World!");
+			var builder = new JreRuntimeOptions () {
+				JniAddNativeMethodRegistrationAttributePresent  = true,
+				JvmLibraryPath                                  = jvmPath,
+			};
+			builder.AddOption ("-Xcheck:jni");
+			var jvm = builder.CreateJreVM ();
+			Console.WriteLine ($"JniRuntime.CurrentRuntime == jvm? {ReferenceEquals (JniRuntime.CurrentRuntime, jvm)}");
 			foreach (var h in JniRuntime.GetAvailableInvocationPointers ()) {
 				Console.WriteLine ("PRE: GetCreatedJavaVMHandles: {0}", h);
 			}
+
+			CreateJLO ();
+
+			if (createMultipleVMs) {
+				CreateAnotherJVM ();
+			}
+		}
+
+		static void CreateJLO ()
+		{
+			var jlo = new Java.Lang.Object ();
+			Console.WriteLine ($"binding? {jlo.ToString ()}");
+		}
+
+		static unsafe void CreateAnotherJVM ()
+		{
 			Console.WriteLine ("Part 2!");
 			using (var vm = new JreRuntimeOptions ().CreateJreVM ()) {
 				Console.WriteLine ("# JniEnvironment.EnvironmentPointer={0}", JniEnvironment.EnvironmentPointer);

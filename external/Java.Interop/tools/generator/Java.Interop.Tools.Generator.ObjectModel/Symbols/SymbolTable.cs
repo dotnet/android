@@ -4,6 +4,8 @@ using System.Text;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace MonoDroid.Generation {
 
 	public class SymbolTable {
@@ -22,6 +24,8 @@ namespace MonoDroid.Generation {
 		ISymbol xmlpullparser_sym;
 		ISymbol xmlresourceparser_sym;
 		ISymbol string_sym;
+
+		CodeGenerationTarget    target;
 
 		static readonly string[] InvariantSymbols = new string[]{
 			"Android.Graphics.Color",
@@ -48,8 +52,10 @@ namespace MonoDroid.Generation {
 			return symbols.Values.SelectMany (v => v);
 		}
 
-		public SymbolTable ()
+		public SymbolTable (CodeGenerationTarget target)
 		{
+			this.target = target;
+
 			AddType (new SimpleSymbol ("IntPtr.Zero", "void", "void", "V"));
 			AddType (new SimpleSymbol ("false", "boolean", "bool", "Z"));
 			AddType (new SimpleSymbol ("0", "byte", "sbyte", "B"));
@@ -63,15 +69,18 @@ namespace MonoDroid.Generation {
 			AddType (new SimpleSymbol ("0", "ushort", "ushort", "S", returnCast: "(ushort)"));
 			AddType (new SimpleSymbol ("0", "ulong", "ulong", "J", returnCast: "(ulong)"));
 			AddType (new SimpleSymbol ("0", "ubyte", "byte", "B", returnCast: "(byte)"));
-			AddType ("Android.Graphics.Color", new ColorSymbol ());
 			char_seq = new CharSequenceSymbol ();
+			string_sym = new StringSymbol ();
+			if (target == CodeGenerationTarget.JavaInterop1) {
+				return;
+			}
+			AddType ("Android.Graphics.Color", new ColorSymbol ());
 			instream_sym = new StreamSymbol ("InputStream");
 			outstream_sym = new StreamSymbol ("OutputStream");
 			fileinstream_sym = new StreamSymbol ("FileInputStream", "InputStream");
 			fileoutstream_sym = new StreamSymbol ("FileOutputStream", "OutputStream");
 			xmlpullparser_sym = new XmlPullParserSymbol ();
 			xmlresourceparser_sym = new XmlResourceParserSymbol ();
-			string_sym = new StringSymbol ();
 		}
 
 		// Extract symbol information
@@ -241,7 +250,7 @@ namespace MonoDroid.Generation {
 
 			ArraySymbol r = null;
 			while (rank-- > 0)
-				symbol = r = new ArraySymbol (symbol);
+				symbol = r = new ArraySymbol (symbol, target);
 			if (r != null)
 				r.IsParams = has_ellipsis;
 			return symbol;

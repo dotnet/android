@@ -1,0 +1,78 @@
+﻿<Project>
+
+  <PropertyGroup>
+    <GeneratorPath>$(ToolOutputFullPath)generator.dll</GeneratorPath>
+  </PropertyGroup>
+
+  <Target Name="_GetJavaBaseJmodPath">
+    <PropertyGroup Condition=" '$(Java11SdkDirectory)' != '' ">
+      <_JavaBaseJmod>$(Java11SdkDirectory)/jmods/java.base.jmod</_JavaBaseJmod>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_GenerateApiDescription"
+      DependsOnTargets="_GetJavaBaseJmodPath"
+      BeforeTargets="_GenerateBinding"
+      Inputs="$(_JavaBaseJmod)"
+      Outputs="$(IntermediateOutputPath)\mcw\api.xml">
+    <MakeDir Directories="$(IntermediateOutputPath)mcw" />
+    <PropertyGroup>
+      <_ClassParse>"$(ToolOutputFullPath)class-parse.dll"</_ClassParse>
+      <_Input>"$(_JavaBaseJmod)"</_Input>
+      <_Output>"-o=$(IntermediateOutputPath)/mcw/api.xml"</_Output>
+    </PropertyGroup>
+    <Error
+        Condition=" !Exists($(_JavaBaseJmod)) "
+        Text="Could not find a JDK-11 installation directory"
+    />
+    <Exec
+        Command="$(DotnetToolPath) $(_ClassParse) $(_Input) $(_Output)"
+    />
+  </Target>
+
+  <ItemGroup>
+    <_GenerateBindingInputs Include="$(GeneratorPath)" />
+    <_GenerateBindingInputs Include="$(MSBuildThisFileFullPath)" />
+    <_GenerateBindingInputs Include="Transforms\**" />
+    <_GenerateBindingInputs Include="$(IntermediateOutputPath)mcw\api.xml" />
+  </ItemGroup>
+
+  <Target Name="_GenerateBinding"
+      BeforeTargets="CoreCompile"
+      Inputs="@(_GenerateBindingInputs)"
+      Outputs="$(IntermediateOutputPath)mcw\Java.Base.projitems">
+    <MakeDir Directories="$(IntermediateOutputPath)mcw" />
+    <PropertyGroup>
+      <Generator>"$(GeneratorPath)"</Generator>
+      <_GenFlags>--public</_GenFlags>
+      <_Out>-o "$(IntermediateOutputPath)mcw"</_Out>
+      <_Codegen>--codegen-target=JavaInterop1</_Codegen>
+      <_Fixup>--fixup=Transforms/Metadata.xml</_Fixup>
+      <_Enums1>--preserve-enums --enumflags=Transforms/enumflags --enumfields=Transforms/map.csv --enummethods=Transforms/methodmap.csv</_Enums1>
+      <_Enums2>--enummetadata=$(IntermediateOutputPath)mcw/enummetadata</_Enums2>
+      <_Assembly>"--assembly=Java.Base"</_Assembly>
+      <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw/type-mapping.txt</_TypeMap>
+      <_Api>$(IntermediateOutputPath)mcw/api.xml</_Api>
+      <_Dirs>--enumdir=$(IntermediateOutputPath)mcw</_Dirs>
+      <_FullIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_FullIntermediateOutputPath>
+      <_LangFeatures>--lang-features=nullable-reference-types,default-interface-methods,nested-interface-types,interface-constants</_LangFeatures>
+    </PropertyGroup>
+    <Exec
+        Command="$(DotnetToolPath) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_LangFeatures) $(_Dirs) $(_Api) $(_WithJavadocXml)"
+        IgnoreStandardErrorWarningFormat="True"
+    />
+    <ItemGroup>
+      <Compile Include="$(_FullIntermediateOutputPath)\mcw\**\*.cs" KeepDuplicates="False" />
+    </ItemGroup>
+    <XmlPeek
+        Namespaces="&lt;Namespace Prefix='msbuild' Uri='http://schemas.microsoft.com/developer/msbuild/2003' /&gt;"
+        XmlInputPath="$(IntermediateOutputPath)mcw\Java.Base.projitems"
+        Query="/msbuild:Project/msbuild:PropertyGroup/msbuild:DefineConstants/text()" >
+      <Output TaskParameter="Result" PropertyName="_GeneratedDefineConstants" />
+    </XmlPeek>
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
+    </PropertyGroup>
+  </Target>
+
+</Project>

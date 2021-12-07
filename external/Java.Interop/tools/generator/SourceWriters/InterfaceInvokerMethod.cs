@@ -28,7 +28,7 @@ namespace generator.SourceWriters
 			IsStatic = method.IsStatic;
 
 			method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence);
-			context_this = context.ContextType.GetObjectHandleProperty ("this");
+			context_this = context.ContextType.GetObjectHandleProperty (opt, "this");
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 

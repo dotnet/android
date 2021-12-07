@@ -15,7 +15,7 @@ namespace MonoDroid.Generation {
 		string ElementType { get; }
 		string ReturnCast { get; }
 
-		string GetObjectHandleProperty (string variable);
+		string GetObjectHandleProperty (CodeGenerationOptions opt, string variable);
 
 		string GetGenericType (Dictionary<string, string> mappings);
 

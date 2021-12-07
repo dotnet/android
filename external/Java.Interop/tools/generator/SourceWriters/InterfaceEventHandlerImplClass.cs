@@ -43,7 +43,7 @@ namespace generator.SourceWriters
 
 			ctor.BaseCall = $"base (global::Android.Runtime.JNIEnv.StartCreateInstance (\"{jniClass}\", \"()V\"), JniHandleOwnership.TransferLocalRef)";
 
-			ctor.Body.Add ($"global::Android.Runtime.JNIEnv.FinishCreateInstance ({iface.GetObjectHandleProperty ("this")}, \"()V\");");
+			ctor.Body.Add ($"global::Android.Runtime.JNIEnv.FinishCreateInstance ({iface.GetObjectHandleProperty (opt, "this")}, \"()V\");");
 
 			if (iface.NeedsSender)
 				ctor.Body.Add ("this.sender = sender;");

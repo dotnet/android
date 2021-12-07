@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
+using Xamarin.Android.Binder;
 
 namespace generator.SourceWriters
 {
@@ -258,7 +259,10 @@ namespace generator.SourceWriters
 			body.Add ($"\t{return_var}_members.{method_type}.Invoke{virt_type}{invokeType}Method ({this_param});");
 
 			if (!method.IsVoid) {
-				var r = invokeType == "Object" ? "__rm.Handle" : "__rm";
+				var r = "__rm";
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 && invokeType == "Object") {
+					r += ".Handle";
+				}
 				body.Add ($"\treturn {method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true) + opt.GetNullForgiveness (method.RetVal)};");
 			}
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if !JAVA_INTEROP1
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -41,3 +43,5 @@ namespace Java.Lang {
 		}
 	}
 }
+
+#endif  // !JAVA_INTEROP1

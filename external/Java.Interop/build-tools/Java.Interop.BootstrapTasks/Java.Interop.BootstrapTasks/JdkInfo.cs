@@ -19,6 +19,8 @@ namespace Java.Interop.BootstrapTasks
 	{
 		public  string  JdksRoot              { get; set; }
 
+		public  string  PropertyNameModifier  { get; set; } = "";
+		public  string  MinimumJdkVersion     { get; set; }
 		public  string  MaximumJdkVersion     { get; set; }
 
 		public  string  DotnetToolPath        { get; set; }
@@ -28,7 +30,6 @@ namespace Java.Interop.BootstrapTasks
 		[Required]
 		public  ITaskItem       PropertyFile        { get; set; }
 
-		[Required]
 		public  ITaskItem       MakeFragmentFile    { get; set; }
 
 		[Output]
@@ -36,11 +37,15 @@ namespace Java.Interop.BootstrapTasks
 
 		public override bool Execute ()
 		{
+			var minVersion      = GetVersion (MinimumJdkVersion);
 			var maxVersion      = GetVersion (MaximumJdkVersion);
 
-			XATInfo jdk         = XATInfo.GetKnownSystemJdkInfos (CreateLogger ())
+			var explicitJdks    = GetJdkRoots ();
+			var defaultJdks     = XATInfo.GetKnownSystemJdkInfos (CreateLogger ())
+				.Where (j => minVersion != null ? j.Version >= minVersion : true)
 				.Where (j => maxVersion != null ? j.Version <= maxVersion : true)
-				.Where (j => j.IncludePath.Any ())
+				.Where (j => j.IncludePath.Any ());
+			var jdk             = explicitJdks.Concat (defaultJdks)
 				.FirstOrDefault ();
 
 			if (jdk == null) {
@@ -56,12 +61,29 @@ namespace Java.Interop.BootstrapTasks
 			JavaHomePath  = jdk.HomePath;
 
 			Directory.CreateDirectory (Path.GetDirectoryName (PropertyFile.ItemSpec));
-			Directory.CreateDirectory (Path.GetDirectoryName (MakeFragmentFile.ItemSpec));
-
 			WritePropertyFile (jdk.JavaPath, jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
-			WriteMakeFragmentFile (jdk.JavaPath, jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
+
+			if (MakeFragmentFile != null) {
+				Directory.CreateDirectory (Path.GetDirectoryName (MakeFragmentFile.ItemSpec));
+				WriteMakeFragmentFile (jdk.JavaPath, jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
+			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		XATInfo[] GetJdkRoots ()
+		{
+			XATInfo jdk = null;
+			try {
+				if (!string.IsNullOrEmpty (JdksRoot))
+					jdk = new XATInfo (JdksRoot);
+			} catch (Exception e) {
+				Log.LogWarning ($"Could not get information about JdksRoot path `{JdksRoot}`: {e.Message}");
+				Log.LogMessage (MessageImportance.Low, e.ToString ());
+			}
+			return jdk == null
+				? Array.Empty<XATInfo>()
+				: new[] { jdk };
 		}
 
 		Version GetVersion (string value)
@@ -97,39 +119,35 @@ namespace Java.Interop.BootstrapTasks
 
 		void WritePropertyFile (string javaPath, string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
 		{
-			var dotnet = string.IsNullOrEmpty (DotnetToolPath) ? "dotnet" : DotnetToolPath;
 			var msbuild = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
+			var jdkJvmP = $"JdkJvm{PropertyNameModifier}Path";
 			var project = new XElement (msbuild + "Project",
 				new XElement (msbuild + "Choose",
-					new XElement (msbuild + "When", new XAttribute ("Condition", " '$(JdkJvmPath)' == '' "),
+					new XElement (msbuild + "When", new XAttribute ("Condition", $" '$({jdkJvmP})' == '' "),
 						new XElement (msbuild + "PropertyGroup",
-							new XElement (msbuild + "JdkJvmPath", jdkJvmPath)),
+							new XElement (msbuild + jdkJvmP, jdkJvmPath)),
 						new XElement (msbuild + "ItemGroup",
-							includes.Select (i => new XElement (msbuild + "JdkIncludePath", new XAttribute ("Include", i)))))),
+							includes.Select (i => new XElement (msbuild + $"Jdk{PropertyNameModifier}IncludePath", new XAttribute ("Include", i)))))),
 				new XElement (msbuild + "PropertyGroup",
-					new XElement (msbuild + "JavaSdkDirectory", new XAttribute ("Condition", " '$(JavaSdkDirectory)' == '' "),
-						JavaHomePath),
-					new XElement (msbuild + "JavaPath", new XAttribute ("Condition", " '$(JavaPath)' == '' "),
-						javaPath),
-					new XElement (msbuild + "JavaCPath", new XAttribute ("Condition", " '$(JavaCPath)' == '' "),
-						javacPath),
-					new XElement (msbuild + "JarPath", new XAttribute ("Condition", " '$(JarPath)' == '' "),
-						jarPath),
-					new XElement (msbuild + "DotnetToolPath", new XAttribute ("Condition", " '$(DotnetToolPath)' == '' "),
-						dotnet),
-					CreateJreRtJarPath (msbuild, rtJarPath)));
+					CreateProperty (msbuild, $"Java{PropertyNameModifier}SdkDirectory", JavaHomePath),
+					CreateProperty (msbuild, $"Java{PropertyNameModifier}Path", javaPath),
+					CreateProperty (msbuild, $"JavaC{PropertyNameModifier}Path", javacPath),
+					CreateProperty (msbuild, $"Jar{PropertyNameModifier}Path", jarPath),
+					CreateProperty (msbuild, $"Dotnet{PropertyNameModifier}ToolPath", DotnetToolPath),
+					CreateProperty (msbuild, $"Jre{PropertyNameModifier}RtJarPath", rtJarPath)));
 			project.Save (PropertyFile.ItemSpec);
 		}
 
-		static XElement CreateJreRtJarPath (XNamespace msbuild, string rtJarPath)
+		XElement CreateProperty (XNamespace msbuild, string propertyName, string propertyValue)
 		{
-			if (rtJarPath == null)
+			if (string.IsNullOrEmpty (propertyValue)) {
 				return null;
-			return new XElement (msbuild + "JreRtJarPath",
-					new XAttribute ("Condition", " '$(JreRtJarPath)' == '' "),
-					rtJarPath);
-		}
+			}
 
+			return new XElement (msbuild + propertyName,
+					new XAttribute ("Condition", $" '$({propertyName})' == '' "),
+					propertyValue);
+		}
 		void WriteMakeFragmentFile (string javaPath, string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
 		{
 			using (var o = new StreamWriter (MakeFragmentFile.ItemSpec)) {

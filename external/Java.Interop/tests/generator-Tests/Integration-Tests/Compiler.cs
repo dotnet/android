@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace generatortests
 {
 	public static class Compiler
@@ -34,25 +36,46 @@ namespace generatortests
 				sourceFiles.AddRange (additonal);
 			}
 
+			var preprocessorSymbols = new List<string> ();
+			if (options.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				preprocessorSymbols.Add ("JAVA_INTEROP1");
+			}
+
+			var parseOptions = new CSharpParseOptions (preprocessorSymbols:preprocessorSymbols);
+
+
 			// Parse the source files
-			var syntax_trees = sourceFiles.Distinct ().Select (s => CSharpSyntaxTree.ParseText (File.ReadAllText (s))).ToArray ();
+			var syntax_trees = sourceFiles.Distinct ()
+				.Select (s => CSharpSyntaxTree.ParseText (File.ReadAllText (s), options:parseOptions))
+				.ToArray ();
 
 			// Set up the assemblies we need to reference
 			var binDir = Path.GetDirectoryName (typeof (BaseGeneratorTest).Assembly.Location);
 			var facDir = GetFacadesPath ();
 
-			var references = new [] {
-				MetadataReference.CreateFromFile (unitTestFrameworkAssemblyPath),
-				MetadataReference.CreateFromFile (typeof(object).Assembly.Location),
-				MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location),
-				MetadataReference.CreateFromFile (typeof(Uri).Assembly.Location),
-				MetadataReference.CreateFromFile (Path.Combine (binDir, "Java.Interop.dll")),
-				MetadataReference.CreateFromFile (Path.Combine (facDir, "netstandard.dll")),
+			var referencePaths = new[]{
+				unitTestFrameworkAssemblyPath,
+				typeof(object).Assembly.Location,
+				typeof(Enumerable).Assembly.Location,
+				typeof(Uri).Assembly.Location,
+				Path.Combine (binDir, "Java.Interop.dll"),
+				Path.Combine (facDir, "netstandard.dll"),
 #if NET
-				MetadataReference.CreateFromFile (Path.Combine (facDir, "System.Runtime.dll")),
+				Path.Combine (facDir, "System.Runtime.dll"),
 #endif  // NET
 			};
 
+			var references = referencePaths.Select (p => MetadataReference.CreateFromFile (p)).ToArray ();
+
+			string testCommandLine =
+				$"csc \"-out:{Path.GetFileName (assemblyFileName)}\" " +
+				$"-unsafe -t:library " +
+				string.Join (" ", preprocessorSymbols.Select (p => $"\"-define:{p}\"")) + " " +
+				string.Join (" ", referencePaths.Select (p => $"\"-r:{p}\"")) + " " +
+				string.Join (" ", sourceFiles)
+				;
+
+			Console.WriteLine ($"# Trying to compile: {testCommandLine}");
 
 			// Compile!
 			var compilation = CSharpCompilation.Create (

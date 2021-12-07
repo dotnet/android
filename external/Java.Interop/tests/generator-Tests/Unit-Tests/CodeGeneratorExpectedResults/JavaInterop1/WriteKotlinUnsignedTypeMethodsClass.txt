@@ -1,18 +1,13 @@
 // Metadata.xml XPath class reference: path="/api/package[@name='java.code']/class[@name='MyClass']"
-[global::Android.Runtime.Register ("java/code/MyClass", DoNotGenerateAcw=true)]
+[global::Java.Interop.JniTypeSignature ("java/code/MyClass", GenerateJavaPeer=false)]
 public partial class MyClass {
 	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
 
-	internal static IntPtr class_ref {
-		get { return _members.JniPeerType.PeerReference.Handle; }
-	}
-
-	protected MyClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+	protected MyClass (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
 	{
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='uint']]"
-	[Register ("Echo", "(I)I", "")]
 	public unsafe uint Echo (uint value)
 	{
 		const string __id = "Echo.(I)I";
@@ -26,7 +21,6 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ushort']]"
-	[Register ("Echo", "(S)S", "")]
 	public unsafe ushort Echo (ushort value)
 	{
 		const string __id = "Echo.(S)S";
@@ -40,7 +34,6 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ulong']]"
-	[Register ("Echo", "(J)J", "")]
 	public unsafe ulong Echo (ulong value)
 	{
 		const string __id = "Echo.(J)J";
@@ -54,7 +47,6 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ubyte']]"
-	[Register ("Echo", "(B)B", "")]
 	public unsafe byte Echo (byte value)
 	{
 		const string __id = "Echo.(B)B";

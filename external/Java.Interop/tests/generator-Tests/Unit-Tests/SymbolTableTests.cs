@@ -2,6 +2,8 @@ using System;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace generatortests
 {
 	[TestFixture]
@@ -10,7 +12,7 @@ namespace generatortests
 		[Test]
 		public void FindGenericTypes ()
 		{
-			var table = new SymbolTable ();
+			var table = new SymbolTable (CodeGenerationTarget.XAJavaInterop1);
 
 			var list = new InterfaceGen (new GenBaseSupport {
 				Name = "System.Collections.Generic.IList`1",

@@ -43,6 +43,11 @@ namespace MonoDroid.Generation
 
 		public override string FromNative (CodeGenerationOptions opt, string varname, bool owned)
 		{
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				return "global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
+					opt.GetOutputName (FullName) +
+					$"> (ref {varname}, JniObjectReferenceOptions.{(owned ? "CopyAndDispose" : "Copy")})";
+			}
 			return string.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", opt.GetOutputName (FullName), varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
 			/*
 			if (String.IsNullOrEmpty (Marshaler))
@@ -81,7 +86,9 @@ namespace MonoDroid.Generation
 			using (var sw = gen_info.OpenStream (opt.GetFileName (FullName))) {
 				sw.WriteLine ("using System;");
 				sw.WriteLine ("using System.Collections.Generic;");
-				sw.WriteLine ("using Android.Runtime;");
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+					sw.WriteLine ("using Android.Runtime;");
+				}
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.XamarinAndroid) {
 					sw.WriteLine ("using Java.Interop;");
 				}

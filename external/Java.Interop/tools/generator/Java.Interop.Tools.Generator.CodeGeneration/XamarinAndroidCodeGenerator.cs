@@ -66,7 +66,7 @@ namespace MonoDroid.Generation {
 
 		internal override void WriteConstructorBody (Ctor ctor, string indent, System.Collections.Specialized.StringCollection call_cleanup)
 		{
-			writer.WriteLine ("{0}if ({1} != IntPtr.Zero)", indent, Context.ContextType.GetObjectHandleProperty ("this"));
+			writer.WriteLine ("{0}if ({1} != IntPtr.Zero)", indent, Context.ContextType.GetObjectHandleProperty (opt, "this"));
 			writer.WriteLine ("{0}\treturn;", indent);
 			writer.WriteLine ();
 			foreach (string prep in ctor.Parameters.GetCallPrep (opt))
@@ -84,7 +84,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}\t\t\tJniHandleOwnership.TransferLocalRef);", indent);
 			writer.WriteLine ("{0}\tglobal::Android.Runtime.JNIEnv.FinishCreateInstance ({1}, \"{2}\"{3});",
 					indent,
-					Context.ContextType.GetObjectHandleProperty ("this"),
+					Context.ContextType.GetObjectHandleProperty (opt, "this"),
 					ctor.IsNonStaticNestedType ? "(" + ctor.Parameters.GetJniNestedDerivedSignature (opt) + ")V" : ctor.JniSignature,
 					ctor.Parameters.GetCallArgs (opt, invoker:false));
 			writer.WriteLine ("{0}\treturn;", indent);
@@ -98,7 +98,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}\t\tJniHandleOwnership.TransferLocalRef);", indent);
 			writer.WriteLine ("{0}JNIEnv.FinishCreateInstance ({1}, class_ref, {2}{3});",
 					indent,
-					Context.ContextType.GetObjectHandleProperty ("this"),
+					Context.ContextType.GetObjectHandleProperty (opt, "this"),
 					ctor.ID,
 					ctor.Parameters.GetCallArgs (opt, invoker:false));
 			indent = oldindent;
@@ -143,13 +143,13 @@ namespace MonoDroid.Generation {
 				writer.WriteLine ("{0}if (((object) this).GetType () == ThresholdType)", indent);
 				GenerateJNICall (method, indent + "\t",
 						"JNIEnv.Call" + method.RetVal.CallMethodPrefix + "Method (" +
-						method.DeclaringType.GetObjectHandleProperty ("this") +
+						method.DeclaringType.GetObjectHandleProperty (opt, "this") +
 						", " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker:false) + ")",
 						declare_ret: false);
 				writer.WriteLine ("{0}else", indent);
 				GenerateJNICall (method, indent + "\t",
 						"JNIEnv.CallNonvirtual" + method.RetVal.CallMethodPrefix + "Method (" +
-						method.DeclaringType.GetObjectHandleProperty ("this") +
+						method.DeclaringType.GetObjectHandleProperty (opt, "this") +
 						", ThresholdClass, " +
 						string.Format ("JNIEnv.GetMethodID (ThresholdClass, \"{0}\", \"{1}\")", method.JavaName, method.JniSignature) +
 						method.Parameters.GetCallArgs (opt, invoker:false) + ")",
@@ -159,7 +159,7 @@ namespace MonoDroid.Generation {
 						method,
 						indent,
 						"JNIEnv.Call" + method.RetVal.CallMethodPrefix + "Method (" +
-							method.DeclaringType.GetObjectHandleProperty ("this") +
+							method.DeclaringType.GetObjectHandleProperty (opt, "this") +
 							", " + method.EscapedIdName +
 							method.Parameters.GetCallArgs (opt, invoker:false) + ")",
 						declare_ret: true);
@@ -190,7 +190,7 @@ namespace MonoDroid.Generation {
 					field.GetMethodPrefix,
 					field.IsStatic
 						? "class_ref"
-						: type.GetObjectHandleProperty ("this"),
+						: type.GetObjectHandleProperty (opt, "this"),
 					field.ID);
 
 			//var asym = Symbol as ArraySymbol;
@@ -237,7 +237,7 @@ namespace MonoDroid.Generation {
 						: String.Empty,
 					field.IsStatic
 						? "class_ref"
-						: type.GetObjectHandleProperty ("this"),
+						: type.GetObjectHandleProperty (opt, "this"),
 					field.ID,
 					arg);
 

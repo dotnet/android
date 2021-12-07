@@ -94,6 +94,11 @@ namespace MonoDroid.Generation {
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned)
 		{
 			if (!string.IsNullOrEmpty (managed_type) && (sym is ClassGen || sym is InterfaceGen)) {
+				if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.JavaInterop1) {
+					return "global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
+						opt.GetOutputName (managed_type) +
+						$"> (ref __rm, JniObjectReferenceOptions.Copy)";
+				}
 				return string.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", 
 				                      opt.GetOutputName (managed_type), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
  			}

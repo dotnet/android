@@ -11,7 +11,7 @@ namespace generator.SourceWriters
 {
 	public class JavaLangObjectConstructor : ConstructorWriter
 	{
-		public JavaLangObjectConstructor (ClassGen klass)
+		public JavaLangObjectConstructor (ClassGen klass, CodeGenerationOptions opt)
 		{
 			Name = klass.Name;
 
@@ -20,10 +20,17 @@ namespace generator.SourceWriters
 			else
 				IsProtected = true;
 
-			Parameters.Add (new MethodParameterWriter ("javaReference", TypeReferenceWriter.IntPtr));
-			Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				Parameters.Add (new MethodParameterWriter ("reference", new TypeReferenceWriter ("ref JniObjectReference")));
+				Parameters.Add (new MethodParameterWriter ("options", new TypeReferenceWriter ("JniObjectReferenceOptions")));
 
-			BaseCall = "base (javaReference, transfer)";
+				BaseCall = "base (ref reference, options)";
+			} else {
+				Parameters.Add (new MethodParameterWriter ("javaReference", TypeReferenceWriter.IntPtr));
+				Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
+
+				BaseCall = "base (javaReference, transfer)";
+			}
 		}
 	}
 }

@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using static MonoDroid.Generation.EnumMappings;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace MonoDroid.Generation
 {
 	class EnumGenerator
@@ -15,7 +17,7 @@ namespace MonoDroid.Generation
 			sw = writer;
 		}
 
-		public void WriteEnumeration (KeyValuePair<string, EnumDescription> enu, GenBase [] gens)
+		public void WriteEnumeration (CodeGenerationOptions opt, KeyValuePair<string, EnumDescription> enu, GenBase [] gens)
 		{
 			string ns = enu.Key.Substring (0, enu.Key.LastIndexOf ('.')).Trim ();
 			string enoom = enu.Key.Substring (enu.Key.LastIndexOf ('.') + 1).Trim ();
@@ -27,7 +29,8 @@ namespace MonoDroid.Generation
 
 			foreach (var member in enu.Value.Members) {
 				var managedMember = FindManagedMember (enu.Value, member.Key, gens);
-				sw.WriteLine ("\t\t[global::Android.Runtime.IntDefinition (" + (managedMember != null ? "\"" + managedMember + "\"" : "null") + ", JniField = \"" + StripExtraInterfaceSpec (enu.Value.JniNames [member.Key]) + "\")]");
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
+					sw.WriteLine ("\t\t[global::Android.Runtime.IntDefinition (" + (managedMember != null ? "\"" + managedMember + "\"" : "null") + ", JniField = \"" + StripExtraInterfaceSpec (enu.Value.JniNames [member.Key]) + "\")]");
 				sw.WriteLine ("\t\t{0} = {1},", member.Key.Trim (), member.Value.Trim ());
 			}
 			sw.WriteLine ("\t}");

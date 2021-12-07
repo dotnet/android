@@ -11,8 +11,8 @@ namespace Java.Interop
 	{
 		internal    static  readonly    ValueMarshaler   Instance           = new ValueMarshaler ();
 
-		public JavaObjectArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
-			: base (ref handle, transfer)
+		public JavaObjectArray (ref JniObjectReference handle, JniObjectReferenceOptions options)
+			: base (ref handle, options)
 		{
 		}
 
@@ -46,6 +46,15 @@ namespace Java.Interop
 		public JavaObjectArray (IEnumerable<T> value)
 			: this (ToList (value))
 		{
+		}
+
+		public override void DisposeUnlessReferenced ()
+		{
+			if (forMarshalCollection) {
+				Dispose ();
+				return;
+			}
+			base.DisposeUnlessReferenced ();
 		}
 
 		[MaybeNull]
@@ -172,6 +181,26 @@ namespace Java.Interop
 			public override void DestroyGenericArgumentState ([AllowNull]IList<T> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<T>.DestroyArgumentState<JavaObjectArray<T>> (value, ref state, synchronize);
+			}
+		}
+	}
+
+	partial class JniEnvironment {
+
+		[SuppressMessage ("Design", "CA1034", Justification = "https://github.com/xamarin/Java.Interop/commit/bb7ca5d02aa3fc2b447ad57af1256e74e5f954fa")]
+		partial class Arrays {
+
+			public static JavaObjectArray<T>? CreateMarshalObjectArray<T> (IEnumerable<T>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is JavaObjectArray<T> c) {
+					return c;
+				}
+				return new JavaObjectArray<T> (value) {
+					forMarshalCollection = true,
+				};
 			}
 		}
 	}

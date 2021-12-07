@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if !JAVA_INTEROP1
+
+using System;
 using Android.Runtime;
 
 namespace Java.Lang {
@@ -11,3 +13,5 @@ namespace Java.Lang {
 		string ToString ();
 	}
 }
+
+#endif  // !JAVA_INTEROP1

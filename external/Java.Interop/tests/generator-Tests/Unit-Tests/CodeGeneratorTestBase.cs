@@ -48,15 +48,19 @@ namespace generatortests
 		protected virtual string CommonDirectoryOverride => null;
 
 		// Get the test results from "Common" for tests with the same results regardless of Target
-		protected string GetExpected (string testName) => GetExpectedResults (testName, CommonDirectoryOverride ?? "Common");
+		protected string GetExpected (string testName) => GetOriginalExpected (testName).NormalizeLineEndings ();
+		string GetOriginalExpected (string testName) => GetExpectedResults (testName, CommonDirectoryOverride ?? "Common");
 
 		// Get the test results from "JavaInterop1" or "XamarinAndroid" for tests with different results per Target
-		protected string GetTargetedExpected (string testName) => GetExpectedResults (testName, TargetedDirectoryOverride ?? Target.ToString ());
+		protected string GetTargetedExpected (string testName) => GetOriginalTargetExpected (testName).NormalizeLineEndings ();
+		string GetOriginalTargetExpected (string testName) => GetExpectedResults (testName, TargetedDirectoryOverride ?? Target.ToString ());
 
 		string GetExpectedResults (string testName, string target)
 		{
 			var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
-			return File.ReadAllText (Path.Combine (root, "Unit-Tests", "CodeGeneratorExpectedResults", target, $"{testName}.txt")).NormalizeLineEndings ();
+			var path = Path.Combine (root, "Unit-Tests", "CodeGeneratorExpectedResults", target, $"{testName}.txt");
+			Console.WriteLine ($"# jonp: test {GetType().Name}.{testName}: expected path: {path}");
+			return File.ReadAllText (path);
 		}
 
 		protected List<GenBase> ParseApiDefinition (string xml)
@@ -77,6 +81,27 @@ namespace generatortests
 				gen.FixupMethodOverrides (options);
 
 			return gens;
+		}
+
+		protected void AssertExpected (string testName, string actual)
+		{
+			var expected    = GetOriginalExpected (testName);
+			Assert.AreEqual (expected.NormalizeLineEndings (), actual.NormalizeLineEndings (),
+					GetAssertionMessage ($"Test `{testName}` failed.", expected, actual));
+		}
+
+		protected void AssertTargetExpected (string testName, string actual)
+		{
+			var expected    = GetOriginalTargetExpected (testName);
+			Assert.AreEqual (expected.NormalizeLineEndings (), actual.NormalizeLineEndings (),
+					GetAssertionMessage ($"Test `{testName}` failed.", expected, actual));
+		}
+
+		protected static string GetAssertionMessage (string header, string expected, string actual)
+		{
+			return header + "\n" +
+				$"Expected:\n```\n{expected}\n```\n" +
+				$"Actual:\n```\n{actual}\n```";
 		}
 	}
 }

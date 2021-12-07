@@ -43,7 +43,14 @@ namespace MonoDroid.Generation
 			}
 		}
 
-		public      SymbolTable             SymbolTable             { get; } = new SymbolTable ();
+		SymbolTable symbolTable;
+		public      SymbolTable             SymbolTable             {
+			get {
+				if (symbolTable != null)
+					return symbolTable;
+				return symbolTable = new SymbolTable (CodeGenerationTarget);
+			}
+		}
 
 		readonly SortedSet<string> jni_marshal_delegates = new SortedSet<string> ();
 		readonly object jni_marshal_delegates_lock = new object ();

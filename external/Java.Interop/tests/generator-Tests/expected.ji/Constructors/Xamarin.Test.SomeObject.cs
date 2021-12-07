@@ -1,18 +1,13 @@
 using System;
 using System.Collections.Generic;
-using Android.Runtime;
 using Java.Interop;
 
 namespace Xamarin.Test {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']"
-	[global::Android.Runtime.Register ("xamarin/test/SomeObject", DoNotGenerateAcw=true)]
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/SomeObject", GenerateJavaPeer=false)]
 	public partial class SomeObject : global::Java.Lang.Object {
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -20,54 +15,40 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
-		}
-
-		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		protected SomeObject (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
 		{
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/constructor[@name='SomeObject' and count(parameter)=0]"
-		[Register (".ctor", "()V", "")]
 		[Obsolete (@"deprecated")]
-		public unsafe SomeObject () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe SomeObject () : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const string __id = "()V";
 
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+			if (PeerReference.IsValid)
 				return;
 
 			try {
 				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
 				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 			} finally {
 			}
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/constructor[@name='SomeObject' and count(parameter)=1 and parameter[1][@type='int']]"
-		[Register (".ctor", "(I)V", "")]
-		public unsafe SomeObject (int aint) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe SomeObject (int aint) : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const string __id = "(I)V";
 
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+			if (PeerReference.IsValid)
 				return;
 
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (aint);
 				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
 				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
 			} finally {
 			}

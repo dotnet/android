@@ -29,8 +29,10 @@ namespace generatortests
 
 		protected CodeGeneratorOptions Options = null;
 		protected Assembly BuiltAssembly = null;
-		protected List<string> AdditionalSourceDirectories;
+		List<string> AdditionalSourceDirectories;
 		protected bool AllowWarnings;
+
+		protected virtual bool TryJavaInterop1 => true;
 
 		public void Execute ()
 		{
@@ -69,7 +71,7 @@ namespace generatortests
 					//Error message for diff in powershell vs bash
 					string message  = Environment.OSVersion.Platform == PlatformID.Win32NT ?
 						$"File contents differ; run: diff (cat {fullSource}) `{Environment.NewLine}\t(cat {fullDest})" :
-						$"File contents differ; run: diff -u {fullSource} \\{Environment.NewLine}\t{fullDest}";
+						$"File contents differ; run: git diff --no-index {fullSource} \\{Environment.NewLine}\t{fullDest}";
 					Assert.Fail (message);
 				}
 			}
@@ -122,7 +124,10 @@ namespace generatortests
 		protected void RunAllTargets (string outputRelativePath, string apiDescriptionFile, string expectedRelativePath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null)
 		{
 			Run (CodeGenerationTarget.XamarinAndroid,   Path.Combine ("out", outputRelativePath),       apiDescriptionFile,     Path.Combine ("expected", expectedRelativePath),        additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile);
-			Run (CodeGenerationTarget.JavaInterop1,     Path.Combine ("out.ji", outputRelativePath),    apiDescriptionFile,     Path.Combine ("expected.ji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile);
+			Run (CodeGenerationTarget.XAJavaInterop1,   Path.Combine ("out.xaji", outputRelativePath),  apiDescriptionFile,     Path.Combine ("expected.xaji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile);
+			if (TryJavaInterop1) {
+				Run (CodeGenerationTarget.JavaInterop1,     Path.Combine ("out.ji", outputRelativePath),    apiDescriptionFile,     Path.Combine ("expected.ji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile);
+			}
 		}
 
 		protected string FullPath (string path)
@@ -134,6 +139,7 @@ namespace generatortests
 		protected void Run (CodeGenerationTarget target, string outputPath, string apiDescriptionFile, string expectedPath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null)
 		{
 			Cleanup (outputPath);
+			AdditionalSourceDirectories.Clear ();
 
 			Options.CodeGenerationTarget                        = target;
 			Options.ApiDescriptionFile                          = FullPath (apiDescriptionFile);

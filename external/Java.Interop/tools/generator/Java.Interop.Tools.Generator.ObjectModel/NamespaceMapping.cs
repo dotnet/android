@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace MonoDroid.Generation
 {
 	public class NamespaceMapping
@@ -22,11 +24,12 @@ namespace MonoDroid.Generation
 				sw.WriteLine ("using System;");
 				sw.WriteLine ();
 
-				foreach (var p in mappings)
-					sw.WriteLine ("[assembly:global::Android.Runtime.NamespaceMapping (Java = \"{0}\", Managed=\"{1}\")]",
-					              p.Key, p.Value);
-
-				sw.WriteLine ();
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+					foreach (var p in mappings) {
+						sw.WriteLine ($"[assembly:global::Android.Runtime.NamespaceMapping (Java = \"{p.Key}\", Managed=\"{p.Value}\")]");
+					}
+					sw.WriteLine ();
+				}
 
 				// delegate bool _JniMarshal_PPL_Z (IntPtr jnienv, IntPtr klass, IntPtr a);
 				foreach (var jni in opt.GetJniMarshalDelegates ())

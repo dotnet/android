@@ -31,7 +31,7 @@ namespace generatortests
 			var enu = CreateEnum ();
 			enu.Value.FieldsRemoved = true;
 
-			generator.WriteEnumeration (enu, null);
+			generator.WriteEnumeration (new CodeGenerationOptions (), enu, null);
 
 			Assert.AreEqual (GetExpected (nameof (WriteBasicEnum)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -43,7 +43,7 @@ namespace generatortests
 			enu.Value.BitField = true;
 			enu.Value.FieldsRemoved = true;
 
-			generator.WriteEnumeration (enu, null);
+			generator.WriteEnumeration (new CodeGenerationOptions (), enu, null);
 
 			Assert.AreEqual (GetExpected (nameof (WriteFlagsEnum)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -54,7 +54,7 @@ namespace generatortests
 			var enu = CreateEnum ();
 			var gens = CreateGens ();
 
-			generator.WriteEnumeration (enu, gens);
+			generator.WriteEnumeration (new CodeGenerationOptions (), enu, gens);
 			
 			Assert.AreEqual (GetExpected (nameof (WriteEnumWithGens)), writer.ToString ().NormalizeLineEndings ());
 		}

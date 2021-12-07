@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if !JAVA_INTEROP1
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -115,3 +117,4 @@ namespace Android.Runtime {
 	}
 }
 
+#endif  // !JAVA_INTEROP1

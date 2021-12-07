@@ -45,9 +45,13 @@ namespace MonoDroid.Generation {
 				return c;
 			if (!NeedsPrep)
 				return c;
-			var h = sym.GetObjectHandleProperty (c);
-			if (sym.PreCall (opt, Name).Length == 0)
+			var h = sym.GetObjectHandleProperty (opt, c);
+			if (sym.PreCall (opt, Name).Length == 0) {
+				if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+					return c;
+				}
 				return string.Format ("({0} == null) ? IntPtr.Zero : {1}", c, h);
+			}
 			return c;
 		}
 

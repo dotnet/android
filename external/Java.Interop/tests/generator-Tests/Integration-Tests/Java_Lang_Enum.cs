@@ -6,6 +6,8 @@ namespace generatortests
 	[TestFixture]
 	public class Java_Lang_Enum : BaseGeneratorTest
 	{
+		protected override bool TryJavaInterop1 => false;
+
 		[Test]
 		public void Generated_OK ()
 		{
