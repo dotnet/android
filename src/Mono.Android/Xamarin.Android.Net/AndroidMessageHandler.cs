@@ -314,6 +314,11 @@ namespace Xamarin.Android.Net
 			return null;
 		}
 
+		internal IHostnameVerifier? GetSSLHostnameVerifierInternal (HttpsURLConnection connection)
+		{
+			return GetSSLHostnameVerifier (connection);
+		}
+
 		/// <summary>
 		/// Creates, configures and processes an asynchronous request to the indicated resource.
 		/// </summary>
@@ -380,6 +385,11 @@ namespace Xamarin.Android.Net
 			}
 		}
 
+		internal Task <HttpResponseMessage> SendAsyncInternal (HttpRequestMessage request, CancellationToken cancellationToken)
+		{
+			return SendAsync (request, cancellationToken);
+		}
+
 		protected virtual async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
 		{
 			var proxy = Java.Net.Proxy.NoProxy;
@@ -400,6 +410,11 @@ namespace Xamarin.Android.Net
 			}, cancellationToken);
 
 			return proxy;
+		}
+
+		internal Task <Java.Net.Proxy?> GetJavaProxyInternal (Uri destination, CancellationToken cancellationToken)
+		{
+			return GetJavaProxy (destination, cancellationToken);
 		}
 
 		Task <HttpResponseMessage?> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
@@ -461,6 +476,11 @@ namespace Xamarin.Android.Net
 				if (stream.CanSeek)
 					stream.Seek (0, SeekOrigin.Begin);
 			}
+		}
+
+		internal Task WriteRequestContentToOutputInternal (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
+		{
+			return WriteRequestContentToOutput (request, httpConnection, cancellationToken);
 		}
 
 		async Task <HttpResponseMessage?> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
@@ -842,6 +862,11 @@ namespace Xamarin.Android.Net
 			return Task.Run (a);
 		}
 
+		internal Task SetupRequestInternal (HttpRequestMessage request, HttpURLConnection conn)
+		{
+			return SetupRequest (request, conn);
+		}
+
 		/// <summary>
 		/// Configures the key store. The <paramref name="keyStore"/> parameter is set to instance of <see cref="KeyStore"/>
 		/// created using the <see cref="KeyStore.DefaultType"/> type and with populated with certificates provided in the <see cref="TrustedCerts"/>
@@ -854,6 +879,11 @@ namespace Xamarin.Android.Net
 			AssertSelf ();
 
 			return keyStore;
+		}
+
+		internal KeyStore? ConfigureKeyStoreInternal (KeyStore? keyStore)
+		{
+			return ConfigureKeyStore (keyStore);
 		}
 
 		/// <summary>
@@ -872,6 +902,12 @@ namespace Xamarin.Android.Net
 			return null;
 		}
 
+		internal KeyManagerFactory? ConfigureKeyManagerFactoryInternal (KeyStore? keyStore)
+		{
+			return ConfigureKeyManagerFactoryInternal (keyStore);
+		}
+
+
 		/// <summary>
 		/// Create and configure an instance of <see cref="TrustManagerFactory"/>. The <paramref name="keyStore"/> parameter is set to the
 		/// return value of the <see cref="ConfigureKeyStore"/> method, so it might be null if the application overrode the method and provided
@@ -887,6 +923,11 @@ namespace Xamarin.Android.Net
 			AssertSelf ();
 
 			return null;
+		}
+
+		internal TrustManagerFactory? ConfigureTrustManagerFactoryInternal (KeyStore? keyStore)
+		{
+			return ConfigureTrustManagerFactory (keyStore);
 		}
 
 		void AppendEncoding (string encoding, ref List <string>? list)
@@ -967,6 +1008,11 @@ namespace Xamarin.Android.Net
 		protected virtual SSLSocketFactory? ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
 		{
 			return null;
+		}
+
+		internal SSLSocketFactory? ConfigureCustomSSLSocketFactoryInternal (HttpsURLConnection connection)
+		{
+			return ConfigureCustomSSLSocketFactoryInternal (connection);
 		}
 
 		void SetupSSL (HttpsURLConnection? httpsConnection)

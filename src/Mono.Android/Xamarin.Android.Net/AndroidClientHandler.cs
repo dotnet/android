@@ -62,14 +62,12 @@ namespace Xamarin.Android.Net
 	{
 		internal const string LOG_APP = "monodroid-net";
 		private AndroidMessageHandler _underlyingHander;
-		private AndroidMessageHandlerProxy _underlyingHanderProxy;
 
 		bool disposed;
 
 		public AndroidClientHandler ()
 		{
 			_underlyingHander = GetUnderlyingHandler () as AndroidMessageHandler ?? throw new InvalidOperationException ("Unknown underlying handler.  Only AndroidMessageHandler is supported for AndroidClientHandler");
-			_underlyingHanderProxy = new AndroidMessageHandlerProxy(_underlyingHander);
 		}
 
 		/// <summary>
@@ -210,7 +208,7 @@ namespace Xamarin.Android.Net
 		/// <param name="connection">HTTPS connection object.</param>
 		public IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
 		{
-			return _underlyingHanderProxy.ProxiedGetSSLHostnameVerifier (connection);
+			return _underlyingHander.GetSSLHostnameVerifierInternal (connection);
 		}
 
 		/// <summary>
@@ -227,12 +225,12 @@ namespace Xamarin.Android.Net
 
 		public async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
 		{
-			return await _underlyingHanderProxy.ProxiedGetJavaProxy (destination, cancellationToken);
+			return await _underlyingHander.GetJavaProxyInternal (destination, cancellationToken);
 		}
 
 		public async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
-			await _underlyingHanderProxy.ProxiedWriteRequestContentToOutput (request, httpConnection, cancellationToken);
+			await _underlyingHander.WriteRequestContentToOutputInternal (request, httpConnection, cancellationToken);
 		}
 
 		/// <summary>
@@ -245,7 +243,7 @@ namespace Xamarin.Android.Net
 		/// <param name="conn">Pre-configured connection instance</param>
 		public Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
-			return _underlyingHanderProxy.ProxiedSetupRequest (request, conn);
+			return _underlyingHander.SetupRequestInternal (request, conn);
 		}
 
 		/// <summary>
@@ -259,7 +257,7 @@ namespace Xamarin.Android.Net
 		{
 			AssertSelf ();
 
-			return _underlyingHanderProxy.ProxiedConfigureKeyStore (keyStore);
+			return _underlyingHander.ConfigureKeyStoreInternal (keyStore);
 		}
 
 		/// <summary>
@@ -275,7 +273,7 @@ namespace Xamarin.Android.Net
 		{
 			AssertSelf ();
 
-			return _underlyingHanderProxy.ProxiedConfigureKeyManagerFactory (keyStore);
+			return _underlyingHander.ConfigureKeyManagerFactoryInternal (keyStore);
 		}
 
 		/// <summary>
@@ -292,7 +290,7 @@ namespace Xamarin.Android.Net
 		{
 			AssertSelf ();
 
-			return _underlyingHanderProxy.ProxiedConfigureTrustManagerFactory (keyStore);
+			return _underlyingHander.ConfigureTrustManagerFactoryInternal (keyStore);
 		}
 
 		/// <summary>
@@ -308,42 +306,7 @@ namespace Xamarin.Android.Net
 		/// <param name="connection">HTTPS connection to return socket factory for</param>
 		public SSLSocketFactory? ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
 		{
-			return _underlyingHanderProxy.ProxiedConfigureCustomSSLSocketFactory (connection);
-		}
-
-		// This class is used to access `protected virtual` members of the AndroidMessageHandler class from AndroidClientHandler.
-		private class AndroidMessageHandlerProxy : AndroidMessageHandler
-		{
-			private AndroidMessageHandler _internalHandler;
-
-			public AndroidMessageHandlerProxy(AndroidMessageHandler internalHandler)
-			{
-				_internalHandler = internalHandler;
-			}
-
-			public IHostnameVerifier? ProxiedGetSSLHostnameVerifier (HttpsURLConnection connection)
-				=> _internalHandler.GetSSLHostnameVerifier (connection);
-
-			public Task <Java.Net.Proxy?> ProxiedGetJavaProxy (Uri destination, CancellationToken cancellationToken)
-				=> _internalHandler.GetJavaProxy (destination, cancellationToken);
-
-			public Task ProxiedWriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
-				=> _internalHandler.WriteRequestContentToOutput (request, httpConnection, cancellationToken);
-
-			public Task ProxiedSetupRequest (HttpRequestMessage request, HttpURLConnection conn)
-				=> _internalHandler.SetupRequest (request, conn);
-
-			public KeyStore? ProxiedConfigureKeyStore (KeyStore? keyStore)
-				=> _internalHandler.ConfigureKeyStore (keyStore);
-
-			public KeyManagerFactory? ProxiedConfigureKeyManagerFactory (KeyStore? keyStore)
-				=> _internalHandler.ConfigureKeyManagerFactory (keyStore);
-
-			public TrustManagerFactory? ProxiedConfigureTrustManagerFactory (KeyStore? keyStore)
-				=> _internalHandler.ConfigureTrustManagerFactory (keyStore);
-
-			public SSLSocketFactory? ProxiedConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
-				=> _internalHandler.ConfigureCustomSSLSocketFactory (connection);
+			return _underlyingHander.ConfigureCustomSSLSocketFactoryInternal (connection);
 		}
 
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (AndroidMessageHandler))]
