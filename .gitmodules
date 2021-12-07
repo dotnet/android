@@ -12,7 +12,7 @@
     branch = main
 [submodule "external/Java.Interop"]
     path = external/Java.Interop
-    url = https://github.com/pjcollins/java.interop.git
+    url = https://github.com/xamarin/java.interop.git
     branch = main
 [submodule "external/lz4"]
     path = external/lz4
