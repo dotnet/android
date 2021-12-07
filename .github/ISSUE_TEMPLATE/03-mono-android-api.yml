@@ -12,14 +12,17 @@ body:
 
         [Microsoft Q&A](https://docs.microsoft.com/en-us/answers/topics/dotnet-android.html)
         [Stack Overflow](https://stackoverflow.com)
-  - type: checkboxes
+  - type: dropdown
     id: android-type
     attributes:
       label: Android application type
-      description: In what type of Android application do you see this issue?
+      description: In what type(s) of Android application(s) do you see this issue?
+      multiple: true
       options:
-      - label: Classic Xamarin.Android (MonoAndroid11.0, MonoAndroid12.0, etc.)
-      - label: Android for .NET (net6.0-android, etc.)
+      - Classic Xamarin.Android (MonoAndroid12.0, etc.)
+      - Android for .NET (net6.0-android, etc.)
+    validations:
+      required: true
   - type: input
     id: platform-versions
     attributes:
