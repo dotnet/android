@@ -61,10 +61,14 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Required]
 		public string ApiCompatibilityPath { get; set; }
 
+		// In case API diffs vary between e.g. Classic MonoAndroid & .NET 6+
+		public string TargetFramework { get; set; }
+
 		// This Build tasks validates that changes are not breaking Api
 		public override bool Execute ()
 		{
 			Log.LogMessage (MessageImportance.High, $"CheckApiCompatibility for ApiLevel: {ApiLevel}");
+			Log.LogWarning ($"# jonp: TargetFramework={TargetFramework}");
 
 			// Check to see if Api has a previous Api defined.
 			if (!api_versions.TryGetValue (ApiLevel, out string previousApiLevel)) {
@@ -173,8 +177,14 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 
 					// Verify if there is a file with acceptable issues.
-					var acceptableIssuesFile = new FileInfo (Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }.txt"));
-					if (acceptableIssuesFile.Exists) {
+					var acceptableIssuesFiles = new[]{
+						Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }-{TargetFramework}.txt"),
+						Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }.txt"),
+					};
+					var acceptableIssuesFile = acceptableIssuesFiles.Select (p => new FileInfo (p))
+						.Where (v => v.Exists)
+						.FirstOrDefault ();
+					if (acceptableIssuesFile != null) {
 						genApiProcess.StartInfo.Arguments += $"--baseline \"{acceptableIssuesFile.FullName}\" --validate-baseline ";
 					}
 
