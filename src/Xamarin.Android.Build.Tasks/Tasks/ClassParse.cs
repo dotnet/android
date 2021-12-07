@@ -1,22 +1,16 @@
 // Copyright (C) 2012 Xamarin, Inc. All rights reserved.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using System.Reflection;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using System.Text;
-using Bytecode = Xamarin.Android.Tools.Bytecode;
-using System.Diagnostics;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ClassParse : AndroidTask
+	public class ClassParse : AndroidDotnetToolTask
 	{
 		public override string TaskPrefix => "CLP";
+
+		protected override string BaseToolName => "class-parse";
 
 		[Required]
 		public string OutputFile { get; set; }
@@ -26,43 +20,33 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] DocumentationPaths { get; set; }
 
-		public override bool RunTask ()
+		protected override string GenerateCommandLineCommands ()
 		{
-			using (var output = new StreamWriter (OutputFile, append: false, 
-						encoding: Files.UTF8withoutBOM)) {
-				Bytecode.Log.OnLog = LogEventHandler;
-				var classPath = new Bytecode.ClassPath () {
-					ApiSource = "class-parse",
-					DocumentationPaths = (DocumentationPaths ?? Enumerable.Empty<ITaskItem> ()).Select(x => x.ItemSpec)
-				};
-				foreach (var jar in SourceJars) {
-					if (Bytecode.ClassPath.IsJarFile (jar.ItemSpec)) {
-						classPath.Load (jar.ItemSpec);
-					}
-				}
-				classPath.SaveXmlDescription (output);
+			var cmd = GetCommandLineBuilder ();
+
+			var responseFile = Path.Combine (Path.GetDirectoryName (OutputFile), "class-parse.rsp");
+			Log.LogDebugMessage ("[class-parse] response file: {0}", responseFile);
+
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM)) {
+				WriteLine (sw, $"--o=\"{OutputFile}\"");
+
+				if (DocumentationPaths != null)
+					foreach (var doc in DocumentationPaths)
+						WriteLine (sw, $"--docspath=\"{doc}\"");
+
+				foreach (var doc in SourceJars)
+					WriteLine (sw, $"\"{doc}\"");
 			}
-			return true;
+
+			cmd.AppendSwitch ($"@{responseFile}");
+
+			return cmd.ToString ();
 		}
 
-		void LogEventHandler (TraceLevel type, int verbosity, string message, params object[] args)
+		void WriteLine (StreamWriter sw, string line)
 		{
-			switch (type) {
-			case TraceLevel.Error:
-				Log.LogError (message, args);
-				break;
-			case TraceLevel.Warning:
-				Log.LogWarning (message, args);
-				break;
-			case TraceLevel.Info:
-				Log.LogMessage ((MessageImportance)verbosity, message, args);
-				break;
-			default:
-				Log.LogDebugMessage (message, args);
-				break;
-
-			}
+			sw.WriteLine (line);
+			Log.LogDebugMessage (line);
 		}
 	}
 }
-
