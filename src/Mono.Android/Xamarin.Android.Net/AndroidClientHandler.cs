@@ -314,7 +314,7 @@ namespace Xamarin.Android.Net
 		// This class is used to access `protected virtual` members of the AndroidMessageHandler class from AndroidClientHandler.
 		private class AndroidMessageHandlerProxy : AndroidMessageHandler
 		{
-			public AndroidMessageHandler _internalHandler;
+			private AndroidMessageHandler _internalHandler;
 
 			public AndroidMessageHandlerProxy(AndroidMessageHandler internalHandler)
 			{
