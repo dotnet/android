@@ -126,7 +126,7 @@ namespace Mono.Data.Sqlite.Tests
                                                 c.CommandText = "SELECT * FROM TESTTABLE";
                                                 using (var r = c.ExecuteReader ()) {
                                                         string typeName = r.GetDataTypeName (0);
-                                                        Assert.IsFalse (typeName != "blob", $"Bug in DbDataReader.GetDataTypeName: should be 'blob', got: {typeName}");
+                                                        Assert.IsTrue (String.Compare (typeName, "BLOB", StringComparison.OrdinalIgnoreCase) == 0, $"Bug in DbDataReader.GetDataTypeName: should be 'blob', got: {typeName}");
                                                 }
                                 });
                                 ItemsDb.Instance.WithCommand (c => {

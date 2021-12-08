@@ -135,7 +135,7 @@ namespace xamarin::android::internal
 		int _monodroid_gref_inc ();
 		int _monodroid_gref_dec ();
 		char* _get_stack_trace_line_end (char *m);
-		void _write_stack_trace (FILE *to, const char *from);
+		void _write_stack_trace (FILE *to, char *from, LogCategories = LOG_NONE);
 		mono_bool take_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj);
 		mono_bool take_weak_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj);
 		mono_bool take_global_ref_jni (JNIEnv *env, MonoObject *obj);

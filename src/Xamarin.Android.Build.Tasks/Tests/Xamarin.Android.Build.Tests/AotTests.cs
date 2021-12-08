@@ -258,6 +258,7 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = true,
 				PackageName = "com.xamarin.buildaotappandbundlewithspecialchars",
 			};
+			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
@@ -448,10 +449,6 @@ namespace "+ libName + @" {
 		[Category ("LLVM")]
 		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode)
 		{
-			if (Builder.UseDotNet) {
-				Assert.Ignore ("https://github.com/dotnet/runtime/issues/57800");
-			}
-
 			AssertAotModeSupported (androidAotMode);
 
 			var proj = new XamarinAndroidApplicationProject () {

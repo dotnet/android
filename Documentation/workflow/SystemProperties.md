@@ -118,16 +118,30 @@ categories:
   * `gref`
     Enable global reference logging and log messages to the default
     `grefs.txt` file.
+  * `gref+`
+    Enable global reference logging, writing messages to `adb logcat`.
+    ***Note***: this will spam `adb logcat`, possibly impacting app
+    performance, and Android might not preserve all messages.
+    This is provided as a "last ditch effort", and is not as reliable
+    as the normal `gref` or `gref=` options which write to a file.
+    Added in Xamarin.Android 12.2.
   * `lref-`
     Enable local reference logging but without writing the logged
     messages to a file.
   * `lref=FILE`
-    Enable global reference logging and write messages to the
+    Enable local reference logging and write messages to the
     specified `FILE`
   * `lref`
-    Enable global reference logging and log messages to the default
+    Enable local reference logging and log messages to the default
     `lrefs.txt` file, unless `gref` or `gref=` are also present, in
     which case messages will be logged to the `gref` file.
+  * `lref+`
+    Enable local reference logging, writing messages to `adb logcat`.
+    ***Note***: this will spam `adb logcat`, possibly impacting app
+    performance, and Android might not preserve all messages.
+    This is provided as a "last ditch effort", and is not as reliable
+    as the normal `lref` or `lref=` options which write to a file.
+    Added in Xamarin.Android 12.2.
   * `mono_log_level=LEVEL`
     Set Mono runtime log level.  The default value is `error` to log
     only errors, unless `gc` or `assembly` log categories are enabled,

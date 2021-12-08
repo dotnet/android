@@ -7,6 +7,8 @@ namespace Xamarin.Android.Tasks
 		public Version Main { get; }
 		public string Tag { get; } = String.Empty;
 
+		public NdkVersion () => Main = new Version (0, 0);
+
 		public NdkVersion (string? version)
 		{
 			string? ver = version?.Trim ();
