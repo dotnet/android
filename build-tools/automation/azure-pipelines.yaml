@@ -245,6 +245,7 @@ stages:
         msbuildArguments: >-
           /restore
           /t:RunJavaInteropTests
+          /p:SkipJSUTests=true
           /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
           /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-ji-tests.binlog
       continueOnError: True
@@ -360,6 +361,7 @@ stages:
         msbuildArguments: >-
           /restore
           /t:RunJavaInteropTests
+          /p:SkipJSUTests=true
           /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
           /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\dotnet-run-ji-tests.binlog
       continueOnError: True
