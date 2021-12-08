@@ -32,6 +32,8 @@
 // These two must stay here until JavaInterop is converted to C++
 FILE  *gref_log;
 FILE  *lref_log;
+bool    gref_to_logcat;
+bool    lref_to_logcat;
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -208,7 +210,7 @@ OSBridge::_get_stack_trace_line_end (char *m)
 }
 
 void
-OSBridge::_write_stack_trace (FILE *to, const char *from)
+OSBridge::_write_stack_trace (FILE *to, char *from, LogCategories category)
 {
 	char *n	= const_cast<char*> (from);
 
@@ -220,8 +222,14 @@ OSBridge::_write_stack_trace (FILE *to, const char *from)
 		n       = end + 1;
 		c       = *end;
 		*end    = '\0';
-		fprintf (to, "%s\n", m);
-		fflush (to);
+		if ((category == LOG_GREF && gref_to_logcat) ||
+				(category == LOG_LREF && lref_to_logcat)) {
+			log_debug (category, "%s", m);
+		}
+		if (to != nullptr) {
+			fprintf (to, "%s\n", m);
+			fflush (to);
+		}
 		*end    = c;
 	} while (c);
 }
@@ -229,6 +237,9 @@ OSBridge::_write_stack_trace (FILE *to, const char *from)
 void
 OSBridge::_monodroid_gref_log (const char *message)
 {
+	if (gref_to_logcat) {
+		log_debug (LOG_GREF, "%s", message);
+	}
 	if (!gref_log)
 		return;
 	fprintf (gref_log, "%s", message);
@@ -250,6 +261,9 @@ OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newH
 	          newType,
 	          threadName,
 	          threadId);
+	if (gref_to_logcat) {
+		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+	}
 	if (!gref_log)
 		return c;
 	fprintf (gref_log, "+g+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)\n",
@@ -284,6 +298,9 @@ OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *thr
 	          type,
 	          threadName,
 	          threadId);
+	if (gref_to_logcat) {
+		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+	}
 	if (!gref_log)
 		return;
 	fprintf (gref_log, "-g- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)\n",
@@ -294,7 +311,7 @@ OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *thr
 	         threadName,
 	         threadId);
 	if (from_writable)
-		_write_stack_trace (gref_log, from);
+		_write_stack_trace (gref_log, const_cast<char*>(from));
 	else
 		fprintf (gref_log, "%s\n", from);
 
@@ -316,6 +333,9 @@ OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject new
 	          newType,
 	          threadName,
 	          threadId);
+	if (gref_to_logcat) {
+		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+	}
 	if (!gref_log)
 		return;
 	fprintf (gref_log, "+w+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)\n",
@@ -328,7 +348,7 @@ OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject new
 	         threadName,
 	         threadId);
 	if (from_writable)
-		_write_stack_trace (gref_log, from);
+		_write_stack_trace (gref_log, const_cast<char*>(from));
 	else
 		fprintf (gref_log, "%s\n", from);
 
@@ -348,6 +368,9 @@ OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *th
 	          type,
 	          threadName,
 	          threadId);
+	if (gref_to_logcat) {
+		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+	}
 	if (!gref_log)
 		return;
 	fprintf (gref_log, "-w- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)\n",
@@ -358,7 +381,7 @@ OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *th
 	         threadName,
 	         threadId);
 	if (from_writable)
-		_write_stack_trace (gref_log, from);
+		_write_stack_trace (gref_log, const_cast<char*>(from));
 	else
 		fprintf (gref_log, "%s\n", from);
 
@@ -376,6 +399,9 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 	          type,
 	          threadName,
 	          threadId);
+	if (lref_to_logcat) {
+		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_LREF);
+	}
 	if (!lref_log)
 		return;
 	fprintf (lref_log, "+l+ lrefc %i handle %p/%c from thread '%s'(%i)\n",
@@ -385,7 +411,7 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 	         threadName,
 	         threadId);
 	if (from_writable)
-		_write_stack_trace (lref_log, from);
+		_write_stack_trace (lref_log, const_cast<char*>(from));
 	else
 		fprintf (lref_log, "%s\n", from);
 
@@ -403,6 +429,9 @@ OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, cons
 	          type,
 	          threadName,
 	          threadId);
+	if (lref_to_logcat) {
+		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_LREF);
+	}
 	if (!lref_log)
 		return;
 	fprintf (lref_log, "-l- lrefc %i handle %p/%c from thread '%s'(%i)\n",
@@ -412,7 +441,7 @@ OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, cons
 	         threadName,
 	         threadId);
 	if (from_writable)
-		_write_stack_trace (lref_log, from);
+		_write_stack_trace (lref_log, const_cast<char*>(from));
 	else
 		fprintf (lref_log, "%s\n", from);
 

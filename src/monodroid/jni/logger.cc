@@ -215,6 +215,11 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 			continue;
 		}
 
+		if (set_category ("gref+", param, LOG_GREF)) {
+			gref_to_logcat = true;
+			continue;
+		}
+
 		constexpr char CAT_LREF_EQUALS[] = "lref=";
 		constexpr size_t CAT_LREF_EQUALS_LEN = sizeof(CAT_LREF_EQUALS) - 1;
 		if (set_category (CAT_LREF_EQUALS, param, LOG_LREF, true /* arg_starts_with_name */)) {
@@ -224,6 +229,11 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 
 		if (set_category ("lref-", param, LOG_LREF)) {
 			light_lref = true;
+			continue;
+		}
+
+		if (set_category ("lref+", param, LOG_LREF)) {
+			lref_to_logcat = true;
 			continue;
 		}
 
