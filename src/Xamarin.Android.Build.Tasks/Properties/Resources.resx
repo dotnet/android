@@ -296,6 +296,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Using fast deployment and a code shrinker at the same time is not recommended. Use fast deployment for Debug configurations and a code shrinker for Release configurations.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
   </data>
+  <data name="XA0119_Interpreter" xml:space="preserve">
+    <value>Disabling the interpreter; using the interpreter and AOT at the same time is not supported. Use the interpreter for hot reload support in Debug configurations and AOT for Release configurations.</value>
+    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet

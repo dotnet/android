@@ -865,6 +865,37 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			builder.AssertHasNoWarnings ();
 		}
 
+		static readonly object [] SettingCombinationsSource = new object [] {
+			// Interpreter + AOT
+			new object [] {
+				/* isRelease */      true,
+				/* useInterpreter */ true,
+				/* publishTrimmed */ true,
+				/* aot */            true,
+			},
+			// Debug + AOT
+			new object [] {
+				/* isRelease */      false,
+				/* useInterpreter */ false,
+				/* publishTrimmed */ true,
+				/* aot */            true,
+			},
+		};
+
+		[Test]
+		[TestCaseSource (nameof (SettingCombinationsSource))]
+		public void SettingCombinations (bool isRelease, bool useInterpreter, bool publishTrimmed, bool aot)
+		{
+			var proj = new XASdkProject {
+				IsRelease = isRelease,
+			};
+			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
+			proj.SetProperty ("PublishTrimmed", publishTrimmed.ToString ());
+			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
+			var builder = CreateDotNetBuilder (proj);
+			Assert.IsTrue (builder.Build (), $"{proj.ProjectName} should succeed");
+		}
+
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
 		{
 			if (string.IsNullOrEmpty (relativeProjectDir)) {

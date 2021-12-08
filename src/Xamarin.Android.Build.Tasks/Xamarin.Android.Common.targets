@@ -190,7 +190,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<!-- Ahead-of-time compilation properties -->
 	<AotAssemblies Condition=" '$(AndroidEnableProfiledAot)' == 'True' ">True</AotAssemblies>
-	<AndroidAotMode Condition=" '$(AndroidUseInterpreter)' != 'False' ">Interpreter</AndroidAotMode>
+	<AndroidAotMode Condition=" '$(AotAssemblies)' != 'True' And '$(AndroidUseInterpreter)' == 'True' ">Interpreter</AndroidAotMode>
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' ">None</AndroidAotMode>
 	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' And '$(AndroidAotMode)' != 'None' And '$(AndroidAotMode)' != 'Interpreter' ">True</AotAssemblies>
@@ -444,6 +444,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_AAB"
       Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AndroidPackageFormat)' == 'aab' "
+  />
+  <AndroidWarning Code="XA0119"
+      ResourceName="XA0119_Interpreter"
+      Condition=" '$(AndroidUseInterpreter)' == 'True' And '$(AotAssemblies)' == 'True' "
   />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
