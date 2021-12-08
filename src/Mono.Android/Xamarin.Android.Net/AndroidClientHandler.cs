@@ -58,7 +58,7 @@ namespace Xamarin.Android.Net
 	/// system in <see cref="TrustedCerts"/> along with the self-signed certificate(s).</para>
 	/// </remarks>
 	[Obsolete("AndroidClientHandler has been deprecated. Use AndroidMessageHandler instead.")]
-	public class AndroidClientHandler : HttpClientHandler
+	public sealed class AndroidClientHandler : HttpClientHandler
 	{
 		internal const string LOG_APP = "monodroid-net";
 		private AndroidMessageHandler _underlyingHander;
@@ -190,7 +190,7 @@ namespace Xamarin.Android.Net
 			base.Dispose (disposing);
 		}
 
-		protected void AssertSelf ()
+		private void AssertSelf ()
 		{
 			if (!disposed)
 				return;
@@ -206,7 +206,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>Instance of IHostnameVerifier to be used for this HTTPS connection</returns>
 		/// <param name="connection">HTTPS connection object.</param>
-		protected virtual IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
+		public IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
 		{
 			return _underlyingHander.GetSSLHostnameVerifierInternal (connection);
 		}
@@ -223,12 +223,12 @@ namespace Xamarin.Android.Net
 			return await base.SendAsync (request, cancellationToken);
 		}
 
-		protected virtual async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
+		public async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
 		{
 			return await _underlyingHander.GetJavaProxyInternal (destination, cancellationToken);
 		}
 
-		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
+		public async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
 			await _underlyingHander.WriteRequestContentToOutputInternal (request, httpConnection, cancellationToken);
 		}
@@ -241,7 +241,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <param name="request">Request data</param>
 		/// <param name="conn">Pre-configured connection instance</param>
-		protected virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
+		public Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
 			return _underlyingHander.SetupRequestInternal (request, conn);
 		}
@@ -253,7 +253,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>The key store.</returns>
 		/// <param name="keyStore">Key store to configure.</param>
-		protected virtual KeyStore? ConfigureKeyStore (KeyStore? keyStore)
+		public KeyStore? ConfigureKeyStore (KeyStore? keyStore)
 		{
 			AssertSelf ();
 
@@ -269,7 +269,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>The key manager factory or <c>null</c>.</returns>
 		/// <param name="keyStore">Key store.</param>
-		protected virtual KeyManagerFactory? ConfigureKeyManagerFactory (KeyStore? keyStore)
+		public KeyManagerFactory? ConfigureKeyManagerFactory (KeyStore? keyStore)
 		{
 			AssertSelf ();
 
@@ -286,7 +286,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>The trust manager factory.</returns>
 		/// <param name="keyStore">Key store.</param>
-		protected virtual TrustManagerFactory? ConfigureTrustManagerFactory (KeyStore? keyStore)
+		public TrustManagerFactory? ConfigureTrustManagerFactory (KeyStore? keyStore)
 		{
 			AssertSelf ();
 
@@ -304,7 +304,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>Instance of SSLSocketFactory ready to use with the HTTPS connection.</returns>
 		/// <param name="connection">HTTPS connection to return socket factory for</param>
-		protected virtual SSLSocketFactory? ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
+		public SSLSocketFactory? ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
 		{
 			return _underlyingHander.ConfigureCustomSSLSocketFactoryInternal (connection);
 		}
@@ -313,12 +313,7 @@ namespace Xamarin.Android.Net
 		object GetUnderlyingHandler ()
 		{
 			var fieldName = "_nativeHandler";
-			var type = GetType ();
-			while (type != typeof (AndroidClientHandler)) {
-				type = type.BaseType;
-			}
-
-			var baseType = type.BaseType;
+			var baseType = GetType ().BaseType;
 			var field = baseType.GetField (fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 			if (field == null) {
 				throw new InvalidOperationException ($"Field '{fieldName}' is missing from type '{baseType}'.");
