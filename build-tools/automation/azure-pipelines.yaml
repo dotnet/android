@@ -158,7 +158,7 @@ stages:
   jobs:
   - job: win_build_test
     displayName: Build and Smoke Test
-    pool: $(VSEngWinVS2019)
+    pool: $(1ESWindowsPool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     steps:
@@ -278,7 +278,7 @@ stages:
 
   - job: win_dotnet_build_test
     displayName: Dotnet Build and Smoke Test
-    pool: $(VSEngWinVS2019)
+    pool: $(1ESWindowsPool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     steps:

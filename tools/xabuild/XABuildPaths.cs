@@ -162,9 +162,9 @@ namespace Xamarin.Android.Build
 					Path.Combine (programFiles, "MSBuild", "Microsoft"),
 				};
 				SearchPathsOS            = "windows";
-				string nuget             = Path.Combine (MSBuildPath, "Microsoft", "NuGet", "16.0");
+				string nuget             = Path.Combine (MSBuildPath, "Microsoft", "NuGet", "17.0");
 				if (!Directory.Exists (nuget)) {
-					nuget = Path.Combine (MSBuildPath, "Microsoft", "NuGet", "15.0");
+					nuget = Path.Combine (MSBuildPath, "Microsoft", "NuGet", "16.0");
 				}
 				NuGetProps               = Path.Combine (nuget, "Microsoft.NuGet.props");
 				NuGetTargets             = Path.Combine (nuget, "Microsoft.NuGet.targets");
