@@ -4,7 +4,7 @@
     <TargetFrameworks>net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
-    <NoWarn>8764</NoWarn>
+    <NoWarn>$(NoWarn);8764</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

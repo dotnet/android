@@ -1,5 +1,7 @@
 using System;
 
+#if NET
+
 namespace Java.Interop
 {
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Method,
@@ -14,3 +16,5 @@ namespace Java.Interop
 		public string [] TypeParameters { get; }
 	}
 }
+
+#endif  // NET

@@ -40,6 +40,9 @@ namespace generatortests
 			if (options.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				preprocessorSymbols.Add ("JAVA_INTEROP1");
 			}
+#if NET
+			preprocessorSymbols.Add ("NET");
+#endif  // NET
 
 			var parseOptions = new CSharpParseOptions (preprocessorSymbols:preprocessorSymbols);
 

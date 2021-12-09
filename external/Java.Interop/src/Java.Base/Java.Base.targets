@@ -1,7 +1,7 @@
 ﻿<Project>
 
   <PropertyGroup>
-    <GeneratorPath>$(ToolOutputFullPath)generator.dll</GeneratorPath>
+    <GeneratorPath>$(UtilityOutputFullPath)generator.dll</GeneratorPath>
   </PropertyGroup>
 
   <Target Name="_GetJavaBaseJmodPath">
@@ -17,7 +17,7 @@
       Outputs="$(IntermediateOutputPath)\mcw\api.xml">
     <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
-      <_ClassParse>"$(ToolOutputFullPath)class-parse.dll"</_ClassParse>
+      <_ClassParse>"$(UtilityOutputFullPath)class-parse.dll"</_ClassParse>
       <_Input>"$(_JavaBaseJmod)"</_Input>
       <_Output>"-o=$(IntermediateOutputPath)/mcw/api.xml"</_Output>
     </PropertyGroup>

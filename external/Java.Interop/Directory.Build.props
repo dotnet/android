@@ -91,6 +91,20 @@
     <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(Runtime) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
   </PropertyGroup>
 
+  <!--
+    When building on a bot w/ VS2019:
+
+      warning CS8032: An instance of analyzer System.Text.Json.SourceGeneration.JsonSourceGenerator cannot be created from
+
+    however, with `$(TreatWarningsAsErrors)`=True, this becomes an error,
+    meaning we can't build on VS2019.
+
+    Ignore CS8032 so that we can build on VS2019.
+    -->
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS8032</NoWarn>
+  </PropertyGroup>
+
   <!-- The net6.0 versions of these are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
   <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
