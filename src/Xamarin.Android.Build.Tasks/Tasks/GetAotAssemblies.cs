@@ -42,9 +42,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			(_, string outdir, string mtriple, AndroidTargetArch arch) = GetAbiSettings (abi);
-			string toolPrefix = GetToolPrefix (ndk, arch, out int level);
+			Triple = mtriple;
+			ToolPrefix = GetToolPrefix (ndk, arch, out int level);
 
-			var aotOptions = GetAotOptions (ndk, arch, level, outdir, mtriple, toolPrefix);
+			GetAotOptions (ndk, arch, level, outdir, ToolPrefix);
 
 			var aotProfiles = new StringBuilder ();
 			if (Profiles != null && Profiles.Length > 0) {
@@ -56,15 +57,16 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			var arguments = string.Join (",", aotOptions);
 			foreach (var assembly in ResolvedAssemblies) {
-				var temp = Path.GetFullPath (Path.Combine (outdir, Path.GetFileNameWithoutExtension (assembly.ItemSpec)));
+				var temp = Path.Combine (outdir, Path.GetFileNameWithoutExtension (assembly.ItemSpec));
 				Directory.CreateDirectory (temp);
 				if (Path.GetFileNameWithoutExtension (assembly.ItemSpec) == TargetName) {
-					LogDebugMessage ($"Not using profile(s) for main assembly: {assembly.ItemSpec}");
-					assembly.SetMetadata ("AotArguments", $"{arguments},temp-path={temp}");
+					if (Profiles != null && Profiles.Length > 0) {
+						LogDebugMessage ($"Not using profile(s) for main assembly: {assembly.ItemSpec}");
+					}
+					assembly.SetMetadata ("AotArguments", $"asmwriter,temp-path={temp}");
 				} else {
-					assembly.SetMetadata ("AotArguments", $"{arguments},temp-path={temp}{aotProfiles}");
+					assembly.SetMetadata ("AotArguments", $"asmwriter,temp-path={temp}{aotProfiles}");
 				}
 			}
 

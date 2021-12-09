@@ -26,10 +26,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (!IsWindows)
 				return;
-			// Use standard NDK directory for now
-			// See: https://github.com/dotnet/runtime/issues/56163
-			if (Builder.UseDotNet)
-				return;
 
 			var sdkPath = AndroidSdkPath;
 			var ndkPath = AndroidNdkPath;
@@ -48,10 +44,6 @@ namespace Xamarin.Android.Build.Tests
 		public void TearDown ()
 		{
 			if (!IsWindows)
-				return;
-			// Use standard NDK directory for now
-			// See: https://github.com/dotnet/runtime/issues/56163
-			if (Builder.UseDotNet)
 				return;
 			Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", "");
 			Environment.SetEnvironmentVariable ("TEST_ANDROID_NDK_PATH", "");
@@ -169,7 +161,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
-		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
 		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult, bool usesAssemblyBlobs)
 		{
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}_{3}", supportedAbis, enableLLVM, expectedResult, usesAssemblyBlobs));
@@ -203,7 +194,7 @@ namespace Xamarin.Android.Build.Tests
 				if (!expectedResult)
 					return;
 				//NOTE: Windows has shortened paths such as: C:\Users\myuser\ANDROI~3\ndk\PLATFO~1\AN3971~1\arch-x86\usr\lib\libc.so
-				if (checkMinLlvmPath && !IsWindows) {
+				if (checkMinLlvmPath && !IsWindows && !Builder.UseDotNet) {
 					Xamarin.Android.Tasks.NdkTools ndk = Xamarin.Android.Tasks.NdkTools.Create (AndroidNdkPath);
 					bool ndk22OrNewer = ndk.Version.Main.Major >= 22;
 
@@ -218,12 +209,13 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
-					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"bundles", abi, "libmonodroid_bundle_app.so");
-					Assert.IsFalse (File.Exists (libapp), abi + " libmonodroid_bundle_app.so should not exist");
-					var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"aot", abi, "libaot-UnnamedProject.dll.so");
-					Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
+					var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+					var libapp = Path.Combine (intermediate, "bundles", abi, "libmonodroid_bundle_app.so");
+					FileAssert.DoesNotExist (libapp);
+					var aotNativeLibrary = Builder.UseDotNet ?
+						Path.Combine (intermediate, AbiUtils.AbiToRuntimeIdentifier (abi), "aot", "UnnamedProject.dll.so") :
+						Path.Combine (intermediate, "aot", abi, "libaot-UnnamedProject.dll.so");
+					FileAssert.Exists (aotNativeLibrary);
 					var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
@@ -248,7 +240,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor"), Category ("MkBundle")]
-		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
 		public void BuildAotApplicationAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult, bool usesAssemblyBlobs)
 		{
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplicationAndBundle AndÜmläüts_{0}_{1}_{2}_{3}", supportedAbis, enableLLVM, expectedResult, usesAssemblyBlobs));
@@ -449,10 +440,6 @@ namespace "+ libName + @" {
 		[Category ("LLVM")]
 		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode)
 		{
-			if (Builder.UseDotNet) {
-				Assert.Ignore ("https://github.com/dotnet/runtime/issues/57800");
-			}
-
 			AssertAotModeSupported (androidAotMode);
 
 			var proj = new XamarinAndroidApplicationProject () {
