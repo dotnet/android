@@ -694,8 +694,8 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			NdkTools ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: false, log: Log);
-			if (Log.HasLoggedErrors) {
+			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
+			if (ndk == null) {
 				return; // NdkTools.Create will log appropriate error
 			}
 

@@ -57,8 +57,8 @@ namespace Xamarin.Android.Tasks
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			NdkTools ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: EnableLLVM, log: Log);
-			if (Log.HasLoggedErrors) {
+			NdkTools? ndk = NdkTools.Create (AndroidNdkDirectory, Log);
+			if (ndk == null) {
 				return; // NdkTools.Create will log appropriate error
 			}
 

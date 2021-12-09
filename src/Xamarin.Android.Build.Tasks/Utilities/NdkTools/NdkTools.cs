@@ -60,38 +60,37 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		protected NdkTools (NdkVersion version, TaskLoggingHelper? log = null)
-		{
-			Log = log;
-			Version = version;
-		}
-
-		protected NdkTools (string androidNdkPath, NdkVersion version, TaskLoggingHelper? log = null) : this (version, log)
+		protected NdkTools (string androidNdkPath, NdkVersion version, TaskLoggingHelper? log = null)
 		{
 			if (String.IsNullOrEmpty (androidNdkPath)) {
 				throw new ArgumentException ("must be a non-empty string", nameof (androidNdkPath));
 			}
 
+			Log = log;
 			NdkRootDirectory = androidNdkPath;
+			Version = version;
 		}
 
-		public static NdkTools Create (string androidNdkPath, bool logErrors = true, TaskLoggingHelper? log = null)
+		public static NdkTools? Create (string androidNdkPath, TaskLoggingHelper? log = null, string? osBinPath = null)
 		{
-			if (String.IsNullOrEmpty (androidNdkPath) || !Directory.Exists (androidNdkPath)) {
-				if (logErrors)
-					log?.LogCodedError ("XA5104", Properties.Resources.XA5104);
-				return new NullNdkTools (log);
+			if (String.IsNullOrEmpty (androidNdkPath)) {
+				log?.LogCodedError ("XA5104", Properties.Resources.XA5104);
+				return null;
 			}
 
-			NdkVersion? version = ReadVersion (androidNdkPath, logErrors, log);
+			if (!Directory.Exists (androidNdkPath)) {
+				log?.LogCodedError ("XA5104", Properties.Resources.XA5104);
+				return null;
+			}
+
+			NdkVersion? version = ReadVersion (androidNdkPath, log);
 			if (version == null) {
-				return new NullNdkTools (log);
+				return null;
 			}
 
 			if (version.Main.Major < 14) {
 				if (log != null) {
-					if (logErrors)
-						log.LogCodedError ("XA5104", Properties.Resources.XA5104);
+					log.LogCodedError ("XA5104", Properties.Resources.XA5104);
 					log.LogDebugMessage ($"Unsupported NDK version {version}");
 				}
 			} else if (version.Main.Major < 16) {
@@ -379,13 +378,12 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		static NdkVersion? ReadVersion (string androidNdkPath, bool logErrors = true, TaskLoggingHelper? log = null)
+		static NdkVersion? ReadVersion (string androidNdkPath, TaskLoggingHelper? log = null)
 		{
 			string sourcePropertiesPath = Path.Combine (androidNdkPath, "source.properties");
 			if (!File.Exists (sourcePropertiesPath)) {
 				if (log != null) {
-					if (logErrors)
-						log.LogCodedError ("XA5104", Properties.Resources.XA5104);
+					log.LogCodedError ("XA5104", Properties.Resources.XA5104);
 					log.LogDebugMessage ("Could not read NDK version information, '{sourcePropertiesPath}' not found.");
 				}
 				return null;
@@ -402,8 +400,7 @@ namespace Xamarin.Android.Tasks
 				string[] parts = line.Split (splitChars, 2);
 				if (parts.Length != 2) {
 					if (log != null) {
-						if (logErrors)
-							log.LogCodedError ("XA5104", Properties.Resources.XA5104);
+						log.LogCodedError ("XA5104", Properties.Resources.XA5104);
 						log.LogDebugMessage ($"Invalid NDK version format in '{sourcePropertiesPath}'.");
 					}
 					return null;

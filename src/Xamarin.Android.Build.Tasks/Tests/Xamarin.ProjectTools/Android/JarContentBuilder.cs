@@ -30,6 +30,8 @@ namespace Xamarin.ProjectTools
 				}
 			};
 
+			var sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
+			var ndkPath = AndroidSdkResolver.GetAndroidNdkPath ();
 			var jdkPath = AndroidSdkResolver.GetJavaSdkPath ();
 			JavacFullPath = Path.Combine (jdkPath, "bin", "javac");
 			JarFullPath = Path.Combine (jdkPath, "bin", "jar");

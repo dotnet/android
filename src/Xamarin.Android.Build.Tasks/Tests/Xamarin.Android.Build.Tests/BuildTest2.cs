@@ -1003,7 +1003,6 @@ namespace UnamedProject
 		public void BuildMkBundleApplicationRelease ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true, BundleAssemblies = true };
-			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			using (var b = CreateApkBuilder ("temp/BuildMkBundleApplicationRelease", false)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
@@ -1030,7 +1029,6 @@ namespace UnamedProject
 		public void BuildMkBundleApplicationReleaseAllAbi ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true, BundleAssemblies = true };
-			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ("temp/BuildMkBundleApplicationReleaseAllAbi", false)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
