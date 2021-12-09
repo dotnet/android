@@ -52,6 +52,7 @@ namespace Xamarin.ProjectTools
 				p.StartInfo.UseShellExecute = false;
 				p.StartInfo.RedirectStandardOutput = true;
 				p.StartInfo.RedirectStandardError = true;
+				p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
 				// Ensure any variable alteration from DotNetXamarinProject.Construct is cleared.
 				if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
 					p.StartInfo.SetEnvironmentVariable ("MSBUILD_EXE_PATH", null);

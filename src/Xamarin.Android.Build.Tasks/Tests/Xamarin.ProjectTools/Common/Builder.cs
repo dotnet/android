@@ -347,6 +347,9 @@ namespace Xamarin.ProjectTools
 			if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
 				psi.SetEnvironmentVariable ("MSBUILD_EXE_PATH", null);
 			}
+			if (Builder.UseDotNet) {
+				psi.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+			}
 
 			psi.Arguments = args.ToString ();
 

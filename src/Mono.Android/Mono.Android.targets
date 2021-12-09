@@ -263,6 +263,7 @@
         LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
         TargetImplementationPath="$(OutputPath)"
         ApiCompatibilityPath="$(ApiCompatibilityDir)"
+        TargetFramework="$(TargetFramework)"
     />
     <Touch
         Files="$(IntermediateOutputPath)CheckApiCompatibility.stamp"
