@@ -449,6 +449,10 @@ namespace "+ libName + @" {
 		[Category ("LLVM")]
 		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode)
 		{
+			if (Builder.UseDotNet) {
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/57800");
+			}
+
 			AssertAotModeSupported (androidAotMode);
 
 			var proj = new XamarinAndroidApplicationProject () {
