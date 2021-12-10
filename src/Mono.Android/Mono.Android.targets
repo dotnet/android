@@ -286,16 +286,9 @@
       <_Binlog>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateExternalDocumentation-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).binlog</_Binlog>
     </PropertyGroup>
     <Exec
-        Condition=" '$(HostOS)' != 'Windows' "
-        Command="msbuild /restore /p:Configuration=$(Configuration) /p:IncludeAndroidJavadoc=True /bl:$(_Binlog)"
+        Command="dotnet build -v:n -c $(Configuration) -p:IncludeAndroidJavadoc=True -bl:$(_Binlog)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
-    />
-    <MSBuild
-        Condition=" '$(HostOS)' == 'Windows' "
-        Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
-        Properties="IncludeAndroidJavadoc=True"
-        Targets="Restore;Build"
     />
   </Target>
 
