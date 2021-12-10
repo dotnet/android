@@ -480,19 +480,19 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package Xamarin_GooglePlayServices_Base = new Package {
 			Id = "Xamarin.GooglePlayServices.Base",
-			Version = "117.1.0",
+			Version = "117.6.0.2",
 		};
 		public static Package Xamarin_GooglePlayServices_Basement = new Package {
 			Id = "Xamarin.GooglePlayServices.Basement",
-			Version = "117.1.0",
+			Version = "117.6.0.3",
 		};
 		public static Package Xamarin_GooglePlayServices_Tasks = new Package {
 			Id = "Xamarin.GooglePlayServices.Tasks",
-			Version = "117.0.0",
+			Version = "117.2.1.2",
 		};
 		public static Package Xamarin_GooglePlayServices_Maps = new Package {
 			Id = "Xamarin.GooglePlayServices.Maps",
-			Version = "117.0.0",
+			Version = "117.0.1.2",
 		};
 		public static Package Acr_UserDialogs = new Package {
 			Id = "Acr.UserDialogs",

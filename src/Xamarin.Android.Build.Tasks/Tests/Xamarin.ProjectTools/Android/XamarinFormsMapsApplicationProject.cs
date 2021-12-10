@@ -48,7 +48,7 @@ namespace Xamarin.ProjectTools
       ""client_info"": {
         ""mobilesdk_app_id"": ""1:1041063143217:android:ffbe6976403db935"",
         ""android_client_info"": {
-          ""package_name"": ""com.xamarin.sample""
+          ""package_name"": """ + packageName + @"""
         }
       },
       ""oauth_client"": [
@@ -56,7 +56,7 @@ namespace Xamarin.ProjectTools
           ""client_id"": ""1041063143217-rve97omgqivvs3qcne1ljso137k3t6po.apps.googleusercontent.com"",
           ""client_type"": 1,
           ""android_info"": {
-            ""package_name"": ""com.xamarin.sample"",
+            ""package_name"": """ + packageName + @""",
             ""certificate_hash"": ""84949BBD3F34C8290A55AC9B66AD0A701EBA67AC""
           }
         },
