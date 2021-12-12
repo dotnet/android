@@ -929,11 +929,10 @@ namespace Xamarin.Android.NetTests {
 		public void DisallowAutoRedirect ()
 		{
 			var listener = CreateListener (l => {
-					var request = l.Request;
-					var response = l.Response;
-
-					response.StatusCode = (int)HttpStatusCode.Moved;
-					response.RedirectLocation = "http://xamarin.com/";
+					using (var response = l.Response)
+					{
+						response.Redirect("http://xamarin.com/");
+					}
 				});
 
 			using (listener) {
