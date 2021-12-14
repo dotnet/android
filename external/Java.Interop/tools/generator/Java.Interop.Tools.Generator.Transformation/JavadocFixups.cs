@@ -100,7 +100,7 @@ namespace Java.Interop.Tools.Generator.Transformation
 			return typeJavadoc
 				.Elements (elementName)
 				.Where (e => jniSignature == (string) e.Attribute ("jni-signature") &&
-						name == null ? true : name == (string) e.Attribute ("name"))
+						(name == null ? true : name == (string) e.Attribute ("name")))
 				.Elements ("javadoc")
 				.FirstOrDefault ();
 		}
