@@ -406,14 +406,14 @@ namespace Xamarin.Android.Build.Tests
 			return referencesDirectory;
 		}
 
-		protected string CreateFauxJavaSdkDirectory (string path, string javaVersion, out string javaExe, out string javacExe)
+		protected string CreateFauxJavaSdkDirectory (string path, string javaVersion, out string javaExe, out string javacExe, string[] extraPrefix = null)
 		{
 			javaExe = IsWindows ? "java.cmd" : "java";
 			javacExe  = IsWindows ? "javac.cmd" : "javac";
 
 			var javaPath = Path.Combine (Root, path);
 
-			CreateFauxJdk (javaPath, javaVersion, javaVersion, javaVersion);
+			CreateFauxJdk (javaPath, javaVersion, javaVersion, javaVersion, extraPrefix);
 
 			var jarSigner = IsWindows ? "jarsigner.exe" : "jarsigner";
 			var javaBinPath = Path.Combine (javaPath, "bin");
@@ -423,7 +423,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		// https://github.com/xamarin/xamarin-android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L60-L100
-		void CreateFauxJdk (string dir, string releaseVersion, string releaseBuildNumber, string javaVersion)
+		void CreateFauxJdk (string dir, string releaseVersion, string releaseBuildNumber, string javaVersion, string[] extraPrefix)
 		{
 			Directory.CreateDirectory (dir);
 
@@ -443,10 +443,15 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (jli);
 			Directory.CreateDirectory (jre);
 
+			string prefix = extraPrefix == null
+				? ""
+				: string.Join ("",
+					extraPrefix.Select (e => "echo " + e + Environment.NewLine));
+
 			string quote = IsWindows ? "" : "\"";
 			string java = IsWindows
-				? $"echo java version \"{javaVersion}\"{Environment.NewLine}"
-				: $"echo java version '\"{javaVersion}\"'{Environment.NewLine}";
+				? prefix + $"echo java version \"{javaVersion}\"{Environment.NewLine}"
+				: prefix + $"echo java version '\"{javaVersion}\"'{Environment.NewLine}";
 			java = java +
 				$"echo Property settings:{Environment.NewLine}" +
 				$"echo {quote}    java.home = {dir}{quote}{Environment.NewLine}" +
@@ -457,6 +462,7 @@ namespace Xamarin.Android.Build.Tests
 				$"echo {quote}        .{quote}{Environment.NewLine}";
 
 			string javac =
+				prefix +
 				$"echo javac {javaVersion}{Environment.NewLine}";
 
 			CreateShellScript (Path.Combine (bin, "jar"), "");

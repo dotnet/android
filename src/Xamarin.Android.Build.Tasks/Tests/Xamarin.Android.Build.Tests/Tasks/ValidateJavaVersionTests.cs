@@ -15,6 +15,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		string path;
 		List<BuildErrorEventArgs> errors;
+		List<BuildWarningEventArgs> warnings;
 		List<BuildMessageEventArgs> messages;
 		MockBuildEngine engine;
 
@@ -24,6 +25,7 @@ namespace Xamarin.Android.Build.Tests
 			path = Path.Combine ("temp", TestName);
 			engine = new MockBuildEngine (TestContext.Out,
 				errors: errors = new List<BuildErrorEventArgs> (),
+				warnings: warnings = new List<BuildWarningEventArgs> (),
 				messages: messages = new List<BuildMessageEventArgs> ());
 
 			//Setup statics on MonoAndroidHelper
@@ -77,6 +79,29 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (
 					errors.Any (e => e.Message.StartsWith ($"Java SDK 1.8 or above is required when using Android SDK Build-Tools {validateJavaVersion.AndroidSdkBuildToolsVersion}.", StringComparison.OrdinalIgnoreCase)),
 					"Should get error about build-tools=27.0.0");
+		}
+
+		[Test]
+		public void ExtraJavacOutputIsIgnored ()
+		{
+			var extraPrefix = new[]{
+				"Picked up JAVA_TOOL_OPTIONS: -Dcom.sun.jndi.ldap.object.trustURLCodebase=false -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true",
+				"Picked up _JAVA_OPTIONS: -Dcom.sun.jndi.ldap.object.trustURLCodebase=false -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true",
+			};
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "11.0.12", out string javaExe, out string javacExe, extraPrefix);
+			var validateJavaVersion = new ValidateJavaVersion {
+				BuildEngine                 = engine,
+				AndroidSdkBuildToolsVersion = "27.0.0",
+				JavaSdkPath                 = javaPath,
+				JavaToolExe                 = javaExe,
+				JavacToolExe                = javacExe,
+				LatestSupportedJavaVersion  = "11.99.0",
+				MinimumSupportedJavaVersion = "11.0.0",
+			};
+			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
+			Assert.IsFalse (
+					warnings.Any (e => e.Code == "XA0033"),
+					$"Want no XA0033 warnings! Got: ```{string.Join (Environment.NewLine, warnings.Select (m => $"warning {m.Code}: {m.Message}"))}```");
 		}
 
 		[Test]
