@@ -39,9 +39,9 @@ namespace MonoDroid.Generation
 			var desc                        = GetMemberDescription (element);
 			string declaringJniType         = desc.DeclaringJniType;
 			string declaringMemberName      = desc.DeclaringMemberName;
-			var declaringMemberJniSignature = desc.DeclaringMemberJniSignature;
+			var declaringMemberParamString  = desc.DeclaringMemberParameterString;
 
-			var extras                      = GetExtra (element, style, declaringJniType, declaringMemberName, declaringMemberJniSignature, appendCopyrightExtra);
+			var extras                      = GetExtra (element, style, declaringJniType, declaringMemberName, declaringMemberParamString, appendCopyrightExtra);
 			XElement[] extra                = extras.Extras;
 			XElement[] copyright            = extras.Copyright;
 
@@ -54,13 +54,13 @@ namespace MonoDroid.Generation
 				Javadoc             = javadoc,
 				MemberDescription   = declaringMemberName == null
 					? declaringJniType
-					: $"{declaringJniType}.{declaringMemberName}.{declaringMemberJniSignature}",
+					: $"{declaringJniType}.{declaringMemberName}{declaringMemberParamString}",
 				XmldocStyle         = style,
 			};
 			return info;
 		}
 
-		static (string DeclaringJniType, string DeclaringMemberName, string DeclaringMemberJniSignature) GetMemberDescription (XElement element)
+		static (string DeclaringJniType, string DeclaringMemberName, string DeclaringMemberParameterString) GetMemberDescription (XElement element)
 		{
 			bool isType     = element.Name.LocalName == "class" ||
 				element.Name.LocalName == "interface";
@@ -76,14 +76,26 @@ namespace MonoDroid.Generation
 			string declaringMemberName          = isType
 				? null
 				: (string) element.Attribute ("name") ?? declaringJniType.Substring (declaringJniType.LastIndexOf ('/')+1);
+
 			string declaringMemberJniSignature  = isType
 				? null
 				: (string) element.Attribute ("jni-signature");
 
-			return (declaringJniType, declaringMemberName, declaringMemberJniSignature);
+
+			string declaringMemberParameterString = null;
+			if (!isType && (declaringMemberJniSignature?.StartsWith ("(", StringComparison.Ordinal) ?? false)) {
+				var parameterTypes = element.Elements ("parameter")?.Select (e => e.Attribute ("type")?.Value)?.ToList ();
+				if (parameterTypes?.Any () ?? false) {
+					declaringMemberParameterString = $"({string.Join (", ", parameterTypes)})";
+				} else {
+					declaringMemberParameterString = "()";
+				}
+			}
+
+			return (declaringJniType, declaringMemberName, declaringMemberParameterString);
 		}
 
-		static (XElement[] Extras, XElement[] Copyright) GetExtra (XElement element, XmldocStyle style, string declaringJniType, string declaringMemberName, string declaringMemberJniSignature, bool appendCopyrightExtra)
+		static (XElement[] Extras, XElement[] Copyright) GetExtra (XElement element, XmldocStyle style, string declaringJniType, string declaringMemberName, string declaringMemberParameterString, bool appendCopyrightExtra)
 		{
 			if (!style.HasFlag (XmldocStyle.IntelliSenseAndExtraRemarks))
 				return (null, null);
@@ -107,7 +119,7 @@ namespace MonoDroid.Generation
 
 				XElement docLink	= null;
 				if (!string.IsNullOrEmpty (urlPrefix)) {
-					docLink         = CreateDocLinkUrl (kind, urlPrefix, declaringJniType, declaringMemberName, declaringMemberJniSignature);
+					docLink         = CreateDocLinkUrl (kind, urlPrefix, declaringJniType, declaringMemberName, declaringMemberParameterString);
 				}
 				extra           = new List<XElement> ();
 				extra.Add (docLink);
@@ -217,18 +229,17 @@ namespace MonoDroid.Generation
 			[ApiLinkStyle.DeveloperAndroidComReference_2020Nov] = CreateAndroidDocLinkUri,
 		};
 
-		static XElement CreateDocLinkUrl (ApiLinkStyle style, string prefix, string declaringJniType, string declaringMemberName, string declaringMemberJniSignature)
+		static XElement CreateDocLinkUrl (ApiLinkStyle style, string prefix, string declaringJniType, string declaringMemberName, string declaringMemberParameterString)
 		{
-			;
 			if (style == ApiLinkStyle.None || prefix == null || declaringJniType == null)
 				return null;
 			if (UrlCreators.TryGetValue (style, out var creator)) {
-				return creator (prefix, declaringJniType, declaringMemberName, declaringMemberJniSignature);
+				return creator (prefix, declaringJniType, declaringMemberName, declaringMemberParameterString);
 			}
 			return null;
 		}
 
-		static XElement CreateAndroidDocLinkUri (string prefix, string declaringJniType, string declaringMemberName, string declaringMemberJniSignature)
+		static XElement CreateAndroidDocLinkUri (string prefix, string declaringJniType, string declaringMemberName, string declaringMemberParameterString)
 		{
 			// URL is:
 			//  * {prefix}
@@ -236,7 +247,8 @@ namespace MonoDroid.Generation
 			//  * when `declaringJniMemberName` != null, `#{declaringJniMemberName}`
 			//  * for methods & constructors, a `(`, the arguments in *Java* syntax -- separated by `, ` -- and `)`
 			//
-			// Example: https://developer.android.com/reference/android/app/Application#registerOnProvideAssistDataListener(android.app.Application.OnProvideAssistDataListener)
+			// Example: "https://developer.android.com/reference/android/app/Application#registerOnProvideAssistDataListener(android.app.Application.OnProvideAssistDataListener)"
+			// Example: "https://developer.android.com/reference/android/animation/ObjectAnimator#ofFloat(T,%20android.util.Property%3CT,%20java.lang.Float%3E,%20float...)"
 
 			var java    = new StringBuilder (declaringJniType)
 				.Replace ("/", ".")
@@ -250,13 +262,9 @@ namespace MonoDroid.Generation
 			if (declaringMemberName != null) {
 				java.Append (".").Append (declaringMemberName);
 				url.Append ("#").Append (declaringMemberName);
-				if (declaringMemberJniSignature?.StartsWith ("(", StringComparison.Ordinal) ?? false) {
-					java.Append ("(");
-					url.Append ("(");
-					AppendJavaParameterTypes (java, declaringMemberJniSignature);
-					AppendJavaParameterTypes (url, declaringMemberJniSignature);
-					java.Append (")");
-					url.Append (")");
+				if (declaringMemberParameterString != null) {
+					java.Append (declaringMemberParameterString);
+					url.Append (declaringMemberParameterString);
 				}
 			}
 			var format  = new XElement ("format",
@@ -270,85 +278,5 @@ namespace MonoDroid.Generation
 			return new XElement ("para", format);
 		}
 
-		static StringBuilder AppendJavaParameterTypes (StringBuilder builder, string declaringMemberJniSignature)
-		{
-			if (string.IsNullOrEmpty (declaringMemberJniSignature) || declaringMemberJniSignature [0] != '(')
-				return builder;
-
-			int startLen = builder.Length;
-
-			for (int i = 1; i < declaringMemberJniSignature.Length; ++i) {
-				if (declaringMemberJniSignature [i] == ')')
-					break;
-				AppendComma ();
-				AppendJavaParameterType (builder, declaringMemberJniSignature, ref i);
-			}
-
-			return builder;
-
-			void AppendComma ()
-			{
-				if (startLen == builder.Length)
-					return;
-				builder.Append (", ");
-			}
-		}
-
-		static void AppendJavaParameterType (StringBuilder builder, string declaringMemberJniSignature, ref int i)
-		{
-			switch (declaringMemberJniSignature [i]) {
-				case '[': {
-					++i;
-					AppendJavaParameterType (builder, declaringMemberJniSignature, ref i);
-					builder.Append ("[]");
-					break;
-				}
-				case 'B': {
-					builder.Append ("byte");
-					break;
-				}
-				case 'C': {
-					builder.Append ("char");
-					break;
-				}
-				case 'D': {
-					builder.Append ("double");
-					break;
-				}
-				case 'F': {
-					builder.Append ("float");
-					break;
-				}
-				case 'I': {
-					builder.Append ("int");
-					break;
-				}
-				case 'J': {
-					builder.Append ("long");
-					break;
-				}
-				case 'L': {
-					int end = declaringMemberJniSignature.IndexOf (';', i);
-					if (end < 0)
-						throw new InvalidOperationException ($"INTERNAL ERROR: Invalid JNI signature '{declaringMemberJniSignature}': no ';' to end 'L' at index {i}!");
-					var type    = declaringMemberJniSignature.Substring (i+1, end - i - 1)
-						.Replace ('/', '.')
-						.Replace ('$', '.');
-					builder.Append (type);
-					i           = end;
-					break;
-				}
-				case 'S': {
-					builder.Append ("short");
-					break;
-				}
-				case 'Z': {
-					builder.Append ("boolean");
-					break;
-				}
-				default:
-					throw new NotSupportedException ($"INTERNAL ERROR: Don't know what to do with '{declaringMemberJniSignature [i]}' in '{declaringMemberJniSignature}'!");
-			}
-		}
 	}
 }
