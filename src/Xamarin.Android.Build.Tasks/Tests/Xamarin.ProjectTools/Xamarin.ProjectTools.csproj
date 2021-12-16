@@ -12,6 +12,7 @@
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
   <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
+    <Compile Include="..\..\..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
     <EmbeddedResource Include="Resources\**\*" />
   </ItemGroup>
   <ItemGroup>
