@@ -527,14 +527,13 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // Xamarin.Build.Download needs updated $(TargetFramework) checks
 		public void ExtraAaptManifest ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nCrashlytics.Crashlytics.HandleManagedExceptions();");
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Crashlytics_2_9_4);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Fabric_1_4_3);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				builder.Target = "Restore";
 				Assert.IsTrue (builder.Build (proj), "Restore should have succeeded.");
@@ -1661,7 +1660,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				},
 				PackageReferences = {
 					KnownPackages.Acr_UserDialogs,
-					KnownPackages.Xamarin_Build_Download,
+					KnownPackages.Xamarin_Build_Download_0_4_11,
 				}
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
