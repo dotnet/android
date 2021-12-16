@@ -3,10 +3,12 @@ name: Xamarin.Android.Tools $(Rev:r)
 trigger:
   - main
   - d16-*
+  - d17-*
 
 pr:
   - main
   - d16-*
+  - d17-*
 
 # Global variables
 variables:
