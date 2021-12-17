@@ -1099,41 +1099,41 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
-	[TestFixture]
-	public class AndroidMessageHandlerIntegrationTests : HttpClientIntegrationTestBase
-	{
-		protected override AndroidHandlerSettingsAdapter CreateHandler ()
-		{
-			return new AndroidMessageHandlerAdapter (new Xamarin.Android.Net.AndroidMessageHandler ());
-		}
+	// [TestFixture]
+	// public class AndroidMessageHandlerIntegrationTests : HttpClientIntegrationTestBase
+	// {
+	// 	protected override AndroidHandlerSettingsAdapter CreateHandler ()
+	// 	{
+	// 		return new AndroidMessageHandlerAdapter (new Xamarin.Android.Net.AndroidMessageHandler ());
+	// 	}
 
-		private class AndroidMessageHandlerAdapter : AndroidHandlerSettingsAdapter
-		{
-			private Xamarin.Android.Net.AndroidMessageHandler _handler;
+	// 	private class AndroidMessageHandlerAdapter : AndroidHandlerSettingsAdapter
+	// 	{
+	// 		private Xamarin.Android.Net.AndroidMessageHandler _handler;
 
-			public AndroidMessageHandlerAdapter (Xamarin.Android.Net.AndroidMessageHandler handler)
-			{
-				_handler = handler;
-			}
+	// 		public AndroidMessageHandlerAdapter (Xamarin.Android.Net.AndroidMessageHandler handler)
+	// 		{
+	// 			_handler = handler;
+	// 		}
 
-			protected override HttpMessageHandler Unwrap()
-				=> _handler;
+	// 		protected override HttpMessageHandler Unwrap()
+	// 			=> _handler;
 
-			public override void Dispose ()
-			{
-				_handler.Dispose();
-			}
+	// 		public override void Dispose ()
+	// 		{
+	// 			_handler.Dispose();
+	// 		}
 
-			public override bool UseProxy { set => _handler.UseProxy = value; }
-			public override IWebProxy? Proxy { set => _handler.Proxy = value; }
-			public override bool AllowAutoRedirect { set => _handler.AllowAutoRedirect = value; }
-			public override DecompressionMethods AutomaticDecompression { set => _handler.AutomaticDecompression = value; }
-			public override int MaxAutomaticRedirections { set => _handler.MaxAutomaticRedirections = value; }
-			public override int MaxRequestContentBufferSize { set { /* no-op */ } }
-			public override bool PreAuthenticate { set => _handler.PreAuthenticate = value; }
-			public override CookieContainer CookieContainer => _handler.CookieContainer;
-			public override bool UseCookies { set => _handler.UseCookies = value; }
-			public override bool UseDefaultCredentials { set => _handler.Credentials = value ? CredentialCache.DefaultCredentials : null; }
-		}
-	}
+	// 		public override bool UseProxy { set => _handler.UseProxy = value; }
+	// 		public override IWebProxy? Proxy { set => _handler.Proxy = value; }
+	// 		public override bool AllowAutoRedirect { set => _handler.AllowAutoRedirect = value; }
+	// 		public override DecompressionMethods AutomaticDecompression { set => _handler.AutomaticDecompression = value; }
+	// 		public override int MaxAutomaticRedirections { set => _handler.MaxAutomaticRedirections = value; }
+	// 		public override int MaxRequestContentBufferSize { set { /* no-op */ } }
+	// 		public override bool PreAuthenticate { set => _handler.PreAuthenticate = value; }
+	// 		public override CookieContainer CookieContainer => _handler.CookieContainer;
+	// 		public override bool UseCookies { set => _handler.UseCookies = value; }
+	// 		public override bool UseDefaultCredentials { set => _handler.Credentials = value ? CredentialCache.DefaultCredentials : null; }
+	// 	}
+	// }
 }
