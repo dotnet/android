@@ -450,23 +450,23 @@ namespace Xamarin.ProjectTools
 				}
 			}
 		};
-		public static Package Xamarin_Android_Crashlytics_2_9_4 = new Package {
+		public static Package Xamarin_Android_Crashlytics = new Package {
 			Id = "Xamarin.Android.Crashlytics",
-			Version = "2.9.4",
+			Version = "2.9.4.4",
 			TargetFramework = "MonoAndroid60",
 			References = {
 				new BuildItem.Reference("Xamarin.Android.Crashlytics") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Crashlytics.2.9.4\\lib\\MonoAndroid60\\Xamarin.Android.Crashlytics.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Crashlytics.2.9.4.4\\lib\\MonoAndroid60\\Xamarin.Android.Crashlytics.dll"
 				}
 			}
 		};
-		public static Package Xamarin_Android_Fabric_1_4_3 = new Package {
+		public static Package Xamarin_Android_Fabric = new Package {
 			Id = "Xamarin.Android.Fabric",
-			Version = "1.4.3",
+			Version = "1.4.3.4",
 			TargetFramework = "MonoAndroid60",
 			References = {
 				new BuildItem.Reference("Xamarin.Android.Fabric") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Fabric.1.4.3\\lib\\MonoAndroid60\\Xamarin.Android.Fabric.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Fabric.1.4.3.4\\lib\\MonoAndroid60\\Xamarin.Android.Fabric.dll"
 				}
 			}
 		};

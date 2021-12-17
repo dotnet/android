@@ -532,8 +532,8 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nCrashlytics.Crashlytics.HandleManagedExceptions();");
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Crashlytics_2_9_4);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Fabric_1_4_3);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Fabric);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download);
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				builder.Target = "Restore";
 				Assert.IsTrue (builder.Build (proj), "Restore should have succeeded.");
