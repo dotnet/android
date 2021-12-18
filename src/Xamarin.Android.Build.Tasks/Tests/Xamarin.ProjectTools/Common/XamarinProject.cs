@@ -388,8 +388,6 @@ $@"<Project>
 				RedirectStandardError = true,
 				RedirectStandardOutput = true,
 			};
-			//TODO: possibly remove this later?
-			psi.SetEnvironmentVariable ("MONO_LOG_LEVEL", "debug");
 			Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
 			using (var process = new Process {
 				StartInfo = psi,
