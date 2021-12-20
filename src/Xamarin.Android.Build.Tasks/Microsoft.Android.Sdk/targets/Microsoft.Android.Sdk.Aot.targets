@@ -40,7 +40,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
 
   <Target Name="_AndroidAot"
       Condition=" '$(AotAssemblies)' == 'true' and '$(RuntimeIdentifier)' != '' "
-      DependsOnTargets="_AndroidAotInputs"
+      DependsOnTargets="_CreatePropertiesCache;_AndroidAotInputs"
       Inputs="@(_AndroidAotInputs)"
       Outputs="$(_AndroidStampDirectory)_AndroidAot.stamp">
     <ItemGroup>

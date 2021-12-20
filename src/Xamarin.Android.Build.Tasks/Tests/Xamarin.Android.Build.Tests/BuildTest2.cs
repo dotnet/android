@@ -1556,5 +1556,26 @@ namespace App1
 				}
 			}
 		}
+
+		[Test]
+		[NonParallelizable] // Environment variables are global!
+		public void BuildWithJavaToolOptions ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true
+			};
+			var oldEnvVar = Environment.GetEnvironmentVariable ("JAVA_TOOL_OPTIONS");
+			try {
+				Environment.SetEnvironmentVariable ("JAVA_TOOL_OPTIONS",
+						"-Dcom.sun.jndi.ldap.object.trustURLCodebase=false -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true");
+				using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+					b.Target = "Build";
+					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+					b.AssertHasNoWarnings ();
+				}
+			} finally {
+				Environment.SetEnvironmentVariable ("JAVA_TOOL_OPTIONS", oldEnvVar);
+			}
+		}
 	}
 }

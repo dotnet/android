@@ -1,5 +1,12 @@
 using System;
 
+#if NET
+using System.Runtime.CompilerServices;
+
+[assembly: TypeForwardedTo (typeof (Java.Interop.JavaTypeParametersAttribute))]
+
+#else   // !NET
+
 namespace Java.Interop
 {
 	public class JavaTypeParametersAttribute : Attribute
@@ -13,3 +20,4 @@ namespace Java.Interop
 	}
 }
 
+#endif  // !NET

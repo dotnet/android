@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
@@ -119,6 +120,10 @@ namespace Xamarin.ProjectTools
 		static int? maxInstalled;
 		static object maxInstalledLock = new object ();
 
+		/// <summary>
+		/// Searches the Android SDK 'platforms' folder for the latest version that we support and consider stable.
+		/// </summary>
+		/// <returns>The latest Android platform version that we support and consider stable.</returns>
 		public static int GetMaxInstalledPlatform ()
 		{
 			lock (maxInstalledLock) {
@@ -138,7 +143,7 @@ namespace Xamarin.ProjectTools
 				Console.WriteLine ($"GetMaxInstalledPlatform: Parsing {v}");
 				if (!int.TryParse (v, out version))
 					continue;
-				if (version < maxInstalled)
+				if (version < maxInstalled || version > XABuildConfig.AndroidLatestStableApiLevel)
 					continue;
 				Console.WriteLine ($"GetMaxInstalledPlatform: Setting maxInstalled to {version}");
 				maxInstalled = version;
