@@ -1061,43 +1061,43 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
-	// [TestFixture]
-	// public class AndroidClientHandlerIntegrationTests : HttpClientIntegrationTestBase
-	// {
-	// 	protected override AndroidHandlerSettingsAdapter CreateHandler ()
-	// 	{
-	// 		return new AndroidClientHandlerAdapter (new Xamarin.Android.Net.AndroidClientHandler ());
-	// 	}
+	[TestFixture]
+	public class AndroidClientHandlerIntegrationTests : HttpClientIntegrationTestBase
+	{
+		protected override AndroidHandlerSettingsAdapter CreateHandler ()
+		{
+			return new AndroidClientHandlerAdapter (new Xamarin.Android.Net.AndroidClientHandler ());
+		}
 
-	// 	private class AndroidClientHandlerAdapter : AndroidHandlerSettingsAdapter
-	// 	{
-	// 		private Xamarin.Android.Net.AndroidClientHandler _handler;
+		private class AndroidClientHandlerAdapter : AndroidHandlerSettingsAdapter
+		{
+			private Xamarin.Android.Net.AndroidClientHandler _handler;
 
-	// 		public AndroidClientHandlerAdapter (Xamarin.Android.Net.AndroidClientHandler handler)
-	// 		{
-	// 			_handler = handler;
-	// 		}
+			public AndroidClientHandlerAdapter (Xamarin.Android.Net.AndroidClientHandler handler)
+			{
+				_handler = handler;
+			}
 
-	// 		protected override HttpMessageHandler Unwrap()
-	// 			=> _handler;
+			protected override HttpMessageHandler Unwrap()
+				=> _handler;
 
-	// 		public override void Dispose ()
-	// 		{
-	// 			_handler.Dispose();
-	// 		}
+			public override void Dispose ()
+			{
+				_handler.Dispose();
+			}
 
-	// 		public override bool UseProxy { set => _handler.UseProxy = value; }
-	// 		public override IWebProxy? Proxy { set => _handler.Proxy = value; }
-	// 		public override bool AllowAutoRedirect { set => _handler.AllowAutoRedirect = value; }
-	// 		public override DecompressionMethods AutomaticDecompression { set => _handler.AutomaticDecompression = value; }
-	// 		public override int MaxAutomaticRedirections { set => _handler.MaxAutomaticRedirections = value; }
-	// 		public override int MaxRequestContentBufferSize { set => _handler.MaxRequestContentBufferSize = value; }
-	// 		public override bool PreAuthenticate { set => _handler.PreAuthenticate = value; }
-	// 		public override CookieContainer CookieContainer => _handler.CookieContainer;
-	// 		public override bool UseCookies { set => _handler.UseCookies = value; }
-	// 		public override bool UseDefaultCredentials { set => _handler.UseDefaultCredentials = value; }
-	// 	}
-	// }
+			public override bool UseProxy { set => _handler.UseProxy = value; }
+			public override IWebProxy? Proxy { set => _handler.Proxy = value; }
+			public override bool AllowAutoRedirect { set => _handler.AllowAutoRedirect = value; }
+			public override DecompressionMethods AutomaticDecompression { set => _handler.AutomaticDecompression = value; }
+			public override int MaxAutomaticRedirections { set => _handler.MaxAutomaticRedirections = value; }
+			public override int MaxRequestContentBufferSize { set => _handler.MaxRequestContentBufferSize = value; }
+			public override bool PreAuthenticate { set => _handler.PreAuthenticate = value; }
+			public override CookieContainer CookieContainer => _handler.CookieContainer;
+			public override bool UseCookies { set => _handler.UseCookies = value; }
+			public override bool UseDefaultCredentials { set => _handler.UseDefaultCredentials = value; }
+		}
+	}
 
 	[TestFixture]
 	public class AndroidMessageHandlerIntegrationTests : HttpClientIntegrationTestBase
