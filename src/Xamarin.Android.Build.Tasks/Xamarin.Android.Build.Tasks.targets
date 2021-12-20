@@ -316,8 +316,7 @@
   <Target Name="ILRepacker"
       BeforeTargets="CopyFilesToOutputDirectory"
       Inputs="$(MSBuildAllProjects);@(IntermediateAssembly);@(InputAssemblies)"
-      Outputs="$(IntermediateOutputPath)ILRepacker.stamp"
-      Condition=" '$(HostOS)' != 'Linux' ">
+      Outputs="$(IntermediateOutputPath)ILRepacker.stamp" >
     <ItemGroup>
       <_InputAssembliesThatExist Include="@(InputAssemblies)" Condition="Exists('%(Identity)')" />
       <_NetstandardPath Include="@(ReferencePath->'%(RootDir)%(Directory)')" Condition="'%(FileName)%(Extension)' == 'netstandard.dll'" />

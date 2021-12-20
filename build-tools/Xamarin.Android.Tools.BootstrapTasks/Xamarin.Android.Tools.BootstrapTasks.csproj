@@ -19,4 +19,28 @@
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
   </ItemGroup>
 
+ <!-- See https://github.com/xamarin/xamarin-android/commit/ceca993068c0401f664676db85edec1d772bf5ff -->
+  <ItemGroup>
+    <None Include="$(PkgMono_Unix)\runtimes\linux-x64\native\libMono.Unix.so" CopyToOutputDirectory="PreserveNewest" />
+    <_MonoUnixDylib Include="$(PkgMono_Unix)\runtimes\osx-arm64\native\libMono.Unix.dylib" Condition=" '$(HostOS)' == 'Darwin' " />
+    <_MonoUnixDylib Include="$(PkgMono_Unix)\runtimes\osx-x64\native\libMono.Unix.dylib" />
+  </ItemGroup>
+  <PropertyGroup>
+    <_MonoUnixOutputDylib>$(OutputPath)$(TargetFrameworkNETStandard)\libMono.Unix.dylib</_MonoUnixOutputDylib>
+  </PropertyGroup>
+  <Target Name="_MakeMonoUnixFatBinariesOSX"
+      AfterTargets="CopyFilesToOutputDirectory"
+      Inputs="@(_MonoUnixDylib)"
+      Outputs="$(_MonoUnixOutputDylib)">
+    <Exec
+        Command="lipo @(_MonoUnixDylib->'&quot;%(FullPath)&quot;', ' ') -create -output &quot;$(_MonoUnixOutputDylib)&quot;"
+        Condition=" '$(HostOS)' == 'Darwin' "
+    />
+    <Copy
+        SourceFiles="@(_MonoUnixDylib)"
+        DestinationFolder="$(OutputPath)"
+        Condition=" '$(HostOS)' != 'Darwin' "
+    />
+  </Target>
+
 </Project>

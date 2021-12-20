@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="_RemapAssemblies"
       AfterTargets="Build"
-      Condition=" '$(TargetFramework)' != '' ">
+      Condition=" '$(TargetFramework)' == 'net472' ">
     <ItemGroup>
       <_Source Include="$(OutputPath)Mono.Debugging.Soft.dll">
         <From>Mono.Cecil</From>

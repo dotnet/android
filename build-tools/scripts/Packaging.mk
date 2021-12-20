@@ -11,7 +11,7 @@ create-nupkgs:
 	$(call DOTNET_BINLOG,create-all-packs) -t:CreateAllPacks $(topdir)/build-tools/create-packs/Microsoft.Android.Sdk.proj
 
 create-pkg:
-	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-pkg) /p:Configuration=$(CONFIGURATION) /t:CreatePkg \
+	$(call DOTNET_BINLOG,create-pkg) /t:CreatePkg \
 		build-tools/create-pkg/create-pkg.csproj \
 		$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
 		$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
@@ -21,10 +21,12 @@ create-pkg:
 		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
 
 create-workload-installers:
-	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-workload-installers) /p:Configuration=$(CONFIGURATION) /t:CreateWorkloadInstallers \
+	$(call DOTNET_BINLOG,create-workload-installers) /t:CreateWorkloadInstallers \
 		Xamarin.Android.sln \
 		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
 
+# create-vsix.csproj dependencies do not yet support `dotnet build`:
+#    .nuget/packages/microsoft.vssdk.buildtools/17.0.4207-preview4/build/Microsoft.VSSDK.BuildTools.targets(16,5): error MSB4801: The task factory "CodeTaskFactory" is not supported on the .NET Core version of MSBuild.
 create-vsix:
 	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-vsix) /p:Configuration=$(CONFIGURATION) /p:CreateVsixContainer=True \
 		build-tools/create-vsix/create-vsix.csproj \
