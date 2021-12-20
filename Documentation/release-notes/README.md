@@ -81,15 +81,15 @@ any custom release notes.
 
   For other changes, choose from the following headings:
 
-  - `#### Application and library build and deployment`
-  - `#### Application behavior on device and emulator`
-  - `#### Application Mono Framework behavior on device and emulator`
-  - `#### Application publishing`
-  - `#### Android API bindings`
-  - `#### Bindings projects`
-  - `#### Design-time build process`
-  - `#### Xamarin.Android SDK installation`
-  - `#### IDE compatibility`
+  - `### Application and library build and deployment`
+  - `### Application behavior on device and emulator`
+  - `### Application Mono Framework behavior on device and emulator`
+  - `### Application publishing`
+  - `### Android API bindings`
+  - `### Bindings projects`
+  - `### Design-time build process`
+  - `### Xamarin.Android SDK installation`
+  - `### IDE compatibility`
 
 - Write a list item to go under the heading.  Start the item with one of the
   following, in order of preference:
@@ -111,7 +111,7 @@ Examples:
 ```
 
 ```markdown
-#### Application behavior on device and emulator
+### Application behavior on device and emulator
 
 - [Developer Community 743965](https://developercommunity.visualstudio.com/content/problem/743965/newtonsoftjsonjsonreaderexception-unexpected-chara.html),
   [GitHub Issue 3626](https://github.com/xamarin/xamarin-android/issues/3626):
