@@ -9,6 +9,8 @@ steps:
 - checkout: self
   clean: true
   submodules: recursive
+  ${{ if ne(parameters.xaSourcePath, variables['System.DefaultWorkingDirectory']) }}:
+    path: s/xamarin-android
 
 - ${{ if eq(parameters.updateVS, true) }}:
   - template: update-vs.yaml
