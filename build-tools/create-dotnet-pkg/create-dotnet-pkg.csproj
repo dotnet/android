@@ -41,7 +41,6 @@
       <_FilesToCopy Include="$(DotNetPreviewPath)\sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Sdk.Android\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Ref\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk.Darwin\**\*" />
-      <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk.BundleTool\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\template-packs\Microsoft.Android.Templates.*.nupkg" />
     </ItemGroup>
     <MakeDir Directories="$(PkgOutputPath);$(PayloadDir);$(PkgResourcesPath);$(LicenseDestination)"/>
