@@ -1133,7 +1133,7 @@ namespace Xamarin.Android.NetTests {
 			public override bool PreAuthenticate { set => _handler.PreAuthenticate = value; }
 			public override CookieContainer CookieContainer => _handler.CookieContainer;
 			public override bool UseCookies { set => _handler.UseCookies = value; }
-			public override bool UseDefaultCredentials { set => _handler.Credentials == value ? CredentialCache.DefaultCredentials : null; }
+			public override bool UseDefaultCredentials { set => _handler.Credentials = value ? CredentialCache.DefaultCredentials : null; }
 		}
 	}
 }
