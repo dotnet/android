@@ -531,7 +531,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nCrashlytics.Crashlytics.HandleManagedExceptions();");
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Crashlytics_2_9_4);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Crashlytics);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Fabric);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download);
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
