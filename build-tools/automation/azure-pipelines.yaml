@@ -44,12 +44,22 @@ variables:
   value: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
 - name: DotNetNUnitCategories
   value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != ProfiledAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger & TestCategory != SystemApplication'
-- ${{ if and(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest')) }}:
+- name: TeamName
+  value: XamarinAndroid
+- ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android Private') }}:
+  - group: AzureDevOps-Artifact-Feeds-Pats
+  - group: DotNet-MSRC-Storage
+  - name: DotNetFeedCredential
+    value: dotnet6-internal-dnceng-internal-feed
+- ${{ if ne(variables['Build.DefinitionName'], 'Xamarin.Android Private') }}:
+  - name: DotNetFeedCredential
+    value: dnceng-dotnet6
+- ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Real
   - name: VSEngMacBuildPool
     value: VSEng-Xamarin-RedmondMac-Android-Trusted
-- ${{ if or(ne(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android Private')), eq(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Test
   - name: VSEngMacBuildPool
@@ -1400,7 +1410,7 @@ stages:
         command: push
         packagesToPush: $(System.DefaultWorkingDirectory)\nuget-signed\*.nupkg
         nuGetFeedType: external
-        publishFeedCredentials: dnceng-dotnet6
+        publishFeedCredentials: $(DotNetFeedCredential)
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
     - task: DownloadPipelineArtifact@2
@@ -1414,7 +1424,7 @@ stages:
         command: push
         packagesToPush: $(System.DefaultWorkingDirectory)\vs-msi-nugets\*.nupkg
         nuGetFeedType: external
-        publishFeedCredentials: dnceng-dotnet6
+        publishFeedCredentials: $(DotNetFeedCredential)
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
     - powershell: >-
