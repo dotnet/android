@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Xamarin.Android.Tools.VSWhere;
 
@@ -94,6 +95,26 @@ namespace Xamarin.ProjectTools
 				} else {
 					return Path.Combine (MacOSInstallationRoot, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
 				}
+			}
+		}
+
+		static string _dotNetAndroidSdkDirectory;
+		public static string DotNetAndroidSdkDirectory {
+			get {
+				if (!string.IsNullOrEmpty (_dotNetAndroidSdkDirectory)) {
+					return _dotNetAndroidSdkDirectory;
+				}
+				var sdkName = IsMacOS ? "Microsoft.Android.Sdk.Darwin"
+					: TestEnvironment.IsWindows ? "Microsoft.Android.Sdk.Windows"
+					: "Microsoft.Android.Sdk.Linux";
+
+				return _dotNetAndroidSdkDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", sdkName)).LastOrDefault ();
+			}
+		}
+
+		public static string DotNetAndroidSdkToolsDirectory {
+			get {
+				return Path.Combine (DotNetAndroidSdkDirectory, "tools");
 			}
 		}
 
