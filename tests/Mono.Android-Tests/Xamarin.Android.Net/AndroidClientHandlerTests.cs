@@ -70,32 +70,32 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		[Test]
-		public void Properties_Defaults ()
-		{
-			var obj = CreateHandler ();
-			if (obj is not HttpClientHandler h) {
-				Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
-				return;
-			}
+		// [Test]
+		// public void Properties_Defaults ()
+		// {
+		// 	var obj = CreateHandler ();
+		// 	if (obj is not HttpClientHandler h) {
+		// 		Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
+		// 		return;
+		// 	}
 
-			Assert.IsTrue (h.AllowAutoRedirect, "#1");
-			Assert.AreEqual (DecompressionMethods.None, h.AutomaticDecompression, "#2");
-			Assert.AreEqual (0, h.CookieContainer.Count, "#3");
-			Assert.AreEqual (4096, h.CookieContainer.MaxCookieSize, "#3b");
-			Assert.AreEqual (null, h.Credentials, "#4");
-			Assert.AreEqual (50, h.MaxAutomaticRedirections, "#5");
-			Assert.IsFalse (h.PreAuthenticate, "#7");
-			Assert.IsNull (h.Proxy, "#8");
-			Assert.IsTrue (h.SupportsAutomaticDecompression, "#9");
-			Assert.IsTrue (h.SupportsProxy, "#10");
-			Assert.IsTrue (h.SupportsRedirectConfiguration, "#11");
-			Assert.IsTrue (h.UseCookies, "#12");
-			Assert.IsFalse (h.UseDefaultCredentials, "#13");
-			Assert.IsTrue (h.UseProxy, "#14");
-			Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
-			Assert.IsNull (h.ServerCertificateCustomValidationCallback, "#16");
-		}
+		// 	Assert.IsTrue (h.AllowAutoRedirect, "#1");
+		// 	Assert.AreEqual (DecompressionMethods.None, h.AutomaticDecompression, "#2");
+		// 	Assert.AreEqual (0, h.CookieContainer.Count, "#3");
+		// 	Assert.AreEqual (4096, h.CookieContainer.MaxCookieSize, "#3b");
+		// 	Assert.AreEqual (null, h.Credentials, "#4");
+		// 	Assert.AreEqual (50, h.MaxAutomaticRedirections, "#5");
+		// 	Assert.IsFalse (h.PreAuthenticate, "#7");
+		// 	Assert.IsNull (h.Proxy, "#8");
+		// 	Assert.IsTrue (h.SupportsAutomaticDecompression, "#9");
+		// 	Assert.IsTrue (h.SupportsProxy, "#10");
+		// 	Assert.IsTrue (h.SupportsRedirectConfiguration, "#11");
+		// 	Assert.IsTrue (h.UseCookies, "#12");
+		// 	Assert.IsFalse (h.UseDefaultCredentials, "#13");
+		// 	Assert.IsTrue (h.UseProxy, "#14");
+		// 	Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
+		// 	Assert.IsNull (h.ServerCertificateCustomValidationCallback, "#16");
+		// }
 
 		[Test]
 		public void Properties_Invalid ()
@@ -386,27 +386,27 @@ namespace Xamarin.Android.NetTests {
 		// 	}
 		// }
 
-		[Test]
-		public void Redirect_POST_With_Content_Works ()
-		{
-			var requestURI = new Uri ("http://tls-test.internalx.com/redirect.php");
-			var redirectedURI = new Uri ("http://tls-test.internalx.com/redirect-301.html");
-			using (var c = new HttpClient (CreateHandler ())) {
-				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
-				request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
-				var t = ConnectIgnoreFailure (() => c.SendAsync(request), out bool connectionFailed);
-				if (connectionFailed)
-					return;
+		// [Test]
+		// public void Redirect_POST_With_Content_Works ()
+		// {
+		// 	var requestURI = new Uri ("http://tls-test.internalx.com/redirect.php");
+		// 	var redirectedURI = new Uri ("http://tls-test.internalx.com/redirect-301.html");
+		// 	using (var c = new HttpClient (CreateHandler ())) {
+		// 		var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
+		// 		request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+		// 		var t = ConnectIgnoreFailure (() => c.SendAsync(request), out bool connectionFailed);
+		// 		if (connectionFailed)
+		// 			return;
 
-				HttpResponseMessage response = null;
-				RunIgnoringNetworkIssues (() => response = t.Result, out connectionFailed);
-				if (connectionFailed)
-					return;
+		// 		HttpResponseMessage response = null;
+		// 		RunIgnoringNetworkIssues (() => response = t.Result, out connectionFailed);
+		// 		if (connectionFailed)
+		// 			return;
 
-				response.EnsureSuccessStatusCode ();
-				Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
-			}
-		}
+		// 		response.EnsureSuccessStatusCode ();
+		// 		Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
+		// 	}
+		// }
 
 		[TestFixture]
 		public class AndroidClientHandlerTests : AndroidHandlerTestBase
