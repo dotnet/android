@@ -1,5 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <AndroidBundleToolJarPath Condition=" '$(AndroidBundleToolJarPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\bundletool.jar</AndroidBundleToolJarPath>
-  </PropertyGroup>
-</Project>
