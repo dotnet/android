@@ -97,7 +97,7 @@ all-tests::
 	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) /restore $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 pack-dotnet::
-	$(call DOTNET_BINLOG,pack-dotnet) $(MSBUILD_FLAGS) $(SOLUTION) -m:1 -t:PackDotNet
+	$(call DOTNET_BINLOG,pack-dotnet) $(MSBUILD_FLAGS) $(SOLUTION) -t:PackDotNet
 
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
