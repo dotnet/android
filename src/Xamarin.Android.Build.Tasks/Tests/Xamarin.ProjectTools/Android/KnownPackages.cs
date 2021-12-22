@@ -450,26 +450,31 @@ namespace Xamarin.ProjectTools
 				}
 			}
 		};
-		public static Package Xamarin_Android_Crashlytics_2_9_4 = new Package {
+		public static Package Xamarin_Android_Crashlytics = new Package {
 			Id = "Xamarin.Android.Crashlytics",
-			Version = "2.9.4",
+			Version = "2.9.4.4",
 			TargetFramework = "MonoAndroid60",
 			References = {
 				new BuildItem.Reference("Xamarin.Android.Crashlytics") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Crashlytics.2.9.4\\lib\\MonoAndroid60\\Xamarin.Android.Crashlytics.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Crashlytics.2.9.4.4\\lib\\MonoAndroid60\\Xamarin.Android.Crashlytics.dll"
 				}
 			}
 		};
-		public static Package Xamarin_Android_Fabric_1_4_3 = new Package {
+		public static Package Xamarin_Android_Fabric = new Package {
 			Id = "Xamarin.Android.Fabric",
-			Version = "1.4.3",
+			Version = "1.4.3.4",
 			TargetFramework = "MonoAndroid60",
 			References = {
 				new BuildItem.Reference("Xamarin.Android.Fabric") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Fabric.1.4.3\\lib\\MonoAndroid60\\Xamarin.Android.Fabric.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Fabric.1.4.3.4\\lib\\MonoAndroid60\\Xamarin.Android.Fabric.dll"
 				}
 			}
 		};
+		public static Package Xamarin_Build_Download = new Package {
+			Id = "Xamarin.Build.Download",
+			Version = "0.11.0",
+		};
+		// NOTE: old version required for some tests
 		public static Package Xamarin_Build_Download_0_4_11 = new Package {
 			Id = "Xamarin.Build.Download",
 			Version = "0.4.11",
@@ -480,19 +485,19 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package Xamarin_GooglePlayServices_Base = new Package {
 			Id = "Xamarin.GooglePlayServices.Base",
-			Version = "117.1.0",
+			Version = "117.6.0.2",
 		};
 		public static Package Xamarin_GooglePlayServices_Basement = new Package {
 			Id = "Xamarin.GooglePlayServices.Basement",
-			Version = "117.1.0",
+			Version = "117.6.0.3",
 		};
 		public static Package Xamarin_GooglePlayServices_Tasks = new Package {
 			Id = "Xamarin.GooglePlayServices.Tasks",
-			Version = "117.0.0",
+			Version = "117.2.1.2",
 		};
 		public static Package Xamarin_GooglePlayServices_Maps = new Package {
 			Id = "Xamarin.GooglePlayServices.Maps",
-			Version = "117.0.0",
+			Version = "117.0.1.2",
 		};
 		public static Package Acr_UserDialogs = new Package {
 			Id = "Acr.UserDialogs",
