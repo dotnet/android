@@ -32,9 +32,20 @@
   <Target Name="_GenerateIncludeFiles"
       Inputs="@(_EmbeddedBlobSource);jni\config.h"
       Outputs="@(_EmbeddedBlobDestination);$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h"
-      DependsOnTargets="_TestPinvokeTables">
+      DependsOnTargets="_TestPinvokeTables;_GetMonoAndroidRuntimeH">
     <Copy SourceFiles="jni/config.h" DestinationFiles="$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h" />
     <GenerateMonoDroidIncludes SourceFiles="@(_EmbeddedBlobSource)" DestinationFiles="@(_EmbeddedBlobDestination)" />
+  </Target>
+
+  <Target Name="_GetMonoAndroidRuntimeH"
+      Inputs="$(OutputPath)..\mono_android_Runtime.h"
+      Outputs="jni/mono_android_Runtime.h">
+    <Copy
+        SourceFiles="$(OutputPath)..\mono_android_Runtime.h"
+        DestinationFiles="jni/mono_android_Runtime.h"
+        SkipUnchangedFiles="True"
+    />
+    <Touch Files="jni/mono_android_Runtime.h" />
   </Target>
 
   <Target Name="RunStaticAnalysis"

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Reflection;
@@ -259,11 +260,18 @@ namespace Android.Runtime {
 				yield return t;
 		}
 
+#if NET
+		[RequiresPreviewFeatures]
+#endif  // NET
 		protected override string? GetSimpleReference (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
-				return j;
+				return
+#if NET
+					GetReplacementTypeCore (j) ??
+#endif  // NET
+					j;
 			}
 			if (JNIEnv.IsRunningOnDesktop) {
 				return JavaNativeTypeManager.ToJniName (type);
@@ -271,16 +279,89 @@ namespace Android.Runtime {
 			return null;
 		}
 
+#if NET
+		[RequiresPreviewFeatures]
+#endif  // NET
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
-				yield return j;
+				yield return
+#if NET
+					GetReplacementTypeCore (j) ??
+#endif  // NET
+					j;
 			}
 			if (JNIEnv.IsRunningOnDesktop) {
 				yield return JavaNativeTypeManager.ToJniName (type);
 			}
 		}
+
+#if NET
+		[RequiresPreviewFeatures]
+		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
+		{
+			return new[]{$"{jniSimpleReference}$-CC"};
+		}
+
+		[RequiresPreviewFeatures]
+		protected override string? GetReplacementTypeCore (string jniSimpleReference)
+		{
+			if (JNIEnv.ReplacementTypes == null) {
+				return null;
+			}
+			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: looking for replacement type for `{jniSimpleReference}`");
+			Logger.Log (LogLevel.Warn, "*jonp*", new System.Diagnostics.StackTrace (true).ToString ());
+			if (JNIEnv.ReplacementTypes.TryGetValue (jniSimpleReference, out var v)) {
+				return v;
+			}
+			return null;
+		}
+
+		[RequiresPreviewFeatures]
+		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
+		{
+			if (JNIEnv.ReplacementMethods == null) {
+				return null;
+			}
+			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: looking for replacement method for (\"{jniSourceType}\", \"{jniMethodName}\", \"{jniMethodSignature}\")");
+			if (!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, jniMethodSignature), out var r) &&
+					!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, GetMethodSignatureWithoutReturnType ()), out r) &&
+					!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, null), out r)) {
+				Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: no method replacement found!");
+				return null;
+			}
+			var targetSig   = r.TargetSignature;
+			var paramCount  = r.ParamCount;
+			if (targetSig == null && r.TurnStatic) {
+				targetSig   = $"(L{jniSourceType};" + jniMethodSignature.Substring ("(".Length);
+				paramCount  = paramCount ?? JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature);
+				paramCount++;
+			}
+			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: found replacement: ({GetValue (r.TargetType)}, {GetValue (r.TargetName)}, {GetValue (r.TargetSignature)}, {r.ParamCount?.ToString () ?? "null"}, {r.TurnStatic})");
+			return new JniRuntime.ReplacementMethodInfo {
+					SourceJniType                   = jniSourceType,
+					SourceJniMethodName             = jniMethodName,
+					SourceJniMethodSignature        = jniMethodSignature,
+					TargetJniType                   = r.TargetType ?? jniSourceType,
+					TargetJniMethodName             = r.TargetName ?? jniMethodName,
+					TargetJniMethodSignature        = targetSig    ?? jniMethodSignature,
+					TargetJniMethodParameterCount   = paramCount,
+					TargetJniMethodInstanceToStatic = r.TurnStatic,
+			};
+
+			string GetMethodSignatureWithoutReturnType ()
+			{
+				int i = jniMethodSignature.IndexOf (')');
+				return jniMethodSignature.Substring (0, i+1);
+			}
+
+			string GetValue (string? value)
+			{
+				return value == null ? "null" : $"\"{value}\"";
+			}
+		}
+#endif  // NET
 
 		delegate Delegate GetCallbackHandler ();
 

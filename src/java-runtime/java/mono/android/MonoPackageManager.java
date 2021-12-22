@@ -101,6 +101,8 @@ public class MonoPackageManager {
 
 				System.loadLibrary("monodroid");
 
+				byte[] mappingXml = getMappingXml (context);
+
 				Runtime.initInternal (
 						language,
 						apks,
@@ -108,6 +110,8 @@ public class MonoPackageManager {
 						appDirs,
 						loader,
 						MonoPackageManager_Resources.Assemblies,
+						mappingXml,
+						mappingXml == null ? 0 : mappingXml.length,
 						Build.VERSION.SDK_INT,
 						isEmulator (),
 						haveSplitApks
@@ -161,5 +165,32 @@ public class MonoPackageManager {
 	public static String[] getDependencies ()
 	{
 		return MonoPackageManager_Resources.Dependencies;
+	}
+
+	static byte[] getMappingXml (Context context)
+	{
+		try {
+			AssetManager manager = context.getAssets();
+			String[] assets = manager.list ("xa-internal");
+			if (assets == null) {
+				return null;
+			}
+			for (String asset: assets) {
+				if (!asset.equals ("xa-mam-mapping.xml")) {
+					continue;
+				}
+				Log.d ("*jonp*", "# jonp: found `xa-mam-mapping.xml`; trying to load...");
+				InputStream s = manager.open ("xa-internal/xa-mam-mapping.xml");
+				Log.d ("*jonp*", "# jonp: s? " + (s != null));
+				byte[] contents = new byte[s.available ()];
+				int r = s.read (contents);
+				Log.d ("*jonp*", "# jonp: read " + r + " bytes from inputstream! expected " + contents.length + "!");
+				s.close ();
+				return contents;
+			}
+		} catch (IOException e) {
+			Log.wtf ("*jonp*", "Error reading `xa-mam-mapping.xml`", e);
+		}
+		return null;
 	}
 }

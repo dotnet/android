@@ -22,6 +22,7 @@
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <EnablePreviewFeatures>True</EnablePreviewFeatures>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -253,6 +254,7 @@
     <Compile Include="Android.Runtime\JObjectRefType.cs" />
     <Compile Include="Android.Runtime\JValue.cs" />
     <Compile Include="Android.Runtime\Logger.cs" />
+    <Compile Include="Android.Runtime\MamXmlParser.cs" />
     <Compile Include="Android.Runtime\NamespaceMappingAttribute.cs" />
     <Compile Include="Android.Runtime\OutputStreamAdapter.cs" />
     <Compile Include="Android.Runtime\OutputStreamInvoker.cs" />

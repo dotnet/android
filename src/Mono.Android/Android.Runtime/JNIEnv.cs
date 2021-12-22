@@ -15,6 +15,14 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 using System.Diagnostics.CodeAnalysis;
 
+#if NET
+using ReplacementTypesDict      = System.Collections.Generic.Dictionary<string, string>;
+using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<
+	(string SourceType, string SourceName, string? SourceSignature),
+	(string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool TurnStatic)
+>;
+#endif  // NET
+
 namespace Android.Runtime {
 #pragma warning disable 0649
 	struct JnienvInitializeArgs {
@@ -35,6 +43,8 @@ namespace Android.Runtime {
 		public int             packageNamingPolicy;
 		public byte            ioExceptionType;
 		public int             jniAddNativeMethodRegistrationAttributePresent;
+		public IntPtr          mappingXml;
+		public int             mappingXmlLen;
 	}
 #pragma warning restore 0649
 
@@ -60,6 +70,11 @@ namespace Android.Runtime {
 
 		static AndroidRuntime? androidRuntime;
 		static BoundExceptionType BoundExceptionType;
+
+#if NET
+		internal static ReplacementTypesDict?    ReplacementTypes;
+		internal static ReplacementMethodsDict?  ReplacementMethods;
+#endif  // NET
 
 		[ThreadStatic]
 		static byte[]? mvid_bytes;
@@ -165,6 +180,14 @@ namespace Android.Runtime {
 			load_class_id     = args->Loader_loadClass;
 			gref_class        = args->grefClass;
 			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
+
+#if NET
+			if (args->mappingXml != IntPtr.Zero) {
+				var xml = Encoding.UTF8.GetString ((byte*) args->mappingXml, args->mappingXmlLen);
+				Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: mapping xml: len={args->mappingXmlLen}; {xml}");
+				(ReplacementTypes, ReplacementMethods) = MamXmlParser.Parse (xml);
+			}
+#endif  // NET
 
 			if (args->localRefsAreIndirect == 1)
 				IdentityHash = v => _monodroid_get_identity_hash_code (Handle, v);

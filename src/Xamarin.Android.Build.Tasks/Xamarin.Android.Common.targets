@@ -68,6 +68,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.LogErrorsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LogWarningsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MakeBundleNativeCodeExternal" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.MamJsonToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MonoSymbolicate" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -429,6 +430,25 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <FilterAssemblies InputAssemblies="@(_ReferenceDependencyPaths)">
     <Output TaskParameter="OutputAssemblies" ItemName="_MonoAndroidReferenceDependencyPaths" />
   </FilterAssemblies>
+  <MakeDir
+      Condition=" '@(_AndroidMamMappingFile->Count())' != '0' "
+      Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
+  />
+  <PropertyGroup>
+    <_AndroidMamMappingXml>$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml</_AndroidMamMappingXml>
+  </PropertyGroup>
+  <MamJsonToXml
+      Condition=" '@(_AndroidMamMappingFile->Count())' != '0' "
+      MappingFiles="@(_AndroidMamMappingFile)"
+      XmlMappingOutput="$(_AndroidMamMappingXml)"
+  />
+  <ItemGroup
+      Condition=" Exists ('$(_AndroidMamMappingXml)') ">
+    <AndroidAsset Include="$(_AndroidMamMappingXml)" LogicalName="xa-internal/xa-mam-mapping.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidMamMappingXml)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations">

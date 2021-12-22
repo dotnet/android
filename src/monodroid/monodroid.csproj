@@ -16,6 +16,7 @@
   <Import Project="monodroid.targets" />
   
   <ItemGroup>
+    <ProjectReference Include="..\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="False" />
     <!--
       `jnimarshalmethod-gen.exe` needs to be built first because our
       `_CreateJavaInteropDllConfigs` target replaces
