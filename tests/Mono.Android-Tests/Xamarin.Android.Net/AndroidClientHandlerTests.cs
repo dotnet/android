@@ -119,22 +119,22 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		// [Test]
-		// public void Properties_AfterClientCreation ()
-		// {
-		// 	var obj = CreateHandler ();
-		// 	if (obj is not HttpClientHandler h) {
-		// 		Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
-		// 		return;
-		// 	}
+		[Test]
+		public void Properties_AfterClientCreation ()
+		{
+			var obj = CreateHandler ();
+			if (obj is not HttpClientHandler h) {
+				Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
+				return;
+			}
 
-		// 	h.AllowAutoRedirect = true;
+			h.AllowAutoRedirect = true;
 
-		// 	// We may modify properties after creating the HttpClient.
-		// 	using (var c = new HttpClient (h, true)) {
-		// 		h.AllowAutoRedirect = false;
-		// 	}
-		// }
+			// We may modify properties after creating the HttpClient.
+			using (var c = new HttpClient (h, true)) {
+				h.AllowAutoRedirect = false;
+			}
+		}
 
 		// [Test]
 		// public void Disposed ()
@@ -214,25 +214,25 @@ namespace Xamarin.Android.NetTests {
 	{
 		const string Tls_1_2_Url = "https://tls-test.internalx.com";
 
-		[Test]
-		public void Tls_1_2_Url_Works ()
-		{
-			if (((int) Build.VERSION.SdkInt) < 16) {
-				Assert.Ignore ("Host platform doesn't support TLS 1.2.");
-				return;
-			}
-			using (var c = new HttpClient (CreateHandler ())) {
-				var tr = ConnectIgnoreFailure (() => c.GetAsync (Tls_1_2_Url), out bool connectionFailed);
-				if (connectionFailed)
-					return;
+		// [Test]
+		// public void Tls_1_2_Url_Works ()
+		// {
+		// 	if (((int) Build.VERSION.SdkInt) < 16) {
+		// 		Assert.Ignore ("Host platform doesn't support TLS 1.2.");
+		// 		return;
+		// 	}
+		// 	using (var c = new HttpClient (CreateHandler ())) {
+		// 		var tr = ConnectIgnoreFailure (() => c.GetAsync (Tls_1_2_Url), out bool connectionFailed);
+		// 		if (connectionFailed)
+		// 			return;
 
-				RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
-				if (connectionFailed)
-					return;
+		// 		RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
+		// 		if (connectionFailed)
+		// 			return;
 
-				tr.Result.EnsureSuccessStatusCode ();
-			}
-		}
+		// 		tr.Result.EnsureSuccessStatusCode ();
+		// 	}
+		// }
 
 		static IEnumerable<Exception> Exceptions (Exception e)
 		{
@@ -386,36 +386,36 @@ namespace Xamarin.Android.NetTests {
 		// 	}
 		// }
 
-		// [Test]
-		// public void Redirect_POST_With_Content_Works ()
-		// {
-		// 	var requestURI = new Uri ("http://tls-test.internalx.com/redirect.php");
-		// 	var redirectedURI = new Uri ("http://tls-test.internalx.com/redirect-301.html");
-		// 	using (var c = new HttpClient (CreateHandler ())) {
-		// 		var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
-		// 		request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
-		// 		var t = ConnectIgnoreFailure (() => c.SendAsync(request), out bool connectionFailed);
-		// 		if (connectionFailed)
-		// 			return;
+		[Test]
+		public void Redirect_POST_With_Content_Works ()
+		{
+			var requestURI = new Uri ("http://tls-test.internalx.com/redirect.php");
+			var redirectedURI = new Uri ("http://tls-test.internalx.com/redirect-301.html");
+			using (var c = new HttpClient (CreateHandler ())) {
+				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
+				request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+				var t = ConnectIgnoreFailure (() => c.SendAsync(request), out bool connectionFailed);
+				if (connectionFailed)
+					return;
 
-		// 		HttpResponseMessage response = null;
-		// 		RunIgnoringNetworkIssues (() => response = t.Result, out connectionFailed);
-		// 		if (connectionFailed)
-		// 			return;
+				HttpResponseMessage response = null;
+				RunIgnoringNetworkIssues (() => response = t.Result, out connectionFailed);
+				if (connectionFailed)
+					return;
 
-		// 		response.EnsureSuccessStatusCode ();
-		// 		Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
-		// 	}
-		// }
+				response.EnsureSuccessStatusCode ();
+				Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
+			}
+		}
 
-		// [TestFixture]
-		// public class AndroidClientHandlerTests : AndroidHandlerTestBase
-		// {
-		// 	protected override HttpMessageHandler CreateHandler ()
-		// 	{
-		// 		return new Xamarin.Android.Net.AndroidClientHandler ();
-		// 	}
-		// }
+		[TestFixture]
+		public class AndroidClientHandlerTests : AndroidHandlerTestBase
+		{
+			protected override HttpMessageHandler CreateHandler ()
+			{
+				return new Xamarin.Android.Net.AndroidClientHandler ();
+			}
+		}
 
 		[TestFixture]
 		public class AndroidMessageHandlerTests : AndroidHandlerTestBase
