@@ -119,40 +119,40 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		[Test]
-		public void Properties_AfterClientCreation ()
-		{
-			var obj = CreateHandler ();
-			if (obj is not HttpClientHandler h) {
-				Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
-				return;
-			}
+		// [Test]
+		// public void Properties_AfterClientCreation ()
+		// {
+		// 	var obj = CreateHandler ();
+		// 	if (obj is not HttpClientHandler h) {
+		// 		Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
+		// 		return;
+		// 	}
 
-			h.AllowAutoRedirect = true;
+		// 	h.AllowAutoRedirect = true;
 
-			// We may modify properties after creating the HttpClient.
-			using (var c = new HttpClient (h, true)) {
-				h.AllowAutoRedirect = false;
-			}
-		}
+		// 	// We may modify properties after creating the HttpClient.
+		// 	using (var c = new HttpClient (h, true)) {
+		// 		h.AllowAutoRedirect = false;
+		// 	}
+		// }
 
-		[Test]
-		public void Disposed ()
-		{
-			var h = CreateHandler ();
-			h.Dispose ();
-			var c = new HttpClient (h);
-			try {
-				var t = ConnectIgnoreFailure (() => c.GetAsync ("http://google.com"), out bool connectionFailed);
-				if (connectionFailed)
-					return;
+		// [Test]
+		// public void Disposed ()
+		// {
+		// 	var h = CreateHandler ();
+		// 	h.Dispose ();
+		// 	var c = new HttpClient (h);
+		// 	try {
+		// 		var t = ConnectIgnoreFailure (() => c.GetAsync ("http://google.com"), out bool connectionFailed);
+		// 		if (connectionFailed)
+		// 			return;
 
-				t.Wait ();
-				Assert.Fail ("#1");
-			} catch (AggregateException e) {
-				Assert.IsTrue (e.InnerException is ObjectDisposedException, "#2");
-			}
-		}
+		// 		t.Wait ();
+		// 		Assert.Fail ("#1");
+		// 	} catch (AggregateException e) {
+		// 		Assert.IsTrue (e.InnerException is ObjectDisposedException, "#2");
+		// 	}
+		// }
 
 		protected Task<HttpResponseMessage> ConnectIgnoreFailure (Func<Task<HttpResponseMessage>> connector, out bool connectionFailed)
 		{
