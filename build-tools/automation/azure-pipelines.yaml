@@ -57,56 +57,6 @@ variables:
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
-- stage: code_analysis
-  displayName: Code Analysis
-  jobs:
-  # Check - "Xamarin.Android (Code Analysis Security and Compliance)"
-  - job: run_static_analysis
-    displayName: Security and Compliance
-    pool: $(HostedWinVS2019)
-    timeoutInMinutes: 60
-    cancelTimeoutInMinutes: 5
-    steps:
-    - checkout: self
-      submodules: recursive
-
-    - template: security\credscan\v2.yml@yaml
-      parameters:
-        suppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
-
-    - template: security\policheck\v1.yml@yaml
-      parameters:
-        exclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
-        pE: 1|2|3|4
-        rulesDBPath: $(System.DefaultWorkingDirectory)\build-tools\automation\policheck-rules-db.mdb
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@3
-      displayName: Run AntiMalware (Defender) Scan
-      inputs:
-        FileDirPath: $(System.DefaultWorkingDirectory)
-        EnableServices: true
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
-      displayName: Create Security Analysis Report
-      inputs:
-        CredScan: true
-        PoliCheck: true
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
-      displayName: Publish Security Analysis Logs
-      inputs:
-        ArtifactName: CodeAnalysisLogs
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
-      displayName: Fail Job if Security Issues are Detected
-      inputs:
-        CredScan: true
-        PoliCheck: true
-      condition: succeededOrFailed()
-
 - stage: mac_build
   displayName: Mac
   dependsOn: []
@@ -1618,3 +1568,54 @@ stages:
         buildParameters: '{ "REPO": "$(Build.Repository.Name)", "COMMIT": "$(Build.SourceVersion)", "SIGN_TYPE": "Real", "GITHUB_CONTEXT": "$(GitHub.Artifacts.Context)", "BUILD_DEFINITIONNAME": "$(Build.DefinitionName)", "BUILD_ID": "$(Build.BuildId)", "BUILD_NUMBER": "$(Build.BuildNumber)", "BUILD_URI": "$(Build.BuildUri)", "ENABLE_JAR_SIGNING": "true" }'
         authenticationMethod: 'OAuth Token'
         password: $(System.AccessToken)     # Equivalent to the 'Allow scripts to access OAuth token option': https://stackoverflow.com/questions/52837980/how-to-allow-scripts-to-access-oauth-token-from-yaml-builds
+
+- stage: code_analysis
+  dependsOn: []
+  displayName: Code Analysis
+  jobs:
+  # Check - "Xamarin.Android (Code Analysis Security and Compliance)"
+  - job: run_static_analysis
+    displayName: Security and Compliance
+    pool: $(HostedWinVS2019)
+    timeoutInMinutes: 60
+    cancelTimeoutInMinutes: 5
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - template: security\credscan\v2.yml@yaml
+      parameters:
+        suppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
+
+    - template: security\policheck\v1.yml@yaml
+      parameters:
+        exclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
+        pE: 1|2|3|4
+        rulesDBPath: $(System.DefaultWorkingDirectory)\build-tools\automation\policheck-rules-db.mdb
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@3
+      displayName: Run AntiMalware (Defender) Scan
+      inputs:
+        FileDirPath: $(System.DefaultWorkingDirectory)
+        EnableServices: true
+      condition: succeededOrFailed()
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
+      displayName: Create Security Analysis Report
+      inputs:
+        CredScan: true
+        PoliCheck: true
+      condition: succeededOrFailed()
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
+      displayName: Publish Security Analysis Logs
+      inputs:
+        ArtifactName: CodeAnalysisLogs
+      condition: succeededOrFailed()
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
+      displayName: Fail Job if Security Issues are Detected
+      inputs:
+        CredScan: true
+        PoliCheck: true
+      condition: succeededOrFailed()
