@@ -1,0 +1,68 @@
+<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#
+var delegateTypes = new [] {
+	new { Type = "_JniMarshal_PP_V", Signature = "(jnienv, klazz)", Return = false },
+	new { Type = "_JniMarshal_PPI_V", Signature = "(jnienv, klazz, p0)", Return = false },
+	new { Type = "_JniMarshal_PPL_L", Signature = "(jnienv, klazz, p0)", Return = true },
+	new { Type = "_JniMarshal_PPL_V", Signature = "(jnienv, klazz, p0)", Return = false },
+	new { Type = "_JniMarshal_PPL_Z", Signature = "(jnienv, klazz, p0)", Return = true },
+	new { Type = "_JniMarshal_PPII_V", Signature = "(jnienv, klazz, p0, p1)", Return = false },
+	new { Type = "_JniMarshal_PPLI_V", Signature = "(jnienv, klazz, p0, p1)", Return = false },
+	new { Type = "_JniMarshal_PPLL_V", Signature = "(jnienv, klazz, p0, p1)", Return = false },
+	new { Type = "_JniMarshal_PPLL_Z", Signature = "(jnienv, klazz, p0, p1)", Return = true },
+	new { Type = "_JniMarshal_PPIIL_V", Signature = "(jnienv, klazz, p0, p1, p2)", Return = false },
+	new { Type = "_JniMarshal_PPILL_V", Signature = "(jnienv, klazz, p0, p1, p2)", Return = false },
+	new { Type = "_JniMarshal_PPLIL_Z", Signature = "(jnienv, klazz, p0, p1, p2)", Return = true },
+	new { Type = "_JniMarshal_PPLLL_L", Signature = "(jnienv, klazz, p0, p1, p2)", Return = true },
+	new { Type = "_JniMarshal_PPLLL_Z", Signature = "(jnienv, klazz, p0, p1, p2)", Return = true },
+	new { Type = "_JniMarshal_PPIIII_V", Signature = "(jnienv, klazz, p0, p1, p2, p3)", Return = false },
+	new { Type = "_JniMarshal_PPLLLL_V", Signature = "(jnienv, klazz, p0, p1, p2, p3)", Return = false },
+	new { Type = "_JniMarshal_PPLIIII_V", Signature = "(jnienv, klazz, p0, p1, p2, p3, p4)", Return = false },
+	new { Type = "_JniMarshal_PPZIIII_V", Signature = "(jnienv, klazz, p0, p1, p2, p3, p4)", Return = false },
+	new { Type = "_JniMarshal_PPLIIIIIIII_V", Signature = "(jnienv, klazz, p0, p1, p2, p3, p4, p5, p6, p7, p8)", Return = false },
+};
+#>
+using System;
+using System.Diagnostics;
+
+namespace Android.Runtime
+{
+	public static partial class JNINativeWrapper
+	{
+		private static Delegate CreateBuiltInDelegate (Delegate dlg, Type delegateType)
+		{
+			switch (delegateType.Name) {
+<#
+foreach (var info in delegateTypes) {
+#>
+				case nameof (<#= info.Type #>): {
+					<#= info.Type #> callback = (<#= info.Type #>) Delegate.CreateDelegate (typeof (<#= info.Type #>), dlg.Target, dlg.Method);
+					<#= info.Type #> result = <#= info.Signature #> => {
+						JNIEnv.WaitForBridgeProcessing ();
+						try {
+							<#= info.Return ? "return " : "" #>callback <#= info.Signature #>;
+						} catch (Exception e) {
+							bool  filter = Debugger.IsAttached || !JNIEnv.PropagateExceptions;
+							if (filter && JNIEnv.mono_unhandled_exception != null) {
+								JNIEnv.mono_unhandled_exception (e);
+							}
+							AndroidEnvironment.UnhandledException (e);
+							if (filter)
+								throw;
+							<#= info.Return ? "return default;" : "" #>
+						}
+					};
+					return result;
+				}
+<#
+}
+#>
+				default:
+					return null;
+			}
+		}
+	}
+}
