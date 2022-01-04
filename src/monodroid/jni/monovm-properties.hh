@@ -4,29 +4,34 @@
 #if defined (NET6)
 #include <cstring>
 #include "monodroid-glue-internal.hh"
+#include "jni-wrappers.hh"
 
 namespace xamarin::android::internal
 {
 	class MonoVMProperties final
 	{
-		constexpr static size_t PROPERTY_COUNT = 0;
+		constexpr static size_t PROPERTY_COUNT = 2;
+
+		constexpr static char RUNTIME_IDENTIFIER_KEY[] = "RUNTIME_IDENTIFIER";
+		constexpr static size_t RUNTIME_IDENTIFIER_INDEX = 0;
+
+		constexpr static char APP_CONTEXT_BASE_DIRECTORY_KEY[] = "APP_CONTEXT_BASE_DIRECTORY";
+		constexpr static size_t APP_CONTEXT_BASE_DIRECTORY_INDEX = 1;
 
 		using property_array = const char*[PROPERTY_COUNT];
 
 	public:
-		explicit MonoVMProperties ()
+		explicit MonoVMProperties (jstring_wrapper& filesDir)
 		{
 			static_assert (PROPERTY_COUNT == N_PROPERTY_KEYS);
 			static_assert (PROPERTY_COUNT == N_PROPERTY_VALUES);
+
+			_property_values[APP_CONTEXT_BASE_DIRECTORY_INDEX] = strdup (filesDir.get_cstr ());
 		}
 
-		int property_count () const
+		constexpr int property_count () const
 		{
-			if constexpr (PROPERTY_COUNT != 0) {
-				return _property_count;
-			} else {
-				return 0;
-			}
+			return PROPERTY_COUNT;
 		}
 
 		const char* const* property_keys () const
@@ -48,23 +53,11 @@ namespace xamarin::android::internal
 		}
 
 	private:
-		template<size_t N_PROPERTIES, size_t P_INDEX>
-		force_inline void
-		add_init_property (const char* key)
-		{
-			static_assert (P_INDEX < N_PROPERTIES);
-			_property_keys[P_INDEX] = key;
-			_property_count++;
-		}
-
-	private:
-		property_array _property_keys = {};
+		static property_array _property_keys;
 		constexpr static size_t N_PROPERTY_KEYS = sizeof(_property_keys) / sizeof(const char*);
 
-		property_array _property_values = {};
+		static property_array _property_values;
 		constexpr static size_t N_PROPERTY_VALUES = sizeof(_property_values) / sizeof(const char*);
-
-		int _property_count = 0;
 	};
 }
 #endif // def NET6

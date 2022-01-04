@@ -2100,9 +2100,12 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		total_time.mark_start ();
 	}
 
+	jstring_array_wrapper applicationDirs (env, appDirs);
+	jstring_wrapper &home = applicationDirs[SharedConstants::APP_DIRS_FILES_DIR_INDEX];
+
 #if defined (NET6)
 	{
-		MonoVMProperties monovm_props;
+		MonoVMProperties monovm_props { home };
 
 		// NOTE: the `const_cast` breaks the contract made to MonoVMProperties that the arrays it returns won't be
 		// modified, but it's "ok" since Mono doesn't modify them and by using `const char* const*` in MonoVMProperties
@@ -2118,8 +2121,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 #endif // def NET6
 
-	jstring_array_wrapper applicationDirs (env, appDirs);
-
 	android_api_level = apiLevel;
 	androidSystem.detect_embedded_dso_mode (applicationDirs);
 	androidSystem.set_running_in_emulator (isEmulator);
@@ -2133,8 +2134,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	androidSystem.setup_environment ();
 
-	jstring_wrapper &home = applicationDirs[0];
-	set_environment_variable_for_directory ("TMPDIR", applicationDirs[1]);
+	set_environment_variable_for_directory ("TMPDIR", applicationDirs[SharedConstants::APP_DIRS_CACHE_DIR_INDEX]);
 	set_environment_variable_for_directory ("HOME", home);
 	create_xdg_directories_and_environment (home);
 	androidSystem.set_primary_override_dir (home);
