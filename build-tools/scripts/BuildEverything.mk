@@ -22,10 +22,10 @@ ifneq ("$(wildcard $(topdir)/external/monodroid/Makefile)","")
 	cd $(topdir)/external/monodroid && ./configure --with-xamarin-android='$(topdir)'
 	cd $(topdir)/external/monodroid && $(MAKE) build-monodroid CONFIGURATION=$(CONFIGURATION) XAMARIN_ANDROID_PATH=$(topdir)
 endif
-	$(MAKE) leeroy $(ZIP_OUTPUT)
+	$(MAKE) leeroy
 
 leeroy: leeroy-all framework-assemblies
 
 leeroy-all:
-	$(call MSBUILD_BINLOG,leeroy-all,$(_SLN_BUILD)) /restore $(SOLUTION) /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)
+	$(call DOTNET_BINLOG,leeroy-all) $(SOLUTION) -m:1 $(_MSBUILD_ARGS)
 	$(call MSBUILD_BINLOG,leeroy-all,$(_SLN_BUILD)) /restore tools/xabuild/xabuild.csproj /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)

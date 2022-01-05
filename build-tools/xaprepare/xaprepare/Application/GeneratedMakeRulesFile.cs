@@ -129,8 +129,8 @@ namespace Xamarin.Android.Prepare
 				WriteRuleLine ( "if [ $$? -ne 0 ] ; then \\");
 				WriteRuleLine ($"\trm -f {redistFile}; \\");
 				WriteRuleLine ( "fi; \\");
-				WriteRuleLine ( "$(call MSBUILD_BINLOG,Mono.Android,$(_SLN_BUILD)) src/Mono.Android/Mono.Android.csproj \\");
-				WriteRuleLine ( "\t/p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) \\");
+				WriteRuleLine ( "$(call DOTNET_BINLOG,Mono.Android) src/Mono.Android/Mono.Android.csproj \\");
+				WriteRuleLine ( "\t$(_MSBUILD_ARGS) \\");
 				WriteRuleLine ($"\t/p:AndroidApiLevel={apiLevel} /p:AndroidPlatformId={platformId} /p:AndroidFrameworkVersion={curVersion} \\");
 				WriteRuleLine ($"\t/p:AndroidPreviousFrameworkVersion={prevVersion} || exit 1;");
 
@@ -170,8 +170,8 @@ namespace Xamarin.Android.Prepare
 			void WriteMSBuildCall (string fileToRemovePath, string projectPath)
 			{
 				WriteRuleLine ($"rm -f {fileToRemovePath}");
-				WriteRuleLine ($"$(call MSBUILD_BINLOG,NUnitLite,$(_SLN_BUILD)) $(MSBUILD_FLAGS) {projectPath} \\");
-				WriteRuleLine ( "\t/p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) \\");
+				WriteRuleLine ($"$(call DOTNET_BINLOG,NUnitLite) $(MSBUILD_FLAGS) {projectPath} \\");
+				WriteRuleLine ( "\t$(_MSBUILD_ARGS) \\");
 				WriteRuleLine ($"\t/p:AndroidApiLevel={firstApiLevel} /p:AndroidPlatformId={firstPlatformId} \\");
 				WriteRuleLine ($"\t/p:AndroidFrameworkVersion={firstFramework} || exit 1;");
 			}
