@@ -778,7 +778,9 @@ namespace Xamarin.Android.Build.Tests
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 			};
-			bool preview = targetFramework.Contains("32");
+			// Re-enable when we have unstable API 33
+			// bool preview = targetFramework.Contains("33");
+			bool preview = false;
 			if (preview) {
 				library.SetProperty ("EnablePreviewFeatures", "true");
 			}
