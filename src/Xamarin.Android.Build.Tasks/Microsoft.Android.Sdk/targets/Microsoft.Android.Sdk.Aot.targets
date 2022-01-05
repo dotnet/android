@@ -53,14 +53,17 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         AndroidApiLevel="$(_AndroidApiLevel)"
         MinimumSupportedApiLevel="$(AndroidMinimumSupportedApiLevel)"
         AndroidSequencePointsMode="$(_SequencePointsMode)"
-        AotAdditionalArguments="$(AndroidAotAdditionalArguments)"
         TargetName="$(TargetName)"
         ResolvedAssemblies="@(_AndroidAotInputs)"
         AotOutputDirectory="$(_AndroidAotBinDirectory)"
         RuntimeIdentifier="$(RuntimeIdentifier)"
         EnableLLVM="$(EnableLLVM)"
-        UsingAndroidNETSdk="true"
         Profiles="@(AndroidAotProfile)">
+      <Output PropertyName="_Triple"     TaskParameter="Triple" />
+      <Output PropertyName="_ToolPrefix" TaskParameter="ToolPrefix" />
+      <Output PropertyName="_MsymPath"   TaskParameter="MsymPath" />
+      <Output PropertyName="_LdName"     TaskParameter="LdName" />
+      <Output PropertyName="_LdFlags"    TaskParameter="LdFlags" />
       <Output ItemName="_MonoAOTAssemblies" TaskParameter="ResolvedAssemblies" />
     </GetAotAssemblies>
     <PropertyGroup>
@@ -69,7 +72,10 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     </PropertyGroup>
     <MakeDir Directories="$(IntermediateOutputPath)aot\" />
     <MonoAOTCompiler
-        Assemblies="@(_MonoAOTAssemblies->'%(FullPath)')"
+        Triple="$(_Triple)"
+        ToolPrefix="$(_ToolPrefix)"
+        MsymPath="$(_MsymPath)"
+        Assemblies="@(_MonoAOTAssemblies)"
         CompilerBinaryPath="$(_MonoAOTCompilerPath)"
         DisableParallelAot="$(_DisableParallelAot)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
@@ -79,7 +85,11 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         OutputType="Library"
         UseAotDataFile="false"
         UseLLVM="$(EnableLLVM)"
-        LLVMPath="$(_LLVMPath)">
+        LLVMPath="$(_LLVMPath)"
+        LdName="$(_LdName)"
+        LdFlags="$(_LdFlags)"
+        WorkingDirectory="$(MSBuildProjectDirectory)"
+        AotArguments="$(AndroidAotAdditionalArguments)">
       <Output TaskParameter="CompiledAssemblies" ItemName="_AotCompiledAssemblies" />
       <Output TaskParameter="FileWrites"         ItemName="FileWrites" />
     </MonoAOTCompiler>

@@ -51,12 +51,23 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] Profiles { get; set; } = Array.Empty<ITaskItem> ();
 
-		public bool UsingAndroidNETSdk { get; set; }
-
-		public string AotAdditionalArguments { get; set; } = "";
-
 		[Required, Output]
 		public ITaskItem [] ResolvedAssemblies { get; set; } = Array.Empty<ITaskItem> ();
+
+		[Output]
+		public string? Triple { get; set; }
+
+		[Output]
+		public string? ToolPrefix { get; set; }
+
+		[Output]
+		public string? MsymPath { get; set; }
+
+		[Output]
+		public string? LdName { get; set; }
+
+		[Output]
+		public string? LdFlags { get; set; }
 
 		protected AotMode AotMode;
 		protected SequencePointsMode SequencePointsMode;
@@ -208,22 +219,12 @@ namespace Xamarin.Android.Tasks
 		}
 
 		/// <summary>
-		/// Returns a list of parameters to pass to the --aot switch
+		/// Fills [Output] parameters to pass to the --aot switch
 		/// </summary>
-		protected List<string> GetAotOptions (NdkTools ndk, AndroidTargetArch arch, int level, string outdir, string mtriple, string toolPrefix)
+		protected void GetAotOptions (NdkTools ndk, AndroidTargetArch arch, int level, string outdir, string toolPrefix)
 		{
-			List<string> aotOptions = new List<string> ();
-
-			if (!string.IsNullOrEmpty (AotAdditionalArguments))
-				aotOptions.Add (AotAdditionalArguments);
 			if (SequencePointsMode == SequencePointsMode.Offline)
-				aotOptions.Add ($"msym-dir={outdir}");
-			if (AotMode != AotMode.Normal)
-				aotOptions.Add (AotMode.ToString ().ToLowerInvariant ());
-
-			aotOptions.Add ("asmwriter");
-			aotOptions.Add ($"mtriple={mtriple}");
-			aotOptions.Add ($"tool-prefix={toolPrefix}");
+				MsymPath = outdir;
 
 			string ldName;
 			if (EnableLLVM) {
@@ -238,16 +239,12 @@ namespace Xamarin.Android.Tasks
 				ldName = "ld";
 			}
 			string ldFlags = GetLdFlags (ndk, arch, level, toolPrefix);
-
-			// MUST be before `ld-flags`, otherwise Mono fails to parse it on Windows
 			if (!string.IsNullOrEmpty (ldName)) {
-				aotOptions.Add ($"ld-name={ldName}");
+				LdName = ldName;
 			}
 			if (!string.IsNullOrEmpty (ldFlags)) {
-				aotOptions.Add ($"ld-flags={ldFlags}");
+				LdFlags = ldFlags;
 			}
-
-			return aotOptions;
 		}
 
 		string GetLdFlags(NdkTools ndk, AndroidTargetArch arch, int level, string toolPrefix)
@@ -292,13 +289,7 @@ namespace Xamarin.Android.Tasks
 				libs.Add (Path.Combine (androidLibPath, "libc.so"));
 				libs.Add (Path.Combine (androidLibPath, "libm.so"));
 
-				if (UsingAndroidNETSdk) {
-					// NOTE: in .NET 6+ use space for the delimiter and escape spaces in paths
-					var escaped = libs.Select (l => l.Replace (" ", "\\ "));
-					ldFlags = string.Join (" ", escaped);
-				} else {
-					ldFlags = $"\\\"{string.Join ("\\\";\\\"", libs)}\\\"";
-				}
+				ldFlags = $"\\\"{string.Join ("\\\";\\\"", libs)}\\\"";
 			}
 			return ldFlags;
 		}
