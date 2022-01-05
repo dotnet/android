@@ -314,9 +314,9 @@ namespace Xamarin.Android.Net
 		{
 			var fieldName = "_nativeHandler";
 			var type = GetType ();
-			while (type != typeof (AndroidClientHandler)) {
-				type = type.BaseType;
-			}
+			// while (type != typeof (AndroidClientHandler)) {
+			// 	type = type.BaseType;
+			// }
 
 			var baseType = type.BaseType;
 			var field = baseType.GetField (fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
