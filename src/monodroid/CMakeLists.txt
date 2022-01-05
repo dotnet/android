@@ -519,6 +519,7 @@ endif()
 
 if(ANDROID AND ENABLE_NET6)
   list(APPEND XAMARIN_MONODROID_SOURCES
+    ${SOURCES_DIR}/monovm-properties.cc
     ${SOURCES_DIR}/pinvoke-override-api.cc
     ${SOURCES_DIR}/java_interop_api.c
     ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc

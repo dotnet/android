@@ -26,6 +26,8 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     <_RuntimeConfigReservedProperties Include="NATIVE_DLL_SEARCH_DIRECTORIES"/>
     <_RuntimeConfigReservedProperties Include="PLATFORM_RESOURCE_ROOTS"/>
     <_RuntimeConfigReservedProperties Include="PINVOKE_OVERRIDE"/>
+    <_RuntimeConfigReservedProperties Include="RUNTIME_IDENTIFIER"/>
+    <_RuntimeConfigReservedProperties Include="APP_CONTEXT_BASE_DIRECTORY"/>
   </ItemGroup>
 
   <Target Name="_ParseRuntimeConfigFiles"
