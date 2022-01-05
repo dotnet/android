@@ -326,8 +326,7 @@ namespace Xamarin.Android.Prepare
 
 			public static string MicrosoftNETWorkloadMonoPackageDir => Path.Combine (
 				XAPackagesDir,
-				//TODO: use $(DotNetPreviewVersionBand) after we get: https://github.com/dotnet/runtime/pull/62787
-				$"microsoft.net.workload.mono.toolchain.manifest-6.0.100",
+				$"microsoft.net.workload.mono.toolchain.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionBand)}",
 				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion)
 			);
 
