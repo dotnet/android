@@ -45,6 +45,8 @@ namespace Xamarin.Android.Tasks
 
 		public string ExtraAotOptions { get; set; }
 
+		public string AotAdditionalArguments { get; set; }
+
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
 
@@ -137,11 +139,27 @@ namespace Xamarin.Android.Tasks
 					string tempDir = Path.Combine (outdir, Path.GetFileName (assembly.ItemSpec));
 					Directory.CreateDirectory (tempDir);
 
-					var aotOptions = GetAotOptions (ndk, arch, level, outdir, mtriple, toolPrefix);
+					GetAotOptions (ndk, arch, level, outdir, toolPrefix);
 					// NOTE: ordering seems to matter on Windows
-					aotOptions.Insert (0, $"outfile={outputFile}");
-					aotOptions.Insert (0, $"llvm-path={SdkBinDirectory}");
-					aotOptions.Insert (0, $"temp-path={tempDir}");
+					var aotOptions = new List<string> ();
+					aotOptions.Add ("asmwriter");
+					aotOptions.Add ($"mtriple={mtriple}");
+					aotOptions.Add ($"tool-prefix={toolPrefix}");
+					aotOptions.Add ($"outfile={outputFile}");
+					aotOptions.Add ($"llvm-path={SdkBinDirectory}");
+					aotOptions.Add ($"temp-path={tempDir}");
+					if (!string.IsNullOrEmpty (AotAdditionalArguments)) {
+						aotOptions.Add (AotAdditionalArguments);
+					}
+					if (!string.IsNullOrEmpty (MsymPath)) {
+						aotOptions.Add ($"msym-dir={MsymPath}");
+					}
+					if (!string.IsNullOrEmpty (LdName)) {
+						aotOptions.Add ($"ld-name={LdName}");
+					}
+					if (!string.IsNullOrEmpty (LdFlags)) {
+						aotOptions.Add ($"ld-flags={LdFlags}");
+					}
 					if (Profiles != null && Profiles.Length > 0) {
 						if (Path.GetFileNameWithoutExtension (assembly.ItemSpec) == TargetName) {
 							LogDebugMessage ($"Not using profile(s) for main assembly: {assembly.ItemSpec}");

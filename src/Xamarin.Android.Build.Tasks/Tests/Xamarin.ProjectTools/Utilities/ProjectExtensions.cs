@@ -31,30 +31,14 @@ namespace Xamarin.ProjectTools
 
 		public static void SetRuntimeIdentifier (this IShortFormProject project, string androidAbi)
 		{
-			if (androidAbi == "armeabi-v7a") {
-				project.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm");
-			} else if (androidAbi == "arm64-v8a") {
-				project.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
-			} else if (androidAbi == "x86") {
-				project.SetProperty (KnownProperties.RuntimeIdentifier, "android-x86");
-			} else if (androidAbi == "x86_64") {
-				project.SetProperty (KnownProperties.RuntimeIdentifier, "android-x64");
-			}
+			project.SetProperty (KnownProperties.RuntimeIdentifier, AbiUtils.AbiToRuntimeIdentifier (androidAbi));
 		}
 
 		public static void SetRuntimeIdentifiers (this IShortFormProject project, string [] androidAbis)
 		{
 			var abis = new List<string> ();
 			foreach (var androidAbi in androidAbis) {
-				if (androidAbi == "armeabi-v7a") {
-					abis.Add ("android-arm");
-				} else if (androidAbi == "arm64-v8a") {
-					abis.Add ("android-arm64");
-				} else if (androidAbi == "x86") {
-					abis.Add ("android-x86");
-				} else if (androidAbi == "x86_64") {
-					abis.Add ("android-x64");
-				}
+				abis.Add (AbiUtils.AbiToRuntimeIdentifier (androidAbi));
 			}
 			project.SetProperty (KnownProperties.RuntimeIdentifiers, string.Join (";", abis));
 		}

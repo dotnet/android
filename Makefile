@@ -22,7 +22,7 @@ _PREPARE_CI_MODE_ARGS = $(_PREPARE_CI_MODE_PR_ARGS) -a
 _PREPARE_ARGS =
 
 all:
-	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) $(SOLUTION)
+	$(call DOTNET_BINLOG,all) $(MSBUILD_FLAGS) $(SOLUTION) -m:1
 	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) tools/xabuild/xabuild.csproj
 
 -include bin/Build$(CONFIGURATION)/rules.mk
@@ -97,7 +97,7 @@ all-tests::
 	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) /restore $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 pack-dotnet::
-	$(call MSBUILD_BINLOG,pack-dotnet,$(_SLN_BUILD)) $(MSBUILD_FLAGS) Xamarin.Android.sln /t:PackDotNet
+	$(call DOTNET_BINLOG,pack-dotnet) $(MSBUILD_FLAGS) $(SOLUTION) -t:PackDotNet
 
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
@@ -141,7 +141,7 @@ run-all-tests:
 	exit $$_r
 
 clean:
-	$(call MSBUILD_BINLOG,clean) /t:Clean Xamarin.Android.sln
+	$(call DOTNET_BINLOG,clean) -t:Clean $(SOLUTION) -m:1
 	tools/scripts/xabuild $(MSBUILD_FLAGS) /t:Clean Xamarin.Android-Tests.sln
 
 distclean:
