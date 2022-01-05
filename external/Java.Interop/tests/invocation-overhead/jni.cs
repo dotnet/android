@@ -26,21 +26,22 @@ using Java.Interop;
 
 using JNIEnvPtr          = System.IntPtr;
 
-#if FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_JI_PINVOKES
+#if FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 	using jinstanceFieldID   = System.IntPtr;
 	using jstaticFieldID     = System.IntPtr;
 	using jinstanceMethodID  = System.IntPtr;
 	using jstaticMethodID    = System.IntPtr;
 	using jobject            = System.IntPtr;
-#endif  // FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_JI_PINVOKES
+#endif  // FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 
 namespace Java.Interop {
+#pragma warning disable 0649	// Field is assigned to, and will always have its default value `null`; ignore as it'll be set in native code.
+#pragma warning disable 0169	// Field never used; ignore since these fields make the structure have the right layout.
+
 #if FEATURE_JNIENVIRONMENT_SAFEHANDLES || FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_XA_INTPTRS
 	[StructLayout (LayoutKind.Sequential)]
 	partial struct JniNativeInterfaceStruct {
 
-#pragma warning disable 0649	// Field is assigned to, and will always have its default value `null`; ignore as it'll be set in native code.
-#pragma warning disable 0169	// Field never used; ignore since these fields make the structure have the right layout.
 		private IntPtr  reserved0;                      // void*
 		private IntPtr  reserved1;                      // void*
 		private IntPtr  reserved2;                      // void*
@@ -274,10 +275,250 @@ namespace Java.Interop {
 		public  IntPtr  GetDirectBufferAddress;         // void*       (*GetDirectBufferAddress)(JNIEnv*, jobject);
 		public  IntPtr  GetDirectBufferCapacity;        // jlong       (*GetDirectBufferCapacity)(JNIEnv*, jobject);
 		public  IntPtr  GetObjectRefType;               // jobjectRefType (*GetObjectRefType)(JNIEnv*, jobject);
-#pragma warning restore 0169
-#pragma warning restore 0649
 	}
 #endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES || FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_XA_INTPTRS
+
+#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+	[StructLayout (LayoutKind.Sequential)]
+	unsafe partial struct JNIEnv {
+		private IntPtr  reserved0;                      // void*
+		private IntPtr  reserved1;                      // void*
+		private IntPtr  reserved2;                      // void*
+		private IntPtr  reserved3;                      // void*
+		public  delegate* unmanaged <IntPtr /* env */, int> GetVersion;
+		public  delegate* unmanaged <IntPtr /* env */, IntPtr /* name */, jobject /* loader */, IntPtr /* buffer */, int /* bufferLength */, jobject> DefineClass;
+		public  delegate* unmanaged <IntPtr /* env */, IntPtr /* classname */, jobject> FindClass;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* method */, IntPtr> FromReflectedMethod;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* field */, IntPtr> FromReflectedField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, byte /* isStatic */, jobject> ToReflectedMethod;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, jobject> GetSuperclass;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* class1 */, jobject /* class2 */, byte> IsAssignableFrom;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, byte /* isStatic */, jobject> ToReflectedField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* toThrow */, int> Throw;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* message */, int> ThrowNew;
+		public  delegate* unmanaged <IntPtr /* env */, jobject> ExceptionOccurred;
+		public  delegate* unmanaged <IntPtr /* env */, void> ExceptionDescribe;
+		public  delegate* unmanaged <IntPtr /* env */, void> ExceptionClear;
+		public  delegate* unmanaged <IntPtr /* env */, IntPtr /* message */, void> FatalError;
+		public  delegate* unmanaged <IntPtr /* env */, int /* capacity */, int> PushLocalFrame;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* result */, jobject> PopLocalFrame;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject> NewGlobalRef;
+		public  delegate* unmanaged <IntPtr /* env */, IntPtr /* instance */, void> DeleteGlobalRef;
+		public  delegate* unmanaged <IntPtr /* env */, IntPtr /* instance */, void> DeleteLocalRef;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* object1 */, jobject /* object2 */, byte> IsSameObject;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject> NewLocalRef;
+		public  delegate* unmanaged <IntPtr /* env */, int /* capacity */, int> EnsureLocalCapacity;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, jobject> AllocObject;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, jobject> NewObject;
+		public  IntPtr  NewObjectV;                     // jobject     (*NewObjectV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, jobject> NewObjectA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject> GetObjectClass;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, byte> IsInstanceOf;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* name */, IntPtr /* signature */, IntPtr> GetMethodID;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, jobject> CallObjectMethod;
+		public  IntPtr  CallObjectMethodV;              // jobject     (*CallObjectMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, jobject> CallObjectMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, byte> CallBooleanMethod;
+		public  IntPtr  CallBooleanMethodV;             // jboolean    (*CallBooleanMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, byte> CallBooleanMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, sbyte> CallByteMethod;
+		public  IntPtr  CallByteMethodV;                // jbyte       (*CallByteMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, sbyte> CallByteMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, char> CallCharMethod;
+		public  IntPtr  CallCharMethodV;                // jchar       (*CallCharMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, char> CallCharMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, short> CallShortMethod;
+		public  IntPtr  CallShortMethodV;               // jshort      (*CallShortMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, short> CallShortMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, int> CallIntMethod;
+		public  IntPtr  CallIntMethodV;                 // jint        (*CallIntMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, int> CallIntMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, long> CallLongMethod;
+		public  IntPtr  CallLongMethodV;                // jlong       (*CallLongMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, long> CallLongMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, float> CallFloatMethod;
+		public  IntPtr  CallFloatMethodV;               // jfloat      (*CallFloatMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, float> CallFloatMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, double> CallDoubleMethod;
+		public  IntPtr  CallDoubleMethodV;              // jdouble     (*CallDoubleMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, double> CallDoubleMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, void> CallVoidMethod;
+		public  IntPtr  CallVoidMethodV;                // void        (*CallVoidMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* method */, IntPtr /* args */, void> CallVoidMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, jobject> CallNonvirtualObjectMethod;
+		public  IntPtr  CallNonvirtualObjectMethodV;    // jobject     (*CallNonvirtualObjectMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, jobject> CallNonvirtualObjectMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, byte> CallNonvirtualBooleanMethod;
+		public  IntPtr  CallNonvirtualBooleanMethodV;   // jboolean    (*CallNonvirtualBooleanMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, byte> CallNonvirtualBooleanMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, sbyte> CallNonvirtualByteMethod;
+		public  IntPtr  CallNonvirtualByteMethodV;      // jbyte       (*CallNonvirtualByteMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, sbyte> CallNonvirtualByteMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, char> CallNonvirtualCharMethod;
+		public  IntPtr  CallNonvirtualCharMethodV;      // jchar       (*CallNonvirtualCharMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, char> CallNonvirtualCharMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, short> CallNonvirtualShortMethod;
+		public  IntPtr  CallNonvirtualShortMethodV;     // jshort      (*CallNonvirtualShortMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, short> CallNonvirtualShortMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, int> CallNonvirtualIntMethod;
+		public  IntPtr  CallNonvirtualIntMethodV;       // jint        (*CallNonvirtualIntMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, int> CallNonvirtualIntMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, long> CallNonvirtualLongMethod;
+		public  IntPtr  CallNonvirtualLongMethodV;      // jlong       (*CallNonvirtualLongMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, long> CallNonvirtualLongMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, float> CallNonvirtualFloatMethod;
+		public  IntPtr  CallNonvirtualFloatMethodV;     // jfloat      (*CallNonvirtualFloatMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, float> CallNonvirtualFloatMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, double> CallNonvirtualDoubleMethod;
+		public  IntPtr  CallNonvirtualDoubleMethodV;    // jdouble     (*CallNonvirtualDoubleMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, double> CallNonvirtualDoubleMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, void> CallNonvirtualVoidMethod;
+		public  IntPtr  CallNonvirtualVoidMethodV;      // void        (*CallNonvirtualVoidMethodV)(JNIEnv*, jobject, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, void> CallNonvirtualVoidMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* name */, IntPtr /* signature */, IntPtr> GetFieldID;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, jobject> GetObjectField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, byte> GetBooleanField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, sbyte> GetByteField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, char> GetCharField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, short> GetShortField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, int> GetIntField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, long> GetLongField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, float> GetFloatField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, double> GetDoubleField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, jobject /* value */, void> SetObjectField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, byte /* value */, void> SetBooleanField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, sbyte /* value */, void> SetByteField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, char /* value */, void> SetCharField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, short /* value */, void> SetShortField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, int /* value */, void> SetIntField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, long /* value */, void> SetLongField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, float /* value */, void> SetFloatField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, IntPtr /* field */, double /* value */, void> SetDoubleField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* name */, IntPtr /* signature */, IntPtr> GetStaticMethodID;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, jobject> CallStaticObjectMethod;
+		public  IntPtr  CallStaticObjectMethodV;        // jobject     (*CallStaticObjectMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, jobject> CallStaticObjectMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, byte> CallStaticBooleanMethod;
+		public  IntPtr  CallStaticBooleanMethodV;       // jboolean    (*CallStaticBooleanMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, byte> CallStaticBooleanMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, sbyte> CallStaticByteMethod;
+		public  IntPtr  CallStaticByteMethodV;          // jbyte       (*CallStaticByteMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, sbyte> CallStaticByteMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, char> CallStaticCharMethod;
+		public  IntPtr  CallStaticCharMethodV;          // jchar       (*CallStaticCharMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, char> CallStaticCharMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, short> CallStaticShortMethod;
+		public  IntPtr  CallStaticShortMethodV;         // jshort      (*CallStaticShortMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, short> CallStaticShortMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, int> CallStaticIntMethod;
+		public  IntPtr  CallStaticIntMethodV;           // jint        (*CallStaticIntMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, int> CallStaticIntMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, long> CallStaticLongMethod;
+		public  IntPtr  CallStaticLongMethodV;          // jlong       (*CallStaticLongMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, long> CallStaticLongMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, float> CallStaticFloatMethod;
+		public  IntPtr  CallStaticFloatMethodV;         // jfloat      (*CallStaticFloatMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, float> CallStaticFloatMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, double> CallStaticDoubleMethod;
+		public  IntPtr  CallStaticDoubleMethodV;        // jdouble     (*CallStaticDoubleMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, double> CallStaticDoubleMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, void> CallStaticVoidMethod;
+		public  IntPtr  CallStaticVoidMethodV;          // void        (*CallStaticVoidMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* method */, IntPtr /* args */, void> CallStaticVoidMethodA;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* name */, IntPtr /* signature */, IntPtr> GetStaticFieldID;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, jobject> GetStaticObjectField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, byte> GetStaticBooleanField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, sbyte> GetStaticByteField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, char> GetStaticCharField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, short> GetStaticShortField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, int> GetStaticIntField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, long> GetStaticLongField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, float> GetStaticFloatField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, double> GetStaticDoubleField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, jobject /* value */, void> SetStaticObjectField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, byte /* value */, void> SetStaticBooleanField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, sbyte /* value */, void> SetStaticByteField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, char /* value */, void> SetStaticCharField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, short /* value */, void> SetStaticShortField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, int /* value */, void> SetStaticIntField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, long /* value */, void> SetStaticLongField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, float /* value */, void> SetStaticFloatField;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, IntPtr /* field */, double /* value */, void> SetStaticDoubleField;
+		public  delegate* unmanaged <IntPtr /* env */, char* /* unicodeChars */, int /* length */, jobject> NewString;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, int> GetStringLength;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, bool* /* isCopy */, char*> GetStringChars;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, char* /* chars */, void> ReleaseStringChars;
+		public  delegate* unmanaged <IntPtr /* env */, IntPtr /* bytes */, jobject> NewStringUTF;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, int> GetStringUTFLength;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, bool* /* isCopy */, IntPtr> GetStringUTFChars;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, IntPtr /* utf */, void> ReleaseStringUTFChars;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int> GetArrayLength;
+		public  delegate* unmanaged <IntPtr /* env */, int /* length */, jobject /* elementClass */, jobject /* initialElement */, jobject> NewObjectArray;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* index */, jobject> GetObjectArrayElement;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* index */, jobject /* value */, void> SetObjectArrayElement;
+		public  delegate* unmanaged <IntPtr /* env */, int /* length */, jobject> NewBooleanArray;
+		public  delegate* unmanaged <IntPtr /* env */, int /* length */, jobject> NewByteArray;
+		public  delegate* unmanaged <IntPtr /* env */, int /* length */, jobject> NewCharArray;
+		public  delegate* unmanaged <IntPtr /* env */, int /* length */, jobject> NewShortArray;
+		public  delegate* unmanaged <IntPtr /* env */, int /* length */, jobject> NewIntArray;
+		public  delegate* unmanaged <IntPtr /* env */, int /* length */, jobject> NewLongArray;
+		public  delegate* unmanaged <IntPtr /* env */, int /* length */, jobject> NewFloatArray;
+		public  delegate* unmanaged <IntPtr /* env */, int /* length */, jobject> NewDoubleArray;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* isCopy */, bool*> GetBooleanArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* isCopy */, sbyte*> GetByteArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* isCopy */, char*> GetCharArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* isCopy */, short*> GetShortArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* isCopy */, int*> GetIntArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* isCopy */, long*> GetLongArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* isCopy */, float*> GetFloatArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* isCopy */, double*> GetDoubleArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* elements */, int /* mode */, void> ReleaseBooleanArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, sbyte* /* elements */, int /* mode */, void> ReleaseByteArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, char* /* elements */, int /* mode */, void> ReleaseCharArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, short* /* elements */, int /* mode */, void> ReleaseShortArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int* /* elements */, int /* mode */, void> ReleaseIntArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, long* /* elements */, int /* mode */, void> ReleaseLongArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, float* /* elements */, int /* mode */, void> ReleaseFloatArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, double* /* elements */, int /* mode */, void> ReleaseDoubleArrayElements;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, bool* /* buffer */, void> GetBooleanArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, sbyte* /* buffer */, void> GetByteArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, char* /* buffer */, void> GetCharArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, short* /* buffer */, void> GetShortArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, int* /* buffer */, void> GetIntArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, long* /* buffer */, void> GetLongArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, float* /* buffer */, void> GetFloatArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, double* /* buffer */, void> GetDoubleArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, bool* /* buffer */, void> SetBooleanArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, sbyte* /* buffer */, void> SetByteArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, char* /* buffer */, void> SetCharArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, short* /* buffer */, void> SetShortArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, int* /* buffer */, void> SetIntArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, long* /* buffer */, void> SetLongArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, float* /* buffer */, void> SetFloatArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, int /* start */, int /* length */, double* /* buffer */, void> SetDoubleArrayRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, JniNativeMethodRegistration [] /* methods */, int /* numMethods */, int> RegisterNatives;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* type */, int> UnregisterNatives;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, int> MonitorEnter;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, int> MonitorExit;
+		public  delegate* unmanaged <IntPtr /* env */, IntPtr* /* vm */, int> GetJavaVM;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, int /* start */, int /* length */, char* /* buffer */, void> GetStringRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, int /* start */, int /* length */, IntPtr /* buffer */, void> GetStringUTFRegion;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, bool* /* isCopy */, IntPtr> GetPrimitiveArrayCritical;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* array */, IntPtr /* carray */, int /* mode */, void> ReleasePrimitiveArrayCritical;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, bool* /* isCopy */, IntPtr> GetStringCritical;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* stringInstance */, IntPtr /* carray */, void> ReleaseStringCritical;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, jobject> NewWeakGlobalRef;
+		public  delegate* unmanaged <IntPtr /* env */, IntPtr /* instance */, void> DeleteWeakGlobalRef;
+		public  delegate* unmanaged <IntPtr /* env */, byte> ExceptionCheck;
+		public  delegate* unmanaged <IntPtr /* env */, IntPtr /* address */, long /* capacity */, jobject> NewDirectByteBuffer;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* buffer */, IntPtr> GetDirectBufferAddress;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* buffer */, long> GetDirectBufferCapacity;
+		public  delegate* unmanaged <IntPtr /* env */, jobject /* instance */, JniObjectReferenceType> GetObjectRefType;
+	}
+#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+
+#pragma warning restore 0169
+#pragma warning restore 0649
 }
 #if FEATURE_JNIENVIRONMENT_SAFEHANDLES
 namespace
@@ -17641,3 +17882,3006 @@ namespace
 	}
 }
 #endif  // FEATURE_JNIENVIRONMENT_XA_INTPTRS
+#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+namespace
+#if _NAMESPACE_PER_HANDLE
+	Java.Interop.JIFunctionPointers
+#else
+	Java.Interop
+#endif
+{
+
+	partial class JniEnvironment {
+
+	public static partial class Arrays {
+
+		public static unsafe int GetArrayLength (JniObjectReference array)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetArrayLength (__env, array.Handle);
+			return tmp;
+		}
+
+		public static unsafe JniObjectReference NewObjectArray (int length, JniObjectReference elementClass, JniObjectReference initialElement)
+		{
+			if (!elementClass.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "elementClass");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewObjectArray (__env, length, elementClass.Handle, initialElement.Handle);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference GetObjectArrayElement (JniObjectReference array, int index)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetObjectArrayElement (__env, array.Handle, index);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe void SetObjectArrayElement (JniObjectReference array, int index, JniObjectReference value)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetObjectArrayElement (__env, array.Handle, index, value.Handle);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe JniObjectReference NewBooleanArray (int length)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewBooleanArray (__env, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewByteArray (int length)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewByteArray (__env, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewCharArray (int length)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewCharArray (__env, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewShortArray (int length)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewShortArray (__env, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewIntArray (int length)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewIntArray (__env, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewLongArray (int length)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewLongArray (__env, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewFloatArray (int length)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewFloatArray (__env, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewDoubleArray (int length)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewDoubleArray (__env, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe bool* GetBooleanArrayElements (JniObjectReference array, bool* isCopy)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetBooleanArrayElements (__env, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe sbyte* GetByteArrayElements (JniObjectReference array, bool* isCopy)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetByteArrayElements (__env, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe char* GetCharArrayElements (JniObjectReference array, bool* isCopy)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetCharArrayElements (__env, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe short* GetShortArrayElements (JniObjectReference array, bool* isCopy)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetShortArrayElements (__env, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe int* GetIntArrayElements (JniObjectReference array, bool* isCopy)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetIntArrayElements (__env, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe long* GetLongArrayElements (JniObjectReference array, bool* isCopy)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetLongArrayElements (__env, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe float* GetFloatArrayElements (JniObjectReference array, bool* isCopy)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetFloatArrayElements (__env, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe double* GetDoubleArrayElements (JniObjectReference array, bool* isCopy)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetDoubleArrayElements (__env, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, JniReleaseArrayElementsMode mode)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleaseBooleanArrayElements (__env, array.Handle, elements, ((int) mode));
+		}
+
+		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, JniReleaseArrayElementsMode mode)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleaseByteArrayElements (__env, array.Handle, elements, ((int) mode));
+		}
+
+		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, JniReleaseArrayElementsMode mode)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleaseCharArrayElements (__env, array.Handle, elements, ((int) mode));
+		}
+
+		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, JniReleaseArrayElementsMode mode)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleaseShortArrayElements (__env, array.Handle, elements, ((int) mode));
+		}
+
+		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, JniReleaseArrayElementsMode mode)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleaseIntArrayElements (__env, array.Handle, elements, ((int) mode));
+		}
+
+		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, JniReleaseArrayElementsMode mode)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleaseLongArrayElements (__env, array.Handle, elements, ((int) mode));
+		}
+
+		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, JniReleaseArrayElementsMode mode)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleaseFloatArrayElements (__env, array.Handle, elements, ((int) mode));
+		}
+
+		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, JniReleaseArrayElementsMode mode)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleaseDoubleArrayElements (__env, array.Handle, elements, ((int) mode));
+		}
+
+		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->GetBooleanArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void GetByteArrayRegion (JniObjectReference array, int start, int length, sbyte* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->GetByteArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void GetCharArrayRegion (JniObjectReference array, int start, int length, char* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->GetCharArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void GetShortArrayRegion (JniObjectReference array, int start, int length, short* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->GetShortArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void GetIntArrayRegion (JniObjectReference array, int start, int length, int* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->GetIntArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void GetLongArrayRegion (JniObjectReference array, int start, int length, long* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->GetLongArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void GetFloatArrayRegion (JniObjectReference array, int start, int length, float* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->GetFloatArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void GetDoubleArrayRegion (JniObjectReference array, int start, int length, double* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->GetDoubleArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetBooleanArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void SetByteArrayRegion (JniObjectReference array, int start, int length, sbyte* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetByteArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void SetCharArrayRegion (JniObjectReference array, int start, int length, char* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetCharArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void SetShortArrayRegion (JniObjectReference array, int start, int length, short* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetShortArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void SetIntArrayRegion (JniObjectReference array, int start, int length, int* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetIntArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void SetLongArrayRegion (JniObjectReference array, int start, int length, long* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetLongArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void SetFloatArrayRegion (JniObjectReference array, int start, int length, float* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetFloatArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void SetDoubleArrayRegion (JniObjectReference array, int start, int length, double* buffer)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetDoubleArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe IntPtr GetPrimitiveArrayCritical (JniObjectReference array, bool* isCopy)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetPrimitiveArrayCritical (__env, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe void ReleasePrimitiveArrayCritical (JniObjectReference array, IntPtr carray, JniReleaseArrayElementsMode mode)
+		{
+			if (!array.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "array");
+			if (carray == IntPtr.Zero)
+				throw new ArgumentException ("'carray' must not be IntPtr.Zero.", "carray");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleasePrimitiveArrayCritical (__env, array.Handle, carray, ((int) mode));
+		}
+	}
+
+	public static partial class Exceptions {
+
+		internal static unsafe int _Throw (JniObjectReference toThrow)
+		{
+			if (!toThrow.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "toThrow");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->Throw (__env, toThrow.Handle);
+			return tmp;
+		}
+
+		internal static unsafe int _ThrowNew (JniObjectReference type, string message)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (message == null)
+				throw new ArgumentNullException ("message");
+
+			var _message_ptr = Marshal.StringToCoTaskMemUTF8 (message);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->ThrowNew (__env, type.Handle, _message_ptr);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_message_ptr);
+			return tmp;
+		}
+
+		public static unsafe JniObjectReference ExceptionOccurred ()
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe void ExceptionDescribe ()
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ExceptionDescribe (__env);
+		}
+
+		public static unsafe void ExceptionClear ()
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ExceptionClear (__env);
+		}
+
+		public static unsafe void FatalError (string message)
+		{
+			if (message == null)
+				throw new ArgumentNullException ("message");
+
+			var _message_ptr = Marshal.StringToCoTaskMemUTF8 (message);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->FatalError (__env, _message_ptr);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_message_ptr);
+		}
+
+		public static unsafe bool ExceptionCheck ()
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->ExceptionCheck (__env);
+			return (tmp != 0) ? true : false;
+		}
+	}
+
+	public static partial class InstanceFields {
+
+		public static unsafe JniFieldInfo GetFieldID (JniObjectReference type, string name, string signature)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (name == null)
+				throw new ArgumentNullException ("name");
+			if (signature == null)
+				throw new ArgumentNullException ("signature");
+
+			var _name_ptr = Marshal.StringToCoTaskMemUTF8 (name);
+			var _signature_ptr = Marshal.StringToCoTaskMemUTF8 (signature);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetFieldID (__env, type.Handle, _name_ptr, _signature_ptr);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			if (tmp == IntPtr.Zero)
+				return null;
+			return new JniFieldInfo (name, signature, tmp, isStatic: false);
+		}
+
+		public static unsafe JniObjectReference GetObjectField (JniObjectReference instance, JniFieldInfo field)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetObjectField (__env, instance.Handle, field.ID);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe bool GetBooleanField (JniObjectReference instance, JniFieldInfo field)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetBooleanField (__env, instance.Handle, field.ID);
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe sbyte GetByteField (JniObjectReference instance, JniFieldInfo field)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetByteField (__env, instance.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe char GetCharField (JniObjectReference instance, JniFieldInfo field)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetCharField (__env, instance.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe short GetShortField (JniObjectReference instance, JniFieldInfo field)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetShortField (__env, instance.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe int GetIntField (JniObjectReference instance, JniFieldInfo field)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetIntField (__env, instance.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe long GetLongField (JniObjectReference instance, JniFieldInfo field)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetLongField (__env, instance.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe float GetFloatField (JniObjectReference instance, JniFieldInfo field)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetFloatField (__env, instance.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe double GetDoubleField (JniObjectReference instance, JniFieldInfo field)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetDoubleField (__env, instance.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe void SetObjectField (JniObjectReference instance, JniFieldInfo field, JniObjectReference value)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetObjectField (__env, instance.Handle, field.ID, value.Handle);
+		}
+
+		public static unsafe void SetBooleanField (JniObjectReference instance, JniFieldInfo field, bool value)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetBooleanField (__env, instance.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
+		}
+
+		public static unsafe void SetByteField (JniObjectReference instance, JniFieldInfo field, sbyte value)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetByteField (__env, instance.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetCharField (JniObjectReference instance, JniFieldInfo field, char value)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetCharField (__env, instance.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetShortField (JniObjectReference instance, JniFieldInfo field, short value)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetShortField (__env, instance.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetIntField (JniObjectReference instance, JniFieldInfo field, int value)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetIntField (__env, instance.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetLongField (JniObjectReference instance, JniFieldInfo field, long value)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetLongField (__env, instance.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetFloatField (JniObjectReference instance, JniFieldInfo field, float value)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetFloatField (__env, instance.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetDoubleField (JniObjectReference instance, JniFieldInfo field, double value)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetDoubleField (__env, instance.Handle, field.ID, value);
+		}
+	}
+
+	public static partial class InstanceMethods {
+
+		public static unsafe JniMethodInfo GetMethodID (JniObjectReference type, string name, string signature)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (name == null)
+				throw new ArgumentNullException ("name");
+			if (signature == null)
+				throw new ArgumentNullException ("signature");
+
+			var _name_ptr = Marshal.StringToCoTaskMemUTF8 (name);
+			var _signature_ptr = Marshal.StringToCoTaskMemUTF8 (signature);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetMethodID (__env, type.Handle, _name_ptr, _signature_ptr);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			if (tmp == IntPtr.Zero)
+				return null;
+			return new JniMethodInfo (name, signature, tmp, isStatic: false);
+		}
+
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallObjectMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallObjectMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallBooleanMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallBooleanMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallByteMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallByteMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe char CallCharMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallCharMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe char CallCharMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallCharMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe short CallShortMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallShortMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe short CallShortMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallShortMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe int CallIntMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallIntMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe int CallIntMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallIntMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe long CallLongMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallLongMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe long CallLongMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallLongMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe float CallFloatMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallFloatMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe float CallFloatMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallFloatMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallDoubleMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallDoubleMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe void CallVoidMethod (JniObjectReference instance, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->CallVoidMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void CallVoidMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->CallVoidMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualObjectMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualObjectMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualBooleanMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualBooleanMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualByteMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualByteMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualCharMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualCharMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualShortMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualShortMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualIntMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualIntMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualLongMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualLongMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualFloatMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualFloatMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualDoubleMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallNonvirtualDoubleMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->CallNonvirtualVoidMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->CallNonvirtualVoidMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+	}
+
+	public static partial class IO {
+
+		public static unsafe JniObjectReference NewDirectByteBuffer (IntPtr address, long capacity)
+		{
+			if (address == IntPtr.Zero)
+				throw new ArgumentException ("'address' must not be IntPtr.Zero.", "address");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewDirectByteBuffer (__env, address, capacity);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe IntPtr GetDirectBufferAddress (JniObjectReference buffer)
+		{
+			if (!buffer.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "buffer");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetDirectBufferAddress (__env, buffer.Handle);
+			return tmp;
+		}
+
+		public static unsafe long GetDirectBufferCapacity (JniObjectReference buffer)
+		{
+			if (!buffer.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "buffer");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetDirectBufferCapacity (__env, buffer.Handle);
+			return tmp;
+		}
+	}
+
+	public static partial class Monitors {
+
+		internal static unsafe int _MonitorEnter (JniObjectReference instance)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->MonitorEnter (__env, instance.Handle);
+			return tmp;
+		}
+
+		internal static unsafe int _MonitorExit (JniObjectReference instance)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->MonitorExit (__env, instance.Handle);
+			return tmp;
+		}
+	}
+
+	public static partial class Object {
+
+		public static unsafe JniObjectReference AllocObject (JniObjectReference type)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->AllocObject (__env, type.Handle);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		internal static unsafe JniObjectReference _NewObject (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewObject (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		internal static unsafe JniObjectReference _NewObject (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewObjectA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+	}
+
+	public static partial class References {
+
+		internal static unsafe int _PushLocalFrame (int capacity)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->PushLocalFrame (__env, capacity);
+			return tmp;
+		}
+
+		public static unsafe JniObjectReference PopLocalFrame (JniObjectReference result)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->PopLocalFrame (__env, result.Handle);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		internal static unsafe JniObjectReference NewGlobalRef (JniObjectReference instance)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewGlobalRef (__env, instance.Handle);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Global);
+		}
+
+		internal static unsafe void DeleteGlobalRef (IntPtr instance)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->DeleteGlobalRef (__env, instance);
+		}
+
+		internal static unsafe void DeleteLocalRef (IntPtr instance)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->DeleteLocalRef (__env, instance);
+		}
+
+		internal static unsafe JniObjectReference NewLocalRef (JniObjectReference instance)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewLocalRef (__env, instance.Handle);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		internal static unsafe int _EnsureLocalCapacity (int capacity)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->EnsureLocalCapacity (__env, capacity);
+			return tmp;
+		}
+
+		internal static unsafe int _GetJavaVM (out IntPtr vm)
+		{
+			IntPtr _vm_ptr = IntPtr.Zero;
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetJavaVM (__env, &_vm_ptr);
+			vm = _vm_ptr;
+			return tmp;
+		}
+
+		internal static unsafe JniObjectReference NewWeakGlobalRef (JniObjectReference instance)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewWeakGlobalRef (__env, instance.Handle);
+			return new JniObjectReference (tmp, JniObjectReferenceType.WeakGlobal);
+		}
+
+		internal static unsafe void DeleteWeakGlobalRef (IntPtr instance)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->DeleteWeakGlobalRef (__env, instance);
+		}
+
+		internal static unsafe JniObjectReferenceType GetObjectRefType (JniObjectReference instance)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetObjectRefType (__env, instance.Handle);
+			return tmp;
+		}
+	}
+
+	internal static partial class Reflection {
+
+		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference type, JniMethodInfo method, bool isStatic)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->ToReflectedMethod (__env, type.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference ToReflectedField (JniObjectReference type, JniFieldInfo field, bool isStatic)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->ToReflectedField (__env, type.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+	}
+
+	public static partial class StaticFields {
+
+		public static unsafe JniFieldInfo GetStaticFieldID (JniObjectReference type, string name, string signature)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (name == null)
+				throw new ArgumentNullException ("name");
+			if (signature == null)
+				throw new ArgumentNullException ("signature");
+
+			var _name_ptr = Marshal.StringToCoTaskMemUTF8 (name);
+			var _signature_ptr = Marshal.StringToCoTaskMemUTF8 (signature);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticFieldID (__env, type.Handle, _name_ptr, _signature_ptr);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			if (tmp == IntPtr.Zero)
+				return null;
+			return new JniFieldInfo (name, signature, tmp, isStatic: true);
+		}
+
+		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference type, JniFieldInfo field)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticObjectField (__env, type.Handle, field.ID);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe bool GetStaticBooleanField (JniObjectReference type, JniFieldInfo field)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticBooleanField (__env, type.Handle, field.ID);
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe sbyte GetStaticByteField (JniObjectReference type, JniFieldInfo field)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticByteField (__env, type.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe char GetStaticCharField (JniObjectReference type, JniFieldInfo field)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticCharField (__env, type.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe short GetStaticShortField (JniObjectReference type, JniFieldInfo field)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticShortField (__env, type.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe int GetStaticIntField (JniObjectReference type, JniFieldInfo field)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticIntField (__env, type.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe long GetStaticLongField (JniObjectReference type, JniFieldInfo field)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticLongField (__env, type.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe float GetStaticFloatField (JniObjectReference type, JniFieldInfo field)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticFloatField (__env, type.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe double GetStaticDoubleField (JniObjectReference type, JniFieldInfo field)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticDoubleField (__env, type.Handle, field.ID);
+			return tmp;
+		}
+
+		public static unsafe void SetStaticObjectField (JniObjectReference type, JniFieldInfo field, JniObjectReference value)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetStaticObjectField (__env, type.Handle, field.ID, value.Handle);
+		}
+
+		public static unsafe void SetStaticBooleanField (JniObjectReference type, JniFieldInfo field, bool value)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetStaticBooleanField (__env, type.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
+		}
+
+		public static unsafe void SetStaticByteField (JniObjectReference type, JniFieldInfo field, sbyte value)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetStaticByteField (__env, type.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetStaticCharField (JniObjectReference type, JniFieldInfo field, char value)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetStaticCharField (__env, type.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetStaticShortField (JniObjectReference type, JniFieldInfo field, short value)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetStaticShortField (__env, type.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetStaticIntField (JniObjectReference type, JniFieldInfo field, int value)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetStaticIntField (__env, type.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetStaticLongField (JniObjectReference type, JniFieldInfo field, long value)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetStaticLongField (__env, type.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetStaticFloatField (JniObjectReference type, JniFieldInfo field, float value)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetStaticFloatField (__env, type.Handle, field.ID, value);
+		}
+
+		public static unsafe void SetStaticDoubleField (JniObjectReference type, JniFieldInfo field, double value)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (field == null)
+				throw new ArgumentNullException ("field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->SetStaticDoubleField (__env, type.Handle, field.ID, value);
+		}
+	}
+
+	public static partial class StaticMethods {
+
+		public static unsafe JniMethodInfo GetStaticMethodID (JniObjectReference type, string name, string signature)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (name == null)
+				throw new ArgumentNullException ("name");
+			if (signature == null)
+				throw new ArgumentNullException ("signature");
+
+			var _name_ptr = Marshal.StringToCoTaskMemUTF8 (name);
+			var _signature_ptr = Marshal.StringToCoTaskMemUTF8 (signature);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStaticMethodID (__env, type.Handle, _name_ptr, _signature_ptr);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			if (tmp == IntPtr.Zero)
+				return null;
+			return new JniMethodInfo (name, signature, tmp, isStatic: true);
+		}
+
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticObjectMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticObjectMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticBooleanMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticBooleanMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticByteMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticByteMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticCharMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticCharMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticShortMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticShortMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticIntMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticIntMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticLongMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticLongMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticFloatMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticFloatMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticDoubleMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->CallStaticDoubleMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniMethodInfo method)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->CallStaticVoidMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+
+		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->CallStaticVoidMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+		}
+	}
+
+	public static partial class Strings {
+
+		public static unsafe JniObjectReference NewString (char* unicodeChars, int length)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->NewString (__env, unicodeChars, length);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe int GetStringLength (JniObjectReference stringInstance)
+		{
+			if (!stringInstance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "stringInstance");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStringLength (__env, stringInstance.Handle);
+			return tmp;
+		}
+
+		public static unsafe char* GetStringChars (JniObjectReference stringInstance, bool* isCopy)
+		{
+			if (!stringInstance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "stringInstance");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetStringChars (__env, stringInstance.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe void ReleaseStringChars (JniObjectReference stringInstance, char* chars)
+		{
+			if (!stringInstance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "stringInstance");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			(*((JNIEnv**)__env))->ReleaseStringChars (__env, stringInstance.Handle, chars);
+		}
+	}
+
+	public static partial class Types {
+
+		public static unsafe JniObjectReference DefineClass (string name, JniObjectReference loader, IntPtr buffer, int bufferLength)
+		{
+			if (name == null)
+				throw new ArgumentNullException ("name");
+			if (!loader.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "loader");
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
+
+			var _name_ptr = Marshal.StringToCoTaskMemUTF8 (name);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->DefineClass (__env, _name_ptr, loader.Handle, buffer, bufferLength);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		internal static unsafe JniObjectReference _FindClass (string classname)
+		{
+			if (classname == null)
+				throw new ArgumentNullException ("classname");
+
+			var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->FindClass (__env, _classname_ptr);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference GetSuperclass (JniObjectReference type)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetSuperclass (__env, type.Handle);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe bool IsAssignableFrom (JniObjectReference class1, JniObjectReference class2)
+		{
+			if (!class1.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "class1");
+			if (!class2.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "class2");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->IsAssignableFrom (__env, class1.Handle, class2.Handle);
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe bool IsSameObject (JniObjectReference object1, JniObjectReference object2)
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->IsSameObject (__env, object1.Handle, object2.Handle);
+			return (tmp != 0) ? true : false;
+		}
+
+		public static unsafe JniObjectReference GetObjectClass (JniObjectReference instance)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetObjectClass (__env, instance.Handle);
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe bool IsInstanceOf (JniObjectReference instance, JniObjectReference type)
+		{
+			if (!instance.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "instance");
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->IsInstanceOf (__env, instance.Handle, type.Handle);
+			return (tmp != 0) ? true : false;
+		}
+
+		internal static unsafe int _RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->RegisterNatives (__env, type.Handle, methods, numMethods);
+			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
+			return tmp;
+		}
+
+		internal static unsafe int _UnregisterNatives (JniObjectReference type)
+		{
+			if (!type.IsValid)
+				throw new ArgumentException ("Handle must be valid.", "type");
+
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->UnregisterNatives (__env, type.Handle);
+			return tmp;
+		}
+	}
+
+	internal static partial class Versions {
+
+		internal static unsafe int GetVersion ()
+		{
+			IntPtr __env = JniEnvironment.EnvironmentPointer;
+			var tmp = (*((JNIEnv**)__env))->GetVersion (__env);
+			return tmp;
+		}
+	}
+	}
+
+}
+#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
