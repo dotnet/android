@@ -104,9 +104,9 @@ namespace Xamarin.ProjectTools
 				if (!string.IsNullOrEmpty (_dotNetAndroidSdkDirectory)) {
 					return _dotNetAndroidSdkDirectory;
 				}
-				var sdkName = IsMacOS ? "Microsoft.Android.Sdk.Darwin"
-					: TestEnvironment.IsWindows ? "Microsoft.Android.Sdk.Windows"
-					: "Microsoft.Android.Sdk.Linux";
+				var sdkName = IsMacOS ? "Microsoft.Android.Sdk.Darwin" :
+					IsWindows ? "Microsoft.Android.Sdk.Windows" :
+					"Microsoft.Android.Sdk.Linux";
 
 				return _dotNetAndroidSdkDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", sdkName)).LastOrDefault ();
 			}
