@@ -81,7 +81,7 @@ steps:
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifactName: nuget-linux-unsigned
+    artifactName: $(LinuxNuGetArtifactName)
     downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/$(NuGetArtifactName)
   condition: and(succeeded(), eq(variables['agent.os'], 'Linux'))
 

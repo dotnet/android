@@ -401,7 +401,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: upload linux sdk
       inputs:
-        artifactName: nuget-linux-unsigned
+        artifactName: $(LinuxNuGetArtifactName)
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
     - template: yaml-templates/upload-results.yaml
@@ -1322,19 +1322,20 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-- stage: dotnet_prepare_release
-  displayName: .NET 6 Prepare Release
+- stage: net_sign_mac_win
+  displayName: Sign .NET macOS and Windows
   dependsOn: mac_build
   jobs:
-  # Check - "Xamarin.Android (.NET 6 Prepare Release Sign NuGets)"
+  # Check - "Xamarin.Android (Sign .NET macOS and Windows Sign Archives)"
   - template: sign-artifacts/jobs/v2.yml@yaml
     parameters:
       artifactName: $(NuGetArtifactName)
       signType: $(MicroBuildSignType)
+      signedArtifactName: nuget-signed
       usePipelineArtifactTasks: true
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
-  # Check - "Xamarin.Android (.NET 6 Prepare Release Convert NuGet to MSI)"
+  # Check - "Xamarin.Android (Sign .NET macOS and Windows Convert NuGet to MSI)"
   - template: nuget-msi-convert/job/v2.yml@yaml
     parameters:
       yamlResourceName: yaml
@@ -1347,11 +1348,28 @@ stages:
       runInParallel: false
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
- # Check - "Xamarin.Android (.NET 6 Prepare Release Push NuGets)"
+- stage: net_sign_linux
+  displayName: Sign .NET Linux
+  dependsOn: linux_build
+  jobs:
+  # Check - "Xamarin.Android (Sign .NET Linux Sign Archives)"
+  - template: sign-artifacts/jobs/v2.yml@yaml
+    parameters:
+      artifactName: $(LinuxNuGetArtifactName)
+      signType: $(MicroBuildSignType)
+      signedArtifactName: nuget-linux-signed
+      usePipelineArtifactTasks: true
+      condition: eq(variables['MicroBuildSignType'], 'Real')
+
+- stage: net_stage_release
+  displayName: Stage .NET Release
+  dependsOn:
+  - net_sign_mac_win
+  - net_sign_linux
+  condition: and(eq(dependencies.net_sign_mac_win.result, 'Succeeded'), eq(dependencies.net_sign_linux.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+  # Check - "Xamarin.Android (Stage .NET Release Push Internal)"
   - job: push_signed_nugets
-    displayName: Push NuGets
-    dependsOn: nuget_convert
-    condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+    displayName: Push Internal
     timeoutInMinutes: 60
     pool: $(VSEngMicroBuild2019)
     workspace:
@@ -1365,6 +1383,11 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: nuget-signed
+        downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: nuget-linux-signed
         downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
 
     - task: NuGetCommand@2
@@ -1414,7 +1437,7 @@ stages:
 # Check - "Xamarin.Android (VS Insertion - Create VS Drop and Open PR)"
 - template: vs-insertion/stage/v1.yml@yaml
   parameters:
-    dependsOn: dotnet_prepare_release
+    dependsOn: net_stage_release
     symbolArtifactName: nuget-signed
     symbolArtifactPatterns: |
       !*Darwin*
@@ -1425,8 +1448,8 @@ stages:
 
 - stage: push_nugets_to_nuget_org
   displayName: Push to NuGet.org
-  dependsOn: dotnet_prepare_release
-  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'))
+  dependsOn: net_stage_release
+  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.net_stage_release.result, 'Succeeded'))
   jobs:
   - job: wait_for_nuget_org_approval
     displayName: Wait For NuGet.org Approval
@@ -1472,14 +1495,14 @@ stages:
         nuGetFeedType: external
         publishFeedCredentials: Xamarin nuget.org - xamarinc
 
-- stage: finalize_installers
-  displayName: Finalize Installers
+- stage: classic_sign_installers
+  displayName: Sign Classic Installers
   dependsOn: mac_build
   condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
   jobs:
-  # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
+  # Check - "Xamarin.Android (Sign Classic Installers Notarize and Upload)"
   - job: notarize_pkg_upload_storage
-    displayName: Notarize and Upload to Storage
+    displayName: Notarize and Upload
     pool:
       name: $(VSEngMacBuildPool)
       demands:
@@ -1567,9 +1590,9 @@ stages:
         artifactName: Legacy Notarization Results - macOS
         includeBuildResults: true
 
-  # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
+  # Check - "Xamarin.Android (Sign Classic Installers Sign Vsix)"
   - job: queue_vsix_signing
-    displayName: Queue Vsix Signing
+    displayName: Sign Vsix
     dependsOn: notarize_pkg_upload_storage
     pool: $(VSEngMicroBuild2019)
     timeoutInMinutes: 90
