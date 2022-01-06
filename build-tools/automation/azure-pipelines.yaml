@@ -1337,18 +1337,6 @@ stages:
       usePipelineArtifactTasks: true
       condition: eq(variables['MicroBuildSignType'], 'Real')
 
-  # Check - "Xamarin.Android (Sign .NET macOS and Windows Convert NuGet to MSI)"
-  - template: nuget-msi-convert/job/v2.yml@yaml
-    parameters:
-      yamlResourceName: yaml
-      dependsOn: signing
-      artifactName: nuget-signed
-      artifactPatterns: |
-        !*Darwin*
-      propsArtifactName: nuget-unsigned
-      signType: $(MicroBuildSignType)
-      runInParallel: false
-      condition: eq(variables['MicroBuildSignType'], 'Real')
 
 - stage: net_sign_linux
   displayName: Sign .NET Linux
@@ -1401,11 +1389,6 @@ stages:
         nuGetFeedType: external
         publishFeedCredentials: dnceng-dotnet6
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: vs-msi-nugets
-        downloadPath: $(System.DefaultWorkingDirectory)\vs-msi-nugets
 
     - task: NuGetCommand@2
       displayName: push msi nupkgs
