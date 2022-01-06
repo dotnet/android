@@ -394,6 +394,8 @@ stages:
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
         cp $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/Microsoft.Android.Sdk.Linux*.nupkg
+        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
+        cp $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/SignList.xml
         $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy linux sdk
