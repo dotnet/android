@@ -125,7 +125,7 @@ namespace Xamarin.Android.Tasks
 					if (!string.IsNullOrEmpty (ProguardMappingFileOutput)) {
 						xamcfg.WriteLine ("-keepattributes SourceFile");
 						xamcfg.WriteLine ("-keepattributes LineNumberTable");
-						xamcfg.WriteLine ($"-printmapping {Path.GetFullPath (ProguardMappingFileOutput)}");
+						xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
 					}
 				}
 			}
