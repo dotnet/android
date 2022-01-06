@@ -1334,6 +1334,7 @@ stages:
   # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
   - template: sign-artifacts/jobs/v2.yml@yaml
     parameters:
+      name: sign_net_mac_win
       artifactName: $(NuGetArtifactName)
       signType: $(MicroBuildSignType)
       signedArtifactName: nuget-signed
@@ -1342,8 +1343,9 @@ stages:
   # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
   - template: sign-artifacts/jobs/v2.yml@yaml
     parameters:
-      artifactName: $(LinuxNuGetArtifactName)
+      name: sign_net_linux
       displayName: Sign Linux Archive
+      artifactName: $(LinuxNuGetArtifactName)
       signType: $(MicroBuildSignType)
       signedArtifactName: nuget-linux-signed
       usePipelineArtifactTasks: true
@@ -1352,7 +1354,7 @@ stages:
   - template: nuget-msi-convert/job/v2.yml@yaml
     parameters:
       yamlResourceName: yaml
-      dependsOn: signing
+      dependsOn: sign_net_mac_win
       artifactName: nuget-signed
       artifactPatterns: |
         !*Darwin*
@@ -1363,6 +1365,10 @@ stages:
   # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
   - job: push_signed_nugets
     displayName: Push Internal
+    dependsOn:
+    - nuget_convert
+    - sign_net_linux
+    condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
     timeoutInMinutes: 60
     pool: $(VSEngMicroBuild2019)
     workspace:
@@ -1493,7 +1499,7 @@ stages:
         nuGetFeedType: external
         publishFeedCredentials: Xamarin nuget.org - xamarinc
 
-- stage: classic_sign_installers
+- stage: finalize_installers
   displayName: Prepare Classic Release
   dependsOn: mac_build
   condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
