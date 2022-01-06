@@ -61,7 +61,7 @@ namespace Xamarin.Android.Net
 	public class AndroidClientHandler : HttpClientHandler
 	{
 		internal const string LOG_APP = "monodroid-net";
-		private AndroidMessageHandler _underlyingHander;
+		AndroidMessageHandler _underlyingHander;
 
 		bool disposed;
 
