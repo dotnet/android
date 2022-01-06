@@ -216,7 +216,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetPack ([Values ("net6.0-android", "net6.0-android31")] string targetFramework)
+		public void DotNetPack ([Values ("net6.0-android", "net6.0-android32")] string targetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
@@ -248,8 +248,8 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android32.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android32.0/{proj.ProjectName}.aar");
 			}
 		}
 
@@ -614,7 +614,7 @@ namespace Xamarin.Android.Build.Tests
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
 			Assert.AreEqual ("21", uses_sdk.Attribute (ns + "minSdkVersion").Value);
-			Assert.AreEqual ("31", uses_sdk.Attribute (ns + "targetSdkVersion").Value);
+			Assert.AreEqual ("32", uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
@@ -636,12 +636,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 
-		/// <summary>
-		/// NOTE: we cannot use SupportedOSPlatformVersion=31 yet, due to d8 2.2.64 emitting a warning for `--min-api 31`:
-		///       D8 An API level of 31 is not supported by this compiler. Please use an API level of 30 or earlier
-		/// </summary>
 		[Test]
-		public void SupportedOSPlatformVersion ([Values (21, 30)] int minSdkVersion)
+		public void SupportedOSPlatformVersion ([Values (21, 31, 32)] int minSdkVersion)
 		{
 			var proj = new XASdkProject {
 				SupportedOSPlatformVersion = minSdkVersion.ToString (),
@@ -756,8 +752,8 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			using var b = new Builder ();
-			var dotnetTargetFramework = "net6.0-android31.0";
-			var legacyTargetFrameworkVersion = "11.0";
+			var dotnetTargetFramework = "net6.0-android32.0";
+			var legacyTargetFrameworkVersion = "12.1";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
 			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
