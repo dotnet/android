@@ -322,7 +322,7 @@ namespace Xamarin.Android.Net
 			}
 
 			if (field == null) {
-				throw new InvalidOperationException ($"Field '{fieldName}' is missing from type '{baseType}'.");
+				throw new InvalidOperationException ($"Field '{fieldName}' is missing from type '{GetType ()}'.");
 			}
 
 			return field.GetValue (this);
