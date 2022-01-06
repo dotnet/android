@@ -1366,7 +1366,7 @@ stages:
   dependsOn:
   - net_sign_mac_win
   - net_sign_linux
-  condition: and(eq(dependencies.net_sign_mac_win.result, 'Succeeded'), eq(dependencies.net_sign_linux.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+  condition: false
   jobs:
   # Check - "Xamarin.Android (Stage .NET Release Push Internal)"
   - job: push_signed_nugets
