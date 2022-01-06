@@ -1424,7 +1424,7 @@ stages:
         $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
         -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
       displayName: generate and publish BAR manifest
-      condition: eq(variables['PushXAPackageInfoToMaestro'], 'true')
+      condition: and(succeeded(), eq(variables['PushXAPackageInfoToMaestro'], 'true'))
 
     - powershell: |
         $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
@@ -1433,7 +1433,7 @@ stages:
         & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
         & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
       displayName: add build to default darc channel
-      condition: eq(variables['PushXAPackageInfoToMaestro'], 'true')
+      condition: and(succeeded(), eq(variables['PushXAPackageInfoToMaestro'], 'true'))
 
 # .NET 6 VS Insertion Stage
 # Check - "Xamarin.Android (VS Insertion - Wait For Approval)"
