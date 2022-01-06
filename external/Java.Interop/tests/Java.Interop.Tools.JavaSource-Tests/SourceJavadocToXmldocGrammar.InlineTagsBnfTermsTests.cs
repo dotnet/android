@@ -41,7 +41,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 
 			var r = p.Parse ("{@inheritDoc}");
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
-			Assert.AreEqual ("[TODO: @inheritDoc]", r.Root.AstNode.ToString ());
+			Assert.AreEqual ("To be added", r.Root.AstNode.ToString ());
 		}
 
 		[Test]
@@ -82,11 +82,11 @@ namespace Java.Interop.Tools.JavaSource.Tests
 
 			var r = p.Parse ("{@value}");
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
-			Assert.AreEqual ("[TODO: @value]", r.Root.AstNode.ToString ());
+			Assert.AreEqual ("To be added", r.Root.AstNode.ToString ());
 
 			r = p.Parse ("{@value #field}");
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
-			Assert.AreEqual ("[TODO: @value for `#field`]", r.Root.AstNode.ToString ());
+			Assert.AreEqual ("<c>#field</c>", r.Root.AstNode.ToString ());
 		}
 	}
 }

@@ -41,7 +41,8 @@ namespace Java.Interop.Tools.JavaSource {
 
 				InheritDocDeclaration.Rule = grammar.ToTerm ("{@inheritDoc}");
 				InheritDocDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
-					parseNode.AstNode = new XText ("[TODO: @inheritDoc]");
+					// TODO: Iterate through parents for corresponding javadoc element.
+					parseNode.AstNode = new XText ("To be added");
 				};
 
 				LinkDeclaration.Rule = grammar.ToTerm ("{@link") + InlineValue + "}";
@@ -70,11 +71,13 @@ namespace Java.Interop.Tools.JavaSource {
 					| grammar.ToTerm ("{@value") + InlineValue + "}";
 				ValueDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					if (parseNode.ChildNodes.Count > 1) {
+						// TODO: Need to convert to appropriate CREF value, use code text for now.
 						var field = parseNode.ChildNodes [1].AstNode.ToString ();
-						parseNode.AstNode = new XText ($"[TODO: @value for `{field}`]");
+						parseNode.AstNode = new XElement ("c", field);
 					}
 					else {
-						parseNode.AstNode = new XText ("[TODO: @value]");
+						// TODO: Display the value of the corresponding static field.
+						parseNode.AstNode = new XText ("To be added");
 					}
 				};
 			}
