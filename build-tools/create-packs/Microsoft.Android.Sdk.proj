@@ -25,7 +25,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
   </PropertyGroup>
 
   <Target Name="_GenerateXASdkContent"
-      DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions;_GetLicense">
+      DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions;_GetLicense;_GetLinuxReadme">
     <PropertyGroup>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
       <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-net6.0\</NetCoreAppToolsSourceDir>
@@ -143,6 +143,25 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <WriteLinesToFile File="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\$(BundledVersionsFileName)"
                       Lines="$(BundledVersionsContent)"
                       Overwrite="true" />
+  </Target>
+
+<Target Name="_GetLinuxReadme"
+     Condition=" '$(HostOS)' == 'Linux' " >
+    <PropertyGroup>
+      <LinuxReadmeContent>
+<![CDATA[
+Please note that this package is not officially supported, and has not received extensive testing.
+]]>
+      </LinuxReadmeContent>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(BootstrapOutputDirectory)\README.md"
+                      Lines="$(LinuxReadmeContent)"
+                      WriteOnlyWhenDifferent="true" />
+
+    <ItemGroup>
+      <_PackageFiles Include="$(BootstrapOutputDirectory)\README.md" PackagePath="/" />
+    </ItemGroup>
   </Target>
 
 </Project>
