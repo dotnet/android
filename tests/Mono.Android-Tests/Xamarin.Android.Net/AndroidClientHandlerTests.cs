@@ -137,6 +137,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
+		[Ignore("Ignore")]
 		public void Disposed ()
 		{
 			var h = CreateHandler ();
@@ -215,6 +216,7 @@ namespace Xamarin.Android.NetTests {
 		const string Tls_1_2_Url = "https://tls-test.internalx.com";
 
 		[Test]
+		[Ignore("Ignore")]
 		public void Tls_1_2_Url_Works ()
 		{
 			if (((int) Build.VERSION.SdkInt) < 16) {
@@ -260,6 +262,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test, Category ("DotNetIgnore")]
+		[Ignore("Ignore")]
 		public void Sanity_Tls_1_2_Url_WithMonoClientHandlerFails ()
 		{
 			var tlsProvider   = global::System.Environment.GetEnvironmentVariable ("XA_TLS_PROVIDER");
@@ -297,6 +300,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
+		[Ignore("Ignore")]
 		public void Cancel_Client_Works()
 		{
 			var cts = new CancellationTokenSource ();
@@ -321,6 +325,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
+		[Ignore("Ignore")]
 		public void Token_Timeout_Works()
 		{
 			var cts = new CancellationTokenSource (2000); //Cancel after 2000ms through token
@@ -344,6 +349,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
+		[Ignore("Ignore")]
 		public void Property_Timeout_Works()
 		{
 			using (var c = new HttpClient (CreateHandler ()))
@@ -368,6 +374,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
+		[Ignore("Ignore")]
 		public void Redirect_Without_Protocol_Works()
 		{
 			var requestURI = new Uri ("http://tls-test.internalx.com/redirect.php");
@@ -387,6 +394,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
+		[Ignore("Ignore")]
 		public void Redirect_POST_With_Content_Works ()
 		{
 			var requestURI = new Uri ("http://tls-test.internalx.com/redirect.php");
