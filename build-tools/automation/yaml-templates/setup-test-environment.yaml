@@ -28,6 +28,12 @@ steps:
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
 - script: |
+    echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/${{ parameters.jdkTestFolder }}"
+    echo "##vso[task.setvariable variable=DOTNET_TOOL_PATH]$HOME/anroid-toolchain/dotnet/dotnet"
+  displayName: set JI_JAVA_HOME
+  condition: and(succeeded(), eq(variables['agent.os'], 'Linux'))
+
+- script: |
     echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\${{ parameters.jdkTestFolder }}
     echo ##vso[task.setvariable variable=DOTNET_TOOL_PATH]%USERPROFILE%\android-toolchain\dotnet\dotnet.exe
   displayName: set JI_JAVA_HOME
@@ -48,38 +54,36 @@ steps:
     arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
     condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
     xaSourcePath: ${{ parameters.xaSourcePath }}
-  
+
 - template: run-xaprepare.yaml
   parameters:
     arguments: --s=AndroidTestDependencies
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
-- task: MSBuild@1
-  displayName: nuget restore Xamarin.Android.Build.Tasks.sln
+- task: DotNetCoreCLI@2
+  displayName: restore NUnit.Console
   inputs:
-    solution: ${{ parameters.xaSourcePath }}/Xamarin.Android.Build.Tasks.sln
-    configuration: ${{ parameters.configuration }}
-    msbuildArguments: /t:Restore /p:RestoreConfigFile=${{ parameters.xaSourcePath }}/NuGet.config /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android.Build.Tasks.binlog
+    command: restore
+    projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj
+    restoreArguments: --configfile ${{ parameters.xaSourcePath }}/NuGet.config -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android.Build.Tests.binlog
 
-- task: MSBuild@1
-  displayName: nuget restore Xamarin.Android-Tests.sln
-  inputs:
-    solution: ${{ parameters.xaSourcePath }}/Xamarin.Android-Tests.sln
-    configuration: ${{ parameters.configuration }}
-    msbuildArguments: /t:Restore /p:RestoreConfigFile=${{ parameters.xaSourcePath }}/NuGet.config /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android-Tests.binlog
-
-- task: MSBuild@1
+- task: DotNetCoreCLI@2
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
   inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-    configuration: ${{ parameters.configuration }}
-    msbuildArguments: /restore /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
 
 # Download and install .NET nupkgs
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: $(NuGetArtifactName)
     downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/$(NuGetArtifactName)
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: nuget-linux-unsigned
+    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/$(NuGetArtifactName)
+  condition: and(succeeded(), eq(variables['agent.os'], 'Linux'))
 
 - task: DotNetCoreCLI@2
   displayName: extract workload packs

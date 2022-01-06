@@ -341,15 +341,15 @@ stages:
 
     - template: yaml-templates\fail-on-issue.yaml
 
-# Check - "Xamarin.Android (Linux Build and Smoke Test)"
-- stage: linux_build_test
+# Check - "Xamarin.Android (Linux Build)"
+- stage: linux_build
   displayName: Linux
   dependsOn: []
   jobs:
-  - job: linux_build_test
-    displayName: Build and Smoke Test
+  - job: linux_build_create_sdk_pack
+    displayName: Build
     pool: android-devdiv-ubuntu-vmss
-    timeoutInMinutes: 240
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
     workspace:
       clean: all
@@ -387,13 +387,9 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make jenkins
 
-    - task: DotNetCoreCLI@2
-      displayName: extract workload packs
-      inputs:
-        projects: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        arguments: >-
-          -t:CreateAllPacks,ExtractWorkloadPacks -c $(XA.Build.Configuration)
-          -bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+    - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: make create-nupkgs
 
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
@@ -408,29 +404,18 @@ stages:
         artifactName: nuget-linux-unsigned
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
-    - template: yaml-templates/install-apkdiff.yaml
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        useDotNet: true
-        testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
-        testAssembly: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Test$(XA.Build.Configuration)/net6.0/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter CheckSignApk  # TODO: Add more tests (e.g. "TestCategory = SmokeTests $(DotNetNUnitCategories)" )
-        testResultsFile: TestResult-NET6SmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
-
     - template: yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: Build Results - Linux
         includeBuildResults: true
 
-    - template: yaml-templates\fail-on-issue.yaml
+    - template: yaml-templates/fail-on-issue.yaml
 
 - stage: smoke_tests
   displayName: Smoke Tests
   dependsOn: mac_build
   jobs:
-
   # Check - "Xamarin.Android (Smoke Tests APKs Legacy - macOS)"
   - job: mac_apk_tests_legacy
     displayName: APKs Legacy - macOS
@@ -863,6 +848,44 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild Smoke With Emulator - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
+
+- stage: linux_tests
+  displayName: Linux Tests
+  dependsOn:
+  - mac_build
+  - linux_build
+  jobs:
+  # Check - "Xamarin.Android (Linux Tests MSBuild Smoke)"
+  - job: linux_tests_smoke
+    displayName: MSBuild Smoke
+    pool: android-devdiv-ubuntu-vmss
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/setup-ubuntu.yaml
+
+    - template: yaml-templates/setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        useDotNet: true
+        testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net6.0/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
+        testResultsFile: TestResult-NET6SmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        artifactName: Test Results - MSBuild Smoke - Linux
 
     - template: yaml-templates/fail-on-issue.yaml
 

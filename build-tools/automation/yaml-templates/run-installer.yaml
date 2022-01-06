@@ -28,6 +28,7 @@ steps:
     }
     Write-Host "##vso[task.setvariable variable=XA.Provisionator.Args]$installer"
   displayName: find installer and set provisionator variable
+  condition: and(succeeded(), ne(variables['agent.os'], 'Linux'))
 
 - task: provisionator@2
   inputs:
@@ -35,3 +36,4 @@ steps:
     github_token: $(GitHub.Token)
     provisioning_script: $(XA.Provisionator.Args)
     provisioning_extra_args: ${{ parameters.provisionExtraArgs }}
+  condition: and(succeeded(), ne(variables['agent.os'], 'Linux'))
