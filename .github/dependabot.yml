@@ -2,6 +2,10 @@
 version: 2
 updates:
   - package-ecosystem: "gradle"
-    directory: "/"
+    directory: "/src/r8/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gradle"
+    directory: "/src/manifestmerger/"
     schedule:
       interval: "weekly"
