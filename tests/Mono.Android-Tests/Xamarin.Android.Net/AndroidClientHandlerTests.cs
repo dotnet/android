@@ -70,32 +70,32 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		[Test]
-		public void Properties_Defaults ()
-		{
-			var obj = CreateHandler ();
-			if (obj is not HttpClientHandler h) {
-				Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
-				return;
-			}
+		// [Test]
+		// public void Properties_Defaults ()
+		// {
+		// 	var obj = CreateHandler ();
+		// 	if (obj is not HttpClientHandler h) {
+		// 		Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
+		// 		return;
+		// 	}
 
-			Assert.IsTrue (h.AllowAutoRedirect, "#1");
-			Assert.AreEqual (DecompressionMethods.None, h.AutomaticDecompression, "#2");
-			Assert.AreEqual (0, h.CookieContainer.Count, "#3");
-			Assert.AreEqual (4096, h.CookieContainer.MaxCookieSize, "#3b");
-			Assert.AreEqual (null, h.Credentials, "#4");
-			Assert.AreEqual (50, h.MaxAutomaticRedirections, "#5");
-			Assert.IsFalse (h.PreAuthenticate, "#7");
-			Assert.IsNull (h.Proxy, "#8");
-			Assert.IsTrue (h.SupportsAutomaticDecompression, "#9");
-			Assert.IsTrue (h.SupportsProxy, "#10");
-			Assert.IsTrue (h.SupportsRedirectConfiguration, "#11");
-			Assert.IsTrue (h.UseCookies, "#12");
-			Assert.IsFalse (h.UseDefaultCredentials, "#13");
-			Assert.IsTrue (h.UseProxy, "#14");
-			Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
-			Assert.IsNull (h.ServerCertificateCustomValidationCallback, "#16");
-		}
+		// 	Assert.IsTrue (h.AllowAutoRedirect, "#1");
+		// 	Assert.AreEqual (DecompressionMethods.None, h.AutomaticDecompression, "#2");
+		// 	Assert.AreEqual (0, h.CookieContainer.Count, "#3");
+		// 	Assert.AreEqual (4096, h.CookieContainer.MaxCookieSize, "#3b");
+		// 	Assert.AreEqual (null, h.Credentials, "#4");
+		// 	Assert.AreEqual (50, h.MaxAutomaticRedirections, "#5");
+		// 	Assert.IsFalse (h.PreAuthenticate, "#7");
+		// 	Assert.IsNull (h.Proxy, "#8");
+		// 	Assert.IsTrue (h.SupportsAutomaticDecompression, "#9");
+		// 	Assert.IsTrue (h.SupportsProxy, "#10");
+		// 	Assert.IsTrue (h.SupportsRedirectConfiguration, "#11");
+		// 	Assert.IsTrue (h.UseCookies, "#12");
+		// 	Assert.IsFalse (h.UseDefaultCredentials, "#13");
+		// 	Assert.IsTrue (h.UseProxy, "#14");
+		// 	Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
+		// 	Assert.IsNull (h.ServerCertificateCustomValidationCallback, "#16");
+		// }
 
 		// [Test]
 		// public void Properties_Invalid ()
