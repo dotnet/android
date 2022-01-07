@@ -102,133 +102,13 @@ stages:
         condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
-# Check - "Xamarin.Android (Windows Build and Test)"
 - stage: win_build_test
   displayName: Windows
   dependsOn: []
   jobs:
+  # Check - "Xamarin.Android (Windows Build and Smoke Test)"
   - job: win_build_test
     displayName: Build and Smoke Test
-    pool: $(1ESWindowsPool)
-    timeoutInMinutes: 360
-    cancelTimeoutInMinutes: 5
-    steps:
-    - script: netsh int ipv4 set global sourceroutingbehavior=drop
-
-    - checkout: self
-      submodules: recursive
-
-    - template: yaml-templates\kill-processes.yaml
-
-    - template: yaml-templates\clean.yaml
-
-    - script: |
-        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)
-      displayName: set JI_JAVA_HOME
-
-    - template: yaml-templates\use-dot-net.yaml
-
-    # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
-    # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
-    # VSIXInstaller.exe will exit non-zero when the downgrade attempt is a no-op, so we will allow this step to fail silently.
-    - powershell: |
-        $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        & "$vsWhere" -all -prerelease -latest | Out-Default
-        $isLatestVSLaunchable = & "$vsWhere" -all -prerelease -latest -property isLaunchable
-        if ($isLatestVSLaunchable -eq 0) {
-            $vsPath = & "$vsWhere" -all -prerelease -latest -property installationPath
-            Write-Host "Attempting to repair VS instance:" $vsPath
-            $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
-            & "$vsInstaller" resume --installPath $vsPath --quiet --norestart | Out-Default
-            Write-Host "vs_installer.exe resume attempt complete"
-        }
-        $vsixInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\resources\app\ServiceHub\Services\Microsoft.VisualStudio.Setup.Service\VSIXInstaller.exe"
-        $ts = Get-Date -Format FileDateTimeUniversal
-        $log = "xavsixdowngrade-$ts.log"
-        $process = Start-Process -NoNewWindow -FilePath $vsixInstaller -ArgumentList "/downgrade:Xamarin.Android.Sdk /admin /quiet /logFile:$log" -Wait -PassThru -RedirectStandardError "err.txt"
-        Get-Content "err.txt" | Write-Host
-        Get-Content "${env:TEMP}\$log" | Write-Host
-        Write-Host "VSInstaller.exe exited with code:" $process.ExitCode
-        Remove-Item "${env:TEMP}\$log"
-      displayName: downgrade XA to stable
-      ignoreLASTEXITCODE: true
-
-    - task: MSBuild@1
-      displayName: msbuild Xamarin.Android /t:Prepare
-      inputs:
-        solution: Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Prepare /p:AutoProvision=true /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog
-
-    # Build, pack .nupkgs, and extract workload packs to dotnet preview test directory
-    - task: MSBuild@1
-      displayName: msbuild Xamarin.Android
-      inputs:
-        solution: Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:PackDotNet /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
-
-    - task: MSBuild@1
-      displayName: msbuild create-vsix
-      inputs:
-        solution: build-tools\create-vsix\create-vsix.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
-
-    - task: MSBuild@1
-      displayName: msbuild xabuild
-      inputs:
-        solution: tools\xabuild\xabuild.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-xabuild.binlog
-
-    - task: CmdLine@1
-      displayName: xabuild Xamarin.Android-Tests
-      inputs:
-        filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-        arguments: Xamarin.Android-Tests.sln /restore /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
-
-    - task: MSBuild@1
-      displayName: nunit Java.Interop Tests
-      inputs:
-        solution: Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /restore
-          /t:RunJavaInteropTests
-          /p:SkipJSUTests=true
-          /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
-          /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-ji-tests.binlog
-      continueOnError: True
-
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-*.xml
-        testRunTitle: Java Interop Tests - Windows Build Tree
-
-    - template: yaml-templates\install-apkdiff.yaml
-
-    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
-    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
-    # Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Smoke MSBuild Tests - Windows Build Tree
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-SmokeMSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
-        nunitConsoleExtraArgs: --where "cat == SmokeTests"
-
-    - template: yaml-templates\upload-results.yaml
-      parameters:
-        artifactName: Build Results - Windows
-        includeBuildResults: true
-
-    - template: yaml-templates\fail-on-issue.yaml
-
-  - job: win_dotnet_build_test
-    displayName: Dotnet Build and Smoke Test
     pool: $(1ESWindowsPool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
@@ -322,34 +202,41 @@ stages:
       inputs:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-*.xml
-        testRunTitle: Java Interop Tests - Windows Dotnet Build
+        testRunTitle: Java Interop Tests - Windows Build
 
     - template: yaml-templates\install-apkdiff.yaml
+
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Smoke MSBuild Tests - Windows Build Tree
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
+        testResultsFile: TestResult-SmokeMSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
+        nunitConsoleExtraArgs: --where "cat == SmokeTests"
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         useDotNet: true
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net6.0\Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-SmokeMSBuildTests-WinDotnetBuildTree-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-SmokeMSBuildTests-WinDotnetBuild-$(XA.Build.Configuration).xml
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
 
     - template: yaml-templates\upload-results.yaml
       parameters:
-        artifactName: Build Results - Windows DotNet
+        artifactName: Build Results - Windows
         includeBuildResults: true
 
     - template: yaml-templates\fail-on-issue.yaml
 
-# Check - "Xamarin.Android (Linux Build and Smoke Test)"
-- stage: linux_build_test
+# Check - "Xamarin.Android (Linux Build)"
+- stage: linux_build
   displayName: Linux
   dependsOn: []
   jobs:
-  - job: linux_build_test
-    displayName: Build and Smoke Test
+  - job: linux_build_create_sdk_pack
+    displayName: Build
     pool: android-devdiv-ubuntu-vmss
-    timeoutInMinutes: 240
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
     workspace:
       clean: all
@@ -387,13 +274,9 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make jenkins
 
-    - task: DotNetCoreCLI@2
-      displayName: extract workload packs
-      inputs:
-        projects: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        arguments: >-
-          -t:CreateAllPacks,ExtractWorkloadPacks -c $(XA.Build.Configuration)
-          -bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+    - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: make create-nupkgs
 
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
@@ -408,29 +291,18 @@ stages:
         artifactName: nuget-linux-unsigned
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
-    - template: yaml-templates/install-apkdiff.yaml
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        useDotNet: true
-        testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
-        testAssembly: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Test$(XA.Build.Configuration)/net6.0/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter CheckSignApk  # TODO: Add more tests (e.g. "TestCategory = SmokeTests $(DotNetNUnitCategories)" )
-        testResultsFile: TestResult-NET6SmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
-
     - template: yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: Build Results - Linux
         includeBuildResults: true
 
-    - template: yaml-templates\fail-on-issue.yaml
+    - template: yaml-templates/fail-on-issue.yaml
 
 - stage: smoke_tests
   displayName: Smoke Tests
   dependsOn: mac_build
   jobs:
-
   # Check - "Xamarin.Android (Smoke Tests APKs Legacy - macOS)"
   - job: mac_apk_tests_legacy
     displayName: APKs Legacy - macOS
@@ -863,6 +735,44 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild Smoke With Emulator - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
+
+- stage: linux_tests
+  displayName: Linux Tests
+  dependsOn:
+  - mac_build
+  - linux_build
+  jobs:
+  # Check - "Xamarin.Android (Linux Tests MSBuild Smoke)"
+  - job: linux_tests_smoke
+    displayName: MSBuild Smoke
+    pool: android-devdiv-ubuntu-vmss
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/setup-ubuntu.yaml
+
+    - template: yaml-templates/setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        useDotNet: true
+        testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net6.0/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
+        testResultsFile: TestResult-NET6SmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        artifactName: Test Results - MSBuild Smoke - Linux
 
     - template: yaml-templates/fail-on-issue.yaml
 

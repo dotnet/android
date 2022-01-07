@@ -100,9 +100,11 @@ namespace Xamarin.ProjectTools
 
 		/// <summary>
 		/// The MonoAndroidTools directory within a local build tree, e.g. xamarin-android/bin/Debug/lib/xamarin.android/xbuild/Xamarin/Android.<br/>
-		/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
+		/// If a local build tree can not be found, or if it is empty, this will return the system installation or .NET sandbox location instead:<br/>
 		///	Windows:  C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Xamarin\Android <br/>
-		///	macOS:    /Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android
+		///	macOS:    /Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android<br/>
+		///	Windows (dotnet):  %USERPROFILE%\android-toolchain\dotnet\packs\Microsoft.Android.Sdk.Windows\$(Latest)\tools<br/>
+		///	macOS (dotnet):    $HOME/android-toolchain/dotnet/packs/Microsoft.Android.Sdk.Darwin/$(Latest)/tools
 		/// </summary>
 		public string AndroidMSBuildDirectory {
 			get {
@@ -110,7 +112,11 @@ namespace Xamarin.ProjectTools
 				if (Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "lib", Arm32AbiDir, "libmono-android.release.so")))
 					return msbuildDir;
 
-				return TestEnvironment.MonoAndroidToolsDirectory;
+				if (UseDotNet) {
+					return TestEnvironment.DotNetAndroidSdkToolsDirectory;
+				} else {
+					return TestEnvironment.MonoAndroidToolsDirectory;
+				}
 			}
 		}
 
@@ -189,17 +195,13 @@ namespace Xamarin.ProjectTools
 			Version lastVersion     = null;
 			List<string> allTFVs    = new List<string> ();
 
-			foreach (var dir in Directory.EnumerateDirectories (FrameworkLibDirectory, "v*", SearchOption.TopDirectoryOnly)) {
-				// No binding assemblies in `v1.0`; don't process.
-				if (Path.GetFileName (dir) == "v1.0")
+			var searchDir = UseDotNet ? Path.Combine (TestEnvironment.DotNetAndroidSdkDirectory, "data") : FrameworkLibDirectory;
+			foreach (var apiInfoFile in Directory.EnumerateFiles (searchDir, "AndroidApiInfo.xml", SearchOption.AllDirectories)) {
+				string frameworkVersion = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Version");
+				string apiLevel         = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Level");
+				bool.TryParse (GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Stable"), out bool isStable);
+				if (!isStable || !Version.TryParse (frameworkVersion.Replace ("v", ""), out Version version))
 					continue;
-				Version version;
-				string v = Path.GetFileName (dir).Replace ("v", "");
-				if (!Version.TryParse (v, out version))
-					continue;
-
-				string frameworkVersion = "v" + version.ToString ();
-				string apiLevel         = GetApiLevelFromInfoPath (Path.Combine (dir, "AndroidApiInfo.xml"));
 				if (firstVersion == null || version < firstVersion) {
 					firstVersion            = version;
 					firstFrameworkVersion   = frameworkVersion;
@@ -215,13 +217,13 @@ namespace Xamarin.ProjectTools
 			allFrameworkVersions = allTFVs.ToArray ();
 		}
 
-		static string GetApiLevelFromInfoPath (string androidApiInfo)
+		static string GetApiInfoElementValue (string androidApiInfo, string elementPath)
 		{
 			if (!File.Exists (androidApiInfo))
 				return null;
 
 			var doc = XDocument.Load (androidApiInfo);
-			return doc.XPathSelectElement ("/AndroidApiInfo/Level")?.Value;
+			return doc.XPathSelectElement (elementPath)?.Value;
 		}
 
 		public bool TargetFrameworkExists (string targetFramework)
