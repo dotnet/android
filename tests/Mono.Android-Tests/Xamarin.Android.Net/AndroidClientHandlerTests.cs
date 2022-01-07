@@ -71,72 +71,6 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		// [Test]
-		// public void Properties_Defaults ()
-		// {
-		// 	var obj = CreateHandler ();
-		// 	if (obj is not HttpClientHandler h) {
-		// 		Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
-		// 		return;
-		// 	}
-
-		// 	Assert.IsTrue (h.AllowAutoRedirect, "#1");
-		// 	Assert.AreEqual (DecompressionMethods.None, h.AutomaticDecompression, "#2");
-		// 	Assert.AreEqual (0, h.CookieContainer.Count, "#3");
-		// 	Assert.AreEqual (4096, h.CookieContainer.MaxCookieSize, "#3b");
-		// 	Assert.AreEqual (null, h.Credentials, "#4");
-		// 	Assert.AreEqual (50, h.MaxAutomaticRedirections, "#5");
-		// 	Assert.IsFalse (h.PreAuthenticate, "#7");
-		// 	Assert.IsNull (h.Proxy, "#8");
-		// 	Assert.IsTrue (h.SupportsAutomaticDecompression, "#9");
-		// 	Assert.IsTrue (h.SupportsProxy, "#10");
-		// 	Assert.IsTrue (h.SupportsRedirectConfiguration, "#11");
-		// 	Assert.IsTrue (h.UseCookies, "#12");
-		// 	Assert.IsFalse (h.UseDefaultCredentials, "#13");
-		// 	Assert.IsTrue (h.UseProxy, "#14");
-		// 	Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
-		// 	Assert.IsNull (h.ServerCertificateCustomValidationCallback, "#16");
-		// }
-
-		// [Test]
-		// public void Properties_Invalid ()
-		// {
-		// 	var obj = CreateHandler ();
-		// 	if (obj is not HttpClientHandler h) {
-		// 		Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
-		// 		return;
-		// 	}
-
-		// 	try {
-		// 		h.MaxAutomaticRedirections = 0;
-		// 		Assert.Fail ("#1");
-		// 	} catch (ArgumentOutOfRangeException) {
-		// 	}
-
-		// 	try {
-		// 		h.MaxRequestContentBufferSize = -1;
-		// 		Assert.Fail ("#2");
-		// 	} catch (ArgumentOutOfRangeException) {
-		// 	}
-		// }
-
-		// [Test]
-		// public void Properties_AfterClientCreation ()
-		// {
-		// 	var obj = CreateHandler ();
-		// 	if (obj is not HttpClientHandler h) {
-		// 		Assert.Ignore ($"{obj.GetType()} is not a HttpClientHandler.");
-		// 		return;
-		// 	}
-
-		// 	h.AllowAutoRedirect = true;
-
-		// 	// We may modify properties after creating the HttpClient.
-		// 	using (var c = new HttpClient (h, true)) {
-		// 		h.AllowAutoRedirect = false;
-		// 	}
-		// }
-
-		// [Test]
 		// public void Disposed ()
 		// {
 		// 	var h = CreateHandler ();
@@ -414,6 +348,60 @@ namespace Xamarin.Android.NetTests {
 			protected override HttpMessageHandler CreateHandler ()
 			{
 				return new Xamarin.Android.Net.AndroidClientHandler ();
+			}
+
+			[Test]
+			public void Properties_Defaults ()
+			{
+				var h = new Xamarin.Android.Net.AndroidClientHandler ();
+
+				Assert.IsTrue (h.AllowAutoRedirect, "#1");
+				Assert.AreEqual (DecompressionMethods.None, h.AutomaticDecompression, "#2");
+				Assert.AreEqual (0, h.CookieContainer.Count, "#3");
+				Assert.AreEqual (4096, h.CookieContainer.MaxCookieSize, "#3b");
+				Assert.AreEqual (null, h.Credentials, "#4");
+				Assert.AreEqual (50, h.MaxAutomaticRedirections, "#5");
+				Assert.IsFalse (h.PreAuthenticate, "#7");
+				Assert.IsNull (h.Proxy, "#8");
+				Assert.IsTrue (h.SupportsAutomaticDecompression, "#9");
+				Assert.IsTrue (h.SupportsProxy, "#10");
+				Assert.IsTrue (h.SupportsRedirectConfiguration, "#11");
+				Assert.IsTrue (h.UseCookies, "#12");
+				Assert.IsFalse (h.UseDefaultCredentials, "#13");
+				Assert.IsTrue (h.UseProxy, "#14");
+				Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
+				Assert.IsNull (h.ServerCertificateCustomValidationCallback, "#16");
+			}
+
+			[Test]
+			public void Properties_Invalid ()
+			{
+				var h = new Xamarin.Android.Net.AndroidClientHandler ();
+
+				try {
+					h.MaxAutomaticRedirections = 0;
+					Assert.Fail ("#1");
+				} catch (ArgumentOutOfRangeException) {
+				}
+
+				try {
+					h.MaxRequestContentBufferSize = -1;
+					Assert.Fail ("#2");
+				} catch (ArgumentOutOfRangeException) {
+				}
+			}
+
+			[Test]
+			public void Properties_AfterClientCreation ()
+			{
+				var h = new Xamarin.Android.Net.AndroidClientHandler ();
+
+				h.AllowAutoRedirect = true;
+
+				// We may modify properties after creating the HttpClient.
+				using (var c = new HttpClient (h, true)) {
+					h.AllowAutoRedirect = false;
+				}
 			}
 		}
 
