@@ -8,9 +8,9 @@
       <Uri>https://github.com/dotnet/linker</Uri>
       <Sha>21d077670a80d1b7132e649846821f1ff8ade60a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="6.0.2-mauipre.1.22054.8">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="7.0.0-alpha.1.22056.10" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b96f5608dab85cdf87fb8c0b88c233808538d2d0</Sha>
+      <Sha>ef49cd03929b950d80d111621781728bef9cebf9</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
