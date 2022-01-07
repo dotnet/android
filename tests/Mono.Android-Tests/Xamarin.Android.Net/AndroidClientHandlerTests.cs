@@ -41,6 +41,7 @@ using System.Web;
 using NUnit.Framework;
 
 using Android.OS;
+using Xamarin.Android.Net;
 
 namespace Xamarin.Android.NetTests {
 	[Category("InetAccess")]
@@ -347,13 +348,13 @@ namespace Xamarin.Android.NetTests {
 		{
 			protected override HttpMessageHandler CreateHandler ()
 			{
-				return new Xamarin.Android.Net.AndroidClientHandler ();
+				return new AndroidClientHandler ();
 			}
 
 			[Test]
 			public void Properties_Defaults ()
 			{
-				var h = new Xamarin.Android.Net.AndroidClientHandler ();
+				var h = new AndroidClientHandler ();
 
 				Assert.IsTrue (h.AllowAutoRedirect, "#1");
 				Assert.AreEqual (DecompressionMethods.None, h.AutomaticDecompression, "#2");
@@ -376,7 +377,7 @@ namespace Xamarin.Android.NetTests {
 			[Test]
 			public void Properties_Invalid ()
 			{
-				var h = new Xamarin.Android.Net.AndroidClientHandler ();
+				var h = new AndroidClientHandler ();
 
 				try {
 					h.MaxAutomaticRedirections = 0;
@@ -394,7 +395,7 @@ namespace Xamarin.Android.NetTests {
 			[Test]
 			public void Properties_AfterClientCreation ()
 			{
-				var h = new Xamarin.Android.Net.AndroidClientHandler ();
+				var h = new AndroidClientHandler ();
 
 				h.AllowAutoRedirect = true;
 
@@ -410,7 +411,7 @@ namespace Xamarin.Android.NetTests {
 		{
 			protected override HttpMessageHandler CreateHandler ()
 			{
-				return new Xamarin.Android.Net.AndroidMessageHandler ();
+				return new AndroidMessageHandler ();
 			}
 		}
 	}
