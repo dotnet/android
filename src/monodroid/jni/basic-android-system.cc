@@ -15,14 +15,14 @@ const char* BasicAndroidSystem::built_for_abi_name = nullptr;
 void
 BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
-	// appDirs[2] points to the native library directory
-	std::unique_ptr<char> libmonodroid_path {utils.path_combine (appDirs[2].get_cstr (), "libmonodroid.so")};
+	// appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
+	std::unique_ptr<char> libmonodroid_path {utils.path_combine (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr (), "libmonodroid.so")};
 	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path.get ());
 	if (!utils.file_exists (libmonodroid_path.get ())) {
 		log_debug (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path.get ());
 		set_embedded_dso_mode_enabled (true);
 	} else {
-		log_debug (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", appDirs[2].get_cstr ());
+		log_debug (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 		set_embedded_dso_mode_enabled (false);
 	}
 }
@@ -34,8 +34,8 @@ BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtim
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
 		BasicAndroidSystem::app_lib_directories_size = 1;
 		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
-		BasicAndroidSystem::app_lib_directories [0] = utils.strdup_new (appDirs[2].get_cstr ());
-		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", appDirs[2].get_cstr ());
+		BasicAndroidSystem::app_lib_directories [0] = utils.strdup_new (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 	} else {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
 		BasicAndroidSystem::app_lib_directories_size = runtimeApks.get_length ();

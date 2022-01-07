@@ -46,15 +46,26 @@ namespace xamarin::android::internal
 
 #if __arm__
 		static constexpr char android_abi[] = "armeabi_v7a";
+		static constexpr char runtime_identifier[] = "android-arm";
 #elif __aarch64__
 		static constexpr char android_abi[] = "arm64_v8a";
+		static constexpr char runtime_identifier[] = "android-arm64";
 #elif __x86_64__
 		static constexpr char android_abi[] = "x86_64";
+		static constexpr char runtime_identifier[] = "android-x64";
 #elif __i386__
 		static constexpr char android_abi[] = "x86";
+		static constexpr char runtime_identifier[] = "android-x86";
 #endif
 
 		static constexpr auto split_config_abi_apk_name = concat_const ("/split_config.", android_abi, ".apk");
+
+		//
+		// Indexes must match these of trhe `appDirs` array in src/java-runtime/mono/android/MonoPackageManager.java
+		//
+		static constexpr size_t APP_DIRS_FILES_DIR_INDEX = 0;
+		static constexpr size_t APP_DIRS_CACHE_DIR_INDEX = 1;
+		static constexpr size_t APP_DIRS_DATA_DIR_INDEX = 2;
 	};
 }
 #endif // __SHARED_CONSTANTS_HH

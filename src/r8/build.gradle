@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'com.android.tools', name: 'r8', version: '2.2.64'
+    compile group: 'com.android.tools', name: 'r8', version: '3.0.73'
 }
 
 jar {

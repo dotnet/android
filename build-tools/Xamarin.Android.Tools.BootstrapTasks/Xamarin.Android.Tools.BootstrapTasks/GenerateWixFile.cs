@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				packWriter.WriteAttributeString ("Id", "sdk_manifests");
 				packWriter.WriteAttributeString ("Name", "sdk-manifests");
 
-				// $(DotNetPreviewVersionBand) 6.0.100
+				// $(DotNetPreviewVersionBand) such as 6.0.200
 				var sdk_manifests = Directory.EnumerateDirectories (sdk_manifests_root).FirstOrDefault ();
 				if (string.IsNullOrEmpty (sdk_manifests)) {
 					Log.LogError ($"Cannot find child directory of: {sdk_manifests_root}");

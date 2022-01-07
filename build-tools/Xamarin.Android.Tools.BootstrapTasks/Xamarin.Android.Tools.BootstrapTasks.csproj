@@ -1,4 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
     <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
@@ -18,5 +20,15 @@
     <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj" />
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
   </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\MonoUnixNative.targets" />
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      _MakeMonoUnixFatBinariesOSX;
+    </BuildDependsOn>
+  </PropertyGroup>
 
 </Project>

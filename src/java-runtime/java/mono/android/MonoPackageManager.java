@@ -42,6 +42,10 @@ public class MonoPackageManager {
 				String dataDir      = getNativeLibraryPath (context);
 				ClassLoader loader  = context.getClassLoader ();
 				String runtimeDir = getNativeLibraryPath (runtimePackage);
+
+				//
+				// Should the order change here, src/monodroid/jni/SharedConstants.hh must be updated accordingly
+				//
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
 				boolean haveSplitApks = false;
 
