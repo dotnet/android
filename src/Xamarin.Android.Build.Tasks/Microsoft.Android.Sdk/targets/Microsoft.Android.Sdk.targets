@@ -22,8 +22,8 @@
     />
   </ItemGroup>
 
-  <Import Project="Microsoft.Android.Sdk.BundledVersions.targets" />
   <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.targets" />
+  <Import Project="Microsoft.Android.Sdk.BundledVersions.targets" />
   <Import Project="Microsoft.Android.Sdk.DefaultProperties.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props"
       Condition="Exists('$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props')"/>
