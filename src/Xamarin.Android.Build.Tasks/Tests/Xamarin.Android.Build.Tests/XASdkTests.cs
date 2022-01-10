@@ -636,8 +636,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 
+		// TODO: <uses-sdk android:minSdkVersion="32" android:targetSdkVersion="32" />
+		// Causes warning: D8 : warning : An API level of 32 is not supported by this compiler. Please use an API level of 31 or earlier
+		// Add a 32 parameter here when we get a newer version of r8.
 		[Test]
-		public void SupportedOSPlatformVersion ([Values (21, 31, 32)] int minSdkVersion)
+		public void SupportedOSPlatformVersion ([Values (21, 31)] int minSdkVersion)
 		{
 			var proj = new XASdkProject {
 				SupportedOSPlatformVersion = minSdkVersion.ToString (),
