@@ -91,7 +91,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WriteLockFile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="GenerateCompressedAssembliesNativeSourceFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Unzip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.UnzipToFolder" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
 <!--
 *******************************************
@@ -2346,7 +2346,7 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(_UniversalApkSetIntermediate)" />
     <FileWrites Include="$(OutDir)$(_AndroidPackage)-Signed.apk" />
   </ItemGroup>
-  <Unzip Sources="$(_UniversalApkSetIntermediate)" DestinationDirectories="$(OutDir)" Files="@(_FilestoExtract)" />
+  <UnzipToFolder Sources="$(_UniversalApkSetIntermediate)" DestinationDirectories="$(OutDir)" Files="@(_FilestoExtract)" />
 </Target>
 
 <PropertyGroup>
