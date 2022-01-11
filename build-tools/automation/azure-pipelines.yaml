@@ -1479,6 +1479,57 @@ stages:
         authenticationMethod: 'OAuth Token'
         password: $(System.AccessToken)     # Equivalent to the 'Allow scripts to access OAuth token option': https://stackoverflow.com/questions/52837980/how-to-allow-scripts-to-access-oauth-token-from-yaml-builds
 
+- stage: post_build
+  displayName: Post Build
+  dependsOn:
+  - dotnet_prepare_release
+  - finalize_installers
+  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
+  jobs:
+  # Check - "Xamarin.Android (Post Build Generate Software Bill of Materials)"
+  - job: generate_sbom
+    displayName: Generate Software Bill of Materials
+    pool: $(HostedWinVS2019)
+    timeoutInMinutes: 60
+    variables:
+      Packaging.EnableSBOMSigning: true
+      SBOMArtifactDir: $(Build.ArtifactStagingDirectory)\sbom-artifacts
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: nuget-signed
+        downloadPath: $(SBOMArtifactDir)
+        patterns: '*.nupkg'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vs-msi-nugets
+        downloadPath: $(SBOMArtifactDir)
+        patterns: '*.nupkg'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vsdrop-signed
+        downloadPath: $(SBOMArtifactDir)
+        patterns: '*.msi'
+
+    # TODO: Download signed .pkg and .vsix from GitHub status...
+
+    # https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
+    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+      displayName: Generate SBOM from artifacts
+      inputs:
+          BuildDropPath: $(SBOMArtifactDir)
+          ManifestDirPath: $(Build.ArtifactStagingDirectory)\sbom-manifests
+          #PackageName: Xamarin Android
+          #PackageVersion: 
+
+    - task: PublishPipelineArtifact@1
+      displayName: Upload SBOM manifests
+      inputs:
+        artifactName: Software Bill of Materials Manifests
+        targetPath: $(Build.ArtifactStagingDirectory)\sbom-manifests
+
 - stage: code_analysis
   dependsOn: []
   displayName: Code Analysis
