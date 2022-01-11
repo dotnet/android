@@ -1513,7 +1513,21 @@ stages:
         downloadPath: $(SBOMArtifactDir)
         patterns: '*.msi'
 
-    # TODO: Download signed .pkg and .vsix from GitHub status...
+    # Download signed .pkg and .vsix from JENKINS_SIGN GitHub status
+    - powershell: |
+        $url = "https://xamci.azurewebsites.net/dl/xamarin/xamarin-android/$(Build.SourceVersion)/JENKINS-SIGN"
+        Write-Host "Getting manifest from $url"
+        $manifest = [string](Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{"Authorization"="token $(GitHub.Token)"}) | ConvertFrom-Json
+        $artifactsToDownload = ".pkg", ".vsix"
+        foreach ($file in $manifest) {
+            $fileUrl = $file.url
+            if ($null -ne ($artifactsToDownload | ? { $fileUrl.EndsWith($_) })) {
+                $fileName = [IO.Path]::GetFileName($fileUrl)
+                Write-Host "Downloading artifact from $fileUrl to $(SBOMArtifactDir)\$fileName"
+                Invoke-WebRequest -Uri $fileUrl -OutFile "$(SBOMArtifactDir)\$fileName" -UseBasicParsing
+            }
+        }
+      displayName: Download signed .pkg and .vsix
 
     # https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
     - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
