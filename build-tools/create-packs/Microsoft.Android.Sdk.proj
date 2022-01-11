@@ -12,12 +12,13 @@ core workload SDK packs imported by WorkloadManifest.targets.
 
   <PropertyGroup>
     <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
-    <Description>C# Tools and Bindings for the Android SDK</Description>
+    <Description>C# Tools and Bindings for the Android SDK.</Description>
+    <Description Condition=" '$(HostOS)' == 'Linux' ">$(Description) Please note that this package is not officially supported, and has not received extensive testing.</Description>
     <!-- Exclude mono bundle components declared in `create-installers.targets`. -->
     <IncludeMonoBundleComponents>false</IncludeMonoBundleComponents>
   </PropertyGroup>
 
- <PropertyGroup>
+  <PropertyGroup>
     <BeforePack>
       _GenerateXASdkContent;
       $(BeforePack);
