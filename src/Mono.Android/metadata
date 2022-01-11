@@ -367,14 +367,14 @@
 	  ~~ remaining Color methods, manually enumified ~~
 	<attr path="/api/package[@name='android.content.res']/class[@name='ColorStateList']/method[@name='getColorForState']" name="return">Android.Graphics.Color</attr>
 	-->
-	<attr api-since="21" path="/api/package[@name='android.app']/class[@name='ActivityManager.TaskDescription']/constructor/parameter[@name='colorPrimary']" name="type">Android.Graphics.Color</attr>
+	<attr api-since="21" path="/api/package[@name='android.app']/class[@name='ActivityManager.TaskDescription']/constructor/parameter[@name='colorPrimary' and @type='int']" name="type">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.content.res']/class[@name='Resources']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.content.res']/class[@name='TypedArray']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
-	<attr path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='setColor']/parameter[position()=1]" name="type">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='setColor' and parameter[1][@type='int']]/parameter[position()=1]" name="type">Android.Graphics.Color</attr>
 	<attr api-since="11" path="/api/package[@name='android.graphics.drawable']/class[@name='ColorDrawable']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
-	<attr api-since="11" path="/api/package[@name='android.graphics.drawable']/class[@name='ColorDrawable']/method[@name='setColor']/parameter[position()=1]" name="type">Android.Graphics.Color</attr>
-	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='setShadowColor']/parameter[@name='shadowColor']" name="type">Android.Graphics.Color</attr>
+	<attr api-since="11" path="/api/package[@name='android.graphics.drawable']/class[@name='ColorDrawable']/method[@name='setColor']/parameter[position()=1 and @type='int']" name="type">Android.Graphics.Color</attr>
+	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='setShadowColor']/parameter[@name='shadowColor' and @type='int']" name="type">Android.Graphics.Color</attr>
 	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='RadialGradient']/constructor/parameter[@name='centerColor' and @type='int']" name="type">Android.Graphics.Color</attr>
 	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='RadialGradient']/constructor/parameter[@name='edgeColor' and @type='int']" name="type">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.text.style']/class[@name='QuoteSpan']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
@@ -1655,6 +1655,9 @@
   <!-- These interfaces contain constants users need to reference, but the interfaces are protected, nested in a sealed type. -->
   <!-- C# won't let you access protected types in a sealed type, so make them public so they can be used by user code. -->
   <attr api-since="30" path="/api/package[@name='android.provider']/interface[contains(@name, 'Contract.') and contains(@name, 'Columns') and @visibility='protected']" name="visibility">public</attr>
+
+  <!-- The setter 'setColor (long)' can't be merged with the existing 'virtual long Color { get; }' because it's a breaking change -->
+  <attr api-since="29" path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='setColor' and count(parameter)=1 and parameter[1][@type='long']]" name="propertyName"></attr>
 
   <!--
     ***********************************************************************
