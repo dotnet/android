@@ -447,7 +447,7 @@ namespace "+ libName + @" {
 
 		[Test]
 		[Category ("LLVM")]
-		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode)
+		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode, [Values (false, true)] bool skipDebugSymbols)
 		{
 			if (Builder.UseDotNet) {
 				Assert.Ignore ("https://github.com/dotnet/runtime/issues/57800");
@@ -476,7 +476,12 @@ namespace "+ libName + @" {
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					xaAssemblySize = ZipHelper.ReadFileFromZip (apk, $"lib/{supportedAbi}/libaot-Mono.Android.dll.so").Length;
 				}
-				proj.SetProperty ("AndroidAotAdditionalArguments", "no-write-symbols");
+
+				string additionalArgs = "no-write-symbols";
+				if (skipDebugSymbols) {
+					additionalArgs += ",nodebug";
+				}
+				proj.SetProperty ("AndroidAotAdditionalArguments", additionalArgs);
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
 				FileAssert.Exists (apkPath);
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
