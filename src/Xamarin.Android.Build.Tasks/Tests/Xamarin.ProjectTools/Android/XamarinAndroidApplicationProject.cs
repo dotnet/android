@@ -68,7 +68,13 @@ namespace Xamarin.ProjectTools
 			}
 
 			AndroidManifest = default_android_manifest;
-			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
+			if (Builder.UseDotNet) {
+				// TODO: avoid the XA1008 warning when having targetSdkVersion="32" and $(TargetPlatformVersion)=31.0
+				// We should remove this when 32 becomes the default for .NET 6+
+				TargetSdkVersion = "31";
+			} else {
+				TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
+			}
 			LayoutMain = default_layout_main;
 			StringsXml = default_strings_xml;
 			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
