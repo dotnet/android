@@ -92,9 +92,11 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Build (string target = null, string [] parameters = null)
+		public bool Build (string target = null, string [] parameters = null, bool norestore = false)
 		{
 			var arguments = GetDefaultCommandLineArgs ("build", target, parameters);
+			if (norestore)
+				arguments.Add ("--no-restore");
 			return Execute (arguments.ToArray ());
 		}
 
