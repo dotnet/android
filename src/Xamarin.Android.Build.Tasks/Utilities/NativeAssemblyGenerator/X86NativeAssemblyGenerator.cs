@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tasks
 	{
 		protected override string LineCommentStart => "#";
 
-        protected X86NativeAssemblyGenerator (StreamWriter output, string fileName)
+		protected X86NativeAssemblyGenerator (StreamWriter output, string fileName)
 			: base (output, fileName)
 		{}
 
@@ -16,11 +16,11 @@ namespace Xamarin.Android.Tasks
 		{
 			base.ConfigureTypeMappings (mapping);
 
-			ConfigureTypeMapping<short>	 (".short", size: 2, alignment: 2);
+			ConfigureTypeMapping<short>  (".short", size: 2, alignment: 2);
 			ConfigureTypeMapping<ushort> (".short", size: 2, alignment: 2);
-			ConfigureTypeMapping<int>	 (".long",	size: 4, alignment: 4);
-			ConfigureTypeMapping<uint>	 (".long",	size: 4, alignment: 4);
-			ConfigureTypeMapping<float>	 (".long",	size: 4, alignment: 4);
+			ConfigureTypeMapping<int>    (".long",  size: 4, alignment: 4);
+			ConfigureTypeMapping<uint>   (".long",  size: 4, alignment: 4);
+			ConfigureTypeMapping<float>  (".long",  size: 4, alignment: 4);
 		}
 	}
 }

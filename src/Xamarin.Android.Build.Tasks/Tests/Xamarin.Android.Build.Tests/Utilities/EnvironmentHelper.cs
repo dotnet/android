@@ -544,7 +544,7 @@ namespace Xamarin.Android.Build.Tests
 		static bool TryParseInteger (string value, out uint fv)
 		{
 			if (value.StartsWith ("0x", StringComparison.Ordinal)) {
-				return UInt32.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, null, out fv);
+				return UInt32.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
 			}
 
 			return UInt32.TryParse (value, out fv);
@@ -553,7 +553,7 @@ namespace Xamarin.Android.Build.Tests
 		static bool TryParseInteger (string value, out byte fv)
 		{
 			if (value.StartsWith ("0x", StringComparison.Ordinal)) {
-				return Byte.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, null, out fv);
+				return Byte.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
 			}
 
 			return Byte.TryParse (value, out fv);

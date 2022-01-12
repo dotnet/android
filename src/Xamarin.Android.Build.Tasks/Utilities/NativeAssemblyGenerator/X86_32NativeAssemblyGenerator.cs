@@ -25,6 +25,7 @@ namespace Xamarin.Android.Tasks
 			base.ConfigureTypeMappings (mapping);
 
 			// Alignments and sizes as per https://refspecs.linuxbase.org/elf/abi386-4.pdf section 3.2 (Fundamental Types), table 3.1 (Scalar Types)
+			// Assembler type directives are described in https://sourceware.org/binutils/docs-2.37/as/index.html
 			ConfigureTypeMapping<long>	 (".quad", size: 8, alignment: 4);
 			ConfigureTypeMapping<ulong>	 (".quad", size: 8, alignment: 4);
 			ConfigureTypeMapping<double> (".quad", size: 8, alignment: 4);

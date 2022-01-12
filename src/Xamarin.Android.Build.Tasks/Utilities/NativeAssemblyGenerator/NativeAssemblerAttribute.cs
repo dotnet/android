@@ -5,18 +5,18 @@ namespace Xamarin.Android.Tasks
 	[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
 	class NativeAssemblerAttribute : Attribute
 	{
-		public bool Ignore			 { get; set; }
+		public bool Ignore           { get; set; }
 		public bool UsesDataProvider { get; set; }
-		public string? Comment		 { get; set; }
-		public string? Name			 { get; set; }
+		public string? Comment       { get; set; }
+		public string? Name          { get; set; }
 	}
 
 	[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
 	class NativeAssemblerStringAttribute : NativeAssemblerAttribute
 	{
-		public bool Inline				 { get; set; }
-		public bool PadToMaxLength       { get; set; }
-		public bool PointerToSymbol	     { get; set; }
+		public bool Inline          { get; set; }
+		public bool PadToMaxLength  { get; set; }
+		public bool PointerToSymbol { get; set; }
 	}
 
 	[AttributeUsage (AttributeTargets.Class, Inherited = true)]

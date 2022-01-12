@@ -570,7 +570,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 
 	if constexpr (use_precalculated_size) {
 		size = precalculated_size;
-		log_warn (LOG_ASSEMBLY, "Pre-calculated entry size = %u", size);
+		log_info (LOG_ASSEMBLY, "Pre-calculated entry size = %u", size);
 	}
 
 	while (nmemb > 0) {

@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tasks
 	{
 		protected abstract string ArchName { get; }
 
-        protected ArmNativeAssemblyGenerator (StreamWriter output, string fileName)
+		protected ArmNativeAssemblyGenerator (StreamWriter output, string fileName)
 			: base (output, fileName)
 		{}
 

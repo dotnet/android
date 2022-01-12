@@ -12,14 +12,14 @@ namespace Xamarin.Android.Tasks
 	{
 		protected const string AutomaticStringSection = "autostr";
 
-		internal class NativeType
+		public class NativeType
 		{
 			public uint Size;
 			public uint Alignment;
 			public string? Name;
 		}
 
-		internal class StructureField
+		public class StructureField
 		{
 			public NativeType NativeType;
 			public string Text;
@@ -1016,51 +1016,51 @@ namespace Xamarin.Android.Tasks
 				writer.Write (", \"");
 
 				var list = new StringBuilder ();
-				if ((flags & SectionFlags.Allocatable) == SectionFlags.Allocatable) {
+				if (flags.HasFlag (SectionFlags.Allocatable)) {
 					list.Append ("a");
 				}
 
-				if ((flags & SectionFlags.GnuMbind) == SectionFlags.GnuMbind) {
+				if (flags.HasFlag (SectionFlags.GnuMbind)) {
 					list.Append ("d");
 				}
 
-				if ((flags & SectionFlags.Excluded) == SectionFlags.Excluded) {
+				if (flags.HasFlag (SectionFlags.Excluded)) {
 					list.Append ("e");
 				}
 
-				if ((flags & SectionFlags.ReferencesOtherSection) == SectionFlags.ReferencesOtherSection) {
+				if (flags.HasFlag (SectionFlags.ReferencesOtherSection)) {
 					list.Append ("o");
 				}
 
-				if ((flags & SectionFlags.Writable) == SectionFlags.Writable) {
+				if (flags.HasFlag (SectionFlags.Writable)) {
 					list.Append ("w");
 				}
 
-				if ((flags & SectionFlags.Executable) == SectionFlags.Executable) {
+				if (flags.HasFlag (SectionFlags.Executable)) {
 					list.Append ("x");
 				}
 
-				if ((flags & SectionFlags.Mergeable) == SectionFlags.Mergeable) {
+				if (flags.HasFlag (SectionFlags.Mergeable)) {
 					list.Append ("M");
 				}
 
-				if ((flags & SectionFlags.HasCStrings) == SectionFlags.HasCStrings) {
+				if (flags.HasFlag (SectionFlags.HasCStrings)) {
 					list.Append ("S");
 				}
 
-				if ((flags & SectionFlags.GroupMember) == SectionFlags.GroupMember) {
+				if (flags.HasFlag (SectionFlags.GroupMember)) {
 					list.Append ("G");
 				}
 
-				if ((flags & SectionFlags.ThreadLocalStorage) == SectionFlags.ThreadLocalStorage) {
+				if (flags.HasFlag (SectionFlags.ThreadLocalStorage)) {
 					list.Append ("T");
 				}
 
-				if ((flags & SectionFlags.Retained) == SectionFlags.Retained) {
+				if (flags.HasFlag (SectionFlags.Retained)) {
 					list.Append ("R");
 				}
 
-				if ((flags & SectionFlags.Number) == SectionFlags.Number || (flags & SectionFlags.Custom) == SectionFlags.Custom) {
+				if (flags.HasFlag (SectionFlags.Number) || flags.HasFlag (SectionFlags.Custom)) {
 					if (String.IsNullOrEmpty (numberOrCustomFlag)) {
 						throw new InvalidOperationException ("Section number or target-specific flag value must be specified");
 					}

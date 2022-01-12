@@ -2,9 +2,24 @@ using System;
 
 namespace Xamarin.Android.Tasks
 {
-	// Order of fields and their types must correspond *exactly* to that in
+	// Declaration order of fields and their types must correspond *exactly* to that in
 	// src/monodroid/jni/xamarin-app.hh ApplicationConfig structure
 	//
+	// Type mappings:
+	//
+	//     C++           C#
+	// -----------|----------
+	//   bool     |  bool
+	//   uint8_t  |  byte
+	//   int8_t   |  sbyte
+	//   uint16_t |  ushort
+	//   int16_t  |  short
+	//   uint32_t |  uint
+	//   int32_t  |  int
+	//   uint64_t |  ulong
+	//   int64_t  |  long
+	//   char*    |  string
+	//   
 	// Names should be the same as in the above struct, but it's not a requirement
 	// (they will be used only to generate comments in the native code)
 	sealed class ApplicationConfig

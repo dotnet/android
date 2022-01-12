@@ -170,7 +170,7 @@ namespace Xamarin.Android.Tasks
 
 			NativeAssemblyGenerator.StructureWriteContext structStatus = generator.StartStructure ();
 			generator.WriteStructure (structStatus, application_config);
-            generator.WriteSymbol (structStatus, "application_config", local: false);
+			generator.WriteSymbol (structStatus, "application_config", local: false);
 		}
 
 		uint WriteDSOCache (NativeAssemblyGenerator generator)

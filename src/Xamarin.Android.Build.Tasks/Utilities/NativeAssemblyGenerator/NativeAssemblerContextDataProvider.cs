@@ -9,6 +9,7 @@ namespace Xamarin.Android.Tasks
 			return String.Empty;
 		}
 
+		// Get maximum width of data buffer allocated inline (that is not pointed to)
 		public virtual uint GetMaxInlineWidth (object data, string fieldName)
 		{
 			return 0;

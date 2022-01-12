@@ -52,6 +52,7 @@ namespace Xamarin.Android.Tasks
 			base.ConfigureTypeMappings (mapping);
 
 			// Alignments and sizes as per https://github.com/ARM-software/abi-aa/blob/320a56971fdcba282b7001cf4b84abb4fd993131/aapcs32/aapcs32.rst#fundamental-data-types
+			// Assembler type directives are described in https://sourceware.org/binutils/docs-2.37/as/index.html
 			ConfigureTypeMapping<short>	 (".short", size: 2, alignment: 2);
 			ConfigureTypeMapping<ushort> (".short", size: 2, alignment: 2);
 			ConfigureTypeMapping<int>	 (".long",	size: 4, alignment: 4);

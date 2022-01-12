@@ -9,6 +9,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
 using ELFSymbolType = global::ELFSharp.ELF.Sections.SymbolType;
+using ELFSectionType = global::ELFSharp.ELF.Sections.SectionType;
 
 namespace Xamarin.Android.Tasks
 {
@@ -101,7 +102,7 @@ namespace Xamarin.Android.Tasks
 					size = (uint)(object)symbolEntry.Size;
 				}
 
-				return size != 0 && symbolEntry.PointedSection.Type == SectionType.ProgBits;
+				return size != 0 && symbolEntry.PointedSection.Type == ELFSectionType.ProgBits;
 			}
 		}
 
