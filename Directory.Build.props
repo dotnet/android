@@ -14,6 +14,8 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <!-- Ensure reference assemblies copied to bin -->
     <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
+    <!-- Ensure command-line apps can use a newer .NET -->
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <PropertyGroup>
