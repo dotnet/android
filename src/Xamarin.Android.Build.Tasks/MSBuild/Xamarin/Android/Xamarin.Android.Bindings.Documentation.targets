@@ -14,12 +14,12 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
   <UsingTask TaskName="Xamarin.Android.Tasks.ImportJavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.JavaDoc"       AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.MDoc"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.Unzip"         AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.UnzipToFolder" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <Target Name="_ExtractJavaDocJars"
       Inputs="@(JavaDocJar)"
       Outputs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
-    <Unzip
+    <UnzipToFolder
         Sources="@(JavaDocJar)"
         DestinationDirectories="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
     />
@@ -33,7 +33,7 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
       Condition=" '$(_UseLegacyJavadocImport)' == 'True' "
       Inputs="@(JavaSourceJar)"
       Outputs="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
-    <Unzip
+    <UnzipToFolder
         Sources="@(JavaSourceJar)"
         DestinationDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName)')"
     />

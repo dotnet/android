@@ -1,1 +1,2 @@
 Compat issues with assembly Mono.Android:
+CannotChangeAttribute : Attribute 'Android.Runtime.RegisterAttribute' on 'Android.Graphics.Paint.Color.set(Android.Graphics.Color)' changed from '[RegisterAttribute("setColor", "(I)V", "GetSetColor_IHandler", ApiSince=29)]' in the contract to '[RegisterAttribute("setColor", "(I)V", "GetSetColor_IHandler")]' in the implementation.

@@ -56,13 +56,42 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
+			bool isElf64 = elf.Class == Class.Bit64;
 			foreach (var entry in symtab.Entries) {
 				if (entry.Type == SymbolType.Function) {
 					return false;
 				}
-			}
 
+				if (!(isElf64 ? IsNonEmptyCodeSymbol (entry as SymbolEntry<ulong>) : IsNonEmptyCodeSymbol (entry as SymbolEntry<uint>))) {
+					continue;
+				}
+
+				// We have an entry that's in (some) executable section and has some code in it.
+				// Mono creates symbols which are essentially jump tables into executable code
+				// inside the DSO that is not accessible via any other symbol, merely a blob of
+				// executable code. The jump table symbols are named with the `_plt` prefix.
+				if (entry.Name.EndsWith ("_plt")) {
+					return false;
+				}
+			}
 			return true;
+
+			bool IsNonEmptyCodeSymbol<T> (SymbolEntry<T>? symbolEntry) where T : struct
+			{
+				if (symbolEntry == null) {
+					return true; // Err on the side of caution
+				}
+
+				Type t = typeof(T);
+				ulong size = 0;
+				if (t == typeof(System.UInt64)) {
+					size = (ulong)(object)symbolEntry.Size;
+				} else if (t == typeof(System.UInt32)) {
+					size = (uint)(object)symbolEntry.Size;
+				}
+
+				return size != 0 && symbolEntry.PointedSection.Type == SectionType.ProgBits;
+			}
 		}
 
 		static ISymbolTable? GetSymbolTable (IELF elf, string sectionName)
