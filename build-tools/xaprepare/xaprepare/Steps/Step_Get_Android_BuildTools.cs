@@ -27,10 +27,11 @@ namespace Xamarin.Android.Prepare
 			string XABuildTools30PackagePrefixMacOS = Context.Instance.Properties [KnownProperties.XABuildTools30PackagePrefixMacOS] ?? string.Empty;
 			string XABuildTools30PackagePrefixWindows = Context.Instance.Properties [KnownProperties.XABuildTools30PackagePrefixWindows] ?? string.Empty;
 			string XABuildTools30PackagePrefixLinux = Context.Instance.Properties [KnownProperties.XABuildTools30PackagePrefixLinux] ?? string.Empty;
-
-			packages.Add ((package: $"build-tools_r{XABuildTools30Version}-macosx.zip", prefix: XABuildTools30PackagePrefixMacOS));
-			packages.Add ((package: $"build-tools_r{XABuildTools30Version}-windows.zip", prefix: XABuildTools30PackagePrefixWindows));
-			packages.Add ((package: $"build-tools_r{XABuildTools30Version}-linux.zip", prefix: XABuildTools30PackagePrefixLinux));
+			if (!string.IsNullOrEmpty (XABuildTools30Version)) {
+				packages.Add ((package: $"build-tools_r{XABuildTools30Version}-macosx.zip", prefix: XABuildTools30PackagePrefixMacOS));
+				packages.Add ((package: $"build-tools_r{XABuildTools30Version}-windows.zip", prefix: XABuildTools30PackagePrefixWindows));
+				packages.Add ((package: $"build-tools_r{XABuildTools30Version}-linux.zip", prefix: XABuildTools30PackagePrefixLinux));
+			}
 		}
 
 		protected override async Task<bool> Execute (Context context)
