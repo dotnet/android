@@ -35,10 +35,10 @@ namespace Xamarin.Android.Tasks
 		// src/monodroid/jni/xamarin-app.hh TypeMapEntry structure
 		sealed class TypeMapEntry
 		{
-			[NativeAssemblerString (PointerToSymbol = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
 			public string from;
 
-			[NativeAssemblerString (PointerToSymbol = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
 			public string to;
 		};
 
@@ -55,10 +55,10 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (UsesDataProvider = true)]
 			public IntPtr data = IntPtr.Zero; // unused in Debug mode
 
-			[NativeAssemblerString (PointerToSymbol = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
 			public string        java_to_managed;
 
-			[NativeAssemblerString (PointerToSymbol = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
 			public string        managed_to_java;
 		};
 

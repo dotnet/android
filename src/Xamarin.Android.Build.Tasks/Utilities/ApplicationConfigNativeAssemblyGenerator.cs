@@ -88,7 +88,7 @@ namespace Xamarin.Android.Tasks
 			public IntPtr data;
 			public uint   name_length;
 
-			[NativeAssemblerString (PointerToSymbol = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
 			public string name;
 		};
 

@@ -11,12 +11,41 @@ namespace Xamarin.Android.Tasks
 		public string? Name          { get; set; }
 	}
 
+	enum AssemblerStringFormat
+	{
+		/// <summary>
+		/// Local string label is automatically generated for the string, this is the default behavior
+		/// </summary>
+		Automatic,
+
+		/// <summary>
+		/// String is output as an inline (no pointer) array/buffer filled directly with string data
+		/// </summary>
+		InlineArray,
+
+		/// <summary>
+		/// String is output as a pointer to symbol whose name is contents of the string being processed
+		PointerToSymbol,
+	}
+
 	[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
 	class NativeAssemblerStringAttribute : NativeAssemblerAttribute
 	{
-		public bool Inline          { get; set; }
+		AssemblerStringFormat format;
+
+		public bool Inline          => format == AssemblerStringFormat.InlineArray;
 		public bool PadToMaxLength  { get; set; }
-		public bool PointerToSymbol { get; set; }
+		public bool PointerToSymbol => format == AssemblerStringFormat.PointerToSymbol;
+
+		public NativeAssemblerStringAttribute ()
+		{
+			format = AssemblerStringFormat.Automatic;
+		}
+
+		public NativeAssemblerStringAttribute (AssemblerStringFormat format)
+		{
+			this.format = format;
+		}
 	}
 
 	[AttributeUsage (AttributeTargets.Class, Inherited = true)]

@@ -71,13 +71,13 @@ namespace Xamarin.Android.Tasks
 			public uint   entry_count;
 			public uint   duplicate_count;
 
-			[NativeAssemblerString (PointerToSymbol = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
 			public string map;
 
-			[NativeAssemblerString (PointerToSymbol = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
 			public string duplicate_map;
 
-			[NativeAssemblerString (PointerToSymbol = true, UsesDataProvider = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol, UsesDataProvider = true)]
 			public string assembly_name;
 			public IntPtr image;
 			public uint   java_name_width;
@@ -95,7 +95,7 @@ namespace Xamarin.Android.Tasks
 			public uint module_index;
 			public uint type_token_id;
 
-			[NativeAssemblerString (Inline = true, PadToMaxLength = true)]
+			[NativeAssemblerString (AssemblerStringFormat.InlineArray, PadToMaxLength = true)]
 			public string  java_name;
 		}
 

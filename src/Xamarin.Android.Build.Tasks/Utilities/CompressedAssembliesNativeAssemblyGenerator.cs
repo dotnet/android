@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tasks
 			public uint   uncompressed_file_size;
 			public bool   loaded;
 
-			[NativeAssemblerString (PointerToSymbol = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
 			public string data = String.Empty;
 		};
 
@@ -26,7 +26,7 @@ namespace Xamarin.Android.Tasks
 		{
 			public uint count;
 
-			[NativeAssemblerString (PointerToSymbol = true)]
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
 			public string descriptors;
 		};
 
