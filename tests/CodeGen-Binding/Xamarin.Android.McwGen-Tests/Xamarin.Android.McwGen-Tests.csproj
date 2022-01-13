@@ -134,6 +134,9 @@
     <TestJarEntry Include="java\com\xamarin\android\StaticMethodsInterface.java">
       <OutputFile>Jars/xamarin-test.jar</OutputFile>
     </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\example\NamespaceTransform.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedJar Include="Jars\KotlinUnsignedTypes.jar" />
@@ -143,6 +146,10 @@
   </ItemGroup>
   <ItemGroup>
     <JavaSourceJar Include="$(OutputPath)xamarin-test-sources.jar" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidNamespaceReplacement Include="xamarin.example" Replacement="Example" />
+    <AndroidNamespaceReplacement Include="com.example" Replacement="Transformed.Namespace" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
   <Import Project="..\..\..\build-tools\scripts\Jar.targets" />

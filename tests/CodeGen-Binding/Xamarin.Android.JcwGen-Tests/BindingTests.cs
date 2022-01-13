@@ -39,6 +39,15 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 
 		[Test]
+		public void NamespaceTransforms ()
+		{
+			// Really the only test here is that the type exists in the binding.
+			// If the transforms were not working it would be 'Com.Xamarin.Example.NamespaceTransform'.
+			var t = new Transformed.Namespace.NamespaceTransform ();
+			Assert.IsNotNull (t);
+		}
+
+		[Test]
 		public void TestBxc4288 ()
 		{
 			var t = new Com.Xamarin.Android.Bxc4288 ();
