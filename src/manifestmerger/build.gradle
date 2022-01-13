@@ -38,7 +38,8 @@ jar {
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     } {
-        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+        // Exclude native jnidispatch content to simplify installer signing and notarization
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA', 'com/sun/jna/**/*jnidispatch*'
     }
     archiveName 'manifestmerger.jar'
 }
