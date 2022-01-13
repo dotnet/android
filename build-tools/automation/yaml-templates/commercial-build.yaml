@@ -29,7 +29,7 @@ steps:
 # Clone and prepare monodroid with submodules, but disregard the unused xamarin-android submodule.
 - checkout: monodroid
   clean: true
-  submodules: recursive
+  submodules: true
   path: s/xamarin-android/external/monodroid
   persistCredentials: true
 
