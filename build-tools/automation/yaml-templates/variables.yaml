@@ -9,6 +9,8 @@ variables:
   value: jdk-11
 - name: NuGetArtifactName
   value: nuget-unsigned
+- name: LinuxNuGetArtifactName
+  value: nuget-linux-unsigned
 - name: InstallerArtifactName
   value: installers-unsigned
 - name: TestAssembliesArtifactName
