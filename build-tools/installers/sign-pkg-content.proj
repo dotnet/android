@@ -43,24 +43,8 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     <RemoveDir Directories="$(_BundleToolExtractLocation)" />
   </Target>
 
-  <!-- Remove the jna subdirectory in manifestmerger.jar as it should not be needed by our usage.
-    This simplifies signing/notarization and reduces our installation footprint slightly. -->
-  <Target Name="_RemoveJnaFromManifestMerger" >
-    <PropertyGroup>
-      <_ManifestMergerJar>$([System.IO.Path]::GetFullPath('$(MSBuildSrcDir)\manifestmerger.jar'))</_ManifestMergerJar>
-      <_ManifestMergerExtractLocation>$(MSBuildSrcDir)\mm-unzipped</_ManifestMergerExtractLocation>
-    </PropertyGroup>
-    <RemoveDir Directories="$(_ManifestMergerExtractLocation)" />
-    <MakeDir Directories="$(_ManifestMergerExtractLocation)" />
-    <Exec WorkingDirectory="$(_ManifestMergerExtractLocation)" Command="jar -xvf &quot;$(_ManifestMergerJar)&quot;" />
-    <Delete Files="$(_ManifestMergerJar)" />
-    <RemoveDir Directories="$(_ManifestMergerExtractLocation)\com\sun\jna" />
-    <Exec WorkingDirectory="$(_ManifestMergerExtractLocation)" Command="jar -cvmf META-INF/MANIFEST.MF &quot;$(_ManifestMergerJar)&quot; ." />
-    <RemoveDir Directories="$(_ManifestMergerExtractLocation)" />
-  </Target>
-
   <Target Name="_AddMachOEntitlements"
-      DependsOnTargets="_RemoveAapt2FromBundletool;_RemoveJnaFromManifestMerger"
+      DependsOnTargets="_RemoveAapt2FromBundletool"
       BeforeTargets="SignFiles"
       AfterTargets="AfterBuild" >
     <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;%(_MSBuildFilesUnixSignAndHarden.EntitlementsPath)&quot; &quot;%(_MSBuildFilesUnixSignAndHarden.Identity)&quot;" />
