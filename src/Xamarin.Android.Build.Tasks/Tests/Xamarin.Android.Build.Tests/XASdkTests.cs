@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
@@ -614,8 +615,8 @@ namespace Xamarin.Android.Build.Tests
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
 			Assert.AreEqual ("21", uses_sdk.Attribute (ns + "minSdkVersion").Value);
-			// TODO: Change this when 32 becomes the default for .NET 6+
-			Assert.AreEqual ("31", uses_sdk.Attribute (ns + "targetSdkVersion").Value);
+			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString(),
+				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");

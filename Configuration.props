@@ -27,7 +27,7 @@
     <AndroidFirstApiLevel Condition="'$(AndroidFirstApiLevel)' == ''">19</AndroidFirstApiLevel>
     <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">21</AndroidJavaRuntimeApiLevel>
     <!-- The default API level used for $(TargetPlatformVersion) -->
-    <AndroidTargetDotNetApiLevel Condition="'$(AndroidTargetDotNetApiLevel)' == ''">31</AndroidTargetDotNetApiLevel>
+    <AndroidDefaultTargetDotnetApiLevel Condition="'$(AndroidDefaultTargetDotnetApiLevel)' == ''">31</AndroidDefaultTargetDotnetApiLevel>
     <!-- The min API level supported by Microsoft.Android.Sdk, should refactor/remove when this value is the same as $(AndroidFirstApiLevel) -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <AndroidFirstPlatformId Condition="'$(AndroidFirstPlatformId)' == ''">$(AndroidFirstApiLevel)</AndroidFirstPlatformId>

@@ -120,7 +120,7 @@
       <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
       <_PreviewPacks Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' " Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Ref.$(AndroidLatestUnstableApiLevel).*.nupkg" />
       <_InstallArguments Include="android-aot" />
-      <!-- NOTE: temporary if $(AndroidTargetDotNetApiLevel) is not 32 -->
+      <!-- NOTE: temporary if $(AndroidDefaultTargetDotnetApiLevel) is not 32 -->
       <_InstallArguments Include="android-32" />
       <_InstallArguments Include="android-$(AndroidLatestUnstableApiLevel)" Condition=" '@(_PreviewPacks->Count())' != '0' " />
       <_InstallArguments Include="--skip-manifest-update" />

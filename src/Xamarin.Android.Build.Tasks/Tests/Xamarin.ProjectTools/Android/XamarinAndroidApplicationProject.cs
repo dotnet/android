@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using Microsoft.Build.Construction;
-using System.Runtime.CompilerServices;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
@@ -69,9 +70,7 @@ namespace Xamarin.ProjectTools
 
 			AndroidManifest = default_android_manifest;
 			if (Builder.UseDotNet) {
-				// TODO: avoid the XA1008 warning when having targetSdkVersion="32" and $(TargetPlatformVersion)=31.0
-				// We should remove this when 32 becomes the default for .NET 6+
-				TargetSdkVersion = "31";
+				TargetSdkVersion = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 			} else {
 				TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			}
