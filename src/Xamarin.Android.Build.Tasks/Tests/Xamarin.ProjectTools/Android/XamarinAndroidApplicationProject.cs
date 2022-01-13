@@ -70,7 +70,7 @@ namespace Xamarin.ProjectTools
 
 			AndroidManifest = default_android_manifest;
 			if (Builder.UseDotNet) {
-				TargetSdkVersion = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
+				TargetSdkVersion = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString ();
 			} else {
 				TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			}
