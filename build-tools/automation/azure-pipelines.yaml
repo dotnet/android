@@ -1559,7 +1559,11 @@ stages:
             if ($null -ne ($artifactsToDownload | ? { $fileUrl.EndsWith($_) })) {
                 $fileName = [IO.Path]::GetFileName($fileUrl)
                 Write-Host "Downloading artifact from $fileUrl to $(SBOMArtifactDir)\$fileName"
-                Invoke-WebRequest -Uri $fileUrl -OutFile "$(SBOMArtifactDir)\$fileName" -UseBasicParsing
+                if ($fileUrl -like "*dl.internalx.com*") {
+                    Invoke-WebRequest -Uri $fileUrl -OutFile "$(SBOMArtifactDir)\$fileName" -UseBasicParsing -Headers @{"Authorization"="token $(GitHub.Token)"}
+                } else {
+                    Invoke-WebRequest -Uri $fileUrl -OutFile "$(SBOMArtifactDir)\$fileName" -UseBasicParsing
+                }
             }
         }
       displayName: Download signed .pkg and .vsix
