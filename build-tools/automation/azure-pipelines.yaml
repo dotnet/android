@@ -1530,6 +1530,12 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
+        artifactName: nuget-linux-signed
+        downloadPath: $(SBOMArtifactDir)
+        patterns: '*.nupkg'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
         artifactName: vs-msi-nugets
         downloadPath: $(SBOMArtifactDir)
         patterns: '*.nupkg'
@@ -1563,7 +1569,7 @@ stages:
           BuildDropPath: $(SBOMArtifactDir)
           ManifestDirPath: $(Build.ArtifactStagingDirectory)\sbom-manifests
           #PackageName: Xamarin Android
-          #PackageVersion: 
+          #PackageVersion:
 
     - task: PublishPipelineArtifact@1
       displayName: Upload SBOM manifests
