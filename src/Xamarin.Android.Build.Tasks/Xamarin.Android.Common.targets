@@ -1583,6 +1583,7 @@ because xbuild doesn't support framework reference assemblies.
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
     SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
+    NativeLibraries="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)"
     MonoComponents="@(_MonoComponent)"
     MainAssembly="$(TargetPath)"
     OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"

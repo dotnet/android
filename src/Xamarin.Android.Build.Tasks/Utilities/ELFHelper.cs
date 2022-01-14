@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 
 using ELFSharp;
@@ -6,6 +7,9 @@ using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
+
+using ELFSymbolType = global::ELFSharp.ELF.Sections.SymbolType;
+using ELFSectionType = global::ELFSharp.ELF.Sections.SectionType;
 
 namespace Xamarin.Android.Tasks
 {
@@ -37,7 +41,7 @@ namespace Xamarin.Android.Tasks
 
 			bool mono_aot_file_info_found = false;
 			foreach (var entry in symtab.Entries) {
-				if (String.Compare ("mono_aot_file_info", entry.Name, StringComparison.Ordinal) == 0 && entry.Type == SymbolType.Object) {
+				if (String.Compare ("mono_aot_file_info", entry.Name, StringComparison.Ordinal) == 0 && entry.Type == ELFSymbolType.Object) {
 					mono_aot_file_info_found = true;
 					break;
 				}
@@ -58,7 +62,7 @@ namespace Xamarin.Android.Tasks
 
 			bool isElf64 = elf.Class == Class.Bit64;
 			foreach (var entry in symtab.Entries) {
-				if (entry.Type == SymbolType.Function) {
+				if (entry.Type == ELFSymbolType.Function) {
 					return false;
 				}
 
@@ -90,7 +94,7 @@ namespace Xamarin.Android.Tasks
 					size = (uint)(object)symbolEntry.Size;
 				}
 
-				return size != 0 && symbolEntry.PointedSection.Type == SectionType.ProgBits;
+				return size != 0 && symbolEntry.PointedSection.Type == ELFSectionType.ProgBits;
 			}
 		}
 

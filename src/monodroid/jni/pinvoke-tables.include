@@ -655,6 +655,7 @@ static PinvokeEntry dotnet_pinvokes[] = {
 	{0xfc61bb67ab6246d9, "SystemNative_GetMaximumAddressSize", nullptr},
 	{0xfd635b23f61d5b67, "SystemNative_GetIPv4Address", nullptr},
 	{0xfd8e7b20c15262b7, "SystemNative_ReadDirR", nullptr},
+	{0xfdb1f7d817f7c4c5, "SystemNative_GetEnv", nullptr},
 	{0xfdd2763d030c73b9, "BrotliGetTransforms", nullptr},
 	{0xffa666c4ef0b22eb, "AndroidCryptoNative_X509StoreAddCertificate", nullptr},
 };
@@ -1147,6 +1148,7 @@ static PinvokeEntry dotnet_pinvokes[] = {
 	{0x9e366e9c, "SystemNative_InterfaceNameToIndex", nullptr},
 	{0x9e717f20, "SystemNative_LChflagsCanSetHiddenFlag", nullptr},
 	{0x9f47b32d, "SystemNative_ShmOpen", nullptr},
+	{0xa0db1858, "SystemNative_GetEnv", nullptr},
 	{0xa1d774fc, "BrotliEncoderHasMoreOutput", nullptr},
 	{0xa25daa0e, "BrotliSetDictionaryData", nullptr},
 	{0xa2d2f390, "SystemNative_TryChangeSocketEventRegistration", nullptr},
@@ -1324,4 +1326,4 @@ constexpr hash_t system_security_cryptography_native_android_library_hash = 0x93
 #endif
 
 constexpr size_t internal_pinvokes_count = 235;
-constexpr size_t dotnet_pinvokes_count = 409;
+constexpr size_t dotnet_pinvokes_count = 410;

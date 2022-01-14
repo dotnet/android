@@ -6,6 +6,8 @@
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
 
   <Import Project="..\..\..\..\Configuration.props" />

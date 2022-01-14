@@ -168,6 +168,9 @@ namespace Xamarin.Android.Prepare
 				{ "@XA_SUPPORTED_ABIS@",         context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Replace (':', ';') },
 				{ "@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@", context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel) },
 				{ "@ANDROID_LATEST_STABLE_API_LEVEL@", context.Properties.GetRequiredValue (KnownProperties.AndroidLatestStableApiLevel) },
+				{ "@XAMARIN_ANDROID_VERSION@",   context.Properties.GetRequiredValue (KnownProperties.ProductVersion) },
+				{ "@XAMARIN_ANDROID_COMMIT_HASH@", context.BuildInfo.XACommitHash },
+				{ "@XAMARIN_ANDROID_BRANCH@", context.BuildInfo.XABranch },
 			};
 
 			return new GeneratedPlaceholdersFile (

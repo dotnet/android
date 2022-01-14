@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -33,15 +34,16 @@ namespace Xamarin.Android.Build.Tests
 			public uint   system_property_count;
 			public uint   number_of_assemblies_in_apk;
 			public uint   bundled_assembly_name_width;
-			public uint   number_of_assembly_blobs;
+			public uint   number_of_assembly_store_files;
+			public uint   number_of_dso_cache_entries;
 			public uint   mono_components_mask;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 18;
+		const uint ApplicationConfigFieldCount = 19;
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
-		static readonly Regex stringLabelRegex = new Regex ("^\\.L\\.env\\.str\\.[0-9]+:", RegexOptions.Compiled);
+		static readonly Regex stringLabelRegex = new Regex ("^\\.L\\.autostr\\.[0-9]+:", RegexOptions.Compiled);
 
 		static readonly HashSet <string> expectedPointerTypes = new HashSet <string> (StringComparer.Ordinal) {
 			".long",
@@ -102,7 +104,6 @@ namespace Xamarin.Android.Build.Tests
 
 					line = lines [++i];
 					field = GetField (envFile, line, i);
-
 					AssertFieldType (envFile, ".asciz", field [0], i);
 					strings [label] = AssertIsAssemblerString (envFile, field [1], i);
 					continue;
@@ -196,17 +197,22 @@ namespace Xamarin.Android.Build.Tests
 						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile, i, field [1]);
 						break;
 
-					case 15: // number_of_assembly_blobs: uint32_t / .word | .long
+					case 15: // number_of_assembly_store_files: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.number_of_assembly_blobs = ConvertFieldToUInt32 ("number_of_assembly_blobs", envFile, i, field [1]);
+						ret.number_of_assembly_store_files = ConvertFieldToUInt32 ("number_of_assembly_store_files", envFile, i, field [1]);
 						break;
 
-					case 16: // mono_components_mask: uint32_t / .word | .long
+					case 16: // number_of_dso_cache_entries: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
+						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile, i, field [1]);
+						break;
+
+					case 17: // mono_components_mask: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.mono_components_mask = ConvertFieldToUInt32 ("mono_components_mask", envFile, i, field [1]);
 						break;
 
-					case 17: // android_package_name: string / [pointer type]
+					case 18: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;
@@ -216,7 +222,7 @@ namespace Xamarin.Android.Build.Tests
 				if (String.Compare (".size", field [0], StringComparison.Ordinal) == 0) {
 					fieldCount--;
 					Assert.IsTrue (field [1].StartsWith ("application_config", StringComparison.Ordinal), $"Mismatched .size directive in '{envFile}:{i}'");
-					break; // We've reached the end of the application_config structure
+					gatherFields = false; // We've reached the end of the application_config structure
 				}
 			}
 			Assert.AreEqual (ApplicationConfigFieldCount, fieldCount, $"Invalid 'application_config' field count in environment file '{envFile}'");
@@ -280,7 +286,8 @@ namespace Xamarin.Android.Build.Tests
 				field = GetField (envFile, line, i);
 				if (String.Compare (".size", field [0], StringComparison.Ordinal) == 0) {
 					Assert.IsTrue (field [1].StartsWith ("app_environment_variables", StringComparison.Ordinal), $"Mismatched .size directive in '{envFile}:{i}'");
-					break; // We've reached the end of the environment variable array
+					gatherPointers = false; // We've reached the end of the environment variable array
+					continue;
 				}
 
 				Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
@@ -311,13 +318,20 @@ namespace Xamarin.Android.Build.Tests
 		static bool IsCommentLine (string line)
 		{
 			string l = line?.Trim ();
-			return !String.IsNullOrEmpty (l) && l.StartsWith ("/*", StringComparison.Ordinal);
+			if (String.IsNullOrEmpty (l)) {
+				return false;
+			}
+
+			return l.StartsWith ("/*", StringComparison.Ordinal) ||
+				l.StartsWith ("//", StringComparison.Ordinal) ||
+				l.StartsWith ("#", StringComparison.Ordinal) ||
+				l.StartsWith ("@", StringComparison.Ordinal);
 		}
 
 		static string[] GetField (string file, string line, int lineNumber)
 		{
 			string[] ret = line?.Trim ()?.Split ('\t');
-			Assert.AreEqual (2, ret.Length, $"Invalid assembler field format in file '{file}:{lineNumber}': '{line}'");
+			Assert.IsTrue (ret.Length >= 2, $"Invalid assembler field format in file '{file}:{lineNumber}': '{line}'");
 
 			return ret;
 		}
@@ -497,10 +511,11 @@ namespace Xamarin.Android.Build.Tests
 
 		static bool ConvertFieldToBool (string fieldName, string envFile, int fileLine, string value)
 		{
-			Assert.AreEqual (1, value.Length, $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid boolean value (too long)");
+			// Allow both decimal and hexadecimal values
+			Assert.IsTrue (value.Length > 0 && value.Length <= 3, $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid boolean value (length not between 1 and 3)");
 
 			uint fv;
-			Assert.IsTrue (UInt32.TryParse (value, out fv), $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid boolean value (not a valid integer)");
+			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid boolean value (not a valid integer)");
 			Assert.IsTrue (fv == 0 || fv == 1, $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid boolean value (not a valid boolean value 0 or 1)");
 
 			return fv == 1;
@@ -511,7 +526,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (value.Length > 0, $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint32_t value (not long enough)");
 
 			uint fv;
-			Assert.IsTrue (UInt32.TryParse (value, out fv), $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint32_t value (not a valid integer)");
+			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint32_t value (not a valid integer)");
 
 			return fv;
 		}
@@ -521,9 +536,27 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (value.Length > 0, $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint8_t value (not long enough)");
 
 			byte fv;
-			Assert.IsTrue (Byte.TryParse (value, out fv), $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint8_t value (not a valid integer)");
+			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint8_t value (not a valid integer)");
 
 			return fv;
+		}
+
+		static bool TryParseInteger (string value, out uint fv)
+		{
+			if (value.StartsWith ("0x", StringComparison.Ordinal)) {
+				return UInt32.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
+			}
+
+			return UInt32.TryParse (value, out fv);
+		}
+
+		static bool TryParseInteger (string value, out byte fv)
+		{
+			if (value.StartsWith ("0x", StringComparison.Ordinal)) {
+				return Byte.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
+			}
+
+			return Byte.TryParse (value, out fv);
 		}
 	}
 }
