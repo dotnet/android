@@ -1073,7 +1073,8 @@ stages:
   - job: designer_integration_win
     condition: false
     displayName: Windows
-    pool: $(HostedWinVS2019)
+    pool:
+      vmImage: windows-2019
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1257,7 +1258,7 @@ stages:
     - sign_net_linux
     condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
     timeoutInMinutes: 60
-    pool: $(VSEngMicroBuild2019)
+    pool: $(VSEngMicroBuildPool)
     workspace:
       clean: all
     variables:
@@ -1351,7 +1352,7 @@ stages:
 
   - job: push_to_nuget_org
     displayName: Push to NuGet.org
-    pool: $(VSEngMicroBuild2019)
+    pool: $(VSEngMicroBuildPool)
     dependsOn: wait_for_nuget_org_approval
     condition: eq(dependencies.wait_for_nuget_org_approval.result, 'Succeeded')
     steps:
@@ -1485,7 +1486,7 @@ stages:
   - job: queue_vsix_signing
     displayName: Sign Vsix
     dependsOn: notarize_pkg_upload_storage
-    pool: $(VSEngMicroBuild2019)
+    pool: $(VSEngMicroBuildPool)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
@@ -1516,7 +1517,8 @@ stages:
   # Check - "Xamarin.Android (Post Build Generate Software Bill of Materials)"
   - job: generate_sbom
     displayName: Generate Software Bill of Materials
-    pool: $(HostedWinVS2019)
+    pool:
+      vmImage: $(HostedWinImage)
     timeoutInMinutes: 60
     variables:
       Packaging.EnableSBOMSigning: true
@@ -1587,7 +1589,8 @@ stages:
   # Check - "Xamarin.Android (Code Analysis Security and Compliance)"
   - job: run_static_analysis
     displayName: Security and Compliance
-    pool: $(HostedWinVS2019)
+    pool:
+      vmImage: $(HostedWinImage)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     steps:
