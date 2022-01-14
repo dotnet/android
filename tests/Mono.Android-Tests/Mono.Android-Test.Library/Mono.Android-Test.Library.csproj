@@ -15,9 +15,11 @@
     <FileAlignment>512</FileAlignment>
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <TargetFrameworkVersion>v12.0</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFrameworkVersion>$(AndroidLatestStableFrameworkVersion)</TargetFrameworkVersion>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>portable</DebugType>

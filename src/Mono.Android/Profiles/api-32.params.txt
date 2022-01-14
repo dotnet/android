@@ -6856,6 +6856,9 @@ package android.hardware.camera2.params
     copyElements(int[] destination, int offset)
     equals(java.lang.Object obj)
     getElement(int column, int row)
+  class DeviceStateSensorOrientationMap
+    equals(java.lang.Object obj)
+    getSensorOrientation(long deviceState)
   class ExtensionSessionConfiguration
     #ctor(int extension, java.util.List<android.hardware.camera2.params.OutputConfiguration> outputs, java.util.concurrent.Executor executor, android.hardware.camera2.CameraExtensionSession.StateCallback listener)
   class InputConfiguration
@@ -18985,12 +18988,12 @@ package android.view
   interface ActionProvider.VisibilityListener
     onActionProviderVisibilityChanged(boolean isVisible)
   interface AttachedSurfaceControl
-    addOnSurfaceTransformHintChangedListener(android.view.AttachedSurfaceControl.OnSurfaceTransformHintChangedListener listener)
+    addOnBufferTransformHintChangedListener(android.view.AttachedSurfaceControl.OnBufferTransformHintChangedListener listener)
     applyTransactionOnDraw(android.view.SurfaceControl.Transaction t)
     buildReparentTransaction(android.view.SurfaceControl child)
-    removeOnSurfaceTransformHintChangedListener(android.view.AttachedSurfaceControl.OnSurfaceTransformHintChangedListener listener)
-  interface AttachedSurfaceControl.OnSurfaceTransformHintChangedListener
-    onSurfaceTransformHintChanged(int hint)
+    removeOnBufferTransformHintChangedListener(android.view.AttachedSurfaceControl.OnBufferTransformHintChangedListener listener)
+  interface AttachedSurfaceControl.OnBufferTransformHintChangedListener
+    onBufferTransformHintChanged(int hint)
   class Choreographer
     postFrameCallback(android.view.Choreographer.FrameCallback callback)
     postFrameCallbackDelayed(android.view.Choreographer.FrameCallback callback, long delayMillis)

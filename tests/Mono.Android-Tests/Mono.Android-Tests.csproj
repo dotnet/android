@@ -21,7 +21,6 @@
     <MandroidI18n>All</MandroidI18n>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion>v12.0</TargetFrameworkVersion>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <AndroidIncludeWrapSh Condition=" '$(UseASAN)' != '' Or '$(UseUBSAN)' != '' ">true</AndroidIncludeWrapSh>
@@ -33,6 +32,9 @@
   </PropertyGroup>
   <Import Project="Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFrameworkVersion>$(AndroidLatestStableFrameworkVersion)</TargetFrameworkVersion>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
