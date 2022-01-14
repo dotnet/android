@@ -1562,6 +1562,9 @@ stages:
         }
       displayName: Download signed .pkg and .vsix
 
+    - powershell:  mkdir -p $(Build.ArtifactStagingDirectory)\sbom-manifests
+      displayName: Create sbom-manifests directory
+
     # https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
     - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
       displayName: Generate SBOM from artifacts
