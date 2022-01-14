@@ -215,8 +215,17 @@ struct ApplicationConfig
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_assembly_store_files;
+	uint32_t number_of_dso_cache_entries;
 	MonoComponent mono_components_mask;
 	const char *android_package_name;
+};
+
+struct DSOCacheEntry
+{
+	uint64_t       hash;
+	bool           ignore;
+	const char    *name;
+	void          *handle;
 };
 
 MONO_API uint64_t format_tag;
@@ -242,4 +251,5 @@ MONO_API XamarinAndroidBundledAssembly bundled_assemblies[];
 MONO_API AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
 MONO_API AssemblyStoreRuntimeData assembly_stores[];
 
+MONO_API DSOCacheEntry dso_cache[];
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

@@ -1317,7 +1317,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MultiDexR8ConfigWithNoCodeShrinking ([Values (true, false)] bool useConfig)
+		public void MultiDexR8ConfigWithNoCodeShrinking ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -1349,20 +1349,15 @@ EsBAhQAFAAICAgAKHONUL9RRrU7AAAAOwAAABQAAAAAAAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BT
 klGRVNULk1GUEsBAhQAFAAICAgAHHONUB4E1g/HAAAAEgEAABcAAAAAAAAAAAAAAAAAugAAAEV4d
 GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 				") });
-			if (useConfig)
-				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
-					TextContent = () => "-dontwarn java.lang.ClassValue"
-				});
+			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
+				TextContent = () => "-dontwarn java.lang.ClassValue"
+			});
 			using (var builder = CreateApkBuilder ()) {
 				Assert.True (builder.Build (proj), "Build should have succeeded.");
 				string warning = builder.LastBuildOutput
 						.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal))
 						.FirstOrDefault (x => x.Contains ("R8 : warning : Missing class: java.lang.ClassValue"));
-				if (useConfig) {
-					Assert.IsNull (warning, "Build should have completed without an R8 warning for `java.lang.ClassValue`.");
-					return;
-				}
-				Assert.IsNotNull (warning, "Build should have completed with an R8 warning for `java.lang.ClassValue`.");
+				Assert.IsNull (warning, "Build should have completed without an R8 warning for `java.lang.ClassValue`.");
 			}
 		}
 

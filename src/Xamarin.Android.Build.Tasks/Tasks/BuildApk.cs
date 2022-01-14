@@ -127,7 +127,7 @@ namespace Xamarin.Android.Tasks
 			ArchiveFileList files = new ArchiveFileList ();
 			bool refresh = true;
 			if (apkInputPath != null && File.Exists (apkInputPath) && !File.Exists (apkOutputPath)) {
-				Log.LogDebugMessage ($"Copying {apkInputPath} to {apkInputPath}");
+				Log.LogDebugMessage ($"Copying {apkInputPath} to {apkOutputPath}");
 				File.Copy (apkInputPath, apkOutputPath, overwrite: true);
 				refresh = false;
 			}

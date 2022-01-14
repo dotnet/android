@@ -223,6 +223,7 @@
       Outputs="Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.SupportedPlatforms.targets">
     <GenerateSupportedPlatforms
         AndroidApiInfo="@(AndroidApiInfo)"
+        TargetApiLevel="$(AndroidDefaultTargetDotnetApiLevel)"
         MinimumApiLevel="$(AndroidMinimumDotNetApiLevel)"
         OutputFile="Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.SupportedPlatforms.targets"
     />

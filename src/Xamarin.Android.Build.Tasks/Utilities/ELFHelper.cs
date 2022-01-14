@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 
 using ELFSharp;
@@ -6,6 +7,9 @@ using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
+
+using ELFSymbolType = global::ELFSharp.ELF.Sections.SymbolType;
+using ELFSectionType = global::ELFSharp.ELF.Sections.SectionType;
 
 namespace Xamarin.Android.Tasks
 {
@@ -37,7 +41,7 @@ namespace Xamarin.Android.Tasks
 
 			bool mono_aot_file_info_found = false;
 			foreach (var entry in symtab.Entries) {
-				if (String.Compare ("mono_aot_file_info", entry.Name, StringComparison.Ordinal) == 0 && entry.Type == SymbolType.Object) {
+				if (String.Compare ("mono_aot_file_info", entry.Name, StringComparison.Ordinal) == 0 && entry.Type == ELFSymbolType.Object) {
 					mono_aot_file_info_found = true;
 					break;
 				}
@@ -56,13 +60,42 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
+			bool isElf64 = elf.Class == Class.Bit64;
 			foreach (var entry in symtab.Entries) {
-				if (entry.Type == SymbolType.Function) {
+				if (entry.Type == ELFSymbolType.Function) {
+					return false;
+				}
+
+				if (!(isElf64 ? IsNonEmptyCodeSymbol (entry as SymbolEntry<ulong>) : IsNonEmptyCodeSymbol (entry as SymbolEntry<uint>))) {
+					continue;
+				}
+
+				// We have an entry that's in (some) executable section and has some code in it.
+				// Mono creates symbols which are essentially jump tables into executable code
+				// inside the DSO that is not accessible via any other symbol, merely a blob of
+				// executable code. The jump table symbols are named with the `_plt` prefix.
+				if (entry.Name.EndsWith ("_plt")) {
 					return false;
 				}
 			}
-
 			return true;
+
+			bool IsNonEmptyCodeSymbol<T> (SymbolEntry<T>? symbolEntry) where T : struct
+			{
+				if (symbolEntry == null) {
+					return true; // Err on the side of caution
+				}
+
+				Type t = typeof(T);
+				ulong size = 0;
+				if (t == typeof(System.UInt64)) {
+					size = (ulong)(object)symbolEntry.Size;
+				} else if (t == typeof(System.UInt32)) {
+					size = (uint)(object)symbolEntry.Size;
+				}
+
+				return size != 0 && symbolEntry.PointedSection.Type == ELFSectionType.ProgBits;
+			}
 		}
 
 		static ISymbolTable? GetSymbolTable (IELF elf, string sectionName)

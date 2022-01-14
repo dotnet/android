@@ -16,7 +16,7 @@
       "extends" : [ "microsoft-net-runtime-android" ]
     },
     "android-32": {
-      "description": "Preview support for Android API-32.",
+      "description": "Support for Android API-32.",
       "packs": [
         "Microsoft.Android.Ref.32",
         "Microsoft.Android.Runtime.32.android-arm",
@@ -47,23 +47,23 @@
     },
     "Microsoft.Android.Ref.31": {
       "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
+      "version": "31.0.101-preview.11.117"
     },
     "Microsoft.Android.Runtime.31.android-arm": {
       "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
+      "version": "31.0.101-preview.11.117"
     },
     "Microsoft.Android.Runtime.31.android-arm64": {
       "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
+      "version": "31.0.101-preview.11.117"
     },
     "Microsoft.Android.Runtime.31.android-x86": {
       "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
+      "version": "31.0.101-preview.11.117"
     },
     "Microsoft.Android.Runtime.31.android-x64": {
       "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
+      "version": "31.0.101-preview.11.117"
     },
     "Microsoft.Android.Ref.32": {
       "kind": "framework",

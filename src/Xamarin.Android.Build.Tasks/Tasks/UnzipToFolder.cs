@@ -8,7 +8,7 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class Unzip : AndroidTask
+	public class UnzipToFolder : AndroidTask
 	{
 		public override string TaskPrefix => "UNZ";
 
