@@ -3,22 +3,41 @@
   <PropertyGroup>
     <_Destination>$(XAInstallPrefix)xbuild\Xamarin\Android\</_Destination>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <_BundleToolDownloadLocation>$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion).jar</_BundleToolDownloadLocation>
+    <_BundleToolExtractLocation>$(AndroidToolchainCacheDirectory)\bundletool-unzip</_BundleToolExtractLocation>
+    <_JarPath Condition=" '$(JavaSdkDirectory)' != '' ">$(JavaSdkDirectory)/bin/jar</_JarPath>
+    <_JarPath Condition=" '$(_JarPath)' == '' ">jar</_JarPath>
   </PropertyGroup>
 
-  <Target Name="_DownloadBundleTool" BeforeTargets="Build">
+  <Target Name="_DownloadBundleTool">
     <DownloadUri
         SourceUris="https://github.com/google/bundletool/releases/download/$(XABundleToolVersion)/bundletool-all-$(XABundleToolVersion).jar"
-        DestinationFiles="$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion).jar"
+        DestinationFiles="$(_BundleToolDownloadLocation)"
     />
+  </Target>
+
+  <Target Name="_StripAndCopyBundleTool"
+      BeforeTargets="Build"
+      DependsOnTargets="_DownloadBundleTool"
+      Inputs="$(_BundleToolDownloadLocation)"
+      Outputs="$(_Destination)bundletool.jar" >
+    <!-- Strip aapt2 from bundletool.jar, as we pass it our own path to aapt2.
+      This simplifies macOS signing/hardening and reduces our installation footprint slightly. -->
+    <RemoveDir Directories="$(_BundleToolExtractLocation)" />
+    <MakeDir Directories="$(_BundleToolExtractLocation)" />
+    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="$(_JarPath) -xf &quot;$(_BundleToolDownloadLocation)&quot;" />
+    <Delete Files="$(_BundleToolDownloadLocation);$(_BundleToolExtractLocation)\linux\aapt2;$(_BundleToolExtractLocation)\macos\aapt2;$(_BundleToolExtractLocation)\windows\aapt2.exe" />
+    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="$(_JarPath) -cmf META-INF/MANIFEST.MF &quot;$(_BundleToolDownloadLocation)&quot; ." />
+    <RemoveDir Directories="$(_BundleToolExtractLocation)" />
     <Copy
-        SourceFiles="$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion).jar"
+        SourceFiles="$(_BundleToolDownloadLocation)"
         DestinationFiles="$(_Destination)bundletool.jar"
         SkipUnchangedFiles="True"
     />
   </Target>
 
   <Target Name="_CleanBundleTool" BeforeTargets="Clean">
-    <Delete Files="$(_Destination)bundletool.jar" />
+    <Delete Files="$(_BundleToolDownloadLocation);$(_Destination)bundletool.jar" />
   </Target>
 
 </Project>

@@ -28,23 +28,7 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     </PackageReference>
   </ItemGroup>
 
-  <!-- Strip aapt2 from bundletool.jar, as we pass it our own path to aapt2.
-    This simplifies macOS signing/hardening and reduces our installation footprint slightly. -->
-  <Target Name="_RemoveAapt2FromBundletool" >
-    <PropertyGroup>
-      <_BundleToolJar>$([System.IO.Path]::GetFullPath('$(MSBuildSrcDir)\bundletool.jar'))</_BundleToolJar>
-      <_BundleToolExtractLocation>$(MSBuildSrcDir)\sign-bundletool</_BundleToolExtractLocation>
-    </PropertyGroup>
-    <RemoveDir Directories="$(_BundleToolExtractLocation)" />
-    <MakeDir Directories="$(_BundleToolExtractLocation)" />
-    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -xvf &quot;$(_BundleToolJar)&quot;" />
-    <Delete Files="$(_BundleToolJar);$(_BundleToolExtractLocation)\linux\aapt2;$(_BundleToolExtractLocation)\macos\aapt2;$(_BundleToolExtractLocation)\windows\aapt2.exe" />
-    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -cvmf META-INF/MANIFEST.MF &quot;$(_BundleToolJar)&quot; ." />
-    <RemoveDir Directories="$(_BundleToolExtractLocation)" />
-  </Target>
-
   <Target Name="_AddMachOEntitlements"
-      DependsOnTargets="_RemoveAapt2FromBundletool"
       BeforeTargets="SignFiles"
       AfterTargets="AfterBuild" >
     <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;%(_MSBuildFilesUnixSignAndHarden.EntitlementsPath)&quot; &quot;%(_MSBuildFilesUnixSignAndHarden.Identity)&quot;" />
