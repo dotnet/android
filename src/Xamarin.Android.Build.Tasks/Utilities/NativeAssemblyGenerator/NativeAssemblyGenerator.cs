@@ -224,7 +224,7 @@ namespace Xamarin.Android.Tasks
 				Output.WriteLine ();
 			}
 
-			WriteDirective (".ident", QuoteString ($"Xamarin.Android {XABuildConfig.XamarinAndroidVersion}"));
+			WriteDirective (".ident", QuoteString ($"Xamarin.Android {XABuildConfig.XamarinAndroidBranch} @ {XABuildConfig.XamarinAndroidCommitHash}"));
 		}
 
 		NativeType GetNativeType<T> ()

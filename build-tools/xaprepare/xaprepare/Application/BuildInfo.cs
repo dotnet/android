@@ -25,6 +25,9 @@ namespace Xamarin.Android.Prepare
 		public string MonoHash               { get; private set; } = String.Empty;
 		public string FullMonoHash           { get; private set; } = String.Empty;
 
+		public string XACommitHash           { get; private set; } = String.Empty;
+		public string XABranch               { get; private set; } = String.Empty;
+
 		public async Task GatherGitInfo (Context context)
 		{
 			if (context == null)
@@ -36,6 +39,14 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ();
 			DetermineMonoHash (context);
 			Log.StatusLine ();
+			DetermineXACommitInfo (context);
+		}
+
+		void DetermineXACommitInfo (Context context)
+		{
+			GitRunner git = CreateGitRunner (context);
+			XACommitHash = git.GetTopCommitHash (shortHash: false);
+			XABranch = git.GetBranchName ();
 		}
 
 		public bool GatherNDKInfo (Context context)
