@@ -6,26 +6,15 @@
       "packs": [
         "Microsoft.Android.Sdk",
         "Microsoft.Android.Ref.31",
-        "Microsoft.Android.Runtime.31.android-arm",
-        "Microsoft.Android.Runtime.31.android-arm64",
-        "Microsoft.Android.Runtime.31.android-x86",
-        "Microsoft.Android.Runtime.31.android-x64",
-        "Microsoft.Android.Templates"
-      ],
-      "platforms": [ "win-x64", "linux-x64", "osx-x64", "osx-arm64" ],
-      "extends" : [ "microsoft-net-runtime-android" ]
-    },
-    "android-32": {
-      "description": "Support for Android API-32.",
-      "packs": [
         "Microsoft.Android.Ref.32",
         "Microsoft.Android.Runtime.32.android-arm",
         "Microsoft.Android.Runtime.32.android-arm64",
         "Microsoft.Android.Runtime.32.android-x86",
-        "Microsoft.Android.Runtime.32.android-x64"
+        "Microsoft.Android.Runtime.32.android-x64",
+        "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "linux-x64", "osx-x64", "osx-arm64" ],
-      "extends" : [ "android" ]
+      "extends" : [ "microsoft-net-runtime-android" ]
     },
     "android-aot": {
       "description": ".NET SDK Workload for building Android applications with AOT support.",
@@ -46,22 +35,6 @@
       }
     },
     "Microsoft.Android.Ref.31": {
-      "kind": "framework",
-      "version": "31.0.101-preview.11.117"
-    },
-    "Microsoft.Android.Runtime.31.android-arm": {
-      "kind": "framework",
-      "version": "31.0.101-preview.11.117"
-    },
-    "Microsoft.Android.Runtime.31.android-arm64": {
-      "kind": "framework",
-      "version": "31.0.101-preview.11.117"
-    },
-    "Microsoft.Android.Runtime.31.android-x86": {
-      "kind": "framework",
-      "version": "31.0.101-preview.11.117"
-    },
-    "Microsoft.Android.Runtime.31.android-x64": {
       "kind": "framework",
       "version": "31.0.101-preview.11.117"
     },
