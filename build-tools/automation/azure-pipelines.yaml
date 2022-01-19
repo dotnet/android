@@ -1362,7 +1362,8 @@ stages:
 
   - job: push_to_nuget_org
     displayName: Push to NuGet.org
-    pool: $(VSEngMicroBuildPool)
+    pool:
+      vmImage: $(HostedWinImage)
     dependsOn: wait_for_nuget_org_approval
     condition: eq(dependencies.wait_for_nuget_org_approval.result, 'Succeeded')
     steps:
