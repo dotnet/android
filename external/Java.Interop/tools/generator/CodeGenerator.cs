@@ -176,8 +176,12 @@ namespace Xamarin.Android.Binder
 				return;
 
 			// Apply metadata fixups
-			foreach (var fixup in fixups)
-				api.ApplyFixupFile (fixup);
+			foreach (var fixup in fixups) {
+				if (FixupXmlDocument.Load (fixup) is FixupXmlDocument f) {
+					api.ApplyFixupFile (f);
+					opt.NamespaceTransforms.AddRange (f.GetNamespaceTransforms ());
+				}
+			}
 
 			api.ApiDocument.Save (apiXmlFile + ".fixed");
 

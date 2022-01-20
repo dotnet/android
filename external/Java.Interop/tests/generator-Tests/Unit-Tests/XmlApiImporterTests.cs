@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
@@ -301,6 +302,26 @@ namespace generatortests
 
 			// None of these should be parsed because the user has said they are obfuscated
 			Assert.AreEqual (0, gens.Count);
+		}
+
+		[Test]
+		public void TransformNamespaces ()
+		{
+			var xml = XDocument.Parse (@"
+				<api>
+					<package name='com.example.test' jni-name='com/example/test'>
+						<class name='MyClass' visibility='public' />
+					</package>
+				</api>");
+
+			var opt = new CodeGenerationOptions ();
+			opt.NamespaceTransforms.Add (new NamespaceTransform ("com.example", "Example"));
+			opt.NamespaceTransforms.Add (new NamespaceTransform (".test", "Tests"));
+
+			var gens = XmlApiImporter.Parse (xml, opt);
+
+			Assert.AreEqual (1, gens.Count);
+			Assert.AreEqual ("Example.Tests", gens [0].Namespace);
 		}
 	}
 }

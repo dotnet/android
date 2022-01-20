@@ -85,6 +85,19 @@ namespace generatortests
 			Assert.AreEqual ("<api><package /><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
+		[Test]
+		public void ParseNamespaceTransforms ()
+		{
+			var fixup = GetFixupXmlDocument ("<ns-replace source='androidx' replacement='AndroidX' /><ns-replace source='com.google' replacement='Xamarin' />");
+			var transforms = fixup.GetNamespaceTransforms ();
+
+			Assert.AreEqual (2, transforms.Count);
+			Assert.AreEqual ("androidx", transforms [0].OldValue);
+			Assert.AreEqual ("AndroidX", transforms [0].NewValue);
+			Assert.AreEqual ("com.google", transforms [1].OldValue);
+			Assert.AreEqual ("Xamarin", transforms [1].NewValue);
+		}
+
 		ApiXmlDocument GetXmlApiDocument ()
 		{
 			var api = "<api><package name='android' jni-name='android' /><package name='java' jni-name='java' /></api>";

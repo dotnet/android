@@ -80,6 +80,8 @@ namespace MonoDroid.Generation
 
 		public string NullForgivingOperator => SupportNullableReferenceTypes ? "!" : string.Empty;
 
+		public List<NamespaceTransform> NamespaceTransforms { get; } = new List<NamespaceTransform> ();
+
 		public string GetTypeReferenceName (Field field)
 		{
 			var name = GetOutputName (field.Symbol.FullName);
@@ -281,6 +283,17 @@ namespace MonoDroid.Generation
 
 				return s;
 			}
+		}
+
+		public string GetTransformedNamespace (string value)
+		{
+			if (!value.HasValue () || !NamespaceTransforms.Any ())
+				return value;
+
+			foreach (var nt in NamespaceTransforms)
+				value = nt.Apply (value);
+
+			return value;
 		}
 	}
 }

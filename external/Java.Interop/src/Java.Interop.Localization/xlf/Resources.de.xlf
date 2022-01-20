@@ -207,6 +207,11 @@ The following terms should not be translated: &lt;package&gt;.</note>
         <note>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
 The following terms should not be translated: Metadata.xml.</note>
       </trans-unit>
+      <trans-unit id="Generator_BG8A07">
+        <source>Invalid namespace transform '{0}'</source>
+        <target state="new">Invalid namespace transform '{0}'</target>
+        <note>{0} - XML transform. (example: '&lt;ns-replace source="example" replacement="Example" /&gt;')</note>
+      </trans-unit>
       <trans-unit id="Generator_BG8B00">
         <source>Unknown generic argument constraint type '{0}' for member '{1}'.</source>
         <target state="new">Unknown generic argument constraint type '{0}' for member '{1}'.</target>

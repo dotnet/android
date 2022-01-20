@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -40,6 +42,34 @@ namespace Java.Interop.Tools.Generator
 			}
 
 			return null;
+		}
+
+		// A case-insensitive Replace doesn't exist in classic .NET Framework.  Loosely based on:
+		// https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/String.Manipulation.cs
+		public static string ReplaceOrdinalIgnoreCase (this string source, string oldValue, string newValue)
+		{
+			var result = new StringBuilder ();
+			var pos = 0;
+
+			while (true) {
+				var index = source.IndexOf (oldValue, pos, StringComparison.OrdinalIgnoreCase);
+
+				// Not found, bail
+				if (index < 0)
+					break;
+
+				// Append the unmodified portion of search space
+				result.Append (source.Substring (pos, index));
+
+				// Append the replacement
+				result.Append (newValue);
+
+				pos = index + oldValue.Length;
+			}
+
+			// Append what remains of the search space, then allocate the new string.
+			result.Append (source.Substring (pos));
+			return result.ToString ();
 		}
 	}
 }

@@ -121,12 +121,12 @@ namespace generatortests
 			}
 		}
 
-		protected void RunAllTargets (string outputRelativePath, string apiDescriptionFile, string expectedRelativePath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null)
+		protected void RunAllTargets (string outputRelativePath, string apiDescriptionFile, string expectedRelativePath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null, string metadataFile = null)
 		{
-			Run (CodeGenerationTarget.XamarinAndroid,   Path.Combine ("out", outputRelativePath),       apiDescriptionFile,     Path.Combine ("expected", expectedRelativePath),        additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile);
-			Run (CodeGenerationTarget.XAJavaInterop1,   Path.Combine ("out.xaji", outputRelativePath),  apiDescriptionFile,     Path.Combine ("expected.xaji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile);
+			Run (CodeGenerationTarget.XamarinAndroid,   Path.Combine ("out", outputRelativePath),       apiDescriptionFile,     Path.Combine ("expected", expectedRelativePath),        additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
+			Run (CodeGenerationTarget.XAJavaInterop1,   Path.Combine ("out.xaji", outputRelativePath),  apiDescriptionFile,     Path.Combine ("expected.xaji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
 			if (TryJavaInterop1) {
-				Run (CodeGenerationTarget.JavaInterop1,     Path.Combine ("out.ji", outputRelativePath),    apiDescriptionFile,     Path.Combine ("expected.ji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile);
+				Run (CodeGenerationTarget.JavaInterop1,     Path.Combine ("out.ji", outputRelativePath),    apiDescriptionFile,     Path.Combine ("expected.ji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
 			}
 		}
 
@@ -136,7 +136,7 @@ namespace generatortests
 			return Path.Combine (dir, path.Replace ('/', Path.DirectorySeparatorChar));
 		}
 
-		protected void Run (CodeGenerationTarget target, string outputPath, string apiDescriptionFile, string expectedPath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null)
+		protected void Run (CodeGenerationTarget target, string outputPath, string apiDescriptionFile, string expectedPath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null, string metadataFile = null)
 		{
 			Cleanup (outputPath);
 			AdditionalSourceDirectories.Clear ();
@@ -150,6 +150,9 @@ namespace generatortests
 
 			if (!string.IsNullOrWhiteSpace (enumMethodMapFile))
 				Options.EnumMethodsMapFile = FullPath (enumMethodMapFile);
+
+			if (!string.IsNullOrWhiteSpace (metadataFile))
+				Options.FixupFiles.Add (metadataFile);
 
 			var adjuster_output = Path.Combine (Path.GetTempPath (), "generator-tests");
 			Directory.CreateDirectory (adjuster_output);

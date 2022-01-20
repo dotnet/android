@@ -4,6 +4,7 @@ using System.Xml.XPath;
 using System.Xml.Linq;
 
 using Xamarin.Android.Tools;
+using System.Collections.Generic;
 
 namespace Java.Interop.Tools.Generator
 {
@@ -166,6 +167,18 @@ namespace Java.Interop.Tools.Generator
 					break;
 				}
 			}
+		}
+
+		public IList<NamespaceTransform> GetNamespaceTransforms ()
+		{
+			var list = new List<NamespaceTransform> ();
+
+			foreach (var xe in FixupDocument.XPathSelectElements ("/metadata/ns-replace")) {
+				if (NamespaceTransform.TryParse (xe, out var transform))
+					list.Add (transform);
+			}
+
+			return list;
 		}
 
 		bool ShouldSkip (XElement node, int apiLevel, int productVersion)

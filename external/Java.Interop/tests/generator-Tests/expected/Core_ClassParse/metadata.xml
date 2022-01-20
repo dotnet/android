@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<metadata>
+  <ns-replace source="com." replacement="" />
+  <ns-replace source="com" replacement="Xamarin" />
+  <ns-replace source=".compose" replacement="Composable" />
+</metadata>

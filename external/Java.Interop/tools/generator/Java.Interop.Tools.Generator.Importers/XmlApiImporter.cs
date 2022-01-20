@@ -105,7 +105,7 @@ namespace MonoDroid.Generation
 
 		public static ClassGen CreateClass (XElement pkg, XElement elem, CodeGenerationOptions options)
 		{
-			var klass = new ClassGen (CreateGenBaseSupport (pkg, elem, false)) {
+			var klass = new ClassGen (CreateGenBaseSupport (pkg, elem, options, false)) {
 				BaseType = elem.XGetAttribute ("extends"),
 				FromXml = true,
 				IsAbstract = elem.XGetAttribute ("abstract") == "true",
@@ -234,7 +234,7 @@ namespace MonoDroid.Generation
 			return field;
 		}
 
-		public static GenBaseSupport CreateGenBaseSupport (XElement pkg, XElement elem, bool isInterface)
+		public static GenBaseSupport CreateGenBaseSupport (XElement pkg, XElement elem, CodeGenerationOptions opt, bool isInterface)
 		{
 			var support = new GenBaseSupport {
 				IsAcw = true,
@@ -258,7 +258,7 @@ namespace MonoDroid.Generation
 			if (pkg.Attribute ("managedName") != null)
 				support.Namespace = pkg.XGetAttribute ("managedName");
 			else
-				support.Namespace = StringRocks.PackageToPascalCase (support.PackageName);
+				support.Namespace = opt.GetTransformedNamespace (StringRocks.PackageToPascalCase (support.PackageName));
 
 			var tpn = elem.Element ("typeParameters");
 
@@ -302,7 +302,7 @@ namespace MonoDroid.Generation
 
 		public static InterfaceGen CreateInterface (XElement pkg, XElement elem, CodeGenerationOptions options)
 		{
-			var iface = new InterfaceGen (CreateGenBaseSupport (pkg, elem, true)) {
+			var iface = new InterfaceGen (CreateGenBaseSupport (pkg, elem, options, true)) {
 				ArgsType = elem.XGetAttribute ("argsType"),
 				HasManagedName = elem.Attribute ("managedName") != null,
 				NoAlternatives = elem.XGetAttribute ("no-alternatives") == "true",
