@@ -264,6 +264,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
 	<AndroidR8IgnoreWarnings    Condition=" '$(AndroidR8IgnoreWarnings)' == '' ">True</AndroidR8IgnoreWarnings>
+	<AndroidCreateProguardMappingFile Condition="'$(AndroidCreateProguardMappingFile)' == '' And '$(AndroidLinkTool)' == 'r8'">True</AndroidCreateProguardMappingFile>
 
 	<!-- Figure out which is the main packaging format we want-->
 	<AndroidPackageFormat Condition=" $(AndroidPackageFormats.Contains('aab')) And '$(AndroidPackageFormat)' == '' ">aab</AndroidPackageFormat>
@@ -1807,6 +1808,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CreateApplicationSharedLibraries;
 		_GetMonoPlatformJarPath;
 		_GetLibraryImports;
+		_SetProguardMappingFileProperty;
 		_CalculateProguardConfigurationFiles;
 	</_CompileToDalvikDependsOnTargets>
 	<_CompileToDalvikInputs>
@@ -1825,6 +1827,12 @@ because xbuild doesn't support framework reference assemblies.
 		_CompileToDalvik;
 	</_CompileDexDependsOn>
 </PropertyGroup>
+
+<Target Name="_SetProguardMappingFileProperty">
+	<PropertyGroup>
+		<AndroidProguardMappingFile Condition=" '$(AndroidLinkTool)' == 'r8' And '$(AndroidCreateProguardMappingFile)' == 'True' ">$(OutputPath)mapping.txt</AndroidProguardMappingFile>
+	</PropertyGroup>
+</Target>
 
 <Target Name="_CalculateProguardConfigurationFiles">
   <!-- Support the $(ProguardConfigFiles) property to keep backwards compatibility -->
@@ -1967,6 +1975,12 @@ because xbuild doesn't support framework reference assemblies.
       $(ApkFileIntermediate)
     </_BuildApkEmbedOutputs>
   </PropertyGroup>
+  <ItemGroup>
+    <AndroidAppBundleMetaDataFile
+        Condition=" Exists('$(AndroidProguardMappingFile)') "
+        Include="com.android.tools.build.obfuscation/proguard.map:$(AndroidProguardMappingFile)"
+    />
+  </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -2064,6 +2078,7 @@ because xbuild doesn't support framework reference assemblies.
       Output="$(_AppBundleIntermediate)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       CustomBuildConfigFile="$(AndroidBundleConfigurationFile)"
+      MetaDataFiles="@(AndroidAppBundleMetaDataFile)"
   />
 </Target>
 
