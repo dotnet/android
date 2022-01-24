@@ -5,7 +5,7 @@
   <!--Import this file in projects needing to reference Microsoft.Build.*.dll -->
   <PropertyGroup>
     <MSBuildPackageReferenceVersion>16.10.0</MSBuildPackageReferenceVersion>
-    <LibZipSharpVersion Condition=" '$(LibZipSharpVersion)' != ''" >2.0.2</LibZipSharpVersion>
+    <LibZipSharpVersion Condition=" '$(LibZipSharpVersion)' == '' " >2.0.2</LibZipSharpVersion>
     <MonoUnixVersion>7.0.0-final.1.21369.2</MonoUnixVersion>
   </PropertyGroup>
 
