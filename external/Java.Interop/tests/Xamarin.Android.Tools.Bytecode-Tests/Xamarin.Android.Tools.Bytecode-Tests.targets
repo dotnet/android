@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <Target Name="BuildClasses"
-        BeforeTargets="BeforeBuild"
+        BeforeTargets="BeforeCompile"
         Inputs="@(TestJar);@(TestJarNoParameters)"
         Outputs="@(_BuildClassOutputs)">
     <MakeDir Directories="$(IntermediateOutputPath)classes" />
@@ -28,7 +28,7 @@
   -->
   <Target Name="BuildKotlinClasses"
         Condition=" '$(KotlinCPath)' != '' "
-        BeforeTargets="BeforeBuild"
+        BeforeTargets="Build"
         Inputs="@(TestKotlinJar)"
         Outputs="@(TestKotlinJar->'%(RecursiveDir)%(Filename).class')">
     <Exec Command="&quot;$(KotlinCPath)&quot; @(TestKotlinJar->'%(Identity)', ' ') -d &quot;kotlin&quot;" />

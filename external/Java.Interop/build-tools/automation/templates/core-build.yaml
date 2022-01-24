@@ -19,4 +19,4 @@ steps:
   displayName: Build Solution
   inputs:
     projects: Java.Interop.sln
-    arguments: '-c $(Build.Configuration) -m:1'
+    arguments: '-c $(Build.Configuration)'

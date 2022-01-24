@@ -30,7 +30,7 @@
     <JavaExportTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\export\ExportType.java" />
   </ItemGroup>
 
-  <Target Name="BuildExportTestJar" BeforeTargets="BeforeBuild" Inputs="@(JavaExportTestJar)" Outputs="$(OutputPath)export-test.jar">
+  <Target Name="BuildExportTestJar" BeforeTargets="Build" Inputs="@(JavaExportTestJar)" Outputs="$(OutputPath)export-test.jar">
     <MakeDir Directories="$(IntermediateOutputPath)et-classes" />
     <Exec Command="&quot;$(JavaCPath)&quot; -classpath &quot;$(OutputPath)../$(Configuration)/java-interop.jar&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)et-classes&quot; @(JavaExportTestJar->'%(Identity)', ' ')" />
     <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(IntermediateOutputPath)et-classes&quot; ." />

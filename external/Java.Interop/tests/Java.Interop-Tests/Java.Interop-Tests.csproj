@@ -50,7 +50,7 @@
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\TestType.java" />
   </ItemGroup>
 
-  <Target Name="BuildInteropTestJar" BeforeTargets="BeforeBuild" Inputs="@(JavaInteropTestJar)" Outputs="$(OutputPath)interop-test.jar">
+  <Target Name="BuildInteropTestJar" BeforeTargets="Build" Inputs="@(JavaInteropTestJar)" Outputs="$(OutputPath)interop-test.jar">
     <MakeDir Directories="$(IntermediateOutputPath)it-classes" />
     <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)../$(Configuration)/java-interop.jar&quot; @(JavaInteropTestJar->'%(Identity)', ' ')" />
     <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(IntermediateOutputPath)it-classes&quot; ." />
