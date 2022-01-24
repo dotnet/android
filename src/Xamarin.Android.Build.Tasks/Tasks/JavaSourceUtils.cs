@@ -31,6 +31,7 @@ namespace Xamarin.Android.Tasks
 		public  ITaskItem   JavadocCopyrightFile        { get; set; }
 		public  string      JavadocUrlPrefix            { get; set; }
 		public  string      JavadocUrlStyle             { get; set; }
+		public  string      JavadocDocRootUrl           { get; set; }
 
 		public  string      JavaOptions                 { get; set; }
 
@@ -139,11 +140,15 @@ namespace Xamarin.Android.Tasks
 			}
 			if (!string.IsNullOrEmpty (JavadocUrlPrefix)) {
 				AppendArg (response, "--doc-url-prefix");
-				AppendArg (response, Path.GetFullPath (JavadocUrlPrefix));
+				AppendArg (response, JavadocUrlPrefix);
 			}
 			if (!string.IsNullOrEmpty (JavadocUrlStyle)) {
-				AppendArg (response, "--doc-link-style");
-				AppendArg (response, Path.GetFullPath (JavadocUrlStyle));
+				AppendArg (response, "--doc-url-style");
+				AppendArg (response, JavadocUrlStyle);
+			}
+			if (!string.IsNullOrEmpty (JavadocDocRootUrl)) {
+				AppendArg (response, "--doc-root-url");
+				AppendArg (response, JavadocDocRootUrl);
 			}
 
 			foreach (var path in InputFiles) {

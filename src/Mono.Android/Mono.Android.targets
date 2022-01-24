@@ -78,6 +78,8 @@
       <_Doclink Include="https://developer.android.com/reference" />
       <_Doclink Include="--doc-url-style" />
       <_Doclink Include="developer.android.com/reference@2020-Nov" />
+      <_Doclink Include="--doc-root-url" />
+      <_Doclink Include="https://developer.android.com/" />
     </ItemGroup>
     <ItemGroup>
       <_AndroidSources Include="$(_AndroidStableSrcDir)\android\**\*.java" />
