@@ -42,30 +42,22 @@ projects.
   </Target>
 
   <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
-    <_ResolveSdksDependsOnTargets>ProcessFrameworkReferences</_ResolveSdksDependsOnTargets>
+    <_ResolveSdksDependsOnTargets>ResolveTargetingPackAssets</_ResolveSdksDependsOnTargets>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' != 'True' ">
     <_ResolveSdksDependsOnTargets>_GetReferenceAssemblyPaths</_ResolveSdksDependsOnTargets>
   </PropertyGroup>
 
   <Target Name="_ResolveSdks" DependsOnTargets="$(_ResolveSdksDependsOnTargets)">
+    <!-- When using .NET 5, provide a list of paths to the Android and NETCore targeting pack directories, e.g.
+          `packages\microsoft.android.ref\10.0.100-ci.master.22\ref\net5.0\` and
+          `C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\5.0.0-preview.6.20264.1\ref\net5.0\`
+         See https://github.com/dotnet/sdk/blob/9eeb58e24af894597a534326156d09173d9f0f91/src/Tasks/Microsoft.NET.Build.Tasks/ResolveTargetingPackAssets.cs#L56
+    -->
     <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'true' ">
       <_AndroidApiInfo Include="$(MSBuildThisFileDirectory)..\data\*\AndroidApiInfo.xml" />
       <_AndroidApiInfoDirectories Include="@(_AndroidApiInfo->'%(RootDir)%(Directory)')" />
-      <!--
-        When using .NET 6+, provide the directory containing Mono.Android.dll and System.dll.
-        Use %(TargetingPack.PackageDirectory) to get this information.
-        See: https://github.com/dotnet/sdk/blob/22c4860dcb2cf6b123dd641cc4a87a50380759d5/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.FrameworkReferenceResolution.targets#L49-L63
-      -->
-      <_MonoAndroidReferenceAssemblyPath
-          Condition=" '%(TargetingPack.Identity)' == 'Microsoft.NETCore.App' and '%(TargetingPack.PackageDirectory)' != '' "
-          Include="%(TargetingPack.PackageDirectory)\ref\*\System.dll"
-      />
-      <_MonoAndroidReferenceAssemblyPath
-          Condition=" '%(TargetingPack.Identity)' == 'Microsoft.Android' and '%(TargetingPack.PackageDirectory)' != '' "
-          Include="%(TargetingPack.PackageDirectory)\ref\*\Mono.Android.dll"
-      />
-      <_ResolveSdksFrameworkRefAssemblyPaths Include="@(_MonoAndroidReferenceAssemblyPath->'$([System.String]::Copy('%(RootDir)%(Directory)').TrimEnd('\'))')" Condition=" '%(_MonoAndroidReferenceAssemblyPath.RootDir)%(_MonoAndroidReferenceAssemblyPath.Directory)' != '' " />
+      <_ResolveSdksFrameworkRefAssemblyPaths Include="@(Reference->'$([System.String]::Copy('%(RootDir)%(Directory)').TrimEnd('\'))')" Condition=" '%(Reference.FrameworkReferenceName)' != '' " />
     </ItemGroup>
     <ItemGroup Condition=" '$(UsingAndroidNETSdk)' != 'true' ">
       <_AndroidApiInfoDirectories Include="$(_XATargetFrameworkDirectories)" />
