@@ -17,9 +17,16 @@ namespace Java.Interop.Tools.JavaSource.Tests
 	[TestFixture]
 	public class SourceJavadocToXmldocGrammarFixture {
 
+		protected const string DocRootPrefixActual = "https://developer.android.com";
+		protected const string DocRootPrefixExpected = DocRootPrefixActual + "/";
+
 		public static Parser CreateParser (Func<SourceJavadocToXmldocGrammar, NonTerminal> root)
 		{
-			var g = new SourceJavadocToXmldocGrammar (XmldocStyle.Full) {
+			var g = new SourceJavadocToXmldocGrammar (new XmldocSettings {
+				Style = XmldocStyle.Full,
+				DocRootValue = DocRootPrefixActual,
+			})
+			{
 				LanguageFlags = LanguageFlags.Default | LanguageFlags.CreateAst,
 			};
 			g.Root = root (g);

@@ -56,19 +56,19 @@ namespace Java.Interop.Tools.JavaSource {
 
 	public class SourceJavadocToXmldocParser : Irony.Parsing.Parser {
 
-		public SourceJavadocToXmldocParser (XmldocStyle style = XmldocStyle.Full)
-			: base (CreateGrammar (style))
+		public SourceJavadocToXmldocParser (XmldocSettings settings)
+			: base (CreateGrammar (settings))
 		{
-			XmldocStyle = style;
+			XmldocSettings = settings;
 		}
 
-		public  XmldocStyle     XmldocStyle                 { get; }
+		public  XmldocSettings XmldocSettings { get; }
 
-		public  XElement[]?     ExtraRemarks                { get; set; }
 
-		static Grammar CreateGrammar (XmldocStyle style)
+
+		static Grammar CreateGrammar (XmldocSettings settings)
 		{
-			return new SourceJavadocToXmldocGrammar (style) {
+			return new SourceJavadocToXmldocGrammar (settings) {
 				LanguageFlags = LanguageFlags.Default | LanguageFlags.CreateAst,
 			};
 		}
@@ -102,13 +102,13 @@ namespace Java.Interop.Tools.JavaSource {
 				var summary = CreateSummaryNode (info);
 				if (summary != null)
 					yield return summary;
-				var style   = (ImportJavadoc) XmldocStyle;
+				var style   = (ImportJavadoc) XmldocSettings.Style;
 				if (style.HasFlag (ImportJavadoc.Remarks) &&
-						(info.Remarks.Count > 0 || ExtraRemarks?.Length > 0)) {
-					yield return new XElement ("remarks", info.Remarks, ExtraRemarks);
+						(info.Remarks.Count > 0 || XmldocSettings.ExtraRemarks?.Length > 0)) {
+					yield return new XElement ("remarks", info.Remarks, XmldocSettings.ExtraRemarks);
 				}
-				else if (style.HasFlag (ImportJavadoc.ExtraRemarks) && ExtraRemarks?.Length > 0) {
-					yield return new XElement ("remarks", ExtraRemarks);
+				else if (style.HasFlag (ImportJavadoc.ExtraRemarks) && XmldocSettings.ExtraRemarks?.Length > 0) {
+					yield return new XElement ("remarks", XmldocSettings.ExtraRemarks);
 				}
 				foreach (var n in info.Returns) {
 					yield return n;

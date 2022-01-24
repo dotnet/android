@@ -33,6 +33,7 @@ namespace Java.Interop.Tools.JavaSource {
 						| SpecialDeclaration
 						| FormCtrlDeclaration
 						*/
+						| InlineHyperLinkDeclaration
 						| grammar.InlineTagsTerms.AllInlineTerms
 						| UnknownHtmlElementStart
 						,
@@ -93,6 +94,36 @@ namespace Java.Interop.Tools.JavaSource {
 							.Select (c => AstNodeToXmlContent (c)));
 					FinishParse (context, parseNode).Remarks.Add (p);
 					parseNode.AstNode   = p;
+				};
+
+				InlineHyperLinkDeclaration.Rule = InlineHyperLinkOpenTerm + InlineDeclarations + CreateEndElement ("a", grammar, optional: true);
+				InlineHyperLinkDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
+					var unparsedAElementValue = string.Empty;
+					foreach (var cn in parseNode.ChildNodes) {
+						if (cn.ChildNodes?.Count > 1) {
+							foreach (var gcn in cn.ChildNodes) {
+								unparsedAElementValue += gcn.AstNode?.ToString ();
+							}
+						} else {
+							unparsedAElementValue += cn.AstNode?.ToString ();
+						}
+					}
+
+					XNode astNodeElement = new XText (unparsedAElementValue);
+					try {
+						var seeElement = XElement.Parse ($"<see href={unparsedAElementValue}</see>");
+						var hrefValue = seeElement.Attribute ("href")?.Value ?? string.Empty;
+						if (!string.IsNullOrEmpty (hrefValue) &&
+							(hrefValue.StartsWith ("http", StringComparison.OrdinalIgnoreCase) || hrefValue.StartsWith ("www", StringComparison.OrdinalIgnoreCase))) {
+							parseNode.AstNode = seeElement;
+						} else {
+							// TODO: Need to convert relative paths or code references to appropriate CREF value.
+							parseNode.AstNode = astNodeElement;
+						}
+					} catch (Exception) {
+						Console.Error.WriteLine ($"# Unable to parse HTML element: <see href={unparsedAElementValue}</see>");
+						parseNode.AstNode = astNodeElement;
+					}
 				};
 			}
 
@@ -161,6 +192,13 @@ namespace Java.Interop.Tools.JavaSource {
 			public  readonly    NonTerminal BlockDeclaration            = new NonTerminal (nameof (BlockDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal PBlockDeclaration           = new NonTerminal (nameof (PBlockDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal PreBlockDeclaration         = new NonTerminal (nameof (PreBlockDeclaration), ConcatChildNodes);
+			public  readonly    NonTerminal InlineHyperLinkDeclaration  = new NonTerminal (nameof (InlineHyperLinkDeclaration), ConcatChildNodes);
+
+			public	readonly	Terminal	InlineHyperLinkOpenTerm		= new RegexBasedTerminal ("<a href=", @"<a\s*href=") {
+				AstConfig = new AstNodeConfig {
+					NodeCreator = (context, parseNode) => parseNode.AstNode = "",
+				},
+			};
 
 			public  readonly    Terminal    UnknownHtmlElementStart     = new UnknownHtmlElementStartTerminal (nameof (UnknownHtmlElementStart)) {
 				AstConfig   = new AstNodeConfig {

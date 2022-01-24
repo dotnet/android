@@ -47,5 +47,21 @@ namespace Java.Interop.Tools.JavaSource.Tests
 					r.Root.AstNode.ToString ());
 
 		}
+
+		[Test]
+		public void HyperLinkDeclaration ()
+		{
+			var p = CreateParser (g => g.HtmlTerms.InlineHyperLinkDeclaration);
+
+			var r = p.Parse ("<a href=\"https://developer.android.com/guide/topics/manifest/application-element.html\">application</a>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("<see href=\"https://developer.android.com/guide/topics/manifest/application-element.html\">application</see>",
+					r.Root.AstNode.ToString ());
+
+			r = p.Parse ("<a href=\"AutofillService.html#FieldClassification\">field classification</a>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("\"AutofillService.html#FieldClassification\"&gt;field classification",
+					r.Root.AstNode.ToString ());
+		}
 	}
 }

@@ -31,7 +31,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 
 			var r = p.Parse ("{@docRoot}");
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
-			Assert.AreEqual ("[TODO: @docRoot]", r.Root.AstNode.ToString ());
+			Assert.AreEqual (DocRootPrefixExpected, r.Root.AstNode.ToString ());
 		}
 
 		[Test]

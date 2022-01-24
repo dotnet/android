@@ -80,7 +80,7 @@ public final class JavadocXmlGenerator implements AutoCloseable {
 		}
 	}
 
-	public final void writeCopyrightInfo(final File copyright, final String urlPrefix, final String urlStyle) throws IOException, ParserConfigurationException {
+	public final void writeCopyrightInfo(final File copyright, final String urlPrefix, final String urlStyle, final String docRootUrl) throws IOException, ParserConfigurationException {
 		final   Element    info         = document.createElement("javadoc-metadata");
 		if (copyright != null) {
 			final   Element    blurb    = document.createElement("copyright");
@@ -95,13 +95,19 @@ public final class JavadocXmlGenerator implements AutoCloseable {
 			}
 			info.appendChild(blurb);
 		}
-		if (urlPrefix != null && urlStyle != null) {
-			final   Element    link = document.createElement("link");
-			link.setAttribute("prefix", urlPrefix);
-			link.setAttribute("style", urlStyle);
 
-			info.appendChild(link);
+		final   Element    link = document.createElement("link");
+		if (urlPrefix != null) {
+			link.setAttribute("prefix", urlPrefix);
 		}
+		if (urlStyle != null) {
+			link.setAttribute("style", urlStyle);
+		}
+		if (docRootUrl != null) {
+			link.setAttribute("docroot", docRootUrl);
+		}
+
+		info.appendChild(link);
 
 		if (info.hasChildNodes()) {
 			api.appendChild(info);

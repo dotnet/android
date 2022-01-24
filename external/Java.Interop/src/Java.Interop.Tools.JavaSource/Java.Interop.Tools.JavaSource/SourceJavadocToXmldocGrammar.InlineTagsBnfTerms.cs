@@ -36,7 +36,15 @@ namespace Java.Interop.Tools.JavaSource {
 
 				DocRootDeclaration.Rule = grammar.ToTerm ("{@docRoot}");
 				DocRootDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
-					parseNode.AstNode = new XText ("[TODO: @docRoot]");
+					var docRoot = grammar.XmldocSettings.DocRootValue;
+					if (!string.IsNullOrEmpty (docRoot)) {
+						if (!docRoot.EndsWith ("/", StringComparison.OrdinalIgnoreCase)) {
+							docRoot += "/";
+						}
+					} else {
+						docRoot = "{@docRoot}";
+					}
+					parseNode.AstNode = new XText (docRoot);
 				};
 
 				InheritDocDeclaration.Rule = grammar.ToTerm ("{@inheritDoc}");

@@ -16,15 +16,15 @@ namespace Java.Interop.Tools.JavaSource {
 		public  readonly    InlineTagsBnfTerms  InlineTagsTerms;
 		public  readonly    HtmlBnfTerms        HtmlTerms;
 
-		public  readonly    XmldocStyle         XmldocStyle;
+		public  readonly    XmldocSettings      XmldocSettings;
 
-		public SourceJavadocToXmldocGrammar (XmldocStyle style)
+		public SourceJavadocToXmldocGrammar (XmldocSettings settings)
 		{
 			BlockTagsTerms  = new BlockTagsBnfTerms ();
 			InlineTagsTerms = new InlineTagsBnfTerms ();
 			HtmlTerms       = new HtmlBnfTerms ();
 
-			XmldocStyle     = style;
+			XmldocSettings	= settings;
 
 			BlockTagsTerms.CreateRules (this);
 			InlineTagsTerms.CreateRules (this);
@@ -55,7 +55,7 @@ namespace Java.Interop.Tools.JavaSource {
 
 		internal bool ShouldImport (ImportJavadoc value)
 		{
-			var v = (ImportJavadoc) XmldocStyle;
+			var v = (ImportJavadoc) XmldocSettings.Style;
 			return v.HasFlag (value);
 		}
 

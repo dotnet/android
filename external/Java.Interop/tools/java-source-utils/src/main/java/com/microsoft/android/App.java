@@ -68,7 +68,7 @@ public class App {
 
 	static void generateXml(JavaSourceUtilsOptions options, JniPackagesInfo packages) throws Throwable {
 		try (final   JavadocXmlGenerator       javadocXmlGen   = new JavadocXmlGenerator(options.outputJavadocXml)) {
-			javadocXmlGen.writeCopyrightInfo(options.docCopyrightFile, options.docUrlPrefix, options.docUrlStyle);
+			javadocXmlGen.writeCopyrightInfo(options.docCopyrightFile, options.docUrlPrefix, options.docUrlStyle, options.docRootUrl);
 			javadocXmlGen.writePackages(packages);
 		}
 	}

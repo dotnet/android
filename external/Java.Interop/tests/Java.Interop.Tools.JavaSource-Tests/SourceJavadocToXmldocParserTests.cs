@@ -21,12 +21,18 @@ namespace Java.Interop.Tools.JavaSource.Tests
 		public void TryParse (ParseResult parseResult)
 		{
 			ParseTree parseTree;
-			var p = new SourceJavadocToXmldocParser (XmldocStyle.Full);
+			var p = new SourceJavadocToXmldocParser (new XmldocSettings {
+				Style = XmldocStyle.Full,
+				DocRootValue = DocRootPrefixActual,
+			});
 			var n = p.TryParse (parseResult.Javadoc, null, out parseTree);
 			Assert.IsFalse (parseTree.HasErrors (), DumpMessages (parseTree, p));
 			Assert.AreEqual (parseResult.FullXml, GetMemberXml (n), $"while parsing input: ```{parseResult.Javadoc}```");
 
-			p = new SourceJavadocToXmldocParser (XmldocStyle.IntelliSense);
+			p = new SourceJavadocToXmldocParser (new XmldocSettings {
+				Style = XmldocStyle.IntelliSense,
+				DocRootValue = DocRootPrefixActual,
+			});
 			n = p.TryParse (parseResult.Javadoc, null, out parseTree);
 			Assert.IsFalse (parseTree.HasErrors (), DumpMessages (parseTree, p));
 			Assert.AreEqual (parseResult.IntelliSenseXml, GetMemberXml (n), $"while parsing input: ```{parseResult.Javadoc}```");
@@ -168,6 +174,28 @@ more description here.</para>
 </member>",
 				IntelliSenseXml = @"<member>
   <summary>Summary.</summary>
+</member>",
+			},
+			new ParseResult {
+				Javadoc = @"See <a href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</a>.  Insert
+more description here.
+How about another link <a href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</a>
+@param manifest The value of the <a
+href=""{@docRoot}guide/topics/manifest/manifest-element.html#vcode"">{@code
+android:versionCode}</a> manifest attribute.
+",
+				FullXml = $@"<member>
+  <param name=""manifest"">The value of the <see href=""{DocRootPrefixExpected}guide/topics/manifest/manifest-element.html#vcode""><c>android:versionCode</c></see> manifest attribute.</param>
+  <summary>See <see href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</see>.</summary>
+  <remarks>
+    <para>See <see href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</see>.  Insert
+more description here.
+How about another link <see href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</see></para>
+  </remarks>
+</member>",
+				IntelliSenseXml = $@"<member>
+  <param name=""manifest"">The value of the <see href=""{DocRootPrefixExpected}guide/topics/manifest/manifest-element.html#vcode""><c>android:versionCode</c></see> manifest attribute.</param>
+  <summary>See <see href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</see>.</summary>
 </member>",
 			},
 		};

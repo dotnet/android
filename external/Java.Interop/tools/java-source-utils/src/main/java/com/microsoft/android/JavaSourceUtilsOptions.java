@@ -74,6 +74,8 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 		"                               Stored in //javadoc-metadata/link/@style.\n" +
 		"                               Supported styles include:\n" +
 		"                               - developer.android.com/reference@2020-Nov\n" +
+		"      --doc-root-url URL     Base URL to use in place of @{docRoot} elements.\n" +
+		"                               Stored in //javadoc-metadata/link/@docroot.\n" +
 		"\n" +
 		"Output file options:\n" +
 		"  -P, --output-params FILE   Write method parameter names to FILE.\n" +
@@ -94,6 +96,7 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 	public  File    docCopyrightFile;
 	public  String  docUrlPrefix;
 	public  String  docUrlStyle;
+	public  String  docRootUrl;
 
 	private final   Collection<File>    sourceDirectoryFiles  = new ArrayList<File>();
 	private         File                extractedTempDir;
@@ -202,6 +205,11 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 				case "--doc-url-style": {
 					final   String  style   = getNextOptionValue(args, arg);
 					docUrlStyle             = style;
+					break;
+				}
+				case "--doc-root-url": {
+					final   String  docRoot  = getNextOptionValue(args, arg);
+					docRootUrl               = docRoot;
 					break;
 				}
 				case "-j":
