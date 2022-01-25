@@ -374,7 +374,8 @@ namespace Xamarin.Android.Tools.Bytecode
 					rawXML = new string (buf, 0, len).Trim ();
 				}
 				if (rawXML.IndexOf ("<api", StringComparison.Ordinal) >= 0 &&
-						rawXML.IndexOf ("<package", StringComparison.Ordinal) >= 0)
+						(rawXML.IndexOf ("<package", StringComparison.Ordinal) >= 0 ||
+						 rawXML.IndexOf ("<javadoc-metadata", StringComparison.Ordinal) >= 0))
 					kind = JavaDocletType._ApiXml;
 				else if (rawXML.StartsWith ("package", StringComparison.Ordinal) ||
 						rawXML.StartsWith (";", StringComparison.Ordinal)) {
