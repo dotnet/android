@@ -27,7 +27,7 @@
 
   <!-- Common <PackageReference/> versions -->
   <PropertyGroup>
-    <LibZipSharpVersion>2.0.2</LibZipSharpVersion>
+    <LibZipSharpVersion>2.0.3</LibZipSharpVersion>
     <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
     <MonoCecilVersion>0.11.4</MonoCecilVersion>
     <NewtonsoftJsonPackageVersion>13.0.1</NewtonsoftJsonPackageVersion>
