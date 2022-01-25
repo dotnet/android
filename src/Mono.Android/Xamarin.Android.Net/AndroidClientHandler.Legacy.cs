@@ -837,7 +837,7 @@ namespace Xamarin.Android.Net
 
 			// SSL context must be set up as soon as possible, before adding any content or
 			// headers. Otherwise Java won't use the socket factory
-			SetupSSL (httpConnection as HttpsURLConnection);
+			SetupSSL (httpConnection as HttpsURLConnection, request);
 			if (request.Content != null)
 				AddHeaders (httpConnection, request.Content.Headers);
 			AddHeaders (httpConnection, request.Headers);
@@ -892,7 +892,7 @@ namespace Xamarin.Android.Net
 			return null;
 		}
 
-		void SetupSSL (HttpsURLConnection? httpsConnection)
+		void SetupSSL (HttpsURLConnection? httpsConnection, HttpRequestMessage requestMessage)
 		{
 			if (httpsConnection == null)
 				return;
@@ -926,18 +926,25 @@ namespace Xamarin.Android.Net
 			var tmf = ConfigureTrustManagerFactory (keyStore);
 
 			if (tmf == null) {
-				// If there are no certs and no trust manager factory, we can't use a custom manager
-				// because it will cause all the HTTPS requests to fail because of unverified trust
-				// chain
-				if (!gotCerts)
+				// If there are no certs and no trust manager factory or custom certificatevalidation callback,
+				// we can't use a custom manager because it will cause all the HTTPS requests to fail because
+				// of unverified trust chain
+				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
 					return;
 				
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
 				tmf?.Init (keyStore);
 			}
 
+			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
+
+			if (ServerCertificateCustomValidationCallback != null)
+			{
+				trustManagers = X509TrustManagerWithValidationCallback.Inject(trustManagers, requestMessage, ServerCertificateCustomValidationCallback);
+			}
+
 			var context = SSLContext.GetInstance ("TLS");
-			context?.Init (kmf?.GetKeyManagers (), tmf?.GetTrustManagers (), null);
+			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
 			httpsConnection.SSLSocketFactory = context?.SocketFactory;
 		}
 		
