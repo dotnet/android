@@ -1021,7 +1021,7 @@ namespace Xamarin.Android.NetTests {
 
 		[Test]
 		[Category("InetAccess")]
-		public void ServerCertificateCustomValidationCallbackValidatsRequest ()
+		public async Task ServerCertificateCustomValidationCallbackValidatsRequest ()
 		{
 			bool callbackHasBeenCalled = false;
 
@@ -1047,7 +1047,7 @@ namespace Xamarin.Android.NetTests {
 
 		[Test]
 		[Category("InetAccess")]
-		public void ServerCertificateCustomValidationCallbackRejectsRequest ()
+		public async Task ServerCertificateCustomValidationCallbackRejectsRequest ()
 		{
 			bool callbackHasBeenCalled = false;
 
