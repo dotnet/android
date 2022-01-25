@@ -926,7 +926,7 @@ namespace Xamarin.Android.Net
 			var tmf = ConfigureTrustManagerFactory (keyStore);
 
 			if (tmf == null) {
-				// If there are no certs and no trust manager factory or custom certificatevalidation callback,
+				// If there are no certs and no trust manager factory or custom certificatevalidation callback
 				// we can't use a custom manager because it will cause all the HTTPS requests to fail because
 				// of unverified trust chain
 				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
