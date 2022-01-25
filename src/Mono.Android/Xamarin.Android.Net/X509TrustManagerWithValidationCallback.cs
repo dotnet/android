@@ -54,16 +54,11 @@ namespace Xamarin.Android.Net
             }
 
             X509Certificate2? certificate = certificates.FirstOrDefault ();
-            X509Chain chain = BuildChain (certificates, out bool chainIsOk);
+            using X509Chain chain = CreateChain (certificates);
 
             if (certificate == null)
             {
                 sslPolicyErrors |= SslPolicyErrors.RemoteCertificateNotAvailable;
-            }
-
-            if (!chainIsOk)
-            {
-                sslPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
             }
 
             // certificate might be null, but we have to adhere to the Func parameters of HttpClientHandler which
@@ -80,12 +75,13 @@ namespace Xamarin.Android.Net
         public JavaX509Certificate[] GetAcceptedIssuers ()
             => _internalTrustManager?.GetAcceptedIssuers () ?? Array.Empty<JavaX509Certificate> ();
 
-        private static X509Chain BuildChain (X509Certificate2[] certificates, out bool isOk)
+        private static X509Chain CreateChain (X509Certificate2[] certificates)
         {
             // TODO I doubt this is the correct way to implement this and this whole method needs revisiting
             var chain = new X509Chain ();
+            chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
+            chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
             chain.ChainPolicy.ExtraStore.AddRange (certificates);
-            isOk = chain.Build (certificates.FirstOrDefault ()); // this always returns false even for valid chains..
             return chain;
         }
 
