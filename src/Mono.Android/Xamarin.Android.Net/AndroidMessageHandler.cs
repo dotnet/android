@@ -157,7 +157,7 @@ namespace Xamarin.Android.Net
 
 		public bool CheckCertificateRevocationList { get; set; } = false;
 
-		public Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { get; set; }
+		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? ServerCertificateCustomValidationCallback { get; set; }
 
 		// See: https://developer.android.com/reference/javax/net/ssl/SSLSocket#protocols
 		public SslProtocols SslProtocols { get; set; } =

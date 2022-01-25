@@ -16,7 +16,7 @@ namespace Xamarin.Android.Net
     {
         private readonly IX509TrustManager? _internalTrustManager;
         private readonly HttpRequestMessage _request;
-        private readonly Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> _serverCertificateCustomValidationCallback;
+        private readonly Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> _serverCertificateCustomValidationCallback;
 
         public static ITrustManager[] Inject(
             ITrustManager[]? trustManagers,
@@ -61,9 +61,7 @@ namespace Xamarin.Android.Net
                 sslPolicyErrors |= SslPolicyErrors.RemoteCertificateNotAvailable;
             }
 
-            // certificate might be null, but we have to adhere to the Func parameters of HttpClientHandler which
-            // doesn't contain the nullable annotation
-            if (!_serverCertificateCustomValidationCallback (_request, certificate!, chain, sslPolicyErrors))
+            if (!_serverCertificateCustomValidationCallback (_request, certificate, chain, sslPolicyErrors))
             {
                 throw new JavaCertificateException("The remote certificate was rejected by the provided RemoteCertificateValidationCallback.");
             }
