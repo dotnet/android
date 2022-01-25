@@ -1099,7 +1099,7 @@ namespace Xamarin.Android.NetTests {
 			public abstract CookieContainer CookieContainer { get; }
 			public abstract bool UseCookies { set; }
 			public abstract bool UseDefaultCredentials { set; }
-			public abstract Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { set; }
+			public abstract Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { set; }
 
 			public static implicit operator HttpMessageHandler (AndroidHandlerSettingsAdapter adapter)
 				=> adapter.Unwrap();
@@ -1141,7 +1141,7 @@ namespace Xamarin.Android.NetTests {
 			public override CookieContainer CookieContainer => _handler.CookieContainer;
 			public override bool UseCookies { set => _handler.UseCookies = value; }
 			public override bool UseDefaultCredentials { set => _handler.UseDefaultCredentials = value; }
-			public override Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { set => _handler.ServerCertificateCustomValidationCallback = value; }
+			public override Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { set => _handler.ServerCertificateCustomValidationCallback = value; }
 		}
 	}
 
@@ -1180,7 +1180,7 @@ namespace Xamarin.Android.NetTests {
 			public override CookieContainer CookieContainer => _handler.CookieContainer;
 			public override bool UseCookies { set => _handler.UseCookies = value; }
 			public override bool UseDefaultCredentials { set => _handler.Credentials = value ? CredentialCache.DefaultCredentials : null; }
-			public override Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { set => _handler.ServerCertificateCustomValidationCallback = value; }
+			public override Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { set => _handler.ServerCertificateCustomValidationCallback = value; }
 		}
 	}
 }
