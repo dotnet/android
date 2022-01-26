@@ -38,7 +38,7 @@
     <PackageReference Include="XliffTasks" Version="1.0.0-beta.20420.1" PrivateAssets="all" />
   </ItemGroup>
 
-  <Target Name="GetFilesToSign" BeforeTargets="SignFiles">
+  <Target Name="GetFilesToSign" BeforeTargets="SignFiles" Condition=" '$(Configuration)' == 'Release' Or '$(Configuration)' == 'ReleaseWindows'">
     <ItemGroup>
       <FilesToSign Include="$(OutDir)\$(AssemblyName).dll">
         <Authenticode>Microsoft400</Authenticode>
