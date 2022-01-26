@@ -42,7 +42,7 @@ namespace Android.Runtime {
 				return result;
 
 			if (JNIEnv.LogAssemblyCategory) {
-				JNIEnv.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Falling back to System.Reflection.Emit for delegate type '{delegateType}': {dlg.Method}");
+				JNIEnv.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{delegateType}': {dlg.Method}");
 			}
 
 			var ret_type = dlg.Method.ReturnType;
