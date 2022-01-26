@@ -1,8 +1,8 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftDotnetSdkInternalPackageVersion>6.0.200-rtm.22074.2</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>6.0.100-1.21519.4</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftDotnetSdkInternalPackageVersion>6.0.200-rtm.22075.2</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>6.0.200-1.22069.1</MicrosoftNETILLinkTasksPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>5.0.0-beta.20181.7</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>6.0.0-beta.21212.6</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>6.0.2-mauipre.1.22074.5</MicrosoftNETCoreAppRefPackageVersion>
