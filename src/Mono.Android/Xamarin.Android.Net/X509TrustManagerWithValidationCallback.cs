@@ -21,7 +21,7 @@ namespace Xamarin.Android.Net
         public static ITrustManager[] Inject(
             ITrustManager[]? trustManagers,
             HttpRequestMessage requestMessage,
-            Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
+            Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
         {
             IX509TrustManager? x509TrustManager = trustManagers?.OfType<IX509TrustManager> ().FirstOrDefault ();
             IEnumerable<ITrustManager> otherTrustManagers = trustManagers?.Where (manager => manager != x509TrustManager) ?? Enumerable.Empty<ITrustManager> ();
@@ -32,7 +32,7 @@ namespace Xamarin.Android.Net
         public X509TrustManagerWithValidationCallback(
             IX509TrustManager? internalTrustManager,
             HttpRequestMessage request,
-            Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
+            Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
         {
             _request = request;
             _internalTrustManager = internalTrustManager;
