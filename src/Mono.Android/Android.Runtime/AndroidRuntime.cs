@@ -378,57 +378,61 @@ namespace Android.Runtime {
 
 		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 		{
-			if (FastRegisterNativeMembers (nativeClass, type, methods))
-				return;
+			try {
+				if (FastRegisterNativeMembers (nativeClass, type, methods))
+					return;
 
-			if (string.IsNullOrEmpty (methods)) {
-				if (jniAddNativeMethodRegistrationAttributePresent)
-					base.RegisterNativeMembers (nativeClass, type, methods);
-				return;
-			}
-
-			string[] members = methods!.Split ('\n');
-			if (members.Length < 2) {
-				if (jniAddNativeMethodRegistrationAttributePresent)
-					base.RegisterNativeMembers (nativeClass, type, methods);
-				return;
-			}
-
-			JniNativeMethodRegistration[] natives = new JniNativeMethodRegistration [members.Length-1];
-			for (int i = 0; i < members.Length; ++i) {
-				string method = members [i];
-				if (string.IsNullOrEmpty (method))
-					continue;
-				string[] toks = members [i].Split (new[]{':'}, 4);
-				Delegate callback;
-				if (toks [2] == "__export__") {
-					var mname = toks [0].Substring (2);
-					MethodInfo? minfo = null;
-					foreach (var mi in type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
-						if (mi.Name == mname && JavaNativeTypeManager.GetJniSignature (mi) == toks [1]) {
-							minfo = mi;
-							break;
-						}
-
-					if (minfo == null)
-						throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname, toks [1]));
-					callback = CreateDynamicCallback (minfo);
-				} else {
-					Type callbackDeclaringType = type;
-					if (toks.Length == 4) {
-						callbackDeclaringType = Type.GetType (toks [3], throwOnError: true)!;
-					}
-					while (callbackDeclaringType.ContainsGenericParameters) {
-						callbackDeclaringType = callbackDeclaringType.BaseType!;
-					}
-					GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
-						callbackDeclaringType, toks [2]);
-					callback = connector ();
+				if (string.IsNullOrEmpty (methods)) {
+					if (jniAddNativeMethodRegistrationAttributePresent)
+						base.RegisterNativeMembers (nativeClass, type, methods);
+					return;
 				}
-				natives [i] = new JniNativeMethodRegistration (toks [0], toks [1], callback);
-			}
 
-			JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, natives.Length);
+				string[] members = methods!.Split ('\n');
+				if (members.Length < 2) {
+					if (jniAddNativeMethodRegistrationAttributePresent)
+						base.RegisterNativeMembers (nativeClass, type, methods);
+					return;
+				}
+
+				JniNativeMethodRegistration[] natives = new JniNativeMethodRegistration [members.Length-1];
+				for (int i = 0; i < members.Length; ++i) {
+					string method = members [i];
+					if (string.IsNullOrEmpty (method))
+						continue;
+					string[] toks = members [i].Split (new[]{':'}, 4);
+					Delegate callback;
+					if (toks [2] == "__export__") {
+						var mname = toks [0].Substring (2);
+						MethodInfo? minfo = null;
+						foreach (var mi in type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
+							if (mi.Name == mname && JavaNativeTypeManager.GetJniSignature (mi) == toks [1]) {
+								minfo = mi;
+								break;
+							}
+
+						if (minfo == null)
+							throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname, toks [1]));
+						callback = CreateDynamicCallback (minfo);
+					} else {
+						Type callbackDeclaringType = type;
+						if (toks.Length == 4) {
+							callbackDeclaringType = Type.GetType (toks [3], throwOnError: true)!;
+						}
+						while (callbackDeclaringType.ContainsGenericParameters) {
+							callbackDeclaringType = callbackDeclaringType.BaseType!;
+						}
+						GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
+							callbackDeclaringType, toks [2]);
+						callback = connector ();
+					}
+					natives [i] = new JniNativeMethodRegistration (toks [0], toks [1], callback);
+				}
+
+				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, natives.Length);
+			} catch (Exception e) {
+				JniEnvironment.Runtime.RaisePendingException (e);
+			}
 		}
 	}
 
