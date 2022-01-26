@@ -1022,7 +1022,6 @@ namespace Xamarin.Android.NetTests {
 #endif
 
 		[Test]
-		[Category("InetAccess")]
 		public async Task ServerCertificateCustomValidationCallbackValidatsRequest ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -1042,13 +1041,12 @@ namespace Xamarin.Android.NetTests {
 			};
 
 			var client = new HttpClient (handler);
-			await client.GetStringAsync("http://tls-test.internalx.com/");
+			await client.GetStringAsync ("https://tls-test.internalx.com/");
 
 			Assert.IsTrue (callbackHasBeenCalled);
 		}
 
 		[Test]
-		[Category("InetAccess")]
 		public async Task ServerCertificateCustomValidationCallbackRejectsRequest ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -1060,7 +1058,20 @@ namespace Xamarin.Android.NetTests {
 			};
 
 			var client = new HttpClient (handler);
-			Assert.ThrowsAsync<HttpRequestException> (async () => await client.GetStringAsync("http://tls-test.internalx.com/"));
+
+			try
+			{
+				await client.GetStringAsync ("https://tls-test.internalx.com/");
+				Assert.Fail ("No exception has been thrown.");
+			}
+			catch (HttpRequestException)
+			{
+				// this is the expected exception type when validation fails
+			}
+			catch (Exception exception)
+			{
+				Assert.Fail ($"An unexpected exception {exception} has been thrown.");
+			}
 
 			Assert.IsTrue (callbackHasBeenCalled);
 		}
