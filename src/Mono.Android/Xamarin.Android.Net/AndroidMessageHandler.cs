@@ -1014,9 +1014,38 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
+			var keyStore = InitializeKeyStore (out bool gotCerts);
+			keyStore = ConfigureKeyStore (keyStore);
+			var kmf = ConfigureKeyManagerFactory (keyStore);
+			var tmf = ConfigureTrustManagerFactory (keyStore);
+
+			if (tmf == null)
+			{
+				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
+				// there is no point in changing the behavior of the default SSL socket factory
+				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
+					return; // TODO we ignore kmf even if it is not null?
+
+				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
+				tmf?.Init (gotCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
+			}
+
+			ITrustManager[]? trustManagers =
+				ServerCertificateCustomValidationCallback == null
+					? tmf?.GetTrustManagers ()
+					: X509TrustManagerWithValidationCallback.Inject(tmf?.GetTrustManagers (), requestMessage, ServerCertificateCustomValidationCallback);
+
+			var context = SSLContext.GetInstance ("TLS");
+			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
+			httpsConnection.SSLSocketFactory = context?.SocketFactory;
+		}
+
+		KeyStore? InitializeKeyStore (out bool gotCerts)
+		{
 			var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
 			keyStore?.Load (null, null);
-			bool gotCerts = TrustedCerts?.Count > 0;
+
+			gotCerts = TrustedCerts?.Count > 0;
 			if (gotCerts) {
 				for (int i = 0; i < TrustedCerts!.Count; i++) {
 					Certificate cert = TrustedCerts [i];
@@ -1026,32 +1055,7 @@ namespace Xamarin.Android.Net
 				}
 			}
 
-			keyStore = ConfigureKeyStore (keyStore);
-			var kmf = ConfigureKeyManagerFactory (keyStore);
-			var tmf = ConfigureTrustManagerFactory (keyStore);
-
-			if (tmf == null)
-			{
-				// If there are no certs and no trust manager factory or custom certificatevalidation callback
-				// we can't use a custom manager because it will cause all the HTTPS requests to fail because
-				// of unverified trust chain
-				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
-					return;
-
-				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
-				tmf?.Init (keyStore);
-			}
-
-			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
-
-			if (ServerCertificateCustomValidationCallback != null)
-			{
-				trustManagers = X509TrustManagerWithValidationCallback.Inject(trustManagers, requestMessage, ServerCertificateCustomValidationCallback);
-			}
-
-			var context = SSLContext.GetInstance ("TLS");
-			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
-			httpsConnection.SSLSocketFactory = context?.SocketFactory;
+			return keyStore;
 		}
 
 		void HandlePreAuthentication (HttpURLConnection httpConnection)
