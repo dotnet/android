@@ -1,0 +1,7 @@
+{
+  "author": "Microsoft",
+  "name": "Android Application (Preview)",
+  "description": "A project for creating a .NET 6 Android application",
+  "symbols/packageName/description": "Overrides the package name in the AndroidManifest.xml",
+  "symbols/supportedOSVersion/description": "Overrides $(SupportedOSPlatformVersion) in the project"
+}
