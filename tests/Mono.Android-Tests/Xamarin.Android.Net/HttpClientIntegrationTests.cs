@@ -31,8 +31,6 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
@@ -1021,61 +1019,6 @@ namespace Xamarin.Android.NetTests {
 		}
 #endif
 
-		[Test]
-		public async Task ServerCertificateCustomValidationCallbackValidatsRequest ()
-		{
-			bool callbackHasBeenCalled = false;
-
-			var handler = CreateHandler ();
-			handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
-				Assert.NotNull (request, "request");
-				Assert.AreEqual (request.RequestUri.Host, "tls-test.internalx.com");
-				Assert.NotNull (cert, "cert");
-				Assert.AreEqual (cert.Issuer, "CN=Microsoft IT TLS CA 2, OU=Microsoft IT, O=Microsoft Corporation, L=Redmond, S=Washington, C=US");
-				Assert.AreEqual (cert.Subject, "CN=*.internalx.com");
-				Assert.NotNull (chain, "chain");
-				// Assert.AreEqual (SslPolicyErrors.None, errors); -- the certificate expired on 1/24/2022 and hasn't been replaced yet
-
-				callbackHasBeenCalled = true;
-				return true;
-			};
-
-			var client = new HttpClient (handler);
-			await client.GetStringAsync ("https://tls-test.internalx.com/");
-
-			Assert.IsTrue (callbackHasBeenCalled);
-		}
-
-		[Test]
-		public async Task ServerCertificateCustomValidationCallbackRejectsRequest ()
-		{
-			bool callbackHasBeenCalled = false;
-
-			var handler = CreateHandler ();
-			handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
-				callbackHasBeenCalled = true;
-				return false;
-			};
-
-			var client = new HttpClient (handler);
-
-			try
-			{
-				await client.GetStringAsync ("https://tls-test.internalx.com/");
-				Assert.Fail ("No exception has been thrown.");
-			}
-			catch (HttpRequestException)
-			{
-				// this is the expected exception type when validation fails
-			}
-			catch (Exception exception)
-			{
-				Assert.Fail ($"An unexpected exception {exception} has been thrown.");
-			}
-
-			Assert.IsTrue (callbackHasBeenCalled);
-		}
-
 		HttpListener CreateListener (Action<HttpListenerContext> contextAssert)
 		{
 			var l = new HttpListener ();
@@ -1112,7 +1055,6 @@ namespace Xamarin.Android.NetTests {
 			public abstract CookieContainer CookieContainer { get; }
 			public abstract bool UseCookies { set; }
 			public abstract bool UseDefaultCredentials { set; }
-			public abstract Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { set; }
 
 			public static implicit operator HttpMessageHandler (AndroidHandlerSettingsAdapter adapter)
 				=> adapter.Unwrap();
@@ -1154,7 +1096,6 @@ namespace Xamarin.Android.NetTests {
 			public override CookieContainer CookieContainer => _handler.CookieContainer;
 			public override bool UseCookies { set => _handler.UseCookies = value; }
 			public override bool UseDefaultCredentials { set => _handler.UseDefaultCredentials = value; }
-			public override Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { set => _handler.ServerCertificateCustomValidationCallback = value; }
 		}
 	}
 
@@ -1193,7 +1134,6 @@ namespace Xamarin.Android.NetTests {
 			public override CookieContainer CookieContainer => _handler.CookieContainer;
 			public override bool UseCookies { set => _handler.UseCookies = value; }
 			public override bool UseDefaultCredentials { set => _handler.Credentials = value ? CredentialCache.DefaultCredentials : null; }
-			public override Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { set => _handler.ServerCertificateCustomValidationCallback = value; }
 		}
 	}
 }
