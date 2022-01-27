@@ -12,6 +12,10 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>63715256cc94963d608ef3d683d2529332c5140c</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.TemplateEngine.Tasks" Version="7.0.100-alpha.1.21601.1">
+      <Uri>https://github.com/dotnet/templating</Uri>
+      <Sha />
+    </Dependency>    
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20181.7">

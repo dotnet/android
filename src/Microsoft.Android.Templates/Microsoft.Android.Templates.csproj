@@ -8,6 +8,7 @@
     <Description>Templates for Android platforms.</Description>
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <LocalizeTemplates>true</LocalizeTemplates>
     <ContentTargetFolders>content</ContentTargetFolders>
     <OutputPath>..\..\bin\Build$(Configuration)\nuget-unsigned\</OutputPath>
     <!-- Remove the `<group targetFramework=".NETStandard2.0" />` entry from the .nuspec. -->
@@ -22,4 +23,7 @@
     <Compile Remove="**\*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TemplateEngine.Tasks" Version="$(MicrosoftTemplateEngineTasksVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
+  </ItemGroup>
 </Project>
