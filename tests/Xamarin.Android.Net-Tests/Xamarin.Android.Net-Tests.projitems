@@ -3,8 +3,8 @@
   <ItemGroup>
     <TestApk Include="$(OutputPath)Xamarin.Android.Net_Tests-Signed.apk">
       <Package>Xamarin.Android.Net_Tests</Package>
-      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Android.Net_Tests-times.csv</TimingResultsFilename>
+      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
+      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\TestResult-Xamarin.Android.Net_Tests-times.csv</TimingResultsFilename>
     </TestApk>
     <TestApkInstrumentation Include="xamarin.android.localetests.TestInstrumentation">
       <Package>Xamarin.Android.Net_Tests</Package>

@@ -18,14 +18,14 @@
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
   </PropertyGroup>
-  <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
+    <OutputPath>..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -34,15 +34,14 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
+    <OutputPath>..\..\bin\TestRelease</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="Mono.Android" />
     <Reference Include="Xamarin.Android.NUnitLite" />
   </ItemGroup>
@@ -63,11 +62,5 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Xamarin.Android.Net-Tests.projitems" />
-  <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\LibraryResources\LibraryResources.csproj">
-      <Project>{05768F39-7BAF-43E6-971E-712F5771E88E}</Project>
-      <Name>LibraryResources</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <Import Project="..\..\build-tools\scripts\TestApks.targets" />
 </Project>
