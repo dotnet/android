@@ -66,6 +66,9 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
       <Output PropertyName="_LdFlags"    TaskParameter="LdFlags" />
       <Output ItemName="_MonoAOTAssemblies" TaskParameter="ResolvedAssemblies" />
     </GetAotAssemblies>
+    <ItemGroup Condition=" '$(AndroidExtraAotOptions)' != '' ">
+      <_MonoAOTAssemblies Update="@(_MonoAOTAssemblies)" ProcessArguments="$(AndroidExtraAotOptions)" />
+    </ItemGroup>
     <PropertyGroup>
       <_MonoAOTCompilerPath>@(MonoAotCrossCompiler->WithMetadataValue('RuntimeIdentifier', '$(RuntimeIdentifier)'))</_MonoAOTCompilerPath>
       <_LLVMPath Condition=" '$(EnableLLVM)' == 'true' ">$([System.IO.Path]::GetDirectoryName ('$(_MonoAOTCompilerPath)'))</_LLVMPath>
