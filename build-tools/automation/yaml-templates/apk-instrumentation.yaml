@@ -5,7 +5,6 @@ parameters:
   testResultsFiles: ""
   extraBuildArgs: ""
   testResultsFormat: NUnit
-  packageType: Apk
   artifactSource: ""
   artifactFolder: ""
   useDotNet: false
@@ -20,7 +19,7 @@ steps:
       configuration: ${{ parameters.configuration }}
       msbuildArguments: >-
         /restore
-        /t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
+        /t:RunTestApp
         /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
         ${{ parameters.extraBuildArgs }}
     condition: ${{ parameters.condition }}
@@ -32,7 +31,7 @@ steps:
       displayName: run ${{ parameters.testName }}
       project: ${{ parameters.project }}
       arguments: >-
-        -t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
+        -t:RunTestApp
         -bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
         -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
       condition: ${{ parameters.condition }}
