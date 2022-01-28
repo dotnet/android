@@ -26,7 +26,7 @@
     <AvdLaunchTimeoutMinutes Condition=" '$(AvdLaunchTimeoutMinutes)' == '' ">5</AvdLaunchTimeoutMinutes>
     <AvdLaunchTimeoutSeconds>$([MSBuild]::Multiply($(AvdLaunchTimeoutMinutes), 60))</AvdLaunchTimeoutSeconds>
     <AvdLaunchTimeoutMS>$([MSBuild]::Multiply($(AvdLaunchTimeoutSeconds), 1000))</AvdLaunchTimeoutMS>
-    <_LogcatFilename>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\logcat-$(Configuration)-full.log</_LogcatFilename>
+    <_LogcatFilename>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\logcat-$(Configuration)$(TestsFlavor)-full.log</_LogcatFilename>
   </PropertyGroup>
 
   <ItemGroup>
