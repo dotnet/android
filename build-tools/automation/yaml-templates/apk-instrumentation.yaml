@@ -42,7 +42,7 @@ steps:
     mkdir -p "$DEST" &&
     cp "${{ parameters.artifactSource }}" "$DEST"
   displayName: copy apk/aab
-  condition: true #ne(variables['agent.jobstatus'], 'Succeeded')
+  condition: ne(variables['Agent.JobStatus'], 'Succeeded')
   continueOnError: true
 
 - task: PublishTestResults@2
