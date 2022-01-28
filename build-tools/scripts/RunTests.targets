@@ -26,6 +26,7 @@
     <_ApkTestProject Include="$(_TopDir)\tests\EmbeddedDSOs\EmbeddedDSO\EmbeddedDSO.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\Mono.Android-Tests\Runtime-AppBundle\Mono.Android-TestsAppBundle.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\Mono.Android-Tests\Runtime-MultiDex\Mono.Android-TestsMultiDex.csproj" />
+    <_ApkTestProject Include="$(_TopDir)\tests\Xamarin.Android.Net-Tests\Xamarin.Android.Net-Tests.csproj" />
     <_ApkTestProjectAot Include="$(_TopDir)\tests\Mono.Android-Tests\Mono.Android-Tests.csproj" />
     <_ApkTestProjectAot Include="$(_TopDir)\tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.csproj" />
     <_ApkTestProjectAot Include="$(_TopDir)\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj" />
