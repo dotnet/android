@@ -97,12 +97,11 @@ namespace Java.Interop {
 			return mappings [i].Substring (c+1);
 		}
 
-		static Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr>? cb_activate;
+		static _JniMarshal_PPLLLL_V? cb_activate;
 		internal static Delegate GetActivateHandler ()
 		{
 			if (cb_activate == null)
-				cb_activate = (Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr>) JNINativeWrapper.CreateDelegate (
-						(Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr>) n_Activate);
+				cb_activate = (_JniMarshal_PPLLLL_V) JNINativeWrapper.CreateDelegate ((_JniMarshal_PPLLLL_V) n_Activate);
 			return cb_activate;
 		}
 
@@ -220,7 +219,7 @@ namespace Java.Interop {
 
 			if (!JNIEnv.IsRunningOnDesktop) {
 				// Miss message is logged in the native runtime
-				if (JNIEnv.LogTypemapMissStackTrace)
+				if (JNIEnv.LogAssemblyCategory)
 					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
 				return null;
 			}
