@@ -35,13 +35,14 @@ steps:
         -bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
         -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
       condition: ${{ parameters.condition }}
+      continueOnError: true
 
 - script: >
-    DEST="$(Build.ArtifactStagingDirectory)/${{ parameters.artifactFolder }}/" &&
+    DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&
     mkdir -p "$DEST" &&
     cp "${{ parameters.artifactSource }}" "$DEST"
   displayName: copy apk/aab
-  condition: eq(variables['agent.jobstatus'], 'SucceededWithIssues')
+  condition: ne(variables['Agent.JobStatus'], 'Succeeded')
   continueOnError: true
 
 - task: PublishTestResults@2
