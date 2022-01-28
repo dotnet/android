@@ -5,9 +5,8 @@ using System.Reflection.Emit;
 using System.Threading;
 
 namespace Android.Runtime {
-	public static class JNINativeWrapper {
+	public static partial class JNINativeWrapper {
 
-		static MethodInfo? mono_unhandled_exception_method;
 		static MethodInfo? exception_handler_method;
 		static MethodInfo? wait_for_bridge_processing_method;
 
@@ -15,15 +14,7 @@ namespace Android.Runtime {
 		{
 			if (exception_handler_method != null)
 				return;
-#if MONOANDROID1_0
-			mono_unhandled_exception_method = typeof (System.Diagnostics.Debugger).GetMethod (
-				"Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
-			if (mono_unhandled_exception_method == null)
-				AndroidEnvironment.FailFast ("Cannot find System.Diagnostics.Debugger.Mono_UnhandledException");
-#endif
-#if NETCOREAPP
-			mono_unhandled_exception_method = JNIEnv.mono_unhandled_exception.Method;
-#endif  // NETCOREAPP
+
 			exception_handler_method = typeof (AndroidEnvironment).GetMethod (
 				"UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
 			if (exception_handler_method == null)
@@ -44,6 +35,15 @@ namespace Android.Runtime {
 				throw new ArgumentException ();
 
 			get_runtime_types ();
+
+			var delegateType = dlg.GetType ();
+			var result = CreateBuiltInDelegate (dlg, delegateType);
+			if (result != null)
+				return result;
+
+			if (JNIEnv.LogAssemblyCategory) {
+				JNIEnv.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{delegateType}': {dlg.Method}");
+			}
 
 			var ret_type = dlg.Method.ReturnType;
 			var parameters = dlg.Method.GetParameters ();
@@ -73,10 +73,10 @@ namespace Android.Runtime {
 			ig.Emit (OpCodes.Leave, label);
 
 			bool  filter = Debugger.IsAttached || !JNIEnv.PropagateExceptions;
-			if (filter && mono_unhandled_exception_method != null) {
+			if (filter && JNIEnv.mono_unhandled_exception_method != null) {
 				ig.BeginExceptFilterBlock ();
 
-				ig.Emit (OpCodes.Call, mono_unhandled_exception_method);
+				ig.Emit (OpCodes.Call, JNIEnv.mono_unhandled_exception_method);
 				ig.Emit (OpCodes.Ldc_I4_1);
 				ig.BeginCatchBlock (null!);
 			} else {

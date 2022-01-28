@@ -125,6 +125,10 @@
   <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
 
 <ItemGroup>
+    <None Include="Android.Runtime\JNINativeWrapper.g.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JNINativeWrapper.g.cs</LastGenOutput>
+    </None>
     <Compile Include="Android\IncludeAndroidResourcesFromAttribute.cs" />
     <Compile Include="Android\LinkerSafeAttribute.cs" />
     <Compile Include="Android\NativeLibraryReferenceAttribute.cs" />
@@ -241,6 +245,11 @@
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
+    <Compile Include="Android.Runtime\JNINativeWrapper.g.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>JNINativeWrapper.g.tt</DependentUpon>
+    </Compile>
     <Compile Include="Android.Runtime\JObjectRefType.cs" />
     <Compile Include="Android.Runtime\JValue.cs" />
     <Compile Include="Android.Runtime\Logger.cs" />
