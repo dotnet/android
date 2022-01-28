@@ -38,6 +38,26 @@ Used to provide an AOT profile, for use with profile-guided AOT.
 It can be also used from Visual Studio by setting the `AndroidAotProfile`
 build action to a file containing an AOT profile.
 
+## AndroidAppBundleMetaDataFile
+
+Specifies a file that will be included as metadata in the Android App Bundle.
+The format of the flag value is `<bundle-path>:<physical-file>` where
+`bundle-path` denotes the file location inside the App Bundle's metadata
+directory, and `physical-file` is an existing file containing the raw data
+to be stored.
+
+```xml
+<ItemGroup>
+  <AndroidAppBundleMetaDataFile
+    Include="com.android.tools.build.obfuscation/proguard.map:$(OutputPath)mapping.txt"
+  />
+</ItemGroup>
+```
+
+See [bundletool](https://developer.android.com/studio/build/building-cmdline#build_your_app_bundle_using_bundletool) documentation for more details.
+
+Added in Xamarin.Android 12.3.
+
 ## AndroidBoundLayout
 
 Indicates that the layout file is to have code-behind generated for it in case when

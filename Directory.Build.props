@@ -22,12 +22,12 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>31.0.200</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.13</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>preview.14</AndroidPackVersionSuffix>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->
   <PropertyGroup>
-    <LibZipSharpVersion>2.0.0</LibZipSharpVersion>
+    <LibZipSharpVersion>2.0.3</LibZipSharpVersion>
     <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
     <MonoCecilVersion>0.11.4</MonoCecilVersion>
     <NewtonsoftJsonPackageVersion>13.0.1</NewtonsoftJsonPackageVersion>

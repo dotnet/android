@@ -179,8 +179,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidFragmentType Condition=" '$(AndroidFragmentType)' == '' ">Android.App.Fragment</AndroidFragmentType>
 	<AndroidEnableAssemblyCompression Condition=" '$(AndroidEnableAssemblyCompression)' == '' ">True</AndroidEnableAssemblyCompression>
 	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
-	<AndroidUseAssemblyStore Condition=" '$(EmbedAssembliesIntoApk)' == 'False' Or '$(BundleAssemblies)' == 'True'">False</AndroidUseAssemblyStore>
-	<AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">True</AndroidUseAssemblyStore>
 	<_AndroidCheckedBuild Condition=" '$(_AndroidCheckedBuild)' == '' "></_AndroidCheckedBuild>
 
 	<!-- Currently only C# is supported -->
@@ -264,6 +262,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
 	<AndroidR8IgnoreWarnings    Condition=" '$(AndroidR8IgnoreWarnings)' == '' ">True</AndroidR8IgnoreWarnings>
+	<AndroidCreateProguardMappingFile Condition="'$(AndroidCreateProguardMappingFile)' == '' And '$(AndroidLinkTool)' == 'r8'">True</AndroidCreateProguardMappingFile>
 
 	<!-- Figure out which is the main packaging format we want-->
 	<AndroidPackageFormat Condition=" $(AndroidPackageFormats.Contains('aab')) And '$(AndroidPackageFormat)' == '' ">aab</AndroidPackageFormat>
@@ -328,6 +327,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		</PropertyGroup>
 	</Otherwise>
 </Choose>
+
+<PropertyGroup>
+  <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true' or '$(BundleAssemblies)' == 'true') ">false</AndroidUseAssemblyStore>
+  <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
+</PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
 <PropertyGroup>
@@ -1807,6 +1811,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CreateApplicationSharedLibraries;
 		_GetMonoPlatformJarPath;
 		_GetLibraryImports;
+		_SetProguardMappingFileProperty;
 		_CalculateProguardConfigurationFiles;
 	</_CompileToDalvikDependsOnTargets>
 	<_CompileToDalvikInputs>
@@ -1825,6 +1830,12 @@ because xbuild doesn't support framework reference assemblies.
 		_CompileToDalvik;
 	</_CompileDexDependsOn>
 </PropertyGroup>
+
+<Target Name="_SetProguardMappingFileProperty">
+	<PropertyGroup>
+		<AndroidProguardMappingFile Condition=" '$(AndroidLinkTool)' == 'r8' And '$(AndroidCreateProguardMappingFile)' == 'True' ">$(OutputPath)mapping.txt</AndroidProguardMappingFile>
+	</PropertyGroup>
+</Target>
 
 <Target Name="_CalculateProguardConfigurationFiles">
   <!-- Support the $(ProguardConfigFiles) property to keep backwards compatibility -->
@@ -1967,6 +1978,12 @@ because xbuild doesn't support framework reference assemblies.
       $(ApkFileIntermediate)
     </_BuildApkEmbedOutputs>
   </PropertyGroup>
+  <ItemGroup>
+    <AndroidAppBundleMetaDataFile
+        Condition=" Exists('$(AndroidProguardMappingFile)') "
+        Include="com.android.tools.build.obfuscation/proguard.map:$(AndroidProguardMappingFile)"
+    />
+  </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -2064,6 +2081,7 @@ because xbuild doesn't support framework reference assemblies.
       Output="$(_AppBundleIntermediate)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       CustomBuildConfigFile="$(AndroidBundleConfigurationFile)"
+      MetaDataFiles="@(AndroidAppBundleMetaDataFile)"
   />
 </Target>
 

@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks
 {
 	/// <summary>
 	/// Invokes `bundletool` to create an Android App Bundle (.aab file)
-	/// 
+	///
 	/// Usage: bundletool build-bundle --modules=base.zip --output=foo.aab --config=BundleConfig.json
 	/// </summary>
 	public class BuildAppBundle : BundleTool
@@ -63,8 +63,10 @@ namespace Xamarin.Android.Tasks
 		public string BaseZip { get; set; }
 
 		public string CustomBuildConfigFile { get; set; }
-		
+
 		public string [] Modules { get; set; }
+
+		public ITaskItem [] MetaDataFiles { get; set; }
 
 		[Required]
 		public string Output { get; set; }
@@ -130,6 +132,9 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--modules ", string.Join (",", modules));
 			cmd.AppendSwitchIfNotNull ("--output ", Output);
 			cmd.AppendSwitchIfNotNull ("--config ", temp);
+			foreach (var file in MetaDataFiles ?? Array.Empty<ITaskItem> ()) {
+				cmd.AppendSwitch ($"--metadata-file={file.ItemSpec}");
+			}
 			return cmd;
 		}
 	}

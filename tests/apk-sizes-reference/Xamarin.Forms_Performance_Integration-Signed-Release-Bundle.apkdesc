@@ -5,7 +5,7 @@
       "Size": 3768
     },
     "classes.dex": {
-      "Size": 2802888
+      "Size": 2974620
     },
     "lib/armeabi-v7a/libmono-btls-shared.so": {
       "Size": 1112688
@@ -14,19 +14,19 @@
       "Size": 736396
     },
     "lib/armeabi-v7a/libmonodroid_bundle_app.so": {
-      "Size": 4276344
+      "Size": 4276376
     },
     "lib/armeabi-v7a/libmonodroid.so": {
-      "Size": 229116
+      "Size": 235164
     },
     "lib/armeabi-v7a/libmonosgen-2.0.so": {
-      "Size": 4456332
+      "Size": 4456576
     },
     "lib/armeabi-v7a/libxa-internal-api.so": {
       "Size": 48844
     },
     "lib/armeabi-v7a/libxamarin-app.so": {
-      "Size": 110724
+      "Size": 108520
     },
     "lib/x86/libmono-btls-shared.so": {
       "Size": 1459584
@@ -35,19 +35,19 @@
       "Size": 803352
     },
     "lib/x86/libmonodroid_bundle_app.so": {
-      "Size": 4279696
+      "Size": 4284080
     },
     "lib/x86/libmonodroid.so": {
-      "Size": 297800
+      "Size": 306828
     },
     "lib/x86/libmonosgen-2.0.so": {
-      "Size": 4212220
+      "Size": 4212336
     },
     "lib/x86/libxa-internal-api.so": {
       "Size": 61112
     },
     "lib/x86/libxamarin-app.so": {
-      "Size": 109168
+      "Size": 107576
     },
     "META-INF/android.arch.core_runtime.version": {
       "Size": 6
@@ -2993,5 +2993,5 @@
       "Size": 493672
     }
   },
-  "PackageSize": 16238582
+  "PackageSize": 16394230
 }

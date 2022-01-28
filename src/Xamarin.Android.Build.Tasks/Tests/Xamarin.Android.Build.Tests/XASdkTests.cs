@@ -899,16 +899,6 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			Assert.IsTrue (builder.Build (), $"{proj.ProjectName} should succeed");
 		}
 
-		[Test]
-		public void GetAndroidDependencies()
-		{
-			var proj = new XASdkProject ();
-			var builder = CreateDotNetBuilder (proj);
-
-			// `dotnet build -t:GetAndroidDependencies --no-restore` should succeed
-			Assert.IsTrue (builder.Build (target: "GetAndroidDependencies", norestore: true), $"{proj.ProjectName} should succeed");
-		}
-
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
 		{
 			if (string.IsNullOrEmpty (relativeProjectDir)) {
