@@ -89,6 +89,3 @@ namespace Xamarin.Android.Net.Tests
 			};
 	}
 }
-
-
-

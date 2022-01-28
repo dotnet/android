@@ -1044,8 +1044,8 @@ namespace Xamarin.Android.Net
 		{
 			var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
 			keyStore?.Load (null, null);
-
 			gotCerts = TrustedCerts?.Count > 0;
+
 			if (gotCerts) {
 				for (int i = 0; i < TrustedCerts!.Count; i++) {
 					Certificate cert = TrustedCerts [i];
