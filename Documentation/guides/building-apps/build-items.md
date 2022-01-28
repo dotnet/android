@@ -370,6 +370,11 @@ Starting in Xamarin.Android 11.3, the following MSBuild metadata is supported:
     online documentation.  Only one style is currently supported:
     `developer.android.com/reference@2020-Nov`.
 
+Starting in Xamarin.Android 12.3, the following MSBuild metadata is supported:
+
+* `%(DocRootUrl)`: A URL prefix to use in place of all {@docroot}
+    instances in the imported documentation.
+
 
 ## LibraryProjectZip
 
