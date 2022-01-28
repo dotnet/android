@@ -13,7 +13,7 @@ namespace Xamarin.Android.Net.Tests
 	[Category ("InetAccess")]
 	public abstract class ServerCertificateCustomValidationCallbackTest
 	{
-		protected abstract HttpMessageHandler CreateHandlerWithCallback(Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors> callback);
+		protected abstract HttpMessageHandler CreateHandlerWithCallback(Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback);
 
 		[Test]
 		public async Task ApproveRequest ()
@@ -72,7 +72,7 @@ namespace Xamarin.Android.Net.Tests
 	[TestFixture]
 	public class AndroidMessageHandler_ServerCertificateCustomValidationCallbackTest : ServerCertificateCustomValidationCallbackTest
 	{
-		protected override HttpMessageHandler CreateHandlerWithCallback(Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors> callback)
+		protected override HttpMessageHandler CreateHandlerWithCallback(Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
 			=> new Xamarin.Android.Net.AndroidMessageHandler
 			{
 				ServerCertificateCustomValidationCallback = callback
@@ -82,10 +82,10 @@ namespace Xamarin.Android.Net.Tests
 	[TestFixture]
 	public class AndroidClientHandler_ServerCertificateCustomValidationCallbackTest : ServerCertificateCustomValidationCallbackTest
 	{
-		protected override HttpMessageHandler CreateHandlerWithCallback(Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors> callback)
+		protected override HttpMessageHandler CreateHandlerWithCallback(Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
 			=> new Xamarin.Android.Net.AndroidClientHandler
 			{
-				ServerCertificateCustomValidationCallback = (Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors>)callback
+				ServerCertificateCustomValidationCallback = callback
 			};
 	}
 }
