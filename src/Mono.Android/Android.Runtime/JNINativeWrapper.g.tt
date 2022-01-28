@@ -32,6 +32,15 @@ namespace Android.Runtime
 {
 	public static partial class JNINativeWrapper
 	{
+		static bool _unhandled_exception (Exception e)
+		{
+			if (Debugger.IsAttached || !JNIEnv.PropagateExceptions) {
+				JNIEnv.mono_unhandled_exception (e);
+				return false;
+			}
+			return true;
+		}
+
 		private static Delegate CreateBuiltInDelegate (Delegate dlg, Type delegateType)
 		{
 			switch (delegateType.Name) {
@@ -44,14 +53,8 @@ foreach (var info in delegateTypes) {
 						JNIEnv.WaitForBridgeProcessing ();
 						try {
 							<#= info.Return ? "return " : "" #>callback <#= info.Signature #>;
-						} catch (Exception e) {
-							bool  filter = Debugger.IsAttached || !JNIEnv.PropagateExceptions;
-							if (filter && JNIEnv.mono_unhandled_exception != null) {
-								JNIEnv.mono_unhandled_exception (e);
-							}
+						} catch (Exception e) when (_unhandled_exception (e)) {
 							AndroidEnvironment.UnhandledException (e);
-							if (filter)
-								throw;
 							<#= info.Return ? "return default;" : "" #>
 						}
 					};
