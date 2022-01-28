@@ -181,8 +181,10 @@ namespace Xamarin.Android.Tasks
 					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath, compressionMethod: dexCompressionMethod);
 				}
 
-				if (EmbedAssemblies && !BundleAssemblies)
+				if (EmbedAssemblies && !BundleAssemblies) {
 					AddAssemblies (apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
+					apk.Flush ();
+				}
 
 				AddRuntimeLibraries (apk, supportedAbis);
 				apk.Flush();
