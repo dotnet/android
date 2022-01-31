@@ -96,7 +96,8 @@
     <NullabilityInfoContextSupport Condition="'$(NullabilityInfoContextSupport)' == ''">false</NullabilityInfoContextSupport>
     <BuiltInComInteropSupport Condition="'$(BuiltInComInteropSupport)' == ''">false</BuiltInComInteropSupport>    
 
-    <EnableSingleFileAnalyzer Condition="'$(EnableSingleFileAnalyzer)' == ''">true</EnableSingleFileAnalyzer>
+    <!-- TODO: default to true when https://github.com/dotnet/linker/issues/2563 is fixed -->
+    <EnableSingleFileAnalyzer Condition="'$(EnableSingleFileAnalyzer)' == ''">false</EnableSingleFileAnalyzer>
 
     <!-- XA feature switches defaults -->
     <VSAndroidDesigner Condition="'$(VSAndroidDesigner)' == ''">false</VSAndroidDesigner>
