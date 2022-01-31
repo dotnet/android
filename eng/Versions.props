@@ -6,6 +6,72 @@
     <MicrosoftDotNetApiCompatPackageVersion>5.0.0-beta.20181.7</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>6.0.0-beta.21212.6</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>6.0.2-mauipre.1.22075.3</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftExtensionsPrimitivesPackageVersion>
+    </MicrosoftExtensionsPrimitivesPackageVersion>
+    <MicrosoftExtensionsHostingPackageVersion>
+    </MicrosoftExtensionsHostingPackageVersion>
+    <MicrosoftExtensionsHostingAbstractionsPackageVersion>
+    </MicrosoftExtensionsHostingAbstractionsPackageVersion>
+    <MicrosoftExtensionsDependencyInjectionAbstractionsPackageVersion>
+    </MicrosoftExtensionsDependencyInjectionAbstractionsPackageVersion>
+    <MicrosoftExtensionsDependencyInjectionPackageVersion>
+    </MicrosoftExtensionsDependencyInjectionPackageVersion>
+    <MicrosoftExtensionsConfigurationAbstractionsPackageVersion>
+    </MicrosoftExtensionsConfigurationAbstractionsPackageVersion>
+    <MicrosoftExtensionsConfigurationBinderPackageVersion>
+    </MicrosoftExtensionsConfigurationBinderPackageVersion>
+    <MicrosoftExtensionsConfigurationPackageVersion>
+    </MicrosoftExtensionsConfigurationPackageVersion>
+    <MicrosoftExtensionsLoggingAbstractionsPackageVersion>
+    </MicrosoftExtensionsLoggingAbstractionsPackageVersion>
+    <MicrosoftExtensionsLoggingPackageVersion>
+    </MicrosoftExtensionsLoggingPackageVersion>
+    <MicrosoftExtensionsLoggingConsolePackageVersion>
+    </MicrosoftExtensionsLoggingConsolePackageVersion>
+    <MicrosoftExtensionsLoggingDebugPackageVersion>
+    </MicrosoftExtensionsLoggingDebugPackageVersion>
+    <MicrosoftExtensionsConfigurationCommandLinePackageVersion>
+    </MicrosoftExtensionsConfigurationCommandLinePackageVersion>
+    <MicrosoftExtensionsConfigurationEnvironmentVariablesPackageVersion>
+    </MicrosoftExtensionsConfigurationEnvironmentVariablesPackageVersion>
+    <MicrosoftExtensionsConfigurationFileExtensionsPackageVersion>
+    </MicrosoftExtensionsConfigurationFileExtensionsPackageVersion>
+    <MicrosoftExtensionsConfigurationJsonPackageVersion>
+    </MicrosoftExtensionsConfigurationJsonPackageVersion>
+    <MicrosoftExtensionsConfigurationUserSecretsPackageVersion>
+    </MicrosoftExtensionsConfigurationUserSecretsPackageVersion>
+    <MicrosoftExtensionsFileProvidersAbstractionsPackageVersion>
+    </MicrosoftExtensionsFileProvidersAbstractionsPackageVersion>
+    <MicrosoftExtensionsFileProvidersCompositePackageVersion>
+    </MicrosoftExtensionsFileProvidersCompositePackageVersion>
+    <MicrosoftExtensionsFileProvidersPhysicalPackageVersion>
+    </MicrosoftExtensionsFileProvidersPhysicalPackageVersion>
+    <MicrosoftExtensionsFileSystemGlobbingPackageVersion>
+    </MicrosoftExtensionsFileSystemGlobbingPackageVersion>
+    <MicrosoftExtensionsLoggingConfigurationPackageVersion>
+    </MicrosoftExtensionsLoggingConfigurationPackageVersion>
+    <MicrosoftExtensionsLoggingEventLogPackageVersion>
+    </MicrosoftExtensionsLoggingEventLogPackageVersion>
+    <MicrosoftExtensionsLoggingEventSourcePackageVersion>
+    </MicrosoftExtensionsLoggingEventSourcePackageVersion>
+    <MicrosoftExtensionsOptionsPackageVersion>
+    </MicrosoftExtensionsOptionsPackageVersion>
+    <MicrosoftExtensionsOptionsConfigurationExtensionsPackageVersion>
+    </MicrosoftExtensionsOptionsConfigurationExtensionsPackageVersion>
+    <SystemCodeDomPackageVersion>
+    </SystemCodeDomPackageVersion>
+    <SystemRuntimeCompilerServicesUnsafePackageVersion>
+    </SystemRuntimeCompilerServicesUnsafePackageVersion>
+    <SystemDiagnosticsDiagnosticSourcePackageVersion>
+    </SystemDiagnosticsDiagnosticSourcePackageVersion>
+    <SystemDiagnosticsEventLogPackageVersion>
+    </SystemDiagnosticsEventLogPackageVersion>
+    <SystemIOPipelinesPackageVersion>
+    </SystemIOPipelinesPackageVersion>
+    <SystemTextEncodingsWebPackageVersion>
+    </SystemTextEncodingsWebPackageVersion>
+    <SystemTextJsonPackageVersion>
+    </SystemTextJsonPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->
