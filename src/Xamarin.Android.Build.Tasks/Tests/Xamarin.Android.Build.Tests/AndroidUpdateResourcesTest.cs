@@ -523,10 +523,6 @@ namespace UnnamedProject
 				Language = language,
 				IsRelease = isRelease,
 			};
-			if (Builder.UseDotNet && isFSharp && isRelease) {
-				//TODO: temporary until this is fixed: https://github.com/mono/linker/issues/1448
-				proj.AndroidLinkModeRelease = AndroidLinkMode.None;
-			}
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -553,10 +549,6 @@ namespace UnnamedProject
 				Language = language,
 				IsRelease = isRelease,
 			};
-			if (Builder.UseDotNet && isFSharp && isRelease) {
-				//TODO: temporary until this is fixed: https://github.com/mono/linker/issues/1448
-				proj.AndroidLinkModeRelease = AndroidLinkMode.None;
-			}
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var designerPath = GetResourceDesignerPath (b, proj);

@@ -270,22 +270,34 @@ class MemTest {
 			}
 		}
 
+		static object [] BuildBasicApplicationFSharpSource = new object [] {
+			new object[] {
+				/*isRelease*/ false,
+				/*aot*/       false,
+			},
+			new object[] {
+				/*isRelease*/ true,
+				/*aot*/       false,
+			},
+			new object[] {
+				/*isRelease*/ true,
+				/*aot*/       true,
+			},
+		};
+
 		[Test]
+		[TestCaseSource (nameof (BuildBasicApplicationFSharpSource))]
 		[Category ("Minor"), Category ("FSharp")]
 		[NonParallelizable] // parallel NuGet restore causes failures
-		public void BuildBasicApplicationFSharp ([Values (true, false)] bool isRelease)
+		public void BuildBasicApplicationFSharp (bool isRelease, bool aot)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				Language = XamarinAndroidProjectLanguage.FSharp,
 				IsRelease = isRelease,
+				AotAssemblies = aot,
 			};
-			if (Builder.UseDotNet && isRelease) {
-				//TODO: temporary until this is fixed: https://github.com/mono/linker/issues/1448
-				proj.AndroidLinkModeRelease = AndroidLinkMode.None;
-			}
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 		}
 
 		[Test]

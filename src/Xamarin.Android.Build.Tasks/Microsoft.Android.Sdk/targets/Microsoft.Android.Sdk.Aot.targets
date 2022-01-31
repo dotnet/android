@@ -34,7 +34,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
 
   <Target Name="_AndroidAotInputs">
     <ItemGroup>
-      <_AndroidAotInputs Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+      <_AndroidAotInputs Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.AssetType)' != 'resources' " />
     </ItemGroup>
   </Target>
 
