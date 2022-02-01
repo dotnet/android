@@ -5,10 +5,10 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 55086
+      "Size": 54996
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 83182
+      "Size": 87684
     },
     "assemblies/rc.bin": {
       "Size": 1045
@@ -17,7 +17,7 @@
       "Size": 10157
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 520945
+      "Size": 521019
     },
     "assemblies/System.Runtime.dll": {
       "Size": 2410
@@ -80,5 +80,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2697108
+  "PackageSize": 2701204
 }
