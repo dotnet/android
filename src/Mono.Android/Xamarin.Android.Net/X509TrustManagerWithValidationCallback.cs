@@ -60,6 +60,11 @@ namespace Xamarin.Android.Net
 			{
 				sslPolicyErrors |= SslPolicyErrors.RemoteCertificateNotAvailable;
 			}
+			// TODO chian.Build () seems to be broken on Android (the same code works on Windows) - is there a workaround?
+			// else if (!chain.Build (certificate))
+			// {
+			// 	sslPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
+			// }
 
 			if (!_serverCertificateCustomValidationCallback (_request, certificate, chain, sslPolicyErrors))
 			{
@@ -75,11 +80,14 @@ namespace Xamarin.Android.Net
 
 		private static X509Chain CreateChain (X509Certificate2[] certificates)
 		{
-			// TODO I doubt this is the correct way to implement this and this whole method needs revisiting
+			// the chain initialization is based on dotnet/runtime implementation in System.Net.Security.SecureChannel
 			var chain = new X509Chain ();
+
 			chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
 			chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
+
 			chain.ChainPolicy.ExtraStore.AddRange (certificates);
+
 			return chain;
 		}
 
