@@ -19,7 +19,7 @@ resources:
   - repository: sdk-insertions
     type: github
     name: xamarin/sdk-insertions
-    ref: refs/heads/main
+    ref: refs/heads/add-insertion-template
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -1311,6 +1311,7 @@ stages:
         blobName: nuget-artifacts
         packagePrefix: xamarin-android
         artifactsPath: $(Build.StagingDirectory)\nuget-signed
+        yamlResourceName: yaml
 
     - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
       parameters:
@@ -1319,6 +1320,7 @@ stages:
         blobName: vs-insertion
         packagePrefix: xamarin-android
         artifactsPath: $(Build.StagingDirectory)/vs-insertion
+        yamlResourceName: yaml
         downloadSteps:
         - task: DownloadPipelineArtifact@2
           inputs:
