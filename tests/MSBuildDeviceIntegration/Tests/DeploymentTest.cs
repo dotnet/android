@@ -306,6 +306,7 @@ namespace Xamarin.Android.Build.Tests
 		static object [] GetLocalizationTestCases (int node)
 		{
 			List<object> tests = new List<object> ();
+			var rnd = new Random ();
 			var ignore = new string [] {
 				"zh-Hans",
 			};
@@ -316,6 +317,10 @@ namespace Xamarin.Android.Build.Tests
 				}
 				if (ignore.Contains (ci.Name)) {
 					TestContext.WriteLine ($"Ignoring {ci.Name} Localization Test");
+					continue;
+				}
+				if (rnd.NextDouble () < 0.7) {
+					TestContext.WriteLine ($"Randimly Skipping {ci.Name} Localization Test");
 					continue;
 				}
 				tests.Add (new object [] {
