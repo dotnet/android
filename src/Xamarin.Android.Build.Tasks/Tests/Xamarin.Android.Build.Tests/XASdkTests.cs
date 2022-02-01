@@ -532,9 +532,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
-			if (aot) {
-				proj.SetProperty ("RunAOTCompilation", "true");
-			}
+			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
@@ -633,6 +631,10 @@ namespace Xamarin.Android.Build.Tests
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {
 					helper.AssertContainsEntry ("assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
+				}
+				if (aot) {
+					helper.AssertContainsEntry ($"lib/{abi}/libaot-{proj.ProjectName}.dll.so");
+					helper.AssertContainsEntry ($"lib/{abi}/libaot-System.Linq.dll.so");
 				}
 			}
 		}
