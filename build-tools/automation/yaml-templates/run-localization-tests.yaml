@@ -1,4 +1,4 @@
- Runs Localization tests against an emulator running on macOS
+# Runs Localization tests against an emulator running on macOS
 
 parameters:
   node_id: 0
