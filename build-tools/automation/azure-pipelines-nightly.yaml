@@ -171,4 +171,21 @@ stages:
     parameters:
       node_id: 4
 
+  # Localisation test jobs
+- template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 1
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 2
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 3
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 4
+
   - template: yaml-templates/run-systemapp-tests.yaml

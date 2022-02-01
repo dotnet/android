@@ -27,6 +27,51 @@ namespace Xamarin.Android.Build.Tests
 	<!--contents-->
 </root>";
 
+		const string Designer = @"
+using System;
+using System.Reflection;
+
+namespace @projectName@
+{
+	[System.CodeDom.Compiler.GeneratedCodeAttribute(""System.Resources.Tools.StronglyTypedResourceBuilder"", ""4.0.0.0"")]
+	[System.Diagnostics.DebuggerNonUserCodeAttribute()]
+	[System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+	internal class @className@ {
+
+		private static System.Resources.ResourceManager resourceMan;
+
+		private static System.Globalization.CultureInfo resourceCulture;
+
+		[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(""Microsoft.Performance"", ""CA1811:AvoidUncalledPrivateCode"")]
+		internal @className@() {
+		}
+
+		[System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+		internal static System.Resources.ResourceManager ResourceManager {
+			get {
+				if (object.Equals(null, resourceMan)) {
+					System.Resources.ResourceManager temp = new System.Resources.ResourceManager(""@projectName@.@className@"", typeof(@className@).GetTypeInfo().Assembly);
+					resourceMan = temp;
+				}
+				return resourceMan;
+			}
+		}
+
+		[System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+		internal static System.Globalization.CultureInfo Culture {
+			get {
+				return resourceCulture;
+			}
+			set {
+				resourceCulture = value;
+			}
+		}
+
+		@content@
+	}
+}
+";
+
 		public static string ResxWithContents (string contents)
 		{
 			return Resx.Replace ("<!--contents-->", contents);
@@ -39,6 +84,28 @@ namespace Xamarin.Android.Build.Tests
 					TextContent = () => InlineData.ResxWithContents ($"<data name=\"{dataName}\"><value>{culture.Name}</value></data>")
 				});
 			}
+		}
+
+		public static string DesignerWithContents (string projectName, string className, string[] dataNames)
+		{
+			var content = new StringBuilder ();
+			foreach (string data in dataNames) {
+				content.AppendFormat (@"internal static string {0} {{
+			get {{
+				return ResourceManager.GetString(""{0}"", resourceCulture);
+			}}
+		}}" + Environment.NewLine, data);
+			}
+			return Designer.Replace ("@className@", className)
+				.Replace ("@projectName@", projectName)
+				.Replace ("@content@", content.ToString ());
+		}
+
+		public static void AddCultureResourceDesignerToProject (IShortFormProject proj, string projectName, string className, params string[] dataNames)
+		{
+			proj.OtherBuildItems.Add (new BuildItem.Source ($"{className}.Designer.cs") {
+				TextContent = () => InlineData.DesignerWithContents (projectName, className, dataNames)
+			});
 		}
 	}
 }

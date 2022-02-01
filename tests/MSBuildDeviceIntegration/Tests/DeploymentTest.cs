@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -43,9 +44,12 @@ namespace Xamarin.Android.Build.Tests
 			var source = mainPage.TextContent ().Replace ("InitializeComponent ();", @"InitializeComponent ();
 			Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
 			Console.WriteLine ($""TimeZoneInfo={TimeZoneInfo.Local.DisplayName}"");
+			Console.WriteLine ($""CurrentCulture={System.Globalization.CultureInfo.CurrentCulture.Name}"");
 ");
 			source = source.Replace ("Console.WriteLine (\"Button was Clicked!\");", @"Console.WriteLine (""Button was Clicked!"");
 			Console.WriteLine ($""TimeZoneInfoClick={TimeZoneInfo.Local.DisplayName}"");
+			Console.WriteLine ($""CurrentCultureClick={System.Globalization.CultureInfo.CurrentCulture.Name}"");
+			Console.WriteLine ($""StringsClick={Strings.SomeString}"");
 ");
 			mainPage.TextContent = () => source;
 			builder = CreateApkBuilder (Path.Combine ("temp", "DeploymentTests"));
@@ -59,6 +63,9 @@ namespace Xamarin.Android.Build.Tests
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest> ";
+			InlineData.AddCultureResourcesToProject (proj, "Strings", "SomeString");
+			InlineData.AddCultureResourceDesignerToProject (proj, proj.RootNamespace ?? proj.ProjectName, "Strings", "SomeString");
+
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			builder.BuildLogFile = "install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -287,6 +294,105 @@ namespace Xamarin.Android.Build.Tests
 				RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
 				if (!string.IsNullOrEmpty (currentTimeZone)) {
 					RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{currentTimeZone}\"");
+				}
+				if (File.Exists (logFile)) {
+					TestContext.AddTestAttachment (logFile);
+				}
+			}
+		}
+
+		static object [] GetLocalizationTestCases (int node)
+		{
+			List<object> tests = new List<object> ();
+			var ignore = new string [] {
+				"zh-Hans",
+			};
+			foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.SpecificCultures)) {
+				if (ignore.Contains (ci.Name))
+					continue;
+				tests.Add (new object [] {
+					ci.Name,
+				});
+			}
+
+			return tests.Where (p => tests.IndexOf (p) % NODE_COUNT == node).ToArray ();
+		}
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 0 })]
+		[Category ("Localisation")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode1 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 1 })]
+		[Category ("Localisation")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode2 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 2 })]
+		[Category ("Localisation")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode3 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 3 })]
+		[Category ("Localisation")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode4 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		public void CheckLocalizationIsCorrect (string locale)
+		{
+			AssertHasDevices ();
+
+			string currentLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
+			string deviceLocale = string.Empty;
+			string logFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{locale.Replace ("/", "-")}.log");
+			try {
+				for (int attempt = 0; attempt < 5; attempt++) {
+					RunAdbCommand ($"shell su root setprop persist.sys.locale {locale}");
+					RunAdbCommand ("shell su root setprop ctl.restart zygote");
+					MonitorAdbLogcat ((l) => {
+						if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED for"))
+							return true;
+						return false;
+					}, logFile, timeout:30);
+					WaitFor ((int)TimeSpan.FromSeconds (10).TotalMilliseconds);
+					deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
+					if (deviceLocale == locale) {
+						break;
+					}
+				}
+				Assert.AreEqual (locale, deviceLocale, $"The command to set the device locale to {locale} failed. Current device locale is {deviceLocale}");
+				ClearAdbLogcat ();
+				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+				RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
+				WaitFor ((int)TimeSpan.FromSeconds (2).TotalMilliseconds);
+				ClearAdbLogcat ();
+				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity", logFile), "Activity should have started");
+				string line = "";
+				string logCatFile = Path.Combine (Root, builder.ProjectDirectory, $"locale-logcat-{locale.Replace ("/", "-")}.log");
+				ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
+				Assert.IsTrue (MonitorAdbLogcat ((l) => {
+					if (l.Contains ("StringsClick=")) {
+						line = l;
+						return l.Contains ($"{locale}");
+					}
+					return false;
+				}, logCatFile, timeout:30), $"Locale should have been {locale}. We found : {line}");
+			} finally {
+				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+				RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
+				if (!string.IsNullOrEmpty (currentLocale)) {
+					RunAdbCommand ($"shell su root setprop persist.sys.locale \"{currentLocale}\"");
+					RunAdbCommand ("shell su root setprop ctl.restart zygote");
+					MonitorAdbLogcat ((l) => {
+						if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED for"))
+							return true;
+						return false;
+					}, logFile, timeout:30);
 				}
 				if (File.Exists (logFile)) {
 					TestContext.AddTestAttachment (logFile);
