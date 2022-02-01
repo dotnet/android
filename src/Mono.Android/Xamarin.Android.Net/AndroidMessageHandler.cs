@@ -1024,7 +1024,7 @@ namespace Xamarin.Android.Net
 				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
 				// there is no point in changing the behavior of the default SSL socket factory
 				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
-					return; // TODO we ignore kmf even if it is not null?
+					return;
 
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
 				tmf?.Init (gotCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
