@@ -14,6 +14,11 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
+    ref: refs/heads/dev/pjc/drop-vars-file
+    endpoint: xamarin
+  - repository: sdk-insertions
+    type: github
+    name: xamarin/sdk-insertions
     ref: refs/heads/main
     endpoint: xamarin
   - repository: monodroid
@@ -1278,35 +1283,47 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: nuget-signed
-        downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
+        downloadPath: $(Build.StagingDirectory)\nuget-signed
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: nuget-linux-signed
-        downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
+        downloadPath: $(Build.StagingDirectory)\nuget-signed
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vs-msi-nugets
+        downloadPath: $(Build.StagingDirectory)\nuget-signed
 
     - task: NuGetCommand@2
       displayName: push nupkgs
       inputs:
         command: push
-        packagesToPush: $(System.DefaultWorkingDirectory)\nuget-signed\*.nupkg
+        packagesToPush: $(Build.StagingDirectory)\nuget-signed\*.nupkg
         nuGetFeedType: external
         publishFeedCredentials: $(DotNetFeedCredential)
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: vs-msi-nugets
-        downloadPath: $(System.DefaultWorkingDirectory)\vs-msi-nugets
+    - template: templates/common/upload-vs-insertion-artifacts.yml@sdk-insertions
+      parameters:
+        githubToken: $(GitHub.Token)
+        githubContext: nuget-artifacts
+        blobName: nuget-artifacts
+        packagePrefix: xamarin-android
+        artifactsPath: $(Build.StagingDirectory)\nuget-signed
 
-    - task: NuGetCommand@2
-      displayName: push msi nupkgs
-      inputs:
-        command: push
-        packagesToPush: $(System.DefaultWorkingDirectory)\vs-msi-nugets\*.nupkg
-        nuGetFeedType: external
-        publishFeedCredentials: $(DotNetFeedCredential)
-      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+    - template: templates/common/upload-vs-insertion-artifacts.yml@sdk-insertions
+      parameters:
+        githubToken: $(GitHub.Token)
+        githubContext: vs-insertion
+        blobName: vs-insertion
+        packagePrefix: xamarin-android
+        artifactsPath: $(Build.StagingDirectory)/vs-insertion
+        downloadSteps:
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: vsdrop-signed
+            downloadPath: $(Build.StagingDirectory)/vs-insertion
 
     - powershell: >-
         & dotnet build -v:n -c $(XA.Build.Configuration)
