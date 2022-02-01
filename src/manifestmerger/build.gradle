@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     // https://mvnrepository.com/artifact/com.android.tools.build/manifest-merger
-    compile group: 'com.android.tools.build', name: 'manifest-merger', version: '30.0.4'
+    compile group: 'com.android.tools.build', name: 'manifest-merger', version: '30.1.0'
 }
 
 sourceSets {

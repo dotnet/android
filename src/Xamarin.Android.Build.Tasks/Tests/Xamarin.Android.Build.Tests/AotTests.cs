@@ -50,6 +50,13 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (SdkWithSpacesPath, recursive: true);
 		}
 
+		void AssertProfiledAotBuildMessages(ProjectBuilder b)
+		{
+			string filename = Builder.UseDotNet ? "dotnet" : "startup";
+			StringAssertEx.ContainsRegex (@$"Using profile data file.*{filename}\.aotprofile", b.LastBuildOutput, "Should use default AOT profile", RegexOptions.IgnoreCase);
+			StringAssertEx.ContainsRegex (@$"Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
+		}
+
 		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseProfiledAot ()
 		{
@@ -58,11 +65,9 @@ namespace Xamarin.Android.Build.Tests
 				AndroidEnableProfiledAot = true,
 			};
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Using profile data file.*build.Xamarin.Android.startup\.aotprofile", b.LastBuildOutput, "Should use default AOT profile", RegexOptions.IgnoreCase);
-				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
-			}
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			AssertProfiledAotBuildMessages (b);
 		}
 
 		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
@@ -81,11 +86,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAotProfile", "custom.aotprofile") { BinaryContent = () => custom_aot_profile });
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Using profile data file.*custom\.aotprofile", b.LastBuildOutput, "Should use custom AOT profile", RegexOptions.IgnoreCase);
-				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
-			}
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			AssertProfiledAotBuildMessages (b);
 		}
 
 		[Test, Category ("ProfiledAOT")]
@@ -96,10 +99,10 @@ namespace Xamarin.Android.Build.Tests
 				AndroidEnableProfiledAot = true,
 			};
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseDefaultAotProfile", "false");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.DoesNotContainRegex (@"\[aot-compiler stdout\] Using profile data file.*build.Xamarin.Android.startup.*\.aotprofile", b.LastBuildOutput, "Should not use default AOT profile", RegexOptions.IgnoreCase);
-			}
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			string filename = Builder.UseDotNet ? "dotnet" : "startup";
+			StringAssertEx.DoesNotContainRegex (@$"Using profile data file.*{filename}\.aotprofile", b.LastBuildOutput, "Should not use default AOT profile", RegexOptions.IgnoreCase);
 		}
 
 		static object [] AotChecks () => new object [] {

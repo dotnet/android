@@ -1686,6 +1686,7 @@ MonodroidRuntime::set_profile_options ()
 			.append (AOT_EXT);
 
 		value
+			.append (",")
 			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
 	}
