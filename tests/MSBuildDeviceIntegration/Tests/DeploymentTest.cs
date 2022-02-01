@@ -320,25 +320,25 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 0 })]
-		[Category ("Localisation")]
+		[Category ("Localization")]
 		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode1 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 1 })]
-		[Category ("Localisation")]
+		[Category ("Localization")]
 		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode2 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 2 })]
-		[Category ("Localisation")]
+		[Category ("Localization")]
 		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode3 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 3 })]
-		[Category ("Localisation")]
+		[Category ("Localization")]
 		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode4 (string locale) => CheckLocalizationIsCorrect (locale);
 
