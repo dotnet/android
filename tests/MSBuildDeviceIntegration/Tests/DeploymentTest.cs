@@ -223,8 +223,10 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			foreach (var tz in NodaTime.DateTimeZoneProviders.Tzdb.Ids) {
-				if (ignore.Contains (tz))
+				if (ignore.Contains (tz)) {
+					TestContext.WriteLine ($"Ignoring {tz} TimeZone Test");
 					continue;
+				}
 				tests.Add (new object [] {
 					tz,
 				});
@@ -308,8 +310,14 @@ namespace Xamarin.Android.Build.Tests
 				"zh-Hans",
 			};
 			foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.SpecificCultures)) {
-				if (ignore.Contains (ci.Name))
+				if (ci.Name.Length > 5 && ci.Name[2] != '-') {
+					TestContext.WriteLine ($"Skipping {ci.Name} Localization Test");
 					continue;
+				}
+				if (ignore.Contains (ci.Name)) {
+					TestContext.WriteLine ($"Ignoring {ci.Name} Localization Test");
+					continue;
+				}
 				tests.Add (new object [] {
 					ci.Name,
 				});
@@ -358,7 +366,7 @@ namespace Xamarin.Android.Build.Tests
 							return true;
 						return false;
 					}, logFile, timeout:30);
-					WaitFor ((int)TimeSpan.FromSeconds (10).TotalMilliseconds);
+					WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 					deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
 					if (deviceLocale == locale) {
 						break;

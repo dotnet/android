@@ -171,7 +171,7 @@ stages:
     parameters:
       node_id: 4
 
-  # Localisation test jobs
+  # Localization test jobs
   - template: yaml-templates/run-localization-tests.yaml
     parameters:
       node_id: 1
