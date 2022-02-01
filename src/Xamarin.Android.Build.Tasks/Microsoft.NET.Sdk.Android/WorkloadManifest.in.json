@@ -14,12 +14,7 @@
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "linux-x64", "osx-x64", "osx-arm64" ],
-      "extends" : [ "microsoft-net-runtime-android" ]
-    },
-    "android-aot": {
-      "description": ".NET SDK Workload for building Android applications with AOT support.",
-      "platforms": [ "win-x64", "linux-x64", "osx-x64", "osx-arm64" ],
-      "extends" : [ "android", "microsoft-net-runtime-android-aot" ]
+      "extends" : [ "microsoft-net-runtime-android", "microsoft-net-runtime-android-aot" ]
     }
   },
   "packs": {

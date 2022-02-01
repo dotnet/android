@@ -10,7 +10,6 @@
       <Replacement>@PACK_VERSION_SHORT@</Replacement>
     </ShortNames>
     <ComponentResources Include="android" Version="@WORKLOAD_VERSION@" Category=".NET" Title=".NET SDK for Android" Description=".NET SDK Workload for building Android applications."/>
-    <ComponentResources Include="android-aot" Version="@WORKLOAD_VERSION@" Category=".NET" Title=".NET SDK for Android with AOT" Description=".NET SDK Workload for building Android applications with AOT support."/>
     <WorkloadPackages Include="$(NuGetPackagePath)\Microsoft.NET.Sdk.Android.Manifest*.nupkg" Version="@WORKLOAD_VERSION@" />
   </ItemGroup>
 </Project>

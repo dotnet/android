@@ -75,6 +75,7 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
 			proj.IsRelease = true;
+			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
 			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");

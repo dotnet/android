@@ -132,6 +132,9 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinAndroidApplicationProject ();
 			proj.ProjectName = testName;
 			proj.IsRelease = true;
+			// TODO: AOT fails https://github.com/xamarin/xamarin-android/issues/6685
+			// .NET 6 uses AOT by default for Release
+			proj.AotAssemblies = false;
 			if (forms) {
 				proj.PackageReferences.Clear ();
 				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
