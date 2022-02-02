@@ -21,6 +21,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Category ("UsesDevice"), Category ("Node-2")]
+	[NonParallelizable]
 	public class DeploymentTest : DeviceTest {
 
 		static ProjectBuilder builder;
@@ -395,26 +396,28 @@ namespace Xamarin.Android.Build.Tests
 
 			string currentLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
 			TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Current Locale is {currentLocale}");
-			string deviceLocale = string.Empty;
+			string deviceLocale = currentLocale;
 			string logFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{locale.Replace ("/", "-")}.log");
 			string monitorLogFile = Path.Combine (Root, builder.ProjectDirectory, $"monitor-logcat-{locale.Replace ("/", "-")}.log");
 			try {
 				TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Setting Locale to {locale}");
-				for (int attempt = 0; attempt < 5; attempt++) {
-					TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: attempt {attempt}");
-					RunAdbCommand ($"shell su root setprop persist.sys.locale {locale}");
-					RunAdbCommand ("shell su root setprop ctl.restart zygote");
-					if (!MonitorAdbLogcat ((l) => {
-						if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED for"))
-							return true;
-						return false;
-					}, monitorLogFile, timeout:60)) {
-						TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: wating for boot to complete failed or timed out.");
-					}
-					WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
-					deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
-					if (deviceLocale == locale) {
-						break;
+				if (deviceLocale != locale) {
+					for (int attempt = 0; attempt < 5; attempt++) {
+						TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: attempt {attempt}");
+						RunAdbCommand ($"shell su root setprop persist.sys.locale {locale}");
+						RunAdbCommand ("shell su root setprop ctl.restart zygote");
+						if (!MonitorAdbLogcat ((l) => {
+							if (l.Contains ("Finished processing BOOT_COMPLETED for"))
+								return true;
+							return false;
+						}, monitorLogFile, timeout:60)) {
+							TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: wating for boot to complete failed or timed out.");
+						}
+						WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
+						deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
+						if (deviceLocale == locale) {
+							break;
+						}
 					}
 				}
 				Assert.AreEqual (locale, deviceLocale, $"The command to set the device locale to {locale} failed. Current device locale is {deviceLocale}");
@@ -424,7 +427,7 @@ namespace Xamarin.Android.Build.Tests
 				WaitFor ((int)TimeSpan.FromSeconds (2).TotalMilliseconds);
 				ClearAdbLogcat ();
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
-				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity", logFile), "Activity should have started");
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity", logFile, timeout: 120), "Activity should have started");
 				string line = "";
 				string logCatFile = Path.Combine (Root, builder.ProjectDirectory, $"locale-logcat-{locale.Replace ("/", "-")}.log");
 				ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
@@ -443,7 +446,7 @@ namespace Xamarin.Android.Build.Tests
 					RunAdbCommand ($"shell su root setprop persist.sys.locale \"{currentLocale}\"");
 					RunAdbCommand ("shell su root setprop ctl.restart zygote");
 					MonitorAdbLogcat ((l) => {
-						if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED for"))
+						if (l.Contains ("Finished processing BOOT_COMPLETED for"))
 							return true;
 						return false;
 					}, monitorLogFile, timeout:60);
