@@ -45,6 +45,7 @@ namespace Xamarin.Android.Build.Tests
 			Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
 			Console.WriteLine ($""TimeZoneInfo={TimeZoneInfo.Local.DisplayName}"");
 			Console.WriteLine ($""CurrentCulture={System.Globalization.CultureInfo.CurrentCulture.Name}"");
+			myLabel.Text = Strings.SomeString;
 ");
 			source = source.Replace ("Console.WriteLine (\"Button was Clicked!\");", @"Console.WriteLine (""Button was Clicked!"");
 			Console.WriteLine ($""TimeZoneInfoClick={TimeZoneInfo.Local.DisplayName}"");
@@ -405,6 +406,7 @@ namespace Xamarin.Android.Build.Tests
 			string currentLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
 			string deviceLocale = string.Empty;
 			string logFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{locale.Replace ("/", "-")}.log");
+			string monitorLogFile = Path.Combine (Root, builder.ProjectDirectory, $"monitor-logcat-{locale.Replace ("/", "-")}.log");
 			try {
 				for (int attempt = 0; attempt < 5; attempt++) {
 					RunAdbCommand ($"shell su root setprop persist.sys.locale {locale}");
@@ -413,7 +415,7 @@ namespace Xamarin.Android.Build.Tests
 						if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED for"))
 							return true;
 						return false;
-					}, logFile, timeout:30);
+					}, monitorLogFile, timeout:30);
 					WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 					deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
 					if (deviceLocale == locale) {
@@ -448,10 +450,11 @@ namespace Xamarin.Android.Build.Tests
 						if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED for"))
 							return true;
 						return false;
-					}, logFile, timeout:30);
+					}, monitorLogFile, timeout:30);
 				}
 				if (File.Exists (logFile)) {
 					TestContext.AddTestAttachment (logFile);
+					TestContext.AddTestAttachment (monitorLogFile);
 				}
 			}
 		}
