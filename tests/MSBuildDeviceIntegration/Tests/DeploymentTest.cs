@@ -306,12 +306,17 @@ namespace Xamarin.Android.Build.Tests
 		static object [] GetLocalizationTestCases (int node)
 		{
 			List<object> tests = new List<object> ();
-			var rnd = new Random ();
+			var rnd = new Random (45623452);
 			var ignore = new string [] {
 				"zh-Hans",
+				"ca-ES",
+				"id-ID",
+				"ts-ZA",
+				"fi-FI",
+				"nl-NL",
 			};
 			foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.SpecificCultures)) {
-				if (ci.Name.Length > 5 && ci.Name[2] != '-') {
+				if (ci.Name.Length > 5) {
 					TestContext.WriteLine ($"Skipping {ci.Name} Localization Test");
 					continue;
 				}
@@ -320,7 +325,7 @@ namespace Xamarin.Android.Build.Tests
 					continue;
 				}
 				if (rnd.NextDouble () < 0.7) {
-					TestContext.WriteLine ($"Randimly Skipping {ci.Name} Localization Test");
+					TestContext.WriteLine ($"Randomly Skipping {ci.Name} Localization Test");
 					continue;
 				}
 				tests.Add (new object [] {
