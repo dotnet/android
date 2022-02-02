@@ -8,7 +8,7 @@ jobs:
     displayName: Localization Emulator Tests ${{ parameters.node_id }}
     pool:
       vmImage: $(HostedMacImage)
-    timeoutInMinutes: 120
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all

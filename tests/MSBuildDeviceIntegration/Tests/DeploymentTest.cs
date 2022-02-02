@@ -212,7 +212,7 @@ namespace Xamarin.Android.Build.Tests
 			}, Path.Combine (Root, builder.ProjectDirectory, "button-logcat.log")), "Button Should have been Clicked.");
 		}
 
-		private const int NODE_COUNT = 4;
+		private const int TIMEZONE_NODE_COUNT = 4;
 
 		static object [] GetTimeZoneTestCases (int node)
 		{
@@ -231,7 +231,7 @@ namespace Xamarin.Android.Build.Tests
 					tz,
 				});
 			}
-			return tests.Where (p => tests.IndexOf (p) % NODE_COUNT == node).ToArray ();
+			return tests.Where (p => tests.IndexOf (p) % TIMEZONE_NODE_COUNT == node).ToArray ();
 		}
 
 		[Test]
@@ -303,6 +303,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		private const int LOCALIZATION_NODE_COUNT = 10;
+
 		static object [] GetLocalizationTestCases (int node)
 		{
 			List<object> tests = new List<object> ();
@@ -324,16 +326,16 @@ namespace Xamarin.Android.Build.Tests
 					TestContext.WriteLine ($"Ignoring {ci.Name} Localization Test");
 					continue;
 				}
-				if (rnd.NextDouble () < 0.7) {
-					TestContext.WriteLine ($"Randomly Skipping {ci.Name} Localization Test");
-					continue;
-				}
+				// if (rnd.NextDouble () < 0.7) {
+				// 	TestContext.WriteLine ($"Randomly Skipping {ci.Name} Localization Test");
+				// 	continue;
+				// }
 				tests.Add (new object [] {
 					ci.Name,
 				});
 			}
 
-			return tests.Where (p => tests.IndexOf (p) % NODE_COUNT == node).ToArray ();
+			return tests.Where (p => tests.IndexOf (p) % LOCALIZATION_NODE_COUNT == node).ToArray ();
 		}
 
 		[Test]
@@ -359,6 +361,42 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("Localization")]
 		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode4 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 4 })]
+		[Category ("Localization")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode5 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 5 })]
+		[Category ("Localization")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode6 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 6 })]
+		[Category ("Localization")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode7 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 7 })]
+		[Category ("Localization")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode8 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 8 })]
+		[Category ("Localization")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode9 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 9 })]
+		[Category ("Localization")]
+		[Retry (2)]
+		public void CheckLocalizationIsCorrectNode10 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		public void CheckLocalizationIsCorrect (string locale)
 		{
