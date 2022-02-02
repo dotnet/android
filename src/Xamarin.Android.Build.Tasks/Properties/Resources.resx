@@ -864,4 +864,9 @@ In this message, the term "handheld app" means "app for handheld devices."
     </value>
     <comment>{0} - The path of the template file.</comment>
   </data>
+  <data name="XA4233" xml:space="preserve">
+    <value>The &lt;AndroidNamespaceReplacement&gt; for '{0}' does not specify a 'Replacement' attribute.</value>
+    <comment>The following are literal names and should not be translated: &lt;AndroidNamespaceReplacement&gt;
+{0} - The AndroidNamespaceReplacement MSBuild value.</comment>
+  </data>
 </root>
