@@ -309,18 +309,8 @@ namespace Xamarin.Android.Build.Tests
 		static object [] GetLocalizationTestCases (int node)
 		{
 			List<object> tests = new List<object> ();
-			//var rnd = new Random (45623452);
 			var ignore = new string [] {
 				"zh-Hans",
-				// "ca-ES",
-				// "id-ID",
-				// "ts-ZA",
-				// "fi-FI",
-				// "nl-NL",
-				// "he-IL",
-				// "fr-FR",
-				// "el-GR",
-				// "de-DE",
 			};
 			foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.SpecificCultures)) {
 				if (ci.Name.Length > 5) {
@@ -331,10 +321,6 @@ namespace Xamarin.Android.Build.Tests
 					TestContext.WriteLine ($"Ignoring {ci.Name} Localization Test");
 					continue;
 				}
-				// if (rnd.NextDouble () < 0.7) {
-				// 	TestContext.WriteLine ($"Randomly Skipping {ci.Name} Localization Test");
-				// 	continue;
-				// }
 				tests.Add (new object [] {
 					ci.Name,
 				});
@@ -422,7 +408,7 @@ namespace Xamarin.Android.Build.Tests
 						if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED for"))
 							return true;
 						return false;
-					}, monitorLogFile, timeout:30)) {
+					}, monitorLogFile, timeout:60)) {
 						TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: wating for boot to complete failed or timed out.");
 					}
 					WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
@@ -460,11 +446,13 @@ namespace Xamarin.Android.Build.Tests
 						if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED for"))
 							return true;
 						return false;
-					}, monitorLogFile, timeout:30);
+					}, monitorLogFile, timeout:60);
 					WaitFor ((int)TimeSpan.FromSeconds (2).TotalMilliseconds);
 				}
 				if (File.Exists (logFile)) {
 					TestContext.AddTestAttachment (logFile);
+				}
+				if (File.Exists (monitorLogFile)) {
 					TestContext.AddTestAttachment (monitorLogFile);
 				}
 			}
