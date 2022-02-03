@@ -434,7 +434,10 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (MonitorAdbLogcat ((l) => {
 					if (l.Contains ("StringsClick=") || l.Contains ("Strings.SomeString=")) {
 						line = l;
-						return l.Contains ($"{locale}");
+						bool result = l.Contains ($"{locale}");
+						if (l.Contains ("Strings.SomeString=") && !result)
+							return false;
+						return result;
 					}
 					return false;
 				}, logCatFile, timeout:30), $"Locale should have been {locale}. We found : {line}");
