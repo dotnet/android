@@ -25,8 +25,8 @@ namespace Xamarin.Android.Net.Tests
 					Assert.NotNull (request, "request");
 					Assert.AreEqual ("microsoft.com", request.RequestUri.Host);
 					Assert.NotNull (cert, "cert");
-					Assert.True (cert.Subject.Contains ("microsoft.com"), $"Unexpected certificate subject {cert.Subject}");
-					Assert.True (cert.Issuer.Contains ("Microsoft"), $"Unexpected certificate issuer {cert.Issuer}");
+					Assert.True (cert!.Subject.Contains ("microsoft.com"), $"Unexpected certificate subject {cert!.Subject}");
+					Assert.True (cert!.Issuer.Contains ("Microsoft"), $"Unexpected certificate issuer {cert!.Issuer}");
 					Assert.NotNull (chain, "chain");
 					Assert.AreEqual (SslPolicyErrors.None, errors);
 

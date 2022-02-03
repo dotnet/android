@@ -5,7 +5,7 @@ using Xamarin.Android.NUnitLite;
 
 namespace Xamarin.Android.Net.Tests
 {
-	[Activity (Label = "Xamarin.Android.Net-Tests", MainLauncher = true)]
+	[Activity (Label = "Xamarin.Android.Net.Tests", MainLauncher = true)]
 	public class MainActivity : TestSuiteActivity
 	{
 		protected override void OnCreate (Bundle bundle)
@@ -20,3 +20,4 @@ namespace Xamarin.Android.Net.Tests
 		}
 	}
 }
+
