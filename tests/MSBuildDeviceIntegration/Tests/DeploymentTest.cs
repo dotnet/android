@@ -46,6 +46,7 @@ namespace Xamarin.Android.Build.Tests
 			Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
 			Console.WriteLine ($""TimeZoneInfo={TimeZoneInfo.Local.DisplayName}"");
 			Console.WriteLine ($""CurrentCulture={System.Globalization.CultureInfo.CurrentCulture.Name}"");
+			Console.WriteLine ($""Strings.SomeString={Strings.SomeString}"");
 			myLabel.Text = Strings.SomeString;
 ");
 			source = source.Replace ("Console.WriteLine (\"Button was Clicked!\");", @"Console.WriteLine (""Button was Clicked!"");
@@ -311,7 +312,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			List<object> tests = new List<object> ();
 			var ignore = new string [] {
-				"zh-Hans",
 			};
 			foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.SpecificCultures)) {
 				if (ci.Name.Length > 5) {
@@ -432,7 +432,7 @@ namespace Xamarin.Android.Build.Tests
 				string logCatFile = Path.Combine (Root, builder.ProjectDirectory, $"locale-logcat-{locale.Replace ("/", "-")}.log");
 				ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
 				Assert.IsTrue (MonitorAdbLogcat ((l) => {
-					if (l.Contains ("StringsClick=")) {
+					if (l.Contains ("StringsClick=") || l.Contains ("Strings.SomeString=")) {
 						line = l;
 						return l.Contains ($"{locale}");
 					}
