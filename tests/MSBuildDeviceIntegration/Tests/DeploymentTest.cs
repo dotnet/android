@@ -45,6 +45,7 @@ namespace Xamarin.Android.Build.Tests
 			var source = mainPage.TextContent ().Replace ("InitializeComponent ();", @"InitializeComponent ();
 			Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
 			Console.WriteLine ($""TimeZoneInfo={TimeZoneInfo.Local.DisplayName}"");
+			Console.WriteLine ($""LocaleNative={Java.Util.Locale.Default.Language}-{Java.Util.Locale.Default.Country}"");
 			Console.WriteLine ($""CurrentCulture={System.Globalization.CultureInfo.CurrentCulture.Name}"");
 			Console.WriteLine ($""Strings.SomeString={Strings.SomeString}"");
 			myLabel.Text = Strings.SomeString;
