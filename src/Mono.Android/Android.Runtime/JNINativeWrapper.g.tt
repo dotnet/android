@@ -27,6 +27,7 @@ var delegateTypes = new [] {
 #>
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Android.Runtime
 {
@@ -48,7 +49,7 @@ namespace Android.Runtime
 foreach (var info in delegateTypes) {
 #>
 				case nameof (<#= info.Type #>): {
-					<#= info.Type #> callback = (<#= info.Type #>) Delegate.CreateDelegate (typeof (<#= info.Type #>), dlg.Target, dlg.Method);
+					<#= info.Type #> callback = Unsafe.As<<#= info.Type #>> (dlg);
 					<#= info.Type #> result = <#= info.Signature #> => {
 						JNIEnv.WaitForBridgeProcessing ();
 						try {
