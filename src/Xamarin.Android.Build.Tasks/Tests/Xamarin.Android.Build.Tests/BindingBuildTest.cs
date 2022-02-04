@@ -421,7 +421,7 @@ namespace Foo {
 				IsRelease = true,
 				Jars = {
 					new AndroidItem.LibraryProjectZip ("Jars\\ActionBarSherlock-4.3.1.zip") {
-						WebContent = "https://github.com/xamarin/monodroid-samples/blob/master/ActionBarSherlock/ActionBarSherlock/Jars/ActionBarSherlock-4.3.1.zip?raw=true"
+						WebContent = "https://github.com/xamarin/monodroid-samples/blob/main/ActionBarSherlock/ActionBarSherlock/Jars/ActionBarSherlock-4.3.1.zip?raw=true"
 					}
 				},
 				AndroidClassParser = "class-parse",
@@ -470,18 +470,29 @@ namespace Foo {
 				AndroidClassParser = "class-parse",
 			};
 			binding.SetProperty ("DocumentationFile", "UnnamedProject.xml");
+			binding.SetProperty ("AndroidJavadocVerbosity", "full");
 			using (var bindingBuilder = CreateDllBuilder ()) {
 				binding.Jars.Add (new AndroidItem.EmbeddedJar ("javasourcejartest.jar") {
 					BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 				});
+				binding.OtherBuildItems.Add (new BuildItem ("None", "javadoc-copyright.xml") {
+					BinaryContent = () => ResourceData.JavadocCopyright,
+				});
 				binding.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javasourcejartest-sources.jar") {
 					BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
+					MetadataValues = "CopyrightFile=$(MSBuildThisFileDirectory)javadoc-copyright.xml;" +
+						"UrlPrefix=https://developer.android.com/reference;" +
+						"UrlStyle=developer.android.com/reference@2020-Nov;" +
+						"DocRootUrl=https://developer.android.com",
 				});
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 
 				var path    = Path.Combine (Root, bindingBuilder.ProjectDirectory, binding.OutputPath, "UnnamedProject.xml");
 				var xml     = File.ReadAllText (path);
 				Assert.IsTrue (xml.Contains ("<param name=\"name\">name to display.</param>"), "param `name` documentation not imported!");
+				Assert.IsTrue (xml.Contains ("Includes a https://developer.android.com/test.html element."), "{@docRoot} value was not replaced!");
+				Assert.IsTrue (xml.Contains ("<a href=\"https://developer.android.com/reference/com/xamarin/android/test/msbuildtest/JavaSourceJarTest#greet(java.lang.String,%20java.util.Date)\" title=\"Reference documentation\">"), "Java documentation URL was not imported!");
+				Assert.IsTrue (xml.Contains ("<a href=\"https://developers.google.com/terms/site-policies\" title=\"Android Open Source Project\">Android Open Source Project</a>"), "Copyright file was not imported!");
 			}
 		}
 

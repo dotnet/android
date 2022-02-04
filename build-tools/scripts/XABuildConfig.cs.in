@@ -8,8 +8,12 @@ namespace Xamarin.Android.Tools
 		public const string SupportedABIs = "@XA_SUPPORTED_ABIS@";
 		public const string NDKRevision = "@NDK_REVISION@";
 		public const string NDKRelease = "@NDK_RELEASE@";
+		public const string XamarinAndroidVersion = "@XAMARIN_ANDROID_VERSION@";
+		public const string XamarinAndroidCommitHash = "@XAMARIN_ANDROID_COMMIT_HASH@";
+		public const string XamarinAndroidBranch = "@XAMARIN_ANDROID_BRANCH@";
 		public const int NDKMinimumApiAvailable = @NDK_MINIMUM_API_AVAILABLE@;
 		public const int AndroidLatestStableApiLevel = @ANDROID_LATEST_STABLE_API_LEVEL@;
+		public const int AndroidDefaultTargetDotnetApiLevel = @ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@;
 		public static readonly Version NDKVersion = new Version (@NDK_VERSION_MAJOR@, @NDK_VERSION_MINOR@, @NDK_VERSION_MICRO@);
 
 		public static readonly Dictionary <string, int> ArchAPILevels = new Dictionary <string, int> (StringComparer.Ordinal) {

@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResolvedUserAssemblies { get; set; }
 
+		public ITaskItem[] NativeLibraries { get; set; }
+
 		public ITaskItem[] MonoComponents { get; set; }
 
 		public ITaskItem[] SatelliteAssemblies { get; set; }
@@ -142,20 +144,20 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		static internal NativeAssemblerTargetProvider GetAssemblyTargetProvider (string abi)
+		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi)
 		{
 			switch (abi.Trim ()) {
 				case "armeabi-v7a":
-					return new ARMNativeAssemblerTargetProvider (false);
+					return AndroidTargetArch.Arm;
 
 				case "arm64-v8a":
-					return new ARMNativeAssemblerTargetProvider (true);
+					return AndroidTargetArch.Arm64;
 
 				case "x86":
-					return new X86NativeAssemblerTargetProvider (false);
+					return AndroidTargetArch.X86;
 
 				case "x86_64":
-					return new X86NativeAssemblerTargetProvider (true);
+					return AndroidTargetArch.X86_64;
 
 				default:
 					throw new InvalidOperationException ($"Unknown ABI {abi}");
@@ -351,15 +353,42 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			var uniqueNativeLibraries = new List<ITaskItem> ();
+			var seenNativeLibraryNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			if (NativeLibraries != null) {
+				foreach (ITaskItem item in NativeLibraries) {
+					// We don't care about different ABIs here, just the file name
+					string name = Path.GetFileName (item.ItemSpec);
+					if (seenNativeLibraryNames.Contains (name)) {
+						continue;
+					}
+
+					seenNativeLibraryNames.Add (name);
+					uniqueNativeLibraries.Add (item);
+				}
+			}
+
+			// In "classic" Xamarin.Android, we need to add libaot-*.dll.so files
+			if (!UsingAndroidNETSdk && usesMonoAOT) {
+				foreach (var assembly in ResolvedAssemblies) {
+					string name = $"libaot-{Path.GetFileNameWithoutExtension (assembly.ItemSpec)}.dll.so";
+					if (seenNativeLibraryNames.Contains (name)) {
+						continue;
+					}
+
+					seenNativeLibraryNames.Add (name);
+					uniqueNativeLibraries.Add (new TaskItem (name));
+				}
+			}
+
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 
 			foreach (string abi in SupportedAbis) {
-				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
 				string asmFilePath = $"{baseAsmFilePath}.s";
 
-				var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, baseAsmFilePath, environmentVariables, systemProperties) {
+				var asmgen = new ApplicationConfigNativeAssemblyGenerator (GetAndroidTargetArchForAbi (abi), environmentVariables, systemProperties, Log) {
 					IsBundledApp = IsBundledApplication,
 					UsesMonoAOT = usesMonoAOT,
 					UsesMonoLLVM = EnableLLVM,
@@ -379,11 +408,12 @@ namespace Xamarin.Android.Tasks
 									  // runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
 									  // and in the same order.
 					MonoComponents = monoComponents,
+					NativeLibraries = uniqueNativeLibraries,
 					HaveAssemblyStore = UseAssemblyStore,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					asmgen.Write (sw);
+					asmgen.Write (sw, asmFilePath);
 					sw.Flush ();
 					Files.CopyIfStreamChanged (sw.BaseStream, asmFilePath);
 				}

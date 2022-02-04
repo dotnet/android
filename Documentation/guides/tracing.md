@@ -5,7 +5,9 @@
 ```
 $ adb reverse tcp:9000 tcp:9001
 ```
-This will forward port 9000 on device to port 9001. Alternatively:
+This will forward port 9000 on device to port 9001.
+
+_Alternatively:_
 ```
 $ adb reverse tcp:0 tcp:9001
 43399
@@ -16,6 +18,16 @@ This will allocate a random port on remote and forward it to port 9001 on the ho
 
 ```
 $ adb shell setprop debug.mono.profile '127.0.0.1:9000,suspend'
+```
+
+### Install `dotnet-dsrouter`
+
+Use a build from the feed `https://aka.ms/dotnet-tools/index.json`:
+
+```
+$ dotnet tool install -g dotnet-dsrouter --add-source=https://aka.ms/dotnet-tools/index.json --prerelease
+You can invoke the tool using the following command: dotnet-dsrouter
+Tool 'dotnet-dsrouter' (version '6.0.306901') was successfully installed.
 ```
 
 ### Start the tracing router/proxy on host
@@ -39,7 +51,7 @@ This starts a `dsrouter` TCP/IP server on host port `9000` and an IPC (Unix sock
 Before starting the client make sure that the socket file does **not** exist.
 
 ```
-$ dotnet-trace collect --diagnostic-port /tmp/maui-app --format speedscope -o /tmp/hellomaui-app-trace
+$ dotnet-trace collect --diagnostic-port /tmp/maui-app --format speedscope
 No profile or providers specified, defaulting to trace profile 'cpu-sampling'
 
 Provider Name                           Keywords            Level               Enabled By
@@ -53,16 +65,16 @@ Start an application with the following environment variable: DOTNET_DiagnosticP
 The `--format` argument is optional and it defaults to `nettrace`. However, `nettrace` files can be viewed only with
 Perfview on Windows, while the speedscope JSON files can be viewed "on" Unix by uploading them to https://speedscope.app
 
+_NOTE: on Windows, we found the `speedscope` format sometimes shows
+`???` for method names. You can also open `.nettrace` files in
+PerfView and export them to `speedscope` format._
+
 ### Compile and run the application
 
 ```
-$ dotnet build -f net6.0-android \
-        /t:Install \
-        /bl \
-        /p:Configuration=Release \
-        /p:AndroidLinkResources=true \
-        /p:AndroidEnableProfiler=true
+$ dotnet build -f net6.0-android -t:Run -c Release -p:AndroidEnableProfiler=true
 ```
+_NOTE: `-f net6.0-android` is only needed for projects with multiple `$(TargetFrameworks)`._
 
 Once the application is installed and started, `dotnet-trace` should show something similar to:
 
@@ -79,15 +91,9 @@ Once `<Enter>` is pressed, you should see:
 Stopping the trace. This may take up to minutes depending on the application being traced.
 
 Trace completed.
-Writing:	/tmp/hellomaui-app-trace.speedscope.json
+Writing:	hellomaui-app-trace.speedscope.json
 ```
 
-And the following files should be found in `/tmp`:
-
-```
-$ ls -h /tmp/hellomaui-app*|cat
-/tmp/hellomaui-app-trace
-/tmp/hellomaui-app-trace.speedscope.json
-```
-
-`/tmp/hellomaui-app-trace` is the nettrace file.
+And the output files should be found in the current directory. You can
+use the `-o` switch if you would prefer to output them to a specific
+directory.

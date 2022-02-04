@@ -3237,3 +3237,10 @@
 31,android/widget,RemoteViews,setViewLayoutWidth,units,Android.Util.ComplexUnitType
 31,android/widget,RemoteViews,setViewOutlinePreferredRadius,units,Android.Util.ComplexUnitType
 31,android/widget,RemoteViews$RemoteCollectionItems,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+
+32,android/media,AudioAttributes,getSpatializationBehavior,return,Android.Media.AudioSpatializationBehavior
+32,android/media,AudioAttributes$Builder,setSpatializationBehavior,sb,Android.Media.AudioSpatializationBehavior
+32,android/media,Spatializer,getImmersiveAudioLevel,return,Android.Media.SpatializerImmersiveLevel
+32,android/service/voice,VisibleActivityInfo,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+32,android/view,I:AttachedSurfaceControl,getBufferTransformHint,return,Android.Views.BufferTransform
+32,android/view,I:AttachedSurfaceControl$OnBufferTransformHintChangedListener,onBufferTransformHintChanged,p0,Android.Views.BufferTransform

@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using Microsoft.Build.Construction;
-using System.Runtime.CompilerServices;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
@@ -68,7 +69,11 @@ namespace Xamarin.ProjectTools
 			}
 
 			AndroidManifest = default_android_manifest;
-			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
+			if (Builder.UseDotNet) {
+				TargetSdkVersion = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString ();
+			} else {
+				TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
+			}
 			LayoutMain = default_layout_main;
 			StringsXml = default_strings_xml;
 			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";

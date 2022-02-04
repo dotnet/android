@@ -26,17 +26,19 @@
     <AndroidFirstFrameworkVersion Condition="'$(AndroidFirstFrameworkVersion)' == ''">v4.4</AndroidFirstFrameworkVersion>
     <AndroidFirstApiLevel Condition="'$(AndroidFirstApiLevel)' == ''">19</AndroidFirstApiLevel>
     <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">21</AndroidJavaRuntimeApiLevel>
+    <!-- The default API level used for $(TargetPlatformVersion) -->
+    <AndroidDefaultTargetDotnetApiLevel Condition="'$(AndroidDefaultTargetDotnetApiLevel)' == ''">31</AndroidDefaultTargetDotnetApiLevel>
     <!-- The min API level supported by Microsoft.Android.Sdk, should refactor/remove when this value is the same as $(AndroidFirstApiLevel) -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <AndroidFirstPlatformId Condition="'$(AndroidFirstPlatformId)' == ''">$(AndroidFirstApiLevel)</AndroidFirstPlatformId>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
-    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">31</AndroidLatestStableApiLevel>
+    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">32</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
-    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v12.0</AndroidLatestStableFrameworkVersion>
+    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v12.1</AndroidLatestStableFrameworkVersion>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
     <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">32</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">Sv2</AndroidLatestUnstablePlatformId>
-    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v12.0.99</AndroidLatestUnstableFrameworkVersion>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">32</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v12.1</AndroidLatestUnstableFrameworkVersion>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
@@ -118,16 +120,24 @@
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
     <!--
-      For some reason, the URL for platform-tools/build-tools 30.0.3 is prefixed with what appears to be a GIT commit hash or some other checksum...
+      For some reason, the URL for platform-tools/build-tools 32.0.0 is prefixed with what appears to be a GIT commit hash or some other checksum...
       Linux packages don't have any prefix, but this forces us to have *some* mechanism to handle this...
     -->
-    <XABuildToolsPackagePrefixMacOS>f6d24b187cc6bd534c6c37604205171784ac5621.</XABuildToolsPackagePrefixMacOS>
-    <XABuildToolsPackagePrefixWindows>91936d4ee3ccc839f0addd53c9ebf087b1e39251.</XABuildToolsPackagePrefixWindows>
+    <XABuildToolsPackagePrefixMacOS>5219cc671e844de73762e969ace287c29d2e14cd.</XABuildToolsPackagePrefixMacOS>
+    <XABuildToolsPackagePrefixWindows>210b77e4bc623bd4cdda4dae790048f227972bd2.</XABuildToolsPackagePrefixWindows>
     <XABuildToolsPackagePrefixLinux></XABuildToolsPackagePrefixLinux>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildToolsPackagePrefixMacOS)</XABuildToolsPackagePrefix>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
-    <XABuildToolsVersion>30.0.3</XABuildToolsVersion>
-    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">30.0.3</XABuildToolsFolder>
+    <XABuildToolsVersion>32</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">32.0.0</XABuildToolsFolder>
+    <!-- build-tools 30, for DX tests -->
+    <XABuildTools30PackagePrefixMacOS>f6d24b187cc6bd534c6c37604205171784ac5621.</XABuildTools30PackagePrefixMacOS>
+    <XABuildTools30PackagePrefixWindows>91936d4ee3ccc839f0addd53c9ebf087b1e39251.</XABuildTools30PackagePrefixWindows>
+    <XABuildTools30PackagePrefixLinux></XABuildTools30PackagePrefixLinux>
+    <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildTools30PackagePrefixMacOS)</XABuildTools30PackagePrefix>
+    <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildTools30PackagePrefixWindows)</XABuildTools30PackagePrefix>
+    <XABuildTools30Version>30.0.3</XABuildTools30Version>
+    <XABuildTools30Folder Condition="'$(XABuildTools30Folder)' == ''">30.0.3</XABuildTools30Folder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">e8b2b4cbe47c728c1e54c5f524440b52d4e1a33c.</XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>31.0.3</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>

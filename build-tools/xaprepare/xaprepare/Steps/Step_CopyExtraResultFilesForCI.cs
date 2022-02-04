@@ -86,7 +86,7 @@ namespace Xamarin.Android.Prepare
 		string [] testConfigFiles = {
 			"*.apkdesc",
 			"*.aabdesc",
-			"logcat*",
+			"logcat-*.txt",
 			"*log",
 			"TestOutput-*.txt",
 			"Timing_*",

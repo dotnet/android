@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -95,7 +96,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
-				int apiLevel = Builder.UseDotNet ? AndroidSdkResolver.GetMaxInstalledPlatform () : 26;
+				int apiLevel = Builder.UseDotNet ? XABuildConfig.AndroidDefaultTargetDotnetApiLevel : 26;
 				StringAssertEx.Contains ($"platforms/android-{apiLevel}", builder.LastBuildOutput, $"platforms/android-{apiLevel} should be a dependency.");
 				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
@@ -131,7 +132,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
-				int apiLevel = Builder.UseDotNet ? AndroidSdkResolver.GetMaxInstalledPlatform () : 26;
+				int apiLevel = Builder.UseDotNet ? XABuildConfig.AndroidDefaultTargetDotnetApiLevel : 26;
 				StringAssertEx.Contains ($"platforms/android-{apiLevel}", builder.LastBuildOutput, $"platforms/android-{apiLevel} should be a dependency.");
 				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");

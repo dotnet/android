@@ -71,9 +71,12 @@
     <AndroidManifest Condition=" '$(AndroidManifest)' == '' and Exists ('Properties\AndroidManifest.xml') and !Exists ('AndroidManifest.xml') ">Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidManifest Condition=" '$(AndroidManifest)' == '' ">AndroidManifest.xml</AndroidManifest>
     <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
+    <!-- Default to AOT in Release mode -->
+    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
     <AotAssemblies>$(RunAOTCompilation)</AotAssemblies>
+    <AndroidEnableProfiledAot Condition=" '$(AndroidEnableProfiledAot)' == '' and '$(RunAOTCompilation)' == 'true' ">true</AndroidEnableProfiledAot>
 
     <!--
       Runtime libraries feature switches defaults
@@ -96,7 +99,8 @@
     <NullabilityInfoContextSupport Condition="'$(NullabilityInfoContextSupport)' == ''">false</NullabilityInfoContextSupport>
     <BuiltInComInteropSupport Condition="'$(BuiltInComInteropSupport)' == ''">false</BuiltInComInteropSupport>    
 
-    <EnableSingleFileAnalyzer Condition="'$(EnableSingleFileAnalyzer)' == ''">true</EnableSingleFileAnalyzer>
+    <!-- TODO: default to true when https://github.com/dotnet/linker/issues/2563 is fixed -->
+    <EnableSingleFileAnalyzer Condition="'$(EnableSingleFileAnalyzer)' == ''">false</EnableSingleFileAnalyzer>
 
     <!-- XA feature switches defaults -->
     <VSAndroidDesigner Condition="'$(VSAndroidDesigner)' == ''">false</VSAndroidDesigner>

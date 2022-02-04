@@ -256,11 +256,13 @@ namespace xamarin::android::internal
 		static PinvokeEntry* find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept;
 		static void* handle_other_pinvoke_request (const char *library_name, hash_t library_name_hash, const char *entrypoint_name, hash_t entrypoint_name_hash) noexcept;
 		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
-		static void* monodroid_dlopen (const char *name, int flags, char **err);
 #endif // def NET6
-		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data);
+		static void* monodroid_dlopen_ignore_component_or_load (hash_t hash, const char *name, int flags, char **err) noexcept;
+		static void* monodroid_dlopen (const char *name, int flags, char **err) noexcept;
+		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data) noexcept;
 		static void* monodroid_dlsym (void *handle, const char *name, char **err, void *user_data);
 		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, bool need_api_init = false);
+		static DSOCacheEntry* find_dso_cache_entry (hash_t hash) noexcept;
 #if !defined (NET6)
 		static void  init_internal_api_dso (void *handle);
 #endif // ndef NET6
@@ -386,6 +388,7 @@ namespace xamarin::android::internal
 		static std::mutex   api_init_lock;
 		static void        *api_dso_handle;
 #endif // !def NET6
+		static std::mutex   dso_handle_write_lock;
 	};
 }
 #endif

@@ -3,6 +3,8 @@
 	<assembly fullname="Mono.Android">
 		<type fullname="Android.Runtime.AnnotationAttribute" />
 		<type fullname="Android.Runtime.IJavaObject" />
+		<type fullname="Android.Runtime.InputStreamAdapter" preserve="methods" />
+		<type fullname="Android.Runtime.InputStreamInvoker" preserve="methods" />
 		<type fullname="Android.Runtime.JNIEnv">
 			<method name="Exit" />
 			<method name="Initialize" />
@@ -17,6 +19,8 @@
 		<type fullname="Android.Runtime.LogLevel" />
 		<type fullname="Android.Runtime.LogCategories" />
 		<type fullname="Android.Runtime.NamespaceMappingAttribute" />
+		<type fullname="Android.Runtime.OutputStreamAdapter" preserve="methods" />
+		<type fullname="Android.Runtime.OutputStreamInvoker" preserve="methods" />
 		<type fullname="Android.Runtime.PreserveAttribute" />
 		<type fullname="Android.Runtime.RaiseThrowableEventArgs" />
 		<type fullname="Android.Runtime.RegisterAttribute" />

@@ -31,9 +31,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Required]
 		public int MinimumApiLevel { get; set; }
 
+		/// <summary>
+		/// Default value for $(TargetPlatformVersion), defaults to MaxStableVersion.ApiLevel
+		/// </summary>
+		public int TargetApiLevel { get; set; }
+
 		public override bool Execute ()
 		{
 			var versions = new AndroidVersions (AndroidApiInfo.Select (ToVersion));
+			int targetApiLevel = TargetApiLevel > 0 ? TargetApiLevel : versions.MaxStableVersion.ApiLevel;
 			var settings = new XmlWriterSettings {
 				OmitXmlDeclaration = true,
 				Indent = true,
@@ -56,7 +62,7 @@ Specifies the supported Android platform versions for this SDK.
 				writer.WriteEndElement (); // </TargetPlatformSupported>
 				writer.WriteStartElement ("TargetPlatformVersion");
 				writer.WriteAttributeString ("Condition", " '$(TargetPlatformVersion)' == '' ");
-				writer.WriteString (versions.MaxStableVersion.ApiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
+				writer.WriteString (targetApiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
 				writer.WriteEndElement (); // </TargetPlatformVersion>
 				writer.WriteStartElement ("AndroidMinimumSupportedApiLevel");
 				writer.WriteAttributeString ("Condition", " '$(AndroidMinimumSupportedApiLevel)' == '' ");

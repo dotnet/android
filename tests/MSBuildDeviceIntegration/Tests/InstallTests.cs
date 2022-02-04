@@ -567,5 +567,33 @@ namespace Xamarin.Android.Build.Tests
 					$"Fourth unchanged install: '{fourthInstalTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
 			}
 		}
+
+		[Test]
+		public void AdbTargetChangesAppBundle ()
+		{
+			AssertHasDevices ();
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true
+			};
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Install (proj), "first build should have succeeded.");
+
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			var apkset = Path.Combine (intermediate, "android", "bin", $"{proj.PackageName}.apks");
+			FileAssert.Exists (apkset);
+			var before = File.GetLastWriteTimeUtc (apkset);
+
+			// Change $(AdbTarget) to not be blank
+			var serial = GetAttachedDeviceSerial ();
+			Assert.IsTrue (b.Install (proj, parameters: new [] { $"AdbTarget=\"-e {serial}\"" }), "second build should have succeeded.");
+
+			FileAssert.Exists (apkset);
+			var after = File.GetLastWriteTimeUtc (apkset);
+			Assert.AreNotEqual (before, after, $"{apkset} should change!");
+		}
 	}
 }

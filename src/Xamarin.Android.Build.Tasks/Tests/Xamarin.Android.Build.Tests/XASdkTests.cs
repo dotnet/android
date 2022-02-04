@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
@@ -531,9 +532,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
-			if (aot) {
-				proj.SetProperty ("RunAOTCompilation", "true");
-			}
+			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
@@ -614,7 +613,8 @@ namespace Xamarin.Android.Build.Tests
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
 			Assert.AreEqual ("21", uses_sdk.Attribute (ns + "minSdkVersion").Value);
-			Assert.AreEqual ("31", uses_sdk.Attribute (ns + "targetSdkVersion").Value);
+			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString(),
+				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
@@ -632,16 +632,19 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					helper.AssertContainsEntry ("assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				}
+				if (aot) {
+					helper.AssertContainsEntry ($"lib/{abi}/libaot-{proj.ProjectName}.dll.so");
+					helper.AssertContainsEntry ($"lib/{abi}/libaot-System.Linq.dll.so");
+				}
 			}
 		}
 
 
-		/// <summary>
-		/// NOTE: we cannot use SupportedOSPlatformVersion=31 yet, due to d8 2.2.64 emitting a warning for `--min-api 31`:
-		///       D8 An API level of 31 is not supported by this compiler. Please use an API level of 30 or earlier
-		/// </summary>
+		// TODO: <uses-sdk android:minSdkVersion="32" android:targetSdkVersion="32" />
+		// Causes warning: D8 : warning : An API level of 32 is not supported by this compiler. Please use an API level of 31 or earlier
+		// Add a 32 parameter here when we get a newer version of r8.
 		[Test]
-		public void SupportedOSPlatformVersion ([Values (21, 30)] int minSdkVersion)
+		public void SupportedOSPlatformVersion ([Values (21, 31)] int minSdkVersion)
 		{
 			var proj = new XASdkProject {
 				SupportedOSPlatformVersion = minSdkVersion.ToString (),
@@ -756,8 +759,8 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			using var b = new Builder ();
-			var dotnetTargetFramework = "net6.0-android31.0";
-			var legacyTargetFrameworkVersion = "11.0";
+			var dotnetTargetFramework = "net6.0-android32.0";
+			var legacyTargetFrameworkVersion = "12.1";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
 			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
@@ -778,7 +781,9 @@ namespace Xamarin.Android.Build.Tests
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 			};
-			bool preview = targetFramework.Contains("32");
+			// Re-enable when we have unstable API 33
+			// bool preview = targetFramework.Contains("33");
+			bool preview = false;
 			if (preview) {
 				library.SetProperty ("EnablePreviewFeatures", "true");
 			}

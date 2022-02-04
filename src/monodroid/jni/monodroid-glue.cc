@@ -9,7 +9,9 @@
 #include <strings.h>
 #include <cctype>
 #include <cerrno>
-
+#if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
+#include <compare>
+#endif // ndef MINGW32 || def MINGW32 && GNUC >= 10
 #if defined (APPLE_OS_X)
 #include <dlfcn.h>
 #endif  // def APPLE_OX_X
@@ -81,6 +83,7 @@
 #include "xa-internal-api-impl.hh"
 #include "build-info.hh"
 #include "monovm-properties.hh"
+#include "startup-aware-lock.hh"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
@@ -117,6 +120,7 @@ MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
 
 #endif // def NET6
 
+std::mutex MonodroidRuntime::dso_handle_write_lock;
 bool MonodroidRuntime::startup_in_progress = true;
 
 #ifdef WINDOWS
@@ -1280,6 +1284,35 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 }
 #endif // ndef NET6
 
+force_inline DSOCacheEntry*
+MonodroidRuntime::find_dso_cache_entry ([[maybe_unused]] hash_t hash) noexcept
+{
+#if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
+	hash_t entry_hash;
+	DSOCacheEntry *ret = nullptr;
+	size_t entry_count = application_config.number_of_dso_cache_entries;
+	DSOCacheEntry *entries = dso_cache;
+
+	log_debug (LOG_ASSEMBLY, "dso_cache: looking for hash 0x%zx", hash);
+	while (entry_count > 0) {
+		ret = entries + (entry_count / 2);
+		entry_hash = static_cast<hash_t> (ret->hash);
+		log_debug (LOG_ASSEMBLY, "dso_cache: entry_hash == 0x%zx", entry_hash);
+		auto result = hash <=> entry_hash;
+
+		if (result < 0) {
+			entry_count /= 2;
+		} else if (result > 0) {
+			entries = ret + 1;
+			entry_count -= entry_count / 2 + 1;
+		} else {
+			return ret;
+		}
+	}
+#endif // ndef MINGW32 || def MINGW32 && GNUC >= 10
+	return nullptr;
+}
+
 force_inline void*
 MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, [[maybe_unused]] bool need_api_init)
 {
@@ -1300,13 +1333,11 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 	return handle;
 }
 
-#if defined (NET6) && defined (ANDROID)
 force_inline void*
-MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err)
+MonodroidRuntime::monodroid_dlopen_ignore_component_or_load ([[maybe_unused]] hash_t name_hash, const char *name, int flags, char **err) noexcept
 {
+#if defined (NET6)
 	if (startup_in_progress) {
-		hash_t name_hash = xxhash::hash (name, strlen (name));
-
 		auto ignore_component = [&](const char *label, MonoComponent component) -> bool {
 			if ((application_config.mono_components_mask & component) != component) {
 				log_info (LOG_ASSEMBLY, "Mono '%s' component requested but not packaged, ignoring", label);
@@ -1336,69 +1367,62 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err)
 				break;
 		}
 	}
-
+#endif
 	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
-	void *h = androidSystem.load_dso_from_any_directories (name, dl_flags);
-	if (h != nullptr) {
-		return monodroid_dlopen_log_and_return (h, err, name, false /* name_needs_free */);
+	void * handle = androidSystem.load_dso_from_any_directories (name, dl_flags);
+	if (handle != nullptr) {
+		return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
 	}
 
-	if (!utils.ends_with (name, ".dll.so")) {
-		h = androidSystem.load_dso (name, dl_flags, true /* skip_existing_check */);
-		return monodroid_dlopen_log_and_return (h, err, name, false /* name_needs_free */);
+	handle = androidSystem.load_dso (name, dl_flags, false /* skip_existing_check */);
+	return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
+}
+
+force_inline void*
+MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noexcept
+{
+	hash_t name_hash = xxhash::hash (name, strlen (name));
+	log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '%s' is 0x%zx", name, name_hash);
+	DSOCacheEntry *dso = find_dso_cache_entry (name_hash);
+	log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match %sfound, DSO name is '%s'", dso == nullptr ? "not " : "", dso == nullptr ? "<unknown>" : dso->name);
+
+	if (dso == nullptr) {
+		// DSO not known at build time, try to load it
+		return monodroid_dlopen_ignore_component_or_load (name_hash, name, flags, err);
+	} else if (dso->handle != nullptr) {
+		return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
 	}
 
-	char *basename_part = const_cast<char*> (strrchr (name, '/'));
-	if (basename_part != nullptr) {
-		basename_part++;
-	} else {
-		basename_part = (char*)name;
+	if (dso->ignore) {
+		log_info (LOG_ASSEMBLY, "Request to load '%s' ignored, it is known not to exist", dso->name);
+		return nullptr;
 	}
 
-	constexpr char LIBAOT_PREFIX[] = "libaot-";
-	constexpr size_t LIBAOT_PREFIX_SIZE = sizeof(LIBAOT_PREFIX);
+	StartupAwareLock lock (dso_handle_write_lock);
+	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 
-	size_t base_len = strlen (basename_part);
-	size_t len = base_len + LIBAOT_PREFIX_SIZE; // includes the trailing \0
-	static_local_string<PATH_MAX> basename (len);
-
-	basename.append (LIBAOT_PREFIX).append_c (basename_part);
-
-	h = androidSystem.load_dso_from_any_directories (basename.get (), dl_flags);
-
-	if (h != nullptr && XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY))) {
-		log_info_nocheck (LOG_ASSEMBLY, "Loaded AOT image '%s'", basename.get ());
+	dso->handle = androidSystem.load_dso_from_any_directories (dso->name, dl_flags);
+	if (dso->handle != nullptr) {
+		return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
 	}
 
-	return h;
+	dso->handle = androidSystem.load_dso_from_any_directories (name, dl_flags);
+	return monodroid_dlopen_log_and_return (dso->handle, err, name, false /* name_needs_free */);
 }
 
 void*
-MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[maybe_unused]] void *user_data)
+MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[maybe_unused]] void *user_data) noexcept
 {
+	void *h = nullptr;
+
+#if defined (NET6)
 	if (name == nullptr) {
 		log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET6+");
 		return nullptr;
 	}
-
-	constexpr char DSO_EXTENSION[] = ".so";
-	constexpr size_t DSO_EXTENSION_SIZE = sizeof(DSO_EXTENSION);
-
-	if (utils.ends_with (name, DSO_EXTENSION)) {
-		return monodroid_dlopen (name, flags, err);
-	}
-
-	size_t len = ADD_WITH_OVERFLOW_CHECK (size_t, strlen (name), DSO_EXTENSION_SIZE); // includes the trailing \0
-	static_local_string<PATH_MAX> full_name (len);
-
-	full_name.append_c (name).append (DSO_EXTENSION);
-	return monodroid_dlopen (full_name.get (), flags, err);
-}
-#else // def NET6 && def ANDROID
-void*
-MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[maybe_unused]] void *user_data)
-{
+#else // def NET6
 	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
+
 	bool libmonodroid_fallback = false;
 	bool name_is_full_path = false;
 	bool name_needs_free = false;
@@ -1430,7 +1454,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 		};
 
 		//
-		// First try to see if it exist at the path pointed to by `name`. With p/invokes, currently (Sep 2020), we can't
+		// First try to see if it exists at the path pointed to by `name`. With p/invokes, currently (Sep 2020), we can't
 		// really trust the path since it consists of *some* directory path + p/invoke library name and it does not
 		// point to the location where the native library is. However, we still need to check the location first, should
 		// it point to the right place in the future.
@@ -1461,9 +1485,13 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 		libmonodroid_fallback = true;
 	}
 
-	void *h = nullptr;
-	if (!name_is_full_path)
-		h = androidSystem.load_dso_from_any_directories (name, dl_flags);
+	if (!name_is_full_path) {
+		// h = androidSystem.load_dso_from_any_directories (name, dl_flags);
+		h = monodroid_dlopen (name, flags, err);
+		if (h != nullptr) {
+			return h; // already logged by monodroid_dlopen
+		}
+	}
 
 	if (h != nullptr) {
 		return monodroid_dlopen_log_and_return (h, err, name, name_needs_free, libmonodroid_fallback);
@@ -1483,39 +1511,16 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 		h = androidSystem.load_dso (full_name, dl_flags, false);
 		return monodroid_dlopen_log_and_return (h, err, full_name, name_needs_free, true);
 	}
+#endif // ndef NET6
 
-	if (!utils.ends_with (name, ".dll.so") && !utils.ends_with (name, ".exe.so")) {
-		h = androidSystem.load_dso (name, dl_flags, true /* skip_existing_check */);
-		return monodroid_dlopen_log_and_return (h, err, name, name_needs_free);
-	}
-
-	char *basename_part = const_cast<char*> (strrchr (name, '/'));
-	if (basename_part != nullptr)
-		basename_part++;
-	else
-		basename_part = (char*)name;
-
-	constexpr char LIBAOT_PREFIX[] = "libaot-";
-	constexpr size_t LIBAOT_PREFIX_SIZE = sizeof(LIBAOT_PREFIX);
-
-	size_t base_len = strlen (basename_part);
-	size_t len = base_len + LIBAOT_PREFIX_SIZE; // includes the trailing \0
-	static_local_string<PATH_MAX> basename (len);
-
-	basename.append (LIBAOT_PREFIX).append_c (basename_part);
-
-	h = androidSystem.load_dso_from_any_directories (basename.get (), dl_flags);
-
-	if (h != nullptr && XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY)))
-		log_info_nocheck (LOG_ASSEMBLY, "Loaded AOT image '%s'", basename.get ());
-
+	h = monodroid_dlopen (name, flags, err);
+#if !defined (NET6)
 	if (name_needs_free) {
 		delete[] name;
 	}
-
+#endif // ndef NET6
 	return h;
 }
-#endif // !(def NET6 && def ANDROID)
 
 void*
 MonodroidRuntime::monodroid_dlsym (void *handle, const char *name, char **err, [[maybe_unused]] void *user_data)
@@ -1681,6 +1686,7 @@ MonodroidRuntime::set_profile_options ()
 			.append (AOT_EXT);
 
 		value
+			.append (",")
 			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
 	}

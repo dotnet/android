@@ -6,6 +6,8 @@
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
 
   <Import Project="..\..\..\..\Configuration.props" />
@@ -59,6 +61,7 @@
     <EmbeddedResource Include="Resources\*">
       <LogicalName>%(FileName)%(Extension)</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="$(XamarinAndroidSourcePath)\src\Mono.Android\javadoc-copyright.xml" LogicalName="javadoc-copyright.xml" />
   </ItemGroup>
 
 </Project>

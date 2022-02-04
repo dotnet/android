@@ -3,96 +3,169 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	class TypeMappingReleaseNativeAssemblyGenerator : NativeAssemblyGenerator
+	class TypeMappingReleaseNativeAssemblyGenerator : TypeMappingAssemblyGenerator
 	{
+		sealed class TypeMapModuleContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var map_module = data as TypeMapModule;
+				if (map_module == null) {
+					throw new InvalidOperationException ("Invalid data type, expected an instance of TypeMapModule");
+				}
+
+				if (String.Compare ("module_uuid", fieldName, StringComparison.Ordinal) == 0) {
+					return $"module_uuid: {map_module.MVID}";
+				}
+
+				if (String.Compare ("assembly_name", fieldName, StringComparison.Ordinal) == 0) {
+					return $"assembly_name: {map_module.AssemblyNameValue}";
+				}
+
+				return String.Empty;
+			}
+		}
+
+		sealed class TypeMapJavaContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override uint GetMaxInlineWidth (object data, string fieldName)
+			{
+				var map_java = data as TypeMapJava;
+				if (map_java == null) {
+					throw new InvalidOperationException ("Invalid data type, expected an instance of TypeMapJava");
+				}
+
+				if (String.Compare ("java_name", fieldName, StringComparison.Ordinal) == 0) {
+					return map_java.MaxJavaNameLength;
+				}
+
+				return 0;
+			}
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMapModuleEntry structure
+		sealed class TypeMapModuleEntry
+		{
+			public uint type_token_id;
+			public uint java_map_index;
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMapModule structure
+		[NativeAssemblerStructContextDataProvider (typeof (TypeMapModuleContextDataProvider))]
+		sealed class TypeMapModule
+		{
+			[NativeAssembler (Ignore = true)]
+			public Guid   MVID;
+
+			[NativeAssembler (Ignore = true)]
+			public string AssemblyNameValue;
+
+			[NativeAssembler (UsesDataProvider = true)]
+			public byte[] module_uuid;
+			public uint   entry_count;
+			public uint   duplicate_count;
+
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
+			public string map;
+
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
+			public string duplicate_map;
+
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol, UsesDataProvider = true)]
+			public string assembly_name;
+			public IntPtr image;
+			public uint   java_name_width;
+			public IntPtr java_map;
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMapJava structure
+		[NativeAssemblerStructContextDataProvider (typeof (TypeMapJavaContextDataProvider))]
+		sealed class TypeMapJava
+		{
+			[NativeAssembler (Ignore = true)]
+			public uint MaxJavaNameLength;
+
+			public uint module_index;
+			public uint type_token_id;
+
+			[NativeAssemblerString (AssemblerStringFormat.InlineArray, PadToMaxLength = true)]
+			public string  java_name;
+		}
+
 		readonly string baseFileName;
 		readonly NativeTypeMappingData mappingData;
 		readonly bool sharedBitsWritten;
 
-		public TypeMappingReleaseNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, NativeTypeMappingData mappingData, string baseFileName, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix = false)
-			: base (targetProvider, baseFileName, sharedIncludeUsesAbiPrefix)
+		public TypeMappingReleaseNativeAssemblyGenerator (AndroidTargetArch arch, NativeTypeMappingData mappingData, string baseFileName, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix = false)
+			: base (arch, baseFileName, sharedIncludeUsesAbiPrefix)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
 			this.baseFileName = baseFileName;
 			this.sharedBitsWritten = sharedIncludeUsesAbiPrefix ? false : sharedBitsWritten;
 		}
 
-		protected override void WriteSymbols (StreamWriter output)
+		protected override void Write (NativeAssemblyGenerator generator)
 		{
-			output.WriteLine ();
-			WriteHeaderField (output, "map_module_count", mappingData.MapModuleCount);
-
-			output.WriteLine ();
-			WriteHeaderField (output, "java_type_count", mappingData.JavaTypeCount);
+			WriteHeaderField (generator, "map_module_count", mappingData.MapModuleCount);
+			WriteHeaderField (generator, "java_type_count", mappingData.JavaTypeCount);
+			WriteHeaderField (generator, "java_name_width", mappingData.JavaNameWidth);
 
 			bool haveAssemblyNames = mappingData.AssemblyNames.Count > 0;
 			bool haveModules = mappingData.Modules.Length > 0;
 
-			output.WriteLine ();
 			if (haveAssemblyNames) {
-				output.Write (Indent);
-				output.Write (".include");
-				output.Write (Indent);
-				output.Write ('"');
-				output.Write (Path.GetFileName (SharedIncludeFile));
-				output.WriteLine ('"');
+				generator.WriteInclude (Path.GetFileName (SharedIncludeFile));
 			} else {
-				WriteCommentLine (output, $"No shared data present, {Path.GetFileName (SharedIncludeFile)} not generated");
+				generator.WriteCommentLine ($"No shared data present, {Path.GetFileName (SharedIncludeFile)} not generated");
 			}
 
+			generator.WriteEOL ();
 			if (haveModules) {
-				output.Write (Indent);
-				output.Write (".include");
-				output.Write (Indent);
-				output.Write ('"');
-				output.Write (Path.GetFileName (TypemapsIncludeFile));
-				output.WriteLine ('"');
+				generator.WriteInclude (Path.GetFileName (TypemapsIncludeFile));
 			} else {
-				WriteCommentLine (output, $"No modules defined, {Path.GetFileName (TypemapsIncludeFile)} not generated");
+				generator.WriteCommentLine ($"No modules defined, {Path.GetFileName (TypemapsIncludeFile)} not generated");
 			}
-			output.WriteLine ();
 
 			if (!sharedBitsWritten && haveAssemblyNames) {
-				using (var sharedOutput = MemoryStreamPool.Shared.CreateStreamWriter (output.Encoding)) {
-					WriteAssemblyNames (sharedOutput);
+				using (var sharedOutput = MemoryStreamPool.Shared.CreateStreamWriter (generator.Output.Encoding)) {
+					WriteAssemblyNames (generator, sharedOutput);
 					sharedOutput.Flush ();
 					Files.CopyIfStreamChanged (sharedOutput.BaseStream, SharedIncludeFile);
 				}
 			}
 
 			if (haveModules) {
-				using (var mapOutput = MemoryStreamPool.Shared.CreateStreamWriter (output.Encoding)) {
-					WriteMapModules (output, mapOutput, "map_modules");
+				using (var mapOutput = MemoryStreamPool.Shared.CreateStreamWriter (generator.Output.Encoding)) {
+					WriteMapModules (generator, mapOutput, "map_modules");
 					mapOutput.Flush ();
 					Files.CopyIfStreamChanged (mapOutput.BaseStream, TypemapsIncludeFile);
 				}
 			} else {
-				WriteMapModules (output, null, "map_modules");
+				WriteMapModules (generator, null, "map_modules");
 			}
 
-			// The extra padding is used to make each entry aligned to 4 bytes, we need to take that into account for
-			// correct native code map offset calculations. The padding effectively becomes part of the java_name
-			// member, so we just add it there.
-			uint extra_padding = WriteJavaMap (output, "map_java");
-			output.WriteLine ();
-			WriteHeaderField (output, "java_name_width", mappingData.JavaNameWidth + extra_padding);
+			WriteJavaMap (generator, "map_java");
 		}
 
-		void WriteAssemblyNames (StreamWriter output)
+		void WriteAssemblyNames (NativeAssemblyGenerator generator, StreamWriter output)
 		{
+			generator.WriteStringSection (output, "map_assembly_names");
 			foreach (var kvp in mappingData.AssemblyNames) {
 				string label = kvp.Key;
 				string name = kvp.Value;
 
-				WriteData (output, name, label, isGlobal: false);
-				output.WriteLine ();
+				generator.WriteStringSymbol (output, label, name, global: false);
 			}
 		}
 
-		void WriteManagedMaps (StreamWriter output, string moduleSymbolName, IEnumerable<TypeMapGenerator.TypeMapReleaseEntry> entries)
+		void WriteManagedMaps (NativeAssemblyGenerator generator, StreamWriter output, string moduleSymbolName, IEnumerable<TypeMapGenerator.TypeMapReleaseEntry> entries)
 		{
 			if (entries == null)
 				return;
@@ -106,147 +179,102 @@ namespace Xamarin.Android.Tasks
 				tokens[entry.Token] = (uint)idx;
 			}
 
-			WriteSection (output, $".rodata.{moduleSymbolName}", hasStrings: false, writable: false);
-			WriteStructureSymbol (output, moduleSymbolName, alignBits: 2, isGlobal: false);
-
-			uint size = 0;
 			var sortedTokens = tokens.Keys.ToArray ();
 			Array.Sort (sortedTokens);
 
+			generator.WriteDataSection (output, moduleSymbolName, writable: false);
+			var map_entry = new TypeMapModuleEntry ();
+
+			NativeAssemblyGenerator.StructureWriteContext mapArray = generator.StartStructureArray ();
 			foreach (uint token in sortedTokens) {
-				size += WriteStructure (output, packed: false, structureWriter: () => WriteManagedMapEntry (output, token, tokens[token]));
+				map_entry.type_token_id = token;
+				map_entry.java_map_index = tokens[token];
+
+				NativeAssemblyGenerator.StructureWriteContext mapEntryStruct = generator.AddStructureArrayElement (mapArray);
+				generator.WriteStructure (mapEntryStruct, map_entry);
 			}
-
-			WriteStructureSize (output, moduleSymbolName, size);
-			output.WriteLine ();
+			generator.WriteSymbol (output, mapArray, moduleSymbolName, alreadyInSection: true, skipLabelCounter: true);
 		}
 
-		uint WriteManagedMapEntry (StreamWriter output, uint token, uint javaMapIndex)
+		void WriteMapModules (NativeAssemblyGenerator generator, StreamWriter mapOutput, string symbolName)
 		{
-			uint size = WriteData (output, token);
-			size += WriteData (output, javaMapIndex);
+			generator.WriteEOL ();
+			generator.WriteCommentLine ("Managed to Java map: START");
+			generator.WriteDataSection ($"rel.{symbolName}");
 
-			return size;
-		}
-
-		void WriteMapModules (StreamWriter output, StreamWriter mapOutput, string symbolName)
-		{
-			WriteCommentLine (output, "Managed to Java map: START", indent: false);
-			WriteSection (output, $".data.rel.{symbolName}", hasStrings: false, writable: true);
-			WriteStructureSymbol (output, symbolName, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: true);
-
-			uint size = 0;
 			int moduleCounter = 0;
+			var map_module = new TypeMapModule {
+				image = IntPtr.Zero,
+
+				// These two are used only in Debug builds with Instant Run enabled, but for simplicity we always output
+				// them.
+				java_name_width = 0,
+				java_map = IntPtr.Zero,
+			};
+
+			NativeAssemblyGenerator.StructureWriteContext mapModulesArray = generator.StartStructureArray ();
 			foreach (TypeMapGenerator.ModuleReleaseData data in mappingData.Modules) {
 				string mapName = $"module{moduleCounter++}_managed_to_java";
 				string duplicateMapName;
 
 				if (data.DuplicateTypes.Count == 0)
-					duplicateMapName = null;
+					duplicateMapName = String.Empty;
 				else
 					duplicateMapName = $"{mapName}_duplicates";
 
-				size += WriteStructure (output, packed: false, structureWriter: () => WriteMapModule (output, mapName, duplicateMapName, data));
+				map_module.MVID = data.Mvid;
+				map_module.AssemblyNameValue = data.AssemblyName;
+				map_module.module_uuid = data.MvidBytes;
+				map_module.entry_count = (uint)data.Types.Length;
+				map_module.duplicate_count = (uint)data.DuplicateTypes.Count;
+				map_module.map = generator.MakeLocalLabel (mapName, skipCounter: true);
+				map_module.duplicate_map = duplicateMapName.Length == 0 ? null : generator.MakeLocalLabel (duplicateMapName, skipCounter: true);
+				map_module.assembly_name = data.AssemblyNameLabel;
+
+				NativeAssemblyGenerator.StructureWriteContext mapModuleStruct = generator.AddStructureArrayElement (mapModulesArray);
+				generator.WriteStructure (mapModuleStruct, map_module);
+
 				if (mapOutput != null) {
-					WriteManagedMaps (mapOutput, mapName, data.Types);
-					if (data.DuplicateTypes.Count > 0)
-						WriteManagedMaps (mapOutput, duplicateMapName, data.DuplicateTypes.Values);
+					WriteManagedMaps (generator, mapOutput, mapName, data.Types);
+					if (data.DuplicateTypes.Count > 0) {
+						WriteManagedMaps (generator, mapOutput, duplicateMapName, data.DuplicateTypes.Values);
+					}
 				}
 			}
-
-			WriteStructureSize (output, symbolName, size);
-			WriteCommentLine (output, "Managed to Java map: END", indent: false);
-			output.WriteLine ();
+			generator.WriteSymbol (mapModulesArray, symbolName, local: false, alreadyInSection: true);
+			generator.WriteCommentLine ("Managed to Java map: END");
 		}
 
-		uint WriteMapModule (StreamWriter output, string mapName, string duplicateMapName, TypeMapGenerator.ModuleReleaseData data)
+		void WriteJavaMap (NativeAssemblyGenerator generator, string symbolName)
 		{
-			uint size = 0;
-			WriteCommentLine (output, $"module_uuid: {data.Mvid}");
-			size += WriteData (output, data.MvidBytes);
+			generator.WriteEOL ();
+			generator.WriteCommentLine ("Java to managed map: START");
+			generator.WriteDataSection (symbolName, writable: false);
 
-			WriteCommentLine (output, "entry_count");
-			size += WriteData (output, data.Types.Length);
+			var map_entry = new TypeMapJava {
+				MaxJavaNameLength = mappingData.JavaNameWidth,
+			};
 
-			WriteCommentLine (output, "duplicate_count");
-			size += WriteData (output, data.DuplicateTypes.Count);
-
-			WriteCommentLine (output, "map");
-			size += WritePointer (output, mapName);
-
-			WriteCommentLine (output, "duplicate_map");
-			size += WritePointer (output, duplicateMapName);
-
-			WriteCommentLine (output, $"assembly_name: {data.AssemblyName}");
-			size += WritePointer (output, MakeLocalLabel (data.AssemblyNameLabel));
-
-			WriteCommentLine (output, "image");
-			size += WritePointer (output);
-
-			// These two are used only in Debug builds with Instant Run enabled, but for simplicity we always output
-			// them.
-			WriteCommentLine (output, "java_name_width");
-			size += WriteData (output, (uint)0);
-
-			WriteCommentLine (output, "java_map");
-			size += WritePointer (output);
-
-			output.WriteLine ();
-
-			return size;
-		}
-
-		uint WriteJavaMap (StreamWriter output, string symbolName)
-		{
-			WriteCommentLine (output, "Java to managed map: START", indent: false);
-			WriteSection (output, $".rodata.{symbolName}", hasStrings: false, writable: false);
-			WriteStructureSymbol (output, symbolName, alignBits: TargetProvider.MapJavaAlignBits, isGlobal: true);
-
-			uint size = 0;
-			int entryCount = 0;
-			uint extra_padding = 0;
+			NativeAssemblyGenerator.StructureWriteContext javaMapArray = generator.StartStructureArray ();
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
-				size += WriteJavaMapEntry (output, entry, entryCount++, ref extra_padding);
+				map_entry.module_index = (uint)entry.ModuleIndex;
+				map_entry.type_token_id = entry.SkipInJavaToManaged ? 0 : entry.Token;
+				map_entry.java_name = entry.JavaName;
+
+				NativeAssemblyGenerator.StructureWriteContext mapEntryStruct = generator.AddStructureArrayElement (javaMapArray);
+				generator.WriteStructure (mapEntryStruct, map_entry);
 			}
-
-			WriteStructureSize (output, symbolName, size);
-			WriteCommentLine (output, "Java to managed map: END", indent: false);
-			output.WriteLine ();
-
-			return extra_padding;
+			generator.WriteSymbol (javaMapArray, symbolName, local: false, alreadyInSection: true);
+			generator.WriteCommentLine ("Java to managed map: END");
 		}
 
-		uint WriteJavaMapEntry (StreamWriter output, TypeMapGenerator.TypeMapReleaseEntry entry, int entryIndex, ref uint extra_padding)
+		void WriteHeaderField (NativeAssemblyGenerator generator, string name, uint value)
 		{
-			uint size = 0;
-
-			WriteCommentLine (output, $"#{entryIndex}");
-			WriteCommentLine (output, "module_index");
-			size += WriteData (output, entry.ModuleIndex);
-
-			WriteCommentLine (output, "type_token_id");
-			size += WriteData (output, entry.SkipInJavaToManaged ? 0 : entry.Token);
-
-			WriteCommentLine (output, "java_name");
-			size += WriteAsciiData (output, entry.JavaName, mappingData.JavaNameWidth);
-
-			if (extra_padding == 0)
-				extra_padding = size % (1U << (int)TargetProvider.MapJavaAlignBits);
-
-			size += WriteDataPadding (output, extra_padding);
-
-			output.WriteLine ();
-
-			return size;
-		}
-
-		void WriteHeaderField (StreamWriter output, string name, uint value)
-		{
-			WriteCommentLine (output, $"{name}: START", indent: false);
-			WriteSection (output, $".rodata.{name}", hasStrings: false, writable: false);
-			WriteSymbol (output, name, size: 4, alignBits: 2, isGlobal: true, isObject: true, alwaysWriteSize: true);
-			WriteData (output, value);
-			WriteCommentLine (output, $"{name}: END", indent: false);
+			generator.WriteEOL ();
+			generator.WriteCommentLine ($"{name}: START");
+			generator.WriteDataSection (name, writable: false);
+			generator.WriteSymbol (name, value, hex: false, local: false);
+			generator.WriteCommentLine ($"{name}: END");
 		}
 	}
 }

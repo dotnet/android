@@ -1,105 +1,97 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	class CompressedAssembliesNativeAssemblyGenerator : NativeAssemblyGenerator
+	class CompressedAssembliesNativeAssemblyGenerator : NativeAssemblyComposer
 	{
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh CompressedAssemblyDescriptor structure
+		sealed class CompressedAssemblyDescriptor
+		{
+			public uint   uncompressed_file_size;
+			public bool   loaded;
+
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
+			public string data = String.Empty;
+		};
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh CompressedAssemblies structure
+		sealed class CompressedAssemblies
+		{
+			public uint count;
+
+			[NativeAssemblerString (AssemblerStringFormat.PointerToSymbol)]
+			public string descriptors;
+		};
+
 		const string CompressedAssembliesField = "compressed_assemblies";
 		const string DescriptorsField = "compressed_assembly_descriptors";
 
 		IDictionary<string, CompressedAssemblyInfo> assemblies;
 		string dataIncludeFile;
 
-		public CompressedAssembliesNativeAssemblyGenerator (IDictionary<string, CompressedAssemblyInfo> assemblies, NativeAssemblerTargetProvider targetProvider, string baseFilePath)
-			: base (targetProvider, baseFilePath)
+		public CompressedAssembliesNativeAssemblyGenerator (AndroidTargetArch arch, IDictionary<string, CompressedAssemblyInfo> assemblies, string baseFilePath)
+			: base (arch)
 		{
 			this.assemblies = assemblies;
 			dataIncludeFile = $"{baseFilePath}-data.inc";
 		}
 
-		protected override void WriteSymbols (StreamWriter output)
+		protected override void Write (NativeAssemblyGenerator generator)
 		{
 			if (assemblies == null || assemblies.Count == 0) {
-				WriteCompressedAssembliesStructure (output, 0, null);
+				WriteCompressedAssembliesStructure (generator, 0, null);
 				return;
 			}
 
-			string label = MakeLocalLabel (DescriptorsField);
-			using (var dataOutput = MemoryStreamPool.Shared.CreateStreamWriter (output.Encoding)) {
-				uint size = 0;
+			generator.WriteInclude (Path.GetFileName (dataIncludeFile));
 
-				output.Write (Indent);
-				output.Write (".include");
-				output.Write (Indent);
-				output.Write ('"');
-				output.Write (Path.GetFileName (dataIncludeFile));
-				output.WriteLine ('"');
-				output.WriteLine ();
+			string label;
+			using (var dataOutput = MemoryStreamPool.Shared.CreateStreamWriter (generator.Output.Encoding)) {
+				generator.WriteDataSection ();
 
-				WriteDataSection (output, DescriptorsField);
-				WriteStructureSymbol (output, label, alignBits: TargetProvider.MapModulesAlignBits, isGlobal: false);
+				var descriptor = new CompressedAssemblyDescriptor {
+					loaded = false,
+				};
+
+				NativeAssemblyGenerator.StructureWriteContext descriptorArray = generator.StartStructureArray ();
 				foreach (var kvp in assemblies) {
 					string assemblyName = kvp.Key;
 					CompressedAssemblyInfo info = kvp.Value;
 
-					string dataLabel = GetAssemblyDataLabel (info.DescriptorIndex);
-					WriteCommSymbol (dataOutput, dataLabel, info.FileSize, 16);
-					dataOutput.WriteLine ();
+					NativeAssemblyGenerator.LabeledSymbol dataLabel = generator.WriteCommSymbol (dataOutput, "compressed_assembly_data", info.FileSize, alignment: 16);
+					descriptor.uncompressed_file_size = info.FileSize;
+					descriptor.data = dataLabel.Label;
 
-					size += WriteStructure (output, packed: false, structureWriter: () => WriteDescriptor (output, assemblyName, info, dataLabel));
+					NativeAssemblyGenerator.StructureWriteContext descriptorStruct = generator.AddStructureArrayElement (descriptorArray);
+					generator.WriteStructure (descriptorStruct, descriptor);
 				}
-				WriteStructureSize (output, label, size);
+				label = generator.WriteSymbol (descriptorArray, DescriptorsField);
 
 				dataOutput.Flush ();
 				Files.CopyIfStreamChanged (dataOutput.BaseStream, dataIncludeFile);
 			}
 
-			WriteCompressedAssembliesStructure (output, (uint)assemblies.Count, label);
+			WriteCompressedAssembliesStructure (generator, (uint)assemblies.Count, label);
 		}
 
-		uint WriteDescriptor (StreamWriter output, string assemblyName, CompressedAssemblyInfo info, string dataLabel)
+		void WriteCompressedAssembliesStructure (NativeAssemblyGenerator generator, uint count, string descriptorsLabel)
 		{
-			WriteCommentLine (output, $"{info.DescriptorIndex}: {assemblyName}");
+			generator.WriteDataSection ();
+			var compressed_assemblies = new CompressedAssemblies {
+				count = count,
+				descriptors = descriptorsLabel,
+			};
 
-			WriteCommentLine (output, "uncompressed_file_size");
-			uint size = WriteData (output, info.FileSize);
-
-			WriteCommentLine (output, "loaded");
-			size += WriteData (output, false);
-
-			WriteCommentLine (output, "data");
-			size += WritePointer (output, dataLabel);
-
-			output.WriteLine ();
-			return size;
-		}
-
-		string GetAssemblyDataLabel (uint index)
-		{
-			return $"compressed_assembly_data_{index}";
-		}
-
-		void WriteCompressedAssembliesStructure (StreamWriter output, uint count, string descriptorsLabel)
-		{
-			WriteDataSection (output, CompressedAssembliesField);
-			WriteSymbol (output, CompressedAssembliesField, TargetProvider.GetStructureAlignment (true), packed: false, isGlobal: true, alwaysWriteSize: true, structureWriter: () => {
-				// Order of fields and their type must correspond *exactly* to that in
-				// src/monodroid/jni/xamarin-app.h CompressedAssemblies structure
-				WriteCommentLine (output, "count");
-				uint size = WriteData (output, count);
-
-				WriteCommentLine (output, "descriptors");
-				size += WritePointer (output, descriptorsLabel);
-
-				return size;
-			});
-		}
-
-		void WriteDataSection (StreamWriter output, string tag)
-		{
-			WriteSection (output, $".data.{tag}", hasStrings: false, writable: true);
+			NativeAssemblyGenerator.StructureWriteContext compressedAssemblies = generator.StartStructure ();
+			generator.WriteStructure (compressedAssemblies, compressed_assemblies);
+			generator.WriteSymbol (compressedAssemblies, CompressedAssembliesField, local: false);
 		}
 	}
 }

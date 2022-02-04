@@ -95,6 +95,12 @@ namespace xamarin::android::internal {
 		using monodroid_should_register = bool (*)(const char *filename);
 
 	public:
+#if defined (RELEASE) && defined (ANDROID)
+		EmbeddedAssemblies () noexcept
+			: type_map_java_struct_size (calc_type_map_java_struct_size ())
+		{}
+#endif  // def RELEASE && def ANDROID
+
 #if defined (DEBUG) || !defined (ANDROID)
 		void try_load_typemaps_from_directory (const char *path);
 #endif
@@ -156,6 +162,19 @@ namespace xamarin::android::internal {
 		}
 
 	private:
+#if defined (RELEASE) && defined (ANDROID)
+		static size_t calc_type_map_java_struct_size ()
+		{
+			size_t struct_size = sizeof(TypeMapJava) + java_name_width;
+			size_t padding = struct_size % alignof(TypeMapJava);
+			if (padding > 0) {
+				struct_size += alignof(TypeMapJava) - padding;
+			}
+
+			return struct_size;
+		}
+#endif // def RELEASE && def ANDROID
+
 		const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid);
 		MonoReflectionType* typemap_java_to_managed (const char *java_type_name);
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
@@ -286,6 +305,10 @@ namespace xamarin::android::internal {
 		bool                   have_and_want_debug_symbols;
 		size_t                 bundled_assembly_index = 0;
 		size_t                 number_of_found_assemblies = 0;
+
+#if defined (RELEASE) && defined (ANDROID)
+		const size_t          type_map_java_struct_size;
+#endif  // def RELEASE && def ANDROID
 
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;

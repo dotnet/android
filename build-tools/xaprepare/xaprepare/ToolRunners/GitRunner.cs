@@ -135,6 +135,33 @@ namespace Xamarin.Android.Prepare
 			return await RunGit (runner, "submodule-update");
 		}
 
+		public string GetBranchName (string? workingDirectory = null)
+		{
+			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
+			var runner = CreateGitRunner (runnerWorkingDirectory);
+			runner
+				.AddArgument ("name-rev")
+				.AddArgument ("--name-only")
+				.AddArgument ("--exclude=tags/*")
+				.AddArgument ("HEAD");
+
+			string branchName = String.Empty;
+			using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
+				outputSink.LineCallback = (string? line) => {
+					if (!String.IsNullOrEmpty (branchName)) {
+						return;
+					}
+					branchName = line?.Trim () ?? String.Empty;
+				};
+
+				if (!runner.Run ()) {
+					return String.Empty;
+				}
+
+				return branchName;
+			}
+		}
+
 		public string GetTopCommitHash (string? workingDirectory = null, bool shortHash = true)
 		{
 			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);

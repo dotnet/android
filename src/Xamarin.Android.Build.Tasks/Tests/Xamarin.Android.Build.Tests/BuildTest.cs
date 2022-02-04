@@ -83,14 +83,31 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		static object [] CheckAssemblyCountsSource = new object [] {
+			new object[] {
+				/*isRelease*/ false,
+				/*aot*/       false,
+			},
+			new object[] {
+				/*isRelease*/ true,
+				/*aot*/       false,
+			},
+			new object[] {
+				/*isRelease*/ true,
+				/*aot*/       true,
+			},
+		};
+
 		[Test]
+		[TestCaseSource (nameof (CheckAssemblyCountsSource))]
 		[NonParallelizable]
 		[Category ("SmokeTests")]
-		public void CheckAssemblyCounts ([Values (false, true)] bool isRelease)
+		public void CheckAssemblyCounts (bool isRelease, bool aot)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
+				AotAssemblies = aot,
 			};
 			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
@@ -113,6 +130,12 @@ namespace Xamarin.Android.Build.Tests
 				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
+				if (aot) {
+					foreach (var env in envFiles) {
+						StringAssert.Contains ("libaot-Mono.Android.dll.so", File.ReadAllText (env));
+					}
+				}
+
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
 
@@ -132,6 +155,9 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinAndroidApplicationProject ();
 			proj.ProjectName = testName;
 			proj.IsRelease = true;
+			// TODO: AOT fails https://github.com/xamarin/xamarin-android/issues/6685
+			// .NET 6 uses AOT by default for Release
+			proj.AotAssemblies = false;
 			if (forms) {
 				proj.PackageReferences.Clear ();
 				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
@@ -1035,7 +1061,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
 			};
-			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 			using (var b = CreateApkBuilder ()) {
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
 					WebContentFileNameFromAzure = "PdbTestLibrary.dll"

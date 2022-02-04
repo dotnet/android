@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "xamarin-app.hh"
+#include "xxhash.hh"
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
 // designer on desktop.
@@ -55,11 +56,12 @@ ApplicationConfig application_config = {
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
 	.number_of_assembly_store_files = 2,
+	.number_of_dso_cache_entries = 2,
 	.mono_components_mask = MonoComponent::None,
 	.android_package_name = "com.xamarin.test",
 };
 
-const char* mono_aot_mode_name = "";
+const char* mono_aot_mode_name = "normal";
 const char* app_environment_variables[] = {};
 const char* app_system_properties[] = {};
 
@@ -115,5 +117,24 @@ AssemblyStoreRuntimeData assembly_stores[] = {
 		.data_start = nullptr,
 		.assembly_count = 0,
 		.assemblies = nullptr,
+	},
+};
+
+constexpr char fake_dso_name[] = "libaot-Some.Assembly.dll.so";
+constexpr char fake_dso_name2[] = "libaot-Another.Assembly.dll.so";
+
+DSOCacheEntry dso_cache[] = {
+	{
+		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
+		.ignore = true,
+		.name = fake_dso_name,
+		.handle = nullptr,
+	},
+
+	{
+		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
+		.ignore = true,
+		.name = fake_dso_name2,
+		.handle = nullptr,
 	},
 };

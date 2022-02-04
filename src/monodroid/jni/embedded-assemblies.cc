@@ -2,7 +2,7 @@
 
 #if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 #include <compare>
-#endif
+#endif // ndef MINGW32 || def MINGW32 && GNUC >= 10
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -345,7 +345,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 }
 
 force_inline const AssemblyStoreHashEntry*
-EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept
+EmbeddedAssemblies::find_assembly_store_entry ([[maybe_unused]] hash_t hash, [[maybe_unused]] const AssemblyStoreHashEntry *entries, [[maybe_unused]] size_t entry_count) noexcept
 {
 #if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 	hash_t entry_hash;
@@ -547,9 +547,9 @@ EmbeddedAssemblies::install_preload_hooks_for_alc ()
 }
 #endif // def NET6
 
-template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size>
+template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_precalculated_size>
 const Entry*
-EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nmemb, [[maybe_unused]] size_t extra_size)
+EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nmemb, [[maybe_unused]] size_t precalculated_size)
 {
 	static_assert (compare != nullptr, "compare is a required template parameter");
 
@@ -565,11 +565,18 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 		exit (FATAL_EXIT_MISSING_ASSEMBLY);
 	}
 
-	constexpr size_t size = sizeof(Entry);
+	[[maybe_unused]]
+	size_t size;
+
+	if constexpr (use_precalculated_size) {
+		size = precalculated_size;
+		log_info (LOG_ASSEMBLY, "Pre-calculated entry size = %u", size);
+	}
+
 	while (nmemb > 0) {
 		const Entry *ret;
-		if constexpr (use_extra_size) {
-			ret = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(base) + ((size + extra_size) * (nmemb / 2)));
+		if constexpr (use_precalculated_size) {
+			ret = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(base) + (precalculated_size * (nmemb / 2)));
 		} else {
 			ret = base + (nmemb / 2);
 		}
@@ -578,8 +585,8 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 		if (result < 0) {
 			nmemb /= 2;
 		} else if (result > 0) {
-			if constexpr (use_extra_size) {
-				base = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(ret) + size + extra_size);
+			if constexpr (use_precalculated_size) {
+				base = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(ret) + precalculated_size);
 			} else {
 				base = ret + 1;
 			}
@@ -650,7 +657,7 @@ MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 {
 	TypeMapModule *module;
-	const TypeMapJava *java_entry = binary_search<const char, TypeMapJava, compare_java_name, true> (java_type_name, map_java, java_type_count, java_name_width);
+	const TypeMapJava *java_entry = binary_search<const char, TypeMapJava, compare_java_name, true> (java_type_name, map_java, java_type_count, type_map_java_struct_size);
 	if (java_entry == nullptr) {
 		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
 		return nullptr;
@@ -861,9 +868,8 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		return nullptr;
 	}
 
-	const char *ret;
-	const TypeMapJava *java_entry = reinterpret_cast<const TypeMapJava*> (reinterpret_cast<const uint8_t*>(map_java) + ((sizeof(TypeMapJava) + java_name_width) * entry->java_map_index));
-	ret = reinterpret_cast<const char*>(reinterpret_cast<const uint8_t*>(java_entry) + 8);
+	const TypeMapJava *java_entry = reinterpret_cast<const TypeMapJava*> (reinterpret_cast<const uint8_t*>(map_java) + (type_map_java_struct_size * entry->java_map_index));
+	const char *ret = reinterpret_cast<const char*>(java_entry->java_name);
 
 	if (XA_UNLIKELY (ret == nullptr)) {
 		log_warn (LOG_ASSEMBLY, "typemap: empty Java type name returned for entry at index %u", entry->java_map_index);

@@ -5,6 +5,7 @@ namespace Xamarin.Android.Prepare
 		public const string AndroidCmakeUrlPrefix               = "AndroidCmakeUrlPrefix";
 		public const string AndroidCmakeVersion                 = "AndroidCmakeVersion";
 		public const string AndroidCmakeVersionPath             = "AndroidCmakeVersionPath";
+		public const string AndroidDefaultTargetDotnetApiLevel  = "AndroidDefaultTargetDotnetApiLevel";
 		public const string AndroidLatestStableApiLevel         = "AndroidLatestStableApiLevel";
 		public const string AndroidLatestStableFrameworkVersion = "AndroidLatestStableFrameworkVersion";
 		public const string AndroidMxeFullPath                  = "AndroidMxeFullPath";
@@ -56,6 +57,12 @@ namespace Xamarin.Android.Prepare
 		public const string XABuildToolsPackagePrefixWindows    = "XABuildToolsPackagePrefixWindows";
 		public const string XABuildToolsPackagePrefixLinux      = "XABuildToolsPackagePrefixLinux";
 		public const string XABuildToolsPackagePrefix           = "XABuildToolsPackagePrefix";
+		public const string XABuildTools30Folder                = "XABuildTools30Folder";
+		public const string XABuildTools30Version               = "XABuildTools30Version";
+		public const string XABuildTools30PackagePrefixMacOS    = "XABuildTools30PackagePrefixMacOS";
+		public const string XABuildTools30PackagePrefixWindows  = "XABuildTools30PackagePrefixWindows";
+		public const string XABuildTools30PackagePrefixLinux    = "XABuildTools30PackagePrefixLinux";
+		public const string XABuildTools30PackagePrefix         = "XABuildTools30PackagePrefix";
 		public const string XABinRelativeInstallPrefix          = "XABinRelativeInstallPrefix";
 		public const string XAInstallPrefix                     = "XAInstallPrefix";
 		public const string XAPlatformToolsVersion              = "XAPlatformToolsVersion";

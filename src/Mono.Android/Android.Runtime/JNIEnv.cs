@@ -56,7 +56,7 @@ namespace Android.Runtime {
 		internal  static  bool  PropagateExceptions;
 
 		internal static bool IsRunningOnDesktop;
-		internal static bool LogTypemapMissStackTrace;
+		internal static bool LogAssemblyCategory;
 
 		static AndroidRuntime? androidRuntime;
 		static BoundExceptionType BoundExceptionType;
@@ -67,7 +67,7 @@ namespace Android.Runtime {
 		internal    static      AndroidValueManager? AndroidValueManager;
 
 		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		extern static void monodroid_log (LogLevel level, LogCategories category, string message);
+		internal extern static void monodroid_log (LogLevel level, LogCategories category, string message);
 
 		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static IntPtr monodroid_timing_start (string? message);
@@ -149,7 +149,7 @@ namespace Android.Runtime {
 				partial_timing_sequence = monodroid_timing_start (null);
 			}
 
-			LogTypemapMissStackTrace = (args->logCategories & (uint)LogCategories.Assembly) != 0;
+			LogAssemblyCategory = (args->logCategories & (uint)LogCategories.Assembly) != 0;
 
 			gref_gc_threshold = args->grefGcThreshold;
 
@@ -246,6 +246,7 @@ namespace Android.Runtime {
 #else  // NETCOREAPP
 		internal static Action<Exception> mono_unhandled_exception = null!;
 #endif  // NETCOREAPP
+		internal static MethodInfo? mono_unhandled_exception_method = null;
 
 #if !NETCOREAPP
 		static Action<AppDomain, UnhandledExceptionEventArgs> AppDomain_DoUnhandledException = null!;
@@ -254,10 +255,13 @@ namespace Android.Runtime {
 		static void Initialize ()
 		{
 			if (mono_unhandled_exception == null) {
-				var mono_UnhandledException = typeof (System.Diagnostics.Debugger)
+				mono_unhandled_exception_method = typeof (System.Diagnostics.Debugger)
 					.GetMethod ("Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
-				if (mono_UnhandledException != null)
-					mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), mono_UnhandledException);
+				if (mono_unhandled_exception_method != null)
+					mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), mono_unhandled_exception_method);
+			}
+			if (mono_unhandled_exception_method == null && mono_unhandled_exception != null) {
+				mono_unhandled_exception_method = mono_unhandled_exception.Method;
 			}
 
 #if !NETCOREAPP
@@ -737,7 +741,7 @@ namespace Android.Runtime {
 			}
 
 			if (ret == IntPtr.Zero) {
-				if (LogTypemapMissStackTrace) {
+				if (LogAssemblyCategory) {
 					monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
 					LogTypemapTrace (new StackTrace (true));
 				}
