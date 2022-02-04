@@ -143,7 +143,6 @@ namespace Xamarin.Android.NetTests {
 
 
 		[Test]
-		[Retry (2)]
 		public void CancelRequestViaProxy ()
 		{
 			using (var handler = CreateHandler ()) {
