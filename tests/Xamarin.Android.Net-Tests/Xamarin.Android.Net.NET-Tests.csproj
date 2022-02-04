@@ -5,7 +5,7 @@
     <TargetFramework>net6.0-android</TargetFramework>
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
     <RootNamespace>Xamarin.Android.Net.Tests</RootNamespace>
-    <AssemblyName>Xamarin.Android.Net_Tests</AssemblyName>
+    <AssemblyName>Xamarin.Android.Net.NET_Tests</AssemblyName>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <_MonoAndroidTestPackage>Xamarin.Android.Net_Tests</_MonoAndroidTestPackage>
+    <_MonoAndroidTestPackage>Xamarin.Android.Net.NET_Tests</_MonoAndroidTestPackage>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
   </PropertyGroup>
@@ -52,43 +52,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TestApk Include="..\..\bin\Test$(Configuration)\Xamarin.Android.Net_Tests-Signed.$(AndroidPackageFormat)">
+    <TestApk Include="..\..\bin\Test$(Configuration)\$(_MonoAndroidTestPackage)-Signed.$(AndroidPackageFormat)">
       <Package>Xamarin.Android.Net_Tests</Package>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\TestResult-Xamarin.Android.Net_Tests-times.csv</TimingResultsFilename>
+      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
     </TestApk>
 
     <TestApkInstrumentation Include="xamarin.android.net.tests.TestInstrumentation">
       <Package>Xamarin.Android.Net_Tests</Package>
-      <ResultsPath>..\..\bin\Test$(Configuration)\TestResult-Xamarin.Android.Net_Tests.xml</ResultsPath>
+      <ResultsPath>..\..\bin\Test$(Configuration)\TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
     </TestApkInstrumentation>
   </ItemGroup>
-
-  <!-- <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-    <TestApk Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.apk">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
-      <ResultsPath>$(OutputPath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
-      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(OutputPath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
-      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
-      <ApkSizesResultsFilename>$(OutputPath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
-    </TestApk>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
-    <TestAab Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.aab">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
-      <ResultsPath>$(OutputPath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
-      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(OutputPath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
-      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
-      <ApkSizesResultsFilename>$(OutputPath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
-    </TestAab>
-  </ItemGroup> -->
 
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />

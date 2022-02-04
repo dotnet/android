@@ -657,10 +657,10 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Xamarin.Android.Net-Tests
-        project: tests/Xamarin.Android.Net-Tests/Xamarin.Android.Net-Tests.NET.csproj
-        testResultsFiles: TestResult-Xamarin.Android.Net_Tests-$(XA.Build.Configuration)-dotnet.xml
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Xamarin.Android.Net_Tests-Signed.apk
+        testName: Xamarin.Android.Net.NET-Tests
+        project: tests/Xamarin.Android.Net-Tests/Xamarin.Android.Net.NET-Tests.csproj
+        testResultsFiles: TestResult-Xamarin.Android.Net.NET_Tests-$(XA.Build.Configuration).xml
+        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Xamarin.Android.Net.NET_Tests-Signed.apk
         artifactFolder: net6-networking
         useDotNet: true
 
