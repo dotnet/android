@@ -313,6 +313,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			List<object> tests = new List<object> ();
 			var ignore = new string [] {
+				"he-IL", // maps to wi-IL on Android.
+				"id-ID", // maps to in-ID on Android
 			};
 			foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.SpecificCultures)) {
 				if (ci.Name.Length > 5) {
