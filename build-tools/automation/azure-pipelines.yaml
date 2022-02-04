@@ -39,7 +39,7 @@ resources:
 # Global variables
 variables:
 - template: yaml-templates/variables.yaml
-- template: templates/common/vs-release-vars@sdk-insertions
+- template: templates/common/vs-release-vars.yml@sdk-insertions
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
