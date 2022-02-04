@@ -68,6 +68,34 @@ namespace Xamarin.Android.Net.Tests
 			Assert.IsTrue (callbackHasBeenCalled, "callback has been called");
 			Assert.IsTrue (expectedExceptionHasBeenThrown, "the expected exception has been thrown");
 		}
+
+		[Test]
+		public async Task ApprovesRequestWithInvalidCertificate ()
+		{
+			bool callbackHasBeenCalled = false;
+			bool exceptionWasThrown = true;
+
+			var handler = CreateHandlerWithCallback(
+				(request, cert, chain, errors) => {
+					callbackHasBeenCalled = true;
+					return true;
+				}
+			);
+
+			var client = new HttpClient (handler);
+
+			try
+			{
+				await client.GetStringAsync ("https://self-signed.badssl.com/");
+			}
+			catch (Javax.Net.Ssl.SSLHandshakeException)
+			{
+				exceptionWasThrown = false;
+			}
+
+			Assert.IsTrue (callbackHasBeenCalled, "callback has been called");
+			Assert.IsFalse (exceptionWasThrown, "the ssl handshake exception has not been thrown");
+		}
 	}
 
 	[TestFixture]
