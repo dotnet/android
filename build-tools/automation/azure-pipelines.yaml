@@ -1526,7 +1526,7 @@ stages:
   - template: compliance/sbom/job.yml@yaml
     parameters:
       artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
-      useArtifactsAndStatuses: true
+      statusContexts: [ JENKINS-SIGN ]
       packageName: xamarin-android
       packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
       GitHub.Token: $(GitHub.Token)
