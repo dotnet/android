@@ -14,12 +14,12 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/dev/pjc/drop-vars-file
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
     name: xamarin/sdk-insertions
-    ref: refs/heads/add-insertion-template
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: monodroid
     type: github
