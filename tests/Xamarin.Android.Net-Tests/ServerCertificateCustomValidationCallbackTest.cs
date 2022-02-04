@@ -38,13 +38,14 @@ namespace Xamarin.Android.Net.Tests
 			var client = new HttpClient (handler);
 			await client.GetStringAsync ("https://microsoft.com/");
 
-			Assert.IsTrue (callbackHasBeenCalled);
+			Assert.IsTrue (callbackHasBeenCalled, "callback has been called");
 		}
 
 		[Test]
 		public async Task RejectRequest ()
 		{
 			bool callbackHasBeenCalled = false;
+			bool expectedExceptionHasBeenThrown = false;
 
 			var handler = CreateHandlerWithCallback(
 				(request, cert, chain, errors) => {
@@ -58,14 +59,14 @@ namespace Xamarin.Android.Net.Tests
 			try
 			{
 				await client.GetStringAsync ("https://microsoft.com/");
-				Assert.Fail ("No exception has been thrown.");
 			}
 			catch (Javax.Net.Ssl.SSLHandshakeException)
 			{
-				// this is the expected exception type when validation fails
+				expectedExceptionHasBeenThrown = true;
 			}
 
-			Assert.IsTrue (callbackHasBeenCalled);
+			Assert.IsTrue (callbackHasBeenCalled, "callback has been called");
+			Assert.IsTrue (expectedExceptionHasBeenThrown, "the expected exception has been thrown");
 		}
 	}
 

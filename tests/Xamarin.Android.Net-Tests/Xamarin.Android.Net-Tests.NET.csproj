@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk" >
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
@@ -30,10 +29,6 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="$..\TestRunner.NUnit\TestRunner.NUnit.NET.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="System" />

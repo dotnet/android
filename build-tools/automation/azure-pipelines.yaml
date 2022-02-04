@@ -456,7 +456,7 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
         testName: Xamarin.Android.Net-Tests
-        project: tests/Xamarin.Android.Net-Tests/Xamarin.Android.Net-Tests-Legacy.csproj
+        project: tests/Xamarin.Android.Net-Tests/Xamarin.Android.Net-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Net_Tests.nunit-$(ApkTestConfiguration).xml
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Net_Tests-Signed.apk
         artifactFolder: Default
@@ -658,7 +658,7 @@ stages:
       parameters:
         configuration: $(XA.Build.Configuration)
         testName: Xamarin.Android.Net-Tests
-        project: tests/Xamarin.Android.Net-Tests/Xamarin.Android.Net-Tests-Dotnet.csproj
+        project: tests/Xamarin.Android.Net-Tests/Xamarin.Android.Net-Tests.NET.csproj
         testResultsFiles: TestResult-Xamarin.Android.Net_Tests-$(XA.Build.Configuration)-dotnet.xml
         artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Xamarin.Android.Net_Tests-Signed.apk
         artifactFolder: net6-networking
