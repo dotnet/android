@@ -39,6 +39,7 @@ resources:
 # Global variables
 variables:
 - template: yaml-templates/variables.yaml
+- template: templates/common/vs-release-vars@sdk-insertions
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
@@ -1307,8 +1308,8 @@ stages:
     - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
       parameters:
         githubToken: $(GitHub.Token)
-        githubContext: nuget-artifacts
-        blobName: nuget-artifacts
+        githubContext: $(NupkgCommitStatusName)
+        blobName: $(NupkgCommitStatusName)
         packagePrefix: xamarin-android
         artifactsPath: $(Build.StagingDirectory)\nuget-signed
         yamlResourceName: yaml
@@ -1316,16 +1317,16 @@ stages:
     - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
       parameters:
         githubToken: $(GitHub.Token)
-        githubContext: vs-insertion
-        blobName: vs-insertion
+        githubContext: $(VSDropCommitStatusName)
+        blobName: $(VSDropCommitStatusName)
         packagePrefix: xamarin-android
-        artifactsPath: $(Build.StagingDirectory)/vs-insertion
+        artifactsPath: $(Build.StagingDirectory)/$(VSDropCommitStatusName)
         yamlResourceName: yaml
         downloadSteps:
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: vsdrop-signed
-            downloadPath: $(Build.StagingDirectory)/vs-insertion
+            downloadPath: $(Build.StagingDirectory)/$(VSDropCommitStatusName)
 
     - powershell: >-
         & dotnet build -v:n -c $(XA.Build.Configuration)
