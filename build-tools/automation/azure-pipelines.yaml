@@ -14,7 +14,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/bond/multi-artifact
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -1514,77 +1514,13 @@ stages:
   - finalize_installers
   condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
   jobs:
-  # Check - "Xamarin.Android (Post Build Generate Software Bill of Materials)"
-  - job: generate_sbom
-    displayName: Generate Software Bill of Materials
-    pool:
-      vmImage: $(HostedWinImage)
-    timeoutInMinutes: 60
-    variables:
-      Packaging.EnableSBOMSigning: true
-      SBOMArtifactDir: $(Build.ArtifactStagingDirectory)\sbom-artifacts
-    steps:
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: nuget-signed
-        downloadPath: $(SBOMArtifactDir)
-        patterns: '*.nupkg'
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: nuget-linux-signed
-        downloadPath: $(SBOMArtifactDir)
-        patterns: '*.nupkg'
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: vs-msi-nugets
-        downloadPath: $(SBOMArtifactDir)
-        patterns: '*.nupkg'
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: vsdrop-signed
-        downloadPath: $(SBOMArtifactDir)
-        patterns: '*.msi'
-
-    # Download signed .pkg and .vsix from JENKINS_SIGN GitHub status
-    - powershell: |
-        $url = "https://xamci.azurewebsites.net/dl/xamarin/xamarin-android/$(Build.SourceVersion)/JENKINS-SIGN"
-        Write-Host "Getting manifest from $url"
-        $manifest = [string](Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{"Authorization"="token $(GitHub.Token)"}) | ConvertFrom-Json
-        $artifactsToDownload = ".pkg", ".vsix"
-        foreach ($file in $manifest) {
-            $fileUrl = $file.url
-            if ($null -ne ($artifactsToDownload | ? { $fileUrl.EndsWith($_) })) {
-                $fileName = [IO.Path]::GetFileName($fileUrl)
-                Write-Host "Downloading artifact from $fileUrl to $(SBOMArtifactDir)\$fileName"
-                if ($fileUrl -like "*dl.internalx.com*") {
-                    Invoke-WebRequest -Uri $fileUrl -OutFile "$(SBOMArtifactDir)\$fileName" -UseBasicParsing -Headers @{"Authorization"="token $(GitHub.Token)"}
-                } else {
-                    Invoke-WebRequest -Uri $fileUrl -OutFile "$(SBOMArtifactDir)\$fileName" -UseBasicParsing
-                }
-            }
-        }
-      displayName: Download signed .pkg and .vsix
-
-    - powershell:  mkdir -p $(Build.ArtifactStagingDirectory)\sbom-manifests
-      displayName: Create sbom-manifests directory
-
-    # https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
-    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-      displayName: Generate SBOM from artifacts
-      inputs:
-          BuildDropPath: $(SBOMArtifactDir)
-          ManifestDirPath: $(Build.ArtifactStagingDirectory)\sbom-manifests
-          #PackageName: Xamarin Android
-          #PackageVersion:
-
-    - task: PublishPipelineArtifact@1
-      displayName: Upload SBOM manifests
-      inputs:
-        artifactName: Software Bill of Materials Manifests
-        targetPath: $(Build.ArtifactStagingDirectory)\sbom-manifests
+  - template: compliance/sbom/job.yml@yaml
+    parameters:
+      artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
+      useArtifactsAndStatuses: true
+      packageName: xamarin-android
+      packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
+      GitHub.Token: $(GitHub.Token)
 
 - stage: code_analysis
   dependsOn: []
