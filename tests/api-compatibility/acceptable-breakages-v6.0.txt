@@ -1,5 +1,4 @@
 Compat issues with assembly Mono.Android:
-CannotRemoveAttribute : Attribute 'Android.Runtime.RegisterAttribute' exists on 'Android.App.Notification.Action.Icon' in the contract but not the implementation.
 MembersMustExist : Member 'public System.Int32 Android.App.Notification.Action.Icon.get()' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public void Android.App.Notification.Action.Icon.set(System.Int32)' does not exist in the implementation but it does exist in the contract.
 CannotAddAbstractMembers : Member 'public Android.Content.PM.Permission Android.Content.Context.CheckSelfPermission(System.String)' is abstract in the implementation but is missing in the contract.

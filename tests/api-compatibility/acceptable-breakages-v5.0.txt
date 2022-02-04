@@ -12,7 +12,6 @@ CannotAddAbstractMembers : Member 'public Android.Graphics.Drawables.Drawable An
 CannotAddAbstractMembers : Member 'public Java.Lang.ICharSequence Android.Content.PM.PackageManager.GetUserBadgedLabelFormatted(Java.Lang.ICharSequence, Android.OS.UserHandle)' is abstract in the implementation but is missing in the contract.
 CannotAddAbstractMembers : Member 'public Android.Content.PM.PackageInstaller Android.Content.PM.PackageManager.PackageInstaller.get()' is abstract in the implementation but is missing in the contract.
 CannotAddAbstractMembers : Member 'public void Android.InputMethodServices.AbstractInputMethodService.AbstractInputMethodSessionImpl.UpdateCursorAnchorInfo(Android.Views.InputMethods.CursorAnchorInfo)' is abstract in the implementation but is missing in the contract.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'System.String Android.Provider.Settings.Secure.InstallNonMarketApps' in the contract but not the implementation.
 InterfacesShouldHaveSameMembers : Interface member 'public System.Boolean Android.Speech.Tts.ISynthesisCallback.HasFinished' is present in the implementation but not in the contract.
 InterfacesShouldHaveSameMembers : Interface member 'public System.Boolean Android.Speech.Tts.ISynthesisCallback.HasStarted' is present in the implementation but not in the contract.
 InterfacesShouldHaveSameMembers : Interface member 'public void Android.Speech.Tts.ISynthesisCallback.Error(Android.Speech.Tts.TextToSpeechError)' is present in the implementation but not in the contract.
