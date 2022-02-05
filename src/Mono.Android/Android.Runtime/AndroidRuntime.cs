@@ -388,50 +388,90 @@ namespace Android.Runtime {
 					return;
 				}
 
-				string[] members = methods!.Split ('\n');
-				if (members.Length < 2) {
+				int newLineIndex = methods!.IndexOf ('\n');
+				if (newLineIndex == -1) {
 					if (jniAddNativeMethodRegistrationAttributePresent)
 						base.RegisterNativeMembers (nativeClass, type, methods);
 					return;
 				}
 
-				JniNativeMethodRegistration[] natives = new JniNativeMethodRegistration [members.Length-1];
-				for (int i = 0; i < members.Length; ++i) {
-					string method = members [i];
-					if (string.IsNullOrEmpty (method))
-						continue;
-					string[] toks = members [i].Split (new[]{':'}, 4);
-					Delegate callback;
-					if (toks [2] == "__export__") {
-						var mname = toks [0].Substring (2);
-						MethodInfo? minfo = null;
-						foreach (var mi in type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
-							if (mi.Name == mname && JavaNativeTypeManager.GetJniSignature (mi) == toks [1]) {
-								minfo = mi;
-								break;
-							}
+				List<JniNativeMethodRegistration> natives = new List<JniNativeMethodRegistration> (16); // an initial capacity since most classes have more than 4-8 methods
+				ReadOnlySpan<char> methodsSpan = methods;
 
-						if (minfo == null)
-							throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname, toks [1]));
-						callback = CreateDynamicCallback (minfo);
-					} else {
-						Type callbackDeclaringType = type;
-						if (toks.Length == 4) {
-							callbackDeclaringType = Type.GetType (toks [3], throwOnError: true)!;
+				MethodInfo []? typeMethods = null;
+				while (!methodsSpan.IsEmpty) {
+					ReadOnlySpan<char> methodLine = methodsSpan.Slice (0, newLineIndex != -1 ? newLineIndex : methodsSpan.Length);
+					if (!methodLine.IsEmpty) {
+						SplitMethodLine (methodLine,
+							out ReadOnlySpan<char> name,
+							out ReadOnlySpan<char> signature,
+							out ReadOnlySpan<char> callbackString,
+							out ReadOnlySpan<char> callbackDeclaringTypeString);
+						Delegate callback;
+						if (callbackString == "__export__") {
+							var mname = name.Slice (2);
+							MethodInfo? minfo = null;
+							typeMethods ??= type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+							foreach (var mi in typeMethods)
+								if (mi.Name == mname && JavaNativeTypeManager.GetJniSignature (mi) == signature) {
+									minfo = mi;
+									break;
+								}
+
+							if (minfo == null)
+							    throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname.ToString (), signature.ToString ()));
+							callback = CreateDynamicCallback (minfo);
+						} else {
+							Type callbackDeclaringType = type;
+							if (!callbackDeclaringTypeString.IsEmpty) {
+								callbackDeclaringType = Type.GetType (callbackDeclaringTypeString.ToString (), throwOnError: true)!;
+							}
+							while (callbackDeclaringType.ContainsGenericParameters) {
+								callbackDeclaringType = callbackDeclaringType.BaseType!;
+							}
+							GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
+								callbackDeclaringType, callbackString.ToString ());
+							callback = connector ();
 						}
-						while (callbackDeclaringType.ContainsGenericParameters) {
-							callbackDeclaringType = callbackDeclaringType.BaseType!;
-						}
-						GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
-							callbackDeclaringType, toks [2]);
-						callback = connector ();
+						natives.Add (new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback));
 					}
-					natives [i] = new JniNativeMethodRegistration (toks [0], toks [1], callback);
+
+					if (newLineIndex == -1) {
+						methodsSpan = default;
+					} else {
+						methodsSpan = methodsSpan.Slice (newLineIndex + 1);
+						newLineIndex = methodsSpan.IndexOf ('\n');
+					}
 				}
 
-				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, natives.Length);
+				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives.ToArray());
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);
+			}
+		}
+
+		private static void SplitMethodLine(
+			ReadOnlySpan<char> methodLine,
+			out ReadOnlySpan<char> name,
+			out ReadOnlySpan<char> signature,
+			out ReadOnlySpan<char> callback,
+			out ReadOnlySpan<char> callbackDeclaringType)
+		{
+			int colonIndex = methodLine.IndexOf(':');
+			name = methodLine.Slice(0, colonIndex);
+			methodLine = methodLine.Slice(colonIndex + 1);
+	
+			colonIndex = methodLine.IndexOf(':');
+			signature = methodLine.Slice(0, colonIndex);
+			methodLine = methodLine.Slice(colonIndex + 1);
+
+			colonIndex = methodLine.IndexOf(':');
+			callback = methodLine.Slice(0, colonIndex != -1 ? colonIndex : methodLine.Length);
+
+			if (colonIndex == -1) {
+				callbackDeclaringType = default;
+			} else {
+				callbackDeclaringType = methodLine.Slice (colonIndex + 1);
 			}
 		}
 	}
