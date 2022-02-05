@@ -408,12 +408,12 @@ namespace Android.Runtime {
 							out ReadOnlySpan<char> callbackString,
 							out ReadOnlySpan<char> callbackDeclaringTypeString);
 						Delegate callback;
-						if (callbackString == "__export__") {
+						if (callbackString.SequenceEqual ("__export__")) {
 							var mname = name.Slice (2);
 							MethodInfo? minfo = null;
 							typeMethods ??= type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 							foreach (var mi in typeMethods)
-								if (mi.Name == mname && JavaNativeTypeManager.GetJniSignature (mi) == signature) {
+								if (mname.SequenceEqual(mi.Name) && signature.SequenceEqual(JavaNativeTypeManager.GetJniSignature (mi))) {
 									minfo = mi;
 									break;
 								}
