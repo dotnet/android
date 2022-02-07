@@ -419,7 +419,7 @@ namespace Android.Runtime {
 								}
 
 							if (minfo == null)
-							    throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname.ToString (), signature.ToString ()));
+								throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname.ToString (), signature.ToString ()));
 							callback = CreateDynamicCallback (minfo);
 						} else {
 							Type callbackDeclaringType = type;
@@ -450,23 +450,23 @@ namespace Android.Runtime {
 			}
 		}
 
-		private static void SplitMethodLine(
+		static void SplitMethodLine (
 			ReadOnlySpan<char> methodLine,
 			out ReadOnlySpan<char> name,
 			out ReadOnlySpan<char> signature,
 			out ReadOnlySpan<char> callback,
 			out ReadOnlySpan<char> callbackDeclaringType)
 		{
-			int colonIndex = methodLine.IndexOf(':');
-			name = methodLine.Slice(0, colonIndex);
-			methodLine = methodLine.Slice(colonIndex + 1);
-	
-			colonIndex = methodLine.IndexOf(':');
-			signature = methodLine.Slice(0, colonIndex);
-			methodLine = methodLine.Slice(colonIndex + 1);
+			int colonIndex = methodLine.IndexOf (':');
+			name = methodLine.Slice (0, colonIndex);
+			methodLine = methodLine.Slice (colonIndex + 1);
 
-			colonIndex = methodLine.IndexOf(':');
-			callback = methodLine.Slice(0, colonIndex != -1 ? colonIndex : methodLine.Length);
+			colonIndex = methodLine.IndexOf (':');
+			signature = methodLine.Slice (0, colonIndex);
+			methodLine = methodLine.Slice (colonIndex + 1);
+
+			colonIndex = methodLine.IndexOf (':');
+			callback = methodLine.Slice (0, colonIndex != -1 ? colonIndex : methodLine.Length);
 
 			if (colonIndex == -1) {
 				callbackDeclaringType = default;
