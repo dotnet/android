@@ -1044,7 +1044,7 @@ namespace Xamarin.Android.Net
 					: X509TrustManagerWithValidationCallback.Inject(tmf?.GetTrustManagers (), requestMessage, ServerCertificateCustomValidationCallback);
 
 			// TODO: remove this if
-			if (!trustManagers?.Any(x => x is X509TrustManagerWithValidationCallback)) {
+			if (trustManagers == null || !trustManagers!.Any(x => x is X509TrustManagerWithValidationCallback)) {
 				throw new Exception("the custom trust manager was not injected");
 			}
 
