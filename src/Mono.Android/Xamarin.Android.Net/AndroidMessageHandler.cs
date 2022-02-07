@@ -325,9 +325,6 @@ namespace Xamarin.Android.Net
 		/// <param name="cancellationToken">Cancellation token.</param>
 		protected override async Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-			var isSet = ServerCertificateCustomValidationCallback != null ? "is set" : "isn't set";
-			throw new Exception($"the callback {isSet}");
-
 			AssertSelf ();
 			if (request == null)
 				throw new ArgumentNullException (nameof (request));
@@ -1001,11 +998,16 @@ namespace Xamarin.Android.Net
 
 		void SetupSSL (HttpsURLConnection? httpsConnection, HttpRequestMessage requestMessage)
 		{
-			if (httpsConnection == null)
+			if (httpsConnection == null) {
+				// TODO: remove this exception
+				throw new Exception("the https connection is null");
 				return;
+			}
 
 			var socketFactory = ConfigureCustomSSLSocketFactory (httpsConnection);
 			if (socketFactory != null) {
+				// TODO: remove this exception
+				throw new Exception("there's a custom SSL socket factory");
 				httpsConnection.SSLSocketFactory = socketFactory;
 				return;
 			}
@@ -1013,6 +1015,9 @@ namespace Xamarin.Android.Net
 			// Context: https://github.com/xamarin/xamarin-android/issues/1615
 			int apiLevel = (int)Build.VERSION.SdkInt;
 			if (apiLevel >= 16 && apiLevel <= 20) {
+				// TODO: remove this exception
+				throw new Exception($"unexpected api level {apiLevel}");
+
 				httpsConnection.SSLSocketFactory = new OldAndroidSSLSocketFactory ();
 				return;
 			}
@@ -1038,7 +1043,18 @@ namespace Xamarin.Android.Net
 					? tmf?.GetTrustManagers ()
 					: X509TrustManagerWithValidationCallback.Inject(tmf?.GetTrustManagers (), requestMessage, ServerCertificateCustomValidationCallback);
 
+			// TODO: remove this if
+			if (!trustManagers?.Any(x => x is X509TrustManagerWithValidationCallback)) {
+				throw new Exception("the custom trust manager was not injected");
+			}
+
 			var context = SSLContext.GetInstance ("TLS");
+
+			// TODO: remove this if
+			if (context == null) {
+				throw new Exception("the tls context is null");
+			}
+
 			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
 			httpsConnection.SSLSocketFactory = context?.SocketFactory;
 		}
