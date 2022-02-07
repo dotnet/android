@@ -3,7 +3,6 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0-android</TargetFramework>
-    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
     <RootNamespace>Xamarin.Android.Net.Tests</RootNamespace>
     <AssemblyName>Xamarin.Android.Net.NET_Tests</AssemblyName>
     <OutputType>Library</OutputType>
@@ -34,7 +33,7 @@
     <Reference Include="System" />
     <Reference Include="System.Net.Http" />
     <Reference Include="Mono.Android" />
-    <Reference Include="Xamarin.Legacy.NUnitLite" />
+    <Reference Include="Xamarin.Android.NUnitLite" />
   </ItemGroup>
 
   <ItemGroup>
@@ -65,5 +64,4 @@
   </ItemGroup>
 
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>
