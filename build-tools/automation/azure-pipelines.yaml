@@ -14,7 +14,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/dev/bond/multi-artifact
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: monodroid
     type: github
