@@ -325,6 +325,8 @@ namespace Xamarin.Android.Net
 		/// <param name="cancellationToken">Cancellation token.</param>
 		protected override async Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
+			throw new Exception($"the callback {ServerCertificateCustomValidationCallback ? "is set" : "isn't set"}");
+
 			AssertSelf ();
 			if (request == null)
 				throw new ArgumentNullException (nameof (request));
