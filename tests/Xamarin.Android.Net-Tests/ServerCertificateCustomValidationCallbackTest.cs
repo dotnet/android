@@ -73,7 +73,7 @@ namespace Xamarin.Android.Net.Tests
 		public async Task ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
-			bool exceptionWasThrown = true;
+			bool exceptionWasThrown = false;
 
 			var handler = CreateHandlerWithCallback(
 				(request, cert, chain, errors) => {
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Net.Tests
 			}
 			catch (Javax.Net.Ssl.SSLHandshakeException)
 			{
-				exceptionWasThrown = false;
+				exceptionWasThrown = true;
 			}
 
 			Assert.IsTrue (callbackHasBeenCalled, "callback has been called");
