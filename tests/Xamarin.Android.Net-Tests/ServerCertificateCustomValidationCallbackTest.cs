@@ -38,7 +38,7 @@ namespace Xamarin.Android.Net.Tests
 			var client = new HttpClient (handler);
 			await client.GetStringAsync ("https://microsoft.com/");
 
-			Assert.IsTrue (callbackHasBeenCalled, "callback has been called");
+			Assert.IsTrue (callbackHasBeenCalled, "Custom validation callback hasn't been called");
 		}
 
 		[Test]
@@ -65,8 +65,8 @@ namespace Xamarin.Android.Net.Tests
 				expectedExceptionHasBeenThrown = true;
 			}
 
-			Assert.IsTrue (callbackHasBeenCalled, "callback has been called");
-			Assert.IsTrue (expectedExceptionHasBeenThrown, "the expected exception has been thrown");
+			Assert.IsTrue (callbackHasBeenCalled, "Custom validation callback hasn't been called");
+			Assert.IsTrue (expectedExceptionHasBeenThrown, "the expected exception hasn't been thrown");
 		}
 
 		[Test]
@@ -93,8 +93,8 @@ namespace Xamarin.Android.Net.Tests
 				exceptionWasThrown = true;
 			}
 
-			Assert.IsTrue (callbackHasBeenCalled, "callback has been called");
-			Assert.IsFalse (exceptionWasThrown, "the ssl handshake exception has not been thrown");
+			Assert.IsTrue (callbackHasBeenCalled, "Custom validation callback hasn't been called");
+			Assert.IsFalse (exceptionWasThrown, "the ssl handshake exception has been thrown");
 		}
 	}
 
