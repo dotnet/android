@@ -201,31 +201,6 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (KotlinClassInheritability.Final, klass_meta.Inheritability);
 			Assert.AreEqual (KotlinClassVisibility.Public, klass_meta.Visibility);
 		}
-
-		private KotlinMetadata GetMetadataForClassFile (string file)
-		{
-			var c = LoadClassFile (file);
-			var attr = c.Attributes.OfType<RuntimeVisibleAnnotationsAttribute> ().FirstOrDefault ();
-			var kotlin = attr?.Annotations.FirstOrDefault (a => a.Type == "Lkotlin/Metadata;");
-
-			Assert.NotNull (kotlin);
-
-			var meta = KotlinMetadata.FromAnnotation (kotlin);
-
-			return meta;
-		}
-
-		private KotlinClass GetClassMetadata (string file)
-		{
-			var meta = GetMetadataForClassFile (file);
-
-			Assert.AreEqual (KotlinMetadataKind.Class, meta.Kind);
-
-			Assert.AreEqual ("1.0.3", meta.ByteCodeVersion.ToString ());
-			Assert.AreEqual ("1.1.15", meta.MetadataVersion.ToString ());
-
-			return meta.AsClassMetadata ();
-		}
 	}
 }
 

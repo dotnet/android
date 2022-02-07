@@ -175,10 +175,12 @@ namespace Xamarin.Android.Tools.Bytecode
 				return;
 			}
 
-			var java_parameters = method.GetFilteredParameters ();
+			(var start, var end) = CreateParameterMap (method, metadata, kotlinClass);
 
-			for (var i = 0; i < java_parameters.Length; i++) {
-				var java_p = java_parameters [i];
+			var java_parameters = method.GetParameters ();
+
+			for (var i = 0; i < end - start; i++) {
+				var java_p = java_parameters [start + i];
 				var kotlin_p = metadata.ValueParameters == null ? null : metadata.ValueParameters [i];
 				if (kotlin_p == null || kotlin_p.Type == null || kotlin_p.Name == null)
 					continue;
@@ -196,6 +198,46 @@ namespace Xamarin.Android.Tools.Bytecode
 			// Handle erasure of Kotlin unsigned types
 			method.KotlinReturnType = GetKotlinType (method.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
 		}
+
+		public static (int start, int end) CreateParameterMap (MethodInfo method, KotlinFunction function, KotlinClass? kotlinClass)
+		{
+			var parameters = method.GetParameters ();
+			var start = 0;
+			var end = parameters.Length;
+
+			// If the parameter counts are the same, that's good enough (because we know signatures matched)
+			if (IsValidParameterMap (method, function, start, end))
+				return (start, end);
+
+			// Remove the "hidden" receiver type parameter from the start of the parameter list
+			if (function.ReceiverType != null)
+				start++;
+
+			if (IsValidParameterMap (method, function, start, end))
+				return (start, end);
+
+			var last_p = parameters.Last ();
+
+			// Remove the "hidden" coroutine continuation type parameter from the end of the parameter list
+			// We try to restrict it to compiler generated paramteres because a user might have actually used it as a parameter
+			if (last_p.Type.BinaryName == "Lkotlin/coroutines/Continuation;" && (last_p.IsUnnamedParameter () || last_p.IsCompilerNamed ()))
+				end--;
+
+			if (IsValidParameterMap (method, function, start, end))
+				return (start, end);
+
+			// Remove the "hidden" "this" type parameter for a static method from the start of the parameter list
+			// Note we do this last because sometimes it isn't there.
+			if (method.AccessFlags.HasFlag (MethodAccessFlags.Static))
+				start++;
+
+			if (IsValidParameterMap (method, function, start, end))
+				return (start, end);
+
+			return (0, 0);
+		}
+
+		static bool IsValidParameterMap (MethodInfo method, KotlinFunction function, int start, int end) => function.ValueParameters?.Count == end - start;
 
 		static void FixupExtensionMethod (MethodInfo method)
 		{
@@ -271,10 +313,23 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		static MethodInfo? FindJavaMethod (KotlinFile kotlinFile, KotlinFunction function, ClassFile klass)
 		{
-			var possible_methods = klass.Methods.Where (method => method.Name == function.JvmName &&
-									      method.GetFilteredParameters ().Length == function.ValueParameters?.Count);
+			var possible_methods = klass.Methods.Where (method => method.Name == function.JvmName).ToArray ();
+			var signature = function.JvmSignature;
 
-			foreach (var method in possible_methods) {
+			// If the Descriptor/Signature match, that means all parameters and return type match
+			if (signature != null && possible_methods.SingleOrDefault (method => method.Descriptor == signature) is MethodInfo m)
+					return m;
+
+			// Sometimes JvmSignature is null (or unhelpful), so we're going to construct one ourselves and see if they match
+			signature = function.ConstructJvmSignature ();
+
+			if (possible_methods.SingleOrDefault (method => method.Descriptor == signature) is MethodInfo m2)
+				return m2;
+
+			// If that didn't work, let's do it the hard way!
+			// I don't know if this catches anything additional, but it was the original code we shipped, so
+			// we'll keep it just in case something in the wild requires it.
+			foreach (var method in possible_methods.Where (method => method.GetFilteredParameters ().Length == function.ValueParameters?.Count)) {
 				if (function.ReturnType == null)
 					continue;
 				if (!TypesMatch (method.ReturnType, function.ReturnType, kotlinFile))
@@ -285,6 +340,10 @@ namespace Xamarin.Android.Tools.Bytecode
 
 				return method;
 			}
+
+			// Theoretically this should never be hit, but who knows. At worst, it just means
+			// Kotlin niceties won't be applied to the method.
+			Log.Debug ($"Kotlin: Could not find Java method to match '{function.Name} ({function.ConstructJvmSignature ()})'");
 
 			return null;
 		}

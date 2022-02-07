@@ -15,6 +15,7 @@
       "tests\\Xamarin.Android.Tools.Bytecode-Tests\\Xamarin.Android.Tools.Bytecode-Tests.csproj",
       "tests\\Xamarin.SourceWriter-Tests\\Xamarin.SourceWriter-Tests.csproj",
       "tests\\generator-Tests\\generator-Tests.csproj",
+      "tools\\class-parse\\class-parse.csproj",
       "tools\\generator\\generator.csproj"
     ]
   }

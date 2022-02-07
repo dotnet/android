@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tools.Bytecode
 {
 	public static class KotlinUtilities
 	{
-		public static string ConvertKotlinTypeSignature (KotlinType? type, KotlinFile? metadata = null)
+		public static string ConvertKotlinTypeSignature (KotlinType? type, KotlinFile? metadata = null, bool convertUnsignedToPrimitive = true)
 		{
 			if (type is null)
 				return string.Empty;
@@ -27,15 +27,15 @@ namespace Xamarin.Android.Tools.Bytecode
 				return "Ljava/lang/Object;";
 			}
 
-			var result = ConvertKotlinClassToJava (class_name);
+			var result = ConvertKotlinClassToJava (class_name, convertUnsignedToPrimitive);
 
 			if (result == "[")
-				result += ConvertKotlinTypeSignature (type.Arguments?.FirstOrDefault ()?.Type);
+				result += ConvertKotlinTypeSignature (type.Arguments?.FirstOrDefault ()?.Type, null, convertUnsignedToPrimitive);
 
 			return result;
 		}
 
-		public static string ConvertKotlinClassToJava (string? className)
+		public static string ConvertKotlinClassToJava (string? className, bool convertUnsignedToPrimitive = true)
 		{
 			if (className == null || string.IsNullOrWhiteSpace (className))
 				return string.Empty;
@@ -44,6 +44,9 @@ namespace Xamarin.Android.Tools.Bytecode
 
 			if (type_map.TryGetValue (className.TrimEnd (';'), out var result))
 				return result;
+
+			if (convertUnsignedToPrimitive && unsigned_type_map.TryGetValue (className.TrimEnd (';'), out var result2))
+				return result2;
 
 			return "L" + className;
 		}
@@ -92,6 +95,14 @@ namespace Xamarin.Android.Tools.Bytecode
 				parameters [parameters.Length - 1].Type.TypeSignature == "Lkotlin/jvm/internal/DefaultConstructorMarker;";
 		}
 
+		// Sometimes the Kotlin provided JvmSignature is null (or unhelpful), so we need to construct one ourselves
+		public static string ConstructJvmSignature (this KotlinFunction function)
+		{
+			// The receiver type (if specified) is a "hidden" parameter passed at the beginning
+			// of the Java parameter list, so we include it so the Signature/Descriptors match.
+			return $"({function.ReceiverType?.GetSignature (false)}{string.Concat (function.ValueParameters?.Select (p => p.Type?.GetSignature (false)) ?? Enumerable.Empty<string> ())}){function.ReturnType?.GetSignature (false)}";
+		}
+
 		internal static List<TResult>? ToList<TSource, TResult> (this IEnumerable<TSource>? self, JvmNameResolver resolver, Func<TSource, JvmNameResolver, TResult?> creator)
 			where TResult: class
 		{
@@ -114,37 +125,42 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		public static bool IsUnnamedParameter (this ParameterInfo parameter) => parameter.Name.Length > 1 && parameter.Name.StartsWith ("p", StringComparison.Ordinal) && int.TryParse (parameter.Name.Substring (1), out var _);
 
+		public static bool IsCompilerNamed (this ParameterInfo parameter) => parameter.Name.Length > 0 && parameter.Name.StartsWith ("$", StringComparison.Ordinal);
+
 		public static bool IsUnnamedParameter (this KotlinValueParameter parameter) => parameter.Name?.Length > 1 &&
 			parameter.Name.StartsWith ("p", StringComparison.Ordinal) &&
 			int.TryParse (parameter.Name.Substring (1), out var _);
 
+		static Dictionary<string, string> unsigned_type_map = new Dictionary<string, string> {
+			{ "kotlin/UInt", "I" },
+			{ "kotlin/ULong", "J" },
+			{ "kotlin/UShort", "S" },
+			{ "kotlin/UByte", "B" },
+			{ "kotlin/UIntArray", "[I" },
+			{ "kotlin/ULongArray", "[J" },
+			{ "kotlin/UShortArray", "[S" },
+			{ "kotlin/UByteArray", "[B" },
+		};
+
 		static Dictionary<string, string> type_map = new Dictionary<string, string> {
 			{ "kotlin/Int", "I" },
-			{ "kotlin/UInt", "I" },
 			{ "kotlin/Double", "D" },
 			{ "kotlin/Char", "C" },
 			{ "kotlin/Long", "J" },
-			{ "kotlin/ULong", "J" },
 			{ "kotlin/Float", "F" },
 			{ "kotlin/Short", "S" },
-			{ "kotlin/UShort", "S" },
 			{ "kotlin/Byte", "B" },
-			{ "kotlin/UByte", "B" },
 			{ "kotlin/Boolean", "Z" },
 			{ "kotlin/Unit", "V" },
 
 			{ "kotlin/Array", "[" },
 			{ "kotlin/IntArray", "[I" },
-			{ "kotlin/UIntArray", "[I" },
 			{ "kotlin/DoubleArray", "[D" },
 			{ "kotlin/CharArray", "[C" },
 			{ "kotlin/LongArray", "[J" },
-			{ "kotlin/ULongArray", "[J" },
 			{ "kotlin/FloatArray", "[F" },
 			{ "kotlin/ShortArray", "[S" },
-			{ "kotlin/UShortArray", "[S" },
 			{ "kotlin/ByteArray", "[B" },
-			{ "kotlin/UByteArray", "[B" },
 			{ "kotlin/BooleanArray", "[Z" },
 
 			{ "kotlin/Any", "Ljava/lang/Object;" },

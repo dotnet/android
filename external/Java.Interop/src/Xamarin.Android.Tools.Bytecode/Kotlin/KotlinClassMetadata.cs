@@ -358,9 +358,9 @@ namespace Xamarin.Android.Tools.Bytecode
 			};
 		}
 
-		public string GetSignature ()
+		public string GetSignature (bool convertUnsignedToPrimitive = true)
 		{
-			return KotlinUtilities.ConvertKotlinTypeSignature (this);
+			return KotlinUtilities.ConvertKotlinTypeSignature (this, null, convertUnsignedToPrimitive);
 		}
 	}
 

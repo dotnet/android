@@ -105,6 +105,46 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			Assert.AreEqual (expected, actual.ToString ());
 		}
 
+		protected static KotlinMetadata GetMetadataForClass (ClassFile klass)
+		{
+			var attr = klass.Attributes.OfType<RuntimeVisibleAnnotationsAttribute> ().FirstOrDefault ();
+			var kotlin = attr?.Annotations.FirstOrDefault (a => a.Type == "Lkotlin/Metadata;");
+
+			Assert.NotNull (kotlin);
+
+			var meta = KotlinMetadata.FromAnnotation (kotlin);
+
+			return meta;
+		}
+
+		protected static KotlinClass GetClassMetadataForClass (ClassFile klass)
+		{
+			var meta = GetMetadataForClass (klass);
+			Assert.AreEqual (KotlinMetadataKind.Class, meta.Kind);
+
+			return meta.AsClassMetadata ();
+		}
+
+		protected static KotlinFile GetFileMetadataForClass (ClassFile klass)
+		{
+			var meta = GetMetadataForClass (klass);
+			Assert.AreEqual (KotlinMetadataKind.File, meta.Kind);
+
+			return meta.AsFileMetadata ();
+		}
+
+		protected static KotlinMetadata GetMetadataForClassFile (string file)
+		{
+			var c = LoadClassFile (file);
+			return GetMetadataForClass (c);
+		}
+
+		protected static KotlinClass GetClassMetadata (string file)
+		{
+			var c = LoadClassFile (file);
+			return GetClassMetadataForClass (c);
+		}
+
 		static Stream GetResourceStream (string resource)
 		{
 			// Look for resources that end with our name, this allows us to

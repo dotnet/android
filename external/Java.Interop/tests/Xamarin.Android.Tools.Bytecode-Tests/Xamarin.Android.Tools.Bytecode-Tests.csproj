@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\*" />
-    <EmbeddedResource Include="kotlin\**\*.class" />
+    <EmbeddedResource Include="kotlin*\**\*.class" />
 
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NotNullClass.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IJavaInterface.class" />

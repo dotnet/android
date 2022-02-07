@@ -310,5 +310,53 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.True (klass.Methods.Single (m => m.Name == "hitCount").AccessFlags.HasFlag (MethodAccessFlags.Public));
 			Assert.True (klass.Methods.Single (m => m.Name == "setType").AccessFlags.HasFlag (MethodAccessFlags.Public));
 		}
+
+		[Test]
+		public void MatchParametersWithReceiver ()
+		{
+			var klass = LoadClassFile ("DeepRecursiveKt.class");
+			var meta = GetFileMetadataForClass (klass);
+
+			var java_method = klass.Methods.Single (m => m.Name == "invoke");
+			var kotlin_function = meta.Functions.Single (m => m.Name == "invoke");
+
+			(var start, var end) = KotlinFixups.CreateParameterMap (java_method, kotlin_function, null);
+
+			// Start is 1 instead of 0 to skip the receiver
+			Assert.AreEqual (1, start);
+			Assert.AreEqual (2, end);
+		}
+
+		[Test]
+		public void MatchParametersWithContinuation ()
+		{
+			var klass = LoadClassFile ("DeepRecursiveScope.class");
+			var meta = GetClassMetadataForClass (klass);
+
+			var java_method = klass.Methods.Single (m => m.Name == "callRecursive" && m.GetParameters ().Count () == 2);
+			var kotlin_function = meta.Functions.Single (m => m.Name == "callRecursive" && m.JvmSignature.Count (c => c == ';') == 3);
+
+			(var start, var end) = KotlinFixups.CreateParameterMap (java_method, kotlin_function, null);
+
+			// End is 1 instead of 2 to skip the trailing continuation
+			Assert.AreEqual (0, start);
+			Assert.AreEqual (1, end);
+		}
+
+		[Test]
+		public void MatchParametersWithStaticThis ()
+		{
+			var klass = LoadClassFile ("UByteArray.class");
+			var meta = GetClassMetadataForClass (klass);
+
+			var java_method = klass.Methods.Single (m => m.Name == "contains-7apg3OU" && m.GetParameters ().Count () == 2);
+			var kotlin_function = meta.Functions.Single (m => m.Name == "contains");
+
+			(var start, var end) = KotlinFixups.CreateParameterMap (java_method, kotlin_function, null);
+
+			// Start is 1 instead of 0 to skip the static 'this'
+			Assert.AreEqual (1, start);
+			Assert.AreEqual (2, end);
+		}
 	}
 }
