@@ -18,6 +18,7 @@ namespace Xamarin.Android.Prepare
 		protected Unix (Context context) : base (context)
 		{
 			Architecture = Utilities.GetStringFromStdout ("uname", "-m").Trim ();
+			DiskInformation =  Utilities.GetStringFromStdout ("df", "-h").Trim ();
 		}
 
 		string GetCompiler (string fromEnv, string defaultName)
