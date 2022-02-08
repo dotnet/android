@@ -1031,8 +1031,11 @@ namespace Xamarin.Android.Net
 			{
 				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
 				// there is no point in changing the behavior of the default SSL socket factory
-				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
+				if (!gotCerts && ServerCertificateCustomValidationCallback == null) {
+					// TODO: remove the exception
+					throw new Exception("no certs and no callback");
 					return;
+				}
 
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
 				tmf?.Init (gotCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
@@ -1057,25 +1060,27 @@ namespace Xamarin.Android.Net
 
 			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
 			httpsConnection.SSLSocketFactory = context?.SocketFactory;
-		}
+			throw new Exception("everything was set up correctly");
 
-		KeyStore? InitializeKeyStore (out bool gotCerts)
-		{
-			var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
-			keyStore?.Load (null, null);
-			gotCerts = TrustedCerts?.Count > 0;
+			KeyStore? InitializeKeyStore (out bool gotCerts)
+			{
+				var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
+				keyStore?.Load (null, null);
+				gotCerts = TrustedCerts?.Count > 0;
 
-			if (gotCerts) {
-				for (int i = 0; i < TrustedCerts!.Count; i++) {
-					Certificate cert = TrustedCerts [i];
-					if (cert == null)
-						continue;
-					keyStore?.SetCertificateEntry ($"ca{i}", cert);
+				if (gotCerts) {
+					for (int i = 0; i < TrustedCerts!.Count; i++) {
+						Certificate cert = TrustedCerts [i];
+						if (cert == null)
+							continue;
+						keyStore?.SetCertificateEntry ($"ca{i}", cert);
+					}
 				}
-			}
 
-			return keyStore;
+				return keyStore;
+			}
 		}
+
 
 		void HandlePreAuthentication (HttpURLConnection httpConnection)
 		{
