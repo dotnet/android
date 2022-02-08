@@ -7,6 +7,7 @@
     <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' And '$(MSBuildRuntimeType)' != 'Mono' ">true</TreatWarningsAsErrors>
     <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
   </PropertyGroup>
 
   <PropertyGroup>
