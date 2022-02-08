@@ -14,7 +14,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/bond/sbom-artifact-map
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -1523,7 +1523,7 @@ stages:
   - finalize_installers
   condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
   jobs:
-  - template: compliance/sbom/job.yml@yaml
+  - template: compliance/sbom/job.v1.yml@yaml
     parameters:
       artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
       statusContexts: [ JENKINS-SIGN ]
