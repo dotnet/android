@@ -1060,7 +1060,7 @@ namespace Xamarin.Android.Net
 
 			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
 			httpsConnection.SSLSocketFactory = context?.SocketFactory;
-			throw new Exception("everything was set up correctly");
+			throw new Exception($"everything was set up correctly, number of trust managers: {trustManagers!.Count}");
 
 			KeyStore? InitializeKeyStore (out bool gotCerts)
 			{
