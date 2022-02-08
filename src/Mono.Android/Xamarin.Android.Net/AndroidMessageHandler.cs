@@ -1036,13 +1036,6 @@ namespace Xamarin.Android.Net
 					? tmf?.GetTrustManagers ()
 					: X509TrustManagerWithValidationCallback.Inject(tmf?.GetTrustManagers (), requestMessage, ServerCertificateCustomValidationCallback);
 
-			var names = new string[trustManagers.Length];
-			for (int i = 0; i < trustManagers.Length; i++) {
-				names[i] = trustManagers[i].GetType().FullName;
-			}
-
-			throw new Exception(string.Join(", ", names));
-
 			var context = SSLContext.GetInstance ("TLS");
 			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
 			httpsConnection.SSLSocketFactory = context?.SocketFactory;

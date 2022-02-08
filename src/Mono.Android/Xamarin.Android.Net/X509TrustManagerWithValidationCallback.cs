@@ -26,7 +26,7 @@ namespace Xamarin.Android.Net
 			IX509TrustManager? x509TrustManager = trustManagers?.OfType<IX509TrustManager> ().FirstOrDefault ();
 			IEnumerable<ITrustManager> otherTrustManagers = trustManagers?.Where (manager => manager != x509TrustManager) ?? Enumerable.Empty<ITrustManager> ();
 			var trustManagerWithCallback = new X509TrustManagerWithValidationCallback (x509TrustManager, requestMessage, serverCertificateCustomValidationCallback);
-			return otherTrustManagers.Append (trustManagerWithCallback).ToArray ();
+			return otherTrustManagers.Prepend (trustManagerWithCallback).ToArray ();
 		}
 
 		public X509TrustManagerWithValidationCallback(
