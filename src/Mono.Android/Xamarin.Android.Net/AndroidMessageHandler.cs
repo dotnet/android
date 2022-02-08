@@ -999,15 +999,11 @@ namespace Xamarin.Android.Net
 		void SetupSSL (HttpsURLConnection? httpsConnection, HttpRequestMessage requestMessage)
 		{
 			if (httpsConnection == null) {
-				// TODO: remove this exception
-				throw new Exception("the https connection is null");
 				return;
 			}
 
 			var socketFactory = ConfigureCustomSSLSocketFactory (httpsConnection);
 			if (socketFactory != null) {
-				// TODO: remove this exception
-				throw new Exception("there's a custom SSL socket factory");
 				httpsConnection.SSLSocketFactory = socketFactory;
 				return;
 			}
@@ -1015,9 +1011,6 @@ namespace Xamarin.Android.Net
 			// Context: https://github.com/xamarin/xamarin-android/issues/1615
 			int apiLevel = (int)Build.VERSION.SdkInt;
 			if (apiLevel >= 16 && apiLevel <= 20) {
-				// TODO: remove this exception
-				throw new Exception($"unexpected api level {apiLevel}");
-
 				httpsConnection.SSLSocketFactory = new OldAndroidSSLSocketFactory ();
 				return;
 			}
@@ -1031,11 +1024,8 @@ namespace Xamarin.Android.Net
 			{
 				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
 				// there is no point in changing the behavior of the default SSL socket factory
-				if (!gotCerts && ServerCertificateCustomValidationCallback == null) {
-					// TODO: remove the exception
-					throw new Exception("no certs and no callback");
+				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
 					return;
-				}
 
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
 				tmf?.Init (gotCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
@@ -1046,21 +1036,16 @@ namespace Xamarin.Android.Net
 					? tmf?.GetTrustManagers ()
 					: X509TrustManagerWithValidationCallback.Inject(tmf?.GetTrustManagers (), requestMessage, ServerCertificateCustomValidationCallback);
 
-			// TODO: remove this if
-			if (trustManagers == null || !trustManagers!.Any(x => x is X509TrustManagerWithValidationCallback)) {
-				throw new Exception("the custom trust manager was not injected");
+			var names = new string[trustManagers.Length];
+			for (int i = 0; i < trustManagers.Length; i++) {
+				names[i] = trustManagers[i].GetType().FullName;
 			}
+
+			throw new Exception(string.Join(", ", names));
 
 			var context = SSLContext.GetInstance ("TLS");
-
-			// TODO: remove this if
-			if (context == null) {
-				throw new Exception("the tls context is null");
-			}
-
 			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
 			httpsConnection.SSLSocketFactory = context?.SocketFactory;
-			throw new Exception($"everything was set up correctly, number of trust managers: {trustManagers!.Length}");
 
 			KeyStore? InitializeKeyStore (out bool gotCerts)
 			{
