@@ -763,12 +763,14 @@ namespace Xamarin.Android.Prepare
 			InitOS ();
 
 			Log.StatusLine ();
-			Log.StatusLine ("   OS type: ", OS.Type, tailColor: Log.InfoColor);
-			Log.StatusLine (" OS flavor: ", OS.Flavor, tailColor: Log.InfoColor);
-			Log.StatusLine ("   OS name: ", OS.Name, tailColor: Log.InfoColor);
-			Log.StatusLine ("OS release: ", OS.Release, tailColor: Log.InfoColor);
-			Log.StatusLine ("   OS bits: ", OS.Architecture, tailColor: Log.InfoColor);
-			Log.StatusLine (" CPU count: ", OS.CPUCount.ToString (), tailColor: Log.InfoColor);
+			Log.StatusLine ("     OS type: ", OS.Type, tailColor: Log.InfoColor);
+			Log.StatusLine ("   OS flavor: ", OS.Flavor, tailColor: Log.InfoColor);
+			Log.StatusLine ("     OS name: ", OS.Name, tailColor: Log.InfoColor);
+			Log.StatusLine ("  OS release: ", OS.Release, tailColor: Log.InfoColor);
+			Log.StatusLine ("     OS bits: ", OS.Architecture, tailColor: Log.InfoColor);
+			Log.StatusLine ("   CPU count: ", OS.CPUCount.ToString (), tailColor: Log.InfoColor);
+			Log.StatusLine ("   Disk Info: ", string.Empty, tailColor: Log.InfoColor);
+			Log.StatusLine (string.Empty, OS.DiskInformation, tailColor: Log.InfoColor);
 			Log.StatusLine ();
 
 			if (EnableAllTargets) {
@@ -783,6 +785,8 @@ namespace Xamarin.Android.Prepare
 				Log.ErrorLine ("Failed to initialize OS support");
 				return false;
 			}
+
+			Log.StatusLine ();
 
 			Tools.Init (this);
 
