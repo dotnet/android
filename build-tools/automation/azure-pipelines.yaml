@@ -654,16 +654,6 @@ stages:
         artifactFolder: net6-aotllvm
         useDotNet: true
 
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Xamarin.Android.Net.NET-Tests
-        project: tests/Xamarin.Android.Net-Tests/Xamarin.Android.Net.NET-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.Net.NET_Tests-$(XA.Build.Configuration).xml
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Xamarin.Android.Net.NET_Tests-Signed.apk
-        artifactFolder: net6-networking
-        useDotNet: true
-
     - task: MSBuild@1
       displayName: shut down emulator
       inputs:
