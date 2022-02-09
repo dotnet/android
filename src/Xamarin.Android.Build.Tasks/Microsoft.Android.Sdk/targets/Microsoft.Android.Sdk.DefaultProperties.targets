@@ -86,13 +86,9 @@
     <EnableUnsafeUTF7Encoding Condition="'$(EnableUnsafeUTF7Encoding)' == ''">false</EnableUnsafeUTF7Encoding>
     <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
-    <!--
-      FIXME: set $(InvariantGlobalization) to empty unless it is set to true
-      See: https://github.com/dotnet/sdk/blob/1f544a59270cecb2947e50a01f7056c685b4e319/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L389-L392
-    -->
-    <InvariantGlobalization Condition="'$(InvariantGlobalization)' != 'true'"></InvariantGlobalization>
     <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == '' and '$(PublishTrimmed)' == 'true'">true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == ''">false</HttpActivityPropagationSupport>
+    <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
     <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
     <UseNativeHttpHandler Condition="'$(UseNativeHttpHandler)' == ''">true</UseNativeHttpHandler>
     <_AggressiveAttributeTrimming Condition="'$(_AggressiveAttributeTrimming)' == ''">true</_AggressiveAttributeTrimming>		
