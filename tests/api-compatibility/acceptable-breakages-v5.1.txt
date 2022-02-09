@@ -53,12 +53,10 @@ CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSetti
 CannotMakeMemberAbstract : Member 'public Android.Webkit.CacheModes Android.Webkit.WebSettings.CacheMode' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.String Android.Webkit.WebSettings.CursiveFontFamily' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.DatabaseEnabled' is abstract in the implementation but is not abstract in the contract.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebSettings.DatabasePath' in the contract but not the implementation.
 CannotMakeMemberAbstract : Member 'public System.String Android.Webkit.WebSettings.DatabasePath' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Int32 Android.Webkit.WebSettings.DefaultFixedFontSize' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Int32 Android.Webkit.WebSettings.DefaultFontSize' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.String Android.Webkit.WebSettings.DefaultTextEncodingName' is abstract in the implementation but is not abstract in the contract.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebSettings.DefaultZoom' in the contract but not the implementation.
 CannotMakeMemberAbstract : Member 'public Android.Webkit.WebSettings.ZoomDensity Android.Webkit.WebSettings.DefaultZoom' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.DisplayZoomControls' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.DomStorageEnabled' is abstract in the implementation but is not abstract in the contract.
@@ -66,7 +64,6 @@ CannotMakeMemberAbstract : Member 'public System.String Android.Webkit.WebSettin
 CannotMakeMemberAbstract : Member 'public System.String Android.Webkit.WebSettings.FixedFontFamily' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.JavaScriptCanOpenWindowsAutomatically' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.JavaScriptEnabled' is abstract in the implementation but is not abstract in the contract.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebSettings.LightTouchEnabled' in the contract but not the implementation.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.LightTouchEnabled' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.LoadsImagesAutomatically' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.LoadWithOverviewMode' is abstract in the implementation but is not abstract in the contract.
@@ -75,7 +72,6 @@ CannotMakeMemberAbstract : Member 'public System.Int32 Android.Webkit.WebSetting
 CannotMakeMemberAbstract : Member 'public System.Int32 Android.Webkit.WebSettings.MinimumLogicalFontSize' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.String Android.Webkit.WebSettings.SansSerifFontFamily' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.SaveFormData' is abstract in the implementation but is not abstract in the contract.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebSettings.SavePassword' in the contract but not the implementation.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebSettings.SavePassword' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.String Android.Webkit.WebSettings.SerifFontFamily' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.String Android.Webkit.WebSettings.StandardFontFamily' is abstract in the implementation but is not abstract in the contract.
@@ -174,7 +170,6 @@ CannotMakeMemberAbstract : Member 'public void Android.Webkit.WebSettings.UseWid
 CannotMakeTypeAbstract : Type 'Android.Webkit.WebViewDatabase' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebViewDatabase.HasFormData' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebViewDatabase.HasHttpAuthUsernamePassword' is abstract in the implementation but is not abstract in the contract.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebViewDatabase.HasUsernamePassword' in the contract but not the implementation.
 CannotMakeMemberAbstract : Member 'public System.Boolean Android.Webkit.WebViewDatabase.HasUsernamePassword' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public void Android.Webkit.WebViewDatabase.ClearFormData()' is abstract in the implementation but is not abstract in the contract.
 CannotMakeMemberAbstract : Member 'public void Android.Webkit.WebViewDatabase.ClearHttpAuthUsernamePassword()' is abstract in the implementation but is not abstract in the contract.
