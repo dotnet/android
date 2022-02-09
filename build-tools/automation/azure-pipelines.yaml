@@ -1537,6 +1537,21 @@ stages:
         authenticationMethod: 'OAuth Token'
         password: $(System.AccessToken)     # Equivalent to the 'Allow scripts to access OAuth token option': https://stackoverflow.com/questions/52837980/how-to-allow-scripts-to-access-oauth-token-from-yaml-builds
 
+- stage: post_build
+  displayName: Post Build
+  dependsOn:
+  - dotnet_prepare_release
+  - finalize_installers
+  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
+  jobs:
+  - template: compliance/sbom/job.v1.yml@yaml
+    parameters:
+      artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
+      statusContexts: [ JENKINS-SIGN ]
+      packageName: xamarin-android
+      packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
+      GitHub.Token: $(GitHub.Token)
+
 - stage: code_analysis
   dependsOn: []
   displayName: Code Analysis
