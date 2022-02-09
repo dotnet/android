@@ -388,18 +388,21 @@ namespace Android.Runtime {
 					return;
 				}
 
-				int newLineIndex = methods!.IndexOf ('\n');
-				if (newLineIndex == -1) {
+				int methodCount = CountMethods (methods);
+				if (methodCount < 1) {
 					if (jniAddNativeMethodRegistrationAttributePresent)
 						base.RegisterNativeMembers (nativeClass, type, methods);
 					return;
 				}
 
-				List<JniNativeMethodRegistration> natives = new List<JniNativeMethodRegistration> (16); // an initial capacity since most classes have more than 4-8 methods
-				ReadOnlySpan<char> methodsSpan = methods;
-
+				JniNativeMethodRegistration [] natives = new JniNativeMethodRegistration [methodCount];
+				int nativesIndex = 0;
 				MethodInfo []? typeMethods = null;
+
+				ReadOnlySpan<char> methodsSpan = methods;
 				while (!methodsSpan.IsEmpty) {
+					int newLineIndex = methodsSpan.IndexOf ('\n');
+
 					ReadOnlySpan<char> methodLine = methodsSpan.Slice (0, newLineIndex != -1 ? newLineIndex : methodsSpan.Length);
 					if (!methodLine.IsEmpty) {
 						SplitMethodLine (methodLine,
@@ -407,13 +410,14 @@ namespace Android.Runtime {
 							out ReadOnlySpan<char> signature,
 							out ReadOnlySpan<char> callbackString,
 							out ReadOnlySpan<char> callbackDeclaringTypeString);
+
 						Delegate callback;
 						if (callbackString.SequenceEqual ("__export__")) {
 							var mname = name.Slice (2);
 							MethodInfo? minfo = null;
 							typeMethods ??= type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 							foreach (var mi in typeMethods)
-								if (mname.SequenceEqual(mi.Name) && signature.SequenceEqual(JavaNativeTypeManager.GetJniSignature (mi))) {
+								if (mname.SequenceEqual (mi.Name) && signature.SequenceEqual (JavaNativeTypeManager.GetJniSignature (mi))) {
 									minfo = mi;
 									break;
 								}
@@ -433,21 +437,28 @@ namespace Android.Runtime {
 								callbackDeclaringType, callbackString.ToString ());
 							callback = connector ();
 						}
-						natives.Add (new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback));
+						natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
 					}
 
-					if (newLineIndex == -1) {
-						methodsSpan = default;
-					} else {
-						methodsSpan = methodsSpan.Slice (newLineIndex + 1);
-						newLineIndex = methodsSpan.IndexOf ('\n');
-					}
+					methodsSpan = newLineIndex != -1 ? methodsSpan.Slice (newLineIndex + 1) : default;
 				}
 
-				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives.ToArray());
+				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, natives.Length);
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);
 			}
+		}
+
+		static int CountMethods (ReadOnlySpan<char> methodsSpan)
+		{
+			int count = 0;
+			while (!methodsSpan.IsEmpty) {
+				count++;
+
+				int newLineIndex = methodsSpan.IndexOf ('\n');
+				methodsSpan = newLineIndex != -1 ? methodsSpan.Slice (newLineIndex + 1) : default;
+			}
+			return count;
 		}
 
 		static void SplitMethodLine (
@@ -468,11 +479,7 @@ namespace Android.Runtime {
 			colonIndex = methodLine.IndexOf (':');
 			callback = methodLine.Slice (0, colonIndex != -1 ? colonIndex : methodLine.Length);
 
-			if (colonIndex == -1) {
-				callbackDeclaringType = default;
-			} else {
-				callbackDeclaringType = methodLine.Slice (colonIndex + 1);
-			}
+			callbackDeclaringType = colonIndex != -1 ? methodLine.Slice (colonIndex + 1) : default;
 		}
 	}
 
