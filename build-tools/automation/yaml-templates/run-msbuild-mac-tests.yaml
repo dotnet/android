@@ -7,6 +7,7 @@ parameters:
   nunit_categories: ''
   target_framework: 'net472'
   run_extra_tests: false
+  provisionatorChannel: latest
 
 jobs:
   - job: ${{ parameters.job_name }}
@@ -19,6 +20,8 @@ jobs:
       clean: all
     steps:
     - template: setup-test-environment.yaml
+      parameters:
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - task: DownloadPipelineArtifact@1
       inputs:
