@@ -11,9 +11,39 @@ var delegateTypes = new [] {
 		Invoke = "jnienv, klazz",
 	},
 	new {
+		Type = "_JniMarshal_PP_I",
+		Signature = "IntPtr jnienv, IntPtr klazz",
+		Return = "int",
+		Invoke = "jnienv, klazz",
+	},
+	new {
+		Type = "_JniMarshal_PP_Z",
+		Signature = "IntPtr jnienv, IntPtr klazz",
+		Return = "bool",
+		Invoke = "jnienv, klazz",
+	},
+	new {
 		Type = "_JniMarshal_PPI_V",
 		Signature = "IntPtr jnienv, IntPtr klazz, int p0",
 		Return = "void",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPI_L",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0",
+		Return = "IntPtr",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPI_I",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0",
+		Return = "int",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPI_J",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0",
+		Return = "long",
 		Invoke = "jnienv, klazz, p0",
 	},
 	new {
@@ -53,6 +83,12 @@ var delegateTypes = new [] {
 		Invoke = "jnienv, klazz, p0, p1",
 	},
 	new {
+		Type = "_JniMarshal_PPLI_L",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1",
+		Return = "IntPtr",
+		Invoke = "jnienv, klazz, p0, p1",
+	},
+	new {
 		Type = "_JniMarshal_PPLL_Z",
 		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1",
 		Return = "bool",
@@ -62,6 +98,12 @@ var delegateTypes = new [] {
 		Type = "_JniMarshal_PPIIL_V",
 		Signature = "IntPtr jnienv, IntPtr klazz, int p0, int p1, IntPtr p2",
 		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPLLJ_Z",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, long p2",
+		Return = "bool",
 		Invoke = "jnienv, klazz, p0, p1, p2",
 	},
 	new {
