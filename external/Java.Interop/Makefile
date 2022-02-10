@@ -38,7 +38,7 @@ PTESTS = \
 ATESTS = \
 	bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll
 
-BUILD_PROPS = bin/Build$(CONFIGURATION)/JdkInfo.props bin/Build$(CONFIGURATION)/MonoInfo.props
+BUILD_PROPS = bin/Build$(CONFIGURATION)/MonoInfo.props
 
 all: $(DEPENDENCIES) $(TESTS)
 
@@ -52,32 +52,20 @@ run-all-tests:
 
 include build-tools/scripts/msbuild.mk
 
-prepare:: $(BUILD_PROPS) src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
+prepare:: $(BUILD_PROPS)
 
-prepare:: prepare-bootstrap
-	$(MSBUILD) $(MSBUILD_FLAGS) /t:Restore Java.Interop.sln
+prepare:: prepare-core
+	$(MSBUILD) $(MSBUILD_FLAGS) -target:Prepare
+	$(MSBUILD) $(MSBUILD_FLAGS) -target:Restore
 
-prepare-bootstrap: prepare-external bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll
-
-bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll: build-tools/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks.csproj \
-		external/xamarin-android-tools/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj \
-		$(wildcard build-tools/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks/*.cs)
-	$(MSBUILD) $(MSBUILD_FLAGS) /restore "$<"
-
-prepare-external $(PREPARE_EXTERNAL_FILES):
-	git submodule update --init --recursive
-	(cd external/xamarin-android-tools && $(MAKE) prepare)
-	nuget restore
-
-prepare-core: bin/Build$(CONFIGURATION)/MonoInfo.props src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
+prepare-core: bin/Build$(CONFIGURATION)/MonoInfo.props
 
 clean:
 	-$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean
 	-rm -Rf bin/$(CONFIGURATION) bin/Build$(CONFIGURATION) bin/Test$(CONFIGURATION)
-	-rm src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
 
 include build-tools/scripts/mono.mk
-include build-tools/scripts/jdk.mk
+-include bin/Build$(CONFIGURATION)/JdkInfo.mk
 
 JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE = Java.Runtime.Environment.Override.dllmap
 ifeq ($(wildcard $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE)),)
@@ -85,10 +73,6 @@ ifeq ($(wildcard $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE)),)
 else
 	JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD = '/@JAVA_RUNTIME_ENVIRONMENT_DLLMAP@/ {' -e 'r $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE)' -e 'd' -e '}'
 endif
-
-src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config.in \
-		bin/Build$(CONFIGURATION)/JdkInfo.props
-	sed -e 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' -e 's#@OS_NAME@#$(DLLMAP_OS_NAME)#g' -e $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD) < $< > $@
 
 JAVA_INTEROP_LIB    = libjava-interop$(NATIVE_EXT)
 NATIVE_TIMING_LIB   = libNativeTiming$(NATIVE_EXT)

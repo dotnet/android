@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll"
-      TaskName="Java.Interop.BootstrapTasks.GenerateVersionFile" />
+      TaskName="Java.Interop.BootstrapTasks.ReplaceFileContents" />
   <PropertyGroup>
     <GitDefaultBranch>main</GitDefaultBranch>
     <GitThisAssembly>false</GitThisAssembly>
@@ -20,8 +20,8 @@
       <Replacements Include="@COMMIT@" Replacement="$(GitCommit)"/>
       <Replacements Include="@BRANCH@" Replacement="$(GitBranch)"/>
     </ItemGroup>
-    <GenerateVersionFile
-        InputFile="$(MSBuildThisFileDirectory)Version.props.in"
+    <ReplaceFileContents
+        TemplateFile="$(MSBuildThisFileDirectory)Version.props.in"
         OutputFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Version.props"
         Replacements="@(Replacements)"
     />

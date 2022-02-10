@@ -19,6 +19,8 @@
     <ProjectReference Include="..\..\src\java-interop\java-interop.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
+  <Import Project="Java.Runtime.Environment.targets" />
+
   <ItemGroup>
     <Content Include="Java.Runtime.Environment.dll.config" Condition=" '$(OS)' != 'Windows_NT' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

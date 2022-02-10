@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="NUnit.ConsoleRunner" GeneratePathProperty="True" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,5 +18,7 @@
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>
     </ProjectReference>
   </ItemGroup>
+
+  <Import Project="Java.Interop.BootstrapTasks.targets" />
 
 </Project>

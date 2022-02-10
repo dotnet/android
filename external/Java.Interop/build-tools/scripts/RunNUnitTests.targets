@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="RunTests" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import
+      Condition=" Exists('..\..\bin\Build$(Configuration)\PackagePaths.props') "
+      Project="..\..\bin\Build$(Configuration)\PackagePaths.props"
+  />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_Runtime Condition=" '$(RUNTIME)' != '' ">$(RUNTIME)</_Runtime>
     <_Runtime Condition=" '$(RUNTIME)' == '' And '$(OS)' != 'Windows_NT' ">mono --debug</_Runtime>
-    <_NUnit>$(_Runtime) packages\nunit.consolerunner\3.12.0\tools\nunit3-console.exe</_NUnit>
+    <_NUnit>$(_Runtime) $(PkgNUnit_ConsoleRunner)/tools/nunit3-console.exe</_NUnit>
     <_Run Condition=" '$(RUN)' != '' ">--run=&quot;$(RUN)&quot;</_Run>
   </PropertyGroup>
   <Import

@@ -1,0 +1,27 @@
+<Project>
+
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.ReplaceFileContents" />
+
+  <Target Name="_CreateConfigFile"
+      BeforeTargets="BeforeResolveReferences"
+      Inputs="Java.Runtime.Environment.dll.config.in"
+      Outputs="Java.Runtime.Environment.dll.config">
+    <PropertyGroup>
+      <_OverrideFile>$(MSBuildThisFileDirectory)../../Java.Runtime.Environment.Override.dllmap</_OverrideFile>
+    </PropertyGroup>
+    <ReadLinesFromFile
+        Condition=" Exists($(_OverrideFile)) "
+        File="$(_OverrideFile)">
+      <Output TaskParameter="Lines" PropertyName="_JavaInteropDllMapContent" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <Replacements Include="@JAVA_RUNTIME_ENVIRONMENT_DLLMAP@" Replacement="$(_JavaInteropDllMapContent)" />
+    </ItemGroup>
+    <ReplaceFileContents
+        TemplateFile="Java.Runtime.Environment.dll.config.in"
+        OutputFile="Java.Runtime.Environment.dll.config"
+        Replacements="@(Replacements)"
+    />
+  </Target>
+
+</Project>

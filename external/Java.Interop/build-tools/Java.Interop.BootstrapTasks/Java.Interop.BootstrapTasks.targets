@@ -1,0 +1,27 @@
+<Project>
+
+  <Target Name="_CreatePackagePathsProps"
+      AfterTargets="AfterBuild"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildThisFileDirectory)Java.Interop.BootstrapTasks.csproj"
+      Outputs="$(_OutputPath)PackagePaths.props">
+    <ItemGroup>
+      <_Path Include="PkgNUnit_ConsoleRunner" Destination="$(PkgNUnit_ConsoleRunner)" />
+    </ItemGroup>
+    <Message Text="PkgNUnit_ConsoleRunner=$(PkgNUnit_ConsoleRunner)" />
+    <ItemGroup>
+      <_Line Include="&lt;Project&gt;" />
+      <_Line Include="  &lt;PropertyGroup&gt;" />
+      <_Line Include="@(_Path->'    &lt;%(Identity) Condition=&quot; %27%24(%(Identity))%27 == %27%27 &quot;&gt;%(Destination)&lt;/%(Identity)&gt;', '
+')" />
+      <_Line Include="  &lt;/PropertyGroup&gt;" />
+      <_Line Include="&lt;/Project&gt;" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(_OutputPath)PackagePaths.props"
+        Lines="@(_Line)"
+        Overwrite="True"
+    />
+    <Touch Files="$(_OutputPath)PackagePaths.props" />
+  </Target>
+
+</Project>

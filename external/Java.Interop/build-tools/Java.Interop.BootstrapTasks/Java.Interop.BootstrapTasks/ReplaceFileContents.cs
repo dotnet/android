@@ -7,15 +7,15 @@ using System.Collections.Generic;
 
 namespace Java.Interop.BootstrapTasks
 {
-	public class GenerateVersionFile : Task
+	public class ReplaceFileContents : Task
 	{
-		public ITaskItem InputFile { get; set; }
+		public ITaskItem TemplateFile { get; set; }
 		public ITaskItem OutputFile { get; set; }
 
 		public ITaskItem [] Replacements { get; set; }
 		public override bool Execute ()
 		{
-			string text = File.ReadAllText (InputFile.ItemSpec);
+			string text = File.ReadAllText (TemplateFile.ItemSpec);
 			foreach (var replacement in Replacements)
 			{
 				text = text.Replace (replacement.ItemSpec, replacement.GetMetadata ("Replacement"));

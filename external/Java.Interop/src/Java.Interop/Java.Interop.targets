@@ -31,7 +31,7 @@
     <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
     <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)java-interop.jar&quot; -C &quot;$(IntermediateOutputPath)ji-classes&quot; ." />
   </Target>
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.GenerateVersionFile" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.ReplaceFileContents" />
   <Target Name="BuildVersionInfo_g_cs"
       Condition=" '$(GenerateAssemblyInfo)' == 'true' And '$(TargetFramework)' == 'monoandroid10' ">
     <ItemGroup>
@@ -41,8 +41,8 @@
       <Replacements Include="@PRODUCT@" Replacement="$(AssemblyName)"/>
       <Replacements Include="@CONFIGURATION@" Replacement="$(Configuration)"/>
     </ItemGroup>
-    <GenerateVersionFile
-        InputFile="$(MSBuildThisFileDirectory)..\..\build-tools\scripts\AssemblyInfo.g.cs.in"
+    <ReplaceFileContents
+        TemplateFile="$(MSBuildThisFileDirectory)..\..\build-tools\scripts\AssemblyInfo.g.cs.in"
         OutputFile="$(IntermediateOutputPath)$(AssemblyName).AssemblyInfo.g.cs"
         Replacements="@(Replacements)"
     />
