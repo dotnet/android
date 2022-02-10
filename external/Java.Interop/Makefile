@@ -38,8 +38,6 @@ PTESTS = \
 ATESTS = \
 	bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll
 
-BUILD_PROPS = bin/Build$(CONFIGURATION)/MonoInfo.props
-
 all: $(DEPENDENCIES) $(TESTS)
 
 run-all-tests:
@@ -54,17 +52,16 @@ include build-tools/scripts/msbuild.mk
 
 prepare:: $(BUILD_PROPS)
 
-prepare:: prepare-core
+prepare::
 	$(MSBUILD) $(MSBUILD_FLAGS) -target:Prepare
 	$(MSBUILD) $(MSBUILD_FLAGS) -target:Restore
-
-prepare-core: bin/Build$(CONFIGURATION)/MonoInfo.props
 
 clean:
 	-$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean
 	-rm -Rf bin/$(CONFIGURATION) bin/Build$(CONFIGURATION) bin/Test$(CONFIGURATION)
 
 include build-tools/scripts/mono.mk
+-include bin/Build$(CONFIGURATION)/mono.mk
 -include bin/Build$(CONFIGURATION)/JdkInfo.mk
 
 JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE = Java.Runtime.Environment.Override.dllmap

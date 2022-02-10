@@ -176,9 +176,6 @@ jobs:
 
   - template: templates\install-dependencies.yaml
 
-  - script: make prepare-core CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion)
-    displayName: make prepare-core
-
   - template: templates\core-build.yaml
 
   - template: templates\core-tests.yaml
