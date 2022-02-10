@@ -87,19 +87,18 @@ to clarify expected behavior in our community. For more information, see the
 Xamarin.Android.Tools.AndroidSdk nupkg files are produced for every build which occurrs on [Azure Devops](https://dev.azure.com/xamarin/Xamarin/_build?definitionId=2&_a=summary).
 To download one of these packages, navigate to the build you are interested in and click on the `Artifacts` button.
 
-Alternatively, "unofficial" releases are currently hosted on MyGet.
+Alternatively, "unofficial" releases are currently hosted on the [Xamarin.Android](https://dev.azure.com/xamarin/public/_packaging?_a=feed&feed=Xamarin.Android) feed.
 Add the feed to your project's `NuGet.config` to reference these packages:
 
 ```xml
 <configuration>
   <packageSources>
-    <add
-        key="xamarin-android"
-        value="https://www.myget.org/F/xamarin-android/api/v3/index.json"
-    />
+    <add key="Xamarin.Android" value="https://pkgs.dev.azure.com/xamarin/public/_packaging/Xamarin.Android/nuget/v3/index.json" />
   </packageSources>
 </configuration>
 ```
+
+An Azure Pipelines [Release ](https://dev.azure.com/xamarin/public/_release?view=mine&_a=releases&definitionId=12) can be manually triggered to push a new version to this feed.
 
 # Mailing Lists
 
