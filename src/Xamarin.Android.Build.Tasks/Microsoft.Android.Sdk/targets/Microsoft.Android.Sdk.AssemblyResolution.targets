@@ -97,7 +97,7 @@ _ResolveAssemblies MSBuild target.
     <PropertyGroup>
       <_InnerIntermediateOutputPath>$(IntermediateOutputPath)%(_RIDs.Identity)\</_InnerIntermediateOutputPath>
       <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(_InnerIntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
-      <_AndroidLinkFlag>$(_InnerIntermediateOutputPath)link.flag</_AndroidLinkFlag>
+      <_AndroidLinkFlag Condition=" '$(RuntimeIdentifier)' == '' " >$(_InnerIntermediateOutputPath)link.flag</_AndroidLinkFlag>
     </PropertyGroup>
     <ItemGroup>
       <_ResolvedAssemblyFiles Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />

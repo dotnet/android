@@ -131,7 +131,7 @@ namespace Xamarin.Android.Build.Tests
 			options.EvaluationOptions.UseExternalTypeResolver = true;
 			ClearAdbLogcat ();
 			dotnet.BuildLogFile = Path.Combine (Root, dotnet.ProjectDirectory, "run.log");
-			Assert.True (dotnet.Build ("Run", new string [] {
+			Assert.True (dotnet.Build ("Run", parameters: new [] {
 				$"AndroidSdbTargetPort={port}",
 				$"AndroidSdbHostPort={port}",
 				"AndroidAttachDebugger=True",
