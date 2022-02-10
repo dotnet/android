@@ -1323,7 +1323,7 @@ stages:
         & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
         & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
       displayName: add build to default darc channel
-      condition: and(succeeded(), eq(variables['PushXAPackageInfoToMaestro'], 'true'))
+      condition: false
 
     - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
       parameters:
