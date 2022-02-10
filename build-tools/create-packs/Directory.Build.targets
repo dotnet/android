@@ -180,7 +180,7 @@
         RepoCommit="$(BUILD_SOURCEVERSION)"
         PublishingVersion="3" />
 
-    <!--MSBuild
+    <MSBuild
         Targets="Restore"
         Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
         Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion)"
@@ -189,7 +189,7 @@
     <MSBuild
         Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
         Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion);ManifestsPath=$(OutputPath)bar-manifests;MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com"
-    /-->
+    />
   </Target>
 
 </Project>
