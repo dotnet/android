@@ -10,7 +10,7 @@
     </Dependency>
     <Dependency Name="Microsoft.NETCore.App.Ref" Version="6.0.3">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>7a62f17ec09ed21cc290b18138da1f44b122f154</Sha>
+      <Sha>4fde4c1824e644b051162b53c4fb4497a6563a13</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
