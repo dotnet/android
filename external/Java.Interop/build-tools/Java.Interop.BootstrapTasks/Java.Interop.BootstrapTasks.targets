@@ -105,4 +105,37 @@
     <Touch Files="$(_OutputPath)PackagePaths.props" />
   </Target>
 
+ <Target Name="_CreateVersionProps"
+      AfterTargets="Build"
+      DependsOnTargets="GitVersion"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildThisFileDirectory)Java.Interop.BootstrapTasks.csproj"
+      Outputs="$(_OutputPath)Versions.props">
+    <PropertyGroup>
+      <_NetToolVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch).$(GitCommits)</_NetToolVersion>
+      <_OldToolVersion>0.2.$(GitBaseVersionPatch).$(GitCommits)</_OldToolVersion>
+      <_NetCoreLibVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).0.0</_NetCoreLibVersion>
+      <_OldCoreLibVersion>0.1.0.0</_OldCoreLibVersion>
+      <_FileVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch).$(GitCommits)</_FileVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <_VersionsLine Include="&lt;Project&gt;" />
+      <_VersionsLine Include="  &lt;PropertyGroup&gt;" />
+      <_VersionsLine Include="    &lt;FileVersion&gt;$(_FileVersion)&lt;/FileVersion&gt;" />
+      <_VersionsLine Include="    &lt;JINetToolVersion&gt;$(_NetToolVersion)&lt;/JINetToolVersion&gt;" />
+      <_VersionsLine Include="    &lt;JIOldToolVersion&gt;$(_OldToolVersion)&lt;/JIOldToolVersion&gt;" />
+      <_VersionsLine Include="    &lt;JINetCoreLibVersion&gt;$(_NetCoreLibVersion)&lt;/JINetCoreLibVersion&gt;" />
+      <_VersionsLine Include="    &lt;JIOldCoreLibVersion&gt;$(_OldCoreLibVersion)&lt;/JIOldCoreLibVersion&gt;" />
+      <_VersionsLine Include="    &lt;JIBuildBranch&gt;$(GitBranch)&lt;/JIBuildBranch&gt;" />
+      <_VersionsLine Include="    &lt;JIBuildCommit&gt;$(GitCommit)&lt;/JIBuildCommit&gt;" />
+      <_VersionsLine Include="  &lt;/PropertyGroup&gt;" />
+      <_VersionsLine Include="&lt;/Project&gt;" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(_OutputPath)Version.props"
+        Lines="@(_VersionsLine)"
+        Overwrite="True"
+    />
+    <Touch Files="$(_OutputPath)Version.props" />
+  </Target>
+
 </Project>

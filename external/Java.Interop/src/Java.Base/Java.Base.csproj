@@ -5,6 +5,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);8764</NoWarn>
+    <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
 
   <ItemGroup>

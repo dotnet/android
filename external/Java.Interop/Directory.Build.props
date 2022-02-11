@@ -62,6 +62,8 @@
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">$(UtilityOutputFullPathCoreApps)</UtilityOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
     <RollForward>Major</RollForward>
+    <JIUtilityVersion>$(JINetToolVersion)</JIUtilityVersion>
+    <JICoreLibVersion>$(JINetCoreLibVersion)</JICoreLibVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)</IntermediateOutputPath>
@@ -69,6 +71,8 @@
     <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</ToolOutputFullPath>
     <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPath)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
+    <JIUtilityVersion>$(JIOldToolVersion)</JIUtilityVersion>
+    <JICoreLibVersion>$(JIOldCoreLibVersion)</JICoreLibVersion>
   </PropertyGroup>
   <PropertyGroup>
     <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)external\xamarin-android-tools</XamarinAndroidToolsDirectory>
@@ -117,6 +121,10 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">
     <NoWarn>$(NoWarn);CA1307;CA1309;CA1310</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>$(JIUtilityVersion)</Version>
   </PropertyGroup>
 
 </Project>

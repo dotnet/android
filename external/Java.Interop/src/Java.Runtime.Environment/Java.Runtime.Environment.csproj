@@ -12,6 +12,7 @@
 
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
+    <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
 
   <ItemGroup>

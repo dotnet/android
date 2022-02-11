@@ -6,7 +6,13 @@
     <OutputPath>$(BuildToolOutputFullPath)</OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <GitDefaultBranch>main</GitDefaultBranch>
+    <GitThisAssembly>false</GitThisAssembly>
+  </PropertyGroup>
+
   <ItemGroup>
+    <PackageReference Include="GitInfo" />
     <PackageReference Include="Microsoft.Build.Framework" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
     <PackageReference Include="NUnit.ConsoleRunner" GeneratePathProperty="True" />

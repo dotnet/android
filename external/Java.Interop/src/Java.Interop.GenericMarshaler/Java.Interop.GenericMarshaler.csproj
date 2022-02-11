@@ -10,6 +10,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
+    <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
   <ItemGroup>
     <None Include="Java.Interop.GenericMarshaler\JniPeerInstanceMethodsExtensions.tt">

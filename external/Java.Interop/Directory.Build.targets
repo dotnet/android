@@ -34,4 +34,6 @@
     <PackageReference Update="XliffTasks"                                   Version="1.0.0-beta.20420.1" />
   </ItemGroup>
 
+  <Import Project="build-tools\scripts\VersionInfo.targets" />
+
 </Project>
