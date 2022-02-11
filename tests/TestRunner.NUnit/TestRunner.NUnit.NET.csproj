@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk" >
 
   <PropertyGroup>
-    <TargetFramework>net6.0-android</TargetFramework>
+    <TargetFramework>net6.0-android$(AndroidLatestStableApiLevel)</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.UnitTests.NUnit</RootNamespace>
     <AssemblyName>TestRunner.NUnit.NET</AssemblyName>

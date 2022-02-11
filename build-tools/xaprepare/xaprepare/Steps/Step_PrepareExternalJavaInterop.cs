@@ -12,11 +12,6 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			// make prepare-core on Unix
-			var result = await ExecuteOSSpecific (context);
-			if (!result)
-				return false;
-
 			string javaInteropDir = context.Properties.GetRequiredValue (KnownProperties.JavaInteropFullPath);
 			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
 			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
