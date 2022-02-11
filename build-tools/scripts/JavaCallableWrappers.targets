@@ -33,7 +33,7 @@
     <PropertyGroup>
       <_Target>-source $(JavacSourceVersion) -target $(JavacTargetVersion)</_Target>
       <_D>-d "$(IntermediateOutputPath)jcw/bin"</_D>
-      <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidPlatformId)\android.jar"</_AndroidJar>
+      <_AndroidJar>"$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\android.jar"</_AndroidJar>
       <_MonoAndroidJar>$(OutputPath)mono.android.jar</_MonoAndroidJar>
       <_MonoAndroidRuntimeJar>$(OutputPath)..\..\..\xbuild\Xamarin\Android\java_runtime.jar</_MonoAndroidRuntimeJar>
     </PropertyGroup>

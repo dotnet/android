@@ -29,6 +29,8 @@ namespace Xamarin.ProjectTools
 			if (String.IsNullOrEmpty (sdkPath))
 				sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
 			if (String.IsNullOrEmpty (sdkPath))
+				sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_ROOT");
+			if (String.IsNullOrEmpty (sdkPath))
 				sdkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "sdk"));
 
 			return sdkPath;
@@ -42,6 +44,8 @@ namespace Xamarin.ProjectTools
 				ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
 			if (String.IsNullOrEmpty (ndkPath))
 				ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
+			if (String.IsNullOrEmpty (ndkPath))
+				ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_LATEST_HOME");
 			if (String.IsNullOrEmpty (ndkPath))
 				ndkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "ndk"));
 
