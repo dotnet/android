@@ -1321,19 +1321,19 @@ stages:
         githubContext: $(VSDropCommitStatusName)
         blobName: $(VSDropCommitStatusName)
         packagePrefix: xamarin-android
-        artifactsPath: $(Build.StagingDirectory)/$(VSDropCommitStatusName)
+        artifactsPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
         yamlResourceName: yaml
         downloadSteps:
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: vsdrop-signed
-            downloadPath: $(Build.StagingDirectory)/$(VSDropCommitStatusName)
+            downloadPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
 
     - powershell: >-
         & dotnet build -v:n -c $(XA.Build.Configuration)
         -t:PushManifestToBuildAssetRegistry
         -p:BuildAssetRegistryToken=$(MaestroAccessToken)
-        -p:OutputPath=$(System.DefaultWorkingDirectory)\nuget-signed\
+        -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
         $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
         -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
       displayName: generate and publish BAR manifest
@@ -1347,6 +1347,12 @@ stages:
         & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
       displayName: add build to default darc channel
       condition: and(succeeded(), eq(variables['PushXAPackageInfoToMaestro'], 'true'))
+
+    - template: yaml-templates\upload-results.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)
+        artifactName: Prepare Release - Push Internal
+        includeBuildResults: true
 
 # .NET 6 VS Insertion Stage
 # Check - "Xamarin.Android (VS Insertion - Wait For Approval)"
