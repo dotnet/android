@@ -66,13 +66,17 @@ variables:
 - ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Real
-  - name: VSEngMacBuildPool
-    value: VSEng-Xamarin-RedmondMac-Android-Trusted
+  - name: MacBuildPoolName
+    value: Azure Pipelines
+  - name: MacBuildPoolImage
+    value: internal-macos-11
 - ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), eq(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Test
-  - name: VSEngMacBuildPool
+  - name: MacBuildPoolName
     value: VSEng-Xamarin-RedmondMac-Android-Untrusted
+  - name: MacBuildPoolImage
+    value: ''
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -84,9 +88,10 @@ stages:
   - job: mac_build_create_installers
     displayName: Build
     pool:
-      name: $(VSEngMacBuildPool)
-      demands:
-      - agent.osversionfamily -equals 10.15
+      name: $(MacBuildPoolName)
+      vmImage: $(MacBuildPoolImage)
+      ${{ if eq(variables['MacBuildPoolName'], 'VSEng-Xamarin-RedmondMac-Android-Untrusted') }}:
+        demands: agent.osversionfamily -equals 10.15
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1476,9 +1481,8 @@ stages:
   - job: notarize_pkg_upload_storage
     displayName: Notarize and Upload
     pool:
-      name: $(VSEngMacBuildPool)
-      demands:
-      - agent.osversionfamily -equals 10.15
+      name: $(MacBuildPoolName)
+      vmImage: $(MacBuildPoolImage)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 1
     workspace:
