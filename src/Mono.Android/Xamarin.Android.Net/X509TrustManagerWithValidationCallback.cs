@@ -60,11 +60,6 @@ namespace Xamarin.Android.Net
 			{
 				sslPolicyErrors |= SslPolicyErrors.RemoteCertificateNotAvailable;
 			}
-			// TODO chian.Build () seems to be broken on Android (the same code works on Windows) - is there a workaround?
-			// else if (!chain.Build (certificate))
-			// {
-			// 	sslPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
-			// }
 
 			if (!_serverCertificateCustomValidationCallback (_request, certificate, chain, sslPolicyErrors))
 			{
