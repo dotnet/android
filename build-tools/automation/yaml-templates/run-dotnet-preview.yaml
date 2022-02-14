@@ -10,10 +10,7 @@ parameters:
 steps:
 - powershell: |
     if ([Environment]::OSVersion.Platform -eq "Unix") {
-        $dotnetPath = "$env:HOME/Library/Android/dotnet/dotnet"
-        if (-not (Test-Path $dotnetPath)) {
-            $dotnetPath = "$env:HOME/android-toolchain/dotnet/dotnet"
-        }
+        $dotnetPath = "$env:HOME/android-toolchain/dotnet/dotnet"
     } else {
         $dotnetPath = "$env:USERPROFILE\android-toolchain\dotnet\dotnet.exe"
     }

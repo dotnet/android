@@ -3,7 +3,7 @@ parameters:
   provisionExtraArgs: -vv -f
   xaSourcePath: $(System.DefaultWorkingDirectory)
   updateVS: false
-  jdkTestFolder: $(XA.Jdk11.Folder)
+  jdkTestFolder: $(JAVA_HOME_11_X64)
 
 steps:
 - checkout: self
@@ -22,19 +22,13 @@ steps:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
 
 - script: |
-    echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/${{ parameters.jdkTestFolder }}"
-    echo "##vso[task.setvariable variable=DOTNET_TOOL_PATH]$HOME/Library/Android/dotnet/dotnet"
+    echo "##vso[task.setvariable variable=JI_JAVA_HOME]${{ parameters.jdkTestFolder }}"
+    echo "##vso[task.setvariable variable=DOTNET_TOOL_PATH]$HOME/android-toolchain/dotnet/dotnet"
   displayName: set JI_JAVA_HOME
-  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+  condition: and(succeeded(), ne(variables['agent.os'], 'Windows_NT'))
 
 - script: |
-    echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/${{ parameters.jdkTestFolder }}"
-    echo "##vso[task.setvariable variable=DOTNET_TOOL_PATH]$HOME/anroid-toolchain/dotnet/dotnet"
-  displayName: set JI_JAVA_HOME
-  condition: and(succeeded(), eq(variables['agent.os'], 'Linux'))
-
-- script: |
-    echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\${{ parameters.jdkTestFolder }}
+    echo ##vso[task.setvariable variable=JI_JAVA_HOME]${{ parameters.jdkTestFolder }}
     echo ##vso[task.setvariable variable=DOTNET_TOOL_PATH]%USERPROFILE%\android-toolchain\dotnet\dotnet.exe
   displayName: set JI_JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))

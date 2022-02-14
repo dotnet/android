@@ -6,7 +6,6 @@ parameters:
   job_suffix: ''
   nunit_categories: ''
   target_framework: 'net472'
-  jdkTestFolder: $(XA.Jdk11.Folder)
 
 jobs:
   - job: ${{ parameters.job_name }}
@@ -19,8 +18,6 @@ jobs:
       clean: all
     steps:
     - template: setup-test-environment.yaml
-      parameters:
-        jdkTestFolder: ${{ parameters.jdkTestFolder }}
 
     - template: run-xaprepare.yaml
       parameters:

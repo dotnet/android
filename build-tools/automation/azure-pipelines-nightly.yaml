@@ -105,7 +105,7 @@ stages:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
 
-    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$HOME/Library/Android/$(XA.Jdk8.Folder)"
+    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
       displayName: set Java8SdkDirectory
 
     - task: MSBuild@1
