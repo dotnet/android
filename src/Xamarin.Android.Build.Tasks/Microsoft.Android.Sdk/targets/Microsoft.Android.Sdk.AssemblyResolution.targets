@@ -107,6 +107,7 @@ _ResolveAssemblies MSBuild target.
         RuntimeIdentifiers="@(_RIDs)"
         InputAssemblies="@(_ResolvedAssemblyFiles->Distinct())"
         ResolvedSymbols="@(_ResolvedSymbolFiles->Distinct())"
+        AndroidIncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
         PublishTrimmed="$(PublishTrimmed)">
       <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />
       <Output TaskParameter="ResolvedSymbols"  ItemName="ResolvedSymbols" />

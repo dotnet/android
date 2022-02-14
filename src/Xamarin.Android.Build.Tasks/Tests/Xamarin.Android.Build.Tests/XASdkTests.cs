@@ -885,6 +885,13 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 				/* publishTrimmed */ true,
 				/* aot */            true,
 			},
+			// Debug + PublishTrimmed
+			new object [] {
+				/* isRelease */      false,
+				/* useInterpreter */ false,
+				/* publishTrimmed */ true,
+				/* aot */            false,
+			},
 		};
 
 		[Test]
