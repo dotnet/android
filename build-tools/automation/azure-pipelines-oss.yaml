@@ -154,6 +154,9 @@ stages:
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
+    variables:
+      CXX: g++-10
+      CC: gcc-10
     steps:
     - checkout: self
       submodules: recursive
