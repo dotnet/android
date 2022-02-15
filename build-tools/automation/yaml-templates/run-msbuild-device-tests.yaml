@@ -6,6 +6,7 @@ parameters:
   job_suffix: ''
   nunit_categories: ''
   target_framework: 'net472'
+  provisionatorChannel: latest
 
 jobs:
   - job: ${{ parameters.job_name }}
@@ -18,6 +19,8 @@ jobs:
       clean: all
     steps:
     - template: setup-test-environment.yaml
+      parameters:
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: run-xaprepare.yaml
       parameters:
