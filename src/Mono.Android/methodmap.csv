@@ -101,9 +101,6 @@
 0, android.content.pm,PackageManager,setComponentEnabledSetting,newState,Android.Content.PM.ComponentEnabledState
 0, android.content.pm,PackageManager,checkPermission,return,Android.Content.PM.Permission
 0, android.content.pm,PackageManager,checkSignatures,return,Android.Content.PM.SignatureResult
-0, android.content.pm,PackageManager,getInstalledPackages,flags,Android.Content.PM.PackageInfoFlags
-0, android.content.pm,PackageManager,getPackageArchiveInfo,flags,Android.Content.PM.PackageInfoFlags
-0, android.content.pm,PackageManager,getPackageInfo,flags,Android.Content.PM.PackageInfoFlags
 0, android.content.pm,PackageManager,getPreferredPackages,flags,Android.Content.PM.PackageInfoFlags
 0, android.content.pm,PermissionInfo,protectionLevel,,Android.Content.PM.Protection
 0, android.content.res,AssetManager,open,accessMode,Android.Content.Res.Access
@@ -748,27 +745,14 @@
 0, android.content.pm, PathPermission, ctor, type, Android.OS.Pattern
 0, android.app, Fragment, onCreateAnimator, transit, Android.App.FragmentTransit
 
-0, android.content.pm, PackageManager, getActivityInfo, flags, Android.Content.PM.PackageInfoFlags
 0, android.content.pm, PackageManager, getAllPermissionGroups, flags, Android.Content.PM.PackageInfoFlags
 0, android.content.pm, PackageManager, getApplicationEnabledSetting, return, Android.Content.PM.ComponentEnabledState
-0, android.content.pm, PackageManager, getApplicationInfo, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, getInstalledApplications, flags, Android.Content.PM.PackageInfoFlags
 0, android.content.pm, PackageManager, getInstrumentationInfo, flags, Android.Content.PM.PackageInfoFlags
 0, android.content.pm, PackageManager, getPermissionGroupInfo, flags, Android.Content.PM.PackageInfoFlags
 0, android.content.pm, PackageManager, getPermissionInfo, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, getProviderInfo, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, getReceiverInfo, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, getServiceInfo, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, queryBroadcastReceivers, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, queryContentProviders, flags, Android.Content.PM.PackageInfoFlags
 0, android.content.pm, PackageManager, queryInstrumentation, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, queryIntentActivities, flags, Android.Content.PM.PackageInfoFlags
 0, android.content.pm, PackageManager, queryIntentActivityOptions, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, queryIntentServices, flags, Android.Content.PM.PackageInfoFlags
 0, android.content.pm, PackageManager, queryPermissionsByGroup, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, resolveActivity, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, resolveContentProvider, flags, Android.Content.PM.PackageInfoFlags
-0, android.content.pm, PackageManager, resolveService, flags, Android.Content.PM.PackageInfoFlags
 0, android.content.pm, PackageManager, setApplicationEnabledSetting, newState, Android.Content.PM.ComponentEnabledState
 0, android.content.pm, PackageManager, setApplicationEnabledSetting, flags, Android.Content.PM.ComponentEnableOption
 0, android.content.pm, PackageManager, setComponentEnabledSetting, flags, Android.Content.PM.ComponentEnableOption
@@ -1438,7 +1422,6 @@
 18, android.bluetooth, BluetoothManager, getDevicesMatchingConnectionStates, profile, Android.Bluetooth.ProfileType
 18, android.content, RestrictionEntry, getType, return, Android.Content.RestrictionEntryType
 18, android.content, RestrictionEntry, setType, type, Android.Content.RestrictionEntryType
-18, android.content.pm, PackageManager, getPackagesHoldingPermissions, flags, Android.Content.PM.PackageInfoFlags
 18, android.hardware.location, GeofenceHardware, addGeofence, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
 18, android.hardware.location, GeofenceHardware, pauseGeofence, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
 18, android.hardware.location, GeofenceHardware, registerForMonitorStateChangeCallback, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
@@ -1535,7 +1518,6 @@
 19, android.content, ContentResolver, releasePersistableUriPermission, modeFlags, Android.Content.ActivityFlags
 19, android.content, ContentResolver, takePersistableUriPermission, modeFlags, Android.Content.ActivityFlags
 19, android.content, IntentFilter, addDataSchemeSpecificPart, type, Android.OS.Pattern
-19, android.content.pm, PackageManager, queryIntentContentProviders, flags, Android.Content.PM.PackageInfoFlags
 19, android.location,SettingInjectorService,onStartCommand,flags,Android.App.StartCommandFlags
 19, android.location,SettingInjectorService,onStartCommand,return,Android.App.StartCommandResult
 19, android.media, Image, getFormat, return, Android.Graphics.ImageFormatType
@@ -1990,8 +1972,6 @@
 24, android.content, ContentResolver, notifyChange, flags, Android.Content.NotifyChangeFlags
 24, android.content.pm, ActivityInfo.WindowLayout, gravity, , Android.Views.GravityFlags
 24, android.content.pm, ActivityInfo.WindowLayout, ctor, gravity, Android.Views.GravityFlags
-24, android.content.pm, PackageManager, getPackageGids, flags, Android.Content.PM.PackageInfoFlags
-24, android.content.pm, PackageManager, getPackageUid, flags, Android.Content.PM.PackageInfoFlags
 24, android.graphics.drawable, GradientDrawable, getGradientType, return, Android.Graphics.Drawables.GradientType
 24, android.graphics.drawable, GradientDrawable, setGradientType, gradient, Android.Graphics.Drawables.GradientType
 24, android.graphics.drawable, GradientDrawable, getShape, return, Android.Graphics.Drawables.ShapeType
@@ -2228,7 +2208,6 @@
 26, android.content.pm, PackageInstaller.SessionInfo, getInstallReason, return, Android.Content.PM.PackageInstallReason
 26, android.content.pm, PackageInstaller.SessionInfo, getInstallReason, return, Android.Content.PM.PackageInstallReason
 26, android.content.pm, PackageInstaller.SessionParams, setInstallReason, installReason, Android.Content.PM.PackageInstallReason
-26, android.content.pm, PackageManager, getSharedLibraries, flags, Android.Content.PM.PackageInstallReason
 26, android.content.pm, SharedLibraryInfo, getType, return, Android.Content.PM.SharedLibraryType
 26, android.content.res, Configuration, colorMode, , Android.Content.Res.ColorMode
 
