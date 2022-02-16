@@ -154,6 +154,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaType
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "relnote-gen", "tools\relnote-gen\relnote-gen.csproj", "{D8E14B43-E929-4C18-9FA6-2C3DC47EFC17}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Runtime.Environment", "external\Java.Interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj", "{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{3f1f2f50-af1a-4a5a-bedb-193372f068d7}*SharedItemsImports = 5
@@ -426,6 +428,10 @@ Global
 		{D8E14B43-E929-4C18-9FA6-2C3DC47EFC17}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{D8E14B43-E929-4C18-9FA6-2C3DC47EFC17}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{D8E14B43-E929-4C18-9FA6-2C3DC47EFC17}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -496,6 +502,7 @@ Global
 		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{4EFCED6E-9A6B-453A-94E4-CE4B736EC684} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{D8E14B43-E929-4C18-9FA6-2C3DC47EFC17} = {864062D3-A415-4A6F-9324-5820237BA058}
+		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}
