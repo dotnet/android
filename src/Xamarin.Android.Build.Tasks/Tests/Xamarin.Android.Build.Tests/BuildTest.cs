@@ -2616,6 +2616,10 @@ namespace UnnamedProject
 					new BuildItem.Content ("TestContent.txt") {
 						TextContent = () => "Test Content from Library",
 						MetadataValues = metadata,
+					},
+					new BuildItem.Content ("TestContent2.txt") {
+						TextContent = () => "Content excluded from check",
+						MetadataValues = "ExcludeFromContentCheck=true",
 					}
 				}
 			};
@@ -2650,6 +2654,9 @@ namespace UnnamedProject
 					"Build Output did not contain 'TestContent.txt : warning XA0101'.");
 				StringAssertEx.Contains ("TestContent1.txt : warning XA0101: @(Content) build action is not supported", appBuilder.LastBuildOutput,
 					"Build Output did not contain 'TestContent1.txt : warning XA0101'.");
+				// Ensure items excluded from check do not produce warnings.
+				StringAssertEx.DoesNotContain ("TestContent2.txt : warning XA0101", libBuilder.LastBuildOutput,
+					"Build Output contains 'TestContent2.txt : warning XA0101'.");
 			}
 		}
 
