@@ -122,7 +122,7 @@ namespace Java.Interop {
 		static Type[] GetParameterTypes (string? signature)
 		{
 			if (String.IsNullOrEmpty (signature))
-				return new Type[0];
+				return Array.Empty<Type> ();
 			string[] typenames = signature!.Split (':');
 			Type[] result = new Type [typenames.Length];
 			for (int i = 0; i < typenames.Length; i++)
