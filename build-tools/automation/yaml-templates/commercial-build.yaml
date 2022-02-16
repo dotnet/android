@@ -1,9 +1,10 @@
 parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
   makeMSBuildArgs: ''
+  provisionatorChannel: latest
 
 steps:
-- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
+- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-11"
   displayName: set JI_JAVA_HOME
 
 - template: use-dot-net.yaml
@@ -21,6 +22,8 @@ steps:
     github_token: $(GitHub.Token)
     provisioning_script: ${{ parameters.xaSourcePath }}/build-tools/provisioning/xcode.csx
     provisioning_extra_args: '-v -v -v -v'
+  env:
+    PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
 
 - script: make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
   workingDirectory: ${{ parameters.xaSourcePath }}
