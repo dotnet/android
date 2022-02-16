@@ -1469,18 +1469,17 @@ stages:
 
 - stage: finalize_installers
   displayName: Prepare Classic Release
-  dependsOn: [] #mac_build
-  #condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+  dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
   jobs:
-  # Check - "Xamarin.Android (Prepare Classic Release Notarize and Upload)"
-  - job: notarize_pkg_upload_storage
-    displayName: Notarize and Upload
+  # Check - "Xamarin.Android (Prepare Classic Release Sign and Upload)"
+  - job: sign_upload_storage
+    displayName: Sign and Upload
     pool:
       name: $(VSEngMacBuildPool)
       demands:
       - agent.osversionfamily -equals 10.15
-    timeoutInMinutes: 120
-    cancelTimeoutInMinutes: 1
+    timeoutInMinutes: 210
     workspace:
       clean: all
     variables:
@@ -1496,11 +1495,6 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(InstallerArtifactName)
-        source: 'specific'
-        project: '0bdbc590-a062-4c3f-b0f6-9383f67865ee'
-        definition: 11410
-        runVersion: 'specific'
-        pipelineId: 5759747
         downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
         patterns: |
           xamarin.android*.pkg
@@ -1606,7 +1600,7 @@ stages:
   - template: compliance/sbom/job.v1.yml@yaml
     parameters:
       artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
-      statusContexts: [ JENKINS-SIGN ]
+      statusContexts: [ 'vsts-devdiv artifacts' ]
       packageName: xamarin-android
       packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
       GitHub.Token: $(GitHub.Token)
