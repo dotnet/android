@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" >
 
   <PropertyGroup>
-    <TargetFramework>net6.0-android</TargetFramework>
+    <TargetFramework>net6.0-android$(AndroidLatestStableApiLevel)</TargetFramework>
     <RootNamespace>Xamarin.Android.RuntimeTests</RootNamespace>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
