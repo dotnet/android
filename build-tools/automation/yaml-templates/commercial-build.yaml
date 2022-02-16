@@ -80,7 +80,7 @@ steps:
     solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     configuration: $(XA.Build.Configuration)
     msbuildArguments: >-
-      /t:_AddMachOEntitlements;SignFiles
+      /t:_AddMachOEntitlements;Build
       /p:SignType=$(MicroBuildSignType)
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
