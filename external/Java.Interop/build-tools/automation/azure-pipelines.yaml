@@ -22,8 +22,10 @@ variables:
   Build.Configuration: Release
   MaxJdkVersion: 8
   DotNetCoreVersion: 6.0.x
-  HostedMacImage: macOS-10.15
-  HostedWinImage: windows-2022
+  1ESWindowsPool: AzurePipelines-EO
+  1ESWindowsImage: AzurePipelinesWindows2022compliant
+  1ESMacPool: Azure Pipelines
+  1ESMacImage: internal-macos-11
   NetCoreTargetFrameworkPathSuffix: -net6.0
   VSInstallRoot: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
 
@@ -31,7 +33,9 @@ jobs:
 - job: windows_build
   displayName: Windows - .NET Framework
   pool:
-    vmImage: $(HostedWinImage)
+    name: $(1ESWindowsPool)
+    demands: 
+    - ImageOverride -equals $(1ESWindowsImage)
   timeoutInMinutes: 20
   workspace:
     clean: all
@@ -77,7 +81,9 @@ jobs:
 - job: windows_dotnet_build
   displayName: Windows - .NET Core
   pool:
-    vmImage: $(HostedWinImage)
+    name: $(1ESWindowsPool)
+    demands: 
+    - ImageOverride -equals $(1ESWindowsImage)
   timeoutInMinutes: 20
   workspace:
     clean: all
@@ -114,7 +120,8 @@ jobs:
 - job: mac_build
   displayName: Mac - Mono
   pool:
-    vmImage: $(HostedMacImage)
+    name: $(1ESMacPool)
+    vmImage: $(1ESMacImage)
   timeoutInMinutes: 20
   workspace:
     clean: all
@@ -166,7 +173,8 @@ jobs:
 - job: mac_dotnet_build
   displayName: Mac - .NET Core
   pool:
-    vmImage: $(HostedMacImage)
+    name: $(1ESMacPool)
+    vmImage: $(1ESMacImage)
   timeoutInMinutes: 20
   workspace:
     clean: all
