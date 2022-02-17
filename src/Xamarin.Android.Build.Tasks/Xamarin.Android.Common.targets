@@ -776,12 +776,19 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CheckForContent">
-	<LogWarningsForFiles
-		Files="@(Content)"
-		Code="XA0101"
-		Text="%40(Content) build action is not supported"
-		Condition=" '@(Content->Count())' != '0' "
-	/>
+  <!-- SDKs might opt out come Content items from this check if they're responsible for bundling these files. -->
+  <ItemGroup>
+    <_ContentIncludedForCheck
+      Include="@(Content)"
+      Condition="'%(Content.ExcludeFromContentCheck)' != 'true'" />
+  </ItemGroup>
+
+  <LogWarningsForFiles
+      Files="@(_ContentIncludedForCheck)"
+      Code="XA0101"
+      Text="%40(Content) build action is not supported"
+      Condition=" '@(_ContentIncludedForCheck->Count())' != '0' "
+  />
 </Target>
 
 <Target Name="_CheckForObsoleteFrameworkAssemblies">
