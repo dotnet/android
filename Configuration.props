@@ -139,8 +139,8 @@
     <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildTools30PackagePrefixWindows)</XABuildTools30PackagePrefix>
     <XABuildTools30Version>30.0.3</XABuildTools30Version>
     <XABuildTools30Folder Condition="'$(XABuildTools30Folder)' == ''">30.0.3</XABuildTools30Folder>
-    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">e8b2b4cbe47c728c1e54c5f524440b52d4e1a33c.</XAPlatformToolsPackagePrefix>
-    <XAPlatformToolsVersion>31.0.3</XAPlatformToolsVersion>
+    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
+    <XAPlatformToolsVersion>32.0.0</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.8.1</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
