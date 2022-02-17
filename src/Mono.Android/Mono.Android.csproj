@@ -225,7 +225,6 @@
     <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
     <Compile Include="Android.Runtime\BoundExceptionType.cs" />
     <Compile Include="Android.Runtime\CharSequence.cs" />
-    <Compile Include="Android.Runtime\ConstructorBuilder.cs" />
     <Compile Include="Android.Runtime\CPUArchitecture.cs" />
     <Compile Include="Android.Runtime\Extensions.cs" />
     <Compile Include="Android.Runtime\GeneratedEnumAttribute.cs" />
