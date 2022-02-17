@@ -1574,11 +1574,6 @@ stages:
     - script: xcrun stapler validate $(XA.Unsigned.Pkg)
       displayName: validate notarized pkg
 
-    - task: MicroBuildCodesignVerify@3
-      displayName: Verify Signed Files
-      inputs:
-        TargetFolders: $(System.DefaultWorkingDirectory)/storage-artifacts
-
     - template: upload-to-storage.yml@yaml
       parameters:
         BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
