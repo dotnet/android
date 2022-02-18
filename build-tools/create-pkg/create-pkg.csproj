@@ -11,21 +11,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(MicroBuildCoreVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="distribution.xml.in" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <FilesToSign Include="$(OutputPath)\xamarin.android-*.pkg">
-      <Authenticode>MacDeveloper</Authenticode>
-      <Zip>true</Zip>
-    </FilesToSign>
   </ItemGroup>
 
   <Import Project="create-pkg.targets" />
