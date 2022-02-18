@@ -10,6 +10,8 @@
     <PrepTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\xa-prep-tasks.dll</PrepTasksAssembly>
     <!-- Copy PackageReference content to OutputDir for our build tasks, tests, and installer creation logic. This no longer happens by default in short-form projects. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- Ensure reference assemblies copied to bin -->
+    <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
   </PropertyGroup>
 
   <PropertyGroup>

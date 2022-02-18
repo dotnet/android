@@ -74,7 +74,6 @@
     <HOME Condition=" '$(HOME)' == '' ">$(USERPROFILE)</HOME>
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
-    <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' And '$(RunningOnCI)' == 'true' And '$(HostOS)' == 'Darwin' ">$(HOME)\Library\Android</AndroidToolchainDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Linux' ">\usr</AndroidMxeInstallPrefix>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)</AndroidMxeInstallPrefix>
@@ -140,8 +139,8 @@
     <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildTools30PackagePrefixWindows)</XABuildTools30PackagePrefix>
     <XABuildTools30Version>30.0.3</XABuildTools30Version>
     <XABuildTools30Folder Condition="'$(XABuildTools30Folder)' == ''">30.0.3</XABuildTools30Folder>
-    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">e8b2b4cbe47c728c1e54c5f524440b52d4e1a33c.</XAPlatformToolsPackagePrefix>
-    <XAPlatformToolsVersion>31.0.3</XAPlatformToolsVersion>
+    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
+    <XAPlatformToolsVersion>32.0.0</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.8.1</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
@@ -159,6 +158,7 @@
   <PropertyGroup>
     <JavacSourceVersion>1.8</JavacSourceVersion>
     <JavacTargetVersion>1.8</JavacTargetVersion>
+    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists($(JAVA_HOME_8_X64)) ">$(JAVA_HOME_8_X64)</Java8SdkDirectory>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists('$(JavaSdkDirectory)\..\jdk-1.8') ">$([System.IO.Path]::GetFullPath ('$(JavaSdkDirectory)\..\jdk-1.8'))</Java8SdkDirectory>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' ">$(JavaSdkDirectory)</Java8SdkDirectory>
   </PropertyGroup>

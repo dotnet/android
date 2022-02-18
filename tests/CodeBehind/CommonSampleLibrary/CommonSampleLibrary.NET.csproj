@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0-android</TargetFramework>
+    <TargetFramework>net6.0-android$(AndroidLatestStableApiLevel)</TargetFramework>
     <RootNamespace>CommonSampleLibrary</RootNamespace>
     <AssemblyName>CommonSampleLibrary</AssemblyName>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

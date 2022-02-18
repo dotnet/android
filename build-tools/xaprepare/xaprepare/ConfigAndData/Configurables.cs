@@ -330,10 +330,15 @@ namespace Xamarin.Android.Prepare
 				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion)
 			);
 
-			public static string MicrosoftNETWorkloadMonoToolChainDir => Path.Combine (
-				MicrosoftNETWorkloadMonoPackageDir,
-				"data"
+			public static string MicrosoftNETWorkloadMonoToolChainDir => Path.Combine (MicrosoftNETWorkloadMonoPackageDir, "data");
+
+			public static string MicrosoftNETWorkloadEmscriptenPackageDir => Path.Combine (
+				XAPackagesDir,
+				$"microsoft.net.workload.emscripten.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionBand)}",
+				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion)
 			);
+
+			public static string MicrosoftNETWorkloadEmscriptenDir => Path.Combine (MicrosoftNETWorkloadEmscriptenPackageDir, "data");
 
 			// CMake
 			public static string CmakeMSBuildPropsName               = "cmake-config.props";
