@@ -1502,15 +1502,13 @@ stages:
   dependsOn: mac_build
   condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
   jobs:
-  # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
-  - job: notarize_pkg_upload_storage
-    displayName: Notarize and Upload to Storage
+  # Check - "Xamarin.Android (Prepare Classic Release Sign and Upload)"
+  - job: sign_upload_storage
+    displayName: Sign and Upload
     pool:
-      name: $(VSEngMacBuildPool)
-      demands:
-      - agent.osversionfamily -equals 10.15
-    timeoutInMinutes: 120
-    cancelTimeoutInMinutes: 1
+      name: $(MacBuildPoolName)
+      vmImage: $(MacBuildPoolImage)
+    timeoutInMinutes: 210
     workspace:
       clean: all
     variables:
@@ -1522,13 +1520,6 @@ stages:
     - checkout: release_scripts
       clean: true
 
-    # Doesn't support .NET 6 yet
-    - task: UseDotNet@2
-      displayName: Use .NET Core 3.1
-      inputs:
-        packageType: runtime
-        version: 3.1.19
-    
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(InstallerArtifactName)
@@ -1540,32 +1531,63 @@ stages:
 
     - powershell: |
         $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File
-        if (![System.IO.File]::Exists($pkg)) {
-            throw [System.IO.FileNotFoundException] "Pkg File not found in $(System.DefaultWorkingDirectory)/storage-artifacts"
+        $vsix = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.vsix -File
+        if (![System.IO.File]::Exists($pkg) -or ![System.IO.File]::Exists($vsix)) {
+            throw [System.IO.FileNotFoundException] "Did not find .pkg or .vsix file in $(System.DefaultWorkingDirectory)/storage-artifacts"
         }
         Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
-      displayName: set variable to pkg path
+        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Vsix]$vsix"
+      displayName: set variables to unsigned installers
 
     - template: yaml-templates/install-microbuild-tooling.yaml
 
     - task: MSBuild@1
-      displayName: msbuild /t:Restore create-pkg.proj
+      displayName: msbuild /t:Restore sign-content.proj
       inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-pkg/create-pkg.csproj
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-create-pkg.binlog
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
+
+    - powershell: |
+        $signList = "$(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/SignList.xml"
+        (Get-Content $signList).Replace("*", "%2A") | Set-Content -Path $signList
+      displayName: Escape SignList.xml
 
     - task: MSBuild@1
-      displayName: msbuild /t:SignFiles create-pkg.proj
+      displayName: unzip and sign .vsix content
       inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-pkg/create-pkg.csproj
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
-          /t:SignFiles
+          /t:_AddVsixContent;Build
           /p:SignType=$(MicroBuildSignType)
           /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-          /p:OutputPath=$(System.DefaultWorkingDirectory)/storage-artifacts
-          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-pkg.binlog
+          /p:VsixPath=$(XA.Unsigned.Vsix)
+          /p:OutDir=$(Build.StagingDirectory)/
+          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-vsix-content.binlog
+
+    - task: MSBuild@1
+      displayName: rezip .vsix
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:_ZipVsixContent
+          /p:VsixPath=$(XA.Unsigned.Vsix)
+          /p:OutDir=$(Build.StagingDirectory)/
+          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/zip-vsix-content.binlog
+
+    - task: MSBuild@1
+      displayName: sign classic installers
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:_AddClassicInstallers;Build
+          /p:SignType=$(MicroBuildSignType)
+          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+          /p:OutDir=$(System.DefaultWorkingDirectory)/storage-artifacts
+          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-installers.binlog
 
     - script: >
         cd $(System.DefaultWorkingDirectory)/release-scripts &&
@@ -1588,30 +1610,5 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-        artifactName: Legacy Notarization Results - macOS
+        artifactName: Legacy Signing Results - macOS
         includeBuildResults: true
-
-  # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
-  - job: queue_vsix_signing
-    displayName: Queue Vsix Signing
-    dependsOn: notarize_pkg_upload_storage
-    pool: $(VSEngMicroBuild2019)
-    timeoutInMinutes: 90
-    cancelTimeoutInMinutes: 1
-    workspace:
-      clean: all
-    steps:
-      # Signing job is run here: https://dev.azure.com/devdiv/DevDiv/_build?definitionId=13878
-      # https://github.com/huserben/TfsExtensions/blob/master/BuildTasks/overview.md
-    - task: benjhuser.tfs-extensions-build-tasks.trigger-build-task.TriggerBuild@3
-      displayName: 'xamarin vsix codesign - run Azure DevOps job'
-      inputs:
-        buildDefinition: $(Signing.Job)
-        useSameSourceVersion: false
-        useSameBranch: false
-        branchToUse: 'full-esrp-integration'
-        waitForQueuedBuildsToFinish: true
-        storeInEnvironmentVariable: true
-        buildParameters: '{ "REPO": "$(Build.Repository.Name)", "COMMIT": "$(Build.SourceVersion)", "SIGN_TYPE": "Real", "GITHUB_CONTEXT": "$(GitHub.Artifacts.Context)", "BUILD_DEFINITIONNAME": "$(Build.DefinitionName)", "BUILD_ID": "$(Build.BuildId)", "BUILD_NUMBER": "$(Build.BuildNumber)", "BUILD_URI": "$(Build.BuildUri)", "ENABLE_JAR_SIGNING": "true" }'
-        authenticationMethod: 'OAuth Token'
-        password: $(System.AccessToken)     # Equivalent to the 'Allow scripts to access OAuth token option': https://stackoverflow.com/questions/52837980/how-to-allow-scripts-to-access-oauth-token-from-yaml-builds

@@ -250,7 +250,7 @@ added to `Documentation/release-notes/images/`.
 
 1. Determine the product version.  This can be done by viewing the history of
    the non-public [Insertion Release Definition][insertion-definition] and
-   finding the corresponding xamarin-android commit.  Look in the JENKINS-SIGN
+   finding the corresponding xamarin-android commit.  Look in the 'vsts-devdiv artifacts'
    commit status details to find the `version`.
 
    ```
