@@ -1,0 +1,48 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Runtime.Managed.proj
+
+This project file is used to create a Microsoft.Android.Runtime.[API] NuGet, which is a
+runtime pack that contains the non ABI specific assets required for a self-contained publish of
+projects that use the Microsoft.Android framework.
+***********************************************************************************************
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <AndroidRID>android</AndroidRID>
+    <PackageId>Microsoft.Android.Runtime.$(AndroidApiLevel).$(AndroidRID)</PackageId>
+    <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
+    <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\net6.0</_AndroidRuntimePackAssemblyPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BeforePack>
+      _GetRuntimePackItems;
+      _GetDefaultPackageVersion;
+      _GenerateFrameworkListFile;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <Target Name="_GetRuntimePackItems"
+      DependsOnTargets="_GetLicense">
+    <PropertyGroup>
+      <FrameworkListFile>$(IntermediateOutputPath)$(AndroidRID)\RuntimeList.xml</FrameworkListFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_AndroidRuntimePackAssemblies Include="$(JavaInteropSourceDirectory)\bin\$(Configuration)-net6.0\Java.Interop.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputDir)Mono.Android.dll" />
+      <!-- Always include stable Mono.Android.Export.dll -->
+      <_AndroidRuntimePackAssemblies Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
+      <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_PackageFiles Include="@(_AndroidRuntimePackAssemblies)" PackagePath="$(_AndroidRuntimePackAssemblyPath)" TargetPath="$(_AndroidRuntimePackAssemblyPath)" />
+      <_PackageFiles Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" PackagePath="$(_AndroidRuntimePackAssemblyPath)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

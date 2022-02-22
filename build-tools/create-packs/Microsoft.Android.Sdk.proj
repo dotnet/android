@@ -98,7 +98,6 @@ core workload SDK packs imported by WorkloadManifest.targets.
   <Target Name="_GenerateBundledVersions"
       DependsOnTargets="_GetDefaultPackageVersion" >
     <PropertyGroup>
-      <_AndroidNETAppTargetFramework>net6.0</_AndroidNETAppTargetFramework>
       <BundledVersionsFileName>Microsoft.Android.Sdk.BundledVersions.targets</BundledVersionsFileName>
     </PropertyGroup>
 

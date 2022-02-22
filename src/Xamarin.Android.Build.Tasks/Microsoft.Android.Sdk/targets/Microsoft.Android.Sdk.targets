@@ -20,6 +20,12 @@
         Pack="false"
         PrivateAssets="All"
     />
+    <FrameworkReference
+        Include="Microsoft.Android.Unmanaged"
+        IsImplicitlyDefined="true"
+        Pack="false"
+        PrivateAssets="All"
+    />
   </ItemGroup>
 
   <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.targets" />

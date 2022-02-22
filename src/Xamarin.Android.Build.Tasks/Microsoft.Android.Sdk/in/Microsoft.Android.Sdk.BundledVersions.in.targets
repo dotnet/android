@@ -28,5 +28,16 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
         Profile="Android"
     />
+    <KnownFrameworkReference
+        Include="Microsoft.Android"
+        TargetFramework="net6.0"
+        RuntimeFrameworkName="Microsoft.Android"
+        LatestRuntimeFrameworkVersion="**FromWorkload**"
+        TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"
+        TargetingPackVersion="**FromWorkload**"
+        RuntimePackNamePatterns="Microsoft.Android.Runtime.%24(_AndroidRuntimePackId).android"
+        RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
+        Profile="Android"
+    />
   </ItemGroup>
 </Project>
