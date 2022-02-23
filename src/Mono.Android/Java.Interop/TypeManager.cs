@@ -122,7 +122,7 @@ namespace Java.Interop {
 		static Type[] GetParameterTypes (string? signature)
 		{
 			if (String.IsNullOrEmpty (signature))
-				return new Type[0];
+				return Array.Empty<Type> ();
 			string[] typenames = signature!.Split (':');
 			Type[] result = new Type [typenames.Length];
 			for (int i = 0; i < typenames.Length; i++)
@@ -166,14 +166,21 @@ namespace Java.Interop {
 				return;
 			}
 
-			Activate (o, jobject, cinfo, parms);
+			Activate (jobject, cinfo, parms);
 		}
 
-		internal static void Activate (IJavaPeerable? o, IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
+		internal static void Activate (IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
 		{
 			try {
-				var activator = ConstructorBuilder.CreateDelegate (cinfo);
-				activator (jobject, parms);
+				var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType);
+				if (newobj is Java.Lang.Object o) {
+					o.handle = jobject;
+				} else if (newobj is Java.Lang.Throwable throwable) {
+					throwable.handle = jobject;
+				} else {
+					throw new InvalidOperationException ($"Unsupported type: '{newobj}'");
+				}
+				cinfo.Invoke (newobj, parms);
 			} catch (Exception e) {
 				var m = string.Format ("Could not activate JNI Handle 0x{0} (key_handle 0x{1}) of Java type '{2}' as managed type '{3}'.",
 						jobject.ToString ("x"), JNIEnv.IdentityHash! (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), cinfo.DeclaringType.FullName);

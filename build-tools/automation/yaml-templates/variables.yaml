@@ -3,10 +3,6 @@ variables:
   value: true
 - name: XA.Build.Configuration
   value: Release
-- name: XA.Jdk8.Folder
-  value: jdk-1.8
-- name: XA.Jdk11.Folder
-  value: jdk-11
 - name: NuGetArtifactName
   value: nuget-unsigned
 - name: LinuxNuGetArtifactName

@@ -70,6 +70,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\%(_LocalizationLanguages.Identity)\Microsoft.Android.Sdk.ILLink.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
+      <_PackageFiles Include="@(JIUtilityFile->'$(NetCoreAppToolsSourceDir)%(Identity)')"   PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)class-parse.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)class-parse.pdb" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)class-parse.runtimeconfig.json" PackagePath="tools" />

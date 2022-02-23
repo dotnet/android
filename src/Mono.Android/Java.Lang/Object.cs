@@ -24,7 +24,7 @@ namespace Java.Lang {
 		[NonSerialized] int refs_added;
 #pragma warning restore CS0649, CS0169, CS0414
 		[NonSerialized] JObjectRefType handle_type;
-		[NonSerialized] IntPtr handle;
+		[NonSerialized] internal IntPtr handle;
 		[NonSerialized] bool             needsActivation;
 		[NonSerialized] bool             isProxy;
 

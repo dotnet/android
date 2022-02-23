@@ -8,7 +8,7 @@ parameters:
   nunit_categories: ''
   target_framework: 'net472'
   run_extra_tests: false
-  jdkTestFolder: $(XA.Jdk11.Folder)
+  provisionatorChannel: latest
 
 jobs:
   - job: ${{ parameters.job_name }}
@@ -27,7 +27,7 @@ jobs:
 
     - template: setup-test-environment.yaml
       parameters:
-        jdkTestFolder: ${{ parameters.jdkTestFolder }}
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - task: DownloadPipelineArtifact@1
       inputs:

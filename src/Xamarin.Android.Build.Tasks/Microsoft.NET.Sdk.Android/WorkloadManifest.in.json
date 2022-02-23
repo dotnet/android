@@ -5,7 +5,6 @@
       "description": ".NET SDK Workload for building Android applications.",
       "packs": [
         "Microsoft.Android.Sdk",
-        "Microsoft.Android.Ref.31",
         "Microsoft.Android.Ref.32",
         "Microsoft.Android.Runtime.32.android-arm",
         "Microsoft.Android.Runtime.32.android-arm64",
@@ -40,10 +39,6 @@
         "win-x64": "Microsoft.Android.Sdk.Windows",
         "linux-x64": "Microsoft.Android.Sdk.Linux"
       }
-    },
-    "Microsoft.Android.Ref.31": {
-      "kind": "framework",
-      "version": "31.0.101-preview.11.117"
     },
     "Microsoft.Android.Ref.32": {
       "kind": "framework",

@@ -1325,6 +1325,8 @@ namespace Android.Runtime {
 				return null;
 
 			int cnt = _GetArrayLength (array_ptr);
+			if (cnt == 0)
+				return Array.Empty<object> ();
 
 			var converter = GetConverter (NativeArrayElementToManaged, null, array_ptr);
 

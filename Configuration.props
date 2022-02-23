@@ -26,8 +26,6 @@
     <AndroidFirstFrameworkVersion Condition="'$(AndroidFirstFrameworkVersion)' == ''">v4.4</AndroidFirstFrameworkVersion>
     <AndroidFirstApiLevel Condition="'$(AndroidFirstApiLevel)' == ''">19</AndroidFirstApiLevel>
     <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">21</AndroidJavaRuntimeApiLevel>
-    <!-- The default API level used for $(TargetPlatformVersion) -->
-    <AndroidDefaultTargetDotnetApiLevel Condition="'$(AndroidDefaultTargetDotnetApiLevel)' == ''">31</AndroidDefaultTargetDotnetApiLevel>
     <!-- The min API level supported by Microsoft.Android.Sdk, should refactor/remove when this value is the same as $(AndroidFirstApiLevel) -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <AndroidFirstPlatformId Condition="'$(AndroidFirstPlatformId)' == ''">$(AndroidFirstApiLevel)</AndroidFirstPlatformId>
@@ -39,6 +37,8 @@
     <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">33</AndroidLatestUnstableApiLevel>
     <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">Tiramisu</AndroidLatestUnstablePlatformId>
     <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v12.1.99</AndroidLatestUnstableFrameworkVersion>
+    <!-- The default API level used for $(TargetPlatformVersion) in .NET 6, can be increased again in .NET 7 -->
+    <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">32</AndroidDefaultTargetDotnetApiLevel>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
@@ -74,7 +74,6 @@
     <HOME Condition=" '$(HOME)' == '' ">$(USERPROFILE)</HOME>
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
-    <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' And '$(RunningOnCI)' == 'true' And '$(HostOS)' == 'Darwin' ">$(HOME)\Library\Android</AndroidToolchainDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Linux' ">\usr</AndroidMxeInstallPrefix>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)</AndroidMxeInstallPrefix>
@@ -140,8 +139,8 @@
     <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildTools30PackagePrefixWindows)</XABuildTools30PackagePrefix>
     <XABuildTools30Version>30.0.3</XABuildTools30Version>
     <XABuildTools30Folder Condition="'$(XABuildTools30Folder)' == ''">30.0.3</XABuildTools30Folder>
-    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">e8b2b4cbe47c728c1e54c5f524440b52d4e1a33c.</XAPlatformToolsPackagePrefix>
-    <XAPlatformToolsVersion>31.0.3</XAPlatformToolsVersion>
+    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
+    <XAPlatformToolsVersion>32.0.0</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.8.1</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
@@ -159,6 +158,7 @@
   <PropertyGroup>
     <JavacSourceVersion>1.8</JavacSourceVersion>
     <JavacTargetVersion>1.8</JavacTargetVersion>
+    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists($(JAVA_HOME_8_X64)) ">$(JAVA_HOME_8_X64)</Java8SdkDirectory>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists('$(JavaSdkDirectory)\..\jdk-1.8') ">$([System.IO.Path]::GetFullPath ('$(JavaSdkDirectory)\..\jdk-1.8'))</Java8SdkDirectory>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' ">$(JavaSdkDirectory)</Java8SdkDirectory>
   </PropertyGroup>

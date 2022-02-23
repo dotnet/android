@@ -10,8 +10,6 @@ namespace Xamarin.ProjectTools
 	{
 		static string HomeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 		static string DefaultToolchainPath = Path.Combine (HomeDirectory, "android-toolchain");
-		static string AzureToolchainPathMacOS = Path.Combine (HomeDirectory, "Library", "Android");
-		static string ToolchainPath = (TestEnvironment.IsMacOS && TestEnvironment.IsRunningOnCI) ? AzureToolchainPathMacOS : DefaultToolchainPath;
 
 		static string GetPathFromRegistry (string valueName)
 		{
@@ -31,7 +29,7 @@ namespace Xamarin.ProjectTools
 			if (String.IsNullOrEmpty (sdkPath))
 				sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_ROOT");
 			if (String.IsNullOrEmpty (sdkPath))
-				sdkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "sdk"));
+				sdkPath = Path.GetFullPath (Path.Combine (DefaultToolchainPath, "sdk"));
 
 			return sdkPath;
 
@@ -47,7 +45,7 @@ namespace Xamarin.ProjectTools
 			if (String.IsNullOrEmpty (ndkPath))
 				ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_LATEST_HOME");
 			if (String.IsNullOrEmpty (ndkPath))
-				ndkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "ndk"));
+				ndkPath = Path.GetFullPath (Path.Combine (DefaultToolchainPath, "ndk"));
 
 			return ndkPath;
 		}
@@ -66,7 +64,7 @@ namespace Xamarin.ProjectTools
 			if (string.IsNullOrEmpty (JavaSdkPath))
 				JavaSdkPath = GetPathFromRegistry ("JavaSdkDirectory");
 			if (string.IsNullOrEmpty (JavaSdkPath))
-				JavaSdkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "jdk"));
+				JavaSdkPath = Path.GetFullPath (Path.Combine (DefaultToolchainPath, "jdk"));
 			return JavaSdkPath;
 		}
 

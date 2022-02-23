@@ -217,7 +217,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetPack ([Values ("net6.0-android", "net6.0-android31")] string targetFramework)
+		public void DotNetPack ([Values ("net6.0-android", "net6.0-android32")] string targetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
@@ -249,8 +249,8 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android32.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android32.0/{proj.ProjectName}.aar");
 			}
 		}
 
@@ -814,13 +814,14 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 		}
 
 		[Test]
-		public void DotNetIncremental ()
+		public void DotNetIncremental ([Values (true, false)] bool isRelease, [Values ("", "android-arm64")] string runtimeIdentifier)
 		{
 			// Setup dependencies App A -> Lib B
 			var path = Path.Combine ("temp", TestName);
 
 			var libB = new XASdkProject (outputType: "Library") {
-				ProjectName = "LibraryB"
+				ProjectName = "LibraryB",
+				IsRelease = isRelease,
 			};
 			libB.Sources.Clear ();
 			libB.Sources.Add (new BuildItem.Source ("Foo.cs") {
@@ -832,6 +833,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 
 			var appA = new XASdkProject {
 				ProjectName = "AppA",
+				IsRelease = isRelease,
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
 						TextContent = () => "public class Bar : Foo { }",
@@ -840,12 +842,20 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			};
 			appA.AddReference (libB);
 			var appBuilder = CreateDotNetBuilder (appA, Path.Combine (path, appA.ProjectName));
-			Assert.IsTrue (appBuilder.Build (), $"{appA.ProjectName} should succeed");
+			Assert.IsTrue (appBuilder.Build (runtimeIdentifier: runtimeIdentifier), $"{appA.ProjectName} should succeed");
 			appBuilder.AssertTargetIsNotSkipped ("CoreCompile");
+			if (isRelease) {
+				appBuilder.AssertTargetIsNotSkipped ("_RemoveRegisterAttribute");
+				appBuilder.AssertTargetIsNotSkipped ("_AndroidAot");
+			}
 
 			// Build again, no changes
-			Assert.IsTrue (appBuilder.Build (), $"{appA.ProjectName} should succeed");
+			Assert.IsTrue (appBuilder.Build (runtimeIdentifier: runtimeIdentifier), $"{appA.ProjectName} should succeed");
 			appBuilder.AssertTargetIsSkipped ("CoreCompile");
+			if (isRelease) {
+				appBuilder.AssertTargetIsSkipped ("_RemoveRegisterAttribute");
+				appBuilder.AssertTargetIsSkipped ("_AndroidAot");
+			}
 		}
 
 		[Test]
@@ -854,7 +864,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			var proj = new XASdkProject ();
 			var builder = CreateDotNetBuilder (proj);
 			var parameters = new [] { "BuildingInsideVisualStudio=true" };
-			Assert.IsTrue (builder.Build ("SignAndroidPackage", parameters), $"{proj.ProjectName} should succeed");
+			Assert.IsTrue (builder.Build ("SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed");
 		}
 
 		[Test]
@@ -884,6 +894,13 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 				/* useInterpreter */ false,
 				/* publishTrimmed */ true,
 				/* aot */            true,
+			},
+			// Debug + PublishTrimmed
+			new object [] {
+				/* isRelease */      false,
+				/* useInterpreter */ false,
+				/* publishTrimmed */ true,
+				/* aot */            false,
 			},
 		};
 
