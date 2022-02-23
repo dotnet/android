@@ -58,12 +58,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
-		public void BuildBasicApplicationReleaseProfiledAot ()
+		public void BuildBasicApplicationReleaseProfiledAot ([Values (true, false)] bool enableLLVM)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AndroidEnableProfiledAot = true,
 			};
+			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
