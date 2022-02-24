@@ -11,10 +11,10 @@
     -->
     <AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">30.0.3</AndroidSdkBuildToolsVersion>
     <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">5.0</AndroidCommandLineToolsVersion>
-    <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">32.0.0</AndroidSdkPlatformToolsVersion>
+    <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">31.0.3</AndroidSdkPlatformToolsVersion>
     <AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
-    <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-32</AndroidSdkPlatformVersion>
-    <AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">23.1.7779620</AndroidNdkVersion>
+    <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-31</AndroidSdkPlatformVersion>
+    <AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">22.1.7171670</AndroidNdkVersion>
 
     <!-- obsolete; should consider removing eventually -->
     <AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
