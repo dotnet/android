@@ -219,7 +219,7 @@
     </ReplaceFileContents>
   </Target>
   <Target Name="_GenerateSupportedPlatforms"
-      Inputs="$(BootstrapTasksAssembly);$(MSBuildThisFile);..\..\Configuration.props;..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems"
+      Inputs="$(BootstrapTasksAssembly);$(MSBuildThisFile);..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems"
       Outputs="Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.SupportedPlatforms.targets">
     <GenerateSupportedPlatforms
         AndroidApiInfo="@(AndroidApiInfo)"
