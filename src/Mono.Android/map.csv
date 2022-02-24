@@ -14557,6 +14557,7 @@ E,10,I:android/text/InputType.TYPE_TEXT_FLAG_AUTO_CORRECT,32768,Android.Text.Inp
 E,10,I:android/text/InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS,4096,Android.Text.InputTypes,TextFlagCapCharacters,keep,flags
 E,10,I:android/text/InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,16384,Android.Text.InputTypes,TextFlagCapSentences,keep,flags
 E,10,I:android/text/InputType.TYPE_TEXT_FLAG_CAP_WORDS,8192,Android.Text.InputTypes,TextFlagCapWords,keep,flags
+E,33,I:android/text/InputType.TYPE_TEXT_FLAG_ENABLE_TEXT_CONVERSION_SUGGESTIONS,1048576,Android.Text.InputTypes,TextFlagEnableTextConversionSuggestions,keep,flags
 E,10,I:android/text/InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE,262144,Android.Text.InputTypes,TextFlagImeMultiLine,keep,flags
 E,10,I:android/text/InputType.TYPE_TEXT_FLAG_MULTI_LINE,131072,Android.Text.InputTypes,TextFlagMultiLine,keep,flags
 E,10,I:android/text/InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS,524288,Android.Text.InputTypes,TextFlagNoSuggestions,keep,flags

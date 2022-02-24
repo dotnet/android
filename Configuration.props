@@ -34,9 +34,9 @@
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
     <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v12.1</AndroidLatestStableFrameworkVersion>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
-    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">32</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">32</AndroidLatestUnstablePlatformId>
-    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v12.1</AndroidLatestUnstableFrameworkVersion>
+    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">33</AndroidLatestUnstableApiLevel>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">Tiramisu</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v12.1.99</AndroidLatestUnstableFrameworkVersion>
     <!-- The default API level used for $(TargetPlatformVersion) in .NET 6, can be increased again in .NET 7 -->
     <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">32</AndroidDefaultTargetDotnetApiLevel>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
