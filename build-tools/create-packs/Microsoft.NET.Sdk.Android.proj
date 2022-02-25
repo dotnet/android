@@ -10,7 +10,8 @@ about the various Microsoft.Android workloads.
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <PackageId>Microsoft.NET.Sdk.Android.Manifest-$(DotNetPreviewVersionBand)</PackageId>
+    <!-- NOTE: temporarily hardcode to 6.0.200 -->
+    <PackageId>Microsoft.NET.Sdk.Android.Manifest-6.0.200</PackageId>
     <Description>Microsoft.NET.Sdk.Android workload manifest. Please do not reference directly.</Description>
   </PropertyGroup>
 
