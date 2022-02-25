@@ -10,7 +10,7 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	/// <summary>
-	/// Generates a .wix file for the contents of ~/android-toolchain/dotnet/packs
+	/// Generates a .wix file for the contents of bin/$(Configuration)/dotnet/packs
 	/// The .wix file can be used to generate the .msi installer for Windows.
 	/// </summary>
 	public class GenerateWixFile : Task

@@ -1,4 +1,6 @@
 parameters:
+  configuration: $(XA.Build.Configuration)
+  xaSourcePath: $(System.DefaultWorkingDirectory)
   command: build
   project: ''
   arguments: ''
@@ -10,9 +12,9 @@ parameters:
 steps:
 - powershell: |
     if ([Environment]::OSVersion.Platform -eq "Unix") {
-        $dotnetPath = "$env:HOME/android-toolchain/dotnet/dotnet"
+        $dotnetPath = "${{ parameters.xaSourcePath }}/bin/${{ parameters.configuration }}/dotnet/dotnet"
     } else {
-        $dotnetPath = "$env:USERPROFILE\android-toolchain\dotnet\dotnet.exe"
+        $dotnetPath = "${{ parameters.xaSourcePath }}\bin\${{ parameters.configuration }}\dotnet\dotnet.exe"
     }
     & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
     if ([System.Convert]::ToBoolean("${{ parameters.useExitCodeForErrors }}") -and $LASTEXITCODE -ne 0) {
