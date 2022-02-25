@@ -996,6 +996,7 @@ stages:
       node_id: 1
       job_name: mac_msbuilddevice_tests_1
       job_suffix: Legacy
+      nunit_categories: '&& cat != Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
@@ -1003,6 +1004,7 @@ stages:
       node_id: 2
       job_name: mac_msbuilddevice_tests_2
       job_suffix: Legacy
+      nunit_categories: '&& cat != Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
@@ -1010,6 +1012,16 @@ stages:
       node_id: 3
       job_name: mac_msbuilddevice_tests_3
       job_suffix: Legacy
+      nunit_categories: '&& cat != Debugger'
+      provisionatorChannel: ${{ parameters.provisionatorChannel }}
+
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      node_id: 4
+      job_name: mac_msbuilddevice_tests_with_debugger
+      job_suffix: Legacy
+      jdkTestFolder: $(XA.Jdk11.Folder)
+      nunit_categories: '&& cat == Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - One .NET)"
@@ -1035,6 +1047,15 @@ stages:
     parameters:
       node_id: 3
       job_name: mac_dotnetdevice_tests_3
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'net6.0'
+      provisionatorChannel: ${{ parameters.provisionatorChannel }}
+
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      node_id: 4
+      job_name: mac_dotnetdevice_tests_4
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'net6.0'

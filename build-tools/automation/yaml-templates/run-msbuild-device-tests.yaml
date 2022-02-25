@@ -73,8 +73,8 @@ jobs:
           useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
           testRunTitle: MSBuildDeviceIntegration On Device - macOS-NoNode - ${{ parameters.job_suffix }}
           testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
-          nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3 && cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
-          dotNetTestExtraArgs: --filter "TestCategory != Node-1 & TestCategory != Node-2 & TestCategory != Node-3 & TestCategory != TimeZoneInfo ${{ parameters.nunit_categories }}"
+          nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3  && cat != Node-4 && cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
+          dotNetTestExtraArgs: --filter "TestCategory != Node-1 & TestCategory != Node-2 & TestCategory != Node-3 & TestCategory != Node-4 & TestCategory != TimeZoneInfo ${{ parameters.nunit_categories }}"
           testResultsFile: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}-NoNode-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
