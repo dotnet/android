@@ -21,18 +21,17 @@ core workload SDK packs imported by WorkloadManifest.targets.
 
   <PropertyGroup>
     <BeforePack>
+      _GetDefaultPackageVersion;
       _GenerateXASdkContent;
       $(BeforePack);
     </BeforePack>
   </PropertyGroup>
 
   <Target Name="_GenerateXASdkContent"
-      DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions;_GetLicense">
+      DependsOnTargets="ConstructInstallerItems;_GetLicense">
     <ItemGroup>
       <AndroidSdkBuildTools Include="@(MSBuildItemsWin)"  PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsWin.RelativePath)'))"  Condition=" '%(MSBuildItemsWin.ExcludeFromAndroidNETSdk)' != 'true' and '$(HostOS)' == 'Windows' " />
       <AndroidSdkBuildTools Include="@(MSBuildItemsUnix)" PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsUnix.RelativePath)'))" Condition=" '%(MSBuildItemsUnix.ExcludeFromAndroidNETSdk)' != 'true' and ('$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin') " />
-      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" />
-      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml" Condition="Exists('$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml')" />
     </ItemGroup>
 
     <GenerateUnixFilePermissions
@@ -60,28 +59,22 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" PackagePath="targets" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\profiled-aot\dotnet.aotprofile" PackagePath="targets" />
-      <_PackageFiles Include="@(_AndroidApiInfo)" DirectoryName="$([System.IO.Path]::GetDirectoryName ('%(Identity)'))" PackagePath="data\$([System.IO.Path]::GetFileName ('%(_PackageFiles.DirectoryName)'))" />
       <_PackageFiles Include="$(IntermediateOutputPath)UnixFilePermissions.xml" PackagePath="data" Condition=" '$(HostOS)' != 'Windows' " />
       <_PackageFiles Include="$(MSBuildThisFileDirectory)\linux-README.md" PackagePath="\README.md" Condition=" '$(HostOS)' == 'Linux' " />
+      <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" PackagePath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)" />
+      <_PackageFiles
+          Include="$(_MonoAndroidNETOutputRoot)$(AndroidDefaultTargetDotnetApiLevel)\AndroidApiInfo.xml"
+          PackagePath="data\$(DotNetAndroidTargetFramework)$(AndroidDefaultTargetDotnetApiLevel)"
+          Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidDefaultTargetDotnetApiLevel)\AndroidApiInfo.xml') "
+      />
+      <_PackageFiles
+          Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml"
+          PackagePath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)"
+          Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml') "
+      />
       <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
       <None Include="$(MSBuildThisFileDirectory)SignVerifyIgnore.txt" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
-  </Target>
-
-  <!-- Generate and include this file in our SDK for now, but we may eventually want to migrate to:
-       https://github.com/dotnet/installer/blob/d98f5f18bce44014aeacd2f99923b4779d89459d/src/redist/targets/GenerateBundledVersions.targets
-       -->
-  <Target Name="_GenerateBundledVersions"
-      DependsOnTargets="_GetDefaultPackageVersion" >
-    <PropertyGroup>
-      <BundledVersionsFileName>Microsoft.Android.Sdk.BundledVersions.targets</BundledVersionsFileName>
-    </PropertyGroup>
-
-    <ReplaceFileContents
-        SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets"
-        DestinationFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\$(BundledVersionsFileName)"
-        Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel);@DOTNET_TARGET_FRAMEWORK@=$(DotNetTargetFramework)" >
-    </ReplaceFileContents>
   </Target>
 
 </Project>

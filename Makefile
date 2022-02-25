@@ -23,6 +23,7 @@ _PREPARE_ARGS =
 
 all:
 	$(call DOTNET_BINLOG,all) $(MSBUILD_FLAGS) $(SOLUTION) -m:1
+	$(call DOTNET_BINLOG,setup-workload) -t:ConfigureLocalWorkload build-tools/create-packs/Microsoft.Android.Sdk.proj
 	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) tools/xabuild/xabuild.csproj
 
 -include bin/Build$(CONFIGURATION)/rules.mk

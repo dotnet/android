@@ -91,19 +91,17 @@ So for example:
 [windows_path]: https://www.java.com/en/download/help/path.xml
 [set_alias]: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/set-alias?view=powershell-6
 
-# Creating a local .NET 6 Workload
+# Creating a local .NET android Workload
 
-`msbuild Xamarin.Android.sln /t:Prepare` provisions a specific build
-of .NET 6 to `bin\$(Configuration)\dotnet`.
+`dotnet msbuild Xamarin.Android.sln -t:Prepare` provisions a
+specific build of .NET to `bin\$(Configuration)\dotnet`.
 
-Once `msbuild Xamarin.Android.sln /t:Build` is complete, you can build
-the .NET 6 packages with:
+Once the prepare target is complete, you can set up a local
+.NET android workload install with:
 
-    dotnet-local.cmd build Xamarin.Android.sln -t:PackDotNet -m:1
+    dotnet-local.cmd build Xamarin.Android.sln -t:BuildDotNet -m:1
 
-Several `.nupkg` files will be output in `.\bin\BuildDebug\nuget-unsigned`,
-but this is only part of the story. Your local
-`bin\$(Configuration)\dotnet\packs` directory will be
+Your local `bin\$(Configuration)\lib\packs` directory will be
 populated with a local Android "workload" in
 `Microsoft.Android.Sdk.$(HostOS)` matching your operating system.
 
@@ -130,6 +128,19 @@ Using the `dotnet-local` script will execute the `dotnet` provisioned in
 `bin\$(Configuration)\dotnet` and will use the locally built binaries.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
+
+# Creating installers
+
+Once `dotnet msbuild Xamarin.Android.sln -t:Prepare` is complete,
+.NET android workload packs can be built with:
+
+    dotnet-local.cmd build Xamarin.Android.sln -t:BuildDotNet,PackDotNet -m:1
+
+Several `.nupkg` files will be output in `.\bin\Build$(Configuration)\nuget-unsigned`.
+
+Commercial packages will be created by this command if the
+`dotnet-local.cmd build Xamarin.Android.sln -t:BuildExternal`
+command was ran before building.
 
 # Building Unit Tests
 

@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
-      DependsOnTargets="_GenerateIncludeFiles;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_BuildHostRuntimes">
+      DependsOnTargets="_GenerateIncludeFiles;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_BuildHostRuntimes;_CopyToPackDirs">
   </Target>
   <Target Name="_TestPinvokeTables" Condition=" '$(HostOS)' == 'Linux' And '$(RunningOnCI)' == 'true' ">
     <Exec
@@ -301,6 +301,35 @@
         ContinueOnError="ErrorAndContinue"
         Command="$(ClangTidy) -p $(MSBuildThisFileDirectory)%(_CompileCommandsDir.Identity) *.cc > ..\..\..\bin\Build$(Configuration)\clang-tidy.%(_CompileCommandsDir.LogTag).log"
         WorkingDirectory="$(MSBuildThisFileDirectory)\jni"
+    />
+  </Target>
+
+  <Target Name="_CopyToPackDirs">
+    <ItemGroup>
+      <_ArmRuntimePackFiles   Include="$(OutputPath)\android-arm\*.*" />
+      <_Arm64RuntimePackFiles Include="$(OutputPath)\android-arm64\*.*" />
+      <_x86RuntimePackFiles   Include="$(OutputPath)\android-x86\*.*" />
+      <_x64RuntimePackFiles   Include="$(OutputPath)\android-x64\*.*" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_ArmRuntimePackFiles)"
+        DestinationFolder="$(MicrosoftAndroidArmPackDir)native"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="@(_Arm64RuntimePackFiles)"
+        DestinationFolder="$(MicrosoftAndroidArm64PackDir)native"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="@(_x86RuntimePackFiles)"
+        DestinationFolder="$(MicrosoftAndroidx86PackDir)native"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="@(_x64RuntimePackFiles)"
+        DestinationFolder="$(MicrosoftAndroidx64PackDir)native"
+        SkipUnchangedFiles="true"
     />
   </Target>
 </Project>

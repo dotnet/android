@@ -4,7 +4,7 @@ Microsoft.Android.Runtime.proj
 
 This project file is used to create Microsoft.Android.Runtime.[API].[RID] NuGets, which are
 runtime packs that contain the assets required for a self-contained publish of
-projects that use the Microsoft.Android framework in .NET 5.
+projects that use the Microsoft.Android framework in .NET 6+.
 ***********************************************************************************************
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
@@ -29,14 +29,14 @@ projects that use the Microsoft.Android framework in .NET 5.
   <Target Name="_GetRuntimePackItems"
       DependsOnTargets="_GetLicense">
     <PropertyGroup>
-      <FrameworkListFile>$(IntermediateOutputPath)$(AndroidRID)\RuntimeList.xml</FrameworkListFile>
+      <FrameworkListFile Condition="'$(FrameworkListFile)' == ''">$(IntermediateOutputPath)$(AndroidRID)\RuntimeList.xml</FrameworkListFile>
     </PropertyGroup>
 
     <ItemGroup>
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\Java.Interop.dll" />
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\Mono.Android.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
       <!-- Always include stable Mono.Android.Export.dll -->
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.debug.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxamarin-debug-app-helper.so" />
