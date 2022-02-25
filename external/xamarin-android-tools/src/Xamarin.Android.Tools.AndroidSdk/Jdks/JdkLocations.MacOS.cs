@@ -21,8 +21,10 @@ namespace Xamarin.Android.Tools {
 		{
 			var config = AndroidSdkUnix.GetUnixConfigFile (logger);
 			foreach (var java_sdk in config.Root.Elements ("java-sdk")) {
-				var path    = (string) java_sdk.Attribute ("path");
-				yield return path;
+				var path    = (string?) java_sdk.Attribute ("path");
+				if (path != null && !string.IsNullOrEmpty (path)) {
+					yield return path;
+				}
 			}
 		}
 

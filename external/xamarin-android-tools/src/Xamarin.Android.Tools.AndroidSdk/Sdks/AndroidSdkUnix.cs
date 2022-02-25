@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tools
 				var androidEl = config_file.Root.Element ("android-sdk");
 
 				if (androidEl != null) {
-					var path = (string)androidEl.Attribute ("path");
+					var path = (string?)androidEl.Attribute ("path");
 
 					if (ValidateAndroidSdkLocation (path))
 						return path;
@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tools
 				var androidEl = config_file.Root.Element ("android-ndk");
 
 				if (androidEl != null) {
-					var path = (string)androidEl.Attribute ("path");
+					var path = (string?)androidEl.Attribute ("path");
 
 					if (ValidateAndroidNdkLocation (path))
 						return path;
@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tools
 				var javaEl = config_file.Root.Element ("java-sdk");
 
 				if (javaEl != null) {
-					var path = (string)javaEl.Attribute ("path");
+					var path = (string?)javaEl.Attribute ("path");
 
 					if (ValidateJavaSdkLocation (path))
 						return path;

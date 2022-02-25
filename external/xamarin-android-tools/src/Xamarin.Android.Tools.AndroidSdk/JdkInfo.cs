@@ -285,6 +285,7 @@ namespace Xamarin.Android.Tools
 					if (e.Data.StartsWith (ContinuedValuePrefix, StringComparison.Ordinal)) {
 						if (curKey == null) {
 							logger (TraceLevel.Error, $"No Java property previously seen for continued value `{e.Data}`.");
+							return;
 						}
 						props [curKey].Add (e.Data.Substring (ContinuedValuePrefix.Length));
 						return;
