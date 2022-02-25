@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			AddDotNetProfilerNativeLibraries (proj);
 			var port = 9000 + new Random ().Next (1000);
 			proj.SetProperty ("AndroidAotProfilerPort", port.ToString ());

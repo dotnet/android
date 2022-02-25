@@ -130,9 +130,10 @@ namespace Xamarin.Android.Tools
 		{
 			var times = new List<long> ();
 			int errors = 0;
+			var timeoutInMS = (int) TimeSpan.FromMinutes (15).TotalMilliseconds;
 
 			Stopwatch sw = new Stopwatch ();
-			var token = coldBoot ? "emulator: INFO: boot time" : "onGuestSendCommand";
+			var token = coldBoot ? "boot completed" : "onGuestSendCommand";
 
 			for (int i = 0; i < executionTimes; i++) {
 				await CloseEmulator ();
@@ -162,7 +163,7 @@ namespace Xamarin.Android.Tools
 				bool hasTimedOut = false;
 				sw.Reset ();
 				sw.Start ();
-				if (!await RunProcess (emulatorPath, $"-avd {deviceName} {bootOptions} -verbose", 300000, validation, async () => {
+				if (!await RunProcess (emulatorPath, $"-avd {deviceName} {bootOptions} -verbose -detect-image-hang", timeoutInMS, validation, async () => {
 					hasTimedOut = true;
 					await ForceKillEmulator ();
 				})) {

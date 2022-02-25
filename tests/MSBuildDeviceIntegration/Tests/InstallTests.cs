@@ -38,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			}
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
@@ -69,7 +69,7 @@ namespace Xamarin.Android.Build.Tests
 			if (isRelease) {
 				// Set debuggable=true to allow run-as command usage with a release build
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			}
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
@@ -100,7 +100,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageName = "com.xamarin.keytest"
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			using (var builder = CreateApkBuilder ()) {
 				// Use the default debug.keystore XA generates
 				Assert.IsTrue (builder.Install (proj), "first install should succeed.");
@@ -132,7 +132,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			proj.SetProperty ("AndroidPackageFormat", "apk");
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
@@ -185,7 +185,7 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
 			}
-			var abis = new [] { "armeabi-v7a", "x86" };
+			var abis = new [] { "armeabi-v7a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			using (var builder = CreateApkBuilder ()) {
 				if (RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length != 0)
@@ -277,7 +277,7 @@ namespace Xamarin.Android.Build.Tests
 
 				//Now toggle FastDev to OFF
 				proj.EmbedAssembliesIntoApk = true;
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 
 				Assert.IsTrue (builder.Install (proj), "Second install should have succeeded.");
 
@@ -301,7 +301,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -397,7 +397,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidSigningStorePass", password);
 				proj.SetProperty ("AndroidSigningKeyPass", password);
 			}
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			proj.SetProperty ("AndroidKeyStore", androidKeyStore);
 			proj.SetProperty ("AndroidSigningKeyStore", "test.keystore");
 			proj.SetProperty ("AndroidSigningKeyAlias", "mykey");

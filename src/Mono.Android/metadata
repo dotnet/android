@@ -1659,7 +1659,47 @@
   <!-- The setter 'setColor (long)' can't be merged with the existing 'virtual long Color { get; }' because it's a breaking change -->
   <attr api-since="29" path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='setColor' and count(parameter)=1 and parameter[1][@type='long']]" name="propertyName"></attr>
 
-  <!--
+  <!-- API-33 Adjustments -->
+  <!-- Work around a generator bug where having multiple Listener methods with the same name cause multiple conflicting EventArgs classes to be created. -->
+  <!-- This is the "default" method version, so it's ok to remove it from an interface. -->
+  <remove-node api-since="33" path="/api/package[@name='android.accessibilityservice']/interface[@name='AccessibilityService.MagnificationController.OnMagnificationChangedListener']/method[@name='onMagnificationChanged' and count(parameter)=3 and parameter[1][@type='android.accessibilityservice.AccessibilityService.MagnificationController'] and parameter[2][@type='android.graphics.Region'] and parameter[3][@type='android.accessibilityservice.MagnificationConfig']]" />
+
+  <!-- Fix covariant return type -->
+  <attr api-since="33" path="/api/package[@name='java.security.cert']/class[@name='URICertStoreParameters']/method[@name='clone' and count(parameter)=0]" name="managedReturn">Java.Lang.Object</attr>
+
+  <!-- We have 2 methods with the same name and the same parameter name. One needs to be enumified but not the other.
+       Our methodmap.csv isn't capable of only choosing 1 of the methods, so it sets them both as the enum, making both have the
+       same signature. So we are going to set the enum transformation here instead, where we can specify a path that only affects a single method. -->
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getActivityInfo' and count(parameter)=2 and parameter[1][@type='android.content.ComponentName'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getApplicationInfo' and count(parameter)=2 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getInstalledApplications' and count(parameter)=1 and parameter[1][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getInstalledPackages' and count(parameter)=1 and parameter[1][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getPackageArchiveInfo' and count(parameter)=2 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr api-since="24" path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getPackageGids' and count(parameter)=2 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getPackageInfo' and count(parameter)=2 and parameter[1][@type='android.content.pm.VersionedPackage'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getPackageInfo' and count(parameter)=2 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getPackagesHoldingPermissions' and count(parameter)=2 and parameter[1][@type='java.lang.String[]'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr api-since="24" path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getPackageUid' and count(parameter)=2 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getProviderInfo' and count(parameter)=2 and parameter[1][@type='android.content.ComponentName'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getReceiverInfo' and count(parameter)=2 and parameter[1][@type='android.content.ComponentName'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getServiceInfo' and count(parameter)=2 and parameter[1][@type='android.content.ComponentName'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr api-since="26" path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='getSharedLibraries' and count(parameter)=1 and parameter[1][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInstallReason</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='queryBroadcastReceivers' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='queryContentProviders' and count(parameter)=3 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int'] and parameter[3][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='queryIntentActivities' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='queryIntentContentProviders' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='queryIntentServices' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='resolveActivity' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='resolveContentProvider' and count(parameter)=2 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='resolveService' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+
+  <!-- These parameters that we enumify changed names. Change them back so the enumification process can still find them. -->
+  <attr api-since="33" path="/api/package[@name='android.app']/class[@name='Service']/method[@name='stopForeground' and count(parameter)=1 and parameter[1][@type='int']]/parameter[@name='notificationBehavior']" name="name">flags</attr>
+
+  <!-- This method was already specified on a base interface, ignore to avoid "breakage" report. -->
+  <remove-node api-since="33" path="/api/package[@name='java.util']/interface[@name='Deque']/method[@name='addAll' and count(parameter)=1 and parameter[1][@type='java.util.Collection&lt;? extends E&gt;']]" />
+
+	<!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
     
@@ -1675,6 +1715,8 @@
   <attr api-since="31" path="/api/package/interface[contains(@merge.SourceFile,'api-S.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="32" path="/api/package/interface[contains(@merge.SourceFile,'api-32.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="32" path="/api/package/interface[contains(@merge.SourceFile,'api-Sv2.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="33" path="/api/package/interface[contains(@merge.SourceFile,'api-33.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="33" path="/api/package/interface[contains(@merge.SourceFile,'api-Tiramisu.xml.in')]" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -1691,4 +1733,6 @@
   <attr api-since="31" path="/api//*[contains(@merge.SourceFile,'api-S.xml.in')]" name="api-since">31</attr>
   <attr api-since="32" path="/api//*[contains(@merge.SourceFile,'api-32.xml.in')]" name="api-since">32</attr>
   <attr api-since="32" path="/api//*[contains(@merge.SourceFile,'api-Sv2.xml.in')]" name="api-since">32</attr>
+  <attr api-since="33" path="/api//*[contains(@merge.SourceFile,'api-33.xml.in')]" name="api-since">33</attr>
+  <attr api-since="33" path="/api//*[contains(@merge.SourceFile,'api-Tiramisu.xml.in')]" name="api-since">33</attr>
 </metadata>

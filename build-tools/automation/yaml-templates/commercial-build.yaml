@@ -68,21 +68,22 @@ steps:
 
 # Restore needs to be executed first or MicroBuild targets won't be imported in time
 - task: MSBuild@1
-  displayName: msbuild /t:Restore sign-pkg-content.proj
+  displayName: msbuild /t:Restore sign-content.proj
   inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-pkg-content.proj
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     configuration: $(XA.Build.Configuration)
-    msbuildArguments: /t:Restore /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
+    msbuildArguments: /t:Restore /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
 
 - task: MSBuild@1
-  displayName: sign and harden legacy and .NET 6 .pkg content
+  displayName: sign and harden classic installer content
   inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-pkg-content.proj
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     configuration: $(XA.Build.Configuration)
     msbuildArguments: >-
+      /t:_AddMachOEntitlements;Build
       /p:SignType=$(MicroBuildSignType)
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
 
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}

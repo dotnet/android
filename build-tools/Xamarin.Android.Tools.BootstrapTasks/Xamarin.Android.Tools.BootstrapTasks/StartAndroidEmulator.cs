@@ -34,6 +34,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string          ToolPath        {get; set;}
 		public                  string          ToolExe         {get; set;}
 		public                  string          LogcatFile      {get; set;}
+		public                  bool            ShowWindow      {get; set;} = true;
 
 		public override bool Execute ()
 		{
@@ -69,7 +70,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				return;
 
 			var port = string.IsNullOrEmpty (Port) ? "" : $" -port {Port}";
-			var arguments = $"{Arguments ?? string.Empty} -verbose -logcat-output \"{LogcatFile}\" -no-boot-anim -no-audio -no-snapshot -cache-size 512 -timezone \"Etc/UTC\" -avd {ImageName}{port}";
+			var showWindow = ShowWindow ? "" : " -no-window";
+			var arguments = $"{Arguments ?? string.Empty} -verbose -detect-image-hang -logcat-output \"{LogcatFile}\" -no-boot-anim -no-audio -no-snapshot -cache-size 512 -timezone \"Etc/UTC\" {showWindow}{port} -avd {ImageName}";
 			Log.LogMessage (MessageImportance.Low, $"Tool {emulator} execution started with arguments: {arguments}");
 			var psi = new ProcessStartInfo () {
 				FileName                = emulator,

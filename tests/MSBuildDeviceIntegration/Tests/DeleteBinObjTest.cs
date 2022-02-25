@@ -50,7 +50,9 @@ namespace Xamarin.Android.Build.Tests
 					"IntermediateOutputPath=" + Path.Combine ("obj", isRelease ? "Release" : "Debug", "90") + Path.DirectorySeparatorChar
 				};
 				if (isRelease || !CommercialBuildAvailable) {
-					parameters.Add (KnownProperties.AndroidSupportedAbis + "=\"armeabi-v7a;x86\"");
+					parameters.Add (KnownProperties.AndroidSupportedAbis + "=\"armeabi-v7a;x86;x86_64\"");
+				} else {
+					parameters.Add (KnownProperties.AndroidSupportedAbis + "=\"armeabi-v7a;arm64-v8a;x86;x86_64\"");
 				}
 				if (HasDevices) {
 					Assert.IsTrue (builder.Install (project, doNotCleanupOnUpdate: true, parameters: parameters.ToArray (), saveProject: false),
