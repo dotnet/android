@@ -326,7 +326,8 @@ namespace Xamarin.Android.Prepare
 
 			public static string MicrosoftNETWorkloadMonoPackageDir => Path.Combine (
 				XAPackagesDir,
-				$"microsoft.net.workload.mono.toolchain.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionBand)}",
+				// NOTE: temporarily hardcode to 6.0.200
+				"microsoft.net.workload.mono.toolchain.manifest-6.0.200",
 				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion)
 			);
 
@@ -334,7 +335,8 @@ namespace Xamarin.Android.Prepare
 
 			public static string MicrosoftNETWorkloadEmscriptenPackageDir => Path.Combine (
 				XAPackagesDir,
-				$"microsoft.net.workload.emscripten.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionBand)}",
+				// NOTE: temporarily hardcode to 6.0.200
+				"microsoft.net.workload.emscripten.manifest-6.0.200",
 				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion)
 			);
 
