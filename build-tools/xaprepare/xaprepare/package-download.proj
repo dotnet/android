@@ -20,8 +20,9 @@ Otherwise, $(MicrosoftNETCoreAppRefPackageVersion) from eng/Versions.props will 
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-arm64" Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x86" Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x64" Version="[$(DotNetRuntimePacksVersion)]" />
-    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-$(DotNetPreviewVersionBand)" Version="[$(DotNetRuntimePacksVersion)]" />
-    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Manifest-$(DotNetPreviewVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion)]" />
+    <!-- NOTE: temporarily hardcode to 6.0.200 -->
+    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Manifest-6.0.200" Version="[$(MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion)]" />
   </ItemGroup>
 
 </Project>
