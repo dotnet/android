@@ -134,10 +134,13 @@
     <_FrameworkFiles Include="@(MonoProfileAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\%(Identity)')" />
     <_FrameworkFiles Include="@(MonoProfileAssemblySymbol->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\%(Identity)')" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Java.Interop.dll" />
+    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Java.Interop.pdb" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Sqlite.dll.config" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Posix.dll" />
+    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Posix.pdb" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\RedistList\FrameworkList.xml" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.dll" />
+    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.pdb" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.pdb" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.xml" />
