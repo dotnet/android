@@ -137,17 +137,13 @@ namespace Xamarin.Android.Tasks
 			int level;
 			if (manifest?.MinSdkVersion != null) {
 				level       = manifest.MinSdkVersion.Value;
-				Log.LogDebugMessage ($"NDK API level read from manifest");
 			} else if (int.TryParse (MinimumSupportedApiLevel, out level)) {
-				Log.LogDebugMessage ("NDK API level taken from MinimumSupportedApiLevel");
 				// level already set
 			} else if (int.TryParse (AndroidApiLevel, out level)) {
-				Log.LogDebugMessage ("NDK API level taken from AndroidApiLevel");
 				// level already set
 			} else {
 				// Probably not ideal!
 				level       = MonoAndroidHelper.SupportedVersions.MaxStableVersion.ApiLevel;
-				Log.LogDebugMessage ("NDK API level taken from MonoAndroidHelper.SupportedVersions.MaxStableVersion.ApiLevel");
 			}
 
 			// Some Android API levels do not exist on the NDK level. Workaround this my mapping them to the
@@ -161,7 +157,6 @@ namespace Xamarin.Android.Tasks
 
 			// API levels below level 21 do not provide support for 64-bit architectures.
 			if (ndk.IsNdk64BitArch (arch) && level < 21) {
-				Log.LogDebugMessage ("NDK API level raised to 21, required for 64-bit support");
 				level = 21;
 			}
 
@@ -177,7 +172,6 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			Log.LogDebugMessage ($"Using NDK API level {level}");
 			return level;
 		}
 
