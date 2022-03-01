@@ -138,7 +138,7 @@
         {
           "label": "build-sample-under-dotnet",
           "type": "shell",
-          "command": "${env:HOME}/android-toolchain/dotnet/dotnet build ${input:project} -p:Configuration=${input:configuration} -t:${input:target}",
+          "command": "bin/${input:configuration}/dotnet/dotnet build ${input:project} -p:Configuration=${input:configuration} -t:${input:target}",
           "group": {
               "kind": "build",
               "isDefault": true
@@ -150,7 +150,7 @@
         {
           "label": "run-sample-under-dotnet",
           "type": "shell",
-          "command": "${env:HOME}/android-toolchain/dotnet/dotnet build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach}",
+          "command": "bin/${input:configuration}/dotnet/dotnet build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach}",
           "group": {
               "kind": "build",
               "isDefault": true

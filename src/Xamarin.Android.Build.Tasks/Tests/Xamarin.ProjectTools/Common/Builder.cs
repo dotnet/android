@@ -103,8 +103,8 @@ namespace Xamarin.ProjectTools
 		/// If a local build tree can not be found, or if it is empty, this will return the system installation or .NET sandbox location instead:<br/>
 		///	Windows:  C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Xamarin\Android <br/>
 		///	macOS:    /Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android<br/>
-		///	Windows (dotnet):  %USERPROFILE%\android-toolchain\dotnet\packs\Microsoft.Android.Sdk.Windows\$(Latest)\tools<br/>
-		///	macOS (dotnet):    $HOME/android-toolchain/dotnet/packs/Microsoft.Android.Sdk.Darwin/$(Latest)/tools
+		///	Windows (dotnet):  bin\Debug\dotnet\packs\Microsoft.Android.Sdk.Windows\$(Latest)\tools<br/>
+		///	macOS (dotnet):    bin/Debug/dotnet/packs/Microsoft.Android.Sdk.Darwin/$(Latest)/tools
 		/// </summary>
 		public string AndroidMSBuildDirectory {
 			get {

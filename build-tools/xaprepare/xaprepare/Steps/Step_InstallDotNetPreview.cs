@@ -20,7 +20,7 @@ namespace Xamarin.Android.Prepare
 			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
 			var dotnetPreviewVersion = context.Properties.GetRequiredValue (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion);
 
-			// Always delete the ~/android-toolchain/dotnet/ directory
+			// Always delete the bin/$(Configuration)/dotnet/ directory
 			Utilities.DeleteDirectory (dotnetPath);
 
 			if (!await InstallDotNetAsync (context, dotnetPath, dotnetPreviewVersion)) {

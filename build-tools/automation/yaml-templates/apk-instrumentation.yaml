@@ -1,5 +1,6 @@
 parameters:
-  configuration: ""
+  configuration: $(XA.Build.Configuration)
+  xaSourcePath: $(System.DefaultWorkingDirectory)
   testName: ""
   project: ""
   testResultsFiles: ""
@@ -20,7 +21,7 @@ steps:
       msbuildArguments: >-
         /restore
         /t:RunTestApp
-        /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
+        /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
         ${{ parameters.extraBuildArgs }}
     condition: ${{ parameters.condition }}
     continueOnError: true
@@ -28,11 +29,13 @@ steps:
 - ${{ if eq(parameters.useDotNet, true) }}:
   - template: run-dotnet-preview.yaml
     parameters:
+      configuration: ${{ parameters.configuration }}
+      xaSourcePath: ${{ parameters.xaSourcePath }}
       displayName: run ${{ parameters.testName }}
       project: ${{ parameters.project }}
       arguments: >-
         -t:RunTestApp
-        -bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
+        -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
         -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
       condition: ${{ parameters.condition }}
       continueOnError: true

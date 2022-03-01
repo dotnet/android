@@ -92,13 +92,9 @@ namespace Xamarin.ProjectTools
 			return JavaSdkVersionString;
 		}
 
-		// Cache the result, so we don't run MSBuild on every call
-		static string DotNetPreviewPath;
 		public static string GetDotNetPreviewPath ()
 		{
-			if (string.IsNullOrEmpty (DotNetPreviewPath))
-				DotNetPreviewPath = RunPathsTargets ("GetDotNetPreviewPath");
-			return DotNetPreviewPath;
+			return Path.Combine (XABuildPaths.PrefixDirectory, "dotnet");
 		}
 
 		static string RunPathsTargets (string target)

@@ -10,6 +10,6 @@ msbuild /p:Configuration=Release /restore .\tools\xabuild\xabuild.csproj
 Write-Output "Building legacy BuildReleaseArm64 tests"
 msbuild /p:Configuration=Release Xamarin.Android.sln /t:RunNunitTests /p:TEST="Xamarin.Android.Build.Tests.BuildTest.BuildReleaseArm64"
 Write-Output "Building DotNet BuildReleaseArm64 tests"
-~\android-toolchain\dotnet\dotnet test -p:Configuration=Release --filter BuildTest.BuildReleaseArm64 .\bin\TestRelease\net6.0\Xamarin.Android.Build.Tests.dll
+bin\Release\dotnet\dotnet test -p:Configuration=Release --filter BuildTest.BuildReleaseArm64 .\bin\TestRelease\net6.0\Xamarin.Android.Build.Tests.dll
 Write-Output "Updating reference files"
 Copy-Item -Verbose bin\TestRelease\BuildReleaseArm64*.apkdesc -Destination src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\
