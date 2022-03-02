@@ -387,6 +387,9 @@ namespace Xamarin.Android.Tasks
 			foreach (string abi in SupportedAbis) {
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
 				string asmFilePath = $"{baseAsmFilePath}.s";
+				string llFilePath  = $"{baseAsmFilePath}.ll";
+
+				var llvmAsmGen = new LlvmApplicationConfigNativeAssemblyGenerator (GetAndroidTargetArchForAbi (abi), environmentVariables, systemProperties, Log);
 
 				var asmgen = new ApplicationConfigNativeAssemblyGenerator (GetAndroidTargetArchForAbi (abi), environmentVariables, systemProperties, Log) {
 					IsBundledApp = IsBundledApplication,
@@ -411,6 +414,12 @@ namespace Xamarin.Android.Tasks
 					NativeLibraries = uniqueNativeLibraries,
 					HaveAssemblyStore = UseAssemblyStore,
 				};
+
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+					llvmAsmGen.Write (sw, llFilePath);
+					sw.Flush ();
+					Files.CopyIfStreamChanged (sw.BaseStream, llFilePath);
+				}
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					asmgen.Write (sw, asmFilePath);

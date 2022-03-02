@@ -21,6 +21,31 @@ namespace Xamarin.Android.Tasks
 		Tracing   = 0x04,
 	}
 
+	class LlvmApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
+	{
+		SortedDictionary <string, string> environmentVariables;
+		SortedDictionary <string, string> systemProperties;
+		TaskLoggingHelper log;
+
+		public LlvmApplicationConfigNativeAssemblyGenerator (AndroidTargetArch arch, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
+			: base (arch)
+		{
+			if (environmentVariables != null) {
+				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
+			}
+
+			if (systemProperties != null) {
+				this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
+			}
+
+			this.log = log;
+		}
+
+		protected override void Write (LlvmIrGenerator generator)
+		{
+		}
+	}
+
 	class ApplicationConfigNativeAssemblyGenerator : NativeAssemblyComposer
 	{
 		sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
@@ -125,7 +150,7 @@ namespace Xamarin.Android.Tasks
 			if (environmentVariables != null)
 				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
 			if (systemProperties != null)
-			this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
+				this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
 			this.log = log;
 		}
 
