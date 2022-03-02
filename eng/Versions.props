@@ -11,8 +11,8 @@
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), `^\d+\.\d+\.\d`))00</DotNetPreviewVersionBand>
+    <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
     <!-- NOTE: temporarily hardcode these to 6.0.200 -->
-    <DotNetAndroidManifestVersionBand>6.0.200</DotNetAndroidManifestVersionBand>
     <DotNetMonoManifestVersionBand>6.0.200</DotNetMonoManifestVersionBand>
     <DotNetEmscriptenManifestVersionBand>6.0.200</DotNetEmscriptenManifestVersionBand>
   </PropertyGroup>
