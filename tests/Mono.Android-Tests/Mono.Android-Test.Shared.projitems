@@ -27,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\XmlReaderResourceParserTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Widget\AdapterTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaConvertTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaListTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang\ObjectArrayMarshaling.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang\ObjectTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JnienvTest.cs" />
