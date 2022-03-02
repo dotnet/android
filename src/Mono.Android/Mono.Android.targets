@@ -34,7 +34,8 @@
         Properties="$(_GlobalProperties)"
     />
     <ItemGroup>
-      <Assembly Include="$(JavaInteropFullPath)\bin\$(Configuration)Net45\*.dll*" />
+      <Assembly Include="$(JavaInteropFullPath)\bin\$(Configuration)Net45\*.dll" />
+      <Assembly Include="$(JavaInteropFullPath)\bin\$(Configuration)Net45\*.pdb" />
     </ItemGroup>
     <Copy
         SourceFiles="@(Assembly)"
