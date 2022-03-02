@@ -54,19 +54,36 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
+
+
 		bool CopyToDestination (Context context, string label, string sourceDir, string destinationDir, string osName = HostName, string[]? executableExtensions = null)
 		{
 			Log.StatusLine ();
 			Log.StatusLine ($"Installing for {label}:");
 
-			string sourcePath = Path.Combine (sourceDir, osName);
+			string osSourcePath = Path.Combine (sourceDir, osName);
+			string sourcePath = Path.Combine (osSourcePath, "bin");
 			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
 				string prefix = kvp.Value;
 				CopyTools (prefix);
 			}
 			CopyTools (String.Empty);
+			CopyLibraries ();
 
 			return true;
+
+			void CopyLibraries ()
+			{
+				if (osName == "windows") {
+					return;
+				}
+
+				string libSourcePath = Path.Combine (osSourcePath, "lib");
+				string libDestPath = Path.Combine (destinationDir, "lib");
+				foreach (string file in Directory.EnumerateFiles (libSourcePath)) {
+					Utilities.CopyFileToDir (file, libDestPath);
+				}
+			}
 
 			void CopyTools (string prefix)
 			{
@@ -78,7 +95,7 @@ namespace Xamarin.Android.Prepare
 
 					string toolSourcePath = GetToolPath (sourcePath, prefix, tool, executableExtensions, throwOnMissing: true);
 					string toolName = Path.GetFileName (toolSourcePath);
-					string toolDestinationPath = Path.Combine (destinationDir, toolName);
+					string toolDestinationPath = Path.Combine (destinationDir, "bin", toolName);
 					string versionMarkerPath = GetVersionMarker (toolDestinationPath);
 
 					Log.StatusLine ($"  {context.Characters.Bullet} Installing ", toolName, tailColor: ConsoleColor.White);

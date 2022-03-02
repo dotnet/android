@@ -89,7 +89,7 @@ namespace Xamarin.Android.Tasks
 			}
 			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
 			MonoAndroidLibPath  = MonoAndroidHelper.GetOSLibPath () + Path.DirectorySeparatorChar;
-			AndroidBinUtilsPath = MonoAndroidBinPath + "binutils" + Path.DirectorySeparatorChar;
+			AndroidBinUtilsPath = MonoAndroidBinPath + "binutils" + Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar;
 
 			var minVersion      = Version.Parse (MinimumSupportedJavaVersion);
 			var maxVersion      = Version.Parse (LatestSupportedJavaVersion);

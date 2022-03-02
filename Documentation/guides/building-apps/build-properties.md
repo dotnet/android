@@ -132,7 +132,7 @@ the Android [binutils][binutils] such as `ld`, the native linker,
 and `as`, the native assembler. These tools are included in the
 Xamarin.Android installation.
 
-The default value is `$(MonoAndroidBinDirectory)\binutils\`.
+The default value is `$(MonoAndroidBinDirectory)\binutils\bin\`.
 
 Added in Xamarin.Android 10.0.
 
