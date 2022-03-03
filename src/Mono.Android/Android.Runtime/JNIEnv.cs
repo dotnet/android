@@ -574,7 +574,7 @@ namespace Android.Runtime {
 			}
 
 			IntPtr global_ref = NewGlobalRef (local_ref.Handle);
-			DeleteLocalRef (local_ref.Handle);
+			JniObjectReference.Dispose (ref local_ref);
 			return global_ref;
 		}
 
