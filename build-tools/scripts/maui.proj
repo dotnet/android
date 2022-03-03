@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageDownload Include="Microsoft.NET.Sdk.Maui.Manifest-$(DotNetPreviewVersionBand)" Version="[$(MauiVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand)" Version="[$(MauiVersion)]" />
   </ItemGroup>
 
 </Project>
