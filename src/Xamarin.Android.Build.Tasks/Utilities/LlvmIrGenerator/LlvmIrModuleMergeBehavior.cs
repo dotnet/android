@@ -1,4 +1,4 @@
-namespace Xamarin.Android.Tasks
+namespace Xamarin.Android.Tasks.LLVMIR
 {
 	// See: https://llvm.org/docs/LangRef.html#module-flags-metadata
 	static class LlvmIrModuleMergeBehavior

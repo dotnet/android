@@ -6,11 +6,12 @@ using System.Text;
 
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
+namespace Xamarin.Android.Tasks.LLVMIR
 {
 	abstract class LlvmIrGenerator
 	{
 		string fileName;
+		List<IStructureInfo> structures = new List<IStructureInfo> ();
 
 		protected abstract string DataLayout { get; }
 		protected abstract int PointerSize { get; }
@@ -45,7 +46,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static string MapManagedType (Type type)
+		public static string MapManagedTypeToIR (Type type)
 		{
 			if (type == typeof (bool)) return "i8";
 			if (type == typeof (byte)) return "i8";
@@ -58,8 +59,27 @@ namespace Xamarin.Android.Tasks
 			if (type == typeof (ulong)) return "i64";
 			if (type == typeof (float)) return "float";
 			if (type == typeof (double)) return "double";
+			if (type == typeof (string)) return "i8*";
 
 			throw new InvalidOperationException ($"Unsupported managed type {type}");
+		}
+
+		public static string MapManagedTypeToNative (Type type)
+		{
+			if (type == typeof (bool)) return "bool";
+			if (type == typeof (byte)) return "uint8_t";
+			if (type == typeof (sbyte)) return "int8_t";
+			if (type == typeof (short)) return "int16_t";
+			if (type == typeof (ushort)) return "uint16_t";
+			if (type == typeof (int)) return "int32_t";
+			if (type == typeof (uint)) return "uint32_t";
+			if (type == typeof (long)) return "int64_t";
+			if (type == typeof (ulong)) return "uint64_t";
+			if (type == typeof (float)) return "float";
+			if (type == typeof (double)) return "double";
+			if (type == typeof (string)) return "char*";
+
+			return type.GetShortName ();
 		}
 
 		public virtual void Init ()
@@ -78,6 +98,19 @@ namespace Xamarin.Android.Tasks
 			ident.AddReferenceField (identValue.Name);
 		}
 
+		public StructureInfo<T> MapStructure<T> ()
+		{
+			Type t = typeof(T);
+			if (!t.IsClass && !t.IsValueType) {
+				throw new InvalidOperationException ($"{t} must be a class or a struct");
+			}
+
+			var ret = new StructureInfo<T> ();
+			structures.Add (ret);
+
+			return ret;
+		}
+
 		public virtual void WriteFileTop ()
 		{
 			WriteCommentLine ($"ModuleID = '{fileName}'");
@@ -92,6 +125,44 @@ namespace Xamarin.Android.Tasks
 
 			foreach (LlvmIrMetadataItem metadata in MetadataManager.Items) {
 				Output.WriteLine (metadata.Render ());
+			}
+		}
+
+		public void WriteStructureDeclarations ()
+		{
+			if (structures.Count == 0) {
+				return;
+			}
+
+			Output.WriteLine ();
+			foreach (IStructureInfo si in structures) {
+				si.RenderDeclaration (this);
+			}
+		}
+
+		public void WriteStructureDeclarationStart (string name)
+		{
+			Output.WriteLine ($"%struct.{name} = type {{");
+		}
+
+		public void WriteStructureDeclarationEnd ()
+		{
+			Output.WriteLine ("}");
+			Output.WriteLine ();
+		}
+
+		public void WriteStructureDeclarationField (string typeName, string comment, bool last)
+		{
+			Output.Write ($"{Indent}{typeName}");
+			if (!last) {
+				Output.Write (",");
+			}
+
+			if (!String.IsNullOrEmpty (comment)) {
+				Output.Write (' ');
+				WriteCommentLine (comment);
+			} else {
+				WriteEOL ();
 			}
 		}
 

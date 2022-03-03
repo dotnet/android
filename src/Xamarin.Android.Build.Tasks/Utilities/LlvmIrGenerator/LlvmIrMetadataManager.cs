@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Xamarin.Android.Tasks
+namespace Xamarin.Android.Tasks.LLVMIR
 {
 	class LlvmIrMetadataField
 	{
@@ -34,7 +34,7 @@ namespace Xamarin.Android.Tasks
 				return QuoteString ((string)value);
 			}
 
-			string irType = LlvmIrGenerator.MapManagedType (vt);
+			string irType = LlvmIrGenerator.MapManagedTypeToIR (vt);
 			return $"{irType} {value}";
 		}
 

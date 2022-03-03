@@ -9,6 +9,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
+using Xamarin.Android.Tasks.LLVMIR;
+
 namespace Xamarin.Android.Tasks
 {
 	// Must match the MonoComponent enum in src/monodroid/jni/xamarin-app.hh
@@ -23,9 +25,86 @@ namespace Xamarin.Android.Tasks
 
 	class LlvmApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	{
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh AssemblyStoreAssemblyDescriptor structure
+		sealed class AssemblyStoreAssemblyDescriptor
+		{
+			public uint data_offset;
+			public uint data_size;
+
+			public uint debug_data_offset;
+			public uint debug_data_size;
+
+			public uint config_data_offset;
+			public uint config_data_size;
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh AssemblyStoreSingleAssemblyRuntimeData structure
+		sealed class AssemblyStoreSingleAssemblyRuntimeData
+		{
+			[NativePointer]
+			public byte image_data;
+
+			[NativePointer]
+			public byte debug_info_data;
+
+			[NativePointer]
+			public byte config_data;
+
+			[NativePointer]
+			public AssemblyStoreAssemblyDescriptor descriptor;
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh AssemblyStoreRuntimeData structure
+		sealed class AssemblyStoreRuntimeData
+		{
+			[NativePointer]
+			public byte data_start;
+			public uint assembly_count;
+
+			[NativePointer]
+			public AssemblyStoreAssemblyDescriptor assemblies;
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh XamarinAndroidBundledAssembly structure
+		sealed class XamarinAndroidBundledAssembly
+		{
+			public int  apk_fd;
+			public uint data_offset;
+			public uint data_size;
+
+			[NativePointer]
+			public byte data;
+			public uint name_length;
+			public string name;
+		}
+
 		SortedDictionary <string, string> environmentVariables;
 		SortedDictionary <string, string> systemProperties;
 		TaskLoggingHelper log;
+		ApplicationConfig? application_config;
+		uint dsoCacheEntries = 0;
+
+		public bool IsBundledApp { get; set; }
+		public bool UsesMonoAOT { get; set; }
+		public bool UsesMonoLLVM { get; set; }
+		public bool UsesAssemblyPreload { get; set; }
+		public string MonoAOTMode { get; set; }
+		public string AndroidPackageName { get; set; }
+		public bool BrokenExceptionTransitions { get; set; }
+		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
+		public bool InstantRunEnabled { get; set; }
+		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
+		public bool HaveRuntimeConfigBlob { get; set; }
+		public bool HaveAssemblyStore { get; set; }
+		public int NumberOfAssembliesInApk { get; set; }
+		public int NumberOfAssemblyStoresInApks { get; set; }
+		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
+		public MonoComponent MonoComponents { get; set; }
+		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
 		public LlvmApplicationConfigNativeAssemblyGenerator (AndroidTargetArch arch, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 			: base (arch)
@@ -41,8 +120,43 @@ namespace Xamarin.Android.Tasks
 			this.log = log;
 		}
 
+		protected override void Init ()
+		{
+			application_config = new ApplicationConfig {
+				uses_mono_llvm = UsesMonoLLVM,
+				uses_mono_aot = UsesMonoAOT,
+				uses_assembly_preload = UsesAssemblyPreload,
+				is_a_bundled_app = IsBundledApp,
+				broken_exception_transitions = BrokenExceptionTransitions,
+				instant_run_enabled = InstantRunEnabled,
+				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
+				have_runtime_config_blob = HaveRuntimeConfigBlob,
+				have_assemblies_blob = HaveAssemblyStore,
+				bound_stream_io_exception_type = (byte)BoundExceptionType,
+				package_naming_policy = (uint)PackageNamingPolicy,
+				environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),
+				system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
+				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
+				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
+				number_of_assembly_store_files = (uint)NumberOfAssemblyStoresInApks,
+				number_of_dso_cache_entries = dsoCacheEntries,
+				mono_components_mask = (uint)MonoComponents,
+				android_package_name = AndroidPackageName,
+			};
+		}
+
+		protected override void MapStructures (LlvmIrGenerator generator)
+		{
+			generator.MapStructure<ApplicationConfig> ();
+			generator.MapStructure<AssemblyStoreAssemblyDescriptor> ();
+			generator.MapStructure<AssemblyStoreSingleAssemblyRuntimeData> ();
+			generator.MapStructure<AssemblyStoreRuntimeData> ();
+			generator.MapStructure<XamarinAndroidBundledAssembly> ();
+		}
+
 		protected override void Write (LlvmIrGenerator generator)
 		{
+
 		}
 	}
 
