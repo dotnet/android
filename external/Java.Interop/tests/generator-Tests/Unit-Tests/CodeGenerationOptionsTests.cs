@@ -57,15 +57,27 @@ namespace generatortests
 		{
 			var opt = new CodeGenerationOptions { SupportNullableReferenceTypes = true };
 
+			// System.Void isn't a valid return type, ensure it gets changed to void
 			var system_void = new ReturnValue (null, "void", "System.Void", false, false);
 			system_void.Validate (opt, null, null);
 
 			Assert.AreEqual ("void", opt.GetTypeReferenceName (system_void));
 
+			// Primitive types should not be nullable
 			var primitive_void = new ReturnValue (null, "void", "void", false, false);
 			primitive_void.Validate (opt, null, null);
 
 			Assert.AreEqual ("void", opt.GetTypeReferenceName (primitive_void));
+
+			var system_uint = new ReturnValue (null, "uint", "System.UInt32", false, false);
+			system_uint.Validate (opt, null, null);
+
+			Assert.AreEqual ("System.UInt32", opt.GetTypeReferenceName (system_uint));
+
+			var primitive_uint = new ReturnValue (null, "uint", "uint", false, false);
+			primitive_uint.Validate (opt, null, null);
+
+			Assert.AreEqual ("uint", opt.GetTypeReferenceName (primitive_uint));
 		}
 	}
 }

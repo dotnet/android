@@ -157,6 +157,10 @@ namespace MonoDroid.Generation
 				case "char":
 				case "double":
 				case "short":
+				case "uint":
+				case "ushort":
+				case "ulong":
+				case "byte":
 				case "System.Boolean":
 				case "System.Byte":
 				case "System.Char":
@@ -166,6 +170,9 @@ namespace MonoDroid.Generation
 				case "System.Int64":
 				case "System.Single":
 				case "System.SByte":
+				case "System.UInt16":
+				case "System.UInt32":
+				case "System.UInt64":
 				case "System.Void":
 				case "Android.Graphics.Color":
 					return string.Empty;
