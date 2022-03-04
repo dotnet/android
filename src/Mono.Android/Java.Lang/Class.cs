@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-
 using Android.Runtime;
+using Java.Interop;
 
 namespace Java.Lang {
 
@@ -13,6 +11,7 @@ namespace Java.Lang {
 		public static readonly IntPtr CharSequence;
 
 		internal static readonly IntPtr CharSequence_toString;
+		internal static JniPeerMembers Members => _members;
 
 		static Class ()
 		{

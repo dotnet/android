@@ -43,7 +43,7 @@ namespace Android.Runtime {
 		static IntPtr java_vm;
 		static IntPtr load_class_id;
 		static IntPtr gref_class;
-		static IntPtr mid_Class_forName;
+		static JniMethodInfo? mid_Class_forName;
 		static int version;
 		static int androidSdkVersion;
 
@@ -162,7 +162,7 @@ namespace Android.Runtime {
 			java_class_loader = args->grefLoader;
 			load_class_id     = args->Loader_loadClass;
 			gref_class        = args->grefClass;
-			mid_Class_forName = args->Class_forName;
+			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
 
 			if (args->localRefsAreIndirect == 1)
 				IdentityHash = v => _monodroid_get_identity_hash_code (Handle, v);
@@ -557,19 +557,24 @@ namespace Android.Runtime {
 			return NewString (nameBuffer, length);
 		}
 
-		public static IntPtr FindClass (string classname)
+		public unsafe static IntPtr FindClass (string classname)
 		{
-			IntPtr local_ref;
+			JniObjectReference local_ref;
 
 			IntPtr native_str = BinaryName (classname);
 			try {
-				local_ref = CallStaticObjectMethod (gref_class, mid_Class_forName, new JValue (native_str), new JValue (true), new JValue (java_class_loader));
+				JniArgumentValue* parameters = stackalloc JniArgumentValue [3] {
+					new JniArgumentValue (native_str),
+					new JniArgumentValue (true),
+					new JniArgumentValue (java_class_loader),
+				};
+				local_ref = JniEnvironment.StaticMethods.CallStaticObjectMethod (Java.Lang.Class.Members.JniPeerType.PeerReference, mid_Class_forName!, parameters);
 			} finally {
 				DeleteLocalRef (native_str);
 			}
 
-			IntPtr global_ref = NewGlobalRef (local_ref);
-			DeleteLocalRef (local_ref);
+			IntPtr global_ref = NewGlobalRef (local_ref.Handle);
+			JniObjectReference.Dispose (ref local_ref);
 			return global_ref;
 		}
 
