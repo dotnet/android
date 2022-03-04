@@ -25,6 +25,44 @@ namespace Xamarin.Android.Tasks
 
 	class LlvmApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	{
+		sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var dso_entry = data as DSOCacheEntry;
+				if (dso_entry == null) {
+					throw new InvalidOperationException ("Invalid data type, expected an instance of DSOCacheEntry");
+				}
+
+				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
+					return $"hash, from name: {dso_entry.HashedName}";
+				}
+
+				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
+					return $"name: {dso_entry.name}";
+				}
+
+				return String.Empty;
+			}
+		}
+
+		// Order of fields and their type must correspond *exactly* (with exception of the
+		// ignored managed members) to that in
+		// src/monodroid/jni/xamarin-app.hh DSOCacheEntry structure
+		[NativeAssemblerStructContextDataProvider (typeof (DSOCacheEntryContextDataProvider))]
+		sealed class DSOCacheEntry
+		{
+			[NativeAssembler (Ignore = true)]
+			public string HashedName;
+
+			[NativeAssembler (UsesDataProvider = true)]
+			public ulong hash;
+			public bool ignore;
+
+			public string name;
+			public IntPtr handle = IntPtr.Zero;
+		}
+
 		// Order of fields and their type must correspond *exactly* to that in
 		// src/monodroid/jni/xamarin-app.hh AssemblyStoreAssemblyDescriptor structure
 		sealed class AssemblyStoreAssemblyDescriptor
@@ -82,11 +120,14 @@ namespace Xamarin.Android.Tasks
 			public string name;
 		}
 
+		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
+		const ulong FORMAT_TAG = 0x015E6972616D58;
+
 		SortedDictionary <string, string> environmentVariables;
 		SortedDictionary <string, string> systemProperties;
 		TaskLoggingHelper log;
 		ApplicationConfig? application_config;
-		uint dsoCacheEntries = 0;
+		List<DSOCacheEntry>? dsoCache;
 
 		public bool IsBundledApp { get; set; }
 		public bool UsesMonoAOT { get; set; }
@@ -105,9 +146,9 @@ namespace Xamarin.Android.Tasks
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
+		public List<ITaskItem> NativeLibraries { get; set; }
 
-		public LlvmApplicationConfigNativeAssemblyGenerator (AndroidTargetArch arch, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
-			: base (arch)
+		public LlvmApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 		{
 			if (environmentVariables != null) {
 				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
@@ -120,8 +161,9 @@ namespace Xamarin.Android.Tasks
 			this.log = log;
 		}
 
-		protected override void Init ()
+		public override void Init ()
 		{
+			dsoCache = InitDSOCache ();
 			application_config = new ApplicationConfig {
 				uses_mono_llvm = UsesMonoLLVM,
 				uses_mono_aot = UsesMonoAOT,
@@ -139,10 +181,73 @@ namespace Xamarin.Android.Tasks
 				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
 				number_of_assembly_store_files = (uint)NumberOfAssemblyStoresInApks,
-				number_of_dso_cache_entries = dsoCacheEntries,
+				number_of_dso_cache_entries = (uint)dsoCache.Count,
 				mono_components_mask = (uint)MonoComponents,
 				android_package_name = AndroidPackageName,
 			};
+		}
+
+		List<DSOCacheEntry> InitDSOCache ()
+		{
+			var dsos = new List<(string name, string nameLabel, bool ignore)> ();
+			var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+			foreach (ITaskItem item in NativeLibraries) {
+				string? name = item.GetMetadata ("ArchiveFileName");
+				if (String.IsNullOrEmpty (name)) {
+					name = item.ItemSpec;
+				}
+				name = Path.GetFileName (name);
+
+				if (nameCache.Contains (name)) {
+					continue;
+				}
+
+				dsos.Add ((name, $"dsoName{dsos.Count}", ELFHelper.IsEmptyAOTLibrary (log, item.ItemSpec)));
+			}
+
+			var dsoCache = new List<DSOCacheEntry> ();
+			var nameMutations = new List<string> ();
+
+			for (int i = 0; i < dsos.Count; i++) {
+				string name = dsos[i].name;
+				nameMutations.Clear();
+				AddNameMutations (name);
+				// All mutations point to the actual library name, but have hash of the mutated one
+				foreach (string entryName in nameMutations) {
+					dsoCache.Add (
+						new DSOCacheEntry {
+							HashedName = entryName,
+							hash = 0, // Hash is arch-specific, we compute it before writing
+							ignore = dsos[i].ignore,
+							name = name,
+						}
+					);
+				}
+			}
+
+			dsoCache.Sort ((DSOCacheEntry a, DSOCacheEntry b) => a.hash.CompareTo (b.hash));
+			return dsoCache;
+
+			void AddNameMutations (string name)
+			{
+				nameMutations.Add (name);
+				if (name.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
+					nameMutations.Add (Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name))!);
+				} else {
+					nameMutations.Add (Path.GetFileNameWithoutExtension (name)!);
+				}
+
+				const string aotPrefix = "libaot-";
+				if (name.StartsWith (aotPrefix, StringComparison.OrdinalIgnoreCase)) {
+					AddNameMutations (name.Substring (aotPrefix.Length));
+				}
+
+				const string libPrefix = "lib";
+				if (name.StartsWith (libPrefix, StringComparison.OrdinalIgnoreCase)) {
+					AddNameMutations (name.Substring (libPrefix.Length));
+				}
+			}
 		}
 
 		protected override void MapStructures (LlvmIrGenerator generator)
@@ -152,11 +257,37 @@ namespace Xamarin.Android.Tasks
 			generator.MapStructure<AssemblyStoreSingleAssemblyRuntimeData> ();
 			generator.MapStructure<AssemblyStoreRuntimeData> ();
 			generator.MapStructure<XamarinAndroidBundledAssembly> ();
+			generator.MapStructure<DSOCacheEntry> ();
 		}
 
 		protected override void Write (LlvmIrGenerator generator)
 		{
+			generator.WriteVariable ("format_tag", FORMAT_TAG);
+			generator.WriteString ("mono_aot_mode_name", MonoAOTMode, global: true);
 
+			generator.WriteNameValueArray ("app_environment_variables", environmentVariables);
+			generator.WriteNameValueArray ("app_system_properties", systemProperties);
+
+			WriteDSOCache (generator);
+		}
+
+		void WriteDSOCache (LlvmIrGenerator generator)
+		{
+			bool is64Bit = generator.Is64Bit;
+
+			foreach (DSOCacheEntry entry in dsoCache) {
+				entry.hash = HashName (entry.HashedName);
+			}
+
+			ulong HashName (string name)
+			{
+				byte[] nameBytes = Encoding.UTF8.GetBytes (name);
+				if (is64Bit) {
+					return XXH64.DigestOf (nameBytes, 0, nameBytes.Length);
+				}
+
+				return (ulong)XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
+			}
 		}
 	}
 
@@ -183,6 +314,9 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		// Order of fields and their type must correspond *exactly* (with exception of the
+		// ignored managed members) to that in
+		// src/monodroid/jni/xamarin-app.hh DSOCacheEntry structure
 		[NativeAssemblerStructContextDataProvider (typeof (DSOCacheEntryContextDataProvider))]
 		sealed class DSOCacheEntry
 		{

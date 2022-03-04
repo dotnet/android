@@ -389,7 +389,30 @@ namespace Xamarin.Android.Tasks
 				string asmFilePath = $"{baseAsmFilePath}.s";
 				string llFilePath  = $"{baseAsmFilePath}.ll";
 
-				var llvmAsmGen = new LlvmApplicationConfigNativeAssemblyGenerator (GetAndroidTargetArchForAbi (abi), environmentVariables, systemProperties, Log);
+				var llvmAsmGen = new LlvmApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
+					IsBundledApp = IsBundledApplication,
+					UsesMonoAOT = usesMonoAOT,
+					UsesMonoLLVM = EnableLLVM,
+					UsesAssemblyPreload = usesAssemblyPreload,
+					MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
+					AndroidPackageName = AndroidPackageName,
+					BrokenExceptionTransitions = brokenExceptionTransitions,
+					PackageNamingPolicy = pnp,
+					BoundExceptionType = boundExceptionType,
+					InstantRunEnabled = InstantRunEnabled,
+					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
+					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
+					NumberOfAssembliesInApk = assemblyCount,
+					BundledAssemblyNameWidth = assemblyNameWidth,
+					NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
+									  // and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
+									  // runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
+									  // and in the same order.
+					MonoComponents = monoComponents,
+					NativeLibraries = uniqueNativeLibraries,
+					HaveAssemblyStore = UseAssemblyStore,
+				};
+				llvmAsmGen.Init ();
 
 				var asmgen = new ApplicationConfigNativeAssemblyGenerator (GetAndroidTargetArchForAbi (abi), environmentVariables, systemProperties, Log) {
 					IsBundledApp = IsBundledApplication,
@@ -416,7 +439,7 @@ namespace Xamarin.Android.Tasks
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					llvmAsmGen.Write (sw, llFilePath);
+					llvmAsmGen.Write (GetAndroidTargetArchForAbi (abi), sw, llFilePath);
 					sw.Flush ();
 					Files.CopyIfStreamChanged (sw.BaseStream, llFilePath);
 				}

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	class X86LlvmIrGenerator : LlvmIrGenerator
@@ -14,8 +16,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		protected override int PointerSize   => 4;
 		protected override string Triple     => "i686-unknown-linux-android"; // NDK appends API level, we don't need that
 
-		public X86LlvmIrGenerator (StreamWriter output, string fileName)
-			: base (output, fileName)
+		public X86LlvmIrGenerator (AndroidTargetArch arch, StreamWriter output, string fileName)
+			: base (arch, output, fileName)
 		{}
 
 		protected override void AddModuleFlagsMetadata (List<LlvmIrMetadataItem> flagsFields)

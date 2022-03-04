@@ -8,16 +8,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	{
 		protected AndroidTargetArch TargetArch { get; }
 
-		protected LlvmIrComposer (AndroidTargetArch arch)
-		{
-			TargetArch = arch;
-		}
+		protected LlvmIrComposer ()
+		{}
 
-		public void Write (StreamWriter output, string fileName)
+		public void Write (AndroidTargetArch arch, StreamWriter output, string fileName)
 		{
-			Init ();
-
-			LlvmIrGenerator generator = LlvmIrGenerator.Create (TargetArch, output, fileName);
+			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, output, fileName);
 
 			MapStructures (generator);
 			generator.WriteFileTop ();
@@ -28,10 +24,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		/// <summary>
 		/// Initialize the composer. It needs to allocate and populate all the structures that
-		/// are used by the composer, before they can be mapped by the generator. Essentially,
-		/// the implementation should prepare its full state for writing.
+		/// are used by the composer, before they can be mapped by the generator. The code here
+		/// should initialize only the architecture-independent fields of structures etc to
+		/// write. The composer is reused between architectures, and only the Write method is
+		/// aware of which architecture is targetted.
 		/// </summary>
-		protected abstract void Init ();
+		public abstract void Init ();
 
 		/// <summary>
 		/// Maps all the structures used to internal LLVM IR representation. Every structure MUST

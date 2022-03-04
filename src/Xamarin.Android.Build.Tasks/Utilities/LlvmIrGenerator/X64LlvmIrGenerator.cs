@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	class X64LlvmIrGenerator : LlvmIrGenerator
@@ -14,8 +16,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		protected override int PointerSize   => 8;
 		protected override string Triple     => "x86_64-unknown-linux-android"; // NDK appends API level, we don't need that
 
-		public X64LlvmIrGenerator (StreamWriter output, string fileName)
-			: base (output, fileName)
+		public X64LlvmIrGenerator (AndroidTargetArch arch, StreamWriter output, string fileName)
+			: base (arch, output, fileName)
 		{}
 
 		protected override int GetAggregateAlignment (int maxFieldAlignment, ulong dataSize)

@@ -10,21 +10,58 @@ namespace Xamarin.Android.Tasks.LLVMIR
 {
 	abstract class LlvmIrGenerator
 	{
+		static readonly Dictionary<Type, string> typeMap = new Dictionary<Type, string> {
+			{ typeof (bool), "i8" },
+			{ typeof (byte), "i8" },
+			{ typeof (sbyte), "i8" },
+            { typeof (short), "i16" },
+            { typeof (ushort), "i16" },
+            { typeof (int), "i32" },
+            { typeof (uint), "i32" },
+            { typeof (long), "i64" },
+            { typeof (ulong), "i64" },
+            { typeof (float), "float" },
+            { typeof (double), "double" },
+            { typeof (string), "i8*" },
+			{ typeof (IntPtr), "i8*" },
+		};
+
+		// https://llvm.org/docs/LangRef.html#single-value-types
+		static readonly Dictionary<Type, ulong> typeSizes = new Dictionary<Type, ulong> {
+			{ typeof (bool), 1 },
+			{ typeof (byte), 1 },
+			{ typeof (sbyte), 1 },
+            { typeof (short), 2 },
+            { typeof (ushort), 2 },
+            { typeof (int), 4 },
+            { typeof (uint), 4 },
+            { typeof (long), 8 },
+            { typeof (ulong), 8 },
+            { typeof (float), 4 }, // floats are 32-bit
+            { typeof (double), 8 }, // doubles are 64-bit
+		};
+
 		string fileName;
+		ulong stringCounter = 0;
 		List<IStructureInfo> structures = new List<IStructureInfo> ();
 
 		protected abstract string DataLayout { get; }
 		protected abstract int PointerSize { get; }
 		protected abstract string Triple { get; }
 
+		public bool Is64Bit { get; }
 		public TextWriter Output { get; }
+		public AndroidTargetArch TargetArch { get; }
+
 		protected string Indent => "\t";
 		protected LlvmIrMetadataManager MetadataManager { get; }
 
-		protected LlvmIrGenerator (TextWriter output, string fileName)
+		protected LlvmIrGenerator (AndroidTargetArch arch, TextWriter output, string fileName)
 		{
 			Output = output;
 			MetadataManager = new LlvmIrMetadataManager ();
+			TargetArch = arch;
+			Is64Bit = arch == AndroidTargetArch.X86_64 || arch == AndroidTargetArch.Arm64;
 			this.fileName = fileName;
 		}
 
@@ -37,10 +74,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			LlvmIrGenerator Instantiate ()
 			{
 				return arch switch {
-					AndroidTargetArch.Arm => new Arm32LlvmIrGenerator (output, fileName),
-					AndroidTargetArch.Arm64 => new Arm64LlvmIrGenerator (output, fileName),
-					AndroidTargetArch.X86 => new X86LlvmIrGenerator (output, fileName),
-					AndroidTargetArch.X86_64 => new X64LlvmIrGenerator (output, fileName),
+					AndroidTargetArch.Arm => new Arm32LlvmIrGenerator (arch, output, fileName),
+					AndroidTargetArch.Arm64 => new Arm64LlvmIrGenerator (arch, output, fileName),
+					AndroidTargetArch.X86 => new X86LlvmIrGenerator (arch, output, fileName),
+					AndroidTargetArch.X86_64 => new X64LlvmIrGenerator (arch, output, fileName),
 					_ => throw new InvalidOperationException ($"Unsupported Android target ABI {arch}")
 				};
 			}
@@ -48,20 +85,30 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public static string MapManagedTypeToIR (Type type)
 		{
-			if (type == typeof (bool)) return "i8";
-			if (type == typeof (byte)) return "i8";
-			if (type == typeof (sbyte)) return "i8";
-			if (type == typeof (short)) return "i16";
-			if (type == typeof (ushort)) return "i16";
-			if (type == typeof (int)) return "i32";
-			if (type == typeof (uint)) return "i32";
-			if (type == typeof (long)) return "i64";
-			if (type == typeof (ulong)) return "i64";
-			if (type == typeof (float)) return "float";
-			if (type == typeof (double)) return "double";
-			if (type == typeof (string)) return "i8*";
+			if (!typeMap.TryGetValue (type, out string irType)) {
+				throw new InvalidOperationException ($"Unsupported managed type {type}");
+			}
 
-			throw new InvalidOperationException ($"Unsupported managed type {type}");
+			return irType;
+		}
+
+		public string MapManagedTypeToIR (Type type, out ulong size)
+		{
+			string irType = MapManagedTypeToIR (type);
+			if (!typeSizes.TryGetValue (type, out size)) {
+				if (type == typeof (string) || type == typeof (IntPtr)) {
+					size = (ulong)PointerSize;
+				} else {
+					throw new InvalidOperationException ($"Unsupported managed type {type}");
+				}
+			}
+
+			return irType;
+		}
+
+		public string MapManagedTypeToIR<T> (out ulong size)
+		{
+			return MapManagedTypeToIR (typeof(T), out size);
 		}
 
 		public static string MapManagedTypeToNative (Type type)
@@ -78,6 +125,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			if (type == typeof (float)) return "float";
 			if (type == typeof (double)) return "double";
 			if (type == typeof (string)) return "char*";
+			if (type == typeof (IntPtr)) return "void*";
 
 			return type.GetShortName ();
 		}
@@ -111,6 +159,132 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return ret;
 		}
 
+		public void WriteNameValueArray (string symbolName, IDictionary<string, string> arrayContents, bool constexprStrings = true)
+		{
+			WriteEOL ();
+			WriteEOL (symbolName);
+
+			var strings = new List<(ulong stringSize, string varName)> ();
+			long i = 0;
+			foreach (var kvp in arrayContents) {
+				string name = kvp.Key;
+				string value = kvp.Value;
+
+				WriteArrayString (name, $"n_{i}");
+				WriteArrayString (value, $"v_{i}");
+				i++;
+			}
+			if (strings.Count > 0) {
+				Output.WriteLine ();
+			}
+
+			Output.Write ($"@{symbolName} = local_unnamed_addr constant [{strings.Count} x i8*]");
+
+			if (strings.Count > 0) {
+				Output.WriteLine (" [");
+
+				for (int j = 0; j < strings.Count; j++) {
+					ulong size = strings[j].stringSize;
+					string varName = strings[j].varName;
+
+					//
+					// Syntax: https://llvm.org/docs/LangRef.html#getelementptr-instruction
+					// the two indices following {varName} have the following meanings:
+					//
+					//  - The first index is into the **pointer** itself
+					//  - The second index is into the **pointed to** value
+					//
+					// Better explained here: https://llvm.org/docs/GetElementPtr.html#id4
+					//
+					Output.Write ($"{Indent}i8* getelementptr inbounds ([{size} x i8], [{size} x i8]* @{varName}, i32 0, i32 0)");
+					if (j < strings.Count - 1) {
+						Output.WriteLine (",");
+					}
+				}
+				WriteEOL ();
+			} else {
+				Output.Write (" zeroinitializer");
+			}
+
+			var arraySize = (ulong)(strings.Count * PointerSize);
+			if (strings.Count > 0) {
+				Output.Write ("]");
+			}
+			Output.WriteLine ($", align {GetAggregateAlignment (PointerSize, arraySize)}");
+
+			void WriteArrayString (string str, string symbolSuffix)
+			{
+				string name = WriteString ($"__{symbolName}_{symbolSuffix}", str, out ulong size, global: false);
+				strings.Add (new (size, name));
+			}
+		}
+
+		public void WriteVariable<T> (string symbolName, T value, bool global = true, bool isConstant = true)
+		{
+			if (typeof(T) == typeof(string)) {
+				WriteString (symbolName, (string)(object)value, global, isConstant);
+				return;
+			}
+
+			string irType = MapManagedTypeToIR<T> (out ulong size);
+			string options = global ? String.Empty : "internal ";
+			string type = isConstant ? "constant" : "global";
+
+			Output.WriteLine ($"@{symbolName} = {options}local_unnamed_addr {type} {irType} {value}, align {size}");
+		}
+
+		/// <summary>
+		/// Writes a private string. Strings without symbol names aren't exported, but they may be referenced by other
+		/// symbols
+		/// </summary>
+		public string WriteString (string value, bool constexpr = true)
+		{
+			string name = $"@.str";
+			if (stringCounter > 0) {
+				name += $".{stringCounter}";
+			}
+			stringCounter++;
+			return WriteString (name, value, global: false, constexpr: constexpr);
+		}
+
+		public string WriteString (string symbolName, string value, bool global = false, bool constexpr = true)
+		{
+			return WriteString (symbolName, value, out _, global, constexpr);
+		}
+
+		public string WriteString (string symbolName, string value, out ulong stringSize, bool global = false, bool constexpr = true)
+		{
+			WriteEOL ();
+
+			string options;
+			if (constexpr) {
+				options = "internal";
+			} else {
+				options = "private unnamed_addr";
+			}
+
+			string strSymbolName;
+			if (global) {
+				strSymbolName = $"__{symbolName}";
+			} else {
+				strSymbolName = symbolName;
+			}
+
+			Output.WriteLine ($"@{strSymbolName} = {options} constant c{QuoteString (value, out stringSize)}, align {GetAggregateAlignment (1, stringSize)}");
+			if (!global) {
+				return symbolName;
+			}
+
+			string indexType = Is64Bit ? "i64" : "i32";
+			Output.WriteLine ($"@{symbolName} = local_unnamed_addr constant i8* getelementptr inbounds ([{stringSize} x i8], [{stringSize} x i8]* @{strSymbolName}, {indexType} 0, {indexType} 0), align {GetAggregateAlignment (PointerSize, stringSize)}");
+
+			return symbolName;
+		}
+
+		public void WriteStructure<T> (string symbolName, T instance)
+		{
+		}
+
 		public virtual void WriteFileTop ()
 		{
 			WriteCommentLine ($"ModuleID = '{fileName}'");
@@ -142,13 +316,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public void WriteStructureDeclarationStart (string name)
 		{
+			WriteEOL ();
 			Output.WriteLine ($"%struct.{name} = type {{");
 		}
 
 		public void WriteStructureDeclarationEnd ()
 		{
 			Output.WriteLine ("}");
-			Output.WriteLine ();
 		}
 
 		public void WriteStructureDeclarationField (string typeName, string comment, bool last)
@@ -170,7 +344,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			flagsFields.Add (MetadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "wchar_size", 4));
 			flagsFields.Add (MetadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Max, "PIC Level", 2));
-			flagsFields.Add (MetadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Max, "PIE Level", 2));
 		}
 
 		// Alignment for arrays, structures and unions
@@ -245,7 +418,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return $"\"{s}\"";
 		}
 
-		public static string QuoteString (string value)
+		public static string QuoteString (string value, bool nullTerminated = true)
+		{
+			return QuoteString (value, out _, nullTerminated);
+		}
+
+		public static string QuoteString (string value, out ulong stringSize, bool nullTerminated = true)
 		{
 			byte[] bytes = Encoding.UTF8.GetBytes (value);
 			var sb = new StringBuilder ();
@@ -257,6 +435,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				sb.Append ($"\\{b:X2}");
+			}
+
+			stringSize = (ulong)bytes.Length;
+			if (nullTerminated) {
+				stringSize++;
+				sb.Append ("\\00");
 			}
 
 			return QuoteStringNoEscape (sb.ToString ());

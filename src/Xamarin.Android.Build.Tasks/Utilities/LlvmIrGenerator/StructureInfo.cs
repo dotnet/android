@@ -8,17 +8,20 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
+	// TODO: add cache for members and data provider info
 	sealed class StructureInfo<T> : IStructureInfo
 	{
 		public string Name { get; } = String.Empty;
 		public ulong Size { get; }
 		public List<StructureMemberInfo<T>> Members { get; } = new List<StructureMemberInfo<T>> ();
+		public NativeAssemblerStructContextDataProvider? DataProvider { get; }
 
 		public StructureInfo ()
 		{
 			Type t = typeof(T);
 			Name = t.GetShortName ();
 			Size = GatherMembers (t);
+			DataProvider = t.GetDataProvider ();
 		}
 
 		public void RenderDeclaration (LlvmIrGenerator generator)
@@ -32,7 +35,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				if (info.Info.IsNativePointer ()) {
 					nativeType += "*";
 				}
-				string comment = $"{nativeType} {info.Info.Name}";
+				var comment = $"{nativeType} {info.Info.Name}";
 				generator.WriteStructureDeclarationField (info.IRType, comment, i == Members.Count - 1);
 			}
 
@@ -42,7 +45,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		ulong GatherMembers (Type type)
 		{
 			foreach (MemberInfo mi in type.GetMembers ()) {
-				if (!(mi is FieldInfo) && !(mi is PropertyInfo)) {
+				if (mi.ShouldBeIgnored () || (!(mi is FieldInfo) && !(mi is PropertyInfo))) {
 					continue;
 				}
 

@@ -40,7 +40,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		string QuoteString (string value)
 		{
-			return $"!{LlvmIrGenerator.QuoteString (value)}";
+			return $"!{LlvmIrGenerator.QuoteStringNoEscape (value)}";
 		}
 	}
 

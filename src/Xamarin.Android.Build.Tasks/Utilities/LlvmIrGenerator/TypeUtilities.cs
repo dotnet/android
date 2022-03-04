@@ -1,6 +1,8 @@
 using System;
 using System.Reflection;
 
+using Xamarin.Android.Tasks;
+
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	static class TypeUtilities
@@ -40,6 +42,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				!type.IsPrimitive &&
 				type != typeof (decimal) &&
 				type != typeof (DateTime);
+		}
+
+		public static NativeAssemblerStructContextDataProvider? GetDataProvider (this Type t)
+		{
+			var attr = t.GetCustomAttribute<NativeAssemblerStructContextDataProviderAttribute> ();
+			if (attr == null) {
+				return null;
+			}
+
+			return Activator.CreateInstance (attr.Type) as NativeAssemblerStructContextDataProvider;
 		}
 	}
 }
