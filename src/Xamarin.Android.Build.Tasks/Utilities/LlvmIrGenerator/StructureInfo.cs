@@ -15,12 +15,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public ulong Size { get; }
 		public List<StructureMemberInfo<T>> Members { get; } = new List<StructureMemberInfo<T>> ();
 		public NativeAssemblerStructContextDataProvider? DataProvider { get; }
+		public int MaxFieldAlignment { get; private set; } = 0;
 
-		public StructureInfo ()
+		public StructureInfo (LlvmIrGenerator generator)
 		{
 			Type t = typeof(T);
 			Name = t.GetShortName ();
-			Size = GatherMembers (t);
+			Size = GatherMembers (t, generator);
 			DataProvider = t.GetDataProvider ();
 		}
 
@@ -42,17 +43,23 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			generator.WriteStructureDeclarationEnd ();
 		}
 
-		ulong GatherMembers (Type type)
+		ulong GatherMembers (Type type, LlvmIrGenerator generator)
 		{
+			ulong size = 0;
 			foreach (MemberInfo mi in type.GetMembers ()) {
 				if (mi.ShouldBeIgnored () || (!(mi is FieldInfo) && !(mi is PropertyInfo))) {
 					continue;
 				}
 
-				Members.Add (new StructureMemberInfo<T> (mi));
+				var info = new StructureMemberInfo<T> (mi, generator);
+				Members.Add (info);
+				size += info.Size;
+				if ((int)info.Size > MaxFieldAlignment) {
+					MaxFieldAlignment = (int)info.Size;
+				}
 			}
 
-			return 0;
+			return size;
 		}
 	}
 }

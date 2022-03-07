@@ -43,10 +43,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		string fileName;
 		ulong stringCounter = 0;
+		ulong structStringCounter = 0;
+
 		List<IStructureInfo> structures = new List<IStructureInfo> ();
 
 		protected abstract string DataLayout { get; }
-		protected abstract int PointerSize { get; }
+		public abstract int PointerSize { get; }
 		protected abstract string Triple { get; }
 
 		public bool Is64Bit { get; }
@@ -153,10 +155,114 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new InvalidOperationException ($"{t} must be a class or a struct");
 			}
 
-			var ret = new StructureInfo<T> ();
+			var ret = new StructureInfo<T> (this);
 			structures.Add (ret);
 
 			return ret;
+		}
+
+		public void WriteStructure<T> (StructureInfo<T> info, T instance, string? symbolName = null, bool constant = true, bool global = false, bool writeStrings = true, bool writeFieldComment = true)
+		{
+			if (global && String.IsNullOrEmpty (symbolName)) {
+				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
+			}
+
+			bool named = !String.IsNullOrEmpty (symbolName);
+			if (named) {
+				WriteEOL ();
+				WriteEOL (symbolName);
+			}
+
+			object? value;
+			if (writeStrings) {
+				bool wroteSomething = false;
+				foreach (StructureMemberInfo<T> smi in info.Members) {
+					if (smi.MemberType != typeof(string)) {
+						smi.StringVariableName = null;
+						continue;
+					}
+
+					string str = (string)GetTypedValue (smi, typeof(string), String.Empty);
+					smi.StringVariableName = WriteString ($"__{smi.Info.Name}_{structStringCounter++}", str, out ulong size);
+					smi.StringSize = size;
+					wroteSomething = true;
+				}
+				if (wroteSomething) {
+					WriteEOL ();
+				}
+			}
+
+			if (named) {
+				var sb = new StringBuilder (global ? String.Empty : "private ");
+				sb.Append ("local_unnamed_addr ");
+				sb.Append (constant ? "constant " : "global ");
+
+				Output.Write ($"@{symbolName} = {sb.ToString ()}");
+			}
+
+			Output.WriteLine ($"%struct.{info.Name} {{");
+
+			for (int i = 0; i < info.Members.Count; i++) {
+				StructureMemberInfo<T> smi = info.Members[i];
+
+				Output.Write (Indent);
+				if (smi.IsNativePointer) {
+					WritePointer (smi);
+				} else {
+					Output.Write ($"{smi.IRType} {GetTypedValue (smi, smi.MemberType)}");
+				}
+
+				if (i < info.Members.Count - 1) {
+					Output.Write ($", ");
+				}
+
+				WriteEOL (writeFieldComment ? smi.Info.Name : String.Empty);
+			}
+
+			Output.WriteLine ($"}}, align {info.MaxFieldAlignment}");
+
+			void WritePointer (StructureMemberInfo<T> smi)
+			{
+				if (!String.IsNullOrEmpty (smi.StringVariableName)) {
+					WriteGetStringPointer (smi.StringVariableName, smi.StringSize, indent: false);
+					return;
+				}
+
+				value = smi.GetValue (instance);
+				if (value == null || ((value is IntPtr) && (IntPtr)value == IntPtr.Zero)) {
+					Output.Write ($"{smi.IRType} null");
+					return;
+				}
+
+				throw new InvalidOperationException ($"Non-null pointers to objects of managed type '{smi.Info.Name}' (IR type '{smi.IRType}') currently not supported");
+			}
+
+			object? GetTypedValue (StructureMemberInfo<T> smi, Type expectedType, object? defaultValue = null)
+			{
+				value = smi.GetValue (instance);
+				if (value == null) {
+					return defaultValue;
+				}
+
+				if (value.GetType () != expectedType) {
+					throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' should have a value of '{expectedType}' type, instead it had a '{value.GetType ()}'");
+				}
+
+				if (expectedType == typeof(bool)) {
+					return (bool)value ? 1 : 0;
+				}
+
+				return value;
+			}
+		}
+
+		void WriteGetStringPointer (string variableName, ulong size, bool indent = true)
+		{
+			if (indent) {
+				Output.Write (Indent);
+			}
+
+			Output.Write ($"i8* getelementptr inbounds ([{size} x i8], [{size} x i8]* @{variableName}, i32 0, i32 0)");
 		}
 
 		public void WriteNameValueArray (string symbolName, IDictionary<string, string> arrayContents, bool constexprStrings = true)
@@ -196,7 +302,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					//
 					// Better explained here: https://llvm.org/docs/GetElementPtr.html#id4
 					//
-					Output.Write ($"{Indent}i8* getelementptr inbounds ([{size} x i8], [{size} x i8]* @{varName}, i32 0, i32 0)");
+					WriteGetStringPointer (varName, size);
 					if (j < strings.Count - 1) {
 						Output.WriteLine (",");
 					}
@@ -254,8 +360,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public string WriteString (string symbolName, string value, out ulong stringSize, bool global = false, bool constexpr = true)
 		{
-			WriteEOL ();
-
 			string options;
 			if (constexpr) {
 				options = "internal";
@@ -270,7 +374,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				strSymbolName = symbolName;
 			}
 
-			Output.WriteLine ($"@{strSymbolName} = {options} constant c{QuoteString (value, out stringSize)}, align {GetAggregateAlignment (1, stringSize)}");
+			string quotedString = QuoteString (value, out stringSize);
+			Output.WriteLine ($"@{strSymbolName} = {options} constant [{stringSize} x i8] c{quotedString}, align {GetAggregateAlignment (1, stringSize)}");
 			if (!global) {
 				return symbolName;
 			}
@@ -279,10 +384,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.WriteLine ($"@{symbolName} = local_unnamed_addr constant i8* getelementptr inbounds ([{stringSize} x i8], [{stringSize} x i8]* @{strSymbolName}, {indexType} 0, {indexType} 0), align {GetAggregateAlignment (PointerSize, stringSize)}");
 
 			return symbolName;
-		}
-
-		public void WriteStructure<T> (string symbolName, T instance)
-		{
 		}
 
 		public virtual void WriteFileTop ()

@@ -129,6 +129,8 @@ namespace Xamarin.Android.Tasks
 		ApplicationConfig? application_config;
 		List<DSOCacheEntry>? dsoCache;
 
+		StructureInfo<ApplicationConfig>? applicationConfigStructureInfo;
+
 		public bool IsBundledApp { get; set; }
 		public bool UsesMonoAOT { get; set; }
 		public bool UsesMonoLLVM { get; set; }
@@ -252,7 +254,7 @@ namespace Xamarin.Android.Tasks
 
 		protected override void MapStructures (LlvmIrGenerator generator)
 		{
-			generator.MapStructure<ApplicationConfig> ();
+			applicationConfigStructureInfo = generator.MapStructure<ApplicationConfig> ();
 			generator.MapStructure<AssemblyStoreAssemblyDescriptor> ();
 			generator.MapStructure<AssemblyStoreSingleAssemblyRuntimeData> ();
 			generator.MapStructure<AssemblyStoreRuntimeData> ();
@@ -268,15 +270,22 @@ namespace Xamarin.Android.Tasks
 			generator.WriteNameValueArray ("app_environment_variables", environmentVariables);
 			generator.WriteNameValueArray ("app_system_properties", systemProperties);
 
+			generator.WriteStructure (applicationConfigStructureInfo, application_config, "application_config", global: true);
+
 			WriteDSOCache (generator);
 		}
 
 		void WriteDSOCache (LlvmIrGenerator generator)
 		{
+			generator.WriteEOL ();
+
 			bool is64Bit = generator.Is64Bit;
 
+			// We need to hash here, because the hash is architecture-specific
+			ulong stringCounter = 0;
 			foreach (DSOCacheEntry entry in dsoCache) {
 				entry.hash = HashName (entry.HashedName);
+				generator.WriteString ($"__dso_name_{stringCounter++}", entry.HashedName);
 			}
 
 			ulong HashName (string name)

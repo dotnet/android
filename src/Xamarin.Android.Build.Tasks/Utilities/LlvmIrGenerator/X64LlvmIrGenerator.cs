@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		//   Value as used by Android NDK's clang++
 		//
 		protected override string DataLayout => "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128";
-		protected override int PointerSize   => 8;
+		public override int PointerSize   => 8;
 		protected override string Triple     => "x86_64-unknown-linux-android"; // NDK appends API level, we don't need that
 
 		public X64LlvmIrGenerator (AndroidTargetArch arch, StreamWriter output, string fileName)

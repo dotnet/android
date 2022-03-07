@@ -10,11 +10,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 {
 	sealed class StructureMemberInfo<T>
 	{
-		public string IRType   { get; }
-		public MemberInfo Info { get; }
-		public Type MemberType { get; }
+		public string IRType        { get; }
+		public MemberInfo Info      { get; }
+		public Type MemberType      { get; }
+		public ulong Size           { get; }
+		public bool IsNativePointer { get; }
 
-		public StructureMemberInfo (MemberInfo mi)
+		// Used only by string members (to make structure generation faster and use less memory, since instead of caching
+		// the info here we would have to store the information in a dictionary before outputting the actual structure in
+		// LlvmIrGenerator.WriteStructure<T>
+		public string? StringVariableName { get; set; } = null;
+		public ulong StringSize           { get; set; } = 0;
+
+		public StructureMemberInfo (MemberInfo mi, LlvmIrGenerator generator)
 		{
 			Info = mi;
 
@@ -26,15 +34,27 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				_ => throw new InvalidOperationException ($"Unsupported member type {mi}")
 			};
 
+			ulong size = 0;
 			if (MemberType != typeof(string) && (MemberType.IsStructure () || MemberType.IsClass)) {
 				IRType = $"%struct.{MemberType.GetShortName ()}";
+				// TODO: figure out how to get structure size if it isn't a pointer
 			} else {
-				IRType = LlvmIrGenerator.MapManagedTypeToIR (MemberType);
+				IRType = generator.MapManagedTypeToIR (MemberType, out size);
+			}
+			IsNativePointer = IRType[IRType.Length - 1] == '*';
+
+			if (!IsNativePointer) {
+				IsNativePointer = mi.IsNativePointer ();
+				if (IsNativePointer) {
+					IRType += "*";
+				}
 			}
 
-			if (mi.IsNativePointer ()) {
-				IRType += "*";
+			if (IsNativePointer) {
+				size = (ulong)generator.PointerSize;
 			}
+
+			Size = size;
 		}
 
 		public object? GetValue (T instance)
