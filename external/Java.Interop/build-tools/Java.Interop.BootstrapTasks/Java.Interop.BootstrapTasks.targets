@@ -113,7 +113,7 @@
     <PropertyGroup>
       <_NetToolVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch).$(GitCommits)</_NetToolVersion>
       <_OldToolVersion>0.2.$(GitBaseVersionPatch).$(GitCommits)</_OldToolVersion>
-      <_NetCoreLibVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).0.0</_NetCoreLibVersion>
+      <_NetCoreLibVersion>0.1.0.0</_NetCoreLibVersion>
       <_OldCoreLibVersion>0.1.0.0</_OldCoreLibVersion>
       <_FileVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch).$(GitCommits)</_FileVersion>
     </PropertyGroup>
