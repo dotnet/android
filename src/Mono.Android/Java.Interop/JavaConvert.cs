@@ -360,8 +360,9 @@ namespace Java.Interop {
 			} },
 		};
 
-		static Func<object, IntPtr> GetLocalJniHandleConverter<T> (T value, Type sourceType)
+		static Func<object, IntPtr> GetLocalJniHandleConverter (object value)
 		{
+			Type sourceType = value.GetType ();
 			Func<object, IntPtr>? converter;
 			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter))
 				return converter;
@@ -380,7 +381,7 @@ namespace Java.Interop {
 			if (value is IJavaObject v) {
 				return JNIEnv.ToLocalJniHandle (v);
 			}
-			Func<object, IntPtr> converter = GetLocalJniHandleConverter (value, value.GetType ());
+			Func<object, IntPtr> converter = GetLocalJniHandleConverter (value);
 			return converter (value);
 		}
 
