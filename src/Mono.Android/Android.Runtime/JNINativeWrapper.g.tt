@@ -77,6 +77,12 @@ var delegateTypes = new [] {
 		Invoke = "jnienv, klazz, p0, p1",
 	},
 	new {
+		Type = "_JniMarshal_PPLZ_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, bool p1",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1",
+	},
+	new {
 		Type = "_JniMarshal_PPLL_V",
 		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1",
 		Return = "void",
