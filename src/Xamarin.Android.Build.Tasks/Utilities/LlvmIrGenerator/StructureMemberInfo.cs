@@ -16,12 +16,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public ulong Size           { get; }
 		public bool IsNativePointer { get; }
 
-		// Used only by string members (to make structure generation faster and use less memory, since instead of caching
-		// the info here we would have to store the information in a dictionary before outputting the actual structure in
-		// LlvmIrGenerator.WriteStructure<T>
-		public string? StringVariableName { get; set; } = null;
-		public ulong StringSize           { get; set; } = 0;
-
 		public StructureMemberInfo (MemberInfo mi, LlvmIrGenerator generator)
 		{
 			Info = mi;

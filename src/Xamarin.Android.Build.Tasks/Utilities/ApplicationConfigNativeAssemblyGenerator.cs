@@ -35,7 +35,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
-					return $"hash, from name: {dso_entry.HashedName}";
+					return $"hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
 				}
 
 				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
@@ -126,10 +126,11 @@ namespace Xamarin.Android.Tasks
 		SortedDictionary <string, string> environmentVariables;
 		SortedDictionary <string, string> systemProperties;
 		TaskLoggingHelper log;
-		ApplicationConfig? application_config;
-		List<DSOCacheEntry>? dsoCache;
+		StructureInstance<ApplicationConfig>? application_config;
+		List<StructureInstance<DSOCacheEntry>>? dsoCache;
 
 		StructureInfo<ApplicationConfig>? applicationConfigStructureInfo;
+		StructureInfo<DSOCacheEntry>? dsoCacheEntryStructureInfo;
 
 		public bool IsBundledApp { get; set; }
 		public bool UsesMonoAOT { get; set; }
@@ -166,7 +167,7 @@ namespace Xamarin.Android.Tasks
 		public override void Init ()
 		{
 			dsoCache = InitDSOCache ();
-			application_config = new ApplicationConfig {
+			var app_cfg = new ApplicationConfig {
 				uses_mono_llvm = UsesMonoLLVM,
 				uses_mono_aot = UsesMonoAOT,
 				uses_assembly_preload = UsesAssemblyPreload,
@@ -187,9 +188,10 @@ namespace Xamarin.Android.Tasks
 				mono_components_mask = (uint)MonoComponents,
 				android_package_name = AndroidPackageName,
 			};
+			application_config = new StructureInstance<ApplicationConfig> (app_cfg);
 		}
 
-		List<DSOCacheEntry> InitDSOCache ()
+		List<StructureInstance<DSOCacheEntry>> InitDSOCache ()
 		{
 			var dsos = new List<(string name, string nameLabel, bool ignore)> ();
 			var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
@@ -208,7 +210,7 @@ namespace Xamarin.Android.Tasks
 				dsos.Add ((name, $"dsoName{dsos.Count}", ELFHelper.IsEmptyAOTLibrary (log, item.ItemSpec)));
 			}
 
-			var dsoCache = new List<DSOCacheEntry> ();
+			var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 			var nameMutations = new List<string> ();
 
 			for (int i = 0; i < dsos.Count; i++) {
@@ -217,18 +219,17 @@ namespace Xamarin.Android.Tasks
 				AddNameMutations (name);
 				// All mutations point to the actual library name, but have hash of the mutated one
 				foreach (string entryName in nameMutations) {
-					dsoCache.Add (
-						new DSOCacheEntry {
-							HashedName = entryName,
-							hash = 0, // Hash is arch-specific, we compute it before writing
-							ignore = dsos[i].ignore,
-							name = name,
-						}
-					);
+					var entry = new DSOCacheEntry {
+						HashedName = entryName,
+						hash = 0, // Hash is arch-specific, we compute it before writing
+						ignore = dsos[i].ignore,
+						name = name,
+					};
+
+					dsoCache.Add (new StructureInstance<DSOCacheEntry> (entry));
 				}
 			}
 
-			dsoCache.Sort ((DSOCacheEntry a, DSOCacheEntry b) => a.hash.CompareTo (b.hash));
 			return dsoCache;
 
 			void AddNameMutations (string name)
@@ -259,7 +260,7 @@ namespace Xamarin.Android.Tasks
 			generator.MapStructure<AssemblyStoreSingleAssemblyRuntimeData> ();
 			generator.MapStructure<AssemblyStoreRuntimeData> ();
 			generator.MapStructure<XamarinAndroidBundledAssembly> ();
-			generator.MapStructure<DSOCacheEntry> ();
+			dsoCacheEntryStructureInfo = generator.MapStructure<DSOCacheEntry> ();
 		}
 
 		protected override void Write (LlvmIrGenerator generator)
@@ -277,16 +278,15 @@ namespace Xamarin.Android.Tasks
 
 		void WriteDSOCache (LlvmIrGenerator generator)
 		{
-			generator.WriteEOL ();
-
 			bool is64Bit = generator.Is64Bit;
 
 			// We need to hash here, because the hash is architecture-specific
-			ulong stringCounter = 0;
-			foreach (DSOCacheEntry entry in dsoCache) {
-				entry.hash = HashName (entry.HashedName);
-				generator.WriteString ($"__dso_name_{stringCounter++}", entry.HashedName);
+			foreach (StructureInstance<DSOCacheEntry> entry in dsoCache) {
+				entry.Obj.hash = HashName (entry.Obj.HashedName);
 			}
+			dsoCache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Obj.hash.CompareTo (b.Obj.hash));
+
+			generator.WriteStructureArray (dsoCacheEntryStructureInfo, dsoCache, "dso_cache", constant: false, global: true);
 
 			ulong HashName (string name)
 			{

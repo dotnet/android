@@ -161,7 +161,47 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return ret;
 		}
 
-		public void WriteStructure<T> (StructureInfo<T> info, T instance, string? symbolName = null, bool constant = true, bool global = false, bool writeStrings = true, bool writeFieldComment = true)
+		void WriteGlobalSymbolStart (string symbolName, bool constant, bool global)
+		{
+			var sb = new StringBuilder (global ? String.Empty : "private ");
+			sb.Append ("local_unnamed_addr ");
+			sb.Append (constant ? "constant " : "global ");
+
+			Output.Write ($"@{symbolName} = {sb.ToString ()}");
+		}
+
+		object? GetTypedMemberValue<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, Type expectedType, object? defaultValue = null)
+		{
+			object? value = smi.GetValue (instance.Obj);
+			if (value == null) {
+				return defaultValue;
+			}
+
+			if (value.GetType () != expectedType) {
+				throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' should have a value of '{expectedType}' type, instead it had a '{value.GetType ()}'");
+			}
+
+			if (expectedType == typeof(bool)) {
+				return (bool)value ? 1 : 0;
+			}
+
+			return value;
+		}
+
+		bool MaybeWriteStructureString<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance)
+		{
+			if (smi.MemberType != typeof(string)) {
+				return false;
+			}
+
+			string str = (string)GetTypedMemberValue (info, smi, instance, typeof(string), String.Empty);
+			string variableName = WriteString ($"__{info.Name}_{smi.Info.Name}_{structStringCounter++}", str, out ulong size);
+			instance.AddStringData (smi, variableName, size);
+
+			return true;
+		}
+
+		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>> instances, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true)
 		{
 			if (global && String.IsNullOrEmpty (symbolName)) {
 				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
@@ -173,62 +213,84 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				WriteEOL (symbolName);
 			}
 
-			object? value;
-			if (writeStrings) {
+			if (info.HasStrings) {
 				bool wroteSomething = false;
-				foreach (StructureMemberInfo<T> smi in info.Members) {
-					if (smi.MemberType != typeof(string)) {
-						smi.StringVariableName = null;
-						continue;
+				foreach (StructureInstance<T> instance in instances) {
+					foreach (StructureMemberInfo<T> smi in info.Members) {
+						if (MaybeWriteStructureString (info, smi, instance)) {
+							wroteSomething = true;
+						}
 					}
-
-					string str = (string)GetTypedValue (smi, typeof(string), String.Empty);
-					smi.StringVariableName = WriteString ($"__{smi.Info.Name}_{structStringCounter++}", str, out ulong size);
-					smi.StringSize = size;
-					wroteSomething = true;
 				}
+
 				if (wroteSomething) {
 					WriteEOL ();
 				}
 			}
 
 			if (named) {
-				var sb = new StringBuilder (global ? String.Empty : "private ");
-				sb.Append ("local_unnamed_addr ");
-				sb.Append (constant ? "constant " : "global ");
-
-				Output.Write ($"@{symbolName} = {sb.ToString ()}");
+				WriteGlobalSymbolStart (symbolName, constant, global);
 			}
 
-			Output.WriteLine ($"%struct.{info.Name} {{");
+			Output.WriteLine ($"[{instances.Count} x %struct.{info.Name}] [");
+
+			string fieldIndent = $"{Indent}{Indent}";
+			for (int i = 0; i < instances.Count; i++) {
+				StructureInstance<T> instance = instances[i];
+
+				WriteStructureBody (info, instance, writeFieldComment: true, fieldIndent: fieldIndent, structIndent: Indent);
+				if (i < instances.Count - 1) {
+					Output.Write (", ");
+				}
+				WriteEOL ();
+			}
+
+			Output.Write ($"], align {GetAggregateAlignment (info.MaxFieldAlignment, info.Size * (ulong)instances.Count)}");
+			if (named) {
+				WriteEOL ($"end of '{symbolName}' array");
+			} else {
+				WriteEOL ();
+			}
+		}
+
+		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T> instance, bool writeFieldComment, string fieldIndent, string structIndent)
+		{
+			Output.WriteLine ($"{structIndent}%struct.{info.Name} {{");
 
 			for (int i = 0; i < info.Members.Count; i++) {
 				StructureMemberInfo<T> smi = info.Members[i];
 
-				Output.Write (Indent);
+				Output.Write (fieldIndent);
 				if (smi.IsNativePointer) {
 					WritePointer (smi);
 				} else {
-					Output.Write ($"{smi.IRType} {GetTypedValue (smi, smi.MemberType)}");
+					Output.Write ($"{smi.IRType} 0x{GetTypedMemberValue (info, smi, instance, smi.MemberType):x}");
 				}
 
 				if (i < info.Members.Count - 1) {
-					Output.Write ($", ");
+					Output.Write (", ");
 				}
 
-				WriteEOL (writeFieldComment ? smi.Info.Name : String.Empty);
+				if (writeFieldComment) {
+					WriteEOL (info.GetCommentFromProvider (smi, instance) ?? smi.Info.Name);
+				} else {
+					WriteEOL ();
+				}
 			}
 
-			Output.WriteLine ($"}}, align {info.MaxFieldAlignment}");
+			Output.Write ($"{structIndent}}}");
 
 			void WritePointer (StructureMemberInfo<T> smi)
 			{
-				if (!String.IsNullOrEmpty (smi.StringVariableName)) {
-					WriteGetStringPointer (smi.StringVariableName, smi.StringSize, indent: false);
-					return;
+				if (info.HasStrings) {
+					StructureStringData? ssd = instance.GetStringData (smi);
+					if (ssd != null) {
+						WriteGetStringPointer (ssd.VariableName, ssd.Size, indent: false);
+						return;
+					}
 				}
 
-				value = smi.GetValue (instance);
+				object? value = smi.GetValue (instance.Obj);
 				if (value == null || ((value is IntPtr) && (IntPtr)value == IntPtr.Zero)) {
 					Output.Write ($"{smi.IRType} null");
 					return;
@@ -236,24 +298,39 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				throw new InvalidOperationException ($"Non-null pointers to objects of managed type '{smi.Info.Name}' (IR type '{smi.IRType}') currently not supported");
 			}
+		}
 
-			object? GetTypedValue (StructureMemberInfo<T> smi, Type expectedType, object? defaultValue = null)
-			{
-				value = smi.GetValue (instance);
-				if (value == null) {
-					return defaultValue;
-				}
-
-				if (value.GetType () != expectedType) {
-					throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' should have a value of '{expectedType}' type, instead it had a '{value.GetType ()}'");
-				}
-
-				if (expectedType == typeof(bool)) {
-					return (bool)value ? 1 : 0;
-				}
-
-				return value;
+		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T> instance, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true)
+		{
+			if (global && String.IsNullOrEmpty (symbolName)) {
+				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
 			}
+
+			bool named = !String.IsNullOrEmpty (symbolName);
+			if (named) {
+				WriteEOL ();
+				WriteEOL (symbolName);
+			}
+
+			if (info.HasStrings) {
+				bool wroteSomething = false;
+				foreach (StructureMemberInfo<T> smi in info.Members) {
+					if (MaybeWriteStructureString (info, smi, instance)) {
+						wroteSomething = true;
+					}
+				}
+
+				if (wroteSomething) {
+					WriteEOL ();
+				}
+			}
+
+			if (named) {
+				WriteGlobalSymbolStart (symbolName, constant, global);
+			}
+
+			WriteStructureBody (info, instance, writeFieldComment, fieldIndent: Indent, structIndent: Indent);
+			Output.WriteLine ($", align {info.MaxFieldAlignment}");
 		}
 
 		void WriteGetStringPointer (string variableName, ulong size, bool indent = true)

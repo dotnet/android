@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
-
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
@@ -16,6 +13,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public List<StructureMemberInfo<T>> Members { get; } = new List<StructureMemberInfo<T>> ();
 		public NativeAssemblerStructContextDataProvider? DataProvider { get; }
 		public int MaxFieldAlignment { get; private set; } = 0;
+		public bool HasStrings { get; private set; }
 
 		public StructureInfo (LlvmIrGenerator generator)
 		{
@@ -43,6 +41,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			generator.WriteStructureDeclarationEnd ();
 		}
 
+		public string? GetCommentFromProvider (StructureMemberInfo<T> smi, StructureInstance<T> instance)
+		{
+			if (DataProvider == null) {
+				return null;
+			}
+
+			string ret = DataProvider.GetComment (instance.Obj, smi.Info.Name);
+			if (ret.Length == 0) {
+				return null;
+			}
+
+			return ret;
+		}
+
 		ulong GatherMembers (Type type, LlvmIrGenerator generator)
 		{
 			ulong size = 0;
@@ -56,6 +68,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				size += info.Size;
 				if ((int)info.Size > MaxFieldAlignment) {
 					MaxFieldAlignment = (int)info.Size;
+				}
+
+				if (info.MemberType == typeof (string)) {
+					HasStrings = true;
 				}
 			}
 
