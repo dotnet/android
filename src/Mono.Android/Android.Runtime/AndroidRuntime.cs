@@ -306,7 +306,7 @@ namespace Android.Runtime {
 
 		static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
 
-		static bool FastRegisterNativeMembers (JniType nativeClass, Type type, string? methods)
+		static bool FastRegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
 			if (!MagicRegistrationMap.Filled)
 				return false;
@@ -323,7 +323,7 @@ namespace Android.Runtime {
 				} else {
 					registrations = new List<JniNativeMethodRegistration> ();
 				}
-				JniNativeMethodRegistrationArguments arguments = new JniNativeMethodRegistrationArguments (registrations, methods);
+				JniNativeMethodRegistrationArguments arguments = new JniNativeMethodRegistrationArguments (registrations, methods.ToString ());
 				rv = MagicRegistrationMap.CallRegisterMethod (arguments, type.FullName!);
 
 				if (registrations.Count > 0)
@@ -376,22 +376,25 @@ namespace Android.Runtime {
 			}
 		}
 
-		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods)
+		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods) =>
+			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
+
+		public void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
 			try {
 				if (FastRegisterNativeMembers (nativeClass, type, methods))
 					return;
 
-				if (string.IsNullOrEmpty (methods)) {
+				if (methods.IsEmpty) {
 					if (jniAddNativeMethodRegistrationAttributePresent)
-						base.RegisterNativeMembers (nativeClass, type, methods);
+						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
 					return;
 				}
 
 				int methodCount = CountMethods (methods);
 				if (methodCount < 1) {
 					if (jniAddNativeMethodRegistrationAttributePresent)
-						base.RegisterNativeMembers (nativeClass, type, methods);
+						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
 					return;
 				}
 

@@ -136,7 +136,8 @@ namespace Android.Runtime {
 			JniType? jniType = null;
 			JniType.GetCachedJniType (ref jniType, className);
 
-			androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods_ptr == IntPtr.Zero ? null : new string ((char*) methods_ptr, 0, methods_len));
+			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
+			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
 		}
 
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
