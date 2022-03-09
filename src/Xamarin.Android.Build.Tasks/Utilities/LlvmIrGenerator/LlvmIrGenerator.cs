@@ -205,6 +205,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return true;
 		}
 
+		bool WriteStructureStrings<T> (StructureInfo<T> info, StructureInstance<T> instance)
+		{
+			bool wroteSomething = false;
+			foreach (StructureMemberInfo<T> smi in info.Members) {
+				if (MaybeWriteStructureString (info, smi, instance)) {
+					wroteSomething = true;
+				}
+			}
+
+			return wroteSomething;
+		}
+
+		bool WriteStructurePreAllocatedBuffers<T> (StructureInfo<T> info, StructureInstance<T> instance)
+		{
+			bool wroteSomething = false;
+
+			return wroteSomething;
+		}
+
 		bool WriteStructureArrayStart<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool constant = true, bool global = false, string? initialComment = null)
 		{
 			if (global && String.IsNullOrEmpty (symbolName)) {
@@ -217,19 +236,34 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				WriteEOL (initialComment ?? symbolName);
 			}
 
-			if (instances != null && info.HasStrings) {
-				// TODO: potentially de-duplicate strings? The linker should do it for us, but why start with a mess?
+			if (instances != null) {
 				bool wroteSomething = false;
-				foreach (StructureInstance<T> instance in instances) {
-					foreach (StructureMemberInfo<T> smi in info.Members) {
-						if (MaybeWriteStructureString (info, smi, instance)) {
+
+				if (info.HasStrings) {
+					// TODO: potentially de-duplicate strings? The linker should do it for us, but why start with a mess?
+					foreach (StructureInstance<T> instance in instances) {
+						if (WriteStructureStrings (info, instance)) {
 							wroteSomething = true;
 						}
 					}
+
+					if (wroteSomething) {
+						WriteEOL ();
+					}
 				}
 
-				if (wroteSomething) {
-					WriteEOL ();
+				if (info.HasPreAllocatedBuffers) {
+					wroteSomething = false;
+
+					foreach (StructureInstance<T> instance in instances) {
+						if (WriteStructurePreAllocatedBuffers (info, instance)) {
+							wroteSomething = true;
+						}
+					}
+
+					if (wroteSomething) {
+						WriteEOL ();
+					}
 				}
 			}
 
@@ -288,33 +322,38 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: instances == null);
 		}
 
-		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T> instance, bool writeFieldComment, string fieldIndent, string structIndent)
+		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, bool writeFieldComment, string fieldIndent, string structIndent)
 		{
-			Output.WriteLine ($"{structIndent}%struct.{info.Name} {{");
+			Output.Write ($"{structIndent}%struct.{info.Name} ");
 
-			for (int i = 0; i < info.Members.Count; i++) {
-				StructureMemberInfo<T> smi = info.Members[i];
+			if (instance != null) {
+				Output.WriteLine ("{");
+				for (int i = 0; i < info.Members.Count; i++) {
+					StructureMemberInfo<T> smi = info.Members[i];
 
-				Output.Write (fieldIndent);
-				if (smi.IsNativePointer) {
-					WritePointer (smi);
-				} else {
-					Output.Write ($"{smi.IRType} {GetTypedMemberValue (info, smi, instance, smi.MemberType)}");
+					Output.Write (fieldIndent);
+					if (smi.IsNativePointer) {
+						WritePointer (smi);
+					} else {
+						Output.Write ($"{smi.IRType} {GetTypedMemberValue (info, smi, instance, smi.MemberType)}");
+					}
+
+					if (i < info.Members.Count - 1) {
+						Output.Write (", ");
+					}
+
+					if (writeFieldComment) {
+						// TODO: append value in hex for integer types, LLVM IR doesn't support hex constants for integer fields (only for floats and doubles)
+						WriteEOL (info.GetCommentFromProvider (smi, instance) ?? smi.Info.Name);
+					} else {
+						WriteEOL ();
+					}
 				}
 
-				if (i < info.Members.Count - 1) {
-					Output.Write (", ");
-				}
-
-				if (writeFieldComment) {
-					// TODO: append value in hex for integer types, LLVM IR doesn't support hex constants for integer fields (only for floats and doubles)
-					WriteEOL (info.GetCommentFromProvider (smi, instance) ?? smi.Info.Name);
-				} else {
-					WriteEOL ();
-				}
+				Output.Write ($"{structIndent}}}");
+			} else {
+				Output.Write ("zeroinitializer");
 			}
-
-			Output.Write ($"{structIndent}}}");
 
 			void WritePointer (StructureMemberInfo<T> smi)
 			{
@@ -349,7 +388,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T> instance, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true)
+		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true)
 		{
 			if (global && String.IsNullOrEmpty (symbolName)) {
 				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
@@ -361,15 +400,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				WriteEOL (symbolName);
 			}
 
-			if (info.HasStrings) {
-				bool wroteSomething = false;
-				foreach (StructureMemberInfo<T> smi in info.Members) {
-					if (MaybeWriteStructureString (info, smi, instance)) {
-						wroteSomething = true;
-					}
+			if (instance != null) {
+				if (info.HasStrings && WriteStructureStrings (info, instance)) {
+					WriteEOL ();
 				}
 
-				if (wroteSomething) {
+				if (info.HasPreAllocatedBuffers && WriteStructurePreAllocatedBuffers (info, instance)) {
 					WriteEOL ();
 				}
 			}

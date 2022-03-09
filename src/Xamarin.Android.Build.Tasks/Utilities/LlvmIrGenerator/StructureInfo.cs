@@ -14,6 +14,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public NativeAssemblerStructContextDataProvider? DataProvider { get; }
 		public int MaxFieldAlignment { get; private set; } = 0;
 		public bool HasStrings { get; private set; }
+		public bool HasPreAllocatedBuffers { get; private set; }
 
 		public StructureInfo (LlvmIrGenerator generator)
 		{
@@ -70,8 +71,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					MaxFieldAlignment = (int)info.Size;
 				}
 
-				if (info.MemberType == typeof (string)) {
+				if (!HasStrings && info.MemberType == typeof (string)) {
 					HasStrings = true;
+				}
+
+				if (!HasPreAllocatedBuffers && info.Info.IsNativePointerToPreallocatedBuffer ()) {
+					HasPreAllocatedBuffers = true;
 				}
 			}
 

@@ -310,7 +310,6 @@ namespace Xamarin.Android.Tasks
 
 		void WriteBundledAssemblies (LlvmIrGenerator generator)
 		{
-			// TODO: test it with actual data!
 			generator.WriteStructureArray (xamarinAndroidBundledAssemblyStructureInfo, xamarinAndroidBundledAssemblies, "bundled_assemblies", constant: false, global: true, initialComment: $"Bundled assembly name buffers, all {BundledAssemblyNameWidth} bytes long");
 		}
 

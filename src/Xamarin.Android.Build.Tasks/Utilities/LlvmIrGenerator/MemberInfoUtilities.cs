@@ -12,6 +12,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return mi.GetCustomAttribute <NativePointerAttribute> () != null;
 		}
 
+		public static bool IsNativePointerToPreallocatedBuffer (this MemberInfo mi)
+		{
+			var attr = mi.GetCustomAttribute <NativePointerAttribute> ();
+			if (attr == null) {
+				return false;
+			}
+
+			return attr.PointsToPreAllocatedBuffer;
+		}
+
 		public static bool ShouldBeIgnored (this MemberInfo mi)
 		{
 			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
