@@ -194,26 +194,31 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			string str = (string)GetTypedMemberValue (info, smi, instance, typeof(string), String.Empty);
+			string? str = (string?)GetTypedMemberValue (info, smi, instance, typeof(string), null);
+			if (str == null) {
+				instance.AddStringData (smi, null, 0);
+				return false;
+			}
 			string variableName = WriteString ($"__{info.Name}_{smi.Info.Name}_{structStringCounter++}", str, out ulong size);
 			instance.AddStringData (smi, variableName, size);
 
 			return true;
 		}
 
-		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>> instances, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true)
+		bool WriteStructureArrayStart<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool constant = true, bool global = false, string? initialComment = null)
 		{
 			if (global && String.IsNullOrEmpty (symbolName)) {
 				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
 			}
 
 			bool named = !String.IsNullOrEmpty (symbolName);
-			if (named) {
+			if (named || !String.IsNullOrEmpty (initialComment)) {
 				WriteEOL ();
-				WriteEOL (symbolName);
+				WriteEOL (initialComment ?? symbolName);
 			}
 
-			if (info.HasStrings) {
+			if (instances != null && info.HasStrings) {
+				// TODO: potentially de-duplicate strings? The linker should do it for us, but why start with a mess?
 				bool wroteSomething = false;
 				foreach (StructureInstance<T> instance in instances) {
 					foreach (StructureMemberInfo<T> smi in info.Members) {
@@ -232,25 +237,55 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				WriteGlobalSymbolStart (symbolName, constant, global);
 			}
 
-			Output.WriteLine ($"[{instances.Count} x %struct.{info.Name}] [");
+			return named;
+		}
 
-			string fieldIndent = $"{Indent}{Indent}";
-			for (int i = 0; i < instances.Count; i++) {
-				StructureInstance<T> instance = instances[i];
-
-				WriteStructureBody (info, instance, writeFieldComment: true, fieldIndent: fieldIndent, structIndent: Indent);
-				if (i < instances.Count - 1) {
-					Output.Write (", ");
-				}
-				WriteEOL ();
-			}
-
-			Output.Write ($"], align {GetAggregateAlignment (info.MaxFieldAlignment, info.Size * (ulong)instances.Count)}");
-			if (named) {
-				WriteEOL ($"end of '{symbolName}' array");
+		void WriteStructureArrayEnd<T> (StructureInfo<T> info, string? symbolName, ulong count, bool named, bool skipFinalComment = false)
+		{
+			Output.Write ($", align {GetAggregateAlignment (info.MaxFieldAlignment, info.Size * count)}");
+			if (named && !skipFinalComment) {
+				WriteEOL ($"end of '{symbolName!}' array");
 			} else {
 				WriteEOL ();
 			}
+		}
+
+		/// <summary>
+		/// Writes an array of <paramref name="count"/> zero-initialized entries
+		/// </summary>
+		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true, string? initialComment = null)
+		{
+			bool named = WriteStructureArrayStart<T> (info, null, symbolName, constant, global, initialComment);
+
+			Output.Write ($"[{count} x %struct.{info.Name}] zeroinitializer");
+
+			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: true);
+		}
+
+		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true, string? initialComment = null)
+		{
+			bool named = WriteStructureArrayStart<T> (info, instances, symbolName, constant, global, initialComment);
+			int count = instances != null ? instances.Count : 0;
+
+			Output.Write ($"[{count} x %struct.{info.Name}] ");
+			if (instances != null) {
+				Output.WriteLine ("[");
+				string fieldIndent = $"{Indent}{Indent}";
+				for (int i = 0; i < count; i++) {
+					StructureInstance<T> instance = instances[i];
+
+					WriteStructureBody (info, instance, writeFieldComment: true, fieldIndent: fieldIndent, structIndent: Indent);
+					if (i < count - 1) {
+						Output.Write (", ");
+					}
+					WriteEOL ();
+				}
+				Output.Write ("]");
+			} else {
+				Output.Write ("zeroinitializer");
+			}
+
+			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: instances == null);
 		}
 
 		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T> instance, bool writeFieldComment, string fieldIndent, string structIndent)
@@ -264,7 +299,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				if (smi.IsNativePointer) {
 					WritePointer (smi);
 				} else {
-					Output.Write ($"{smi.IRType} 0x{GetTypedMemberValue (info, smi, instance, smi.MemberType):x}");
+					Output.Write ($"{smi.IRType} {GetTypedMemberValue (info, smi, instance, smi.MemberType)}");
 				}
 
 				if (i < info.Members.Count - 1) {
@@ -272,6 +307,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				if (writeFieldComment) {
+					// TODO: append value in hex for integer types, LLVM IR doesn't support hex constants for integer fields (only for floats and doubles)
 					WriteEOL (info.GetCommentFromProvider (smi, instance) ?? smi.Info.Name);
 				} else {
 					WriteEOL ();
@@ -292,11 +328,24 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				object? value = smi.GetValue (instance.Obj);
 				if (value == null || ((value is IntPtr) && (IntPtr)value == IntPtr.Zero)) {
-					Output.Write ($"{smi.IRType} null");
+					WriteNullPointer ();
 					return;
 				}
 
-				throw new InvalidOperationException ($"Non-null pointers to objects of managed type '{smi.Info.Name}' (IR type '{smi.IRType}') currently not supported");
+				if (value.GetType ().IsPrimitive) {
+					ulong v = Convert.ToUInt64 (value);
+					if (v == 0) {
+						WriteNullPointer ();
+						return;
+					}
+				}
+
+				throw new InvalidOperationException ($"Non-null pointers to objects of managed type '{smi.Info.MemberType}' (IR type '{smi.IRType}') currently not supported (value: {value})");
+
+				void WriteNullPointer ()
+				{
+					Output.Write ($"{smi.IRType} null");
+				}
 			}
 		}
 
@@ -329,17 +378,21 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				WriteGlobalSymbolStart (symbolName, constant, global);
 			}
 
-			WriteStructureBody (info, instance, writeFieldComment, fieldIndent: Indent, structIndent: Indent);
+			WriteStructureBody (info, instance, writeFieldComment, fieldIndent: Indent, structIndent: String.Empty);
 			Output.WriteLine ($", align {info.MaxFieldAlignment}");
 		}
 
-		void WriteGetStringPointer (string variableName, ulong size, bool indent = true)
+		void WriteGetStringPointer (string? variableName, ulong size, bool indent = true)
 		{
 			if (indent) {
 				Output.Write (Indent);
 			}
 
-			Output.Write ($"i8* getelementptr inbounds ([{size} x i8], [{size} x i8]* @{variableName}, i32 0, i32 0)");
+			if (String.IsNullOrEmpty (variableName)) {
+				Output.Write ($"i8* null");
+			} else {
+				Output.Write ($"i8* getelementptr inbounds ([{size} x i8], [{size} x i8]* @{variableName}, i32 0, i32 0)");
+			}
 		}
 
 		public void WriteNameValueArray (string symbolName, IDictionary<string, string> arrayContents, bool constexprStrings = true)
@@ -511,7 +564,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			if (!String.IsNullOrEmpty (comment)) {
-				Output.Write (' ');
 				WriteCommentLine (comment);
 			} else {
 				WriteEOL ();
@@ -541,7 +593,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				writer.Write (Indent);
 			}
 
-			writer.Write (';');
+			writer.Write (" ;");
 
 			if (!String.IsNullOrEmpty (comment)) {
 				writer.Write (' ');

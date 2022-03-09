@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Obj = instance;
 		}
 
-		public void AddStringData (StructureMemberInfo<T> smi, string variableName, ulong stringSize)
+		public void AddStringData (StructureMemberInfo<T> smi, string? variableName, ulong stringSize)
 		{
 			if (strings == null) {
 				strings = new Dictionary<StructureMemberInfo<T>, StructureStringData> ();

@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tasks
 			[NativePointer]
 			public byte data;
 			public uint name_length;
-			public string name;
+			public string? name;
 		}
 
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
@@ -128,9 +128,13 @@ namespace Xamarin.Android.Tasks
 		TaskLoggingHelper log;
 		StructureInstance<ApplicationConfig>? application_config;
 		List<StructureInstance<DSOCacheEntry>>? dsoCache;
+		List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
 
 		StructureInfo<ApplicationConfig>? applicationConfigStructureInfo;
 		StructureInfo<DSOCacheEntry>? dsoCacheEntryStructureInfo;
+		StructureInfo<XamarinAndroidBundledAssembly>? xamarinAndroidBundledAssemblyStructureInfo;
+		StructureInfo<AssemblyStoreSingleAssemblyRuntimeData> assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
+		StructureInfo<AssemblyStoreRuntimeData> assemblyStoreRuntimeDataStructureInfo;
 
 		public bool IsBundledApp { get; set; }
 		public bool UsesMonoAOT { get; set; }
@@ -189,6 +193,23 @@ namespace Xamarin.Android.Tasks
 				android_package_name = AndroidPackageName,
 			};
 			application_config = new StructureInstance<ApplicationConfig> (app_cfg);
+
+			if (!HaveAssemblyStore) {
+				xamarinAndroidBundledAssemblies = new List<StructureInstance<XamarinAndroidBundledAssembly>> (NumberOfAssembliesInApk);
+
+				var emptyBundledAssemblyData = new XamarinAndroidBundledAssembly {
+					apk_fd = -1,
+					data_offset = 0,
+					data_size = 0,
+					data = 0,
+					name_length = 0,
+					name = null,
+				};
+
+				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+					xamarinAndroidBundledAssemblies.Add (new StructureInstance<XamarinAndroidBundledAssembly> (emptyBundledAssemblyData));
+				}
+			}
 		}
 
 		List<StructureInstance<DSOCacheEntry>> InitDSOCache ()
@@ -257,9 +278,9 @@ namespace Xamarin.Android.Tasks
 		{
 			applicationConfigStructureInfo = generator.MapStructure<ApplicationConfig> ();
 			generator.MapStructure<AssemblyStoreAssemblyDescriptor> ();
-			generator.MapStructure<AssemblyStoreSingleAssemblyRuntimeData> ();
-			generator.MapStructure<AssemblyStoreRuntimeData> ();
-			generator.MapStructure<XamarinAndroidBundledAssembly> ();
+			assemblyStoreSingleAssemblyRuntimeDataStructureinfo = generator.MapStructure<AssemblyStoreSingleAssemblyRuntimeData> ();
+			assemblyStoreRuntimeDataStructureInfo = generator.MapStructure<AssemblyStoreRuntimeData> ();
+			xamarinAndroidBundledAssemblyStructureInfo = generator.MapStructure<XamarinAndroidBundledAssembly> ();
 			dsoCacheEntryStructureInfo = generator.MapStructure<DSOCacheEntry> ();
 		}
 
@@ -274,6 +295,23 @@ namespace Xamarin.Android.Tasks
 			generator.WriteStructure (applicationConfigStructureInfo, application_config, "application_config", global: true);
 
 			WriteDSOCache (generator);
+			WriteBundledAssemblies (generator);
+			WriteAssemblyStoreAssemblies (generator);
+		}
+
+		void WriteAssemblyStoreAssemblies (LlvmIrGenerator generator)
+		{
+			ulong count = (ulong)(HaveAssemblyStore ? NumberOfAssembliesInApk : 0);
+			generator.WriteStructureArray<AssemblyStoreSingleAssemblyRuntimeData> (assemblyStoreSingleAssemblyRuntimeDataStructureinfo, count, "assembly_store_bundled_assemblies", constant: false, global: true, initialComment: "Assembly store individual assembly data");
+
+			count = (ulong)(HaveAssemblyStore ? NumberOfAssemblyStoresInApks : 0);
+			generator.WriteStructureArray<AssemblyStoreRuntimeData> (assemblyStoreRuntimeDataStructureInfo, count, "assembly_stores", constant: false, global: true, initialComment: "Assembly store data");
+		}
+
+		void WriteBundledAssemblies (LlvmIrGenerator generator)
+		{
+			// TODO: test it with actual data!
+			generator.WriteStructureArray (xamarinAndroidBundledAssemblyStructureInfo, xamarinAndroidBundledAssemblies, "bundled_assemblies", constant: false, global: true, initialComment: $"Bundled assembly name buffers, all {BundledAssemblyNameWidth} bytes long");
 		}
 
 		void WriteDSOCache (LlvmIrGenerator generator)
