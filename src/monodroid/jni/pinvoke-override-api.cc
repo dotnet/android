@@ -207,7 +207,9 @@ _monodroid_timezone_get_default_id ()
 static void
 _monodroid_counters_dump (const char *format, va_list args)
 {
+#if !defined (NET6)
 	monodroidRuntime.dump_counters_v (format, args);
+#endif // ndef NET6
 }
 
 static managed_timing_sequence*
