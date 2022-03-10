@@ -230,7 +230,7 @@ namespace Monodroid {
 		/// for example
 		///		layout\main.xml => layout_main.xml.flat
 		///		values\values.xml -> values_values.arsc.flat
-		///		values\strings.xml -> values_strings.arsc.flat
+		///		values\pointees.xml -> values_strings.arsc.flat
 		public static string CalculateAapt2FlatArchiveFileName (string file)
 		{
 			var dir = Path.GetFileName (Path.GetDirectoryName (file)).TrimEnd ('\\').TrimEnd ('/');

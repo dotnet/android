@@ -13,7 +13,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public string IRType        { get; }
 		public MemberInfo Info      { get; }
 		public Type MemberType      { get; }
+
+		/// <summary>
+		/// Size of a variable with this IR type. May differ to <see cref="BaseTypeSize"/> because the field
+		/// can be a pointer to type
+		/// </summary>
 		public ulong Size           { get; }
+
+		/// <summary>
+		/// Size of the member's base IR type.  If the variable is a pointer, this property will represent
+		/// the size of a base type, not the pointer.
+		/// </summary>
+		public ulong BaseTypeSize   { get; }
 		public bool IsNativePointer { get; }
 
 		public StructureMemberInfo (MemberInfo mi, LlvmIrGenerator generator)
@@ -44,6 +55,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 			}
 
+			BaseTypeSize = size;
 			if (IsNativePointer) {
 				size = (ulong)generator.PointerSize;
 			}

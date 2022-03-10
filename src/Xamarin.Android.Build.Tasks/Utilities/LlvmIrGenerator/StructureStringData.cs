@@ -1,11 +1,11 @@
 namespace Xamarin.Android.Tasks.LLVMIR
 {
-	sealed class StructureStringData
+	sealed class StructurePointerData
 	{
 		public string? VariableName { get; }
 		public ulong Size { get; }
 
-		public StructureStringData (string? name, ulong size)
+		public StructurePointerData (string? name, ulong size)
 		{
 			VariableName = name;
 			Size = size;

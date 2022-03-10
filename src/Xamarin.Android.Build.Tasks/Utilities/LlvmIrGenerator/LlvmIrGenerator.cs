@@ -44,6 +44,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		string fileName;
 		ulong stringCounter = 0;
 		ulong structStringCounter = 0;
+		ulong structBufferCounter = 0;
 
 		List<IStructureInfo> structures = new List<IStructureInfo> ();
 
@@ -161,10 +162,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return ret;
 		}
 
-		void WriteGlobalSymbolStart (string symbolName, bool constant, bool global)
+		void WriteGlobalSymbolStart (string symbolName, bool constant, bool global, bool addressSignificantInModule = false, bool isPrivate = true)
 		{
-			var sb = new StringBuilder (global ? String.Empty : "private ");
-			sb.Append ("local_unnamed_addr ");
+			var sb = new StringBuilder (global ? String.Empty : (isPrivate ? "private " : "internal "));
+			if (!addressSignificantInModule) {
+				sb.Append ("local_unnamed_addr ");
+			}
 			sb.Append (constant ? "constant " : "global ");
 
 			Output.Write ($"@{symbolName} = {sb.ToString ()}");
@@ -196,11 +199,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			string? str = (string?)GetTypedMemberValue (info, smi, instance, typeof(string), null);
 			if (str == null) {
-				instance.AddStringData (smi, null, 0);
+				instance.AddPointerData (smi, null, 0);
 				return false;
 			}
 			string variableName = WriteString ($"__{info.Name}_{smi.Info.Name}_{structStringCounter++}", str, out ulong size);
-			instance.AddStringData (smi, variableName, size);
+			instance.AddPointerData (smi, variableName, size);
 
 			return true;
 		}
@@ -217,9 +220,35 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return wroteSomething;
 		}
 
+		bool MaybeWritePreAllocatedBuffer<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance)
+		{
+			if (!smi.Info.IsNativePointerToPreallocatedBuffer (out ulong bufferSize)) {
+				return false;
+			}
+
+			if (smi.Info.UsesDataProvider ()) {
+				bufferSize = info.GetBufferSizeFromProvider (smi, instance);
+			}
+
+			string irType = MapManagedTypeToIR (smi.MemberType);
+			string variableName = $"__{info.Name}_{smi.Info.Name}_{structBufferCounter++}";
+
+			WriteGlobalSymbolStart (variableName, constant: false, global: false, addressSignificantInModule: true, isPrivate: false);
+			ulong size = bufferSize * smi.BaseTypeSize;
+			Output.WriteLine ($"[{bufferSize} x {irType}] zeroinitializer, align {GetAggregateAlignment ((int)smi.BaseTypeSize, size)}");
+			instance.AddPointerData (smi, variableName, size);
+			return true;
+		}
+
 		bool WriteStructurePreAllocatedBuffers<T> (StructureInfo<T> info, StructureInstance<T> instance)
 		{
 			bool wroteSomething = false;
+
+			foreach (StructureMemberInfo<T> smi in info.Members) {
+				if (MaybeWritePreAllocatedBuffer (info, smi, instance)) {
+					wroteSomething = true;
+				}
+			}
 
 			return wroteSomething;
 		}
@@ -240,7 +269,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				bool wroteSomething = false;
 
 				if (info.HasStrings) {
-					// TODO: potentially de-duplicate strings? The linker should do it for us, but why start with a mess?
+					// TODO: potentially de-duplicate pointees? The linker should do it for us, but why start with a mess?
 					foreach (StructureInstance<T> instance in instances) {
 						if (WriteStructureStrings (info, instance)) {
 							wroteSomething = true;
@@ -358,11 +387,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			void WritePointer (StructureMemberInfo<T> smi)
 			{
 				if (info.HasStrings) {
-					StructureStringData? ssd = instance.GetStringData (smi);
-					if (ssd != null) {
-						WriteGetStringPointer (ssd.VariableName, ssd.Size, indent: false);
+					StructurePointerData? spd = instance.GetPointerData (smi);
+					if (spd != null) {
+						WriteGetStringPointer (spd.VariableName, spd.Size, indent: false);
 						return;
 					}
+				}
+
+				if (info.HasPreAllocatedBuffers) {
+					StructurePointerData? spd = instance.GetPointerData (smi);
+					if (spd != null) {
+						WriteGetBufferPointer (spd.VariableName, smi.IRType, spd.Size, indent: false);
+						return;
+					}
+				}
+
+				if (smi.Info.PointsToSymbol (out string? symbolName) && !String.IsNullOrEmpty (symbolName)) {
+					ulong bufferSize = info.GetBufferSizeFromProvider (smi, instance);
+					WriteGetBufferPointer (symbolName, smi.IRType, bufferSize, indent: false);
+					return;
 				}
 
 				object? value = smi.GetValue (instance.Obj);
@@ -420,14 +463,26 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteGetStringPointer (string? variableName, ulong size, bool indent = true)
 		{
+			WriteGetBufferPointer (variableName, "i8*", size, indent);
+		}
+
+		void WriteGetBufferPointer (string? variableName, string irType, ulong size, bool indent = true)
+		{
 			if (indent) {
 				Output.Write (Indent);
 			}
 
 			if (String.IsNullOrEmpty (variableName)) {
-				Output.Write ($"i8* null");
+				Output.Write ($"{irType} null");
 			} else {
-				Output.Write ($"i8* getelementptr inbounds ([{size} x i8], [{size} x i8]* @{variableName}, i32 0, i32 0)");
+				string irBaseType;
+				if (irType[irType.Length - 1] == '*') {
+					irBaseType = irType.Substring (0, irType.Length - 1);
+				} else {
+					irBaseType = irType;
+				}
+
+				Output.Write ($"{irType} getelementptr inbounds ([{size} x {irBaseType}], [{size} x {irBaseType}]* @{variableName}, i32 0, i32 0)");
 			}
 		}
 

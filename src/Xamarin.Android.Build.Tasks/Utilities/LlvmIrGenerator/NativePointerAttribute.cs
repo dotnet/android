@@ -6,6 +6,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	class NativePointerAttribute : Attribute
 	{
 		public bool PointsToPreAllocatedBuffer { get; set; }
+		public ulong PreAllocatedBufferSize { get; set; } = 0;
 		public string? PointsToSymbol { get; set; }
 	}
 }

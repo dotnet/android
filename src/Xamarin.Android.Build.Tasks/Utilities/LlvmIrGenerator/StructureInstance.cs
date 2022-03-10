@@ -7,7 +7,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 {
 	class StructureInstance<T>
 	{
-		Dictionary<StructureMemberInfo<T>, StructureStringData>? strings;
+		Dictionary<StructureMemberInfo<T>, StructurePointerData>? pointees;
 
 		public T Obj { get; }
 
@@ -16,18 +16,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Obj = instance;
 		}
 
-		public void AddStringData (StructureMemberInfo<T> smi, string? variableName, ulong stringSize)
+		public void AddPointerData (StructureMemberInfo<T> smi, string? variableName, ulong dataSize)
 		{
-			if (strings == null) {
-				strings = new Dictionary<StructureMemberInfo<T>, StructureStringData> ();
+			if (pointees == null) {
+				pointees = new Dictionary<StructureMemberInfo<T>, StructurePointerData> ();
 			}
 
-			strings.Add (smi, new StructureStringData (variableName, stringSize));
+			pointees.Add (smi, new StructurePointerData (variableName, dataSize));
 		}
 
-		public StructureStringData? GetStringData (StructureMemberInfo<T> smi)
+		public StructurePointerData? GetPointerData (StructureMemberInfo<T> smi)
 		{
-			if (strings != null && strings.TryGetValue (smi, out StructureStringData ssd)) {
+			if (pointees != null && pointees.TryGetValue (smi, out StructurePointerData ssd)) {
 				return ssd;
 			}
 

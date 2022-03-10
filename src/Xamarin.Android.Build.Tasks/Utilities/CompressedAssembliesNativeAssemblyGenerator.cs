@@ -38,8 +38,22 @@ namespace Xamarin.Android.Tasks
 			public byte data;
 		};
 
+		sealed class CompressedAssembliesContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override ulong GetBufferSize (object data, string fieldName)
+			{
+				if (String.Compare ("descriptors", fieldName, StringComparison.Ordinal) != 0) {
+					return 0;
+				}
+
+				var cas = EnsureType<CompressedAssemblies> (data);
+				return cas.count;
+			}
+		}
+
 		// Order of fields and their type must correspond *exactly* to that in
 		// src/monodroid/jni/xamarin-app.hh CompressedAssemblies structure
+		[NativeAssemblerStructContextDataProvider (typeof (CompressedAssembliesContextDataProvider))]
 		sealed class CompressedAssemblies
 		{
 			public uint count;
@@ -52,6 +66,7 @@ namespace Xamarin.Android.Tasks
 		StructureInfo<CompressedAssemblyDescriptor> compressedAssemblyDescriptorStructureInfo;
 		StructureInfo<CompressedAssemblies> compressedAssembliesStructureInfo;
 		List<StructureInstance<CompressedAssemblyDescriptor>>? compressedAssemblyDescriptors;
+		StructureInstance<CompressedAssemblies> compressedAssemblies;
 
 		public LlvmCompressedAssembliesNativeAssemblyGenerator (IDictionary<string, CompressedAssemblyInfo> assemblies)
 		{
@@ -77,6 +92,8 @@ namespace Xamarin.Android.Tasks
 
 				compressedAssemblyDescriptors.Add (new StructureInstance<CompressedAssemblyDescriptor> (descriptor));
 			}
+
+			compressedAssemblies = new StructureInstance<CompressedAssemblies> (new CompressedAssemblies { count = (uint)assemblies.Count });
 		}
 
 		protected override void MapStructures (LlvmIrGenerator generator)
@@ -93,6 +110,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			generator.WriteStructureArray<CompressedAssemblyDescriptor> (compressedAssemblyDescriptorStructureInfo, compressedAssemblyDescriptors, DescriptorsArraySymbolName, constant: false, initialComment: "Compressed assembly data storage");
+			generator.WriteStructure (compressedAssembliesStructureInfo, compressedAssemblies, CompressedAssembliesSymbolName, constant: false, global: true);
 		}
 	}
 

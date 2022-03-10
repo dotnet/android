@@ -56,6 +56,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return ret;
 		}
 
+		public ulong GetBufferSizeFromProvider (StructureMemberInfo<T> smi, StructureInstance<T> instance)
+		{
+			if (DataProvider == null) {
+				return 0;
+			}
+
+			return DataProvider.GetBufferSize (instance.Obj, smi.Info.Name);
+		}
+
 		ulong GatherMembers (Type type, LlvmIrGenerator generator)
 		{
 			ulong size = 0;
@@ -75,7 +84,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					HasStrings = true;
 				}
 
-				if (!HasPreAllocatedBuffers && info.Info.IsNativePointerToPreallocatedBuffer ()) {
+				if (!HasPreAllocatedBuffers && info.Info.IsNativePointerToPreallocatedBuffer (out ulong _)) {
 					HasPreAllocatedBuffers = true;
 				}
 			}
