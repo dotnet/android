@@ -105,12 +105,12 @@ namespace Xamarin.Android.Tasks
 		protected override void Write (LlvmIrGenerator generator)
 		{
 			if (compressedAssemblyDescriptors == null) {
-				generator.WriteStructure (compressedAssembliesStructureInfo, null, CompressedAssembliesSymbolName, constant: false, global: true);
+				generator.WriteStructure (compressedAssembliesStructureInfo, null, CompressedAssembliesSymbolName);
 				return;
 			}
 
-			generator.WriteStructureArray<CompressedAssemblyDescriptor> (compressedAssemblyDescriptorStructureInfo, compressedAssemblyDescriptors, DescriptorsArraySymbolName, constant: false, initialComment: "Compressed assembly data storage");
-			generator.WriteStructure (compressedAssembliesStructureInfo, compressedAssemblies, CompressedAssembliesSymbolName, constant: false, global: true);
+			generator.WriteStructureArray<CompressedAssemblyDescriptor> (compressedAssemblyDescriptorStructureInfo, compressedAssemblyDescriptors, LlvmIrVariableOptions.LocalConstant, DescriptorsArraySymbolName, initialComment: "Compressed assembly data storage");
+			generator.WriteStructure (compressedAssembliesStructureInfo, compressedAssemblies, CompressedAssembliesSymbolName);
 		}
 	}
 

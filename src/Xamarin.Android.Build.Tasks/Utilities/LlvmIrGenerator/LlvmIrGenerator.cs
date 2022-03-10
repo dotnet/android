@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text;
 
 using Xamarin.Android.Tools;
@@ -13,6 +12,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		static readonly Dictionary<Type, string> typeMap = new Dictionary<Type, string> {
 			{ typeof (bool), "i8" },
 			{ typeof (byte), "i8" },
+			{ typeof (char), "i8" },
 			{ typeof (sbyte), "i8" },
             { typeof (short), "i16" },
             { typeof (ushort), "i16" },
@@ -30,6 +30,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		static readonly Dictionary<Type, ulong> typeSizes = new Dictionary<Type, ulong> {
 			{ typeof (bool), 1 },
 			{ typeof (byte), 1 },
+			{ typeof (char), 1 },
 			{ typeof (sbyte), 1 },
             { typeof (short), 2 },
             { typeof (ushort), 2 },
@@ -39,6 +40,48 @@ namespace Xamarin.Android.Tasks.LLVMIR
             { typeof (ulong), 8 },
             { typeof (float), 4 }, // floats are 32-bit
             { typeof (double), 8 }, // doubles are 64-bit
+		};
+
+		static readonly Dictionary<LlvmIrLinkage, string> llvmLinkage = new Dictionary<LlvmIrLinkage, string> {
+			{ LlvmIrLinkage.Default, String.Empty },
+			{ LlvmIrLinkage.Private, "private" },
+			{ LlvmIrLinkage.Internal, "internal" },
+			{ LlvmIrLinkage.AvailableExternally, "available_externally" },
+			{ LlvmIrLinkage.LinkOnce, "linkonce" },
+			{ LlvmIrLinkage.Weak, "weak" },
+			{ LlvmIrLinkage.Common, "common" },
+			{ LlvmIrLinkage.Appending, "appending" },
+			{ LlvmIrLinkage.ExternWeak, "extern_weak" },
+			{ LlvmIrLinkage.LinkOnceODR, "linkonce_odr" },
+			{ LlvmIrLinkage.External, "external" },
+		};
+
+		static readonly Dictionary<LlvmIrRuntimePreemption, string> llvmRuntimePreemption = new Dictionary<LlvmIrRuntimePreemption, string> {
+			{ LlvmIrRuntimePreemption.Default, String.Empty },
+			{ LlvmIrRuntimePreemption.DSOPreemptable, "dso_preemptable" },
+			{ LlvmIrRuntimePreemption.DSOLocal, "dso_local" },
+		};
+
+		static readonly Dictionary<LlvmIrVisibility, string> llvmVisibility = new Dictionary<LlvmIrVisibility, string> {
+			{ LlvmIrVisibility.Default, "default" },
+			{ LlvmIrVisibility.Hidden, "hidden" },
+			{ LlvmIrVisibility.Protected, "protected" },
+		};
+
+		static readonly Dictionary<LlvmIrAddressSignificance, string> llvmAddressSignificance = new Dictionary<LlvmIrAddressSignificance, string> {
+			{ LlvmIrAddressSignificance.Default, String.Empty },
+			{ LlvmIrAddressSignificance.Unnamed, "unnamed_addr" },
+			{ LlvmIrAddressSignificance.LocalUnnamed, "local_unnamed_addr" },
+		};
+
+		static readonly Dictionary<LlvmIrWritability, string> llvmWritability = new Dictionary<LlvmIrWritability, string> {
+			{ LlvmIrWritability.Constant, "constant" },
+			{ LlvmIrWritability.Writable, "global" },
+		};
+
+		static readonly LlvmIrVariableOptions preAllocatedBufferVariableOptions = new LlvmIrVariableOptions {
+			Writability = LlvmIrWritability.Writable,
+			Linkage = LlvmIrLinkage.Internal,
 		};
 
 		string fileName;
@@ -162,15 +205,24 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return ret;
 		}
 
-		void WriteGlobalSymbolStart (string symbolName, bool constant, bool global, bool addressSignificantInModule = false, bool isPrivate = true)
+		void WriteGlobalSymbolStart (string symbolName, LlvmIrVariableOptions options)
 		{
-			var sb = new StringBuilder (global ? String.Empty : (isPrivate ? "private " : "internal "));
-			if (!addressSignificantInModule) {
-				sb.Append ("local_unnamed_addr ");
-			}
-			sb.Append (constant ? "constant " : "global ");
+			var sb = new StringBuilder (llvmLinkage[options.Linkage]);
+			if (options.AddressSignificance != LlvmIrAddressSignificance.Default) {
+				if (sb.Length > 0) {
+					sb.Append (' ');
+				}
 
-			Output.Write ($"@{symbolName} = {sb.ToString ()}");
+				sb.Append (llvmAddressSignificance[options.AddressSignificance]);
+			}
+
+			if (sb.Length > 0) {
+				sb.Append (' ');
+			}
+
+			sb.Append (llvmWritability[options.Writability]);
+
+			Output.Write ($"@{symbolName} = {sb.ToString ()} ");
 		}
 
 		object? GetTypedMemberValue<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, Type expectedType, object? defaultValue = null)
@@ -233,7 +285,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			string irType = MapManagedTypeToIR (smi.MemberType);
 			string variableName = $"__{info.Name}_{smi.Info.Name}_{structBufferCounter++}";
 
-			WriteGlobalSymbolStart (variableName, constant: false, global: false, addressSignificantInModule: true, isPrivate: false);
+			WriteGlobalSymbolStart (variableName, preAllocatedBufferVariableOptions);
 			ulong size = bufferSize * smi.BaseTypeSize;
 			Output.WriteLine ($"[{bufferSize} x {irType}] zeroinitializer, align {GetAggregateAlignment ((int)smi.BaseTypeSize, size)}");
 			instance.AddPointerData (smi, variableName, size);
@@ -253,9 +305,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return wroteSomething;
 		}
 
-		bool WriteStructureArrayStart<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool constant = true, bool global = false, string? initialComment = null)
+		bool WriteStructureArrayStart<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options, string? symbolName = null, string? initialComment = null)
 		{
-			if (global && String.IsNullOrEmpty (symbolName)) {
+			if (options.IsGlobal && String.IsNullOrEmpty (symbolName)) {
 				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
 			}
 
@@ -297,7 +349,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			if (named) {
-				WriteGlobalSymbolStart (symbolName, constant, global);
+				WriteGlobalSymbolStart (symbolName, options);
 			}
 
 			return named;
@@ -316,18 +368,23 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// <summary>
 		/// Writes an array of <paramref name="count"/> zero-initialized entries
 		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true, string? initialComment = null)
+		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
 		{
-			bool named = WriteStructureArrayStart<T> (info, null, symbolName, constant, global, initialComment);
+			bool named = WriteStructureArrayStart<T> (info, null, options, symbolName, initialComment);
 
 			Output.Write ($"[{count} x %struct.{info.Name}] zeroinitializer");
 
 			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: true);
 		}
 
-		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true, string? initialComment = null)
+		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
 		{
-			bool named = WriteStructureArrayStart<T> (info, instances, symbolName, constant, global, initialComment);
+			WriteStructureArray<T> (info, count, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
+		}
+
+		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
+		{
+			bool named = WriteStructureArrayStart<T> (info, instances, options, symbolName, initialComment);
 			int count = instances != null ? instances.Count : 0;
 
 			Output.Write ($"[{count} x %struct.{info.Name}] ");
@@ -349,6 +406,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: instances == null);
+		}
+
+		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
+		{
+			WriteStructureArray<T> (info, instances, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
 		}
 
 		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, bool writeFieldComment, string fieldIndent, string structIndent)
@@ -431,9 +493,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, string? symbolName = null, bool constant = true, bool global = false, bool writeFieldComment = true)
+		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true)
 		{
-			if (global && String.IsNullOrEmpty (symbolName)) {
+			if (options.IsGlobal && String.IsNullOrEmpty (symbolName)) {
 				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
 			}
 
@@ -454,11 +516,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			if (named) {
-				WriteGlobalSymbolStart (symbolName, constant, global);
+				WriteGlobalSymbolStart (symbolName, options);
 			}
 
 			WriteStructureBody (info, instance, writeFieldComment, fieldIndent: Indent, structIndent: String.Empty);
 			Output.WriteLine ($", align {info.MaxFieldAlignment}");
+		}
+
+		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, string? symbolName = null, bool writeFieldComment = true)
+		{
+			WriteStructure<T> (info, instance, LlvmIrVariableOptions.Default, symbolName, writeFieldComment);
 		}
 
 		void WriteGetStringPointer (string? variableName, ulong size, bool indent = true)
@@ -486,7 +553,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public void WriteNameValueArray (string symbolName, IDictionary<string, string> arrayContents, bool constexprStrings = true)
+		public void WriteNameValueArray (string symbolName, IDictionary<string, string> arrayContents)
 		{
 			WriteEOL ();
 			WriteEOL (symbolName);
@@ -505,7 +572,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				Output.WriteLine ();
 			}
 
-			Output.Write ($"@{symbolName} = local_unnamed_addr constant [{strings.Count} x i8*]");
+			WriteGlobalSymbolStart (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer);
+			Output.Write ($"[{strings.Count} x i8*]");
 
 			if (strings.Count > 0) {
 				Output.WriteLine (" [");
@@ -541,54 +609,76 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WriteArrayString (string str, string symbolSuffix)
 			{
-				string name = WriteString ($"__{symbolName}_{symbolSuffix}", str, out ulong size, global: false);
+				string name = WriteString ($"__{symbolName}_{symbolSuffix}", str, LlvmIrVariableOptions.LocalConstexprString, out ulong size);
 				strings.Add (new (size, name));
 			}
 		}
 
-		public void WriteVariable<T> (string symbolName, T value, bool global = true, bool isConstant = true)
+		/// <summary>
+		/// Wries a global, constant variable
+		/// </summary>
+		public void WriteVariable<T> (string symbolName, T value)
+		{
+			WriteVariable (symbolName, value, LlvmIrVariableOptions.GlobalConstant);
+		}
+
+		public void WriteVariable<T> (string symbolName, T value, LlvmIrVariableOptions options)
 		{
 			if (typeof(T) == typeof(string)) {
-				WriteString (symbolName, (string)(object)value, global, isConstant);
+				WriteString (symbolName, (string)(object)value, options);
 				return;
 			}
 
 			string irType = MapManagedTypeToIR<T> (out ulong size);
-			string options = global ? String.Empty : "internal ";
-			string type = isConstant ? "constant" : "global";
+			WriteGlobalSymbolStart (symbolName, options);
 
-			Output.WriteLine ($"@{symbolName} = {options}local_unnamed_addr {type} {irType} {value}, align {size}");
+			Output.WriteLine ($"{irType} {value}, align {size}");
 		}
 
 		/// <summary>
 		/// Writes a private string. Strings without symbol names aren't exported, but they may be referenced by other
 		/// symbols
 		/// </summary>
-		public string WriteString (string value, bool constexpr = true)
+		public string WriteString (string value)
+		{
+			return WriteString (value, LlvmIrVariableOptions.LocalString);
+		}
+
+		public string WriteString (string value, LlvmIrVariableOptions options)
 		{
 			string name = $"@.str";
 			if (stringCounter > 0) {
 				name += $".{stringCounter}";
 			}
 			stringCounter++;
-			return WriteString (name, value, global: false, constexpr: constexpr);
+			return WriteString (name, value, options);
 		}
 
-		public string WriteString (string symbolName, string value, bool global = false, bool constexpr = true)
+		/// <summary>
+		/// Writes a local, C++ constexpr style string
+		/// </summary>
+		public string WriteString (string symbolName, string value)
 		{
-			return WriteString (symbolName, value, out _, global, constexpr);
+			return WriteString (symbolName, value, LlvmIrVariableOptions.GlobalConstexprString);
 		}
 
-		public string WriteString (string symbolName, string value, out ulong stringSize, bool global = false, bool constexpr = true)
+		public string WriteString (string symbolName, string value, LlvmIrVariableOptions options)
 		{
-			string options;
-			if (constexpr) {
-				options = "internal";
-			} else {
-				options = "private unnamed_addr";
-			}
+			return WriteString (symbolName, value, options, out _);
+		}
 
+		/// <summary>
+		/// Writes a local, constexpr style string and returns its size in <paramref name="stringSize"/>
+		/// </summary>
+		public string WriteString (string symbolName, string value, out ulong stringSize)
+		{
+			return WriteString (symbolName, value, LlvmIrVariableOptions.LocalConstexprString, out stringSize);
+		}
+
+		public string WriteString (string symbolName, string value, LlvmIrVariableOptions options, out ulong stringSize)
+		{
 			string strSymbolName;
+			bool global = options.IsGlobal;
 			if (global) {
 				strSymbolName = $"__{symbolName}";
 			} else {
@@ -596,13 +686,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			string quotedString = QuoteString (value, out stringSize);
-			Output.WriteLine ($"@{strSymbolName} = {options} constant [{stringSize} x i8] c{quotedString}, align {GetAggregateAlignment (1, stringSize)}");
+
+			// It might seem counter-intuitive that when we're requested to write a global string, here we generate a **local** one,
+			// but global strings are actually pointers to local storage.
+			WriteGlobalSymbolStart (strSymbolName, global ? LlvmIrVariableOptions.LocalConstexprString : options);
+			Output.WriteLine ($"[{stringSize} x i8] c{quotedString}, align {GetAggregateAlignment (1, stringSize)}");
 			if (!global) {
 				return symbolName;
 			}
 
 			string indexType = Is64Bit ? "i64" : "i32";
-			Output.WriteLine ($"@{symbolName} = local_unnamed_addr constant i8* getelementptr inbounds ([{stringSize} x i8], [{stringSize} x i8]* @{strSymbolName}, {indexType} 0, {indexType} 0), align {GetAggregateAlignment (PointerSize, stringSize)}");
+			WriteGlobalSymbolStart (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer);
+			Output.WriteLine ($"i8* getelementptr inbounds ([{stringSize} x i8], [{stringSize} x i8]* @{strSymbolName}, {indexType} 0, {indexType} 0), align {GetAggregateAlignment (PointerSize, stringSize)}");
 
 			return symbolName;
 		}

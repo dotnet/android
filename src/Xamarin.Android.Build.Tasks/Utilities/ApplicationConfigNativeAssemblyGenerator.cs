@@ -106,8 +106,22 @@ namespace Xamarin.Android.Tasks
 			public AssemblyStoreAssemblyDescriptor assemblies;
 		}
 
+		sealed class XamarinAndroidBundledAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override ulong GetBufferSize (object data, string fieldName)
+			{
+				if (String.Compare ("name", fieldName, StringComparison.Ordinal) != 0) {
+					return 0;
+				}
+
+				var xaba = EnsureType<XamarinAndroidBundledAssembly> (data);
+				return xaba.name_length;
+			}
+		}
+
 		// Order of fields and their type must correspond *exactly* to that in
 		// src/monodroid/jni/xamarin-app.hh XamarinAndroidBundledAssembly structure
+		[NativeAssemblerStructContextDataProvider (typeof (XamarinAndroidBundledAssemblyContextDataProvider))]
 		sealed class XamarinAndroidBundledAssembly
 		{
 			public int  apk_fd;
@@ -117,7 +131,9 @@ namespace Xamarin.Android.Tasks
 			[NativePointer]
 			public byte data;
 			public uint name_length;
-			public string? name;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
+			public char name;
 		}
 
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
@@ -202,8 +218,8 @@ namespace Xamarin.Android.Tasks
 					data_offset = 0,
 					data_size = 0,
 					data = 0,
-					name_length = 0,
-					name = null,
+					name_length = (uint)BundledAssemblyNameWidth,
+					name = '\0',
 				};
 
 				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
@@ -287,12 +303,12 @@ namespace Xamarin.Android.Tasks
 		protected override void Write (LlvmIrGenerator generator)
 		{
 			generator.WriteVariable ("format_tag", FORMAT_TAG);
-			generator.WriteString ("mono_aot_mode_name", MonoAOTMode, global: true);
+			generator.WriteString ("mono_aot_mode_name", MonoAOTMode);
 
 			generator.WriteNameValueArray ("app_environment_variables", environmentVariables);
 			generator.WriteNameValueArray ("app_system_properties", systemProperties);
 
-			generator.WriteStructure (applicationConfigStructureInfo, application_config, "application_config", global: true);
+			generator.WriteStructure (applicationConfigStructureInfo, application_config, LlvmIrVariableOptions.GlobalConstant, "application_config");
 
 			WriteDSOCache (generator);
 			WriteBundledAssemblies (generator);
@@ -302,15 +318,15 @@ namespace Xamarin.Android.Tasks
 		void WriteAssemblyStoreAssemblies (LlvmIrGenerator generator)
 		{
 			ulong count = (ulong)(HaveAssemblyStore ? NumberOfAssembliesInApk : 0);
-			generator.WriteStructureArray<AssemblyStoreSingleAssemblyRuntimeData> (assemblyStoreSingleAssemblyRuntimeDataStructureinfo, count, "assembly_store_bundled_assemblies", constant: false, global: true, initialComment: "Assembly store individual assembly data");
+			generator.WriteStructureArray<AssemblyStoreSingleAssemblyRuntimeData> (assemblyStoreSingleAssemblyRuntimeDataStructureinfo, count, "assembly_store_bundled_assemblies", initialComment: "Assembly store individual assembly data");
 
 			count = (ulong)(HaveAssemblyStore ? NumberOfAssemblyStoresInApks : 0);
-			generator.WriteStructureArray<AssemblyStoreRuntimeData> (assemblyStoreRuntimeDataStructureInfo, count, "assembly_stores", constant: false, global: true, initialComment: "Assembly store data");
+			generator.WriteStructureArray<AssemblyStoreRuntimeData> (assemblyStoreRuntimeDataStructureInfo, count, "assembly_stores", initialComment: "Assembly store data");
 		}
 
 		void WriteBundledAssemblies (LlvmIrGenerator generator)
 		{
-			generator.WriteStructureArray (xamarinAndroidBundledAssemblyStructureInfo, xamarinAndroidBundledAssemblies, "bundled_assemblies", constant: false, global: true, initialComment: $"Bundled assembly name buffers, all {BundledAssemblyNameWidth} bytes long");
+			generator.WriteStructureArray (xamarinAndroidBundledAssemblyStructureInfo, xamarinAndroidBundledAssemblies, "bundled_assemblies", initialComment: $"Bundled assembly name buffers, all {BundledAssemblyNameWidth} bytes long");
 		}
 
 		void WriteDSOCache (LlvmIrGenerator generator)
@@ -323,7 +339,7 @@ namespace Xamarin.Android.Tasks
 			}
 			dsoCache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Obj.hash.CompareTo (b.Obj.hash));
 
-			generator.WriteStructureArray (dsoCacheEntryStructureInfo, dsoCache, "dso_cache", constant: false, global: true);
+			generator.WriteStructureArray (dsoCacheEntryStructureInfo, dsoCache, "dso_cache");
 
 			ulong HashName (string name)
 			{
