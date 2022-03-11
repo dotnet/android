@@ -203,16 +203,15 @@ namespace xamarin::android::internal
 			monodroid_gdb_wait = yes_no;
 		}
 
-		FILE *get_counters () const
-		{
-			return counters;
-		}
-
 #if defined (NET6)
 		void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException);
 #else // def NET6
 		void propagate_uncaught_exception (MonoDomain *domain, JNIEnv *env, jobject javaThread, jthrowable javaException);
-#endif // ndef NET6
+
+		FILE *get_counters () const
+		{
+			return counters;
+		}
 
 		// The reason we don't use the C++ overload feature here is that there appears to be an issue in clang++ that
 		// comes with the Android NDK. The issue is that for calls like:
@@ -231,6 +230,8 @@ namespace xamarin::android::internal
 		// function
 		void dump_counters (const char *format, ...);
 		void dump_counters_v (const char *format, va_list args);
+#endif // ndef NET6
+
 		char*	get_java_class_name_for_TypeManager (jclass klass);
 
 	private:
@@ -358,7 +359,10 @@ namespace xamarin::android::internal
 		timing_period       jit_time;
 		FILE               *jit_log;
 		MonoProfilerHandle  profiler_handle;
+#if !defined (NET6)
 		FILE               *counters;
+#endif // ndef NET6
+
 		/*
 		 * If set, monodroid will spin in a loop until the debugger breaks the wait by
 		 * clearing monodroid_gdb_wait.

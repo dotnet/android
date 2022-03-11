@@ -303,6 +303,12 @@ namespace Xamarin.Android.Build.Tests
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 
+			string wantedFile;
+			if (Builder.UseDotNet) {
+				wantedFile = "methods.txt";
+			} else {
+				wantedFile = "counters.txt";
+			}
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 				RunAdbCommand ("shell setprop debug.mono.log timing");
@@ -312,7 +318,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.True (didLaunch, "Activity should have started.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				builder.Uninstall (proj);
-				StringAssert.Contains ("counters.txt", directorylist, $"counters.txt did not exist in the .__override__ directory.\nFound:{directorylist}");
+				StringAssert.Contains (wantedFile, directorylist, $"{wantedFile} did not exist in the .__override__ directory.\nFound:{directorylist}");
 			}
 		}
 
