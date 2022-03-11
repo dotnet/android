@@ -66,7 +66,7 @@
       <Replacement Include="@DotNetEmscriptenManifestVersionBand@=$(DotNetEmscriptenManifestVersionBand)" />
       <Replacement Include="@MicrosoftDotnetSdkInternalPackageVersion@=$(MicrosoftDotnetSdkInternalPackageVersion)" />
       <Replacement Include="@MicrosoftNETCoreAppRefPackageVersion@=$(MicrosoftNETCoreAppRefPackageVersion)" />
-      <Replacement Include="@MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion@=$(MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion)" />
+      <Replacement Include="@MicrosoftNETWorkloadEmscriptenPackageVersion@=$(MicrosoftNETWorkloadEmscriptenPackageVersion)" />
       <Replacement Include="@EmulatorVersion@=$(EmulatorVersion)" />
       <Replacement Include="@EmulatorPkgRevision@=$(EmulatorPkgRevision)" />
       <Replacement Include="@HostOS@=$(HostOS)" />

@@ -28,7 +28,7 @@ namespace Xamarin.Android.Prepare
 		public const string DotNetEmscriptenManifestVersionBand = nameof (DotNetEmscriptenManifestVersionBand);
 		public const string MicrosoftDotnetSdkInternalPackageVersion = "MicrosoftDotnetSdkInternalPackageVersion";
 		public const string MicrosoftNETCoreAppRefPackageVersion = "MicrosoftNETCoreAppRefPackageVersion";
-		public const string MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion = "MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion";
+		public const string MicrosoftNETWorkloadEmscriptenPackageVersion = "MicrosoftNETWorkloadEmscriptenPackageVersion";
 		public const string EmulatorVersion                     = "EmulatorVersion";
 		public const string EmulatorPkgRevision                 = "EmulatorPkgRevision";
 		public const string HostOS                              = "HostOS";

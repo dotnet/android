@@ -335,7 +335,7 @@ namespace Xamarin.Android.Prepare
 			public static string MicrosoftNETWorkloadEmscriptenPackageDir => Path.Combine (
 				XAPackagesDir,
 				$"microsoft.net.workload.emscripten.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand)}",
-				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion)
+				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenPackageVersion)
 			);
 
 			public static string MicrosoftNETWorkloadEmscriptenDir => Path.Combine (MicrosoftNETWorkloadEmscriptenPackageDir, "data");
