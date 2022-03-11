@@ -32,7 +32,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.DotNetEmscriptenManifestVersionBand, StripQuotes (@"@DotNetEmscriptenManifestVersionBand@"));
 			properties.Add (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion, StripQuotes ("@MicrosoftDotnetSdkInternalPackageVersion@"));
 			properties.Add (KnownProperties.MicrosoftNETCoreAppRefPackageVersion, StripQuotes ("@MicrosoftNETCoreAppRefPackageVersion@"));
-			properties.Add (KnownProperties.MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion, StripQuotes ("@MicrosoftNETWorkloadEmscriptenManifest60100PackageVersion@"));
+			properties.Add (KnownProperties.MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion, StripQuotes ("@MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion@"));
 			properties.Add (KnownProperties.EmulatorVersion,                     StripQuotes ("@EmulatorVersion@"));
 			properties.Add (KnownProperties.EmulatorPkgRevision,                 StripQuotes ("@EmulatorPkgRevision@"));
 			properties.Add (KnownProperties.HostOS,                              StripQuotes ("@HostOS@"));
