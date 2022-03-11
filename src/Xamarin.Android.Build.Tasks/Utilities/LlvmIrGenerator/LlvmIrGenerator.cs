@@ -9,20 +9,41 @@ namespace Xamarin.Android.Tasks.LLVMIR
 {
 	abstract class LlvmIrGenerator
 	{
+		ref struct StructureBodyWriterOptions
+		{
+			public readonly bool WriteFieldComment;
+			public readonly string FieldIndent;
+			public readonly string StructIndent;
+			public readonly TextWriter? StructureOutput;
+			public readonly TextWriter? StringsOutput;
+			public readonly TextWriter? BuffersOutput;
+
+			public StructureBodyWriterOptions (bool writeFieldComment, string fieldIndent = "", string structIndent = "",
+			                                   TextWriter? structureOutput = null, TextWriter? stringsOutput = null, TextWriter? buffersOutput = null)
+			{
+				WriteFieldComment = writeFieldComment;
+				FieldIndent = fieldIndent;
+				StructIndent = structIndent;
+				StructureOutput = structureOutput;
+				StringsOutput = stringsOutput;
+				BuffersOutput = buffersOutput;
+			}
+		}
+
 		static readonly Dictionary<Type, string> typeMap = new Dictionary<Type, string> {
 			{ typeof (bool), "i8" },
 			{ typeof (byte), "i8" },
 			{ typeof (char), "i8" },
 			{ typeof (sbyte), "i8" },
-            { typeof (short), "i16" },
-            { typeof (ushort), "i16" },
-            { typeof (int), "i32" },
-            { typeof (uint), "i32" },
-            { typeof (long), "i64" },
-            { typeof (ulong), "i64" },
-            { typeof (float), "float" },
-            { typeof (double), "double" },
-            { typeof (string), "i8*" },
+			{ typeof (short), "i16" },
+			{ typeof (ushort), "i16" },
+			{ typeof (int), "i32" },
+			{ typeof (uint), "i32" },
+			{ typeof (long), "i64" },
+			{ typeof (ulong), "i64" },
+			{ typeof (float), "float" },
+			{ typeof (double), "double" },
+			{ typeof (string), "i8*" },
 			{ typeof (IntPtr), "i8*" },
 		};
 
@@ -32,14 +53,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			{ typeof (byte), 1 },
 			{ typeof (char), 1 },
 			{ typeof (sbyte), 1 },
-            { typeof (short), 2 },
-            { typeof (ushort), 2 },
-            { typeof (int), 4 },
-            { typeof (uint), 4 },
-            { typeof (long), 8 },
-            { typeof (ulong), 8 },
-            { typeof (float), 4 }, // floats are 32-bit
-            { typeof (double), 8 }, // doubles are 64-bit
+			{ typeof (short), 2 },
+			{ typeof (ushort), 2 },
+			{ typeof (int), 4 },
+			{ typeof (uint), 4 },
+			{ typeof (long), 8 },
+			{ typeof (ulong), 8 },
+			{ typeof (float), 4 }, // floats are 32-bit
+			{ typeof (double), 8 }, // doubles are 64-bit
 		};
 
 		static readonly Dictionary<LlvmIrLinkage, string> llvmLinkage = new Dictionary<LlvmIrLinkage, string> {
@@ -205,8 +226,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return ret;
 		}
 
-		void WriteGlobalSymbolStart (string symbolName, LlvmIrVariableOptions options)
+		TextWriter EnsureOutput (TextWriter? output)
 		{
+			return output ?? Output;
+		}
+
+		void WriteGlobalSymbolStart (string symbolName, LlvmIrVariableOptions options, TextWriter? output = null)
+		{
+			output = EnsureOutput (output);
+
 			var sb = new StringBuilder (llvmLinkage[options.Linkage]);
 			if (options.AddressSignificance != LlvmIrAddressSignificance.Default) {
 				if (sb.Length > 0) {
@@ -222,7 +250,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			sb.Append (llvmWritability[options.Writability]);
 
-			Output.Write ($"@{symbolName} = {sb.ToString ()} ");
+			output.Write ($"@{symbolName} = {sb.ToString ()} ");
 		}
 
 		object? GetTypedMemberValue<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, Type expectedType, object? defaultValue = null)
@@ -243,12 +271,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return value;
 		}
 
-		bool MaybeWriteStructureString<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance)
+		bool MaybeWriteStructureString<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, TextWriter? output = null)
 		{
 			if (smi.MemberType != typeof(string)) {
 				return false;
 			}
 
+			output = EnsureOutput (output);
 			string? str = (string?)GetTypedMemberValue (info, smi, instance, typeof(string), null);
 			if (str == null) {
 				instance.AddPointerData (smi, null, 0);
@@ -260,19 +289,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return true;
 		}
 
-		bool WriteStructureStrings<T> (StructureInfo<T> info, StructureInstance<T> instance)
-		{
-			bool wroteSomething = false;
-			foreach (StructureMemberInfo<T> smi in info.Members) {
-				if (MaybeWriteStructureString (info, smi, instance)) {
-					wroteSomething = true;
-				}
-			}
-
-			return wroteSomething;
-		}
-
-		bool MaybeWritePreAllocatedBuffer<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance)
+		bool MaybeWritePreAllocatedBuffer<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, TextWriter? output = null)
 		{
 			if (!smi.Info.IsNativePointerToPreallocatedBuffer (out ulong bufferSize)) {
 				return false;
@@ -282,30 +299,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				bufferSize = info.GetBufferSizeFromProvider (smi, instance);
 			}
 
+			output = EnsureOutput (output);
 			string irType = MapManagedTypeToIR (smi.MemberType);
 			string variableName = $"__{info.Name}_{smi.Info.Name}_{structBufferCounter++}";
 
-			WriteGlobalSymbolStart (variableName, preAllocatedBufferVariableOptions);
+			WriteGlobalSymbolStart (variableName, preAllocatedBufferVariableOptions, output);
 			ulong size = bufferSize * smi.BaseTypeSize;
-			Output.WriteLine ($"[{bufferSize} x {irType}] zeroinitializer, align {GetAggregateAlignment ((int)smi.BaseTypeSize, size)}");
+			output.WriteLine ($"[{bufferSize} x {irType}] zeroinitializer, align {GetAggregateAlignment ((int)smi.BaseTypeSize, size)}");
 			instance.AddPointerData (smi, variableName, size);
 			return true;
 		}
 
-		bool WriteStructurePreAllocatedBuffers<T> (StructureInfo<T> info, StructureInstance<T> instance)
-		{
-			bool wroteSomething = false;
-
-			foreach (StructureMemberInfo<T> smi in info.Members) {
-				if (MaybeWritePreAllocatedBuffer (info, smi, instance)) {
-					wroteSomething = true;
-				}
-			}
-
-			return wroteSomething;
-		}
-
-		bool WriteStructureArrayStart<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options, string? symbolName = null, string? initialComment = null)
+		bool WriteStructureArrayStart<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options, string? symbolName = null, string? initialComment = null, TextWriter? output = null)
 		{
 			if (options.IsGlobal && String.IsNullOrEmpty (symbolName)) {
 				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
@@ -313,55 +318,26 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			bool named = !String.IsNullOrEmpty (symbolName);
 			if (named || !String.IsNullOrEmpty (initialComment)) {
-				WriteEOL ();
-				WriteEOL (initialComment ?? symbolName);
-			}
-
-			if (instances != null) {
-				bool wroteSomething = false;
-
-				if (info.HasStrings) {
-					// TODO: potentially de-duplicate pointees? The linker should do it for us, but why start with a mess?
-					foreach (StructureInstance<T> instance in instances) {
-						if (WriteStructureStrings (info, instance)) {
-							wroteSomething = true;
-						}
-					}
-
-					if (wroteSomething) {
-						WriteEOL ();
-					}
-				}
-
-				if (info.HasPreAllocatedBuffers) {
-					wroteSomething = false;
-
-					foreach (StructureInstance<T> instance in instances) {
-						if (WriteStructurePreAllocatedBuffers (info, instance)) {
-							wroteSomething = true;
-						}
-					}
-
-					if (wroteSomething) {
-						WriteEOL ();
-					}
-				}
+				WriteEOL (output: output);
+				WriteEOL (initialComment ?? symbolName, output);
 			}
 
 			if (named) {
-				WriteGlobalSymbolStart (symbolName, options);
+				WriteGlobalSymbolStart (symbolName, options, output);
 			}
 
 			return named;
 		}
 
-		void WriteStructureArrayEnd<T> (StructureInfo<T> info, string? symbolName, ulong count, bool named, bool skipFinalComment = false)
+		void WriteStructureArrayEnd<T> (StructureInfo<T> info, string? symbolName, ulong count, bool named, bool skipFinalComment = false, TextWriter? output = null)
 		{
-			Output.Write ($", align {GetAggregateAlignment (info.MaxFieldAlignment, info.Size * count)}");
+			output = EnsureOutput (output);
+
+			output.Write ($", align {GetAggregateAlignment (info.MaxFieldAlignment, info.Size * count)}");
 			if (named && !skipFinalComment) {
-				WriteEOL ($"end of '{symbolName!}' array");
+				WriteEOL ($"end of '{symbolName!}' array", output);
 			} else {
-				WriteEOL ();
+				WriteEOL (output: output);
 			}
 		}
 
@@ -384,28 +360,42 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
 		{
-			bool named = WriteStructureArrayStart<T> (info, instances, options, symbolName, initialComment);
+			var arrayOutput = new StringWriter ();
+			bool named = WriteStructureArrayStart<T> (info, instances, options, symbolName, initialComment, arrayOutput);
 			int count = instances != null ? instances.Count : 0;
 
-			Output.Write ($"[{count} x %struct.{info.Name}] ");
+			arrayOutput.Write ($"[{count} x %struct.{info.Name}] ");
 			if (instances != null) {
-				Output.WriteLine ("[");
+				var bodyWriterOptions = new StructureBodyWriterOptions (
+					writeFieldComment: true,
+					fieldIndent: $"{Indent}{Indent}",
+					structIndent: Indent,
+					structureOutput: arrayOutput,
+					stringsOutput: info.HasStrings ? new StringWriter () : null,
+					buffersOutput: info.HasPreAllocatedBuffers ? new StringWriter () : null
+				);
+
+				arrayOutput.WriteLine ("[");
 				string fieldIndent = $"{Indent}{Indent}";
 				for (int i = 0; i < count; i++) {
 					StructureInstance<T> instance = instances[i];
 
-					WriteStructureBody (info, instance, writeFieldComment: true, fieldIndent: fieldIndent, structIndent: Indent);
+					WriteStructureBody (info, instance, bodyWriterOptions);
 					if (i < count - 1) {
-						Output.Write (", ");
+						arrayOutput.Write (", ");
 					}
-					WriteEOL ();
+					WriteEOL (output: arrayOutput);
 				}
-				Output.Write ("]");
+				arrayOutput.Write ("]");
+
+				WriteBufferToOutput (bodyWriterOptions.StringsOutput);
+				WriteBufferToOutput (bodyWriterOptions.BuffersOutput);
 			} else {
-				Output.Write ("zeroinitializer");
+				arrayOutput.Write ("zeroinitializer");
 			}
 
-			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: instances == null);
+			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: instances == null, output: arrayOutput);
+			WriteBufferToOutput (arrayOutput);
 		}
 
 		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
@@ -413,37 +403,49 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteStructureArray<T> (info, instances, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
 		}
 
-		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, bool writeFieldComment, string fieldIndent, string structIndent)
+		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions options)
 		{
-			Output.Write ($"{structIndent}%struct.{info.Name} ");
+			TextWriter structureOutput = EnsureOutput (options.StructureOutput);
+			structureOutput.Write ($"{options.StructIndent}%struct.{info.Name} ");
 
 			if (instance != null) {
-				Output.WriteLine ("{");
+				bool writeStrings = options.StringsOutput != null;
+				bool writeBuffers = options.BuffersOutput != null;
+
+				structureOutput.WriteLine ("{");
 				for (int i = 0; i < info.Members.Count; i++) {
 					StructureMemberInfo<T> smi = info.Members[i];
 
-					Output.Write (fieldIndent);
+					if (writeStrings) {
+						MaybeWriteStructureString<T> (info, smi, instance, options.StringsOutput);
+					}
+
+					if (writeBuffers) {
+						MaybeWritePreAllocatedBuffer<T> (info, smi, instance, options.BuffersOutput);
+					}
+
+					structureOutput.Write (options.FieldIndent);
 					if (smi.IsNativePointer) {
 						WritePointer (smi);
 					} else {
-						Output.Write ($"{smi.IRType} {GetTypedMemberValue (info, smi, instance, smi.MemberType)}");
+						structureOutput.Write ($"{smi.IRType} {GetTypedMemberValue (info, smi, instance, smi.MemberType)}");
 					}
 
 					if (i < info.Members.Count - 1) {
-						Output.Write (", ");
+						structureOutput.Write (", ");
 					}
 
-					if (writeFieldComment) {
+					if (options.WriteFieldComment) {
 						// TODO: append value in hex for integer types, LLVM IR doesn't support hex constants for integer fields (only for floats and doubles)
-						WriteEOL (info.GetCommentFromProvider (smi, instance) ?? smi.Info.Name);
+						WriteEOL (info.GetCommentFromProvider (smi, instance) ?? smi.Info.Name, structureOutput);
 					} else {
-						WriteEOL ();
+						WriteEOL (output: structureOutput);
 					}
 				}
 
-				Output.Write ($"{structIndent}}}");
+				structureOutput.Write ($"{options.StructIndent}}}");
 			} else {
-				Output.Write ("zeroinitializer");
+				structureOutput.Write ("zeroinitializer");
 			}
 
 			void WritePointer (StructureMemberInfo<T> smi)
@@ -451,7 +453,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				if (info.HasStrings) {
 					StructurePointerData? spd = instance.GetPointerData (smi);
 					if (spd != null) {
-						WriteGetStringPointer (spd.VariableName, spd.Size, indent: false);
+						WriteGetStringPointer (spd.VariableName, spd.Size, indent: false, output: structureOutput);
 						return;
 					}
 				}
@@ -459,14 +461,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				if (info.HasPreAllocatedBuffers) {
 					StructurePointerData? spd = instance.GetPointerData (smi);
 					if (spd != null) {
-						WriteGetBufferPointer (spd.VariableName, smi.IRType, spd.Size, indent: false);
+						WriteGetBufferPointer (spd.VariableName, smi.IRType, spd.Size, indent: false, output: structureOutput);
 						return;
 					}
 				}
 
 				if (smi.Info.PointsToSymbol (out string? symbolName) && !String.IsNullOrEmpty (symbolName)) {
 					ulong bufferSize = info.GetBufferSizeFromProvider (smi, instance);
-					WriteGetBufferPointer (symbolName, smi.IRType, bufferSize, indent: false);
+					WriteGetBufferPointer (symbolName, smi.IRType, bufferSize, indent: false, output: structureOutput);
 					return;
 				}
 
@@ -488,7 +490,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				void WriteNullPointer ()
 				{
-					Output.Write ($"{smi.IRType} null");
+					structureOutput.Write ($"{smi.IRType} null");
 				}
 			}
 		}
@@ -499,28 +501,29 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
 			}
 
+			var structureOutput = new StringWriter ();
 			bool named = !String.IsNullOrEmpty (symbolName);
 			if (named) {
-				WriteEOL ();
-				WriteEOL (symbolName);
+				WriteEOL (output: structureOutput);
+				WriteEOL (symbolName, structureOutput);
+
+				WriteGlobalSymbolStart (symbolName, options, structureOutput);
 			}
 
-			if (instance != null) {
-				if (info.HasStrings && WriteStructureStrings (info, instance)) {
-					WriteEOL ();
-				}
+			var bodyWriterOptions = new StructureBodyWriterOptions (
+				writeFieldComment: writeFieldComment,
+				fieldIndent: Indent,
+				structureOutput: structureOutput,
+				stringsOutput: info.HasStrings ? new StringWriter () : null,
+				buffersOutput: info.HasPreAllocatedBuffers ? new StringWriter () : null
+			);
 
-				if (info.HasPreAllocatedBuffers && WriteStructurePreAllocatedBuffers (info, instance)) {
-					WriteEOL ();
-				}
-			}
+			WriteStructureBody (info, instance, bodyWriterOptions);
+			structureOutput.WriteLine ($", align {info.MaxFieldAlignment}");
 
-			if (named) {
-				WriteGlobalSymbolStart (symbolName, options);
-			}
-
-			WriteStructureBody (info, instance, writeFieldComment, fieldIndent: Indent, structIndent: String.Empty);
-			Output.WriteLine ($", align {info.MaxFieldAlignment}");
+			WriteBufferToOutput (bodyWriterOptions.StringsOutput);
+			WriteBufferToOutput (bodyWriterOptions.BuffersOutput);
+			WriteBufferToOutput (structureOutput);
 		}
 
 		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, string? symbolName = null, bool writeFieldComment = true)
@@ -528,19 +531,33 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteStructure<T> (info, instance, LlvmIrVariableOptions.Default, symbolName, writeFieldComment);
 		}
 
-		void WriteGetStringPointer (string? variableName, ulong size, bool indent = true)
+		void WriteBufferToOutput (TextWriter? writer)
 		{
-			WriteGetBufferPointer (variableName, "i8*", size, indent);
+			if (writer == null) {
+				return;
+			}
+
+			writer.Flush ();
+			string text = writer.ToString ();
+			if (text.Length > 0) {
+				Output.WriteLine (text);
+			}
 		}
 
-		void WriteGetBufferPointer (string? variableName, string irType, ulong size, bool indent = true)
+		void WriteGetStringPointer (string? variableName, ulong size, bool indent = true, TextWriter? output = null)
 		{
+			WriteGetBufferPointer (variableName, "i8*", size, indent, output);
+		}
+
+		void WriteGetBufferPointer (string? variableName, string irType, ulong size, bool indent = true, TextWriter? output = null)
+		{
+			output = EnsureOutput (output);
 			if (indent) {
-				Output.Write (Indent);
+				output.Write (Indent);
 			}
 
 			if (String.IsNullOrEmpty (variableName)) {
-				Output.Write ($"{irType} null");
+				output.Write ($"{irType} null");
 			} else {
 				string irBaseType;
 				if (irType[irType.Length - 1] == '*') {
@@ -549,7 +566,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					irBaseType = irType;
 				}
 
-				Output.Write ($"{irType} getelementptr inbounds ([{size} x {irBaseType}], [{size} x {irBaseType}]* @{variableName}, i32 0, i32 0)");
+				output.Write ($"{irType} getelementptr inbounds ([{size} x {irBaseType}], [{size} x {irBaseType}]* @{variableName}, i32 0, i32 0)");
 			}
 		}
 
@@ -629,6 +646,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
+			WriteEOL ();
 			string irType = MapManagedTypeToIR<T> (out ulong size);
 			WriteGlobalSymbolStart (symbolName, options);
 
@@ -779,7 +797,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				writer.Write (Indent);
 			}
 
-			writer.Write (" ;");
+			writer.Write (';');
 
 			if (!String.IsNullOrEmpty (comment)) {
 				writer.Write (' ');
@@ -789,9 +807,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			writer.WriteLine ();
 		}
 
-		public void WriteEOL (string? comment = null)
+		public void WriteEOL (string? comment = null, TextWriter? output = null)
 		{
-			WriteEOL (Output, comment);
+			WriteEOL (EnsureOutput (output), comment);
 		}
 
 		public void WriteEOL (TextWriter writer, string? comment = null)

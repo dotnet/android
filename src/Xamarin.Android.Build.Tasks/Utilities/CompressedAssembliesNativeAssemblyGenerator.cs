@@ -109,7 +109,13 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			generator.WriteStructureArray<CompressedAssemblyDescriptor> (compressedAssemblyDescriptorStructureInfo, compressedAssemblyDescriptors, LlvmIrVariableOptions.LocalConstant, DescriptorsArraySymbolName, initialComment: "Compressed assembly data storage");
+			generator.WriteStructureArray<CompressedAssemblyDescriptor> (
+				compressedAssemblyDescriptorStructureInfo,
+				compressedAssemblyDescriptors,
+				LlvmIrVariableOptions.LocalWritable,
+				DescriptorsArraySymbolName,
+				initialComment: "Compressed assembly data storage"
+			);
 			generator.WriteStructure (compressedAssembliesStructureInfo, compressedAssemblies, CompressedAssembliesSymbolName);
 		}
 	}
