@@ -21,7 +21,7 @@ Otherwise, $(MicrosoftNETCoreAppRefPackageVersion) from eng/Versions.props will 
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x86" Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x64" Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(DotNetRuntimePacksVersion)]" />
-    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
   </ItemGroup>
 
 </Project>
