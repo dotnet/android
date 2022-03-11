@@ -182,6 +182,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			if (type == typeof (bool)) return "bool";
 			if (type == typeof (byte)) return "uint8_t";
+			if (type == typeof (char)) return "char";
 			if (type == typeof (sbyte)) return "int8_t";
 			if (type == typeof (short)) return "int16_t";
 			if (type == typeof (ushort)) return "uint16_t";
