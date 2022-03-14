@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 using Xamarin.Android.Tools;
@@ -20,6 +21,17 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			generator.WriteStructureDeclarations ();
 			Write (generator);
 			generator.WriteFileEnd ();
+		}
+
+		protected static string GetAbiName (AndroidTargetArch arch)
+		{
+			return arch switch {
+				AndroidTargetArch.Arm => "armeabi-v7a",
+				AndroidTargetArch.Arm64 => "arm64-v8a",
+				AndroidTargetArch.X86 => "x86",
+				AndroidTargetArch.X86_64 => "x86_64",
+				_ => throw new InvalidOperationException ($"Unsupported Android architecture: {arch}"),
+			};
 		}
 
 		/// <summary>

@@ -14,10 +14,21 @@ namespace Xamarin.Android.Tasks
 			return String.Empty;
 		}
 
-		// Get maximum width of data buffer allocated inline (that is not pointed to)
+		/// <summary>
+		/// Get maximum width of data buffer allocated inline (that is as part of structure)
+		/// </summary>
 		public virtual uint GetMaxInlineWidth (object data, string fieldName)
 		{
 			return 0;
+		}
+
+		/// <summary>
+		/// Returns name of the symbol the given field is supposed to point to. <c>null</c> or <c>String.Empty</c>
+		/// can be returned to make the pointer <c>null</c>
+		/// </summary>
+		public virtual string? GetPointedToSymbolName (object data, string fieldName)
+		{
+			return null;
 		}
 
 		protected T EnsureType <T> (object data) where T: class

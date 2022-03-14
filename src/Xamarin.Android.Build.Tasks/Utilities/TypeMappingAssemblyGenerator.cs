@@ -2,9 +2,13 @@ using System;
 using System.IO;
 
 using Xamarin.Android.Tools;
+using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
 {
+	abstract class LlvmTypeMappingAssemblyGenerator : LlvmIrComposer
+	{}
+
 	abstract class TypeMappingAssemblyGenerator : NativeAssemblyComposer
 	{
 		protected string TypemapsIncludeFile { get; }

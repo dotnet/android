@@ -5,8 +5,175 @@ using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 
+using Xamarin.Android.Tasks.LLVMIR;
+
 namespace Xamarin.Android.Tasks
 {
+	class LlvmTypeMappingReleaseNativeAssemblyGenerator : LlvmTypeMappingAssemblyGenerator
+	{
+		sealed class TypeMapModuleContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var map_module = EnsureType<TypeMapModule> (data);
+
+				if (String.Compare ("module_uuid", fieldName, StringComparison.Ordinal) == 0) {
+					return $"module_uuid: {map_module.MVID}";
+				}
+
+				if (String.Compare ("assembly_name", fieldName, StringComparison.Ordinal) == 0) {
+					return $"assembly_name: {map_module.AssemblyNameValue}";
+				}
+
+				return String.Empty;
+			}
+
+			public override string? GetPointedToSymbolName (object data, string fieldName)
+			{
+				var map_module = EnsureType<TypeMapModule> (data);
+
+				if (String.Compare ("map", fieldName, StringComparison.Ordinal) == 0) {
+					return map_module.MapSymbolName;
+				}
+
+				if (String.Compare ("duplicate_map", fieldName, StringComparison.Ordinal) == 0) {
+					return map_module.DuplicateMapSymbolName;
+				}
+
+				return null;
+			}
+		}
+
+		sealed class TypeMapJavaContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override uint GetMaxInlineWidth (object data, string fieldName)
+			{
+				if (String.Compare ("java_name", fieldName, StringComparison.Ordinal) == 0) {
+					// Using a static field for this is **very** clunky, but it works in our case since we will
+					// set that field only once per build session and it allows us to query the array size while
+					// generating the structure declarations (as required by LLVM IR)
+					return TypeMapJava.MaxJavaNameLength;
+				}
+
+				return 0;
+			}
+		}
+
+		// This is here only to generate strongly-typed IR
+		sealed class MonoImage
+		{}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMapModuleEntry structure
+		sealed class TypeMapModuleEntry
+		{
+			public uint type_token_id;
+			public uint java_map_index;
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMapModule structure
+		[NativeAssemblerStructContextDataProvider (typeof (TypeMapModuleContextDataProvider))]
+		sealed class TypeMapModule
+		{
+			[NativeAssembler (Ignore = true)]
+			public Guid   MVID;
+
+			[NativeAssembler (Ignore = true)]
+			public string AssemblyNameValue;
+
+			[NativeAssembler (Ignore = true)]
+			public string? MapSymbolName;
+
+			[NativeAssembler (Ignore = true)]
+			public string? DuplicateMapSymbolName;
+
+			[NativeAssembler (UsesDataProvider = true, InlineArray = true, InlineArraySize = 16)]
+			public byte   module_uuid;
+			public uint   entry_count;
+			public uint   duplicate_count;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public TypeMapModuleEntry map;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public TypeMapModuleEntry duplicate_map;
+
+			[NativeAssembler (UsesDataProvider = true)]
+			public string assembly_name;
+
+			[NativePointer]
+			public MonoImage image;
+			public uint   java_name_width;
+
+			[NativePointer]
+			public byte java_map;
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMapJava structure
+		[NativeAssemblerStructContextDataProvider (typeof (TypeMapJavaContextDataProvider))]
+		sealed class TypeMapJava
+		{
+			[NativeAssembler (Ignore = true)]
+			public static uint MaxJavaNameLength;
+
+			public uint module_index;
+			public uint type_token_id;
+
+			[NativeAssembler (UsesDataProvider = true, InlineArray = true)]
+			public byte java_name;
+		}
+
+		readonly NativeTypeMappingData mappingData;
+		StructureInfo<TypeMapJava> typeMapJavaStructureInfo;
+		StructureInfo<TypeMapModule> typeMapModuleStructureInfo;
+		StructureInfo<TypeMapModuleEntry> typeMapModuleEntryStructureInfo;
+
+		public LlvmTypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData)
+		{
+			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
+		}
+
+		public override void Init ()
+		{
+			TypeMapJava.MaxJavaNameLength = mappingData.JavaNameWidth;
+		}
+
+		protected override void MapStructures (LlvmIrGenerator generator)
+		{
+			generator.MapStructure<MonoImage> ();
+			typeMapJavaStructureInfo = generator.MapStructure<TypeMapJava> ();
+			typeMapModuleStructureInfo = generator.MapStructure<TypeMapModule> ();
+			typeMapModuleEntryStructureInfo = generator.MapStructure<TypeMapModuleEntry> ();
+		}
+
+		protected override void Write (LlvmIrGenerator generator)
+		{
+			generator.WriteVariable ("map_module_count", mappingData.MapModuleCount);
+			generator.WriteVariable ("java_type_count", mappingData.JavaTypeCount);
+			generator.WriteVariable ("java_name_width", mappingData.JavaNameWidth);
+
+			WriteAssemblyNames (generator);
+		}
+
+		void WriteAssemblyNames (LlvmIrGenerator generator)
+		{
+			if (mappingData.AssemblyNames.Count == 0) {
+				return;
+			}
+
+			generator.WriteEOL ();
+			generator.WriteEOL ("Assembly names");
+			foreach (var kvp in mappingData.AssemblyNames) {
+				string label = kvp.Key;
+				string name = kvp.Value;
+
+				generator.WriteString (label, name, LlvmIrVariableOptions.LocalConstexprString);
+			}
+		}
+	}
+
 	class TypeMappingReleaseNativeAssemblyGenerator : TypeMappingAssemblyGenerator
 	{
 		sealed class TypeMapModuleContextDataProvider : NativeAssemblerStructContextDataProvider

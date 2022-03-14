@@ -750,10 +750,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public void WriteStructureDeclarationStart (string name)
+		public void WriteStructureDeclarationStart (string name, bool forOpaqueType = false)
 		{
 			WriteEOL ();
-			Output.WriteLine ($"%struct.{name} = type {{");
+			Output.Write ($"%struct.{name} = type ");
+			if (forOpaqueType) {
+				Output.WriteLine ("opaque");
+			} else {
+				Output.WriteLine ("{");
+			}
 		}
 
 		public void WriteStructureDeclarationEnd ()

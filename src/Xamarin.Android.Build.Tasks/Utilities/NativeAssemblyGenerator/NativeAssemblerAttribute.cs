@@ -7,6 +7,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public bool Ignore           { get; set; }
 		public bool UsesDataProvider { get; set; }
+		public bool InlineArray      { get; set; }
+		public int  InlineArraySize  { get; set; } = -1;
 		public string? Comment       { get; set; }
 		public string? Name          { get; set; }
 	}

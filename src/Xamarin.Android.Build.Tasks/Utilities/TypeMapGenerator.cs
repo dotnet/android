@@ -438,12 +438,50 @@ namespace Xamarin.Android.Tasks
 				}
 			);
 
+			var generator = new LlvmTypeMappingReleaseNativeAssemblyGenerator (data);
+			generator.Init ();
+			GenerateNativeAssembly (generator, outputDirectory);
+
 			return true;
 		}
 
 		bool ShouldSkipInJavaToManaged (TypeDefinition td)
 		{
 			return td.IsInterface || td.HasGenericParameters;
+		}
+
+		void GenerateNativeAssembly (LlvmTypeMappingAssemblyGenerator generator, string baseFileName)
+		{
+			AndroidTargetArch arch;
+			foreach (string abi in supportedAbis) {
+				switch (abi.Trim ()) {
+					case "armeabi-v7a":
+						arch = AndroidTargetArch.Arm;
+						break;
+
+					case "arm64-v8a":
+						arch = AndroidTargetArch.Arm64;
+						break;
+
+					case "x86":
+						arch = AndroidTargetArch.X86;
+						break;
+
+					case "x86_64":
+						arch = AndroidTargetArch.X86_64;
+						break;
+
+					default:
+						throw new InvalidOperationException ($"Unknown ABI {abi}");
+				}
+
+				string outputFile = $"{baseFileName}.{abi}.ll";
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (outputEncoding)) {
+					generator.Write (arch, sw, outputFile);
+					sw.Flush ();
+					Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
+				}
+			}
 		}
 
 		void GenerateNativeAssembly (Func<AndroidTargetArch, bool, bool, TypeMappingAssemblyGenerator> getGenerator)

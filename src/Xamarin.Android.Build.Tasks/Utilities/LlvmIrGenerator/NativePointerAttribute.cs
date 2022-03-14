@@ -7,6 +7,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	{
 		public bool PointsToPreAllocatedBuffer { get; set; }
 		public ulong PreAllocatedBufferSize { get; set; } = 0;
+
+		/// <summary>
+		/// Indicates the symbol to point to. If <c>null</c> the attribute is ignored, if <c>String.Empty</c>
+		/// the data context provider is queried (if the type uses it)
+		/// </summary>
 		public string? PointsToSymbol { get; set; }
 	}
 }

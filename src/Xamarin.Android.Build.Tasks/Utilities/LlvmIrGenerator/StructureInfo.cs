@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool HasStrings { get; private set; }
 		public bool HasPreAllocatedBuffers { get; private set; }
 
+		public bool IsOpaque => Members.Count == 0;
+
 		public StructureInfo (LlvmIrGenerator generator)
 		{
 			Type t = typeof(T);
@@ -27,7 +29,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public void RenderDeclaration (LlvmIrGenerator generator)
 		{
 			TextWriter output = generator.Output;
-			generator.WriteStructureDeclarationStart (Name);
+			generator.WriteStructureDeclarationStart (Name, forOpaqueType: IsOpaque);
+
+			if (IsOpaque) {
+				return;
+			}
 
 			for (int i = 0; i < Members.Count; i++) {
 				StructureMemberInfo<T> info = Members[i];
@@ -35,7 +41,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				if (info.Info.IsNativePointer ()) {
 					nativeType += "*";
 				}
-				var comment = $"{nativeType} {info.Info.Name}";
+
+				// TODO: nativeType can be an array, update to indicate that (and get the size)
+				string arraySize;
+				if (info.IsNativeArray) {
+					arraySize = $"[{info.ArrayElements}]";
+				} else {
+					arraySize = String.Empty;
+				}
+
+				var comment = $"{nativeType} {info.Info.Name}{arraySize}";
 				generator.WriteStructureDeclarationField (info.IRType, comment, i == Members.Count - 1);
 			}
 

@@ -1,10 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
-using System.Text;
-
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
@@ -15,10 +10,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public Type MemberType      { get; }
 
 		/// <summary>
-		/// Size of a variable with this IR type. May differ to <see cref="BaseTypeSize"/> because the field
-		/// can be a pointer to type
+		/// Size of a variable with this IR type. May differ from <see cref="BaseTypeSize"/> because the field
+		/// can be a pointer to type or an array
 		/// </summary>
 		public ulong Size           { get; }
+
+		public ulong ArrayElements  { get; }
 
 		/// <summary>
 		/// Size of the member's base IR type.  If the variable is a pointer, this property will represent
@@ -26,6 +23,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// </summary>
 		public ulong BaseTypeSize   { get; }
 		public bool IsNativePointer { get; }
+		public bool IsNativeArray   { get; }
 
 		public StructureMemberInfo (MemberInfo mi, LlvmIrGenerator generator)
 		{
@@ -56,8 +54,23 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			BaseTypeSize = size;
+			ArrayElements = 0;
 			if (IsNativePointer) {
 				size = (ulong)generator.PointerSize;
+			} else if (mi.IsInlineArray ()) {
+				IsNativeArray = true;
+				int arrayElements = mi.GetInlineArraySize ();
+				if (arrayElements < 0) {
+					arrayElements = GetArraySizeFromProvider (typeof(T).GetDataProvider (), mi.Name);
+				}
+
+				if (arrayElements < 0) {
+					throw new InvalidOperationException ($"Array cannot have negative size (got {arrayElements})");
+				}
+
+				size = (ulong)arrayElements * BaseTypeSize;
+				IRType = $"[{arrayElements} x {IRType}]";
+				ArrayElements = (ulong)arrayElements;
 			}
 
 			Size = size;
@@ -71,6 +84,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			var pi = Info as PropertyInfo;
 			return pi.GetValue (instance);
+		}
+
+		int GetArraySizeFromProvider (NativeAssemblerStructContextDataProvider? provider, string fieldName)
+		{
+			if (provider == null) {
+				return -1;
+			}
+
+			return (int)provider.GetMaxInlineWidth (null, fieldName);
 		}
 	}
 }

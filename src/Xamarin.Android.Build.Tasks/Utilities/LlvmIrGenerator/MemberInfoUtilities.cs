@@ -1,8 +1,6 @@
 using System;
 using System.Reflection;
 
-using Xamarin.Android.Tasks;
-
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	static class MemberInfoUtilities
@@ -46,6 +44,22 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
 			return attr != null && attr.UsesDataProvider;
+		}
+
+		public static bool IsInlineArray (this MemberInfo mi)
+		{
+			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			return attr != null && attr.InlineArray;
+		}
+
+		public static int GetInlineArraySize (this MemberInfo mi)
+		{
+			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			if (attr == null || !attr.InlineArray) {
+				return -1;
+			}
+
+			return attr.InlineArraySize;
 		}
 	}
 }
