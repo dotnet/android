@@ -49,6 +49,12 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
 
+- task: PublishPipelineArtifact@1
+  displayName: upload build tools inventory
+  inputs:
+    artifactName: BuildToolsInventory
+    targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
+
 # Build and package test assemblies
 - script: make all-tests CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
