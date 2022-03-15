@@ -1,5 +1,4 @@
 Compat issues with assembly Mono.Android:
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Activity.LastNonConfigurationInstance' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Activity.OnRetainNonConfigurationInstance()' in the contract but not the implementation.
 CannotAddAbstractMembers : Member 'public void Android.App.FragmentTransaction.CommitNow()' is abstract in the implementation but is missing in the contract.
 CannotAddAbstractMembers : Member 'public void Android.App.FragmentTransaction.CommitNowAllowingStateLoss()' is abstract in the implementation but is missing in the contract.

@@ -43,7 +43,7 @@ namespace Android.Runtime {
 		static IntPtr java_vm;
 		static IntPtr load_class_id;
 		static IntPtr gref_class;
-		static IntPtr mid_Class_forName;
+		static JniMethodInfo? mid_Class_forName;
 		static int version;
 		static int androidSdkVersion;
 
@@ -56,7 +56,7 @@ namespace Android.Runtime {
 		internal  static  bool  PropagateExceptions;
 
 		internal static bool IsRunningOnDesktop;
-		internal static bool LogTypemapMissStackTrace;
+		internal static bool LogAssemblyCategory;
 
 		static AndroidRuntime? androidRuntime;
 		static BoundExceptionType BoundExceptionType;
@@ -67,7 +67,7 @@ namespace Android.Runtime {
 		internal    static      AndroidValueManager? AndroidValueManager;
 
 		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		extern static void monodroid_log (LogLevel level, LogCategories category, string message);
+		internal extern static void monodroid_log (LogLevel level, LogCategories category, string message);
 
 		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static IntPtr monodroid_timing_start (string? message);
@@ -136,7 +136,8 @@ namespace Android.Runtime {
 			JniType? jniType = null;
 			JniType.GetCachedJniType (ref jniType, className);
 
-			androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods_ptr == IntPtr.Zero ? null : new string ((char*) methods_ptr, 0, methods_len));
+			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
+			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
 		}
 
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
@@ -149,7 +150,7 @@ namespace Android.Runtime {
 				partial_timing_sequence = monodroid_timing_start (null);
 			}
 
-			LogTypemapMissStackTrace = (args->logCategories & (uint)LogCategories.Assembly) != 0;
+			LogAssemblyCategory = (args->logCategories & (uint)LogCategories.Assembly) != 0;
 
 			gref_gc_threshold = args->grefGcThreshold;
 
@@ -162,7 +163,7 @@ namespace Android.Runtime {
 			java_class_loader = args->grefLoader;
 			load_class_id     = args->Loader_loadClass;
 			gref_class        = args->grefClass;
-			mid_Class_forName = args->Class_forName;
+			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
 
 			if (args->localRefsAreIndirect == 1)
 				IdentityHash = v => _monodroid_get_identity_hash_code (Handle, v);
@@ -246,6 +247,7 @@ namespace Android.Runtime {
 #else  // NETCOREAPP
 		internal static Action<Exception> mono_unhandled_exception = null!;
 #endif  // NETCOREAPP
+		internal static MethodInfo? mono_unhandled_exception_method = null;
 
 #if !NETCOREAPP
 		static Action<AppDomain, UnhandledExceptionEventArgs> AppDomain_DoUnhandledException = null!;
@@ -254,10 +256,13 @@ namespace Android.Runtime {
 		static void Initialize ()
 		{
 			if (mono_unhandled_exception == null) {
-				var mono_UnhandledException = typeof (System.Diagnostics.Debugger)
+				mono_unhandled_exception_method = typeof (System.Diagnostics.Debugger)
 					.GetMethod ("Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
-				if (mono_UnhandledException != null)
-					mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), mono_UnhandledException);
+				if (mono_unhandled_exception_method != null)
+					mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), mono_unhandled_exception_method);
+			}
+			if (mono_unhandled_exception_method == null && mono_unhandled_exception != null) {
+				mono_unhandled_exception_method = mono_unhandled_exception.Method;
 			}
 
 #if !NETCOREAPP
@@ -553,19 +558,24 @@ namespace Android.Runtime {
 			return NewString (nameBuffer, length);
 		}
 
-		public static IntPtr FindClass (string classname)
+		public unsafe static IntPtr FindClass (string classname)
 		{
-			IntPtr local_ref;
+			JniObjectReference local_ref;
 
 			IntPtr native_str = BinaryName (classname);
 			try {
-				local_ref = CallStaticObjectMethod (gref_class, mid_Class_forName, new JValue (native_str), new JValue (true), new JValue (java_class_loader));
+				JniArgumentValue* parameters = stackalloc JniArgumentValue [3] {
+					new JniArgumentValue (native_str),
+					new JniArgumentValue (true),
+					new JniArgumentValue (java_class_loader),
+				};
+				local_ref = JniEnvironment.StaticMethods.CallStaticObjectMethod (Java.Lang.Class.Members.JniPeerType.PeerReference, mid_Class_forName!, parameters);
 			} finally {
 				DeleteLocalRef (native_str);
 			}
 
-			IntPtr global_ref = NewGlobalRef (local_ref);
-			DeleteLocalRef (local_ref);
+			IntPtr global_ref = NewGlobalRef (local_ref.Handle);
+			JniObjectReference.Dispose (ref local_ref);
 			return global_ref;
 		}
 
@@ -737,7 +747,7 @@ namespace Android.Runtime {
 			}
 
 			if (ret == IntPtr.Zero) {
-				if (LogTypemapMissStackTrace) {
+				if (LogAssemblyCategory) {
 					monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
 					LogTypemapTrace (new StackTrace (true));
 				}
@@ -1321,6 +1331,8 @@ namespace Android.Runtime {
 				return null;
 
 			int cnt = _GetArrayLength (array_ptr);
+			if (cnt == 0)
+				return Array.Empty<object> ();
 
 			var converter = GetConverter (NativeArrayElementToManaged, null, array_ptr);
 

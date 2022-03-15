@@ -51,7 +51,7 @@
   />
   <PropertyGroup>
     <_Target Condition="'$(JavacSourceVersion)' != ''">-source $(JavacSourceVersion) -target $(JavacTargetVersion)</_Target>
-    <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidJavaRuntimeApiLevel)\android.jar"</_AndroidJar>
+    <_AndroidJar>"$(AndroidSdkDirectory)\platforms\android-$(AndroidJavaRuntimeApiLevel)\android.jar"</_AndroidJar>
   </PropertyGroup>
   <Exec
       Command="&quot;$(JavaCPath)&quot; $(_Target) -d %(_RuntimeOutput.IntermediateRuntimeOutputPath) -bootclasspath $(_AndroidJar)$(PathSeparator)&quot;%(_RuntimeOutput.OutputJar)&quot; @%(_RuntimeOutput.IntermediateRuntimeClassesTxt)"

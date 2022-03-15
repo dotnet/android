@@ -1008,12 +1008,14 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
+#if MONOANDROID1_0
 			// Context: https://github.com/xamarin/xamarin-android/issues/1615
 			int apiLevel = (int)Build.VERSION.SdkInt;
 			if (apiLevel >= 16 && apiLevel <= 20) {
 				httpsConnection.SSLSocketFactory = new OldAndroidSSLSocketFactory ();
 				return;
 			}
+#endif
 
 			var keyStore = InitializeKeyStore (out bool gotCerts);
 			keyStore = ConfigureKeyStore (keyStore);

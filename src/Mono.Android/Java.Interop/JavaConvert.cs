@@ -167,7 +167,7 @@ namespace Java.Interop {
 			return Convert.ChangeType (v, targetType!);
 		}
 
-		static Dictionary<string, Type> TypeMappings = new Dictionary<string, Type> {
+		static Dictionary<string, Type> TypeMappings = new Dictionary<string, Type> (9, StringComparer.Ordinal) {
 			{ "java/lang/Boolean",    typeof (bool) },
 			{ "java/lang/Byte",       typeof (byte) },
 			{ "java/lang/Character",  typeof (char) },
@@ -181,20 +181,20 @@ namespace Java.Interop {
 
 		static Type? GetTypeMapping (IntPtr handle)
 		{
-			string className = JNIEnv.GetClassNameFromInstance (handle);
-			if (TypeMappings.TryGetValue (className, out var match))
-				return match;
-			IntPtr lrefClass = JNIEnv.GetObjectClass (handle);
+			var lref = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 			try {
-				if (JNIEnv.IsAssignableFrom (lrefClass, JavaDictionary.map_class))
+				string className = TypeManager.GetClassName (lref.Handle);
+				if (TypeMappings.TryGetValue (className, out var match))
+					return match;
+				if (JniEnvironment.Types.IsAssignableFrom (lref, new JniObjectReference (JavaDictionary.map_class)))
 					return typeof (JavaDictionary);
-				if (JNIEnv.IsAssignableFrom (lrefClass, JavaList.arraylist_class))
+				if (JniEnvironment.Types.IsAssignableFrom (lref, JavaList.list_members.JniPeerType.PeerReference))
 					return typeof (JavaList);
-				if (JNIEnv.IsAssignableFrom (lrefClass, JavaCollection.collection_class))
+				if (JniEnvironment.Types.IsAssignableFrom (lref, new JniObjectReference (JavaCollection.collection_class)))
 					return typeof (JavaCollection);
 				return null;
 			} finally {
-				JNIEnv.DeleteLocalRef (lrefClass);
+				JniObjectReference.Dispose (ref lref);
 			}
 		}
 
@@ -360,8 +360,9 @@ namespace Java.Interop {
 			} },
 		};
 
-		static Func<object, IntPtr> GetLocalJniHandleConverter<T> (T value, Type sourceType)
+		static Func<object, IntPtr> GetLocalJniHandleConverter (object value)
 		{
+			Type sourceType = value.GetType ();
 			Func<object, IntPtr>? converter;
 			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter))
 				return converter;
@@ -372,42 +373,39 @@ namespace Java.Interop {
 			return LocalJniHandleConverters [typeof (Android.Runtime.JavaObject)];
 		}
 
+		internal static IntPtr ToLocalJniHandle (object? value)
+		{
+			if (value == null) {
+				return IntPtr.Zero;
+			}
+			if (value is IJavaObject v) {
+				return JNIEnv.ToLocalJniHandle (v);
+			}
+			Func<object, IntPtr> converter = GetLocalJniHandleConverter (value);
+			return converter (value);
+		}
+
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)
 		{
-			IntPtr lref = IntPtr.Zero;
+			IntPtr lref = ToLocalJniHandle (value);
 			try {
-				var v = value as IJavaObject;
-				if (v != null) {
-					lref = JNIEnv.ToLocalJniHandle (v);
-					return action (lref);
-				}
-				Func<object, IntPtr> converter = GetLocalJniHandleConverter (value, typeof (TValue));
-				lref = converter (value!);
 				return action (lref);
 			}
 			finally {
 				JNIEnv.DeleteLocalRef (lref);
+				GC.KeepAlive (value);
 			}
 		}
 
 		public static TReturn WithLocalJniHandle<TReturn>(object? value, Func<IntPtr, TReturn> action)
 		{
-			IntPtr lref = IntPtr.Zero;
+			IntPtr lref = ToLocalJniHandle (value);
 			try {
-				if (value == null) {
-					return action (lref);
-				}
-				var v = value as IJavaObject;
-				if (v != null) {
-					lref = JNIEnv.ToLocalJniHandle (v);
-					return action (lref);
-				}
-				Func<object, IntPtr> converter = GetLocalJniHandleConverter (value, value.GetType ());
-				lref = converter (value);
 				return action (lref);
 			}
 			finally {
 				JNIEnv.DeleteLocalRef (lref);
+				GC.KeepAlive (value);
 			}
 		}
 	}

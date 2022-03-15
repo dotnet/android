@@ -79,6 +79,7 @@ This file is only used by binding projects.
         JavadocCopyrightFile="%(_JavaSourceJavadocXml.CopyrightFile)"
         JavadocUrlPrefix="%(_JavaSourceJavadocXml.UrlPrefix)"
         JavadocUrlStyle="%(_JavaSourceJavadocXml.UrlStyle)"
+        JavadocDocRootUrl="%(_JavaSourceJavadocXml.DocRootUrl)"
         JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
         JavaOptions="$(JavaOptions)"
         JavaSdkDirectory="$(_JavaSdkDirectory)"

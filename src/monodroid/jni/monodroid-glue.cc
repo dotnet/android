@@ -1686,6 +1686,7 @@ MonodroidRuntime::set_profile_options ()
 			.append (AOT_EXT);
 
 		value
+			.append (",")
 			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
 	}
@@ -2185,7 +2186,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 
 	androidSystem.setup_process_args (runtimeApks);
-
+#if !defined (NET6)
+	// JIT stats based on perf counters are disabled in dotnet/mono
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE)) {
 		mono_counters_enable (static_cast<int>(XA_LOG_COUNTERS));
 
@@ -2196,7 +2198,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		utils.set_world_accessable (counters_path.get ());
 	}
 
-#if !defined (NET6)
 	void *dso_handle = nullptr;
 #if defined (WINDOWS) || defined (APPLE_OS_X)
 	const char *my_location = get_my_location ();
@@ -2332,10 +2333,13 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		total_time.mark_end ();
 
 		Timing::info (total_time, "Runtime.init: end, total time");
+#if !defined (NET6)
 		dump_counters ("## Runtime.init: end");
+#endif // ndef NET6
 	}
 }
 
+#if !defined (NET6)
 void
 MonodroidRuntime::dump_counters (const char *format, ...)
 {
@@ -2360,6 +2364,7 @@ MonodroidRuntime::dump_counters_v (const char *format, va_list args)
 
 	mono_counters_dump (MonodroidRuntime::XA_LOG_COUNTERS, counters);
 }
+#endif // ndef NET6
 
 JNIEXPORT jint JNICALL
 JNI_OnLoad (JavaVM *vm, void *reserved)
@@ -2466,8 +2471,9 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		total_time.mark_end ();
 
 		Timing::info (total_time, "Runtime.register: end time");
-
+#if !defined (NET6)
 		dump_counters ("## Runtime.register: type=%s\n", type.get ());
+#endif
 	}
 }
 

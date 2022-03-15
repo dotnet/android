@@ -24,6 +24,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public                  string          ImageName           {get; set;} = "XamarinAndroidTestRunner64";
 		public                  string          DeviceName          {get; set;} = "pixel_4";
+		public			string		ImageType	    {get; set;} = "default";
 
 		public                  string          DataPartitionSizeMB {get; set;} = "2048";
 		public                  string          RamSizeMB           {get; set;} = "2048";
@@ -32,6 +33,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public override bool Execute ()
 		{
+			if (string.IsNullOrEmpty (ToolExe))
+				ToolExe = "avdmanager";
+
 			var dirs = string.IsNullOrEmpty (ToolPath)
 				? null
 				: new [] { ToolPath };
@@ -43,7 +47,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			ToolExe = filename;
 
 			if (string.IsNullOrEmpty (TargetId) && !string.IsNullOrEmpty (SdkVersion)) {
-				TargetId = "system-images;android-" + SdkVersion + ";default;" + AndroidAbi;
+				TargetId    = $"system-images;android-{SdkVersion};{ImageType};{AndroidAbi}";
 			}
 
 			var env = new List<string> ();

@@ -34,20 +34,21 @@
     />
   </Target>
   <Target Name="InstallMaui">
+    <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' " />
     <PropertyGroup>
       <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
+      <MauiVersionBand>$([System.Text.RegularExpressions.Regex]::Match($(MauiVersion), `^\d+\.\d+\.\d`))00</MauiVersionBand>
     </PropertyGroup>
-    <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' " />
     <MakeDir Directories="$(_TempDirectory)" />
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; restore maui.proj -p:MauiVersion=$(MauiVersion)"
+        Command="&quot;$(DotNetPreviewTool)&quot; restore maui.proj -p:MauiVersion=$(MauiVersion) -p:MauiVersionBand=$(MauiVersionBand)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
         EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory);DOTNET_MULTILEVEL_LOOKUP=0"
     />
 
     <!-- Copy WorkloadManifest.* files-->
     <ItemGroup>
-      <_WLManifest Include="$(_TempDirectory)\microsoft.net.sdk.maui.manifest-$(DotNetPreviewVersionBand)\$(MauiVersion)\data\WorkloadManifest.*" />
+      <_WLManifest Include="$(_TempDirectory)\microsoft.net.sdk.maui.manifest-$(MauiVersionBand)\$(MauiVersion)\data\WorkloadManifest.*" />
     </ItemGroup>
     <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.sdk.maui" />
 

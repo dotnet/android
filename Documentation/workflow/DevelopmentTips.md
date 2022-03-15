@@ -458,7 +458,7 @@ copying `.nupkg` files to the `library-packs` directory of a given
 
 * `C:\Program Files\dotnet\library-packs`
 * `/usr/local/share/dotnet/library-packs`
-* `~/android-toolchain/dotnet/library-packs`
+* `bin/$(Configuration)/dotnet/library-packs`
 
 The `library-packs` directory is simply an implicit NuGet feed that is
 automatically picked up by the .NET SDK.
@@ -518,7 +518,7 @@ be preferred if it is not blank.
 `make pack-dotnet` or `msbuild Xamarin.Android.sln -t:PackDotNet`
 provisions a .NET SDK and locally built Android workload in:
 
-    ~/android-toolchain/dotnet/
+    bin/$(Configuration)/dotnet/
 
 If you *also* want .NET MAUI, you don't want to `dotnet workload
 install maui`, because it will blow away your local build of the

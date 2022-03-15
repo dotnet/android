@@ -61,6 +61,7 @@
     <EmbeddedResource Include="Resources\*">
       <LogicalName>%(FileName)%(Extension)</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="$(XamarinAndroidSourcePath)\src\Mono.Android\javadoc-copyright.xml" LogicalName="javadoc-copyright.xml" />
   </ItemGroup>
 
 </Project>

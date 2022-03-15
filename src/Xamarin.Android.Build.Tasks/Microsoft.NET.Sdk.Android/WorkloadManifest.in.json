@@ -14,12 +14,19 @@
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "linux-x64", "osx-x64", "osx-arm64" ],
-      "extends" : [ "microsoft-net-runtime-android" ]
+      "extends" : [ "microsoft-net-runtime-android", "microsoft-net-runtime-android-aot" ]
     },
-    "android-aot": {
-      "description": ".NET SDK Workload for building Android applications with AOT support.",
+    "android-33": {
+      "description": "Preview support for Android API-33.",
+      "packs": [
+        "Microsoft.Android.Ref.33",
+        "Microsoft.Android.Runtime.33.android-arm",
+        "Microsoft.Android.Runtime.33.android-arm64",
+        "Microsoft.Android.Runtime.33.android-x86",
+        "Microsoft.Android.Runtime.33.android-x64"
+      ],
       "platforms": [ "win-x64", "linux-x64", "osx-x64", "osx-arm64" ],
-      "extends" : [ "android", "microsoft-net-runtime-android-aot" ]
+      "extends" : [ "android" ]
     }
   },
   "packs": {
@@ -42,6 +49,10 @@
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
+    "Microsoft.Android.Ref.33": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
     "Microsoft.Android.Runtime.32.android-arm": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
@@ -55,6 +66,22 @@
       "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Runtime.32.android-x64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.33.android-arm": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.33.android-arm64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.33.android-x86": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.33.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },

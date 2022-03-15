@@ -80,7 +80,7 @@ installer.
 # Creating a local .NET 6 Workload
 
 `make prepare` provisions a specific build of .NET 6 to
-`~/android-toolchain/dotnet`.
+`bin/$(Configuration)/dotnet`.
 
 Once `make all` or `make jenkins` have completed, you can build the .NET 6
 packages with:
@@ -89,7 +89,7 @@ packages with:
 
 Several `.nupkg` files will be output in `./bin/BuildDebug/nuget-unsigned`,
 but this is only part of the story. Your local
-`~/android-toolchain/dotnet/packs` directory will be populated with a
+`bin/$(Configuration)/dotnet/packs` directory will be populated with a
 local Android "workload" in `Microsoft.Android.Sdk.$(HostOS)` matching
 your operating system.
 
@@ -106,9 +106,9 @@ Create a new project with `dotnet new android`:
 
 Build the project with:
 
-    $ ~/android-toolchain/dotnet/dotnet build foo.csproj
+    $ bin/$(Configuration)/dotnet/dotnet build foo.csproj
 
-Using the `dotnet` provisioned in `~/android-toolchain` will use the
+Using the `dotnet` provisioned in `bin/$(Configuration)/dotnet` will use the
 locally built binaries.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.

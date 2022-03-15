@@ -1055,7 +1055,7 @@ namespace Lib2
 		{
 			AssertAotModeSupported (androidAotMode);
 
-			var targets = new string [] {
+			var targets = new List<string> {
 				"_RemoveRegisterAttribute",
 				"_BuildApkEmbed",
 			};
@@ -1065,6 +1065,9 @@ namespace Lib2
 				BundleAssemblies = false,
 				AotAssemblies = aotAssemblies,
 			};
+			if (aotAssemblies) {
+				targets.Add ("_AndroidAot");
+			}
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			if (!string.IsNullOrEmpty (androidAotMode))
 			    proj.SetProperty ("AndroidAotMode", androidAotMode);
@@ -1073,6 +1076,9 @@ namespace Lib2
 					Assert.Ignore ($"Cross compiler for {supportedAbis} was not available");
 				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
 					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+
 				b.BuildLogFile = "first.log";
 				b.CleanupAfterSuccessfulBuild = false;
 				b.CleanupOnDispose = false;
@@ -1083,6 +1089,7 @@ namespace Lib2
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on first build!");
 				}
+				AssertNativeLibrariesExist ();
 
 				b.BuildLogFile = "second.log";
 				b.CleanupAfterSuccessfulBuild = false;
@@ -1091,6 +1098,7 @@ namespace Lib2
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
 				}
+				AssertNativeLibrariesExist ();
 
 				proj.Touch ("MainActivity.cs");
 
@@ -1100,6 +1108,21 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Third build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on third build!");
+				}
+				AssertNativeLibrariesExist ();
+
+				void AssertNativeLibrariesExist ()
+				{
+					FileAssert.Exists (apk);
+					if (!aotAssemblies)
+						return;
+
+					using var zipFile = ZipHelper.OpenZip (apk);
+					foreach (var abi in supportedAbis.Split (';')) {
+						var path = $"lib/{abi}/libaot-Mono.Android.dll.so";
+						var entry = ZipHelper.ReadFileFromZip (zipFile, path);
+						Assert.IsNotNull (entry, $"{path} should be in {apk}", abi);
+					}
 				}
 			}
 		}

@@ -1,5 +1,6 @@
 parameters:
-  nunitConsole: $(System.DefaultWorkingDirectory)/build-tools/scripts/nunit3-console
+  configuration: $(XA.Build.Configuration)
+  xaSourcePath: $(System.DefaultWorkingDirectory)
   testRunTitle: Xamarin Android Tests
   testAssembly: ''
   testResultsFile: TestResult.xml
@@ -14,9 +15,9 @@ steps:
   - powershell: |
       Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
       if ([Environment]::OSVersion.Platform -eq "Unix") {
-          & ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
+          & ${{ parameters.xaSourcePath }}/build-tools/scripts/nunit3-console ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
       } else {
-          & cmd /c '${{ parameters.nunitConsole }}.cmd' ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
+          & cmd /c '${{ parameters.xaSourcePath }}\build-tools\scripts\nunit3-console.cmd' ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
       }
       if ($LASTEXITCODE -ne 0) {
           Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
@@ -31,6 +32,8 @@ steps:
   - powershell: Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
   - template: run-dotnet-preview.yaml
     parameters:
+      configuration: ${{ parameters.configuration }}
+      xaSourcePath: ${{ parameters.xaSourcePath }}
       command: test
       project: ${{ parameters.testAssembly }}
       useExitCodeForErrors: true

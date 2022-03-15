@@ -39,7 +39,7 @@
   <Target Name="_FindFrameworkDirs">
     <ItemGroup>
       <_FrameworkDirs Include="@(AndroidApiInfo->'$(FrameworkSrcDir)%(Identity)\')" />
-      <_FrameworkDirsThatExist Condition="Exists('%(Identity)')" Include="@(_FrameworkDirs)" />
+      <_FrameworkDirsThatExist Condition="Exists('%(Identity)')" Include="@(_FrameworkDirs)" Exclude="$(FrameworkSrcDir)v12.1.99\" />
       <_EarlierFrameworkDir Include="@(_FrameworkDirsThatExist)" Exclude="$(_LatestStableFrameworkDir)" />
     </ItemGroup>
   </Target>
@@ -99,6 +99,32 @@
     <_DesignerFilesWin Include="$(MSBuildSrcDir)\bcl\**\* "/>
   </ItemGroup>
   <ItemGroup>
+    <JIUtilityFile  Include="Java.Interop.Localization.dll" />
+    <JIUtilityFile  Include="Java.Interop.Localization.pdb" />
+    <JIUtilityFile  Include="Java.Interop.Tools.Cecil.dll" />
+    <JIUtilityFile  Include="Java.Interop.Tools.Cecil.pdb" />
+    <JIUtilityFile  Include="Java.Interop.Tools.Diagnostics.dll" />
+    <JIUtilityFile  Include="Java.Interop.Tools.Diagnostics.pdb" />
+    <JIUtilityFile  Include="Java.Interop.Tools.Generator.dll" />
+    <JIUtilityFile  Include="Java.Interop.Tools.Generator.pdb" />
+    <JIUtilityFile  Include="Java.Interop.Tools.JavaCallableWrappers.dll" />
+    <JIUtilityFile  Include="Java.Interop.Tools.JavaCallableWrappers.pdb" />
+    <JIUtilityFile  Include="Java.Interop.Tools.JavaSource.dll" />
+    <JIUtilityFile  Include="Java.Interop.Tools.JavaSource.pdb" />
+    <JIUtilityFile  Include="Java.Interop.Tools.JavaTypeSystem.dll" />
+    <JIUtilityFile  Include="Java.Interop.Tools.JavaTypeSystem.pdb" />
+    <JIUtilityFile  Include="Xamarin.Android.Tools.AnnotationSupport.dll" />
+    <JIUtilityFile  Include="Xamarin.Android.Tools.AnnotationSupport.pdb" />
+    <JIUtilityFile  Include="Xamarin.Android.Tools.ApiXmlAdjuster.dll" />
+    <JIUtilityFile  Include="Xamarin.Android.Tools.ApiXmlAdjuster.pdb" />
+    <JIUtilityFile  Include="Xamarin.Android.Tools.Bytecode.dll" />
+    <JIUtilityFile  Include="Xamarin.Android.Tools.Bytecode.pdb" />
+    <JIUtilityFile  Include="Xamarin.Android.Tools.JavadocImporter.dll" />
+    <JIUtilityFile  Include="Xamarin.Android.Tools.JavadocImporter.pdb" />
+    <JIUtilityFile  Include="Xamarin.SourceWriter.dll" />
+    <JIUtilityFile  Include="Xamarin.SourceWriter.pdb" />
+  </ItemGroup>
+  <ItemGroup>
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.Export.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.Export.pdb" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.dll" />
@@ -108,10 +134,13 @@
     <_FrameworkFiles Include="@(MonoProfileAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\%(Identity)')" />
     <_FrameworkFiles Include="@(MonoProfileAssemblySymbol->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\%(Identity)')" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Java.Interop.dll" />
+    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Java.Interop.pdb" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Sqlite.dll.config" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Posix.dll" />
+    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Posix.pdb" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\RedistList\FrameworkList.xml" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.dll" />
+    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.pdb" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.pdb" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.xml" />
@@ -119,6 +148,7 @@
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.xml" />
   </ItemGroup>
   <ItemGroup>
+    <_MSBuildFiles Include="@(JIUtilityFile->'$(MSBuildSrcDir)\%(Identity)')"   ExcludeFromAndroidNETSdk="true"/>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\android-support-multidex.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apksigner.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe"   ExcludeFromAndroidNETSdk="true" />
@@ -140,21 +170,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\java-source-utils.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\javadoc-to-mdoc.exe" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\javadoc-to-mdoc.pdb" ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Localization.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Localization.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.dll.config" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Cecil.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Cecil.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Diagnostics.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Diagnostics.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Generator.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Generator.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaSource.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaSource.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaTypeSystem.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaTypeSystem.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
@@ -281,21 +297,11 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Aidl.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.AndroidSdk.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.AndroidSdk.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.AnnotationSupport.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.AnnotationSupport.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.ApiXmlAdjuster.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.ApiXmlAdjuster.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Bytecode.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Bytecode.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavadocImporter.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavadocImporter.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Versions.props" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.VisualBasic.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Wear.targets"        ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.SourceWriter.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.SourceWriter.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Compression.LZ4.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Hash.xxHash.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\ELFSharp.dll" />

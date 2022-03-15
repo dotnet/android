@@ -1,26 +1,30 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="6.0.200-rtm.22074.2">
+    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="6.0.300-preview.22164.2">
       <Uri>https://github.com/dotnet/installer</Uri>
-      <Sha>52d63724693b2038e76ac0d67c2fa93ca0dc1654</Sha>
+      <Sha>4969ceaeee306af92bbd09b63a2c14e7fff5c780</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-1.21519.4" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.200-1.22124.2" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
       <Uri>https://github.com/dotnet/linker</Uri>
-      <Sha>d0662ed8db919642177ddfd06a1c33895a69015f</Sha>
+      <Sha>e9cfb5413a6a7a7b5bfc3b9a73671be2b18642cf</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="6.0.2-mauipre.1.22075.3">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="6.0.4">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>059caa278b1e5a62d0d60c9d84bdd737b04e6da8</Sha>
+      <Sha>4050c126c96204c3c4cdd9f3ba715a0779201719</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Manifest-6.0.300" Version="6.0.4" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+      <Uri>https://github.com/dotnet/emsdk</Uri>
+      <Sha>572aeedcfa16bdb619fafcecf5924e5c6b65b07b</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20181.7">
+    <Dependency Name="Microsoft.DotNet.ApiCompat" Version="7.0.0-beta.22103.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>6ee69696ea00da39f35066c22c21a00ceab93d00</Sha>
+      <Sha>70831f0d126fe88b81d7dc8de11358e17a5ce364</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21212.6">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="7.0.0-beta.22103.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>db49d790a4bfa977a9ed7436bf2aa242cefae45e</Sha>
+      <Sha>70831f0d126fe88b81d7dc8de11358e17a5ce364</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

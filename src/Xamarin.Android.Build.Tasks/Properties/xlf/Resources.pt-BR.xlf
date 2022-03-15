@@ -69,6 +69,12 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
         <target state="new">The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.</target>
         <note>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</note>
       </trans-unit>
+      <trans-unit id="XA4233">
+        <source>The &lt;AndroidNamespaceReplacement&gt; for '{0}' does not specify a 'Replacement' attribute.</source>
+        <target state="new">The &lt;AndroidNamespaceReplacement&gt; for '{0}' does not specify a 'Replacement' attribute.</target>
+        <note>The following are literal names and should not be translated: &lt;AndroidNamespaceReplacement&gt;
+{0} - The AndroidNamespaceReplacement MSBuild value.</note>
+      </trans-unit>
       <trans-unit id="XA4300">
         <source>Native library '{0}' will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'.</source>
         <target state="new">Native library '{0}' will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'.</target>
