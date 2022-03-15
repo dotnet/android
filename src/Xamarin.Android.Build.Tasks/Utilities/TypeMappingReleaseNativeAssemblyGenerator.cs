@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (String.Compare ("assembly_name", fieldName, StringComparison.Ordinal) == 0) {
-					return $"assembly_name: {map_module.AssemblyNameValue}";
+					return $"assembly_name: {map_module.assembly_name}";
 				}
 
 				return String.Empty;
@@ -41,6 +41,21 @@ namespace Xamarin.Android.Tasks
 				}
 
 				return null;
+			}
+
+			public override ulong GetBufferSize (object data, string fieldName)
+			{
+				var map_module = EnsureType<TypeMapModule> (data);
+
+				if (String.Compare ("map", fieldName, StringComparison.Ordinal) == 0) {
+					return map_module.entry_count;
+				}
+
+				if (String.Compare ("duplicate_map", fieldName, StringComparison.Ordinal) == 0) {
+					return map_module.duplicate_count;
+				}
+
+				return base.GetBufferSize (data, fieldName);
 			}
 		}
 
@@ -77,10 +92,7 @@ namespace Xamarin.Android.Tasks
 		sealed class TypeMapModule
 		{
 			[NativeAssembler (Ignore = true)]
-			public Guid   MVID;
-
-			[NativeAssembler (Ignore = true)]
-			public string AssemblyNameValue;
+			public Guid    MVID;
 
 			[NativeAssembler (Ignore = true)]
 			public string? MapSymbolName;
@@ -89,9 +101,9 @@ namespace Xamarin.Android.Tasks
 			public string? DuplicateMapSymbolName;
 
 			[NativeAssembler (UsesDataProvider = true, InlineArray = true, InlineArraySize = 16)]
-			public byte   module_uuid;
-			public uint   entry_count;
-			public uint   duplicate_count;
+			public byte[]  module_uuid;
+			public uint    entry_count;
+			public uint    duplicate_count;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 			public TypeMapModuleEntry map;
@@ -102,11 +114,11 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (UsesDataProvider = true)]
 			public string assembly_name;
 
-			[NativePointer]
+			[NativePointer (IsNull = true)]
 			public MonoImage image;
 			public uint   java_name_width;
 
-			[NativePointer]
+			[NativePointer (IsNull = true)]
 			public byte java_map;
 		}
 
@@ -122,22 +134,100 @@ namespace Xamarin.Android.Tasks
 			public uint type_token_id;
 
 			[NativeAssembler (UsesDataProvider = true, InlineArray = true)]
-			public byte java_name;
+			public byte[] java_name;
+		}
+
+		sealed class ModuleMapData
+		{
+			public string SymbolLabel { get; }
+			public List<StructureInstance<TypeMapModuleEntry>> Entries { get; }
+
+			public ModuleMapData (string symbolLabel)
+			{
+				SymbolLabel = symbolLabel;
+				Entries = new List<StructureInstance<TypeMapModuleEntry>> ();
+			}
 		}
 
 		readonly NativeTypeMappingData mappingData;
 		StructureInfo<TypeMapJava> typeMapJavaStructureInfo;
 		StructureInfo<TypeMapModule> typeMapModuleStructureInfo;
 		StructureInfo<TypeMapModuleEntry> typeMapModuleEntryStructureInfo;
+		List<ModuleMapData> mapModulesData;
+		List<StructureInstance<TypeMapModule>> mapModules;
+
+		ulong moduleCounter = 0;
 
 		public LlvmTypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
+			mapModulesData = new List<ModuleMapData> ();
+			mapModules = new List<StructureInstance<TypeMapModule>> ();
 		}
 
 		public override void Init ()
 		{
 			TypeMapJava.MaxJavaNameLength = mappingData.JavaNameWidth;
+			InitMapModules ();
+		}
+
+		void InitMapModules ()
+		{
+			foreach (TypeMapGenerator.ModuleReleaseData data in mappingData.Modules) {
+				string mapName = $"module{moduleCounter++}_managed_to_java";
+				string duplicateMapName;
+
+				if (data.DuplicateTypes.Count == 0)
+					duplicateMapName = String.Empty;
+				else
+					duplicateMapName = $"{mapName}_duplicates";
+
+				var map_module = new TypeMapModule {
+					MVID = data.Mvid,
+					MapSymbolName = mapName,
+					DuplicateMapSymbolName = duplicateMapName.Length == 0 ? null : duplicateMapName,
+
+					module_uuid = data.MvidBytes,
+					entry_count = (uint)data.Types.Length,
+					duplicate_count = (uint)data.DuplicateTypes.Count,
+					assembly_name = data.AssemblyName,
+					java_name_width = 0,
+				};
+
+				InitMapModuleData (mapName, data.Types, mapModulesData);
+				if (data.DuplicateTypes.Count > 0) {
+					InitMapModuleData (duplicateMapName, data.DuplicateTypes.Values, mapModulesData);
+				}
+
+				mapModules.Add (new StructureInstance<TypeMapModule> (map_module));
+			}
+		}
+
+		void InitMapModuleData (string moduleDataSymbolLabel, IEnumerable<TypeMapGenerator.TypeMapReleaseEntry> moduleEntries, List<ModuleMapData> allModulesData)
+		{
+			var tokens = new Dictionary<uint, uint> ();
+			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in moduleEntries) {
+				int idx = Array.BinarySearch (mappingData.JavaTypeNames, entry.JavaName, StringComparer.Ordinal);
+				if (idx < 0)
+					throw new InvalidOperationException ($"Could not map entry '{entry.JavaName}' to array index");
+
+				tokens[entry.Token] = (uint)idx;
+			}
+
+			var sortedTokens = tokens.Keys.ToArray ();
+			Array.Sort (sortedTokens);
+
+			var moduleData = new ModuleMapData (moduleDataSymbolLabel);
+			foreach (uint token in sortedTokens) {
+				var map_entry = new TypeMapModuleEntry {
+					type_token_id = token,
+					java_map_index = tokens[token],
+				};
+
+				moduleData.Entries.Add (new StructureInstance<TypeMapModuleEntry> (map_entry));
+			}
+
+			allModulesData.Add (moduleData);
 		}
 
 		protected override void MapStructures (LlvmIrGenerator generator)
@@ -154,23 +244,34 @@ namespace Xamarin.Android.Tasks
 			generator.WriteVariable ("java_type_count", mappingData.JavaTypeCount);
 			generator.WriteVariable ("java_name_width", mappingData.JavaNameWidth);
 
-			WriteAssemblyNames (generator);
+			WriteMapModules (generator);
 		}
 
-		void WriteAssemblyNames (LlvmIrGenerator generator)
+		void WriteMapModules (LlvmIrGenerator generator)
 		{
-			if (mappingData.AssemblyNames.Count == 0) {
+			if (mapModules.Count == 0) {
 				return;
 			}
 
 			generator.WriteEOL ();
-			generator.WriteEOL ("Assembly names");
-			foreach (var kvp in mappingData.AssemblyNames) {
-				string label = kvp.Key;
-				string name = kvp.Value;
+			generator.WriteEOL ("Map modules data");
 
-				generator.WriteString (label, name, LlvmIrVariableOptions.LocalConstexprString);
+			foreach (ModuleMapData mmd in mapModulesData) {
+				generator.WriteStructureArray<TypeMapModuleEntry> (
+					typeMapModuleEntryStructureInfo,
+					mmd.Entries,
+					LlvmIrVariableOptions.LocalConstant,
+					mmd.SymbolLabel
+				);
 			}
+
+			generator.WriteEOL ("Map modules");
+			generator.WriteStructureArray<TypeMapModule> (
+				typeMapModuleStructureInfo,
+				mapModules,
+				LlvmIrVariableOptions.GlobalConstant,
+				"map_modules"
+			);
 		}
 	}
 

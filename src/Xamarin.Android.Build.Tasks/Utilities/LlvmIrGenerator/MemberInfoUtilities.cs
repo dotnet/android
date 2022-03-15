@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			symbolName = attr.PointsToSymbol;
-			return !String.IsNullOrEmpty (symbolName);
+			return true;
 		}
 
 		public static bool ShouldBeIgnored (this MemberInfo mi)

@@ -150,7 +150,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public static string MapManagedTypeToIR (Type type)
+		static string EnsureIrType (Type type)
 		{
 			if (!typeMap.TryGetValue (type, out string irType)) {
 				throw new InvalidOperationException ($"Unsupported managed type {type}");
@@ -159,11 +159,27 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return irType;
 		}
 
+		static Type GetActualType (Type type)
+		{
+			// Arrays of types are handled elsewhere, so we obtain the array base type here
+			if (type.IsArray) {
+				return type.GetElementType ();
+			}
+
+			return type;
+		}
+
+		public static string MapManagedTypeToIR (Type type)
+		{
+			return EnsureIrType (GetActualType (type));
+		}
+
 		public string MapManagedTypeToIR (Type type, out ulong size)
 		{
-			string irType = MapManagedTypeToIR (type);
-			if (!typeSizes.TryGetValue (type, out size)) {
-				if (type == typeof (string) || type == typeof (IntPtr)) {
+			Type actualType = GetActualType (type);
+			string irType = EnsureIrType (actualType);
+			if (!typeSizes.TryGetValue (actualType, out size)) {
+				if (actualType == typeof (string) || actualType == typeof (IntPtr)) {
 					size = (ulong)PointerSize;
 				} else {
 					throw new InvalidOperationException ($"Unsupported managed type {type}");
@@ -180,20 +196,22 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public static string MapManagedTypeToNative (Type type)
 		{
-			if (type == typeof (bool)) return "bool";
-			if (type == typeof (byte)) return "uint8_t";
-			if (type == typeof (char)) return "char";
-			if (type == typeof (sbyte)) return "int8_t";
-			if (type == typeof (short)) return "int16_t";
-			if (type == typeof (ushort)) return "uint16_t";
-			if (type == typeof (int)) return "int32_t";
-			if (type == typeof (uint)) return "uint32_t";
-			if (type == typeof (long)) return "int64_t";
-			if (type == typeof (ulong)) return "uint64_t";
-			if (type == typeof (float)) return "float";
-			if (type == typeof (double)) return "double";
-			if (type == typeof (string)) return "char*";
-			if (type == typeof (IntPtr)) return "void*";
+			Type baseType = GetActualType (type);
+
+			if (baseType == typeof (bool)) return "bool";
+			if (baseType == typeof (byte)) return "uint8_t";
+			if (baseType == typeof (char)) return "char";
+			if (baseType == typeof (sbyte)) return "int8_t";
+			if (baseType == typeof (short)) return "int16_t";
+			if (baseType == typeof (ushort)) return "uint16_t";
+			if (baseType == typeof (int)) return "int32_t";
+			if (baseType == typeof (uint)) return "uint32_t";
+			if (baseType == typeof (long)) return "int64_t";
+			if (baseType == typeof (ulong)) return "uint64_t";
+			if (baseType == typeof (float)) return "float";
+			if (baseType == typeof (double)) return "double";
+			if (baseType == typeof (string)) return "char*";
+			if (baseType == typeof (IntPtr)) return "void*";
 
 			return type.GetShortName ();
 		}
@@ -404,6 +422,22 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteStructureArray<T> (info, instances, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
 		}
 
+		void AssertArraySize<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, int length, ulong expectedLength)
+		{
+			if (length == (int)expectedLength) {
+				return;
+			}
+
+			throw new InvalidOperationException ($"Invalid array size in field '{smi.Info.Name}' of structure '{info.Name}', expected {expectedLength}, found {length}");
+		}
+
+		void RenderArray<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, byte[] bytes, ulong expectedLength, TextWriter output)
+		{
+			// Byte arrays are represented in the same way as strings, without the explicit NUL termination byte
+			AssertArraySize (info, smi, bytes.Length, expectedLength);
+			output.Write ($"c{QuoteString (bytes, out _, nullTerminated: false)}");
+		}
+
 		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions options)
 		{
 			TextWriter structureOutput = EnsureOutput (options.StructureOutput);
@@ -428,6 +462,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					structureOutput.Write (options.FieldIndent);
 					if (smi.IsNativePointer) {
 						WritePointer (smi);
+					} else if (smi.IsNativeArray) {
+						if (!smi.IsInlineArray) {
+							throw new InvalidOperationException ($"Out of line arrays aren't supported at this time (structure '{info.Name}', field '{smi.Info.Name}')");
+						}
+
+						structureOutput.Write ($"{smi.IRType} ");
+						object? array = GetTypedMemberValue (info, smi, instance, smi.MemberType);
+
+						if (smi.MemberType == typeof(byte[])) {
+							RenderArray (info, smi, (byte[])array, smi.ArrayElements, structureOutput);
+						} else {
+							throw new InvalidOperationException ($"Arrays of type '{smi.MemberType}' aren't supported at this point (structure '{info.Name}', field '{smi.Info.Name}')");
+						}
 					} else {
 						structureOutput.Write ($"{smi.IRType} {GetTypedMemberValue (info, smi, instance, smi.MemberType)}");
 					}
@@ -467,7 +514,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					}
 				}
 
-				if (smi.Info.PointsToSymbol (out string? symbolName) && !String.IsNullOrEmpty (symbolName)) {
+				if (smi.Info.PointsToSymbol (out string? symbolName)) {
+					if (String.IsNullOrEmpty (symbolName) && smi.Info.UsesDataProvider ()) {
+						if (info.DataProvider == null) {
+							throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' points to a symbol, but symbol name wasn't provided and there's no configured data context provider");
+						}
+						symbolName = info.DataProvider.GetPointedToSymbolName (instance.Obj, smi.Info.Name);
+					}
+
+					if (String.IsNullOrEmpty (symbolName)) {
+						WriteNullPointer (smi);
+						return;
+					}
+
 					ulong bufferSize = info.GetBufferSizeFromProvider (smi, instance);
 					WriteGetBufferPointer (symbolName, smi.IRType, bufferSize, indent: false, output: structureOutput);
 					return;
@@ -475,24 +534,24 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				object? value = smi.GetValue (instance.Obj);
 				if (value == null || ((value is IntPtr) && (IntPtr)value == IntPtr.Zero)) {
-					WriteNullPointer ();
+					WriteNullPointer (smi);
 					return;
 				}
 
 				if (value.GetType ().IsPrimitive) {
 					ulong v = Convert.ToUInt64 (value);
 					if (v == 0) {
-						WriteNullPointer ();
+						WriteNullPointer (smi);
 						return;
 					}
 				}
 
 				throw new InvalidOperationException ($"Non-null pointers to objects of managed type '{smi.Info.MemberType}' (IR type '{smi.IRType}') currently not supported (value: {value})");
+			}
 
-				void WriteNullPointer ()
-				{
-					structureOutput.Write ($"{smi.IRType} null");
-				}
+			void WriteNullPointer (StructureMemberInfo<T> smi)
+			{
+				structureOutput.Write ($"{smi.IRType} null");
 			}
 		}
 
@@ -865,11 +924,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public static string QuoteString (string value, out ulong stringSize, bool nullTerminated = true)
 		{
-			byte[] bytes = Encoding.UTF8.GetBytes (value);
+			return QuoteString (Encoding.UTF8.GetBytes (value), out stringSize, nullTerminated);
+		}
+
+		public static string QuoteString (byte[] bytes, out ulong stringSize, bool nullTerminated = true)
+		{
 			var sb = new StringBuilder ();
 
-			foreach (byte b in value) {
-				if (b >= 32 && b < 127) {
+			foreach (byte b in bytes) {
+				if (b != '"' && b >= 32 && b < 127) {
 					sb.Append ((char)b);
 					continue;
 				}

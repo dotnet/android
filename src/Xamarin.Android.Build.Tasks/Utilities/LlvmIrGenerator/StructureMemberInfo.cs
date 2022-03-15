@@ -24,13 +24,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public ulong BaseTypeSize   { get; }
 		public bool IsNativePointer { get; }
 		public bool IsNativeArray   { get; }
+		public bool IsInlineArray   { get; }
 
 		public StructureMemberInfo (MemberInfo mi, LlvmIrGenerator generator)
 		{
 			Info = mi;
 
-			// TODO: check member custom attributes to see if the native member should be a pointer (except for string,
-			// since MapManagedType already takes care of that)
 			MemberType = mi switch {
 				FieldInfo fi => fi.FieldType,
 				PropertyInfo pi => pi.PropertyType,
@@ -38,7 +37,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			};
 
 			ulong size = 0;
-			if (MemberType != typeof(string) && (MemberType.IsStructure () || MemberType.IsClass)) {
+			if (MemberType != typeof(string) && !MemberType.IsArray && (MemberType.IsStructure () || MemberType.IsClass)) {
 				IRType = $"%struct.{MemberType.GetShortName ()}";
 				// TODO: figure out how to get structure size if it isn't a pointer
 			} else {
@@ -55,9 +54,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			BaseTypeSize = size;
 			ArrayElements = 0;
+			IsInlineArray = false;
 			if (IsNativePointer) {
 				size = (ulong)generator.PointerSize;
 			} else if (mi.IsInlineArray ()) {
+				IsInlineArray = true;
 				IsNativeArray = true;
 				int arrayElements = mi.GetInlineArraySize ();
 				if (arrayElements < 0) {
@@ -71,6 +72,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				size = (ulong)arrayElements * BaseTypeSize;
 				IRType = $"[{arrayElements} x {IRType}]";
 				ArrayElements = (ulong)arrayElements;
+			}
+
+			if (MemberType.IsArray && !IsInlineArray) {
+				throw new InvalidOperationException ("Out of line arrays in structures aren't currently supported");
 			}
 
 			Size = size;
