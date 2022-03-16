@@ -61,5 +61,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			return attr.InlineArraySize;
 		}
+
+		public static bool InlineArrayNeedsPadding (this MemberInfo mi)
+		{
+			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			if (attr == null || !attr.InlineArray) {
+				return false;
+			}
+
+			return attr.NeedsPadding;
+		}
 	}
 }

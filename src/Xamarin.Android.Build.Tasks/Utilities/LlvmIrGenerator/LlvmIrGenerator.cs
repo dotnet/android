@@ -30,6 +30,24 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
+		sealed class PackedStructureMember<T>
+		{
+			public readonly string ValueIRType;
+			public readonly string? PaddingIRType;
+			public readonly object? Value;
+			public readonly bool IsPadded;
+			public readonly StructureMemberInfo<T> MemberInfo;
+
+			public PackedStructureMember (StructureMemberInfo<T> memberInfo, object? value, string? valueIRType = null, string? paddingIRType = null)
+			{
+				ValueIRType = valueIRType ?? memberInfo.IRType;
+				Value = value;
+				MemberInfo = memberInfo;
+				PaddingIRType = paddingIRType;
+				IsPadded = !String.IsNullOrEmpty (paddingIRType);
+			}
+		}
+
 		static readonly Dictionary<Type, string> typeMap = new Dictionary<Type, string> {
 			{ typeof (bool), "i8" },
 			{ typeof (byte), "i8" },
@@ -422,20 +440,59 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteStructureArray<T> (info, instances, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
 		}
 
-		void AssertArraySize<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, int length, ulong expectedLength)
+		void AssertArraySize<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, ulong length, ulong expectedLength)
 		{
-			if (length == (int)expectedLength) {
+			if (length == expectedLength) {
 				return;
 			}
 
 			throw new InvalidOperationException ($"Invalid array size in field '{smi.Info.Name}' of structure '{info.Name}', expected {expectedLength}, found {length}");
 		}
 
-		void RenderArray<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, byte[] bytes, ulong expectedLength, TextWriter output)
+		void RenderArray<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, byte[] bytes, TextWriter output, ulong? expectedArraySize = null)
 		{
 			// Byte arrays are represented in the same way as strings, without the explicit NUL termination byte
-			AssertArraySize (info, smi, bytes.Length, expectedLength);
+			AssertArraySize (info, smi, expectedArraySize ?? (ulong)bytes.Length, smi.ArrayElements);
 			output.Write ($"c{QuoteString (bytes, out _, nullTerminated: false)}");
+		}
+
+		void MaybeWriteStructureStringsAndBuffers<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, StructureBodyWriterOptions options)
+		{
+			if (options.StringsOutput != null) {
+				MaybeWriteStructureString<T> (info, smi, instance, options.StringsOutput);
+			}
+
+			if (options.BuffersOutput != null) {
+				MaybeWritePreAllocatedBuffer<T> (info, smi, instance, options.BuffersOutput);
+			}
+		}
+
+		void WriteStructureField<T> (StructureInfo<T> info, StructureInstance<T> instance, StructureMemberInfo<T> smi, int fieldIndex, StructureBodyWriterOptions options, TextWriter output, object? valueOverride = null, ulong? expectedArraySize = null)
+		{
+			output.Write (options.FieldIndent);
+
+			object? value = null;
+			if (smi.IsNativePointer) {
+				WritePointer (info, smi, instance, output);
+			} else if (smi.IsNativeArray) {
+				if (!smi.IsInlineArray) {
+					throw new InvalidOperationException ($"Out of line arrays aren't supported at this time (structure '{info.Name}', field '{smi.Info.Name}')");
+				}
+
+				output.Write ($"{smi.IRType} ");
+				value = valueOverride ?? GetTypedMemberValue (info, smi, instance, smi.MemberType);
+
+				if (smi.MemberType == typeof(byte[])) {
+					RenderArray (info, smi, (byte[])value, output, expectedArraySize);
+				} else {
+					throw new InvalidOperationException ($"Arrays of type '{smi.MemberType}' aren't supported at this point (structure '{info.Name}', field '{smi.Info.Name}')");
+				}
+			} else {
+				value = valueOverride;
+				WritePrimitiveField (info, smi, instance, output);
+			}
+
+			FinishStructureField (info, smi, instance, options, fieldIndex, value, output);
 		}
 
 		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions options)
@@ -444,118 +501,247 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			structureOutput.Write ($"{options.StructIndent}%struct.{info.Name} ");
 
 			if (instance != null) {
-				bool writeStrings = options.StringsOutput != null;
-				bool writeBuffers = options.BuffersOutput != null;
-
 				structureOutput.WriteLine ("{");
 				for (int i = 0; i < info.Members.Count; i++) {
 					StructureMemberInfo<T> smi = info.Members[i];
 
-					if (writeStrings) {
-						MaybeWriteStructureString<T> (info, smi, instance, options.StringsOutput);
-					}
-
-					if (writeBuffers) {
-						MaybeWritePreAllocatedBuffer<T> (info, smi, instance, options.BuffersOutput);
-					}
-
-					structureOutput.Write (options.FieldIndent);
-					if (smi.IsNativePointer) {
-						WritePointer (smi);
-					} else if (smi.IsNativeArray) {
-						if (!smi.IsInlineArray) {
-							throw new InvalidOperationException ($"Out of line arrays aren't supported at this time (structure '{info.Name}', field '{smi.Info.Name}')");
-						}
-
-						structureOutput.Write ($"{smi.IRType} ");
-						object? array = GetTypedMemberValue (info, smi, instance, smi.MemberType);
-
-						if (smi.MemberType == typeof(byte[])) {
-							RenderArray (info, smi, (byte[])array, smi.ArrayElements, structureOutput);
-						} else {
-							throw new InvalidOperationException ($"Arrays of type '{smi.MemberType}' aren't supported at this point (structure '{info.Name}', field '{smi.Info.Name}')");
-						}
-					} else {
-						structureOutput.Write ($"{smi.IRType} {GetTypedMemberValue (info, smi, instance, smi.MemberType)}");
-					}
-
-					if (i < info.Members.Count - 1) {
-						structureOutput.Write (", ");
-					}
-
-					if (options.WriteFieldComment) {
-						// TODO: append value in hex for integer types, LLVM IR doesn't support hex constants for integer fields (only for floats and doubles)
-						WriteEOL (info.GetCommentFromProvider (smi, instance) ?? smi.Info.Name, structureOutput);
-					} else {
-						WriteEOL (output: structureOutput);
-					}
+					MaybeWriteStructureStringsAndBuffers (info, smi, instance, options);
+					WriteStructureField (info, instance, smi, i, options, structureOutput);
 				}
 
 				structureOutput.Write ($"{options.StructIndent}}}");
 			} else {
 				structureOutput.Write ("zeroinitializer");
 			}
-
-			void WritePointer (StructureMemberInfo<T> smi)
-			{
-				if (info.HasStrings) {
-					StructurePointerData? spd = instance.GetPointerData (smi);
-					if (spd != null) {
-						WriteGetStringPointer (spd.VariableName, spd.Size, indent: false, output: structureOutput);
-						return;
-					}
-				}
-
-				if (info.HasPreAllocatedBuffers) {
-					StructurePointerData? spd = instance.GetPointerData (smi);
-					if (spd != null) {
-						WriteGetBufferPointer (spd.VariableName, smi.IRType, spd.Size, indent: false, output: structureOutput);
-						return;
-					}
-				}
-
-				if (smi.Info.PointsToSymbol (out string? symbolName)) {
-					if (String.IsNullOrEmpty (symbolName) && smi.Info.UsesDataProvider ()) {
-						if (info.DataProvider == null) {
-							throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' points to a symbol, but symbol name wasn't provided and there's no configured data context provider");
-						}
-						symbolName = info.DataProvider.GetPointedToSymbolName (instance.Obj, smi.Info.Name);
-					}
-
-					if (String.IsNullOrEmpty (symbolName)) {
-						WriteNullPointer (smi);
-						return;
-					}
-
-					ulong bufferSize = info.GetBufferSizeFromProvider (smi, instance);
-					WriteGetBufferPointer (symbolName, smi.IRType, bufferSize, indent: false, output: structureOutput);
-					return;
-				}
-
-				object? value = smi.GetValue (instance.Obj);
-				if (value == null || ((value is IntPtr) && (IntPtr)value == IntPtr.Zero)) {
-					WriteNullPointer (smi);
-					return;
-				}
-
-				if (value.GetType ().IsPrimitive) {
-					ulong v = Convert.ToUInt64 (value);
-					if (v == 0) {
-						WriteNullPointer (smi);
-						return;
-					}
-				}
-
-				throw new InvalidOperationException ($"Non-null pointers to objects of managed type '{smi.Info.MemberType}' (IR type '{smi.IRType}') currently not supported (value: {value})");
-			}
-
-			void WriteNullPointer (StructureMemberInfo<T> smi)
-			{
-				structureOutput.Write ($"{smi.IRType} null");
-			}
 		}
 
-		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true)
+		void MaybeWriteFieldComment<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, StructureBodyWriterOptions options, object? value, TextWriter output)
+		{
+			if (!options.WriteFieldComment) {
+				return;
+			}
+
+			string? comment = info.GetCommentFromProvider (smi, instance);
+			if (String.IsNullOrEmpty (comment)) {
+				var sb = new StringBuilder (smi.Info.Name);
+				if (value != null && smi.MemberType.IsPrimitive && smi.MemberType != typeof(bool)) {
+					sb.Append (" (");
+					sb.Append ($"0x{value:x})");
+				}
+				comment = sb.ToString ();
+			}
+			WriteComment (output, comment);
+		}
+
+		void FinishStructureField<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, StructureBodyWriterOptions options, int fieldIndex, object? value, TextWriter output)
+		{
+			if (fieldIndex < info.Members.Count - 1) {
+				output.Write (", ");
+			}
+			MaybeWriteFieldComment (info, smi, instance, options, value, output);
+			WriteEOL (output);
+		}
+
+		void WritePrimitiveField<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, TextWriter output, object? overrideValue = null)
+		{
+			object? value = overrideValue ?? GetTypedMemberValue (info, smi, instance, smi.MemberType);
+			output.Write ($"{smi.IRType} {value}");
+		}
+
+		void WritePointer<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, TextWriter output, object? overrideValue = null)
+		{
+			if (info.HasStrings) {
+				StructurePointerData? spd = instance.GetPointerData (smi);
+				if (spd != null) {
+					WriteGetStringPointer (spd.VariableName, spd.Size, indent: false, output: output);
+					return;
+				}
+			}
+
+			if (info.HasPreAllocatedBuffers) {
+				StructurePointerData? spd = instance.GetPointerData (smi);
+				if (spd != null) {
+					WriteGetBufferPointer (spd.VariableName, smi.IRType, spd.Size, indent: false, output: output);
+					return;
+				}
+			}
+
+			if (smi.Info.PointsToSymbol (out string? symbolName)) {
+				if (String.IsNullOrEmpty (symbolName) && smi.Info.UsesDataProvider ()) {
+					if (info.DataProvider == null) {
+						throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' points to a symbol, but symbol name wasn't provided and there's no configured data context provider");
+					}
+					symbolName = info.DataProvider.GetPointedToSymbolName (instance.Obj, smi.Info.Name);
+				}
+
+				if (String.IsNullOrEmpty (symbolName)) {
+					WriteNullPointer (smi, output);
+					return;
+				}
+
+				ulong bufferSize = info.GetBufferSizeFromProvider (smi, instance);
+				WriteGetBufferPointer (symbolName, smi.IRType, bufferSize, indent: false, output: output);
+				return;
+			}
+
+			object? value = overrideValue ?? smi.GetValue (instance.Obj);
+			if (value == null || ((value is IntPtr) && (IntPtr)value == IntPtr.Zero)) {
+				WriteNullPointer (smi, output);
+				return;
+			}
+
+			if (value.GetType ().IsPrimitive) {
+				ulong v = Convert.ToUInt64 (value);
+				if (v == 0) {
+					WriteNullPointer (smi, output);
+					return;
+				}
+			}
+
+			throw new InvalidOperationException ($"Non-null pointers to objects of managed type '{smi.Info.MemberType}' (IR type '{smi.IRType}') currently not supported (value: {value})");
+		}
+
+		void WriteNullPointer<T> (StructureMemberInfo<T> smi, TextWriter output)
+		{
+			output.Write ($"{smi.IRType} null");
+		}
+
+		// In theory, functionality implemented here should be folded into WriteStructureArray, but in practice it would slow processing for most of the structures we
+		// write, thus we'll keep this one separate, even at the cost of some code duplication
+		//
+		// This code is extremely ugly, one day it should be made look nicer (right... :D)
+		//
+		public void WritePackedStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>> instances, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
+		{
+			StructureBodyWriterOptions bodyWriterOptions = InitStructureWrite (info, options, symbolName, writeFieldComment, fieldIndent: $"{Indent}{Indent}");
+			TextWriter structureOutput = EnsureOutput (bodyWriterOptions.StructureOutput);
+			var structureBodyOutput = new StringWriter ();
+			var structureTypeOutput = new StringWriter ();
+
+			bool firstInstance = true;
+			var members = new List<PackedStructureMember<T>> ();
+			var instanceType = new StringBuilder ();
+			foreach (StructureInstance<T> instance in instances) {
+				members.Clear ();
+				bool hasPaddedFields = false;
+
+				if (!firstInstance) {
+					structureTypeOutput.WriteLine (',');
+					structureBodyOutput.WriteLine (',');
+				} else {
+					firstInstance = false;
+				}
+
+				foreach (StructureMemberInfo<T> smi in info.Members) {
+					object? value = GetTypedMemberValue (info, smi, instance, smi.MemberType);
+
+					if (!smi.NeedsPadding) {
+						members.Add (new PackedStructureMember<T> (smi, value));
+						continue;
+					}
+
+					if (smi.MemberType != typeof(byte[])) {
+						throw new InvalidOperationException ($"Only byte arrays are supported currently (field '{smi.Info.Name}' of structure '{info.Name}')");
+					}
+
+					var array = (byte[])value;
+					var arrayLength = (ulong)array.Length;
+
+					if (arrayLength > smi.ArrayElements) {
+						throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' should not have more than {smi.ArrayElements} elements");
+					}
+
+					ulong padding = smi.ArrayElements - arrayLength;
+					if (padding == 0) {
+						members.Add (new PackedStructureMember<T> (smi, value));
+						continue;
+					}
+
+					if (padding < 8) {
+						var paddedValue = new byte[arrayLength + padding];
+						Array.Copy (array, paddedValue, array.Length);
+						for (int i = (int)arrayLength; i < paddedValue.Length; i++) {
+							paddedValue[i] = 0;
+						}
+						members.Add (new PackedStructureMember<T> (smi, paddedValue));
+						continue;
+					}
+
+					members.Add (new PackedStructureMember<T> (smi, value, valueIRType: $"[{arrayLength} x i8]", paddingIRType: $"[{padding} x i8]"));
+					hasPaddedFields = true;
+				}
+
+				bool firstField;
+				instanceType.Clear ();
+				if (!hasPaddedFields) {
+					instanceType.Append ($"\t%struct.{info.Name}");
+				} else {
+					instanceType.Append ("\t{ ");
+
+					firstField = true;
+					foreach (PackedStructureMember<T> psm in members) {
+						if (!firstField) {
+							instanceType.Append (", ");
+						} else {
+							firstField = false;
+						}
+
+						if (!psm.IsPadded) {
+							instanceType.Append (psm.ValueIRType);
+							continue;
+						}
+
+						instanceType.Append ($"<{{ {psm.ValueIRType}, {psm.PaddingIRType} }}>");
+					}
+
+					instanceType.Append (" }");
+				}
+				structureTypeOutput.Write (instanceType.ToString ());
+
+				structureBodyOutput.Write (instanceType.ToString ());
+				structureBodyOutput.WriteLine (" {");
+
+				firstField = true;
+				bool previousFieldWasPadded = false;
+				for (int i = 0; i < members.Count; i++) {
+					PackedStructureMember<T> psm = members[i];
+
+					if (firstField) {
+						firstField = false;
+					}
+
+					if (!psm.IsPadded) {
+						previousFieldWasPadded = false;
+						ulong? expectedArraySize = psm.MemberInfo.IsNativeArray ? (ulong)((byte[])psm.Value).Length : null;
+						WriteStructureField (info, instance, psm.MemberInfo, i, bodyWriterOptions, structureBodyOutput, valueOverride: psm.Value, expectedArraySize: expectedArraySize);
+						continue;
+					}
+
+					if (!firstField && previousFieldWasPadded) {
+						structureBodyOutput.Write (", ");
+					}
+					structureBodyOutput.Write ($"{bodyWriterOptions.FieldIndent}<{{ {psm.ValueIRType}, {psm.PaddingIRType} }}> <{{ {psm.ValueIRType} c{QuoteString ((byte[])psm.Value)}, {psm.PaddingIRType} zeroinitializer }}> ");
+					MaybeWriteFieldComment (info, psm.MemberInfo, instance, bodyWriterOptions, value: null, output: structureBodyOutput);
+					previousFieldWasPadded = true;
+				}
+				structureBodyOutput.WriteLine ();
+				structureBodyOutput.Write ($"{Indent}}}");
+			}
+
+			structureOutput.WriteLine ("<{");
+			structureOutput.Write (structureTypeOutput);
+			structureOutput.WriteLine ();
+			structureOutput.WriteLine ("}>");
+
+			structureOutput.WriteLine ("<{");
+			structureOutput.Write (structureBodyOutput);
+			structureOutput.WriteLine ();
+			structureOutput.Write ("}>");
+
+			FinishStructureWrite (info, bodyWriterOptions);
+		}
+
+		StructureBodyWriterOptions InitStructureWrite<T> (StructureInfo<T> info, LlvmIrVariableOptions options, string? symbolName, bool writeFieldComment, string? fieldIndent = null)
 		{
 			if (options.IsGlobal && String.IsNullOrEmpty (symbolName)) {
 				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
@@ -570,20 +756,31 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				WriteGlobalSymbolStart (symbolName, options, structureOutput);
 			}
 
-			var bodyWriterOptions = new StructureBodyWriterOptions (
+			return new StructureBodyWriterOptions (
 				writeFieldComment: writeFieldComment,
-				fieldIndent: Indent,
+				fieldIndent: fieldIndent ?? Indent,
 				structureOutput: structureOutput,
 				stringsOutput: info.HasStrings ? new StringWriter () : null,
 				buffersOutput: info.HasPreAllocatedBuffers ? new StringWriter () : null
 			);
+		}
 
-			WriteStructureBody (info, instance, bodyWriterOptions);
-			structureOutput.WriteLine ($", align {info.MaxFieldAlignment}");
+		void FinishStructureWrite<T> (StructureInfo<T> info, StructureBodyWriterOptions bodyWriterOptions)
+		{
+			bodyWriterOptions.StructureOutput.WriteLine ($", align {info.MaxFieldAlignment}");
 
 			WriteBufferToOutput (bodyWriterOptions.StringsOutput);
 			WriteBufferToOutput (bodyWriterOptions.BuffersOutput);
-			WriteBufferToOutput (structureOutput);
+			WriteBufferToOutput (bodyWriterOptions.StructureOutput);
+		}
+
+		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true)
+		{
+			StructureBodyWriterOptions bodyWriterOptions = InitStructureWrite (info, options, symbolName, writeFieldComment);
+
+			WriteStructureBody (info, instance, bodyWriterOptions);
+
+			FinishStructureWrite (info, bodyWriterOptions);
 		}
 
 		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, string? symbolName = null, bool writeFieldComment = true)
@@ -856,7 +1053,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteCommentLine (Output, comment, indent);
 		}
 
-		public void WriteCommentLine (TextWriter writer, string? comment = null, bool indent = false)
+		public void WriteComment (TextWriter writer, string? comment = null, bool indent = false)
 		{
 			if (indent) {
 				writer.Write (Indent);
@@ -868,7 +1065,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				writer.Write (' ');
 				writer.Write (comment);
 			}
+		}
 
+		public void WriteCommentLine (TextWriter writer, string? comment = null, bool indent = false)
+		{
+			WriteComment (writer, comment, indent);
 			writer.WriteLine ();
 		}
 
@@ -920,6 +1121,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public static string QuoteString (string value, bool nullTerminated = true)
 		{
 			return QuoteString (value, out _, nullTerminated);
+		}
+
+		public static string QuoteString (byte[] bytes)
+		{
+			return QuoteString (bytes, out _, nullTerminated: false);
 		}
 
 		public static string QuoteString (string value, out ulong stringSize, bool nullTerminated = true)

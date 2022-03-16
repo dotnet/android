@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public string? GetCommentFromProvider (StructureMemberInfo<T> smi, StructureInstance<T> instance)
 		{
-			if (DataProvider == null) {
+			if (DataProvider == null || !smi.Info.UsesDataProvider ()) {
 				return null;
 			}
 

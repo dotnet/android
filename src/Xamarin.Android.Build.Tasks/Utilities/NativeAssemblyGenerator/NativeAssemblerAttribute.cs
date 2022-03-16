@@ -9,6 +9,7 @@ namespace Xamarin.Android.Tasks
 		public bool UsesDataProvider { get; set; }
 		public bool InlineArray      { get; set; }
 		public int  InlineArraySize  { get; set; } = -1;
+		public bool NeedsPadding     { get; set; }
 		public string? Comment       { get; set; }
 		public string? Name          { get; set; }
 	}

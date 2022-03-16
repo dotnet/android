@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 
@@ -133,7 +135,7 @@ namespace Xamarin.Android.Tasks
 			public uint module_index;
 			public uint type_token_id;
 
-			[NativeAssembler (UsesDataProvider = true, InlineArray = true)]
+			[NativeAssembler (UsesDataProvider = true, InlineArray = true, NeedsPadding = true)]
 			public byte[] java_name;
 		}
 
@@ -155,6 +157,7 @@ namespace Xamarin.Android.Tasks
 		StructureInfo<TypeMapModuleEntry> typeMapModuleEntryStructureInfo;
 		List<ModuleMapData> mapModulesData;
 		List<StructureInstance<TypeMapModule>> mapModules;
+		List<StructureInstance<TypeMapJava>> javaMap;
 
 		ulong moduleCounter = 0;
 
@@ -163,12 +166,27 @@ namespace Xamarin.Android.Tasks
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
 			mapModulesData = new List<ModuleMapData> ();
 			mapModules = new List<StructureInstance<TypeMapModule>> ();
+			javaMap = new List<StructureInstance<TypeMapJava>> ();
 		}
 
 		public override void Init ()
 		{
 			TypeMapJava.MaxJavaNameLength = mappingData.JavaNameWidth;
 			InitMapModules ();
+			InitJavaMap ();
+		}
+
+		void InitJavaMap ()
+		{
+			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
+				var map_entry = new TypeMapJava {
+					module_index = (uint)entry.ModuleIndex,
+					type_token_id = entry.SkipInJavaToManaged ? 0 : entry.Token,
+					java_name = Encoding.UTF8.GetBytes (entry.JavaName),
+				};
+
+				javaMap.Add (new StructureInstance<TypeMapJava> (map_entry));
+			}
 		}
 
 		void InitMapModules ()
@@ -245,6 +263,19 @@ namespace Xamarin.Android.Tasks
 			generator.WriteVariable ("java_name_width", mappingData.JavaNameWidth);
 
 			WriteMapModules (generator);
+			WriteJavaMap (generator);
+		}
+
+		void WriteJavaMap (LlvmIrGenerator generator)
+		{
+			generator.WriteEOL ();
+			generator.WriteEOL ("Java to managed map");
+			generator.WritePackedStructureArray (
+				typeMapJavaStructureInfo,
+				javaMap,
+				LlvmIrVariableOptions.GlobalConstant,
+				"map_java"
+			);
 		}
 
 		void WriteMapModules (LlvmIrGenerator generator)
@@ -257,7 +288,7 @@ namespace Xamarin.Android.Tasks
 			generator.WriteEOL ("Map modules data");
 
 			foreach (ModuleMapData mmd in mapModulesData) {
-				generator.WriteStructureArray<TypeMapModuleEntry> (
+				generator.WriteStructureArray (
 					typeMapModuleEntryStructureInfo,
 					mmd.Entries,
 					LlvmIrVariableOptions.LocalConstant,
@@ -266,7 +297,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			generator.WriteEOL ("Map modules");
-			generator.WriteStructureArray<TypeMapModule> (
+			generator.WriteStructureArray (
 				typeMapModuleStructureInfo,
 				mapModules,
 				LlvmIrVariableOptions.GlobalConstant,

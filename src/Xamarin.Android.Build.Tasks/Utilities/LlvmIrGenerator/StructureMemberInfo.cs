@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		/// <summary>
 		/// Size of a variable with this IR type. May differ from <see cref="BaseTypeSize"/> because the field
-		/// can be a pointer to type or an array
+		/// can be a pointer to type
 		/// </summary>
 		public ulong Size           { get; }
 
@@ -25,6 +25,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool IsNativePointer { get; }
 		public bool IsNativeArray   { get; }
 		public bool IsInlineArray   { get; }
+		public bool NeedsPadding    { get; }
 
 		public StructureMemberInfo (MemberInfo mi, LlvmIrGenerator generator)
 		{
@@ -55,11 +56,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			BaseTypeSize = size;
 			ArrayElements = 0;
 			IsInlineArray = false;
+			NeedsPadding = false;
+
 			if (IsNativePointer) {
 				size = (ulong)generator.PointerSize;
 			} else if (mi.IsInlineArray ()) {
 				IsInlineArray = true;
 				IsNativeArray = true;
+				NeedsPadding = mi.InlineArrayNeedsPadding ();
 				int arrayElements = mi.GetInlineArraySize ();
 				if (arrayElements < 0) {
 					arrayElements = GetArraySizeFromProvider (typeof(T).GetDataProvider (), mi.Name);
@@ -69,7 +73,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					throw new InvalidOperationException ($"Array cannot have negative size (got {arrayElements})");
 				}
 
-				size = (ulong)arrayElements * BaseTypeSize;
 				IRType = $"[{arrayElements} x {IRType}]";
 				ArrayElements = (ulong)arrayElements;
 			}
