@@ -19,6 +19,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		};
 
 		/// <summary>
+		/// Options for a global, writable, symbol
+		/// </summary>
+		public static readonly LlvmIrVariableOptions GlobalWritable = new LlvmIrVariableOptions {
+			Writability = LlvmIrWritability.Writable,
+		};
+
+		/// <summary>
 		/// Options for a local, read-only, symbol
 		/// </summary>
 		public static readonly LlvmIrVariableOptions LocalConstant = new LlvmIrVariableOptions {
