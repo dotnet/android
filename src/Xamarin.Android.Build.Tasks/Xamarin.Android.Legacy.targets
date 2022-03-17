@@ -708,7 +708,8 @@ projects. .NET 5 projects will not import this file.
         AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
         YieldDuringToolExecution="$(YieldDuringToolExecution)"
         EnableLLVM="$(EnableLLVM)"
-        Profiles="@(_AotProfiles)">
+        Profiles="@(_AotProfiles)"
+        StripLibraries="$(_AndroidAotStripLibraries)">
       <Output TaskParameter="NativeLibrariesReferences" ItemName="_AdditionalNativeLibraryReferences" />
     </Aot>
 

@@ -47,6 +47,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool EnableLLVM { get; set; }
 
+		public bool StripLibraries { get; set; }
+
 		public string AndroidSequencePointsMode { get; set; } = "";
 
 		public ITaskItem [] Profiles { get; set; } = Array.Empty<ITaskItem> ();
@@ -291,7 +293,17 @@ namespace Xamarin.Android.Tasks
 
 				ldFlags = $"\\\"{string.Join ("\\\";\\\"", libs)}\\\"";
 			}
-			return ldFlags;
+
+			if (!StripLibraries) {
+				return ldFlags;
+			}
+
+			const string StripFlag = "-s";
+			if (ldFlags.Length == 0) {
+				return StripFlag;
+			}
+
+			return $"{ldFlags} {StripFlag}";
 		}
 
 		static string GetNdkToolchainLibraryDir (NdkTools ndk, string binDir, string archDir = null)
