@@ -15,7 +15,7 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string BinutilsVersion                = "2.35.2-XA.1";
+		const string BinutilsVersion                = "L_13.0.1-4.0.1";
 
 		const string MicrosoftOpenJDK11Version      = "11.0.10";
 		const string MicrosoftOpenJDK11Release      = "9.1";
@@ -53,7 +53,7 @@ namespace Xamarin.Android.Prepare
 
 			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
 
-			public static Uri BinutilsArchive = new Uri ($"https://github.com/xamarin/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-binutils-{BinutilsVersion}.7z");
+			public static Uri BinutilsArchive = new Uri ($"https://github.com/xamarin/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-toolchain-{BinutilsVersion}.7z");
 		}
 
 		public static partial class Defaults
@@ -219,9 +219,16 @@ namespace Xamarin.Android.Prepare
 			};
 
 			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
+				// Tools prefixed with architecture triple
+				new NDKTool (name: "as", prefixed: true),
+				new NDKTool (name: "ld", prefixed: true),
+				new NDKTool (name: "strip", prefixed: true),
+
+				// Unprefixed tools
 				new NDKTool (name: "as"),
 				new NDKTool (name: "ld"),
-				new NDKTool (name: "strip"),
+				new NDKTool (name: "llvm-mc"),
+				new NDKTool (name: "llvm-strip"),
 			};
 		}
 

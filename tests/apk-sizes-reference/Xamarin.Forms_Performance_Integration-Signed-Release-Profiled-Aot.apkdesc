@@ -11,7 +11,7 @@
       "Size": 68737
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 565320
+      "Size": 565323
     },
     "assemblies/Mono.Security.dll": {
       "Size": 68437
@@ -116,7 +116,7 @@
       "Size": 22005
     },
     "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
-      "Size": 114914
+      "Size": 114917
     },
     "assemblies/Xamarin.Forms.Platform.Android.dll": {
       "Size": 367737
@@ -131,94 +131,94 @@
       "Size": 43506
     },
     "classes.dex": {
-      "Size": 2652924
+      "Size": 2639828
     },
     "lib/armeabi-v7a/libaot-FormsViewGroup.dll.so": {
-      "Size": 23224
+      "Size": 23692
     },
     "lib/armeabi-v7a/libaot-Java.Interop.dll.so": {
-      "Size": 296796
+      "Size": 457200
     },
     "lib/armeabi-v7a/libaot-Mono.Android.dll.so": {
-      "Size": 1079748
+      "Size": 1896308
     },
     "lib/armeabi-v7a/libaot-mscorlib.dll.so": {
-      "Size": 2353648
+      "Size": 3527556
     },
     "lib/armeabi-v7a/libaot-Newtonsoft.Json.dll.so": {
-      "Size": 437332
+      "Size": 720148
     },
     "lib/armeabi-v7a/libaot-System.Core.dll.so": {
-      "Size": 788152
+      "Size": 1100260
     },
     "lib/armeabi-v7a/libaot-System.Data.dll.so": {
-      "Size": 176416
+      "Size": 426528
     },
     "lib/armeabi-v7a/libaot-System.dll.so": {
-      "Size": 556868
+      "Size": 897968
     },
     "lib/armeabi-v7a/libaot-System.Net.Http.dll.so": {
-      "Size": 99884
+      "Size": 164652
     },
     "lib/armeabi-v7a/libaot-System.Runtime.Serialization.dll.so": {
-      "Size": 117192
+      "Size": 270996
     },
     "lib/armeabi-v7a/libaot-System.ServiceModel.Internals.dll.so": {
-      "Size": 16776
+      "Size": 25760
     },
     "lib/armeabi-v7a/libaot-System.Xml.dll.so": {
-      "Size": 217492
+      "Size": 601068
     },
     "lib/armeabi-v7a/libaot-System.Xml.Linq.dll.so": {
-      "Size": 31912
+      "Size": 50204
     },
     "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Activity.dll.so": {
-      "Size": 13592
+      "Size": 12468
     },
     "lib/armeabi-v7a/libaot-Xamarin.AndroidX.AppCompat.dll.so": {
-      "Size": 110812
+      "Size": 242324
     },
     "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CoordinatorLayout.dll.so": {
-      "Size": 24708
+      "Size": 35252
     },
     "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Core.dll.so": {
-      "Size": 76928
+      "Size": 192156
     },
     "lib/armeabi-v7a/libaot-Xamarin.AndroidX.DrawerLayout.dll.so": {
-      "Size": 33012
+      "Size": 42896
     },
     "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Fragment.dll.so": {
-      "Size": 58532
+      "Size": 95296
     },
     "lib/armeabi-v7a/libaot-Xamarin.AndroidX.RecyclerView.dll.so": {
-      "Size": 111164
+      "Size": 214904
     },
     "lib/armeabi-v7a/libaot-Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
-      "Size": 24188
+      "Size": 28476
     },
     "lib/armeabi-v7a/libaot-Xamarin.AndroidX.ViewPager.dll.so": {
-      "Size": 31804
+      "Size": 45776
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Core.dll.so": {
-      "Size": 1985956
+      "Size": 2831940
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
-      "Size": 13728
+      "Size": 18712
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
-      "Size": 270688
+      "Size": 277200
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.Android.dll.so": {
-      "Size": 1483524
+      "Size": 1971376
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.dll.so": {
-      "Size": 113568
+      "Size": 122172
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Xaml.dll.so": {
-      "Size": 93736
+      "Size": 131496
     },
     "lib/armeabi-v7a/libaot-Xamarin.Google.Android.Material.dll.so": {
-      "Size": 59152
+      "Size": 98024
     },
     "lib/armeabi-v7a/libmono-btls-shared.so": {
       "Size": 1112688
@@ -236,94 +236,94 @@
       "Size": 48844
     },
     "lib/armeabi-v7a/libxamarin-app.so": {
-      "Size": 143740
+      "Size": 141260
     },
     "lib/x86/libaot-FormsViewGroup.dll.so": {
-      "Size": 27028
+      "Size": 19112
     },
     "lib/x86/libaot-Java.Interop.dll.so": {
-      "Size": 273584
+      "Size": 277860
     },
     "lib/x86/libaot-Mono.Android.dll.so": {
-      "Size": 902032
+      "Size": 911652
     },
     "lib/x86/libaot-mscorlib.dll.so": {
-      "Size": 2079504
+      "Size": 2150468
     },
     "lib/x86/libaot-Newtonsoft.Json.dll.so": {
-      "Size": 385724
+      "Size": 383552
     },
     "lib/x86/libaot-System.Core.dll.so": {
-      "Size": 728760
+      "Size": 741508
     },
     "lib/x86/libaot-System.Data.dll.so": {
-      "Size": 130480
+      "Size": 125684
     },
     "lib/x86/libaot-System.dll.so": {
-      "Size": 479884
+      "Size": 487232
     },
     "lib/x86/libaot-System.Net.Http.dll.so": {
-      "Size": 91188
+      "Size": 82796
     },
     "lib/x86/libaot-System.Runtime.Serialization.dll.so": {
-      "Size": 87968
+      "Size": 80400
     },
     "lib/x86/libaot-System.ServiceModel.Internals.dll.so": {
-      "Size": 20708
+      "Size": 13616
     },
     "lib/x86/libaot-System.Xml.dll.so": {
-      "Size": 135404
+      "Size": 128724
     },
     "lib/x86/libaot-System.Xml.Linq.dll.so": {
-      "Size": 31644
+      "Size": 22856
     },
     "lib/x86/libaot-Xamarin.AndroidX.Activity.dll.so": {
-      "Size": 17532
+      "Size": 8492
     },
     "lib/x86/libaot-Xamarin.AndroidX.AppCompat.dll.so": {
-      "Size": 89580
+      "Size": 79604
     },
     "lib/x86/libaot-Xamarin.AndroidX.CoordinatorLayout.dll.so": {
-      "Size": 28464
+      "Size": 20440
     },
     "lib/x86/libaot-Xamarin.AndroidX.Core.dll.so": {
-      "Size": 56124
+      "Size": 45764
     },
     "lib/x86/libaot-Xamarin.AndroidX.DrawerLayout.dll.so": {
-      "Size": 36676
+      "Size": 26976
     },
     "lib/x86/libaot-Xamarin.AndroidX.Fragment.dll.so": {
-      "Size": 49720
+      "Size": 45464
     },
     "lib/x86/libaot-Xamarin.AndroidX.RecyclerView.dll.so": {
-      "Size": 93812
+      "Size": 85944
     },
     "lib/x86/libaot-Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
-      "Size": 27932
+      "Size": 19244
     },
     "lib/x86/libaot-Xamarin.AndroidX.ViewPager.dll.so": {
-      "Size": 35480
+      "Size": 26248
     },
     "lib/x86/libaot-Xamarin.Forms.Core.dll.so": {
-      "Size": 1769736
+      "Size": 1820860
     },
     "lib/x86/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
-      "Size": 21764
+      "Size": 11384
     },
     "lib/x86/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
-      "Size": 192512
+      "Size": 182040
     },
     "lib/x86/libaot-Xamarin.Forms.Platform.Android.dll.so": {
-      "Size": 1318988
+      "Size": 1353492
     },
     "lib/x86/libaot-Xamarin.Forms.Platform.dll.so": {
-      "Size": 80600
+      "Size": 71196
     },
     "lib/x86/libaot-Xamarin.Forms.Xaml.dll.so": {
-      "Size": 85124
+      "Size": 79564
     },
     "lib/x86/libaot-Xamarin.Google.Android.Material.dll.so": {
-      "Size": 54564
+      "Size": 47020
     },
     "lib/x86/libmono-btls-shared.so": {
       "Size": 1459584
@@ -341,7 +341,7 @@
       "Size": 61112
     },
     "lib/x86/libxamarin-app.so": {
-      "Size": 145724
+      "Size": 140024
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -2165,5 +2165,5 @@
       "Size": 347268
     }
   },
-  "PackageSize": 17713830
+  "PackageSize": 19475110
 }
