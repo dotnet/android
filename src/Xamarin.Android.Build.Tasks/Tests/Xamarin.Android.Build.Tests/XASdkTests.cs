@@ -598,13 +598,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var rids = runtimeIdentifiers.Split (';');
-			if (isRelease) {
-				// Check for stripped native libraries
-				foreach (var rid in rids) {
-					FileAssert.Exists (Path.Combine (intermediateOutputPath, "native", rid, "libmono-android.release.so"));
-					FileAssert.Exists (Path.Combine (intermediateOutputPath, "native", rid, "libmonosgen-2.0.so"));
-				}
-			}
 
 			// Check AndroidManifest.xml
 			var manifestPath = Path.Combine (intermediateOutputPath, "android", "AndroidManifest.xml");
