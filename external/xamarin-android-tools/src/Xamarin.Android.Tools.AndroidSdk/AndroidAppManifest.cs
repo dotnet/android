@@ -150,6 +150,11 @@ namespace Xamarin.Android.Tools
 			set { application.SetAttributeValue (aNS + "icon", NullIfEmpty (value)); }
 		}
 
+		public string? ApplicationRoundIcon {
+			get { return (string?) application.Attribute (aNS + "roundIcon");  }
+			set { application.SetAttributeValue (aNS + "roundIcon", NullIfEmpty (value)); }
+		}
+
 		public string? ApplicationTheme {
 			get { return (string?) application.Attribute (aNS + "theme"); }
 			set { application.SetAttributeValue (aNS + "theme", NullIfEmpty (value)); }
