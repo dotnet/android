@@ -37,11 +37,11 @@ This file is used by all project types, including binding projects.
       <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">false</DesignTimeBuild>
     </PropertyGroup>
   </Target>
-  
+
   <Target Name="_SetupDesignTimeBuildForCompile" DependsOnTargets="_CreateStampDirectory">
     <PropertyGroup>
       <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
-      <ManagedDesignTimeBuild Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'true' And '$(DesignTimeBuild)' == 'true' And '$(BuildingInsideVisualStudio)' == 'true' ">true</ManagedDesignTimeBuild>
+      <ManagedDesignTimeBuild Condition=" '$(AndroidGenerateResourceDesigner)' == 'True' And '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'true' And '$(DesignTimeBuild)' == 'true' And '$(BuildingInsideVisualStudio)' == 'true' ">true</ManagedDesignTimeBuild>
       <ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' ">False</ManagedDesignTimeBuild>
       <_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryImportsCache)') ">$(_AndroidLibraryImportsDesignTimeCache)</_AndroidLibraryImportsCache>
       <_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryProjectImportsCache)') ">$(_AndroidLibraryProjectImportsDesignTimeCache)</_AndroidLibraryProjectImportsCache>
