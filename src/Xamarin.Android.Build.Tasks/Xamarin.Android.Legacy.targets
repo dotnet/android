@@ -12,6 +12,7 @@ projects. .NET 5 projects will not import this file.
 
   <PropertyGroup>
     <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">Java</AndroidBoundExceptionType>
+    <AndroidGenerateResourceDesigner>True</AndroidGenerateResourceDesigner>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidBuildApplicationPackage)' == 'True' And '$(AndroidApplication)' == 'True' ">
