@@ -354,8 +354,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var uniqueNativeLibraries = new List<ITaskItem> ();
+			var seenNativeLibraryNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			if (NativeLibraries != null) {
-				var seenNativeLibraryNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 				foreach (ITaskItem item in NativeLibraries) {
 					// We don't care about different ABIs here, just the file name
 					string name = Path.GetFileName (item.ItemSpec);
@@ -365,6 +365,19 @@ namespace Xamarin.Android.Tasks
 
 					seenNativeLibraryNames.Add (name);
 					uniqueNativeLibraries.Add (item);
+				}
+			}
+
+			// In "classic" Xamarin.Android, we need to add libaot-*.dll.so files
+			if (!UsingAndroidNETSdk && usesMonoAOT) {
+				foreach (var assembly in ResolvedAssemblies) {
+					string name = $"libaot-{Path.GetFileNameWithoutExtension (assembly.ItemSpec)}.dll.so";
+					if (seenNativeLibraryNames.Contains (name)) {
+						continue;
+					}
+
+					seenNativeLibraryNames.Add (name);
+					uniqueNativeLibraries.Add (new TaskItem (name));
 				}
 			}
 

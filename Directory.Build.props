@@ -8,12 +8,16 @@
     <TestOutputDirectory>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputDirectory>
     <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
     <PrepTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\xa-prep-tasks.dll</PrepTasksAssembly>
+    <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(BuildOutputDirectory)dotnet\</DotNetPreviewPath>
+    <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <!-- Copy PackageReference content to OutputDir for our build tasks, tests, and installer creation logic. This no longer happens by default in short-form projects. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- Ensure reference assemblies copied to bin -->
+    <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProductVersion>12.2.99</ProductVersion>
+    <ProductVersion>12.3.99</ProductVersion>
     <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
          Rules:
          * Major/Minor match Android stable API level, such as 30.0 for API 30.
@@ -21,13 +25,13 @@
          * Bump last two digits of the patch version for service releases.
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
-    <AndroidPackVersion>31.0.200</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.14</AndroidPackVersionSuffix>
+    <AndroidPackVersion>31.0.300</AndroidPackVersion>
+    <AndroidPackVersionSuffix>rc.1</AndroidPackVersionSuffix>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->
   <PropertyGroup>
-    <LibZipSharpVersion>2.0.2</LibZipSharpVersion>
+    <LibZipSharpVersion>2.0.3</LibZipSharpVersion>
     <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
     <MonoCecilVersion>0.11.4</MonoCecilVersion>
     <NewtonsoftJsonPackageVersion>13.0.1</NewtonsoftJsonPackageVersion>

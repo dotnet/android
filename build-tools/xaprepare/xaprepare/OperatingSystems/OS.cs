@@ -36,6 +36,8 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public uint CPUCount => (uint)Environment.ProcessorCount;
 
+		public string DiskInformation { get; protected set; } = string.Empty;
+
 		/// <summary>
 		///   A dictionary of variables to export in environment of all the executed programs, scripts etc.
 		/// </summary>

@@ -52,6 +52,14 @@ namespace Xamarin.Android.Build.Tests
 			CreateGuestUser (GuestUserName);
 		}
 
+		[OneTimeTearDown]
+		public void DeviceTearDown ()
+		{
+			// make sure we are not on a guest user anymore.
+			SwitchUser ();
+			DeleteGuestUser(GuestUserName);
+		}
+
 		[SetUp]
 		public void CheckDevice ()
 		{
@@ -71,6 +79,7 @@ namespace Xamarin.Android.Build.Tests
 				string local = Path.Combine (outputDir, "screenshot.png");
 				string deviceLog = Path.Combine (outputDir, "logcat-failed.log");
 				string remote = "/data/local/tmp/screenshot.png";
+				string localUi = Path.Combine (outputDir, "ui.xml");
 				RunAdbCommand ($"shell screencap {remote}");
 				var output = RunAdbCommand ($"logcat -d");
 				File.WriteAllText (deviceLog, output);
@@ -80,6 +89,13 @@ namespace Xamarin.Android.Build.Tests
 					TestContext.AddTestAttachment (local);
 				} else {
 					TestContext.WriteLine ($"{local} did not exist!");
+				}
+				var ui = GetUI (timeoutInSeconds: 0);
+				ui.Save (localUi);
+				if (File.Exists (localUi)) {
+					TestContext.AddTestAttachment (localUi);
+				} else {
+					TestContext.WriteLine ($"{localUi} did not exist!");
 				}
 			}
 
@@ -183,7 +199,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 60)
+		protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 120)
 		{
 			bool result = MonitorAdbLogcat ((line) => {
 				return line.IndexOf ("Trying to initialize the debugger with options:", StringComparison.OrdinalIgnoreCase) > 0;
@@ -191,7 +207,7 @@ namespace Xamarin.Android.Build.Tests
 			return result;
 		}
 
-		static Regex regex = new Regex (@"\s*(\++)(?<seconds>\d)s(?<milliseconds>\d+)ms", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+		static Regex regex = new Regex (@"\s*(\++)(?<seconds>\d+)s(?<milliseconds>\d+)ms", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
 		protected static bool WaitForPermissionActivity (string logcatFilePath, int timeout = 5)
 		{
@@ -201,6 +217,12 @@ namespace Xamarin.Android.Build.Tests
 			if (result)
 				ClickButton ("", "com.android.permissioncontroller:id/continue_button", "CONTINUE");
 			return result;
+		}
+
+		protected static void ClearBlockingDialogs ()
+		{
+			ClickButton ("", "android:id/aerr_wait", "Wait");
+			WaitFor ((int)TimeSpan.FromSeconds (2).TotalMilliseconds);
 		}
 
 		protected static bool WaitForAppBuiltForOlderAndroidWarning (string packageName, string logcatFilePath, int timeout = 5)
@@ -213,12 +235,12 @@ namespace Xamarin.Android.Build.Tests
 			return result;
 		}
 
-		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, int timeout = 60)
+		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, int timeout = 120)
 		{
 			return WaitForActivityToStart (activityNamespace, activityName, logcatFilePath, out TimeSpan time, timeout);
 		}
 
-		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, out TimeSpan startupTime, int timeout = 60)
+		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, out TimeSpan startupTime, int timeout = 120)
 		{
 			startupTime = TimeSpan.Zero;
 			string capturedLine = string.Empty;
@@ -235,12 +257,16 @@ namespace Xamarin.Android.Build.Tests
 			return result;
 		}
 
-		protected static XDocument GetUI ()
+		protected static XDocument GetUI (int timeoutInSeconds = 120)
 		{
 			var ui = RunAdbCommand ("exec-out uiautomator dump /dev/tty");
+			int time = 0;
 			while (ui.Contains ("ERROR:")) {
 				ui = RunAdbCommand ("exec-out uiautomator dump /dev/tty");
 				WaitFor (1);
+				time += 1;
+				if (time * 1000 > timeoutInSeconds)
+					break;
 			}
 			ui = ui.Replace ("UI hierchary dumped to: /dev/tty", string.Empty).Trim ();
 			try {
@@ -250,18 +276,17 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected static (int x, int y, int w, int h) GetControlBounds (string packageName, string uiElement, string text)
+		protected static (int x, int y, int w, int h)? GetControlBounds (string packageName, string uiElement, string text, int timeoutInSeconds = 120)
 		{
 			var regex = new Regex (@"[(0-9)]\d*", RegexOptions.Compiled);
-			var result = (x: 0, y: 0, w: 0, h: 0);
-			var uiDoc = GetUI ();
+			var uiDoc = GetUI (timeoutInSeconds);
 			var node = uiDoc.XPathSelectElement ($"//node[contains(@resource-id,'{uiElement}')]");
 			if (node == null)
 				node = uiDoc.XPathSelectElement ($"//node[contains(@content-desc,'{uiElement}')]");
 			if (node == null)
 				node = uiDoc.XPathSelectElement ($"//node[contains(@text,'{text}')]");
 			if (node == null)
-				return result;
+				return null;
 			var bounds = node.Attribute ("bounds");
 			var matches = regex.Matches (bounds.Value);
 			int.TryParse (matches [0].Value, out int x);
@@ -271,10 +296,13 @@ namespace Xamarin.Android.Build.Tests
 			return (x: x, y: y, w: w, h: h);
 		}
 
-		protected static void ClickButton (string packageName, string buttonName, string buttonText)
+		protected static bool ClickButton (string packageName, string buttonName, string buttonText, int timeoutInSeconds = 30)
 		{
-			var bounds = GetControlBounds (packageName, buttonName, buttonText);
-			RunAdbInput ("input tap", bounds.x + ((bounds.w - bounds.x) / 2), bounds.y + ((bounds.h - bounds.y) / 2));
+			var bounds = GetControlBounds (packageName, buttonName, buttonText, timeoutInSeconds);
+			if (!bounds.HasValue)
+				return false;
+			RunAdbInput ("input tap", bounds.Value.x + ((bounds.Value.w - bounds.Value.x) / 2), bounds.Value.y + ((bounds.Value.h - bounds.Value.y) / 2));
+			return true;
 		}
 
 		/// <summary>
@@ -313,7 +341,7 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static void CreateGuestUser (string username)
 		{
-			if (GetUserId (username) != -1)
+			if (GetUserId (username) == -1)
 				RunAdbCommand ($"shell pm create-user --guest {username}");
 		}
 
@@ -327,7 +355,9 @@ namespace Xamarin.Android.Build.Tests
 		protected static int GetUserId (string username)
 		{
 			string output = RunAdbCommand ($"shell pm list users");
-			Regex regex = new Regex (@"UserInfo{(?<userId>\d+):" + username, RegexOptions.Compiled);
+			if (string.IsNullOrEmpty (username))
+				username = "Owner";
+			Regex regex = new Regex ($@"UserInfo{{(?<userId>\d+):{username}", RegexOptions.Compiled);
 			Console.WriteLine (output);
 			var match = regex.Match (output);
 			if (match.Success) {
@@ -336,7 +366,7 @@ namespace Xamarin.Android.Build.Tests
 			return -1;
 		}
 
-		protected static bool SwitchUser (string username)
+		protected static bool SwitchUser (string username = "")
 		{
 			int userId = GetUserId (username);
 			if (userId == -1)

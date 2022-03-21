@@ -1,0 +1,251 @@
+<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#
+var delegateTypes = new [] {
+	new {
+		Type = "_JniMarshal_PP_V",
+		Signature = "IntPtr jnienv, IntPtr klazz",
+		Return = "void",
+		Invoke = "jnienv, klazz",
+	},
+	new {
+		Type = "_JniMarshal_PP_I",
+		Signature = "IntPtr jnienv, IntPtr klazz",
+		Return = "int",
+		Invoke = "jnienv, klazz",
+	},
+	new {
+		Type = "_JniMarshal_PP_Z",
+		Signature = "IntPtr jnienv, IntPtr klazz",
+		Return = "bool",
+		Invoke = "jnienv, klazz",
+	},
+	new {
+		Type = "_JniMarshal_PPI_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPI_L",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0",
+		Return = "IntPtr",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPI_I",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0",
+		Return = "int",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPI_J",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0",
+		Return = "long",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPL_L",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0",
+		Return = "IntPtr",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPL_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPL_Z",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0",
+		Return = "bool",
+		Invoke = "jnienv, klazz, p0",
+	},
+	new {
+		Type = "_JniMarshal_PPII_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0, int p1",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1",
+	},
+	new {
+		Type = "_JniMarshal_PPLI_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1",
+	},
+	new {
+		Type = "_JniMarshal_PPLZ_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, bool p1",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1",
+	},
+	new {
+		Type = "_JniMarshal_PPLL_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1",
+	},
+	new {
+		Type = "_JniMarshal_PPLF_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, float p1",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1",
+	},
+	new {
+		Type = "_JniMarshal_PPLI_L",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1",
+		Return = "IntPtr",
+		Invoke = "jnienv, klazz, p0, p1",
+	},
+	new {
+		Type = "_JniMarshal_PPLL_Z",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1",
+		Return = "bool",
+		Invoke = "jnienv, klazz, p0, p1",
+	},
+	new {
+		Type = "_JniMarshal_PPIIL_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0, int p1, IntPtr p2",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPLII_I",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2",
+		Return = "int",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPLII_Z",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2",
+		Return = "bool",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPLII_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPIII_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0, int p1, int p2",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPLLJ_Z",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, long p2",
+		Return = "bool",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPILL_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0, IntPtr p1, IntPtr p2",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPLIL_Z",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, IntPtr p2",
+		Return = "bool",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPLLL_L",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, IntPtr p2",
+		Return = "IntPtr",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPLLL_Z",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, IntPtr p2",
+		Return = "bool",
+		Invoke = "jnienv, klazz, p0, p1, p2",
+	},
+	new {
+		Type = "_JniMarshal_PPIIII_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, int p0, int p1, int p2, int p3",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2, p3",
+	},
+	new {
+		Type = "_JniMarshal_PPLLLL_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, IntPtr p2, IntPtr p3",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2, p3",
+	},
+	new {
+		Type = "_JniMarshal_PPLIIII_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2, int p3, int p4",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2, p3, p4",
+	},
+	new {
+		Type = "_JniMarshal_PPZIIII_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, bool p0, int p1, int p2, int p3, int p4",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2, p3, p4",
+	},
+	new {
+		Type = "_JniMarshal_PPLIIIIIIII_V",
+		Signature = "IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2, int p3, int p4, int p5, int p6, int p7, int p8",
+		Return = "void",
+		Invoke = "jnienv, klazz, p0, p1, p2, p3, p4, p5, p6, p7, p8",
+	},
+};
+#>
+using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+
+namespace Android.Runtime
+{
+	public static partial class JNINativeWrapper
+	{
+		static bool _unhandled_exception (Exception e)
+		{
+			if (Debugger.IsAttached || !JNIEnv.PropagateExceptions) {
+				JNIEnv.mono_unhandled_exception (e);
+				return false;
+			}
+			return true;
+		}
+
+<#
+foreach (var info in delegateTypes) {
+#>
+		internal static <#= info.Return #> Wrap<#= info.Type #> (this <#= info.Type #> callback, <#= info.Signature #>)
+		{
+			JNIEnv.WaitForBridgeProcessing ();
+			try {
+				<#= info.Return != "void" ? "return " : "" #>callback (<#= info.Invoke #>);
+			} catch (Exception e) when (_unhandled_exception (e)) {
+				AndroidEnvironment.UnhandledException (e);
+				<#= info.Return != "void" ? "return default;" : "" #>
+			}
+		}
+
+<#
+}
+#>
+		private static Delegate CreateBuiltInDelegate (Delegate dlg, Type delegateType)
+		{
+			switch (delegateType.Name) {
+<#
+foreach (var info in delegateTypes) {
+#>
+				case nameof (<#= info.Type #>):
+					return new <#= info.Type #> (Unsafe.As<<#= info.Type #>> (dlg).Wrap<#= info.Type #>);
+<#
+}
+#>
+				default:
+					return null;
+			}
+		}
+	}
+}

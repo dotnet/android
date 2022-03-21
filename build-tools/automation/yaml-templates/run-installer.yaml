@@ -1,5 +1,6 @@
 parameters:
   provisionExtraArgs: -vv -f
+  provisionatorChannel: latest
 
 steps:
 - task: DownloadPipelineArtifact@2
@@ -37,3 +38,5 @@ steps:
     provisioning_script: $(XA.Provisionator.Args)
     provisioning_extra_args: ${{ parameters.provisionExtraArgs }}
   condition: and(succeeded(), ne(variables['agent.os'], 'Linux'))
+  env:
+    PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}

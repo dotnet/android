@@ -6,7 +6,7 @@ public class JavaSourceJarTest
      * Returns greeting message.
      * <p>
      * Returns "Morning, ", "Hello, " or "Evening, " with name argument,
-     * depending on the argument hour.
+     * depending on the argument hour. Includes a {@docRoot}test.html element.
      * </p>
      * @param name name to display.
      * @param date time to determine the greeting message.

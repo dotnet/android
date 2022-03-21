@@ -154,12 +154,6 @@ namespace Xamarin.Android.Tasks
 					if (!string.IsNullOrEmpty (MsymPath)) {
 						aotOptions.Add ($"msym-dir={MsymPath}");
 					}
-					if (!string.IsNullOrEmpty (LdName)) {
-						aotOptions.Add ($"ld-name={LdName}");
-					}
-					if (!string.IsNullOrEmpty (LdFlags)) {
-						aotOptions.Add ($"ld-flags={LdFlags}");
-					}
 					if (Profiles != null && Profiles.Length > 0) {
 						if (Path.GetFileNameWithoutExtension (assembly.ItemSpec) == TargetName) {
 							LogDebugMessage ($"Not using profile(s) for main assembly: {assembly.ItemSpec}");
@@ -170,6 +164,13 @@ namespace Xamarin.Android.Tasks
 								aotOptions.Add ($"profile={fp}");
 							}
 						}
+					}
+					// NOTE: ld-name and ld-flags MUST be last, otherwise Mono fails to parse it on Windows
+					if (!string.IsNullOrEmpty (LdName)) {
+						aotOptions.Add ($"ld-name={LdName}");
+					}
+					if (!string.IsNullOrEmpty (LdFlags)) {
+						aotOptions.Add ($"ld-flags={LdFlags}");
 					}
 
 					// we need to quote the entire --aot arguments here to make sure it is parsed

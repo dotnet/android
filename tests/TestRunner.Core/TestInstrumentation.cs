@@ -62,7 +62,7 @@ namespace Xamarin.Android.UnitTests
 
 			if (aname == null)
 				return null;
-			
+
 			foreach (string dir in TestAssemblyDirectories) {
 				if (String.IsNullOrEmpty (dir))
 					continue;
@@ -244,7 +244,7 @@ namespace Xamarin.Android.UnitTests
 			LogPaddedInfo ("VERSION.Release", Build.VERSION.Release, alignColumn);
 			LogPaddedInfo ("VERSION.Sdk", Build.VERSION.Sdk, alignColumn);
 			LogPaddedInfo ("VERSION.SdkInt", Build.VERSION.SdkInt.ToString (), alignColumn);
-			LogPaddedInfo ("Device Date/Time", DateTime.UtcNow.ToString (), alignColumn); 
+			LogPaddedInfo ("Device Date/Time", DateTime.UtcNow.ToString (), alignColumn);
 
 			// FIXME: add data about how the app was compiled (e.g. ARMvX, LLVM, Linker options)
 		}
@@ -285,7 +285,7 @@ namespace Xamarin.Android.UnitTests
 			results.PutLong (ResultInconclusiveTests, runner.InconclusiveTests);
 			results.PutLong (ResultTotalTests, runner.TotalTests);
 			results.PutLong (ResultFilteredTests, runner.FilteredTests);
-			results.PutString (ResultResultsFilePath, ToAdbPath (resultsFilePath));
+			results.PutString (ResultResultsFilePath, ToAdbPath(resultsFilePath));
 
 			Log.Info (LogTag, $"Passed: {runner.PassedTests}, Failed: {runner.FailedTests}, Skipped: {runner.SkippedTests}, Inconclusive: {runner.InconclusiveTests}, Total: {runner.TotalTests}, Filtered: {runner.FilteredTests}");
 
@@ -380,7 +380,7 @@ namespace Xamarin.Android.UnitTests
 				string line = reader.ReadLine ()?.Trim ();
 				if (line == null)
 					return excludedTestNames;
-				
+
 				if (line.Length == 0 || line.StartsWith ("#", StringComparison.Ordinal))
 					continue;
 
@@ -407,7 +407,9 @@ namespace Xamarin.Android.UnitTests
 			string source = global::System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_SOURCE")?.Trim ();
 			string target = global::System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_TARGET")?.Trim ();
 
-			if (!String.IsNullOrEmpty (source) && !String.IsNullOrEmpty (target) && path.StartsWith (target, StringComparison.Ordinal)) {
+			if (!String.IsNullOrEmpty (source) && !String.IsNullOrEmpty (target) &&
+					path.StartsWith (target, StringComparison.Ordinal) &&
+					((int)Build.VERSION.SdkInt) <= 28) {
 				return path.Replace (target, source);
 			}
 

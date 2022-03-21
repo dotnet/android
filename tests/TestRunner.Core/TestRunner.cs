@@ -97,18 +97,21 @@ namespace Xamarin.Android.UnitTests
 		{
 			if (String.IsNullOrEmpty (ResultsFileName))
 				throw new InvalidOperationException ("Runner didn't specify a valid results file name");
-			
+
+			string pid = Guid.NewGuid ().ToString ();
+
 			Java.IO.File resultsPathFile = null;
 #if __ANDROID_19__
-			if (((int)Build.VERSION.SdkInt) >= 19)
-				resultsPathFile = Context.GetExternalFilesDir (global::Android.OS.Environment.DirectoryDocuments);
+			int sdk = ((int)Build.VERSION.SdkInt);
+			if (sdk >= 19)
+				resultsPathFile = Context.GetExternalFilesDir (null);
 #endif
 			bool usePathFile = resultsPathFile != null && resultsPathFile.Exists ();
-			string resultsPath = usePathFile ? resultsPathFile.AbsolutePath : Path.Combine (Context.FilesDir.AbsolutePath, ".__override__");
+			string resultsPath = usePathFile ? resultsPathFile.AbsolutePath : Context.FilesDir.AbsolutePath;
 			if (!usePathFile && !Directory.Exists (resultsPath))
 				Directory.CreateDirectory (resultsPath);
 
-			return Path.Combine (resultsPath, ResultsFileName);
+			return Path.Combine (resultsPath, $"{(pid.Replace ("-", "_"))}_{ResultsFileName}");
 		}
 	}
 }

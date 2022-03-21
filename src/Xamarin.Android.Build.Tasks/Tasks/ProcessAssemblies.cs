@@ -26,6 +26,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string [] RuntimeIdentifiers { get; set; } = Array.Empty<string>();
 
+		public bool AndroidIncludeDebugSymbols { get; set; }
+
 		public bool PublishTrimmed { get; set; }
 
 		public ITaskItem [] InputAssemblies { get; set; } = Array.Empty<ITaskItem> ();
@@ -63,7 +65,8 @@ namespace Xamarin.Android.Tasks
 			ResolvedSymbols = symbols.Values.ToArray ();
 
 			// Set ShrunkAssemblies for _RemoveRegisterAttribute and <BuildApk/>
-			if (PublishTrimmed) {
+			// This should match the Condition on the _RemoveRegisterAttribute target
+			if (PublishTrimmed && !AndroidIncludeDebugSymbols) {
 				var shrunkAssemblies = new List<ITaskItem> (OutputAssemblies.Length);
 				foreach (var assembly in OutputAssemblies) {
 					var dir = Path.GetDirectoryName (assembly.ItemSpec);

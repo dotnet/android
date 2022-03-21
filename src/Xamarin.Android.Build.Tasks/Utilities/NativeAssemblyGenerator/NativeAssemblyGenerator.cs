@@ -207,7 +207,7 @@ namespace Xamarin.Android.Tasks
 
 		public virtual void WriteFileTop ()
 		{
-			WriteDirective (".file", QuoteString (fileName));
+			WriteDirective (".file", QuoteString (fileName.Replace ("\\", "\\\\")));
 		}
 
 		public virtual void WriteFileEnd ()

@@ -19,14 +19,17 @@
   <PropertyGroup>
     <TestAvdApiLevel Condition=" '$(TestAvdApiLevel)' == '' ">29</TestAvdApiLevel>
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' ">x86_64</TestAvdAbi>
-    <SdkManagerImageName Condition=" '$(SdkManagerImageName)' == '' ">system-images;android-$(TestAvdApiLevel);default;$(TestAvdAbi)</SdkManagerImageName>
+    <TestAvdType Condition=" '$(TestAvdType)' == '' ">default</TestAvdType>
+    <SdkManagerImageName Condition=" '$(SdkManagerImageName)' == '' ">system-images;android-$(TestAvdApiLevel);$(TestAvdType);$(TestAvdAbi)</SdkManagerImageName>
     <TestAvdName>XamarinAndroidTestRunner$(TestAvdApiLevel)-$(TestAvdAbi)</TestAvdName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
+    <_AdbEmulatorShowWindow Condition=" '$(RunningOnCI)' == 'True' And '$(_AdbEmulatorShowWindow)' == '' ">False</_AdbEmulatorShowWindow>
+    <_AdbEmulatorShowWindow Condition=" '$(_AdbEmulatorShowWindow)' == '' ">True</_AdbEmulatorShowWindow>
     <_ApkSizesReferenceDirectory>$(MSBuildThisFileDirectory)..\..\tests\apk-sizes-reference</_ApkSizesReferenceDirectory>
-    <AvdLaunchTimeoutMinutes Condition=" '$(AvdLaunchTimeoutMinutes)' == '' ">5</AvdLaunchTimeoutMinutes>
+    <AvdLaunchTimeoutMinutes Condition=" '$(AvdLaunchTimeoutMinutes)' == '' ">10</AvdLaunchTimeoutMinutes>
     <AvdLaunchTimeoutSeconds>$([MSBuild]::Multiply($(AvdLaunchTimeoutMinutes), 60))</AvdLaunchTimeoutSeconds>
     <AvdLaunchTimeoutMS>$([MSBuild]::Multiply($(AvdLaunchTimeoutSeconds), 1000))</AvdLaunchTimeoutMS>
-    <_LogcatFilename>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\logcat-$(Configuration)-full.log</_LogcatFilename>
+    <_LogcatFilenameBase>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\logcat-$(Configuration)$(TestsFlavor)</_LogcatFilenameBase>
   </PropertyGroup>
 
   <ItemGroup>
@@ -58,6 +61,7 @@
         SdkVersion="$(TestAvdApiLevel)"
         TargetId="$(SdkManagerImageName)"
         ImageName="$(TestAvdName)"
+        ImageType="$(TestAvdType)"
         ToolExe="$(AvdManagerToolExe)"
         ToolPath="$(CommandLineToolsBinPath)"
         RamSizeMB="3072"
@@ -69,8 +73,9 @@
         AvdManagerHome="$(AvdManagerHome)"
         Arguments="$(TestEmulatorArguments)"
         ImageName="$(TestAvdName)"
-        LogcatFile="$(_LogcatFilename)"
+        LogcatFile="$(_LogcatFilenameBase)-full.txt"
         Port="$(_AdbEmulatorPort)"
+        ShowWindow="$(_AdbEmulatorShowWindow)"
         ToolExe="$(EmulatorToolExe)"
         ToolPath="$(EmulatorToolPath)">
       <Output TaskParameter="AdbTarget" PropertyName="_AdbTarget" />
@@ -83,7 +88,7 @@
         Arguments="$(_AdbTarget) wait-for-device"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
-        Timeout="120000"
+        Timeout="$(AvdLaunchTimeoutMS)"
         WriteOutputAsMessage="True"
     />
     <WaitForAndroidEmulator
@@ -247,7 +252,6 @@
     <PropertyGroup>
       <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
       <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
-      <_LogcatFilenameBase>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\logcat-$(Configuration)$(TestsFlavor)</_LogcatFilenameBase>
       <PlotDataLabelSuffix Condition=" '$(PlotDataLabelSuffix)' == '' ">$(TestsFlavor)</PlotDataLabelSuffix>
     </PropertyGroup>
     <RunInstrumentationTests
@@ -255,6 +259,7 @@
         ContinueOnError="ErrorAndContinue"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
+        ApiLevel="$(TestAvdApiLevel)"
         LogLevel="Verbose"
         PackageName="%(TestApkInstrumentation.Package)"
         Component="%(TestApkInstrumentation.Package)/%(TestApkInstrumentation.Identity)"
@@ -390,6 +395,24 @@
         Text="Attempt to install $(AvdImageName) failed after three attempts."
         Condition=" '$(_SdkManagerExitCode)' != '0' "
     />
+  </Target>
+
+  <PropertyGroup>
+    <RunTestAppDependsOn>
+      AcquireAndroidTarget;
+      SignAndroidPackage;
+      DeployTestApks;
+      DeployTestAabs;
+      CheckAndRecordApkSizes;
+      RunTestApks;
+      UndeployTestApks;
+      RenameApkTestCases;
+      ReportComponentFailures;
+    </RunTestAppDependsOn>
+  </PropertyGroup>
+
+  <Target Name="RunTestApp"
+      DependsOnTargets="$(RunTestAppDependsOn)">
   </Target>
 
 </Project>

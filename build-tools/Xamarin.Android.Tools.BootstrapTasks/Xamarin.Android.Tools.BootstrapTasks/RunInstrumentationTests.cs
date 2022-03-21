@@ -19,7 +19,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		const                   int                 StateGetLogcat              = 1;
 		const                   int                 StateClearLogcat            = 2;
 		const                   int                 StatePullFiles              = 3;
-		const                   int                 MaxState                    = StatePullFiles;
+		const                   int                 StateRunAsCatFiles          = 4;
+		const                   int                 MaxState                    = StateRunAsCatFiles;
 
 		public                  string              TestFixture                 { get; set; }
 
@@ -40,6 +41,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string              FailedToRun                 { get; set; }
 
 		public                  string              LogLevel                    { get; set; }
+
+		public                  int                 ApiLevel                    { get; set; }
 
 		int                     currentState = -1;
 		int                     instrumentationExitCode = 99;
@@ -98,10 +101,17 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					ArgumentsString = $"{AdbTarget} {AdbOptions} logcat -c",
 					IgnoreExitCode = true,
 				},
-
 				new CommandInfo {
 					ArgumentsGenerator = () => $"{AdbTarget} {AdbOptions} pull \"{targetTestResultsPath}\" \"{NUnit2TestResultsFile}\"",
-					ShouldRun = () => !String.IsNullOrEmpty (targetTestResultsPath)
+					ShouldRun = () => !String.IsNullOrEmpty (targetTestResultsPath) && ApiLevel != 30,
+					IgnoreExitCode = true,
+				},
+				new CommandInfo {
+					ArgumentsGenerator = () => $"{AdbTarget} {AdbOptions} shell run-as {PackageName} cat \"{targetTestResultsPath}\"",
+					ShouldRun = () => !String.IsNullOrEmpty (targetTestResultsPath) && ApiLevel == 30,
+					StdoutFilePath = NUnit2TestResultsFile,
+					StdoutAppend = false,
+					IgnoreExitCode = true,
 				},
 			};
 		}

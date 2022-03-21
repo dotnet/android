@@ -10,8 +10,6 @@ namespace Xamarin.ProjectTools
 	{
 		static string HomeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 		static string DefaultToolchainPath = Path.Combine (HomeDirectory, "android-toolchain");
-		static string AzureToolchainPathMacOS = Path.Combine (HomeDirectory, "Library", "Android");
-		static string ToolchainPath = (TestEnvironment.IsMacOS && TestEnvironment.IsRunningOnCI) ? AzureToolchainPathMacOS : DefaultToolchainPath;
 
 		static string GetPathFromRegistry (string valueName)
 		{
@@ -29,7 +27,9 @@ namespace Xamarin.ProjectTools
 			if (String.IsNullOrEmpty (sdkPath))
 				sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
 			if (String.IsNullOrEmpty (sdkPath))
-				sdkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "sdk"));
+				sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_ROOT");
+			if (String.IsNullOrEmpty (sdkPath))
+				sdkPath = Path.GetFullPath (Path.Combine (DefaultToolchainPath, "sdk"));
 
 			return sdkPath;
 
@@ -43,7 +43,9 @@ namespace Xamarin.ProjectTools
 			if (String.IsNullOrEmpty (ndkPath))
 				ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
 			if (String.IsNullOrEmpty (ndkPath))
-				ndkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "ndk"));
+				ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_LATEST_HOME");
+			if (String.IsNullOrEmpty (ndkPath))
+				ndkPath = Path.GetFullPath (Path.Combine (DefaultToolchainPath, "ndk"));
 
 			return ndkPath;
 		}
@@ -62,7 +64,7 @@ namespace Xamarin.ProjectTools
 			if (string.IsNullOrEmpty (JavaSdkPath))
 				JavaSdkPath = GetPathFromRegistry ("JavaSdkDirectory");
 			if (string.IsNullOrEmpty (JavaSdkPath))
-				JavaSdkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "jdk"));
+				JavaSdkPath = Path.GetFullPath (Path.Combine (DefaultToolchainPath, "jdk"));
 			return JavaSdkPath;
 		}
 
@@ -90,13 +92,9 @@ namespace Xamarin.ProjectTools
 			return JavaSdkVersionString;
 		}
 
-		// Cache the result, so we don't run MSBuild on every call
-		static string DotNetPreviewPath;
 		public static string GetDotNetPreviewPath ()
 		{
-			if (string.IsNullOrEmpty (DotNetPreviewPath))
-				DotNetPreviewPath = RunPathsTargets ("GetDotNetPreviewPath");
-			return DotNetPreviewPath;
+			return Path.Combine (XABuildPaths.PrefixDirectory, "dotnet");
 		}
 
 		static string RunPathsTargets (string target)

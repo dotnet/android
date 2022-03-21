@@ -3,7 +3,7 @@
   <Import Project="..\..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFramework>net6.0-android</TargetFramework>
+    <TargetFramework>net6.0-android$(AndroidLatestStableApiLevel)</TargetFramework>
     <RootNamespace>Java.Interop_Tests</RootNamespace>
     <AssemblyName>Java.Interop-Tests</AssemblyName>
     <OutputType>Library</OutputType>

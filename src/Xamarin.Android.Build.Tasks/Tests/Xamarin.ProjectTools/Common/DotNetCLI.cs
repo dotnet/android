@@ -92,21 +92,21 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Build (string target = null, string [] parameters = null)
+		public bool Build (string target = null, string runtimeIdentifier = null, string [] parameters = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("build", target, parameters);
+			var arguments = GetDefaultCommandLineArgs ("build", target, runtimeIdentifier, parameters);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Pack (string target = null, string [] parameters = null)
+		public bool Pack (string target = null, string runtimeIdentifier = null, string [] parameters = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("pack", target, parameters);
+			var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Publish (string target = null, string [] parameters = null)
+		public bool Publish (string target = null, string runtimeIdentifier = null, string [] parameters = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("publish", target, parameters);
+			var arguments = GetDefaultCommandLineArgs ("publish", target, runtimeIdentifier, parameters);
 			return Execute (arguments.ToArray ());
 		}
 
@@ -133,7 +133,7 @@ namespace Xamarin.ProjectTools
 
 		public bool IsTargetSkipped (string target) => BuildOutput.IsTargetSkipped (LastBuildOutput, target);
 
-		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string [] parameters = null)
+		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string runtimeIdentifier = null, string [] parameters = null)
 		{
 			string testDir = Path.GetDirectoryName (projectOrSolution);
 			if (string.IsNullOrEmpty (ProcessLogFile))
@@ -148,7 +148,8 @@ namespace Xamarin.ProjectTools
 				$"\"{projectOrSolution}\"",
 				"/noconsolelogger",
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
-				$"/bl:\"{Path.Combine (testDir, $"{binlog}.binlog")}\""
+				$"/bl:\"{Path.Combine (testDir, $"{binlog}.binlog")}\"",
+				"/p:_DisableParallelAot=true",
 			};
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");
@@ -166,6 +167,11 @@ namespace Xamarin.ProjectTools
 				foreach (var parameter in parameters) {
 					arguments.Add ($"/p:{parameter}");
 				}
+			}
+			if (!string.IsNullOrEmpty (runtimeIdentifier)) {
+				// NOTE: that this one has to be -r, /r does not appear to work
+				arguments.Add ("-r");
+				arguments.Add (runtimeIdentifier);
 			}
 			return arguments;
 		}
