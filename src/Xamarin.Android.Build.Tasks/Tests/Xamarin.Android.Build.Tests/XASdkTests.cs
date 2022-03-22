@@ -344,7 +344,7 @@ namespace Xamarin.Android.Build.Tests
 				.Replace ("Resource.Id.myButton", "0");
 
 			var dotnet = CreateDotNetBuilder (proj);
-			Assert.IsTrue (dotnet.Build(target: "CoreCompile", parameters: new string[] { "-p:BuildingInsideVisualStudio=true" }), "Designtime build should succeed.");
+			Assert.IsTrue (dotnet.Build(target: "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" }), "Designtime build should succeed.");
 			var intermediate = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
 			var resource_designer_cs = Path.Combine (intermediate, "designtime",  "Resource.designer.cs");
 			FileAssert.DoesNotExist (resource_designer_cs);
