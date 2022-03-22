@@ -29,7 +29,7 @@ ms.date: 01/24/2020
 + [APT0001](apt0001.md): Unknown option \`{option}\`. Please check \`$(AndroidAapt2CompileExtraArgs)\` and \`$(AndroidAapt2LinkExtraArgs)\` to see if they include any \`aapt\` command line arguments that are no longer valid for \`aapt2\` and ensure that all other arguments are valid for `aapt2`.
 + APT0002: Invalid file name: It must contain only \[^a-zA-Z0-9_.-\]+.
 + APT0003: Invalid file name: It must contain only \[^a-zA-Z0-9_.\]+.
-+ APT0004: Invalid file name: It must start with \[^a-zA-Z_].
++ APT0004: Invalid file name: It must start with a letter or an underscore.
 
 ## JAVACxxxx: Java compiler
 

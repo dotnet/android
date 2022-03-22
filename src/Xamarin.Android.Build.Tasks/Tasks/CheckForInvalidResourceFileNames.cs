@@ -31,8 +31,10 @@ namespace Xamarin.Android.Tasks {
 				var fileName = Path.GetFileName (resourceFile);
 				var directory = Path.GetFileName (Path.GetDirectoryName (resourceFile));
 				char firstChar = fileName [0];
-				if (!Char.IsLetter (firstChar) && firstChar != '_') {
-					Log.LogCodedError ("APT0004", resource.ItemSpec, 0, Properties.Resources.APT0004, fileNameCheck);
+				if (!(('a' <= firstChar && firstChar <= 'z') ||
+						('A' <= firstChar && firstChar <= 'Z') ||
+						firstChar == '_')) {
+					Log.LogCodedError ("APT0004", resource.ItemSpec, 0, Properties.Resources.APT0004);
 				}
 				if (directory.StartsWith ("values", StringComparison.OrdinalIgnoreCase)) {
 					var match = fileNameWithHyphenCheck.Match (fileName);

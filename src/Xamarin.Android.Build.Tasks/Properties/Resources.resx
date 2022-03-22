@@ -137,8 +137,7 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
     <comment>{0} - The regular expression that the file name must match</comment>
   </data>
   <data name="APT0004" xml:space="preserve">
-    <value>Invalid file name: It must start with {0}.</value>
-    <comment>{0} - The regular expression that the file name must match</comment>
+    <value>Invalid file name: It must start with a letter or an underscore.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</value>
