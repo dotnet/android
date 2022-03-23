@@ -48,6 +48,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
+		sealed class StringSymbolInfo
+		{
+			public readonly string SymbolName;
+			public readonly ulong Size;
+
+			public StringSymbolInfo (string symbolName, ulong size)
+			{
+				SymbolName = symbolName;
+				Size = size;
+			}
+		}
+
 		static readonly Dictionary<Type, string> typeMap = new Dictionary<Type, string> {
 			{ typeof (bool), "i8" },
 			{ typeof (byte), "i8" },
@@ -129,6 +141,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		ulong structBufferCounter = 0;
 
 		List<IStructureInfo> structures = new List<IStructureInfo> ();
+		Dictionary<string, StringSymbolInfo> stringSymbolCache = new Dictionary<string, StringSymbolInfo> (StringComparer.Ordinal);
 
 		protected abstract string DataLayout { get; }
 		public abstract int PointerSize { get; }
@@ -320,8 +333,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				instance.AddPointerData (smi, null, 0);
 				return false;
 			}
-			string variableName = WriteString ($"__{info.Name}_{smi.Info.Name}_{structStringCounter++}", str, out ulong size);
-			instance.AddPointerData (smi, variableName, size);
+
+			string symbolName = WriteUniqueString ($"__{info.Name}_{smi.Info.Name}", str, ref structStringCounter, out ulong size);
+			instance.AddPointerData (smi, symbolName, size);
 
 			return true;
 		}
@@ -834,6 +848,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			var strings = new List<(ulong stringSize, string varName)> ();
 			long i = 0;
+			ulong arrayStringCounter = 0;
+
 			foreach (var kvp in arrayContents) {
 				string name = kvp.Key;
 				string value = kvp.Value;
@@ -883,7 +899,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WriteArrayString (string str, string symbolSuffix)
 			{
-				string name = WriteString ($"__{symbolName}_{symbolSuffix}", str, LlvmIrVariableOptions.LocalConstexprString, out ulong size);
+				string name = WriteUniqueString ($"__{symbolName}_{symbolSuffix}", str, ref arrayStringCounter, LlvmIrVariableOptions.LocalConstexprString, out ulong size);
 				strings.Add (new (size, name));
 			}
 		}
@@ -975,6 +991,32 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.WriteLine ($"i8* getelementptr inbounds ([{stringSize} x i8], [{stringSize} x i8]* @{strSymbolName}, {indexType} 0, {indexType} 0), align {GetAggregateAlignment (PointerSize, stringSize)}");
 
 			return symbolName;
+		}
+
+		public string WriteUniqueString (string potentialSymbolName, string value, ref ulong counter)
+		{
+			return WriteUniqueString (potentialSymbolName, value, ref counter, LlvmIrVariableOptions.LocalConstexprString, out _);
+		}
+
+		public string WriteUniqueString (string potentialSymbolName, string value, ref ulong counter, out ulong stringSize)
+		{
+			return WriteUniqueString (potentialSymbolName, value, ref counter, LlvmIrVariableOptions.LocalConstexprString, out stringSize);
+		}
+
+		public string WriteUniqueString (string potentialSymbolNamePrefix, string value, ref ulong counter, LlvmIrVariableOptions options, out ulong stringSize)
+		{
+			StringSymbolInfo info;
+			if (stringSymbolCache.TryGetValue (value, out info)) {
+				stringSize = info.Size;
+				return info.SymbolName;
+			}
+
+			string newSymbolName = $"{potentialSymbolNamePrefix}.{counter++}";
+			WriteString (newSymbolName, value, options, out stringSize);
+			info = new StringSymbolInfo (newSymbolName, stringSize);
+			stringSymbolCache.Add (value, info);
+
+			return info.SymbolName;
 		}
 
 		public virtual void WriteFileTop ()

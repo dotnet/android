@@ -2,12 +2,159 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 
+using Xamarin.Android.Tasks.LLVMIR;
+
 namespace Xamarin.Android.Tasks
 {
+	class LlvmTypeMappingDebugNativeAssemblyGenerator : LlvmTypeMappingAssemblyGenerator
+	{
+		const string JavaToManagedSymbol = "map_java_to_managed";
+		const string ManagedToJavaSymbol = "map_managed_to_java";
+		const string TypeMapSymbol = "type_map"; // MUST match src/monodroid/xamarin-app.hh
+
+		sealed class TypeMapContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var map_module = EnsureType<TypeMap> (data);
+
+				if (String.Compare ("assembly_name", fieldName, StringComparison.Ordinal) == 0) {
+					return "assembly_name (unused in this mode)";
+				}
+
+				if (String.Compare ("data", fieldName, StringComparison.Ordinal) == 0) {
+					return "data (unused in this mode)";
+				}
+
+				return String.Empty;
+			}
+
+			public override ulong GetBufferSize (object data, string fieldName)
+			{
+				var map_module = EnsureType<TypeMap> (data);
+				if (String.Compare ("java_to_managed", fieldName, StringComparison.Ordinal) == 0 ||
+				    String.Compare ("managed_to_java", fieldName, StringComparison.Ordinal) == 0) {
+					return map_module.entry_count;
+				}
+
+				return 0;
+			}
+		}
+
+		sealed class TypeMapEntryContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var entry = EnsureType<TypeMapEntry> (data);
+
+				if (String.Compare ("from", fieldName, StringComparison.Ordinal) == 0) {
+					return $"from: entry.from";
+				}
+
+				if (String.Compare ("to", fieldName, StringComparison.Ordinal) == 0) {
+					return $"to: entry.to";
+				}
+
+				return String.Empty;
+			}
+		}
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMapEntry structure
+		[NativeAssemblerStructContextDataProvider (typeof (TypeMapEntryContextDataProvider))]
+		sealed class TypeMapEntry
+		{
+			public string from;
+			public string to;
+		};
+
+		// Order of fields and their type must correspond *exactly* to that in
+		// src/monodroid/jni/xamarin-app.hh TypeMap structure
+		[NativeAssemblerStructContextDataProvider (typeof (TypeMapContextDataProvider))]
+		sealed class TypeMap
+		{
+			public uint   entry_count;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (IsNull = true)]
+			public string? assembly_name = null; // unused in Debug mode
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (IsNull = true)]
+			public byte   data = 0; // unused in Debug mode
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = JavaToManagedSymbol)]
+			public TypeMapEntry? java_to_managed = null;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = ManagedToJavaSymbol)]
+			public TypeMapEntry? managed_to_java = null;
+		};
+
+		readonly TypeMapGenerator.ModuleDebugData data;
+
+		StructureInfo<TypeMapEntry> typeMapEntryStructureInfo;
+		StructureInfo<TypeMap> typeMapStructureInfo;
+		List<StructureInstance<TypeMapEntry>> javaToManagedMap;
+		List<StructureInstance<TypeMapEntry>> managedToJavaMap;
+		StructureInstance<TypeMap> type_map;
+
+		public LlvmTypeMappingDebugNativeAssemblyGenerator (TypeMapGenerator.ModuleDebugData data)
+		{
+			this.data = data;
+
+			javaToManagedMap = new List<StructureInstance<TypeMapEntry>> ();
+			managedToJavaMap = new List<StructureInstance<TypeMapEntry>> ();
+		}
+
+		public override void Init ()
+		{
+			if (data.JavaToManagedMap != null && data.JavaToManagedMap.Count > 0) {
+				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
+					var j2m = new TypeMapEntry {
+						from = entry.JavaName,
+						to = entry.ManagedName,
+					};
+					javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (j2m));
+				}
+			}
+
+			if (data.ManagedToJavaMap != null && data.ManagedToJavaMap.Count > 0) {
+				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
+					var m2j = new TypeMapEntry {
+						from = entry.ManagedName,
+						to = entry.JavaName,
+					};
+					managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (m2j));
+				}
+			}
+
+			var map = new TypeMap {
+				entry_count = data.EntryCount,
+			};
+			type_map = new StructureInstance<TypeMap> (map);
+		}
+
+		protected override void MapStructures (LlvmIrGenerator generator)
+		{
+			typeMapEntryStructureInfo = generator.MapStructure<TypeMapEntry> ();
+			typeMapStructureInfo = generator.MapStructure<TypeMap> ();
+		}
+
+		protected override void Write (LlvmIrGenerator generator)
+		{
+			if (javaToManagedMap.Count > 0) {
+				generator.WriteStructureArray (typeMapEntryStructureInfo, javaToManagedMap, LlvmIrVariableOptions.LocalConstant, JavaToManagedSymbol);
+			}
+
+			if (managedToJavaMap.Count > 0) {
+				generator.WriteStructureArray (typeMapEntryStructureInfo, managedToJavaMap, LlvmIrVariableOptions.LocalConstant, ManagedToJavaSymbol);
+			}
+
+			generator.WriteStructure (typeMapStructureInfo, type_map, LlvmIrVariableOptions.GlobalConstant, TypeMapSymbol);
+		}
+	}
+
 	class TypeMappingDebugNativeAssemblyGenerator : TypeMappingAssemblyGenerator
 	{
 		sealed class TypeMapContextDataProvider : NativeAssemblerStructContextDataProvider

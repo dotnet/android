@@ -48,8 +48,8 @@ struct TypeMap
 	uint32_t             entry_count;
 	char                *assembly_name;
 	uint8_t             *data;
-	TypeMapEntry        *java_to_managed;
-	TypeMapEntry        *managed_to_java;
+	const TypeMapEntry  *java_to_managed;
+	const TypeMapEntry  *managed_to_java;
 };
 #else
 struct TypeMapModuleEntry

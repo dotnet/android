@@ -58,6 +58,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Resources\*">
       <LogicalName>%(FileName)%(Extension)</LogicalName>
     </EmbeddedResource>

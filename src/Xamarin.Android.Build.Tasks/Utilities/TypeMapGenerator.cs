@@ -227,6 +227,10 @@ namespace Xamarin.Android.Tasks
 				}
 			);
 
+			var generator = new LlvmTypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
+			generator.Init ();
+			GenerateNativeAssembly (generator, outputDirectory);
+
 			return true;
 		}
 
@@ -259,6 +263,10 @@ namespace Xamarin.Android.Tasks
 					return new TypeMappingDebugNativeAssemblyGenerator (arch, data, outputDirectory, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
 				}
 			);
+
+			var generator = new LlvmTypeMappingDebugNativeAssemblyGenerator (data);
+			generator.Init ();
+			GenerateNativeAssembly (generator, outputDirectory);
 
 			return true;
 		}
