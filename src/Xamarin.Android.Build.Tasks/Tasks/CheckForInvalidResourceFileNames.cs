@@ -31,9 +31,8 @@ namespace Xamarin.Android.Tasks {
 				var fileName = Path.GetFileName (resourceFile);
 				var directory = Path.GetFileName (Path.GetDirectoryName (resourceFile));
 				char firstChar = fileName [0];
-				if (!(('a' <= firstChar && firstChar <= 'z') ||
-						('A' <= firstChar && firstChar <= 'Z') ||
-						firstChar == '_')) {
+				bool isValidFirstChar = ('a' <= firstChar && firstChar <= 'z') || ('A' <= firstChar && firstChar <= 'Z') || firstChar == '_';
+				if (!isValidFirstChar) {
 					Log.LogCodedError ("APT0004", resource.ItemSpec, 0, Properties.Resources.APT0004);
 				}
 				if (directory.StartsWith ("values", StringComparison.OrdinalIgnoreCase)) {
