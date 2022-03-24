@@ -199,6 +199,7 @@ namespace Xamarin.Android.Build.Tests
 		string abiCommentStart;
 
 		public Dictionary<string, AssemblerSymbol> Symbols => symbols;
+		public string SourceFilePath { get; }
 
 		public NativeAssemblyParser (string sourceFilePath, string abi)
 		{
@@ -228,6 +229,7 @@ namespace Xamarin.Android.Build.Tests
 					throw new InvalidOperationException ($"Unsupported ABI '{abi}'");
 			}
 
+			SourceFilePath = sourceFilePath;
 			Load (sourceFilePath);
 		}
 
