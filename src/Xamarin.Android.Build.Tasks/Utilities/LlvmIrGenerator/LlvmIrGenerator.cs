@@ -1005,6 +1005,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public string WriteUniqueString (string potentialSymbolNamePrefix, string value, ref ulong counter, LlvmIrVariableOptions options, out ulong stringSize)
 		{
+			if (value == null) {
+				stringSize = 0;
+				return null;
+			}
+
 			StringSymbolInfo info;
 			if (stringSymbolCache.TryGetValue (value, out info)) {
 				stringSize = info.Size;

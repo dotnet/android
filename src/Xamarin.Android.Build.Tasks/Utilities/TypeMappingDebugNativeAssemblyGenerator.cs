@@ -42,6 +42,21 @@ namespace Xamarin.Android.Tasks
 
 				return 0;
 			}
+
+			public override string GetPointedToSymbolName (object data, string fieldName)
+			{
+				var map_module = EnsureType<TypeMap> (data);
+
+				if (String.Compare ("java_to_managed", fieldName, StringComparison.Ordinal) == 0) {
+					return map_module.JavaToManagedCount == 0 ? null : JavaToManagedSymbol;
+				}
+
+				if (String.Compare ("managed_to_java", fieldName, StringComparison.Ordinal) == 0) {
+					return map_module.ManagedToJavaCount == 0 ? null : ManagedToJavaSymbol;
+				}
+
+				return base.GetPointedToSymbolName (data, fieldName);
+			}
 		}
 
 		sealed class TypeMapEntryContextDataProvider : NativeAssemblerStructContextDataProvider
@@ -76,6 +91,12 @@ namespace Xamarin.Android.Tasks
 		[NativeAssemblerStructContextDataProvider (typeof (TypeMapContextDataProvider))]
 		sealed class TypeMap
 		{
+			[NativeAssembler (Ignore = true)]
+			public int    JavaToManagedCount;
+
+			[NativeAssembler (Ignore = true)]
+			public int    ManagedToJavaCount;
+
 			public uint   entry_count;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (IsNull = true)]
@@ -84,10 +105,10 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (UsesDataProvider = true), NativePointer (IsNull = true)]
 			public byte   data = 0; // unused in Debug mode
 
-			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = JavaToManagedSymbol)]
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 			public TypeMapEntry? java_to_managed = null;
 
-			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = ManagedToJavaSymbol)]
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 			public TypeMapEntry? managed_to_java = null;
 		};
 
@@ -109,16 +130,6 @@ namespace Xamarin.Android.Tasks
 
 		public override void Init ()
 		{
-			if (data.JavaToManagedMap != null && data.JavaToManagedMap.Count > 0) {
-				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
-					var j2m = new TypeMapEntry {
-						from = entry.JavaName,
-						to = entry.ManagedName,
-					};
-					javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (j2m));
-				}
-			}
-
 			if (data.ManagedToJavaMap != null && data.ManagedToJavaMap.Count > 0) {
 				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
 					var m2j = new TypeMapEntry {
@@ -129,7 +140,22 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			if (data.JavaToManagedMap != null && data.JavaToManagedMap.Count > 0) {
+				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
+					TypeMapGenerator.TypeMapDebugEntry managedEntry = entry.DuplicateForJavaToManaged != null ? entry.DuplicateForJavaToManaged : entry;
+
+					var j2m = new TypeMapEntry {
+						from = entry.JavaName,
+						to = managedEntry.SkipInJavaToManaged ? null : managedEntry.ManagedName,
+					};
+					javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (j2m));
+				}
+			}
+
 			var map = new TypeMap {
+				JavaToManagedCount = data.JavaToManagedMap == null ? 0 : data.JavaToManagedMap.Count,
+				ManagedToJavaCount = data.ManagedToJavaMap == null ? 0 : data.ManagedToJavaMap.Count,
+
 				entry_count = data.EntryCount,
 			};
 			type_map = new StructureInstance<TypeMap> (map);
@@ -143,12 +169,12 @@ namespace Xamarin.Android.Tasks
 
 		protected override void Write (LlvmIrGenerator generator)
 		{
-			if (javaToManagedMap.Count > 0) {
-				generator.WriteStructureArray (typeMapEntryStructureInfo, javaToManagedMap, LlvmIrVariableOptions.LocalConstant, JavaToManagedSymbol);
-			}
-
 			if (managedToJavaMap.Count > 0) {
 				generator.WriteStructureArray (typeMapEntryStructureInfo, managedToJavaMap, LlvmIrVariableOptions.LocalConstant, ManagedToJavaSymbol);
+			}
+
+			if (javaToManagedMap.Count > 0) {
+				generator.WriteStructureArray (typeMapEntryStructureInfo, javaToManagedMap, LlvmIrVariableOptions.LocalConstant, JavaToManagedSymbol);
 			}
 
 			generator.WriteStructure (typeMapStructureInfo, type_map, LlvmIrVariableOptions.GlobalConstant, TypeMapSymbol);
