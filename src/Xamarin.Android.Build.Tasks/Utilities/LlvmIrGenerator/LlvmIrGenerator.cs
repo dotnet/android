@@ -1180,7 +1180,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			var sb = new StringBuilder ();
 
 			foreach (byte b in bytes) {
-				if (b != '"' && b >= 32 && b < 127) {
+				if (b != '"' && b != '\\' && b >= 32 && b < 127) {
 					sb.Append ((char)b);
 					continue;
 				}
