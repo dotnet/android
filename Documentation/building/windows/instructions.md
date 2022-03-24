@@ -31,7 +31,7 @@ MSBuild version 15 or later is required.
         msbuild Xamarin.Android.sln
 
  7. In order to use the in-tree Xamarin.Android, build xabuild:
- 
+
          msbuild tools/xabuild/xabuild.csproj /restore
 
  8. (For Microsoft team members only - Optional) In a [Developer Command
@@ -120,14 +120,14 @@ Create a new project with `dotnet new android`:
 
 Build the project in `cmd` with:
 
-    > bin\$(Configuration)\dotnet\dotnet build foo.csproj
+    > dotnet-local.cmd build foo.csproj
 
 Or in powershell:
 
-    > bin\$(Configuration)\dotnet\dotnet build foo.csproj
+    > dotnet-local.cmd build foo.csproj
 
-Using the `dotnet` provisioned in `bin/$(Configuration)`
-will use the locally built binaries.
+Using the `dotnet-local` script will execute the `dotnet` provisioned in
+`bin\$(Configuration)\dotnet` and will use the locally built binaries.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 
