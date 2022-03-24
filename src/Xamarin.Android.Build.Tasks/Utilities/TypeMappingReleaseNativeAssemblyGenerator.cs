@@ -300,7 +300,7 @@ namespace Xamarin.Android.Tasks
 			generator.WriteStructureArray (
 				typeMapModuleStructureInfo,
 				mapModules,
-				LlvmIrVariableOptions.GlobalConstant,
+				LlvmIrVariableOptions.GlobalWritable,
 				"map_modules"
 			);
 		}
