@@ -59,7 +59,7 @@ jobs:
 
     - template: run-nunit-tests.yaml
       parameters:
-        useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
+        useDotNet: ${{ eq(parameters.target_framework, $(DotNetStableTargetFramework)) }}
         testRunTitle: MSBuildDeviceIntegration On Device - macOS-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }} && cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"
@@ -70,7 +70,7 @@ jobs:
     - ${{ if eq(parameters.node_id, 1) }}:
       - template: run-nunit-tests.yaml
         parameters:
-          useDotNet: ${{ eq(parameters.target_framework, 'net6.0') }}
+          useDotNet: ${{ eq(parameters.target_framework, $(DotNetStableTargetFramework)) }}
           testRunTitle: MSBuildDeviceIntegration On Device - macOS-NoNode - ${{ parameters.job_suffix }}
           testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
           nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3  && cat != Node-4 && cat != SystemApplication && cat != TimeZoneInfo && cat != SmokeTests ${{ parameters.nunit_categories }}"

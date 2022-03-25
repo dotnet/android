@@ -5,7 +5,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>monoandroid10;net6.0</TargetFrameworks>
+    <TargetFrameworks>monoandroid10;$(DotNetTargetFramework)</TargetFrameworks>
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -386,7 +386,7 @@
   <Target Name="GetTargetPath" />
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <!-- Only build the 'net6.0' version of 'Mono.Android.dll' for the default API level that is supported or higher. -->
+  <!-- Only build the .NET 6+ version of 'Mono.Android.dll' for the default API level that is supported or higher. -->
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &lt; '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>

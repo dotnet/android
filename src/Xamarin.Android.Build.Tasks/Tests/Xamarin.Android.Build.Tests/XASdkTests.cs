@@ -228,9 +228,9 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		[TestCaseSource (nameof (DotNetPackTargetFrameworks))]
-		public void DotNetPack (string targetFramework, int apiLevel)
+		public void DotNetPack ([Values ("net6.0", "net7.0")] string dotnetVersion, [Values ("android", "android31")] string platform)
 		{
+			var targetFramework = dotnetVersion + platform;
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 				IsRelease = true,
@@ -264,8 +264,8 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android{apiLevel}.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android{apiLevel}.0/{proj.ProjectName}.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android31.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android31.0/{proj.ProjectName}.aar");
 			}
 		}
 
@@ -809,7 +809,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void XamarinLegacySdk ()
+		public void XamarinLegacySdk ([Values ("net6.0", "net7.0")] string dotnetVersion)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha4",
@@ -821,7 +821,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			using var b = new Builder ();
-			var dotnetTargetFramework = "net6.0-android32.0";
+			var dotnetTargetFramework = $"{dotnetVersion}-android32.0";
 			var legacyTargetFrameworkVersion = "12.1";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");

@@ -1,6 +1,10 @@
 <Project>
 
   <PropertyGroup>
+    <DotNetTargetFramework>net6.0</DotNetTargetFramework>
+    <!-- Used for bootstrap, command-line tooling, and desktop NUnit projects -->
+    <DotNetStableTargetFramework>net6.0</DotNetStableTargetFramework>
+    <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
     <TargetFrameworkNETStandard>netstandard2.0</TargetFrameworkNETStandard>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <BuildOutputDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\</BuildOutputDirectory>
