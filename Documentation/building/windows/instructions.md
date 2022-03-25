@@ -131,13 +131,6 @@ Using the `dotnet-local` script will execute the `dotnet` provisioned in
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 
-# Creating .NET 6 installer
-
-Once `msbuild Xamarin.Android.sln /t:Build` is complete, you can
-create an `.msi` for the .NET 6 Android workload via:
-
-    > msbuild Xamarin.Android.sln /t:CreateWorkloadInstallers
-
 # Building Unit Tests
 
 Once `msbuild Xamarin.Android.sln` has completed, the unit tests may
