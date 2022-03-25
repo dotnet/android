@@ -28,6 +28,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.CommandLineToolsVersion,             StripQuotes ("@CommandLineToolsVersion@"));
 			properties.Add (KnownProperties.DotNetPreviewPath,                   StripQuotes (@"@DotNetPreviewPath@"));
 			properties.Add (KnownProperties.DotNetPreviewVersionBand,            StripQuotes (@"@DotNetPreviewVersionBand@"));
+			properties.Add (KnownProperties.DotNetSdkManifestsFolder,            StripQuotes (@"@DotNetSdkManifestsFolder@"));
 			properties.Add (KnownProperties.DotNetMonoManifestVersionBand,       StripQuotes (@"@DotNetMonoManifestVersionBand@"));
 			properties.Add (KnownProperties.DotNetEmscriptenManifestVersionBand, StripQuotes (@"@DotNetEmscriptenManifestVersionBand@"));
 			properties.Add (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion, StripQuotes ("@MicrosoftDotnetSdkInternalPackageVersion@"));

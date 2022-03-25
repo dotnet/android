@@ -24,6 +24,7 @@ namespace Xamarin.Android.Prepare
 		public const string CommandLineToolsFolder              = nameof (CommandLineToolsFolder);
 		public const string DotNetPreviewPath                   = "DotNetPreviewPath";
 		public const string DotNetPreviewVersionBand            = nameof (DotNetPreviewVersionBand);
+		public const string DotNetSdkManifestsFolder            = nameof (DotNetSdkManifestsFolder);
 		public const string DotNetMonoManifestVersionBand       = nameof (DotNetMonoManifestVersionBand);
 		public const string DotNetEmscriptenManifestVersionBand = nameof (DotNetEmscriptenManifestVersionBand);
 		public const string MicrosoftDotnetSdkInternalPackageVersion = "MicrosoftDotnetSdkInternalPackageVersion";
