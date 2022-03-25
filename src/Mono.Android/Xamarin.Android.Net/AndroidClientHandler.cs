@@ -50,14 +50,14 @@ namespace Xamarin.Android.Net
 	/// by AndroidClientHandler is requested by the server, the application can provide its own authentication module (<see cref="AuthenticationData"/>, 
 	/// <see cref="PreAuthenticationData"/>) to handle the protocol authorization.</para>
 	/// <para>AndroidClientHandler also supports requests to servers with "invalid" (e.g. self-signed) SSL certificates. Since this process is a bit convoluted using
-	/// the Java APIs, AndroidClientHandler defines two ways to handle the situation. First, easier, is to store the necessary certificates (either CA or server certificates)
-	/// in the <see cref="TrustedCerts"/> collection or, after deriving a custom class from AndroidClientHandler, by overriding one or more methods provided for this purpose
-	/// (<see cref="ConfigureTrustManagerFactory"/>, <see cref="ConfigureKeyManagerFactory"/> and <see cref="ConfigureKeyStore"/>). The former method should be sufficient
-	/// for most use cases, the latter allows the application to provide fully customized key store, trust manager and key manager, if needed. Note that the instance of
-	/// AndroidClientHandler configured to accept an "invalid" certificate from the particular server will most likely fail to validate certificates from other servers (even
-	/// if they use a certificate with a fully validated trust chain) unless you store the CA certificates from your Android system in <see cref="TrustedCerts"/> along with
-	/// the self-signed certificate(s).</para>
+	/// the Java APIs, AndroidClientHandler defines a way to handle the situation. It can store the necessary certificates (either CA or server certificates)
+	/// in the <see cref="TrustedCerts"/> collection. If, however, the application requires finer control over the SSL configuration (e.g. it implements its own
+	/// TrustManager) then it should derive a custom class from <see cref="Xamarin.Android.Net.AndroidMessageHandler"/> instead of using AndroidClientHandler.
+	/// Note that the instance of AndroidClientHandler configured to accept an "invalid" certificate from the particular server will most likely fail to validate
+	/// certificates from other servers (even if they use a certificate with a fully validated trust chain) unless you store the CA certificates from your Android
+	/// system in <see cref="TrustedCerts"/> along with the self-signed certificate(s).</para>
 	/// </remarks>
+	[Obsolete("AndroidClientHandler has been deprecated. Use AndroidMessageHandler instead.")]
 	public class AndroidClientHandler : HttpClientHandler
 	{
 		internal const string LOG_APP = "monodroid-net";
@@ -132,9 +132,7 @@ namespace Xamarin.Android.Net
 		/// in this property in order for AndroidClientHandler to configure the request to accept the server certificate.</para>
 		/// <para>AndroidClientHandler uses a custom <see cref="KeyStore"/> and <see cref="TrustManagerFactory"/> to configure the connection. 
 		/// If, however, the application requires finer control over the SSL configuration (e.g. it implements its own TrustManager) then
-		/// it should leave this property empty and instead derive a custom class from AndroidClientHandler and override, as needed, the 
-		/// <see cref="ConfigureTrustManagerFactory"/>, <see cref="ConfigureKeyManagerFactory"/> and <see cref="ConfigureKeyStore"/> methods
-		/// instead</para>
+		/// it should derive a custom class from <see cref="Xamarin.Android.Net.AndroidMessageHandler"/> instead of using AndroidClientHandler.</para>
 		/// </summary>
 		/// <value>The trusted certs.</value>
 		public IList <Certificate>? TrustedCerts
@@ -210,7 +208,7 @@ namespace Xamarin.Android.Net
 		/// <param name="connection">HTTPS connection object.</param>
 		protected virtual IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
 		{
-			return null;
+			return _underlyingHander.GetSSLHostnameVerifierInternal (connection);
 		}
 
 		/// <summary>
@@ -227,12 +225,12 @@ namespace Xamarin.Android.Net
 
 		protected virtual async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
 		{
-			return await _underlyingHander.GetJavaProxy (destination, cancellationToken);
+			return await _underlyingHander.GetJavaProxyInternal (destination, cancellationToken);
 		}
 
 		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
-			await _underlyingHander.WriteRequestContentToOutput (request, httpConnection, cancellationToken);
+			await _underlyingHander.WriteRequestContentToOutputInternal (request, httpConnection, cancellationToken);
 		}
 
 		/// <summary>
@@ -245,7 +243,7 @@ namespace Xamarin.Android.Net
 		/// <param name="conn">Pre-configured connection instance</param>
 		protected virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
-			return _underlyingHander.SetupRequest (request, conn);
+			return _underlyingHander.SetupRequestInternal (request, conn);
 		}
 
 		/// <summary>
@@ -259,7 +257,7 @@ namespace Xamarin.Android.Net
 		{
 			AssertSelf ();
 
-			return _underlyingHander.ConfigureKeyStore (keyStore);
+			return _underlyingHander.ConfigureKeyStoreInternal (keyStore);
 		}
 
 		/// <summary>
@@ -275,7 +273,7 @@ namespace Xamarin.Android.Net
 		{
 			AssertSelf ();
 
-			return _underlyingHander.ConfigureKeyManagerFactory (keyStore);
+			return _underlyingHander.ConfigureKeyManagerFactoryInternal (keyStore);
 		}
 
 		/// <summary>
@@ -292,7 +290,7 @@ namespace Xamarin.Android.Net
 		{
 			AssertSelf ();
 
-			return _underlyingHander.ConfigureTrustManagerFactory (keyStore);
+			return _underlyingHander.ConfigureTrustManagerFactoryInternal (keyStore);
 		}
 
 		/// <summary>
@@ -308,18 +306,25 @@ namespace Xamarin.Android.Net
 		/// <param name="connection">HTTPS connection to return socket factory for</param>
 		protected virtual SSLSocketFactory? ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
 		{
-			return _underlyingHander.ConfigureCustomSSLSocketFactory (connection);
+			return _underlyingHander.ConfigureCustomSSLSocketFactoryInternal (connection);
 		}
 
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (AndroidMessageHandler))]
 		object GetUnderlyingHandler ()
 		{
 			var fieldName = "_nativeHandler";
-			var baseType = GetType ().BaseType;
-			var field = baseType.GetField (fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-			if (field == null) {
-				throw new InvalidOperationException ($"Field '{fieldName}' is missing from type '{baseType}'.");
+			FieldInfo? field = null;
+
+			for (var type = GetType (); type != null; type = type.BaseType) {
+				field = type.GetField (fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+				if (field != null)
+					break;
 			}
+
+			if (field == null) {
+				throw new InvalidOperationException ($"Field '{fieldName}' is missing from type '{GetType ()}'.");
+			}
+
 			return field.GetValue (this);
 		}
 	}

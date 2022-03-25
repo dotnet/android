@@ -80,7 +80,7 @@ installer.
 # Creating a local .NET 6 Workload
 
 `make prepare` provisions a specific build of .NET 6 to
-`~/android-toolchain/dotnet`.
+`bin/$(Configuration)/dotnet`.
 
 Once `make all` or `make jenkins` have completed, you can build the .NET 6
 packages with:
@@ -89,7 +89,7 @@ packages with:
 
 Several `.nupkg` files will be output in `./bin/BuildDebug/nuget-unsigned`,
 but this is only part of the story. Your local
-`~/android-toolchain/dotnet/packs` directory will be populated with a
+`bin/$(Configuration)/dotnet/packs` directory will be populated with a
 local Android "workload" in `Microsoft.Android.Sdk.$(HostOS)` matching
 your operating system.
 
@@ -106,10 +106,10 @@ Create a new project with `dotnet new android`:
 
 Build the project with:
 
-    $ ~/android-toolchain/dotnet/dotnet build foo.csproj
+    $ ./dotnet-local.sh build foo.csproj
 
-Using the `dotnet` provisioned in `~/android-toolchain` will use the
-locally built binaries.
+Using the `dotnet-local` script will execute the `dotnet` provisioned in
+`bin/$(Configuration)/dotnet` and will use the locally built binaries.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 
@@ -155,7 +155,7 @@ make variable:
 
 In order to get a list of the tests you can use the `list-nunit-tests` make target
 
-    make list-nunit-tests 
+    make list-nunit-tests
 
 or via the `ListNUnitTests` target
 
@@ -262,23 +262,23 @@ For example:
 
 There are a few ways to do it:
 
-  * Use [`Configuration.Override.props`][override-props], and override 
+  * Use [`Configuration.Override.props`][override-props], and override
     `$(AndroidApiLevel)` and `$(AndroidFrameworkVersion)`.
 
   * Build all the platforms with:
-  
+
         make framework-assemblies
 
   * Build several platforms other than the default
-  
+
         make framework-assemblies API_LEVELS="LEVEL1 LEVEL2"
-  
+
     where *LEVEL1* and *LEVEL2* are [API levels from the `$(API_LEVELS)` variable][api-levels].
-  
+
   * Build just the platform you want, other than the default one with
-  
+
         make API_LEVEL=LEVEL
-  
+
     where *LEVEL* is one of the [API levels from the `$(API_LEVELS)` variable][api-levels].
 
 [override-props]: ../../README.md#build-configuration
@@ -367,7 +367,7 @@ top-level `make` and [`xabuild`](../../../tools/xabuild) invocations to use them
 For example, to rebuild Mono for armeabi-v7a:
 
 	$ make -C src/mono-runtimes/obj/Debug/armeabi-v7a
-	
+
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
 	$ msbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
 

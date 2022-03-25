@@ -132,7 +132,7 @@ the Android [binutils][binutils] such as `ld`, the native linker,
 and `as`, the native assembler. These tools are included in the
 Xamarin.Android installation.
 
-The default value is `$(MonoAndroidBinDirectory)\binutils\`.
+The default value is `$(MonoAndroidBinDirectory)\binutils\bin\`.
 
 Added in Xamarin.Android 10.0.
 
@@ -299,6 +299,28 @@ should be created instead of having support for all ABIs in a single `.apk`.
 
 See also the [Building ABI-Specific APKs](~/android/deploy-test/building-apps/abi-specific-apks.md)
 guide.
+
+## AndroidCreateProguardMappingFile
+
+A boolean property that controls if a proguard mapping file is
+generated as part of the build process.
+
+Adding the following to your csproj will cause the file to be
+generated. This uses the [`AndroidProguardMappingFile`](#androidproguardmappingfile) property
+to control the location of the final mapping file.
+
+```
+<AndroidCreateProguardMappingFile>True</AndroidCreateProguardMappingFile>
+```
+
+Note that if you are using `.aab` files the mapping file with be
+automatically included in your package. So there is no need to upload
+it to the Google Play Store manually. If you are using `.apk` files
+you will need to manually upload the [`AndroidProguardMappingFile`](#androidproguardmappingfile).
+
+The default value is `True` when using `AndroidLinkTool=r8`.
+
+Added in Xamarin.Android 12.3.
 
 ## AndroidDebugKeyAlgorithm
 
@@ -987,7 +1009,18 @@ mean the `mapping.txt` file will be produced in the `$(OutputPath)`
 folder. This file can then be used when uploading packages to the
 Google Play Store.
 
-The default value is `$(OutputPath)mapping.txt`.
+By default this file is produced automatically when using `AndroidLinkTool=r8`
+and will generate the following file `$(OutputPath)mapping.txt`.
+
+If you do not want to generate this mapping file you can use the
+[`AndroidCreateProguardMappingFile`](#androidcreateproguardmappingfile) property to stop creating it .
+Add the following in your project
+
+```
+<AndroidCreateProguardMappingFile>False</AndroidCreateProguardMappingFile>
+```
+
+or use `-p:AndroidCreateProguardMappingFile=False` on the command line.
 
 This property was added in Xamarin.Android 11.2.
 

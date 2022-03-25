@@ -136,6 +136,9 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
     <value>Invalid file name: It must contain only {0}.</value>
     <comment>{0} - The regular expression that the file name must match</comment>
   </data>
+  <data name="APT0004" xml:space="preserve">
+    <value>Invalid file name: It must start with A-z or a-z or an underscore.</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -863,5 +866,10 @@ In this message, the term "handheld app" means "app for handheld devices."
     the contents are regenerated.
     </value>
     <comment>{0} - The path of the template file.</comment>
+  </data>
+  <data name="XA4233" xml:space="preserve">
+    <value>The &lt;AndroidNamespaceReplacement&gt; for '{0}' does not specify a 'Replacement' attribute.</value>
+    <comment>The following are literal names and should not be translated: &lt;AndroidNamespaceReplacement&gt;
+{0} - The AndroidNamespaceReplacement MSBuild value.</comment>
   </data>
 </root>

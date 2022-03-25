@@ -163,7 +163,18 @@ selectively AOT'ing only the methods included in the profile.
 
 ## Profiling the JIT Compiler
 
-Before launching the app, run the `adb` command:
+If profiling a Release build, you'll need to edit your
+`AndroidManifest.xml` to make the application "debuggable":
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application android:debuggable="true" ...
+```
+
+Debug builds already set this value by default.
+
+Next, run the `adb` command:
 
     > adb shell setprop debug.mono.log timing,default
 
@@ -213,6 +224,8 @@ Mono:
     Methods JITted using mono JIT       : 921
     Methods JITted using LLVM           : 0
     Methods using the interpreter       : 0
+
+_NOTE: that `counters.txt` is not available in .NET 6 projects._
 
 `methods.txt` has the individual JIT times of each method:
 

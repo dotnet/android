@@ -13,7 +13,7 @@ using System.Collections.Generic;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("Node-3")]
+	[Category ("UsesDevice")]
 	public class DebuggingTest : DeviceTest {
 		[TearDown]
 		public void ClearDebugProperties ()
@@ -43,15 +43,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("Node-3")]
 		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs, [Values (false, true)] bool useEmbeddedDex)
 		{
 			AssertHasDevices ();
+			SwitchUser ();
 
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			}
 			proj.SetDefaultTargetDevice ();
 			if (Builder.UseDotNet && isRelease) {
@@ -79,9 +81,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("Node-3")]
 		public void ClassLibraryMainLauncherRuns ([Values (true, false)] bool preloadAssemblies)
 		{
 			AssertHasDevices ();
+			SwitchUser ();
 
 			var path = Path.Combine ("temp", TestName);
 
@@ -89,7 +93,7 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "MyApp",
 			};
 			if (!CommercialBuildAvailable) {
-				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			}
 			app.SetDefaultTargetDevice ();
 			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
@@ -162,17 +166,26 @@ namespace Xamarin.Android.Build.Tests
 		};
 #pragma warning restore 414
 
-		[Test, Category ("Debugger")]
+		[Test, Category ("Debugger"), Category ("Node-4")]
 		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
+		[Retry(5)]
 		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
+			SwitchUser ();
+
+			var path = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (path)) {
+				TestContext.Out.WriteLine ($"Deleting previous run at '{path}'");
+				Directory.Delete (path,recursive:true);
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 				AndroidFastDeploymentType = fastDevType,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
 			proj.Sources.Add (new BuildItem.Source ("MyApplication.cs") {
@@ -198,7 +211,7 @@ namespace ${ROOT_NAMESPACE} {
 }
 "),
 			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder (path)) {
 				SetTargetFrameworkAndManifest (proj, b);
 				Assert.True (b.Install (proj), "Project should have installed.");
 
@@ -220,7 +233,7 @@ namespace ${ROOT_NAMESPACE} {
 				int port = rnd.Next (10000, 20000);
 				TestContext.Out.WriteLine ($"{port}");
 				var args = new SoftDebuggerConnectArgs ("", IPAddress.Loopback, port) {
-					MaxConnectionAttempts = 10,
+					MaxConnectionAttempts = 2000, // we need a long delay here to get a reliable connection
 				};
 				var startInfo = new SoftDebuggerStartInfo (args) {
 					WorkingDirectory = Path.Combine (b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets"),
@@ -237,18 +250,18 @@ namespace ${ROOT_NAMESPACE} {
 					"AndroidAttachDebugger=True",
 				}), "Project should have run.");
 
-				// do we expect the app to start?
-				Assert.AreEqual (activityStarts, WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
-				if (!activityStarts)
-					return;
-				// we need to give a bit of time for the debug server to start up.
-				WaitFor (2000);
 				session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
 				session.OutputWriter += (isStderr, text) => { Console.WriteLine (text); };
 				session.DebugWriter += (level, category, message) => { Console.WriteLine (message); };
+				// do we expect the app to start?
+				Assert.AreEqual (activityStarts, WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Debugger should have started");
+				if (!activityStarts)
+					return;
+				Assert.False (session.HasExited, "Target should not have exited.");
 				session.Run (startInfo, options);
 				var expectedTime = TimeSpan.FromSeconds (1);
 				var actualTime = ProfileFor (() => session.IsConnected);
+				Assert.True (session.IsConnected, "Debugger should have connected but it did not.");
 				TestContext.Out.WriteLine ($"Debugger connected in {actualTime}");
 				Assert.LessOrEqual (actualTime, expectedTime, $"Debugger should have connected within {expectedTime} but it took {actualTime}.");
 				// we need to wait here for a while to allow the breakpoints to hit
@@ -274,60 +287,83 @@ namespace ${ROOT_NAMESPACE} {
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
+				/* debugType */          "",
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+				/* debugType */          "full",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
+				/* debugType */          "",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
+				/* debugType */          "",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
+				/* debugType */          "",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
+				/* debugType */          "",
 			},
 			new object[] {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
+				/* debugType */          "",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
+				/* debugType */          "",
 			},
 		};
 #pragma warning restore 414
 
-		[Test, Category ("SmokeTests"), Category ("Debugger")]
+		[Test, Category ("SmokeTests"), Category ("Debugger"), Category ("Node-4")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username)
+		[Retry (5)]
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string debugType)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
+			SwitchUser ();
+			WaitFor (5000);
 
-			var path = Path.Combine ("temp", TestName);
+			var path = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (path)) {
+				TestContext.Out.WriteLine ($"Deleting previous run at '{path}'");
+				Directory.Delete (path,recursive:true);
+			}
+
 			int userId = GetUserId (username);
 			List<string> parameters = new List<string> ();
 			if (userId >= 0)
 				parameters.Add ($"AndroidDeviceUserId={userId}");
 			if (SwitchUser (username)) {
-				WaitFor (5);
+				WaitFor (5000);
+				ClearBlockingDialogs ();
 				ClickButton ("", "android:id/button1", "Yes continue");
 			}
 
@@ -354,8 +390,11 @@ namespace ${ROOT_NAMESPACE} {
 			};
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
-			app.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			app.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
+			if (!string.IsNullOrEmpty (debugType)) {
+				app.SetProperty ("DebugType", debugType);
+			}
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
@@ -395,7 +434,7 @@ namespace ${ROOT_NAMESPACE} {
 				int port = rnd.Next (10000, 20000);
 				TestContext.Out.WriteLine ($"{port}");
 				var args = new SoftDebuggerConnectArgs ("", IPAddress.Loopback, port) {
-					MaxConnectionAttempts = 10,
+					MaxConnectionAttempts = 2000,
 				};
 				var startInfo = new SoftDebuggerStartInfo (args) {
 					WorkingDirectory = Path.Combine (appBuilder.ProjectDirectory, app.IntermediateOutputPath, "android", "assets"),
@@ -414,17 +453,24 @@ namespace ${ROOT_NAMESPACE} {
 				Assert.True (appBuilder.RunTarget (app, "_Run", doNotCleanupOnUpdate: true,
 					parameters: parameters.ToArray ()), "Project should have run.");
 
-				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log")), "Activity should have started");
-				// we need to give a bit of time for the debug server to start up.
-				WaitFor (2000);
-				session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
-				session.OutputWriter += (isStderr, text) => { Console.WriteLine (text); };
-				session.DebugWriter += (level, category, message) => { Console.WriteLine (message); };
+				session.LogWriter += (isStderr, text) => {
+					TestContext.Out.WriteLine (text);
+				};
+				session.OutputWriter += (isStderr, text) => {
+					TestContext.Out.WriteLine (text);
+				};
+				session.DebugWriter += (level, category, message) => {
+					TestContext.Out.WriteLine (message);
+				};
+				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log")), "Debugger should have started");
 				session.Run (startInfo, options);
-				WaitFor (TimeSpan.FromSeconds (30), () => session.IsConnected);
+				TestContext.Out.WriteLine ($"Detected debugger startup in log");
+				Assert.False (session.HasExited, "Target should not have exited.");
+				WaitFor (TimeSpan.FromSeconds (30), () => session.IsConnected );
 				Assert.True (session.IsConnected, "Debugger should have connected but it did not.");
 				// we need to wait here for a while to allow the breakpoints to hit
 				// but we need to timeout
+				TestContext.Out.WriteLine ($"Debugger connected.");
 				TimeSpan timeout = TimeSpan.FromSeconds (60);
 				int expected = 4;
 				while (session.IsConnected && breakcountHitCount < 3 && timeout >= TimeSpan.Zero) {
@@ -435,7 +481,8 @@ namespace ${ROOT_NAMESPACE} {
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
 				breakcountHitCount = 0;
 				ClearAdbLogcat ();
-				ClickButton (app.PackageName, "myXFButton", "CLICK ME");
+				ClearBlockingDialogs ();
+				Assert.True (ClickButton (app.PackageName, "myXFButton", "CLICK ME"), "Button should have been clicked!");
 				while (session.IsConnected && breakcountHitCount < 1 && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));

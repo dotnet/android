@@ -446,6 +446,12 @@ namespace Xamarin.Android.Prepare
 			value = SignificantDigits (value, 3);
 		}
 
+		public static string SizeToString (long dSize)
+		{
+			Utilities.FormatSize ((ulong)dSize, out decimal value, out string unit);
+			return $"{value}{unit}";
+		}
+
 		// Creates numbers with maxDigitCount significant digits or less
 		static decimal SignificantDigits (decimal number, int maxDigitCount)
 		{

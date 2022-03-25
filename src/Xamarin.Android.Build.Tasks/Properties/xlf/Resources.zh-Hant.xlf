@@ -27,6 +27,11 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
 This error is likely caused by an issue with the AndroidManifest.xml file or an Android manifest generation attribute in a source code file.</target>
         <note>{0} - The error message returned by the AAPT or AAPT2 tool</note>
       </trans-unit>
+      <trans-unit id="APT0004">
+        <source>Invalid file name: It must start with A-z or a-z or an underscore.</source>
+        <target state="new">Invalid file name: It must start with A-z or a-z or an underscore.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="XA0031_NET">
         <source>Java SDK {0} or above is required when using .NET 6 or higher. Download the latest JDK at: https://aka.ms/msopenjdk</source>
         <target state="new">Java SDK {0} or above is required when using .NET 6 or higher. Download the latest JDK at: https://aka.ms/msopenjdk</target>
@@ -68,6 +73,12 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
         <source>The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.</source>
         <target state="new">The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.</target>
         <note>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</note>
+      </trans-unit>
+      <trans-unit id="XA4233">
+        <source>The &lt;AndroidNamespaceReplacement&gt; for '{0}' does not specify a 'Replacement' attribute.</source>
+        <target state="new">The &lt;AndroidNamespaceReplacement&gt; for '{0}' does not specify a 'Replacement' attribute.</target>
+        <note>The following are literal names and should not be translated: &lt;AndroidNamespaceReplacement&gt;
+{0} - The AndroidNamespaceReplacement MSBuild value.</note>
       </trans-unit>
       <trans-unit id="XA4300">
         <source>Native library '{0}' will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'.</source>

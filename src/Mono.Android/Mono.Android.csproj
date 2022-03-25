@@ -113,6 +113,7 @@
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
       <Link>Crc64.Table.cs</Link>
     </Compile>
+    <Compile Include="Android.Icu\ListFormatter.cs" />
     <Compile Include="Android.Icu\RelativeDateTimeFormatter.cs" />
     <Compile Include="Android.Icu\DateIntervalFormat.cs" />
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
@@ -125,6 +126,10 @@
   <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
 
 <ItemGroup>
+    <None Include="Android.Runtime\JNINativeWrapper.g.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JNINativeWrapper.g.cs</LastGenOutput>
+    </None>
     <Compile Include="Android\IncludeAndroidResourcesFromAttribute.cs" />
     <Compile Include="Android\LinkerSafeAttribute.cs" />
     <Compile Include="Android\NativeLibraryReferenceAttribute.cs" />
@@ -221,7 +226,6 @@
     <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
     <Compile Include="Android.Runtime\BoundExceptionType.cs" />
     <Compile Include="Android.Runtime\CharSequence.cs" />
-    <Compile Include="Android.Runtime\ConstructorBuilder.cs" />
     <Compile Include="Android.Runtime\CPUArchitecture.cs" />
     <Compile Include="Android.Runtime\Extensions.cs" />
     <Compile Include="Android.Runtime\GeneratedEnumAttribute.cs" />
@@ -241,6 +245,11 @@
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
+    <Compile Include="Android.Runtime\JNINativeWrapper.g.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>JNINativeWrapper.g.tt</DependentUpon>
+    </Compile>
     <Compile Include="Android.Runtime\JObjectRefType.cs" />
     <Compile Include="Android.Runtime\JValue.cs" />
     <Compile Include="Android.Runtime\Logger.cs" />
@@ -358,7 +367,7 @@
     <Compile Include="Xamarin.Android.Net\AuthModuleBasic.cs" />
     <Compile Include="Xamarin.Android.Net\AuthModuleDigest.cs" />
     <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
-    <Compile Include="Xamarin.Android.Net\OldAndroidSSLSocketFactory.cs" />
+    <Compile Condition=" '$(TargetFramework)' == 'monoandroid10' " Include="Xamarin.Android.Net\OldAndroidSSLSocketFactory.cs" />
   </ItemGroup>
 
   <ItemGroup>

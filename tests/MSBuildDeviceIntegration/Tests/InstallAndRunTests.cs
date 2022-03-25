@@ -41,7 +41,7 @@ namespace Xamarin.Android.Build.Tests
 				TargetSdkVersion = null,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86");
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
@@ -190,7 +190,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				ProjectName = testName,
 				IsRelease = true,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			proj.SetDefaultTargetDevice ();
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -494,7 +494,7 @@ namespace Library1 {
 			};
 
 			if (isRelease || !CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86");
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			}
 
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
@@ -614,6 +614,7 @@ using System.Runtime.Serialization.Json;
 
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 			};
 			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);

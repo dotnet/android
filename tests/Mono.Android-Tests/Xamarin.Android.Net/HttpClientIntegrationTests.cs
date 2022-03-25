@@ -41,7 +41,9 @@ namespace Xamarin.Android.NetTests {
 	[Category ("InetAccess")]
 	public abstract class HttpClientIntegrationTestBase
 	{
-		protected abstract HttpClientHandler CreateHandler ();
+		// AndroidHandlerSettingsAdapter is a class specific for this test class.
+		// It unifies the APIs of AndroidClientHandler and AndroidMessageHandler.
+		protected abstract AndroidHandlerSettingsAdapter CreateHandler ();
 
 		class CustomStream : Stream
 		{
@@ -927,11 +929,10 @@ namespace Xamarin.Android.NetTests {
 		public void DisallowAutoRedirect ()
 		{
 			var listener = CreateListener (l => {
-					var request = l.Request;
-					var response = l.Response;
-
-					response.StatusCode = (int)HttpStatusCode.Moved;
-					response.RedirectLocation = "http://xamarin.com/";
+					using (var response = l.Response)
+					{
+						response.Redirect("http://xamarin.com/");
+					}
 				});
 
 			using (listener) {
@@ -1035,14 +1036,104 @@ namespace Xamarin.Android.NetTests {
 
 			return l;
 		}
+
+		// AndroidClientHandler and AndroidMessageHandler have the same properties and methods
+		// but they aren't declared in any of their shared base classes or interfaces so there
+		// is this adapter that allows us to unify their APIs for test purposes.
+		protected abstract class AndroidHandlerSettingsAdapter : IDisposable
+		{
+			protected abstract HttpMessageHandler Unwrap();
+			public abstract void Dispose ();
+
+			public abstract bool UseProxy { set; }
+			public abstract IWebProxy? Proxy { set; }
+			public abstract bool AllowAutoRedirect { set; }
+			public abstract DecompressionMethods AutomaticDecompression { set; }
+			public abstract int MaxAutomaticRedirections { set; }
+			public abstract int MaxRequestContentBufferSize { set; }
+			public abstract bool PreAuthenticate { set; }
+			public abstract CookieContainer CookieContainer { get; }
+			public abstract bool UseCookies { set; }
+			public abstract bool UseDefaultCredentials { set; }
+
+			public static implicit operator HttpMessageHandler (AndroidHandlerSettingsAdapter adapter)
+				=> adapter.Unwrap();
+		}
 	}
 
 	[TestFixture]
 	public class AndroidClientHandlerIntegrationTests : HttpClientIntegrationTestBase
 	{
-		protected override HttpClientHandler CreateHandler ()
+		protected override AndroidHandlerSettingsAdapter CreateHandler ()
 		{
-			return new Xamarin.Android.Net.AndroidClientHandler ();
+			return new AndroidClientHandlerAdapter (new Xamarin.Android.Net.AndroidClientHandler ());
+		}
+
+		private class AndroidClientHandlerAdapter : AndroidHandlerSettingsAdapter
+		{
+			private Xamarin.Android.Net.AndroidClientHandler _handler;
+
+			public AndroidClientHandlerAdapter (Xamarin.Android.Net.AndroidClientHandler handler)
+			{
+				_handler = handler;
+			}
+
+			protected override HttpMessageHandler Unwrap()
+				=> _handler;
+
+			public override void Dispose ()
+			{
+				_handler.Dispose();
+			}
+
+			public override bool UseProxy { set => _handler.UseProxy = value; }
+			public override IWebProxy? Proxy { set => _handler.Proxy = value; }
+			public override bool AllowAutoRedirect { set => _handler.AllowAutoRedirect = value; }
+			public override DecompressionMethods AutomaticDecompression { set => _handler.AutomaticDecompression = value; }
+			public override int MaxAutomaticRedirections { set => _handler.MaxAutomaticRedirections = value; }
+			public override int MaxRequestContentBufferSize { set => _handler.MaxRequestContentBufferSize = value; }
+			public override bool PreAuthenticate { set => _handler.PreAuthenticate = value; }
+			public override CookieContainer CookieContainer => _handler.CookieContainer;
+			public override bool UseCookies { set => _handler.UseCookies = value; }
+			public override bool UseDefaultCredentials { set => _handler.UseDefaultCredentials = value; }
+		}
+	}
+
+	[TestFixture]
+	public class AndroidMessageHandlerIntegrationTests : HttpClientIntegrationTestBase
+	{
+		protected override AndroidHandlerSettingsAdapter CreateHandler ()
+		{
+			return new AndroidMessageHandlerAdapter (new Xamarin.Android.Net.AndroidMessageHandler ());
+		}
+
+		private class AndroidMessageHandlerAdapter : AndroidHandlerSettingsAdapter
+		{
+			private Xamarin.Android.Net.AndroidMessageHandler _handler;
+
+			public AndroidMessageHandlerAdapter (Xamarin.Android.Net.AndroidMessageHandler handler)
+			{
+				_handler = handler;
+			}
+
+			protected override HttpMessageHandler Unwrap()
+				=> _handler;
+
+			public override void Dispose ()
+			{
+				_handler.Dispose();
+			}
+
+			public override bool UseProxy { set => _handler.UseProxy = value; }
+			public override IWebProxy? Proxy { set => _handler.Proxy = value; }
+			public override bool AllowAutoRedirect { set => _handler.AllowAutoRedirect = value; }
+			public override DecompressionMethods AutomaticDecompression { set => _handler.AutomaticDecompression = value; }
+			public override int MaxAutomaticRedirections { set => _handler.MaxAutomaticRedirections = value; }
+			public override int MaxRequestContentBufferSize { set { /* no-op */ } }
+			public override bool PreAuthenticate { set => _handler.PreAuthenticate = value; }
+			public override CookieContainer CookieContainer => _handler.CookieContainer;
+			public override bool UseCookies { set => _handler.UseCookies = value; }
+			public override bool UseDefaultCredentials { set => _handler.Credentials = value ? CredentialCache.DefaultCredentials : null; }
 		}
 	}
 }

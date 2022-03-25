@@ -37,10 +37,4 @@
         Importance="High"
     />
   </Target>
-  <Target Name="GetDotNetPreviewPath">
-    <Message
-        Text="$(DotNetPreviewPath)"
-        Importance="High"
-    />
-  </Target>
 </Project>

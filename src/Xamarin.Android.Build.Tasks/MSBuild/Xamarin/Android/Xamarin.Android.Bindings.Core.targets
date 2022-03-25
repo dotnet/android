@@ -81,6 +81,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         EnableBindingInterfaceConstants="$(AndroidBoundInterfacesContainConstants)"
         Nullable="$(Nullable)"
         UseJavaLegacyResolver="$(_AndroidUseJavaLegacyResolver)"
+        NamespaceTransforms="@(AndroidNamespaceReplacement)"
     />
 
     <!-- Write a flag so we won't redo this target if nothing changed -->

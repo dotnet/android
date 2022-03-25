@@ -62,8 +62,11 @@
       <Replacement Include="@CommandLineToolsVersion@=$(CommandLineToolsVersion)" />
       <Replacement Include="@DotNetPreviewPath@=$(DotNetPreviewPath)" />
       <Replacement Include="@DotNetPreviewVersionBand@=$(DotNetPreviewVersionBand)" />
+      <Replacement Include="@DotNetMonoManifestVersionBand@=$(DotNetMonoManifestVersionBand)" />
+      <Replacement Include="@DotNetEmscriptenManifestVersionBand@=$(DotNetEmscriptenManifestVersionBand)" />
       <Replacement Include="@MicrosoftDotnetSdkInternalPackageVersion@=$(MicrosoftDotnetSdkInternalPackageVersion)" />
       <Replacement Include="@MicrosoftNETCoreAppRefPackageVersion@=$(MicrosoftNETCoreAppRefPackageVersion)" />
+      <Replacement Include="@MicrosoftNETWorkloadEmscriptenPackageVersion@=$(MicrosoftNETWorkloadEmscriptenPackageVersion)" />
       <Replacement Include="@EmulatorVersion@=$(EmulatorVersion)" />
       <Replacement Include="@EmulatorPkgRevision@=$(EmulatorPkgRevision)" />
       <Replacement Include="@HostOS@=$(HostOS)" />

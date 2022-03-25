@@ -231,7 +231,15 @@ namespace Xamarin.Android.Build.Tests
 					stream.Position = 0;
 					using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
 						var type = assembly.MainModule.GetType ($"{assemblyName}.Resource");
-						Assert.AreEqual (0, type.NestedTypes.Count, "All Nested Resource Types should be removed.");
+						var intType = typeof(int);
+						foreach (var nestedType in type.NestedTypes) {
+							int count = 0;
+							foreach (var field in nestedType.Fields) {
+								if (field.FieldType.FullName == intType.FullName)
+									count++;
+							}
+							Assert.AreEqual (0, count, "All Nested Resource Type int fields should be removed.");
+						}
 					}
 				}
 			}

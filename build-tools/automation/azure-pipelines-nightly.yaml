@@ -74,18 +74,31 @@ stages:
         Android21-x86:
           avdApiLevel: 21
           avdAbi: x86
+          avdType: default
         Android23-x86:
           avdApiLevel: 23
           avdAbi: x86
+          avdType: default
         Android24-x86:
           avdApiLevel: 24
           avdAbi: x86
+          avdType: default
         Android26-x86_64:
           avdApiLevel: 26
           avdAbi: x86_64
+          avdType: default
         Android28-x86_64:
           avdApiLevel: 28
           avdAbi: x86_64
+          avdType: default
+        Android30-x86_64:
+          avdApiLevel: 30
+          avdAbi: x86_64
+          avdType: default
+        Android31-x86_64:
+          avdApiLevel: 31
+          avdAbi: x86_64
+          avdType: default
     pool:
       vmImage: $(HostedMacImage)
     workspace:
@@ -105,7 +118,7 @@ stages:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
 
-    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$HOME/Library/Android/$(XA.Jdk8.Folder)"
+    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
       displayName: set Java8SdkDirectory
 
     - task: MSBuild@1
@@ -113,15 +126,15 @@ stages:
       inputs:
         solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:InstallAvdImage;AcquireAndroidTarget /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-$(avdApiLevel).binlog
+        msbuildArguments: /t:InstallAvdImage;AcquireAndroidTarget /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-$(avdApiLevel).binlog
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Mono.Android_Tests-$(avdApiLevel)-$(avdAbi)
+        testName: Mono.Android_Tests-$(avdApiLevel)-$(avdAbi)-$(avdType)
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(XA.Build.Configuration).xml
-        extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi)
+        extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType)
         artifactSource: bin/Test$(XA.Build.Configuration)/Mono.Android_Tests-Signed.apk
         artifactFolder: Default
 
@@ -130,13 +143,13 @@ stages:
       inputs:
         solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:AcquireAndroidTarget,ReleaseAndroidTarget /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+        msbuildArguments: /t:AcquireAndroidTarget,ReleaseAndroidTarget /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
       condition: always()
 
     - template: yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi) - macOS
+        artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
 
     - template: yaml-templates/fail-on-issue.yaml
 

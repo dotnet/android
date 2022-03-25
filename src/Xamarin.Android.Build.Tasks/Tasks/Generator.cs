@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
@@ -55,6 +56,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] TransformFiles { get; set; }
 		public ITaskItem[] ReferencedManagedLibraries { get; set; }
 		public ITaskItem[] AnnotationsZipFiles { get; set; }
+		public ITaskItem[] NamespaceTransforms { get; set; }
 
 		public ITaskItem[] JavadocXml { get; set; }
 		public string JavadocVerbosity { get; set; }
@@ -113,6 +115,20 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
+
+			if (NamespaceTransforms?.Any () == true)
+				foreach (var nt in NamespaceTransforms) {
+					if (!nt.MetadataNames.OfType<string> ().Contains ("Replacement", StringComparer.OrdinalIgnoreCase))
+						Log.LogCodedError (
+							code: "XA4233",
+							message: Properties.Resources.XA4233,
+							messageArgs: new [] { nt.ItemSpec }
+						);
+				}
+
+			if (Log.HasLoggedErrors)
+				return false;
+
 			return base.RunTask ();
 		}
 
@@ -125,6 +141,21 @@ namespace Xamarin.Android.Tasks
 		protected override string GenerateCommandLineCommands ()
 		{
 			var cmd = GetCommandLineBuilder ();
+
+			if (NamespaceTransforms?.Any () == true) {
+				// ex: obj/Debug/generated/msbuild-metadata.xml
+				var transform_file = Path.Combine (OutputDirectory, "..", "msbuild-metadata.xml");
+
+				var root = new XElement ("metadata");
+
+				foreach (var nt in NamespaceTransforms)
+					root.Add (new XElement ("ns-replace", new XAttribute ("source", nt.ItemSpec), new XAttribute ("replacement", nt.GetMetadata ("replacement"))));
+
+				using (var xml_writer = XmlWriter.Create (transform_file, new XmlWriterSettings { Indent = true }))
+					root.WriteTo (xml_writer);
+
+				transform_files.Add (new Tuple<string, string> (transform_file, "fixup"));
+			}
 
 			string responseFile = Path.Combine (OutputDirectory, "generator.rsp");
 			Log.LogDebugMessage ("[Generator] response file: {0}", responseFile);

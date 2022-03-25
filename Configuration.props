@@ -26,8 +26,6 @@
     <AndroidFirstFrameworkVersion Condition="'$(AndroidFirstFrameworkVersion)' == ''">v4.4</AndroidFirstFrameworkVersion>
     <AndroidFirstApiLevel Condition="'$(AndroidFirstApiLevel)' == ''">19</AndroidFirstApiLevel>
     <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">21</AndroidJavaRuntimeApiLevel>
-    <!-- The default API level used for $(TargetPlatformVersion) -->
-    <AndroidDefaultTargetDotnetApiLevel Condition="'$(AndroidDefaultTargetDotnetApiLevel)' == ''">31</AndroidDefaultTargetDotnetApiLevel>
     <!-- The min API level supported by Microsoft.Android.Sdk, should refactor/remove when this value is the same as $(AndroidFirstApiLevel) -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <AndroidFirstPlatformId Condition="'$(AndroidFirstPlatformId)' == ''">$(AndroidFirstApiLevel)</AndroidFirstPlatformId>
@@ -36,9 +34,11 @@
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
     <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v12.1</AndroidLatestStableFrameworkVersion>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
-    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">32</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">32</AndroidLatestUnstablePlatformId>
-    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v12.1</AndroidLatestUnstableFrameworkVersion>
+    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">33</AndroidLatestUnstableApiLevel>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">Tiramisu</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v12.1.99</AndroidLatestUnstableFrameworkVersion>
+    <!-- The default API level used for $(TargetPlatformVersion) -->
+    <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">31</AndroidDefaultTargetDotnetApiLevel>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
@@ -74,14 +74,13 @@
     <HOME Condition=" '$(HOME)' == '' ">$(USERPROFILE)</HOME>
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
-    <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' And '$(RunningOnCI)' == 'true' And '$(HostOS)' == 'Darwin' ">$(HOME)\Library\Android</AndroidToolchainDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Linux' ">\usr</AndroidMxeInstallPrefix>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)</AndroidMxeInstallPrefix>
+    <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' And Exists($(ANDROID_SDK_ROOT)) ">$(ANDROID_SDK_ROOT)</AndroidSdkDirectory>
     <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
+    <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' And Exists($(ANDROID_NDK_LATEST_HOME)) ">$(ANDROID_NDK_LATEST_HOME)</AndroidNdkDirectory>
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
-    <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(AndroidToolchainDirectory)\dotnet\</DotNetPreviewPath>
-    <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(AndroidToolchainDirectory)\wix\</WixToolPath>
     <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.18.1</AndroidCmakeVersion>
     <AndroidCmakeUrlPrefix Condition=" '$(HostOS)' == 'Windows' And '$(AndroidCmakeUrlPrefix)' == '' ">7c386a739f915f5bd60051f2572c24782388e807.</AndroidCmakeUrlPrefix>
@@ -138,8 +137,8 @@
     <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildTools30PackagePrefixWindows)</XABuildTools30PackagePrefix>
     <XABuildTools30Version>30.0.3</XABuildTools30Version>
     <XABuildTools30Folder Condition="'$(XABuildTools30Folder)' == ''">30.0.3</XABuildTools30Folder>
-    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">e8b2b4cbe47c728c1e54c5f524440b52d4e1a33c.</XAPlatformToolsPackagePrefix>
-    <XAPlatformToolsVersion>31.0.3</XAPlatformToolsVersion>
+    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
+    <XAPlatformToolsVersion>32.0.0</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.8.1</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
@@ -157,6 +156,7 @@
   <PropertyGroup>
     <JavacSourceVersion>1.8</JavacSourceVersion>
     <JavacTargetVersion>1.8</JavacTargetVersion>
+    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists($(JAVA_HOME_8_X64)) ">$(JAVA_HOME_8_X64)</Java8SdkDirectory>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists('$(JavaSdkDirectory)\..\jdk-1.8') ">$([System.IO.Path]::GetFullPath ('$(JavaSdkDirectory)\..\jdk-1.8'))</Java8SdkDirectory>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' ">$(JavaSdkDirectory)</Java8SdkDirectory>
   </PropertyGroup>
@@ -182,8 +182,9 @@
     <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">5.0</CommandLineToolsFolder>
     <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">7583922_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
-    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">7033400</EmulatorVersion>
-    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">30.3.5</EmulatorPkgRevision>
+    <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-1.xml -->
+    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">8129060</EmulatorVersion>
+    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">31.3.1</EmulatorPkgRevision>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
@@ -240,12 +241,12 @@
 
   <!-- Fix for IDEs -->
   <Target Name="CreateManifestResourceNames" />
-   
+
   <!-- Don't analyze code from external repos -->
   <PropertyGroup Condition=" !$(MSBuildProjectDirectory.Contains ('external')) and !$(MSBuildProjectDirectory.Contains ('NUnitLite')) ">
     <XAShouldAnalyzeAssembly>True</XAShouldAnalyzeAssembly>
   </PropertyGroup>
-   
+
   <!-- The net6.0 versions of these analyzers are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
   <PropertyGroup Condition=" '$(TargetFramework)' != '' And (!$(TargetFramework.StartsWith('nets')) And !$(TargetFramework.StartsWith('net4')) And !$(TargetFramework.StartsWith('monoandroid'))) ">
     <XABuildingForNetCoreApp>True</XABuildingForNetCoreApp>

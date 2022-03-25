@@ -176,6 +176,28 @@ property, as `$(AotAssemblies)` will eventually be deprecated.
 
 [blazor]: https://devblogs.microsoft.com/aspnet/asp-net-core-updates-in-net-6-preview-4/#blazor-webassembly-ahead-of-time-aot-compilation
 
+We want to choose the optimal settings for startup time and app size.
+By default `Release` builds will default to:
+
+```xml
+<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <RunAOTCompilation>true</RunAOTCompilation>
+  <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
+</PropertyGroup>
+```
+This is the behavior when `$(RunAOTCompilation)` and
+`$(AndroidEnableProfiledAot)` are blank.
+
+So if you would like to *disable* AOT, you would need to explicitly
+turn these settings off:
+
+```xml
+<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <RunAOTCompilation>false</RunAOTCompilation>
+  <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+</PropertyGroup>
+```
+
 ## dotnet cli
 
 There are currently a few "verbs" we are aiming to get working in

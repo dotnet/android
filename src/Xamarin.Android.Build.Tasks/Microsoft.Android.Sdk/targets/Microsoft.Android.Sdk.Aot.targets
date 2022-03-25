@@ -34,7 +34,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
 
   <Target Name="_AndroidAotInputs">
     <ItemGroup>
-      <_AndroidAotInputs Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+      <_AndroidAotInputs Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.AssetType)' != 'resources' " />
     </ItemGroup>
   </Target>
 
@@ -58,7 +58,8 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         AotOutputDirectory="$(_AndroidAotBinDirectory)"
         RuntimeIdentifier="$(RuntimeIdentifier)"
         EnableLLVM="$(EnableLLVM)"
-        Profiles="@(AndroidAotProfile)">
+        Profiles="@(AndroidAotProfile)"
+        StripLibraries="$(_AndroidAotStripLibraries)">
       <Output PropertyName="_Triple"     TaskParameter="Triple" />
       <Output PropertyName="_ToolPrefix" TaskParameter="ToolPrefix" />
       <Output PropertyName="_MsymPath"   TaskParameter="MsymPath" />
@@ -66,6 +67,9 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
       <Output PropertyName="_LdFlags"    TaskParameter="LdFlags" />
       <Output ItemName="_MonoAOTAssemblies" TaskParameter="ResolvedAssemblies" />
     </GetAotAssemblies>
+    <ItemGroup Condition=" '$(AndroidExtraAotOptions)' != '' ">
+      <_MonoAOTAssemblies Update="@(_MonoAOTAssemblies)" ProcessArguments="$(AndroidExtraAotOptions)" />
+    </ItemGroup>
     <PropertyGroup>
       <_MonoAOTCompilerPath>@(MonoAotCrossCompiler->WithMetadataValue('RuntimeIdentifier', '$(RuntimeIdentifier)'))</_MonoAOTCompilerPath>
       <_LLVMPath Condition=" '$(EnableLLVM)' == 'true' ">$([System.IO.Path]::GetDirectoryName ('$(_MonoAOTCompilerPath)'))</_LLVMPath>

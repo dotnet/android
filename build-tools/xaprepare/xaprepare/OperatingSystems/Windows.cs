@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 using Xamarin.Android.Tools.VSWhere;
 
@@ -47,6 +48,7 @@ namespace Xamarin.Android.Prepare
 			Name = osinfo.FullName;
 			Architecture = Is64Bit ? "x86" : "x86_64"; // Not good enough! (ARM)
 			Release = $"{osinfo.Major}.{osinfo.Minor}.{osinfo.Build}";
+			DiskInformation = DiskInfo ();
 		}
 
 		public override string Which (string programPath, bool required = true)
@@ -127,6 +129,18 @@ namespace Xamarin.Android.Prepare
 				throw new InvalidOperationException ("Unable to determine user's home directory, missing HOMEPATH environment variable");
 
 			return $"{homeDrive}{homeDir}";
+		}
+
+		string DiskInfo ()
+		{
+			var sb = new StringBuilder ();
+			sb.AppendLine ("Drive\tTotalSize\tAvailableFreeSpace");
+			foreach (DriveInfo d in DriveInfo.GetDrives ()) {
+				if (!d.IsReady)
+					continue;
+				sb.AppendLine ($"{d.Name}\t{Utilities.SizeToString (d.TotalSize)}\t{Utilities.SizeToString (d.AvailableFreeSpace)}");
+			}
+			return sb.ToString ();
 		}
 	};
 }

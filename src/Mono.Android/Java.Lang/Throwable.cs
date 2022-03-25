@@ -16,7 +16,7 @@ namespace Java.Lang {
 	{
 
 		protected bool is_generated;
-		IntPtr handle;
+		internal IntPtr handle;
 
 		IntPtr           key_handle;
 		JObjectRefType   handle_type;

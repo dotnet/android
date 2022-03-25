@@ -12,15 +12,19 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>ef49cd03929b950d80d111621781728bef9cebf9</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Manifest-6.0.300" Version="6.0.4" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+      <Uri>https://github.com/dotnet/emsdk</Uri>
+      <Sha>572aeedcfa16bdb619fafcecf5924e5c6b65b07b</Sha>
+    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20181.7">
+    <Dependency Name="Microsoft.DotNet.ApiCompat" Version="7.0.0-beta.22103.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>6ee69696ea00da39f35066c22c21a00ceab93d00</Sha>
+      <Sha>70831f0d126fe88b81d7dc8de11358e17a5ce364</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21212.6">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="7.0.0-beta.22103.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>db49d790a4bfa977a9ed7436bf2aa242cefae45e</Sha>
+      <Sha>70831f0d126fe88b81d7dc8de11358e17a5ce364</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

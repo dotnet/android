@@ -344,10 +344,14 @@ namespace Xamarin.Android.Build.Tests
 				.Replace ("Resource.Id.myButton", "0");
 
 			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Build(target: "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" }), "Designtime build should succeed.");
+			var intermediate = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
+			var resource_designer_cs = Path.Combine (intermediate, "designtime",  "Resource.designer.cs");
+			FileAssert.DoesNotExist (resource_designer_cs);
+
 			Assert.IsTrue (dotnet.Build (), "build should succeed");
 
-			var intermediate = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
-			var resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
+			resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
 			FileAssert.DoesNotExist (resource_designer_cs);
 
 			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
@@ -532,9 +536,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
-			if (aot) {
-				proj.SetProperty ("RunAOTCompilation", "true");
-			}
+			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
@@ -600,13 +602,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var rids = runtimeIdentifiers.Split (';');
-			if (isRelease) {
-				// Check for stripped native libraries
-				foreach (var rid in rids) {
-					FileAssert.Exists (Path.Combine (intermediateOutputPath, "native", rid, "libmono-android.release.so"));
-					FileAssert.Exists (Path.Combine (intermediateOutputPath, "native", rid, "libmonosgen-2.0.so"));
-				}
-			}
 
 			// Check AndroidManifest.xml
 			var manifestPath = Path.Combine (intermediateOutputPath, "android", "AndroidManifest.xml");
@@ -633,6 +628,10 @@ namespace Xamarin.Android.Build.Tests
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {
 					helper.AssertContainsEntry ("assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
+				}
+				if (aot) {
+					helper.AssertContainsEntry ($"lib/{abi}/libaot-{proj.ProjectName}.dll.so");
+					helper.AssertContainsEntry ($"lib/{abi}/libaot-System.Linq.dll.so");
 				}
 			}
 		}
@@ -812,13 +811,14 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 		}
 
 		[Test]
-		public void DotNetIncremental ()
+		public void DotNetIncremental ([Values (true, false)] bool isRelease, [Values ("", "android-arm64")] string runtimeIdentifier)
 		{
 			// Setup dependencies App A -> Lib B
 			var path = Path.Combine ("temp", TestName);
 
 			var libB = new XASdkProject (outputType: "Library") {
-				ProjectName = "LibraryB"
+				ProjectName = "LibraryB",
+				IsRelease = isRelease,
 			};
 			libB.Sources.Clear ();
 			libB.Sources.Add (new BuildItem.Source ("Foo.cs") {
@@ -830,6 +830,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 
 			var appA = new XASdkProject {
 				ProjectName = "AppA",
+				IsRelease = isRelease,
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
 						TextContent = () => "public class Bar : Foo { }",
@@ -838,12 +839,20 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			};
 			appA.AddReference (libB);
 			var appBuilder = CreateDotNetBuilder (appA, Path.Combine (path, appA.ProjectName));
-			Assert.IsTrue (appBuilder.Build (), $"{appA.ProjectName} should succeed");
+			Assert.IsTrue (appBuilder.Build (runtimeIdentifier: runtimeIdentifier), $"{appA.ProjectName} should succeed");
 			appBuilder.AssertTargetIsNotSkipped ("CoreCompile");
+			if (isRelease) {
+				appBuilder.AssertTargetIsNotSkipped ("_RemoveRegisterAttribute");
+				appBuilder.AssertTargetIsNotSkipped ("_AndroidAot");
+			}
 
 			// Build again, no changes
-			Assert.IsTrue (appBuilder.Build (), $"{appA.ProjectName} should succeed");
+			Assert.IsTrue (appBuilder.Build (runtimeIdentifier: runtimeIdentifier), $"{appA.ProjectName} should succeed");
 			appBuilder.AssertTargetIsSkipped ("CoreCompile");
+			if (isRelease) {
+				appBuilder.AssertTargetIsSkipped ("_RemoveRegisterAttribute");
+				appBuilder.AssertTargetIsSkipped ("_AndroidAot");
+			}
 		}
 
 		[Test]
@@ -852,7 +861,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			var proj = new XASdkProject ();
 			var builder = CreateDotNetBuilder (proj);
 			var parameters = new [] { "BuildingInsideVisualStudio=true" };
-			Assert.IsTrue (builder.Build ("SignAndroidPackage", parameters), $"{proj.ProjectName} should succeed");
+			Assert.IsTrue (builder.Build ("SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed");
 		}
 
 		[Test]
@@ -882,6 +891,13 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 				/* useInterpreter */ false,
 				/* publishTrimmed */ true,
 				/* aot */            true,
+			},
+			// Debug + PublishTrimmed
+			new object [] {
+				/* isRelease */      false,
+				/* useInterpreter */ false,
+				/* publishTrimmed */ true,
+				/* aot */            false,
 			},
 		};
 

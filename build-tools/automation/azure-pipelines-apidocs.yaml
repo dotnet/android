@@ -28,7 +28,7 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
+    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-11"
       displayName: set JI_JAVA_HOME
 
     - template: yaml-templates/use-dot-net.yaml

@@ -669,6 +669,9 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
 					TestContext.AddTestAttachment (file, Path.GetFileName (output));
 				}
+				foreach (var bl in Directory.GetFiles (Path.Combine (output), "*.binlog", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (bl, Path.GetFileName (output));
+				}
 			}
 		}
 	}
