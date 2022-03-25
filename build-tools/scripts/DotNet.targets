@@ -68,7 +68,7 @@
   </Target>
   <Target Name="BuildDotNetPreviewApiLevel">
     <ItemGroup>
-      <_DotNetPreviewProperties Include="TargetFramework=net6.0" />
+      <_DotNetPreviewProperties Include="TargetFramework=$(DotNetTargetFramework)" />
       <_DotNetPreviewProperties Include="AndroidApiLevel=$(AndroidLatestUnstableApiLevel)" />
       <_DotNetPreviewProperties Include="AndroidPlatformId=$(AndroidLatestUnstablePlatformId)" />
       <_DotNetPreviewProperties Include="AndroidFrameworkVersion=$(AndroidLatestUnstableFrameworkVersion)" />

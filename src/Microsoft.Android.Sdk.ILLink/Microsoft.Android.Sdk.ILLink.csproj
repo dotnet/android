@@ -2,7 +2,7 @@
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\tools\BuildTasks.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <DefineConstants>ILLINK</DefineConstants>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>

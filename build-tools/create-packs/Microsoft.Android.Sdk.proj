@@ -29,7 +29,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions;_GetLicense">
     <PropertyGroup>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
-      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-net6.0\</NetCoreAppToolsSourceDir>
+      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-$(DotNetStableTargetFramework)\</NetCoreAppToolsSourceDir>
     </PropertyGroup>
 
     <ItemGroup>
@@ -63,8 +63,8 @@ core workload SDK packs imported by WorkloadManifest.targets.
     />
 
     <ItemGroup>
-      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" />
-      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml" Condition="Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml')" />
+      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidStableTargetFramework)\AndroidApiInfo.xml" />
+      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidUnstableTargetFramework)\AndroidApiInfo.xml" Condition="Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidUnstableTargetFramework)\AndroidApiInfo.xml')" />
       <!-- Microsoft.Android.Sdk.ILLink output -->
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
@@ -98,7 +98,6 @@ core workload SDK packs imported by WorkloadManifest.targets.
   <Target Name="_GenerateBundledVersions"
       DependsOnTargets="_GetDefaultPackageVersion" >
     <PropertyGroup>
-      <_AndroidNETAppTargetFramework>net6.0</_AndroidNETAppTargetFramework>
       <BundledVersionsFileName>Microsoft.Android.Sdk.BundledVersions.targets</BundledVersionsFileName>
     </PropertyGroup>
 
@@ -135,7 +134,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
   <ItemGroup>
     <KnownFrameworkReference
         Include="Microsoft.Android"
-        TargetFramework="$(_AndroidNETAppTargetFramework)"
+        TargetFramework="$(DotNetTargetFramework)"
         RuntimeFrameworkName="Microsoft.Android"
         LatestRuntimeFrameworkVersion="%24(_AndroidRuntimePackVersion)"
         TargetingPackName="Microsoft.Android.Ref.%24(_AndroidTargetingPackId)"

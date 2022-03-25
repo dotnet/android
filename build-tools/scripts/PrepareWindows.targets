@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_XAPrepareExe Condition=" '$(MSBuildRuntimeType)' != 'Core' ">"$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe"</_XAPrepareExe>
-    <_XAPrepareExe Condition=" '$(MSBuildRuntimeType)' == 'Core' ">"$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\net6.0\xaprepare.dll"</_XAPrepareExe>
+    <_XAPrepareExe Condition=" '$(MSBuildRuntimeType)' == 'Core' ">"$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\$(DotNetStableTargetFramework)\xaprepare.dll"</_XAPrepareExe>
     <_XAPrepareStandardArgs Condition=" '$(RunningOnCI)' == 'true' ">--no-emoji --run-mode=CI -v:d</_XAPrepareStandardArgs>
     <_XAPrepareStandardArgs Condition=" '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
   </PropertyGroup>
