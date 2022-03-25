@@ -7,6 +7,9 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
+	/// <summary>
+	/// Base class for all classes which implement architecture-specific code generators.
+	/// </summary>
 	abstract class LlvmIrGenerator
 	{
 		ref struct StructureBodyWriterOptions
@@ -93,6 +96,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			{ typeof (double), 8 }, // doubles are 64-bit
 		};
 
+		// https://llvm.org/docs/LangRef.html#linkage-types
 		static readonly Dictionary<LlvmIrLinkage, string> llvmLinkage = new Dictionary<LlvmIrLinkage, string> {
 			{ LlvmIrLinkage.Default, String.Empty },
 			{ LlvmIrLinkage.Private, "private" },
@@ -107,24 +111,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			{ LlvmIrLinkage.External, "external" },
 		};
 
+		// https://llvm.org/docs/LangRef.html#runtime-preemption-specifiers
 		static readonly Dictionary<LlvmIrRuntimePreemption, string> llvmRuntimePreemption = new Dictionary<LlvmIrRuntimePreemption, string> {
 			{ LlvmIrRuntimePreemption.Default, String.Empty },
 			{ LlvmIrRuntimePreemption.DSOPreemptable, "dso_preemptable" },
 			{ LlvmIrRuntimePreemption.DSOLocal, "dso_local" },
 		};
 
+		// https://llvm.org/docs/LangRef.html#visibility-styles
 		static readonly Dictionary<LlvmIrVisibility, string> llvmVisibility = new Dictionary<LlvmIrVisibility, string> {
 			{ LlvmIrVisibility.Default, "default" },
 			{ LlvmIrVisibility.Hidden, "hidden" },
 			{ LlvmIrVisibility.Protected, "protected" },
 		};
 
+		// https://llvm.org/docs/LangRef.html#global-variables
 		static readonly Dictionary<LlvmIrAddressSignificance, string> llvmAddressSignificance = new Dictionary<LlvmIrAddressSignificance, string> {
 			{ LlvmIrAddressSignificance.Default, String.Empty },
 			{ LlvmIrAddressSignificance.Unnamed, "unnamed_addr" },
 			{ LlvmIrAddressSignificance.LocalUnnamed, "local_unnamed_addr" },
 		};
 
+		// https://llvm.org/docs/LangRef.html#global-variables
 		static readonly Dictionary<LlvmIrWritability, string> llvmWritability = new Dictionary<LlvmIrWritability, string> {
 			{ LlvmIrWritability.Constant, "constant" },
 			{ LlvmIrWritability.Writable, "global" },
@@ -163,6 +171,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			this.fileName = fileName;
 		}
 
+		/// <summary>
+		/// Create architecture-specific generator for the given <paramref name="arch"/>. Contents are written
+		// to the <paramref name="output"/> stream and <paramref name="fileName"/> is used mostly for error
+		// reporting.
+		/// </summary>
 		public static LlvmIrGenerator Create (AndroidTargetArch arch, StreamWriter output, string fileName)
 		{
 			LlvmIrGenerator ret = Instantiate ();
@@ -200,11 +213,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return type;
 		}
 
+		/// <summary>
+		/// Map managed <paramref name="type"/> to its LLVM IR counterpart. Only primitive types,
+		/// <c>string</c> and <c>IntPtr</c> are supported.
+		/// </summary>
 		public static string MapManagedTypeToIR (Type type)
 		{
 			return EnsureIrType (GetActualType (type));
 		}
 
+		/// <summary>
+		/// Map managed type to its LLVM IR counterpart. Only primitive types, <c>string</c> and
+		/// <c>IntPtr</c> are supported.  Additionally, return the native type size (in bytes) in
+		/// <paramref name="size"/>
+		/// </summary>
 		public string MapManagedTypeToIR (Type type, out ulong size)
 		{
 			Type actualType = GetActualType (type);
@@ -220,11 +242,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return irType;
 		}
 
+		/// <summary>
+		/// Map managed type <typeparamref name="T"/> to its LLVM IR counterpart. Only primitive types,
+		/// <c>string</c> and <c>IntPtr</c> are supported.  Additionally, return the native type size
+		/// (in bytes) in <paramref name="size"/>
+		/// </summary>
 		public string MapManagedTypeToIR<T> (out ulong size)
 		{
 			return MapManagedTypeToIR (typeof(T), out size);
 		}
 
+		/// <summary>
+		/// Map a managed <paramref name="type"/> to its <c>C++</c> counterpart. Only primitive types,
+		/// <c>string</c> and <c>IntPtr</c> are supported.
+		/// </summary>
 		public static string MapManagedTypeToNative (Type type)
 		{
 			Type baseType = GetActualType (type);
@@ -247,6 +278,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return type.GetShortName ();
 		}
 
+		/// <summary>
+		/// Initialize the generator.  It involves adding required LLVM IR module metadata (such as data model specification,
+		/// code generation flags etc)
+		/// </summary>
 		public virtual void Init ()
 		{
 			LlvmIrMetadataItem flags = MetadataManager.Add ("llvm.module.flags");
@@ -263,6 +298,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			ident.AddReferenceField (identValue.Name);
 		}
 
+		/// <summary>
+		/// Since LLVM IR is strongly typed, it requires each structure to be properly declared before it is
+		/// used throughout the code.  This method uses reflection to scan the managed type <typeparamref name="T"/>
+		/// and record the information for future use.  The returned <see cref="StructureInfo<T>"/> structure contains
+		/// the description.  It is used later on not only to declare the structure in output code, but also to generate
+		/// data from instances of <typeparamref name="T"/>.  This method is typically called from the <see cref="LlvmIrGenerator.MapStructures"/>
+		/// method.
+		/// </summary>
 		public StructureInfo<T> MapStructure<T> ()
 		{
 			Type t = typeof(T);
@@ -393,7 +436,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		/// <summary>
-		/// Writes an array of <paramref name="count"/> zero-initialized entries
+		/// Writes an array of <paramref name="count"/> zero-initialized entries.  <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
 		/// </summary>
 		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
 		{
@@ -404,11 +447,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: true);
 		}
 
+		/// <summary>
+		/// Writes an array of <paramref name="count"/> zero-initialized entries. The array will be generated as a local, writable symbol.
+		/// </summary>
 		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
 		{
 			WriteStructureArray<T> (info, count, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
 		}
 
+		/// <summary>
+		/// Writes an array of managed type <typeparamref name="T"/>, with data optionally specified in <paramref name="instances"/> (if it's <c>null</c>, the array
+		/// will be zero-initialized).  <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
+		/// </summary>
 		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
 		{
 			var arrayOutput = new StringWriter ();
@@ -449,6 +499,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteBufferToOutput (arrayOutput);
 		}
 
+		/// <summary>
+		/// Writes an array of managed type <typeparamref name="T"/>, with data optionally specified in <paramref name="instances"/> (if it's <c>null</c>, the array
+		/// will be zero-initialized).  The array will be generated as a local, writable symbol.
+		/// </summary>
 		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
 		{
 			WriteStructureArray<T> (info, instances, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
@@ -788,6 +842,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteBufferToOutput (bodyWriterOptions.StructureOutput);
 		}
 
+		/// <summary>
+		/// Write a structure represented by managed type <typeparamref name="T"/>, with optional data passed in <paramref name="instance"/> (if <c>null</c>, the structure
+		/// is zero-initialized). <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
+		/// </summary>
 		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true)
 		{
 			StructureBodyWriterOptions bodyWriterOptions = InitStructureWrite (info, options, symbolName, writeFieldComment);
@@ -797,6 +855,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			FinishStructureWrite (info, bodyWriterOptions);
 		}
 
+		/// <summary>
+		/// Write a structure represented by managed type <typeparamref name="T"/>, with optional data passed in <paramref name="instance"/> (if <c>null</c>, the structure
+		/// is zero-initialized).  The structure will be generated as a local, writable symbol.
+		/// </summary>
 		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, string? symbolName = null, bool writeFieldComment = true)
 		{
 			WriteStructure<T> (info, instance, LlvmIrVariableOptions.Default, symbolName, writeFieldComment);
@@ -841,6 +903,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
+		/// <summary>
+		/// Write an array of name/value pairs.  The array symbol will be global and non-writable.
+		/// </summary>
 		public void WriteNameValueArray (string symbolName, IDictionary<string, string> arrayContents)
 		{
 			WriteEOL ();
@@ -935,6 +1000,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return WriteString (value, LlvmIrVariableOptions.LocalString);
 		}
 
+		/// <summary>
+		/// Writes a string with automatically generated symbol name and symbol options (writeability, visibility etc) specified in the <paramref name="options"/> parameter.
+		/// </summary>
 		public string WriteString (string value, LlvmIrVariableOptions options)
 		{
 			string name = $"@.str";
@@ -946,13 +1014,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		/// <summary>
-		/// Writes a local, C++ constexpr style string
+		/// Writes a global, C++ constexpr style string
 		/// </summary>
 		public string WriteString (string symbolName, string value)
 		{
 			return WriteString (symbolName, value, LlvmIrVariableOptions.GlobalConstexprString);
 		}
 
+		/// <summary>
+		/// Writes a string with symbol options (writeability, visibility) options specified in the <paramref name="options"/> parameter.
+		/// </summary>
 		public string WriteString (string symbolName, string value, LlvmIrVariableOptions options)
 		{
 			return WriteString (symbolName, value, options, out _);
@@ -966,6 +1037,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return WriteString (symbolName, value, LlvmIrVariableOptions.LocalConstexprString, out stringSize);
 		}
 
+		/// <summary>
+		/// Writes a string with specified <paramref name="symbolName"/>, and symbol options (writeability, visibility etc) specified in the <paramref name="options"/>
+		/// parameter.  Returns string size (in bytes) in <paramref name="stringSize"/>
+		/// </summary>
 		public string WriteString (string symbolName, string value, LlvmIrVariableOptions options, out ulong stringSize)
 		{
 			string strSymbolName;
@@ -993,16 +1068,33 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return symbolName;
 		}
 
+		/// <summary>
+		/// Writes a string, creating a new symbol if the <paramref name="value"/> is unique or returns name of a previously created symbol with the same
+		/// string value.  If a new symbol is written, its name is constructed by combining prefix (<paramref name="potentialSymbolNamePrefix"/>) with value
+		/// of a string counter referenced by the <paramref name="counter"/> parameter.  Symbol is created as a local, C++ constexpr style string.
+		/// </summary>
 		public string WriteUniqueString (string potentialSymbolName, string value, ref ulong counter)
 		{
 			return WriteUniqueString (potentialSymbolName, value, ref counter, LlvmIrVariableOptions.LocalConstexprString, out _);
 		}
 
+		/// <summary>
+		/// Writes a string, creating a new symbol if the <paramref name="value"/> is unique or returns name of a previously created symbol with the same
+		/// string value.  If a new symbol is written, its name is constructed by combining prefix (<paramref name="potentialSymbolNamePrefix"/>) with value
+		/// of a string counter referenced by the <paramref name="counter"/> parameter.  Symbol is created as a local, C++ constexpr style string.
+		//  String size (in bytes) is returned in <paramref name="stringSize"/>.
+		/// </summary>
 		public string WriteUniqueString (string potentialSymbolName, string value, ref ulong counter, out ulong stringSize)
 		{
 			return WriteUniqueString (potentialSymbolName, value, ref counter, LlvmIrVariableOptions.LocalConstexprString, out stringSize);
 		}
 
+		/// <summary>
+		/// Writes a string, creating a new symbol if the <paramref name="value"/> is unique or returns name of a previously created symbol with the same
+		/// string value.  If a new symbol is written, its name is constructed by combining prefix (<paramref name="potentialSymbolNamePrefix"/>) with value
+		/// of a string counter referenced by the <paramref name="counter"/> parameter.  Symbol options (writeability, visibility etc) are specified in the <paramref
+		/// name="options"/> parameter.  String size (in bytes) is returned in <paramref name="stringSize"/>.
+		/// </summary>
 		public string WriteUniqueString (string potentialSymbolNamePrefix, string value, ref ulong counter, LlvmIrVariableOptions options, out ulong stringSize)
 		{
 			if (value == null) {

@@ -4,11 +4,17 @@ namespace Xamarin.Android.Tasks
 {
 	class NativeAssemblerStructContextDataProvider
 	{
+		/// <summary>
+		/// Return size of a buffer <paramref name="fieldName"/> will point to, based on data passed in <paramref name="data"/>
+		/// </summary>
 		public virtual ulong GetBufferSize (object data, string fieldName)
 		{
 			return 0;
 		}
 
+		/// <summary>
+		/// Return comment for the specified field, based on instance data passed in <paramref name="data"/>
+		/// </summary>
 		public virtual string GetComment (object data, string fieldName)
 		{
 			return String.Empty;

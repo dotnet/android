@@ -5,6 +5,9 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
+	/// <summary>
+	/// Base class for all classes which "compose" LLVM IR assembly.
+	/// <summary>
 	abstract class LlvmIrComposer
 	{
 		protected AndroidTargetArch TargetArch { get; }
@@ -48,6 +51,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// be mapped.
 		/// </summary>
 		protected abstract void MapStructures (LlvmIrGenerator generator);
+
+		/// <summary>
+		/// Generate LLVM IR code from data structures initialized by <see cref="Init"/>.  This is
+		/// called once per ABI, with the appropriate <paramref name="generator"/> for the target
+		/// ABI.  If any ABI-specific initialization must be performed on the data structures to
+		/// be written, it has to be done here (applies to e.g. constructs that require to know the
+		/// native pointer size).
+		/// </summary>
 		protected abstract void Write (LlvmIrGenerator generator);
 	}
 }

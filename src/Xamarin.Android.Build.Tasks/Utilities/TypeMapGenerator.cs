@@ -221,13 +221,7 @@ namespace Xamarin.Android.Tasks
 			}
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
-			GenerateNativeAssembly (
-				(AndroidTargetArch arch, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
-					return new TypeMappingDebugNativeAssemblyGenerator (arch, new ModuleDebugData (), outputDirectory, sharedBitsWritten);
-				}
-			);
-
-			var generator = new LlvmTypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
+			var generator = new TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
 			generator.Init ();
 			GenerateNativeAssembly (generator, outputDirectory);
 
@@ -258,13 +252,8 @@ namespace Xamarin.Android.Tasks
 			};
 
 			PrepareDebugMaps (data);
-			GenerateNativeAssembly (
-				(AndroidTargetArch arch, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
-					return new TypeMappingDebugNativeAssemblyGenerator (arch, data, outputDirectory, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
-				}
-			);
 
-			var generator = new LlvmTypeMappingDebugNativeAssemblyGenerator (data);
+			var generator = new TypeMappingDebugNativeAssemblyGenerator (data);
 			generator.Init ();
 			GenerateNativeAssembly (generator, outputDirectory);
 
@@ -440,13 +429,7 @@ namespace Xamarin.Android.Tasks
 			NativeTypeMappingData data;
 			data = new NativeTypeMappingData (logger, modules, maxJavaNameLength + 1);
 
-			GenerateNativeAssembly (
-				(AndroidTargetArch arch, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
-					return new TypeMappingReleaseNativeAssemblyGenerator (arch, data, outputDirectory, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
-				}
-			);
-
-			var generator = new LlvmTypeMappingReleaseNativeAssemblyGenerator (data);
+			var generator = new TypeMappingReleaseNativeAssemblyGenerator (data);
 			generator.Init ();
 			GenerateNativeAssembly (generator, outputDirectory);
 
@@ -458,7 +441,7 @@ namespace Xamarin.Android.Tasks
 			return td.IsInterface || td.HasGenericParameters;
 		}
 
-		void GenerateNativeAssembly (LlvmTypeMappingAssemblyGenerator generator, string baseFileName)
+		void GenerateNativeAssembly (TypeMappingAssemblyGenerator generator, string baseFileName)
 		{
 			AndroidTargetArch arch;
 			foreach (string abi in supportedAbis) {
@@ -488,48 +471,6 @@ namespace Xamarin.Android.Tasks
 					generator.Write (arch, sw, outputFile);
 					sw.Flush ();
 					Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
-				}
-			}
-		}
-
-		void GenerateNativeAssembly (Func<AndroidTargetArch, bool, bool, TypeMappingAssemblyGenerator> getGenerator)
-		{
-			AndroidTargetArch arch;
-			bool sharedBitsWritten = false;
-			bool sharedIncludeUsesAbiPrefix;
-			foreach (string abi in supportedAbis) {
-				sharedIncludeUsesAbiPrefix = false;
-				switch (abi.Trim ()) {
-					case "armeabi-v7a":
-						arch = AndroidTargetArch.Arm;
-						sharedIncludeUsesAbiPrefix = true; // ARMv7a is "special", it uses different directive prefix
-														   // than the others and the "shared" code won't build for it
-						break;
-
-					case "arm64-v8a":
-						arch = AndroidTargetArch.Arm64;
-						break;
-
-					case "x86":
-						arch = AndroidTargetArch.X86;
-						break;
-
-					case "x86_64":
-						arch = AndroidTargetArch.X86_64;
-						break;
-
-					default:
-						throw new InvalidOperationException ($"Unknown ABI {abi}");
-				}
-
-				TypeMappingAssemblyGenerator generator = getGenerator (arch, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
-
-				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (outputEncoding)) {
-					generator.Write (sw, generator.MainSourceFile);
-					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, generator.MainSourceFile);
-					if (!sharedIncludeUsesAbiPrefix)
-						sharedBitsWritten = true;
 				}
 			}
 		}
