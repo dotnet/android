@@ -105,18 +105,10 @@ namespace Xamarin.Android.Prepare
 			var type = runtimeOnly ? "runtime" : "SDK";
 			Log.StatusLine ($"Installing dotnet {type} '{version}'...");
 
-			//TODO: temporarily specify the feed until we get:
-			// https://github.com/dotnet/install-scripts/issues/229
-			var feed = "https://dotnetbuilds.blob.core.windows.net/public";
 			if (Context.IsWindows) {
 				var args = new List<string> {
-					"-NoProfile",
-					"-ExecutionPolicy", "unrestricted",
-					"-file", dotnetScriptPath,
-					"-Version", version,
-					"-InstallDir", dotnetPath,
-					"-AzureFeed", feed,
-					"-Verbose"
+					"-NoProfile", "-ExecutionPolicy", "unrestricted", "-file", dotnetScriptPath,
+					"-Version", version, "-InstallDir", dotnetPath, "-Verbose"
 				};
 				if (runtimeOnly)
 					args.AddRange (new string [] { "-Runtime", "dotnet" });
@@ -124,11 +116,7 @@ namespace Xamarin.Android.Prepare
 				return Utilities.RunCommand ("powershell.exe", args.ToArray ());
 			} else {
 				var args = new List<string> {
-					dotnetScriptPath,
-					"--version", version,
-					"--install-dir", dotnetPath,
-					"--azure-feed", feed,
-					"--verbose"
+					dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose"
 				};
 				if (runtimeOnly)
 					args.AddRange (new string [] { "-Runtime", "dotnet" });
