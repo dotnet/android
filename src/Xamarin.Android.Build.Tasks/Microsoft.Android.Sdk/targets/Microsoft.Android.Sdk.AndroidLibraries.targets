@@ -10,6 +10,7 @@ projects.
 -->
 <Project>
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.AppendCustomMetadataToItemGroup" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateAar"          AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ExtractJarsFromAar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
@@ -31,13 +32,21 @@ projects.
         * set %(Pack) to false for located .aar files, we should not repackage into NuGets
         * %(AndroidSkipResourceProcessing) is required for located .aar's; there could be custom views.
       -->
-      <AndroidAarLibrary
+      <_AndroidAarLibrary
           Include="@(_AarFromLibraries)"
           Exclude="@(AndroidAarLibrary)"
           Pack="false"
           AndroidSkipResourceProcessing="false"
       />
+      <AndroidAarLibrary Include="@(_AndroidAarLibrary)" Condition="'$(AndroidApplication)' != 'True'"/>
     </ItemGroup>
+    <AppendCustomMetadataToItemGroup
+      Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
+      Inputs="@(_AndroidAarLibrary)"
+      MetaDataItems="@(AndroidCustomMetaDataForAarLibrary)"
+    >
+      <Output TaskParameter="Output" ItemName="AndroidAarLibrary" />
+    </AppendCustomMetadataToItemGroup>
   </Target>
 
   <Target Name="_CreateAarCache"

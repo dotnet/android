@@ -18,6 +18,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "RLP";
 
 		internal const string AndroidSkipResourceExtraction = "AndroidSkipResourceExtraction";
+		internal const string AndroidForceCreateResourceDirectory = "AndroidForceCreateResourceDirectory";
 
 		[Required]
 		public string ImportsDirectory { get; set; }
@@ -344,6 +345,7 @@ namespace Xamarin.Android.Tasks
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");
 				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
+
 				string assetsDir = Path.Combine (importsDir, "assets");
 
 				bool updated = false;
@@ -351,6 +353,12 @@ namespace Xamarin.Android.Tasks
 				string stamp = Path.Combine (outdir, aarIdentityName + ".stamp");
 				string stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
 				var aarFullPath = Path.GetFullPath (aarFile.ItemSpec);
+
+				var forceResourceDirectory = aarFile.GetMetadata (AndroidForceCreateResourceDirectory);
+				if (!string.IsNullOrEmpty (forceResourceDirectory) && String.Compare (forceResourceDirectory, "True", ignoreCase: true) == 0) {
+					Directory.CreateDirectory (resDir);
+				}
+
 				if (aarHash == stampHash) {
 					Log.LogDebugMessage ("Skipped {0}: extracted files are up to date", aarFile.ItemSpec);
 					if (Directory.Exists (importsDir)) {
