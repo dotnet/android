@@ -41,7 +41,7 @@ projects.
       <AndroidAarLibrary Include="@(_AndroidAarLibrary)" Condition="'$(AndroidApplication)' != 'True'"/>
     </ItemGroup>
     <AppendCustomMetadataToItemGroup
-      Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
+      Condition="'$(AndroidApplication)' != '' And $(AndroidApplication) And '@(_AndroidAarLibrary->Count())' != '0'"
       Inputs="@(_AndroidAarLibrary)"
       MetaDataItems="@(AndroidCustomMetaDataForAarLibrary)"
     >
