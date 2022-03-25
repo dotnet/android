@@ -96,7 +96,7 @@
     </ItemGroup>
     <PropertyGroup>
       <_WLPackVersion>@(_WLManifest->'%(Filename)'->Replace('Microsoft.NET.Sdk.Android.Manifest-$(DotNetPreviewVersionBand).', ''))</_WLPackVersion>
-      <_SdkManifestsFolder>$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\</_SdkManifestsFolder>
+      <_SdkManifestsFolder>$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\</_SdkManifestsFolder>
     </PropertyGroup>
     <Unzip
         SourceFiles="@(_WLManifest)"
@@ -148,8 +148,8 @@
     </ItemGroup>
     <ItemGroup>
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)metadata" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.sdk.android" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.workload.android" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.android" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.workload.android" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Ref.%(_PackApiLevels.Identity)" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-arm" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-arm64" />
