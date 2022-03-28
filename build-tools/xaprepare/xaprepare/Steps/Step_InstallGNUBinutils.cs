@@ -7,11 +7,10 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Step_InstallGNUBinutils : StepWithDownloadProgress
 	{
-		static readonly string[]? WindowsExtensions = {".exe", ".cmd"};
-		static readonly string ProductName = $"Xamarin.Android Toolchain {Configurables.Defaults.BinutilsVersion}";
+		static readonly string ProductName = $"GNU Binutils {Configurables.Defaults.BinutilsVersion}";
 
 		public Step_InstallGNUBinutils ()
-			: base ("Install Xamarin.Android Toolchain")
+			: base ("Install GNU Binutils")
 		{}
 
 		protected override async Task<bool> Execute (Context context)
@@ -20,7 +19,7 @@ namespace Xamarin.Android.Prepare
 			string windowsDestinationDirectory = Configurables.Paths.WindowsBinutilsInstallDir;
 
 			bool hostHaveAll = HaveAllBinutils (hostDestinationDirectory);
-			bool windowsHaveAll = HaveAllBinutils (windowsDestinationDirectory, WindowsExtensions);
+			bool windowsHaveAll = HaveAllBinutils (windowsDestinationDirectory, ".exe");
 
 			if (hostHaveAll && windowsHaveAll) {
 				Log.StatusLine ("All Binutils are already installed");
@@ -44,58 +43,29 @@ namespace Xamarin.Android.Prepare
 			}
 
 			if (!hostHaveAll) {
-				CopyToDestination (context, "Host", tempDir, hostDestinationDirectory, executableExtensions: ExecutableExtensions);
+				CopyToDestination (context, "Host", tempDir, hostDestinationDirectory, executableExtension: ExecutableExtension);
 			}
 
 			if (!windowsHaveAll) {
-				CopyToDestination (context, "Windows", tempDir, windowsDestinationDirectory, "windows", WindowsExtensions);
+				CopyToDestination (context, "Windows", tempDir, windowsDestinationDirectory, "windows", ".exe");
 			}
 
 			return true;
 		}
 
-
-
-		bool CopyToDestination (Context context, string label, string sourceDir, string destinationDir, string osName = HostName, string[]? executableExtensions = null)
+		bool CopyToDestination (Context context, string label, string sourceDir, string destinationDir, string osName = HostName, string? executableExtension = null)
 		{
 			Log.StatusLine ();
 			Log.StatusLine ($"Installing for {label}:");
 
-			string osSourcePath = Path.Combine (sourceDir, osName);
-			string sourcePath = Path.Combine (osSourcePath, "bin");
+			string sourcePath = Path.Combine (sourceDir, osName);
 			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
 				string prefix = kvp.Value;
-				CopyTools (prefix);
-			}
-			CopyTools (String.Empty);
-			CopyLibraries ();
 
-			return true;
-
-			void CopyLibraries ()
-			{
-				if (osName == "windows") {
-					return;
-				}
-
-				string libSourcePath = Path.Combine (osSourcePath, "lib");
-				string libDestPath = Path.Combine (destinationDir, "lib");
-				foreach (string file in Directory.EnumerateFiles (libSourcePath)) {
-					Utilities.CopyFileToDir (file, libDestPath);
-				}
-			}
-
-			void CopyTools (string prefix)
-			{
-				bool copyPrefixed = !String.IsNullOrEmpty (prefix);
 				foreach (NDKTool tool in Configurables.Defaults.NDKTools) {
-					if (tool.Prefixed != copyPrefixed) {
-						continue;
-					}
-
-					string toolSourcePath = GetToolPath (sourcePath, prefix, tool, executableExtensions, throwOnMissing: true);
-					string toolName = Path.GetFileName (toolSourcePath);
-					string toolDestinationPath = Path.Combine (destinationDir, "bin", toolName);
+					string toolName = GetToolName (prefix, tool, executableExtension);
+					string toolSourcePath = Path.Combine (sourcePath, toolName);
+					string toolDestinationPath = Path.Combine (destinationDir, toolName);
 					string versionMarkerPath = GetVersionMarker (toolDestinationPath);
 
 					Log.StatusLine ($"  {context.Characters.Bullet} Installing ", toolName, tailColor: ConsoleColor.White);
@@ -103,6 +73,8 @@ namespace Xamarin.Android.Prepare
 					File.WriteAllText (versionMarkerPath, DateTime.UtcNow.ToString ());
 				}
 			}
+
+			return true;
 		}
 
 		async Task<bool> DownloadBinutils (Context context, string localPackagePath, Uri url)
@@ -134,27 +106,16 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		bool HaveAllBinutils (string dir, string[]? executableExtensions = null)
+		bool HaveAllBinutils (string dir, string? executableExtension = null)
 		{
 			Log.DebugLine ("Checking if all binutils are installed in {dir}");
+			string extension = executableExtension ?? String.Empty;
 			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
 				string prefix = kvp.Value;
-				if (!CheckToolsExist (prefix)) {
-					return false;
-				}
-			}
 
-			return CheckToolsExist (String.Empty);
-
-			bool CheckToolsExist (string prefix)
-			{
-				bool checkPrefixed = !String.IsNullOrEmpty (prefix);
 				foreach (NDKTool tool in Configurables.Defaults.NDKTools) {
-					if (tool.Prefixed != checkPrefixed) {
-						continue;
-					}
-					string toolPath = GetToolPath (dir, prefix, tool, executableExtensions);
-					string toolName = Path.GetFileName (toolPath);
+					string toolName = GetToolName (prefix, tool, executableExtension);
+					string toolPath = Path.Combine (dir, toolName);
 					string versionMarkerPath = GetVersionMarker (toolPath);
 
 					Log.DebugLine ($"Checking {toolName}");
@@ -168,39 +129,14 @@ namespace Xamarin.Android.Prepare
 						return false;
 					}
 				}
-
-				return true;
 			}
+
+			return true;
 		}
 
-		string GetToolPath (string sourcePath, string prefix, NDKTool tool, string[]? executableExtensions = null, bool throwOnMissing = false)
+		string GetToolName (string prefix, NDKTool tool, string? executableExtension = null)
 		{
-			string baseName = $"{(String.IsNullOrEmpty (tool.DestinationName) ? tool.Name : tool.DestinationName)}";
-
-			if (!String.IsNullOrEmpty (prefix)) {
-				baseName = $"{prefix}-{baseName}";
-			}
-
-			if (executableExtensions == null || executableExtensions.Length == 0) {
-				return Path.Combine (sourcePath, baseName);
-			}
-
-			foreach (string executableExtension in executableExtensions) {
-				string binary = Path.Combine (sourcePath, $"{baseName}{executableExtension}");
-				Console.WriteLine ($"Checking: {binary}");
-				if (!Utilities.FileExists (binary)) {
-					continue;
-				}
-
-				return binary;
-			}
-
-			if (throwOnMissing) {
-				string extensions = String.Join (",", executableExtensions);
-				throw new InvalidOperationException ($"Failed to find binary file '{baseName}{{{extensions}}}'");
-			}
-
-			return baseName;
+			return $"{prefix}-{(String.IsNullOrEmpty (tool.DestinationName) ? tool.Name : tool.DestinationName)}{executableExtension}";
 		}
 
 		string GetVersionMarker (string toolPath)

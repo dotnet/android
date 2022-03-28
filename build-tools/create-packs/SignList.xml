@@ -14,12 +14,18 @@
     <ThirdParty Include="protobuf-net.dll" />
     <ThirdParty Include="SgmlReaderDll.dll" />
     <ThirdParty Include="aapt2.exe" />
-    <ThirdParty Include="llvm-mc.exe" />
-    <ThirdParty Include="llvm-strip.exe" />
+    <ThirdParty Include="aarch64-linux-android-as.exe" />
     <ThirdParty Include="aarch64-linux-android-ld.exe" />
+    <ThirdParty Include="aarch64-linux-android-strip.exe" />
+    <ThirdParty Include="arm-linux-androideabi-as.exe" />
     <ThirdParty Include="arm-linux-androideabi-ld.exe" />
+    <ThirdParty Include="arm-linux-androideabi-strip.exe" />
+    <ThirdParty Include="i686-linux-android-as.exe" />
     <ThirdParty Include="i686-linux-android-ld.exe" />
+    <ThirdParty Include="i686-linux-android-strip.exe" />
+    <ThirdParty Include="x86_64-linux-android-as.exe" />
     <ThirdParty Include="x86_64-linux-android-ld.exe" />
+    <ThirdParty Include="x86_64-linux-android-strip.exe" />
   </ItemGroup>
 
   <ItemGroup>

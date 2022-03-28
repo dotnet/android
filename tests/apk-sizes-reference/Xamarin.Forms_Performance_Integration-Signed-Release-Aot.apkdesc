@@ -47,7 +47,7 @@
       "Size": 23262
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 193454
+      "Size": 193453
     },
     "assemblies/System.ServiceModel.Internals.dll": {
       "Size": 26599
@@ -56,7 +56,7 @@
       "Size": 592570
     },
     "assemblies/System.Xml.Linq.dll": {
-      "Size": 34373
+      "Size": 34374
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 7696

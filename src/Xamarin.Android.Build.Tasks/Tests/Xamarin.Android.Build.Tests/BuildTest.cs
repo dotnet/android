@@ -143,11 +143,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		// DotNet fails, see https://github.com/dotnet/runtime/issues/65484
-		// Enable the commented out signature (and AOT) once the above is fixed
 		[Test]
 		[Category ("SmokeTests")]
-		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (false /*, true*/)] bool aot)
+		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms)
 		{
 			var testName = "テスト";
 
@@ -157,8 +155,9 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinAndroidApplicationProject ();
 			proj.ProjectName = testName;
 			proj.IsRelease = true;
-			proj.AotAssemblies = aot;
-
+			// TODO: AOT fails https://github.com/xamarin/xamarin-android/issues/6685
+			// .NET 6 uses AOT by default for Release
+			proj.AotAssemblies = false;
 			if (forms) {
 				proj.PackageReferences.Clear ();
 				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
