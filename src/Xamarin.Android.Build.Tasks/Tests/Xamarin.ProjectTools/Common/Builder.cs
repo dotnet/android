@@ -305,7 +305,6 @@ namespace Xamarin.ProjectTools
 			}
 			args.Append ($" @\"{responseFile}\"");
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {
-				sw.WriteLine ("/p:_DisableParallelAot=true");
 				sw.WriteLine ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
 				if (BuildingInsideVisualStudio) {
 					sw.WriteLine (" /p:BuildingOutOfProcess=true");

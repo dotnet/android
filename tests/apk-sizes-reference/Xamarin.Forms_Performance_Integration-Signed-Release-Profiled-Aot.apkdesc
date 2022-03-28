@@ -131,7 +131,7 @@
       "Size": 43511
     },
     "classes.dex": {
-      "Size": 2639828
+      "Size": 2652924
     },
     "lib/armeabi-v7a/libaot-FormsViewGroup.dll.so": {
       "Size": 10536
@@ -275,7 +275,7 @@
       "Size": 48844
     },
     "lib/armeabi-v7a/libxamarin-app.so": {
-      "Size": 141260
+      "Size": 143740
     },
     "lib/x86/libaot-FormsViewGroup.dll.so": {
       "Size": 9732
@@ -419,7 +419,7 @@
       "Size": 61112
     },
     "lib/x86/libxamarin-app.so": {
-      "Size": 140024
+      "Size": 145724
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
