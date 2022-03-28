@@ -40,6 +40,10 @@ projects.
       />
       <AndroidAarLibrary Include="@(_AndroidAarLibrary)" Condition="'$(AndroidApplication)' != 'True'"/>
     </ItemGroup>
+    <!--
+      NOTE: We have to do this here rather than in _AddAndroidCustomMetaData because
+      we use the outputs of that target to search for .aar files.
+    -->
     <AppendCustomMetadataToItemGroup
       Condition="'$(AndroidApplication)' != '' And $(AndroidApplication) And '@(_AndroidAarLibrary->Count())' != '0'"
       Inputs="@(_AndroidAarLibrary)"
