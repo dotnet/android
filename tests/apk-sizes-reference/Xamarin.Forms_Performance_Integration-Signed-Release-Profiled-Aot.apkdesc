@@ -8,16 +8,16 @@
       "Size": 7199
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 68737
+      "Size": 68911
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 565320
+      "Size": 565201
     },
     "assemblies/Mono.Security.dll": {
       "Size": 68437
     },
     "assemblies/mscorlib.dll": {
-      "Size": 936188
+      "Size": 936222
     },
     "assemblies/Newtonsoft.Json.dll": {
       "Size": 319336
@@ -29,22 +29,22 @@
       "Size": 10201
     },
     "assemblies/System.Core.dll": {
-      "Size": 192217
+      "Size": 192216
     },
     "assemblies/System.Data.dll": {
-      "Size": 316113
+      "Size": 316112
     },
     "assemblies/System.dll": {
-      "Size": 443207
+      "Size": 443206
     },
     "assemblies/System.Drawing.Common.dll": {
       "Size": 16351
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 113293
+      "Size": 113294
     },
     "assemblies/System.Numerics.dll": {
-      "Size": 23260
+      "Size": 23262
     },
     "assemblies/System.Runtime.Serialization.dll": {
       "Size": 193454
@@ -56,7 +56,7 @@
       "Size": 592571
     },
     "assemblies/System.Xml.Linq.dll": {
-      "Size": 34373
+      "Size": 34374
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 7694
@@ -116,7 +116,7 @@
       "Size": 22005
     },
     "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
-      "Size": 114914
+      "Size": 114915
     },
     "assemblies/Xamarin.Forms.Platform.Android.dll": {
       "Size": 367737
@@ -131,7 +131,7 @@
       "Size": 43506
     },
     "classes.dex": {
-      "Size": 2652924
+      "Size": 2639828
     },
     "lib/armeabi-v7a/libaot-FormsViewGroup.dll.so": {
       "Size": 23224
@@ -140,7 +140,7 @@
       "Size": 296796
     },
     "lib/armeabi-v7a/libaot-Mono.Android.dll.so": {
-      "Size": 1079748
+      "Size": 1059348
     },
     "lib/armeabi-v7a/libaot-mscorlib.dll.so": {
       "Size": 2353648
@@ -224,13 +224,13 @@
       "Size": 1112688
     },
     "lib/armeabi-v7a/libmono-native.so": {
-      "Size": 736396
+      "Size": 785140
     },
     "lib/armeabi-v7a/libmonodroid.so": {
       "Size": 235164
     },
     "lib/armeabi-v7a/libmonosgen-2.0.so": {
-      "Size": 4456576
+      "Size": 4456612
     },
     "lib/armeabi-v7a/libxa-internal-api.so": {
       "Size": 48844
@@ -245,7 +245,7 @@
       "Size": 273584
     },
     "lib/x86/libaot-Mono.Android.dll.so": {
-      "Size": 902032
+      "Size": 881728
     },
     "lib/x86/libaot-mscorlib.dll.so": {
       "Size": 2079504
@@ -329,19 +329,19 @@
       "Size": 1459584
     },
     "lib/x86/libmono-native.so": {
-      "Size": 803352
+      "Size": 823560
     },
     "lib/x86/libmonodroid.so": {
       "Size": 306828
     },
     "lib/x86/libmonosgen-2.0.so": {
-      "Size": 4212336
+      "Size": 4212360
     },
     "lib/x86/libxa-internal-api.so": {
       "Size": 61112
     },
     "lib/x86/libxamarin-app.so": {
-      "Size": 145724
+      "Size": 145720
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -2165,5 +2165,5 @@
       "Size": 347268
     }
   },
-  "PackageSize": 17713830
+  "PackageSize": 17730214
 }
