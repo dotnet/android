@@ -1565,11 +1565,11 @@ namespace Android.Runtime {
 			elementType ??= value.GetType ().GetElementType ()!;
 
 			if (elementType.IsArray) {
-				IntPtr grefArrayClass = FindClass (elementType);
+				IntPtr grefArrayElementClass = FindClass (elementType);
 				try {
-					return NewArray (value, elementType, grefArrayClass);
+					return NewArray (value, elementType, grefArrayElementClass);
 				} finally {
-					DeleteGlobalRef (grefArrayClass);
+					DeleteGlobalRef (grefArrayElementClass);
 				}
 			}
 
@@ -1584,11 +1584,11 @@ namespace Android.Runtime {
 				return IntPtr.Zero;
 
 			if (typeof (T).IsArray) {
-				IntPtr grefArrayClass = FindClass (typeof (T));
+				IntPtr grefArrayElementClass = FindClass (typeof (T));
 				try {
-					return NewArray (array, typeof (T), grefArrayClass);
+					return NewArray (array, typeof (T), grefArrayElementClass);
 				} finally {
-					DeleteGlobalRef (grefArrayClass);
+					DeleteGlobalRef (grefArrayElementClass);
 				}
 			}
 
