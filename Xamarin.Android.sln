@@ -155,6 +155,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "relnote-gen", "tools\relnote-gen\relnote-gen.csproj", "{D8E14B43-E929-4C18-9FA6-2C3DC47EFC17}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Runtime.Environment", "external\Java.Interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj", "{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mgen", "tools\mgen\mgen.csproj", "{1771A814-349B-4B0C-918D-0A989E78CB73}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -432,6 +433,10 @@ Global
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{1771A814-349B-4B0C-918D-0A989E78CB73}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{1771A814-349B-4B0C-918D-0A989E78CB73}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{1771A814-349B-4B0C-918D-0A989E78CB73}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{1771A814-349B-4B0C-918D-0A989E78CB73}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -503,6 +508,7 @@ Global
 		{4EFCED6E-9A6B-453A-94E4-CE4B736EC684} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{D8E14B43-E929-4C18-9FA6-2C3DC47EFC17} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
+		{1771A814-349B-4B0C-918D-0A989E78CB73} = {864062D3-A415-4A6F-9324-5820237BA058}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}

@@ -42,3 +42,7 @@
     path = external/xamarin-android-tools
     url = https://github.com/xamarin/xamarin-android-tools
     branch = main
+[submodule "external/magic_enum"]
+    path = external/magic_enum
+    url = https://github.com/Neargye/magic_enum.git
+    branch = master

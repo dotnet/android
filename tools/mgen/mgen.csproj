@@ -1,0 +1,94 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <DefineConstants>HAVE_CECIL</DefineConstants>
+  </PropertyGroup>
+
+  <Import Project="../../Configuration.props" />
+
+    <UsingTask TaskName="ReplaceFileContents" Condition=" '$(OS)' == 'Windows_NT' or '$(MSBuildRuntimeType)' != 'Mono' " TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <SourceFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true" />
+      <DestinationFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true" />
+      <Replacements ParameterType="System.String[]" />
+      <ReplacementFilePath ParameterType="System.String" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Class" Language="cs" Source="../../build-tools/xa-prep-tasks/Xamarin.Android.BuildTools.PrepTasks/ReplaceFileContents.cs"/>
+    </Task>
+  </UsingTask>
+  <UsingTask TaskName="ReplaceFileContents" Condition=" '$(OS)' != 'Windows_NT' and '$(MSBuildRuntimeType)' == 'Mono' " TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <SourceFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true" />
+      <DestinationFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true" />
+      <Replacements ParameterType="System.String[]" />
+      <ReplacementFilePath ParameterType="System.String" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Class" Language="cs" Source="../../build-tools/xa-prep-tasks/Xamarin.Android.BuildTools.PrepTasks/ReplaceFileContents.cs"/>
+    </Task>
+  </UsingTask>
+
+  <Target Name="GenerateSourceFiles" BeforeTargets="BeforeCompile">
+    <PropertyGroup>
+      <ConstantsInputFile>Constants.cs.in</ConstantsInputFile>
+      <ConstantsOutputFile>$(IntermediateOutputPath)/Constants.cs</ConstantsOutputFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Replacement Include="@DotNetPreviewPath@=$(DotNetPreviewPath)" />
+      <Replacement Include="@MicrosoftNETCoreAppRefPackageVersion@=$(MicrosoftNETCoreAppRefPackageVersion)" />
+    </ItemGroup>
+
+    <ReplaceFileContents
+        SourceFile="$(ConstantsInputFile)"
+        DestinationFile="$(ConstantsOutputFile)"
+        Replacements="@(Replacement)" />
+  </Target>
+
+  <PropertyGroup>
+    <JISourceDir>../../external/Java.Interop/src</JISourceDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)/Constants.cs" />
+
+    <Compile Include="$(JISourceDir)/Java.Interop.NamingCustomAttributes/Android.Runtime/RegisterAttribute.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.NamingCustomAttributes/Java.Interop/ExportAttribute.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.NamingCustomAttributes/Java.Interop/ExportFieldAttribute.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.NamingCustomAttributes/Java.Interop/ExportParameterAttribute.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.NamingCustomAttributes/Java.Interop/ExportParameterKind.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.NamingCustomAttributes/Java.Interop/IJniNameProviderAttribute.cs" />
+
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil/CustomAttributeProviderRocks.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil/DirectoryAssemblyResolver.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil/MethodDefinitionRocks.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil/TypeDefinitionCache.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil/TypeDefinitionRocks.cs" />
+
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.Diagnostics/Java.Interop.Tools.Diagnostics/Diagnostic.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.Diagnostics/Java.Interop.Tools.Diagnostics/XamarinAndroidException.cs" />
+
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/Crc64.Table.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/Crc64Helper.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs" />
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaTypeScanner.cs" />
+
+    <Compile Include="$(JISourceDir)/Java.Interop.Tools.TypeNameMappings/Java.Interop.Tools.TypeNameMappings/JavaNativeTypeManager.cs" />
+
+    <Compile Include="$(JISourceDir)/Xamarin.Android.Tools.Bytecode/Signatures.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(JISourceDir)/Java.Interop.Localization/Java.Interop.Localization.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
+  </ItemGroup>
+</Project>

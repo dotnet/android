@@ -19,6 +19,8 @@ project(
   LANGUAGES CXX C
   )
 
+option(COMPILER_DIAG_COLOR "Show compiler diagnostics/errors in color" ON)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -345,6 +347,12 @@ set(LOCAL_COMMON_COMPILER_ARGS
   -Wuninitialized
   )
 
+if(COMPILER_DIAG_COLOR)
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS
+    -fdiagnostics-color=always
+    )
+endif()
+
 set(LOCAL_COMMON_LINKER_ARGS "")
 if(ANDROID)
   if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
@@ -460,6 +468,7 @@ endif()
 set(XAMARIN_INTERNAL_API_LIB xa-internal-api${CHECKED_BUILD_INFIX})
 set(XAMARIN_DEBUG_APP_HELPER_LIB xamarin-debug-app-helper${CHECKED_BUILD_INFIX})
 set(XAMARIN_APP_STUB_LIB xamarin-app)
+set(XAMARIN_APP_MARSHALING_LIB xamarin-app-marshaling)
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
@@ -493,6 +502,12 @@ if(ANDROID)
     ${SOURCES_DIR}/mono-log-adapter.cc
     ${LZ4_SOURCES}
     )
+
+  if(NOT DEBUG_BUILD)
+    list(APPEND XAMARIN_MONODROID_SOURCES
+      ${SOURCES_DIR}/xamarin-android-app-context.cc
+      )
+  endif()
 
   if(NOT USES_LIBSTDCPP)
     list(APPEND XAMARIN_MONODROID_SOURCES
@@ -550,10 +565,20 @@ set(XAMARIN_DEBUG_APP_HELPER_SOURCES
   ${SOURCES_DIR}/shared-constants.cc
   )
 
+set(XAMARIN_APP_MARSHALING_LIB_SOURCES
+  ${SOURCES_DIR}/xamarin-app-marshaling.cc
+  )
+
 # Build
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 
-if(NOT (ANDROID AND ENABLE_NET))
+if(MINGW OR WIN32)
+  list(APPEND MONOSGEN_LIB_LINK -lmonosgen-2.0.dll)
+else()
+  list(APPEND MONOSGEN_LIB_LINK -lmonosgen-2.0)
+endif()
+
+if(NOT (ANDROID AND ENABLE_NET6))
   add_library(
     ${XAMARIN_INTERNAL_API_LIB}
     SHARED
@@ -583,6 +608,25 @@ target_link_options(
   )
 
 if(ANDROID)
+  if(NOT DEBUG_BUILD)
+    # The marshaling lib is used only when building for devices
+    add_library(
+      ${XAMARIN_APP_MARSHALING_LIB}
+      STATIC
+      ${XAMARIN_APP_MARSHALING_LIB_SOURCES}
+      )
+
+    target_link_libraries(
+      ${XAMARIN_APP_MARSHALING_LIB}
+      ${MONOSGEN_LIB_LINK}
+      )
+
+    target_link_libraries(
+      ${XAMARIN_APP_STUB_LIB}
+      ${XAMARIN_APP_MARSHALING_LIB}
+      )
+  endif()
+
   # Only Android builds need to go in separate directories, desktop builds have the same ABI
   set_target_properties(
     ${XAMARIN_APP_STUB_LIB}
@@ -669,11 +713,7 @@ if(APPLE)
     )
 endif()
 
-if(MINGW OR WIN32)
-  list(APPEND LINK_LIBS -lmonosgen-2.0.dll)
-else()
-  list(APPEND LINK_LIBS -lmonosgen-2.0)
-endif()
+list(APPEND LINK_LIBS ${MONOSGEN_LIB_LINK})
 
 if(NOT MINGW AND NOT WIN32)
   set(DEBUG_HELPER_LINK_LIBS "-ldl")

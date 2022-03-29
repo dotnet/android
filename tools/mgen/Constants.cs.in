@@ -1,0 +1,14 @@
+using System;
+using System.IO;
+
+namespace Xamarin.Android.Tools
+{
+	static class Constants
+	{
+		const string DotNetPath = @"@DotNetPreviewPath@";
+		const string DotnetRuntimeVersion = "@MicrosoftNETCoreAppRefPackageVersion@";
+
+		public static readonly string FrameworkLibsDir = Path.Combine (DotNetPath, "packs", "Microsoft.NETCore.App.Runtime.Mono.android-arm64", DotnetRuntimeVersion, "runtimes", "android-arm64", "lib", "net6.0");
+		public static readonly string FrameworkArchLibsDir = Path.Combine (DotNetPath, "packs", "Microsoft.NETCore.App.Runtime.Mono.android-arm64", DotnetRuntimeVersion, "runtimes", "android-arm64", "native");
+	}
+}

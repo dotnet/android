@@ -873,6 +873,10 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 #ifndef RELEASE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
+
+#if defined (RELEASE) && defined (ANDROID)
+	xamarin_app_init (&xa_app_context);
+#endif // def RELEASE && def ANDROID
 }
 
 #if defined (NET)

@@ -144,3 +144,10 @@ DSOCacheEntry dso_cache[] = {
 		.handle = nullptr,
 	},
 };
+
+#if defined (RELEASE)
+void xamarin_app_init (xamarin::android::internal::AppContext *context)
+{
+	// Dummy
+}
+#endif // def RELEASE

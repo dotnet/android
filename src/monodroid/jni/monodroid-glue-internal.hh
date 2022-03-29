@@ -9,6 +9,7 @@
 #include "timing.hh"
 #include "cpp-util.hh"
 #include "xxhash.hh"
+#include "xamarin-app-marshaling.hh"
 
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
@@ -65,6 +66,14 @@ namespace xamarin::android::internal
 			return xamarin::android::xxhash::hash (s.c_str (), s.length ());
 		}
 	};
+
+#if defined (RELEASE) && defined (ANDROID)
+	class XamarinAndroidAppContext : public AppContext
+	{
+	public:
+		virtual MonoImage *lookup_mono_image (uint8_t *module_uuid) override final;
+	};
+#endif // def RELEASE && def ANDROID
 
 	class MonodroidRuntime
 	{
@@ -413,6 +422,9 @@ namespace xamarin::android::internal
 		static void        *api_dso_handle;
 #endif // !def NET
 		static std::mutex   dso_handle_write_lock;
+#if defined (RELEASE) && defined (ANDROID)
+		XamarinAndroidAppContext xa_app_context;
+#endif // def RELEASE && def ANDROID
 	};
 }
 #endif
