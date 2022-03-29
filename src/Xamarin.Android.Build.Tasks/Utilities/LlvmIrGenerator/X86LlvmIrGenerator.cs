@@ -16,6 +16,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public override int PointerSize   => 4;
 		protected override string Triple     => "i686-unknown-linux-android"; // NDK appends API level, we don't need that
 
+		static readonly LlvmFunctionAttributeSet commonAttributes = new LlvmFunctionAttributeSet {
+			new FramePointerFunctionAttribute ("none"),
+			new TargetCpuFunctionAttribute ("i686"),
+			new TargetFeaturesFunctionAttribute ("+cx8,+mmx,+sse,+sse2,+sse3,+ssse3,+x87"),
+			new TuneCpuFunctionAttribute ("generic"),
+			new StackrealignFunctionAttribute (),
+		};
+
 		public X86LlvmIrGenerator (AndroidTargetArch arch, StreamWriter output, string fileName)
 			: base (arch, output, fileName)
 		{}
@@ -24,6 +32,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			base.AddModuleFlagsMetadata (flagsFields);
 			flagsFields.Add (MetadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "NumRegisterParameters", 0));
+		}
+
+		protected override void InitFunctionAttributes ()
+		{
+			base.InitFunctionAttributes ();
+
+			FunctionAttributes[FunctionAttributesXamarinAppInit].Add (commonAttributes);
+			FunctionAttributes[FunctionAttributesJniMethods].Add (commonAttributes);
 		}
 	}
 }

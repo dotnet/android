@@ -42,6 +42,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		};
 
 		/// <summary>
+		/// Options for a local, writable, insignificant address symbol
+		/// </summary>
+		public static readonly LlvmIrVariableOptions LocalWritableInsignificantAddr = new LlvmIrVariableOptions {
+			Linkage = LlvmIrLinkage.Internal,
+			Writability = LlvmIrWritability.Writable,
+			AddressSignificance = LlvmIrAddressSignificance.Unnamed,
+		};
+
+		/// <summary>
 		/// Options for a local, read-only, string which will end up in a strings ELF section
 		/// </summary>
 		public static readonly LlvmIrVariableOptions LocalString = new LlvmIrVariableOptions {

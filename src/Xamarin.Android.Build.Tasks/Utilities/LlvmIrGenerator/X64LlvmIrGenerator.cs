@@ -16,6 +16,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public override int PointerSize   => 8;
 		protected override string Triple     => "x86_64-unknown-linux-android"; // NDK appends API level, we don't need that
 
+		static readonly LlvmFunctionAttributeSet commonAttributes = new LlvmFunctionAttributeSet {
+			new FramePointerFunctionAttribute ("none"),
+			new TargetCpuFunctionAttribute ("x86-64"),
+			new TargetFeaturesFunctionAttribute ("+cx16,+cx8,+fxsr,+mmx,+popcnt,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+ssse3,+x87"),
+			new TuneCpuFunctionAttribute ("generic"),
+		};
+
 		public X64LlvmIrGenerator (AndroidTargetArch arch, StreamWriter output, string fileName)
 			: base (arch, output, fileName)
 		{}
@@ -32,6 +39,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			return maxFieldAlignment;
+		}
+
+		protected override void InitFunctionAttributes ()
+		{
+			base.InitFunctionAttributes ();
+
+			FunctionAttributes[FunctionAttributesXamarinAppInit].Add (commonAttributes);
+			FunctionAttributes[FunctionAttributesJniMethods].Add (commonAttributes);
 		}
 	}
 }

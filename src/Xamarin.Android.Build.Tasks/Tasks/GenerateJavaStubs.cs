@@ -237,6 +237,7 @@ namespace Xamarin.Android.Tasks
 					string managedKey = type.FullName.Replace ('/', '.');
 					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 
+					Console.WriteLine ($"##G2: {type.FullName} -> {javaKey}");
 					acw_map.Write (type.GetPartialAssemblyQualifiedName (cache));
 					acw_map.Write (';');
 					acw_map.Write (javaKey);
@@ -384,6 +385,7 @@ namespace Xamarin.Android.Tasks
 
 			bool ok = true;
 			foreach (var t in javaTypes) {
+				Console.WriteLine ($"##G0: JCW for {t.FullName}");
 				if (t.IsInterface) {
 					// Interfaces are in typemap but they shouldn't have JCW generated for them
 					continue;

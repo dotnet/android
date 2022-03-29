@@ -11,7 +11,7 @@
 
 static get_function_pointer_fn get_function_pointer;
 
-void xamarin_app_init (get_function_pointer_fn fn)
+void xamarin_app_init (get_function_pointer_fn fn) noexcept
 {
 	get_function_pointer = fn;
 }
@@ -19,19 +19,21 @@ void xamarin_app_init (get_function_pointer_fn fn)
 using android_app_activity_on_create_bundle_fn = void (*) (JNIEnv *env, jclass klass, jobject savedInstanceState);
 static android_app_activity_on_create_bundle_fn android_app_activity_on_create_bundle = nullptr;
 
-JNIEXPORT void
-JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv *env, jclass klass, jobject savedInstanceState)
+extern "C" JNIEXPORT void
+JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv *env, jclass klass, jobject savedInstanceState) noexcept
 {
 	//	log_info (LOG_DEFAULT, "%s (%p, %p, %p)", __PRETTY_FUNCTION__, env, klass, savedInstanceState);
 
 	if (android_app_activity_on_create_bundle == nullptr) {
-		void *fn = get_function_pointer (
-			16 /* Mono.Android.dll index */,
-			0x020000AF /* Android.App.Activity token */,
-			0x0600055B /* n_OnCreate_Landroid_os_Bundle_ */
-		);
+		// void *fn = get_function_pointer (
+		// 	16 /* Mono.Android.dll index */,
+		// 	0 /* Android.App.Activity index */,
+		// 	0x0600055B /* n_OnCreate_Landroid_os_Bundle_ */
+		// );
 
-		android_app_activity_on_create_bundle = reinterpret_cast<android_app_activity_on_create_bundle_fn>(fn);
+		// android_app_activity_on_create_bundle = reinterpret_cast<android_app_activity_on_create_bundle_fn>(fn);
+
+		get_function_pointer (16, 0, 0x0600055B, reinterpret_cast<void*&>(android_app_activity_on_create_bundle));
 	}
 
 	android_app_activity_on_create_bundle (env, klass, savedInstanceState);
@@ -40,20 +42,37 @@ JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv
 using android_app_activity_on_create_view_fn = jobject (*) (JNIEnv *env, jclass klass, jobject view, jstring name, jobject context, jobject attrs);
 static android_app_activity_on_create_view_fn android_app_activity_on_create_view = nullptr;
 
-JNIEXPORT jobject
-JNICALL Java_helloandroid_MainActivity_n_1onCreateView__Landroid_view_View_2Ljava_lang_String_2Landroid_content_Context_2Landroid_util_AttributeSet_2 (JNIEnv *env, jclass klass, jobject view, jstring name, jobject context, jobject attrs)
+extern "C" JNIEXPORT jobject
+JNICALL Java_helloandroid_MainActivity_n_1onCreateView__Landroid_view_View_2Ljava_lang_String_2Landroid_content_Context_2Landroid_util_AttributeSet_2 (JNIEnv *env, jclass klass, jobject view, jstring name, jobject context, jobject attrs) noexcept
 {
 	//	log_info (LOG_DEFAULT, "%s (%p, %p, %p, %p, %p, %p)", __PRETTY_FUNCTION__, env, klass, view, name, context, attrs);
 
 	if (android_app_activity_on_create_view == nullptr) {
-		void *fn = get_function_pointer (
+		get_function_pointer (
 			16 /* Mono.Android.dll index */,
-			0x020000AF /* Android.App.Activity token */,
-			0x06000564 /* n_OnCreateView_Landroid_view_View_Ljava_lang_String_Landroid_content_Context_Landroid_util_AttributeSet_ */
+			0 /* Android.App.Activity index */,
+			0x06000564 /* n_OnCreateView_Landroid_view_View_Ljava_lang_String_Landroid_content_Context_Landroid_util_AttributeSet_ */,
+			reinterpret_cast<void*&>(android_app_activity_on_create_view)
 		);
-
-		android_app_activity_on_create_view = reinterpret_cast<android_app_activity_on_create_view_fn>(fn);
 	}
 
 	return android_app_activity_on_create_view (env, klass, view, name, context, attrs);
+}
+
+using onDoSomething_fn = jbyte (*) (JNIEnv *env, jclass klass, jint anInt, jlong aLong, jfloat aFloat, jboolean aBool, jchar aChar, jshort aShort, jdouble aDouble);
+static onDoSomething_fn onDoSomething = nullptr;
+
+extern "C" JNIEXPORT jbyte
+JNICALL Java_helloandroid_MainActivity_n_1onDoSomething (JNIEnv *env, jclass klass, jint anInt, jlong aLong, jfloat aFloat, jboolean aBool, jchar aChar, jshort aShort, jdouble aDouble) noexcept
+{
+	if (onDoSomething == nullptr) {
+		get_function_pointer (
+			16 /* Mono.Android.dll index */,
+			0 /* Android.App.Activity index */,
+			0x06000564 /* n_OnCreateView_Landroid_view_View_Ljava_lang_String_Landroid_content_Context_Landroid_util_AttributeSet_ */,
+			reinterpret_cast<void*&>(onDoSomething)
+		);
+	}
+
+	return onDoSomething (env, klass, anInt, aLong, aFloat, aBool, aChar, aShort, aDouble);
 }

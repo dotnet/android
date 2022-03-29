@@ -22,6 +22,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, output, fileName);
 
+			InitGenerator (generator);
 			MapStructures (generator);
 			generator.WriteFileTop ();
 			generator.WriteStructureDeclarations ();
@@ -49,6 +50,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			return (ulong)XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
 		}
+
+		protected virtual void InitGenerator (LlvmIrGenerator generator)
+		{}
 
 		/// <summary>
 		/// Initialize the composer. It needs to allocate and populate all the structures that

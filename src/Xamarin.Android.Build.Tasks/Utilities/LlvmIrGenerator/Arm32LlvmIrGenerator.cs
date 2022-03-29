@@ -16,6 +16,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public override int PointerSize   => 4;
 		protected override string Triple     => "armv7-unknown-linux-android"; // NDK appends API level, we don't need that
 
+		static readonly LlvmFunctionAttributeSet commonAttributes = new LlvmFunctionAttributeSet {
+			new FramePointerFunctionAttribute ("all"),
+			new TargetCpuFunctionAttribute ("generic"),
+			new TargetFeaturesFunctionAttribute ("+armv7-a,+d32,+dsp,+fp64,+neon,+thumb-mode,+vfp2,+vfp2sp,+vfp3,+vfp3d16,+vfp3d16sp,+vfp3sp,-aes,-fp-armv8,-fp-armv8d16,-fp-armv8d16sp,-fp-armv8sp,-fp16,-fp16fml,-fullfp16,-sha2,-vfp4,-vfp4d16,-vfp4d16sp,-vfp4sp"),
+		};
+
 		public Arm32LlvmIrGenerator (AndroidTargetArch arch, StreamWriter output, string fileName)
 			: base (arch, output, fileName)
 		{}
@@ -24,6 +30,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			base.AddModuleFlagsMetadata (flagsFields);
 			flagsFields.Add (MetadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "min_enum_size", 4));
+		}
+
+		protected override void InitFunctionAttributes ()
+		{
+			base.InitFunctionAttributes ();
+
+			FunctionAttributes[FunctionAttributesXamarinAppInit].Add (commonAttributes);
+			FunctionAttributes[FunctionAttributesJniMethods].Add (commonAttributes);
 		}
 	}
 }
