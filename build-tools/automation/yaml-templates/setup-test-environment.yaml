@@ -63,6 +63,7 @@ steps:
     projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj
     restoreArguments: -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android.Build.Tests.binlog
     nugetConfigPath: ${{ parameters.xaSourcePath }}/NuGet.config
+    feedsToUse: config
 
 - task: DotNetCoreCLI@2
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
