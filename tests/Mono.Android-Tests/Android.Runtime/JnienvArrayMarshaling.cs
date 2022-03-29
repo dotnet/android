@@ -294,6 +294,16 @@ namespace Android.RuntimeTests {
 			Assert.AreEqual ("[[I", t);
 		}
 
+		[Test]
+		public void NewArray_Int32ArrayArray_ArrayOverload ()
+		{
+			Array array = new int[][]{new[]{11, 12}, new []{21, 22}};
+			IntPtr x = JNIEnv.NewArray(array);
+			string t = JNIEnv.GetClassNameFromInstance (x);
+			JNIEnv.DeleteLocalRef (x);
+			Assert.AreEqual ("[[I", t);
+		}
+
 		// http://bugzilla.xamarin.com/show_bug.cgi?id=12479
 		[Test]
 		public void NewArray_Int32ArrayArray_ShouldNotLeak ()
