@@ -334,6 +334,11 @@ namespace Xamarin.Android.Prepare
 		public RefreshableComponent ComponentsToRefresh { get; set; }
 
 		/// <summary>
+		///   Collection of Android SDK platform levels to be installed.
+		/// </summary>
+		public IEnumerable<string> AndroidSdkPlatforms { get; set; } = Enumerable.Empty<string> ();
+
+		/// <summary>
 		/// Set by the --mono-archive-url flag
 		/// </summary>
 		public string MonoArchiveCustomUrl { get; set; } = String.Empty;

@@ -33,9 +33,13 @@ namespace Xamarin.Android.Prepare
 
 	class AndroidPlatformComponent : AndroidToolchainComponent
 	{
+		public string ApiLevel { get; }
+
 		public AndroidPlatformComponent (string name, string apiLevel, string pkgRevision)
 			: base (name, Path.Combine ("platforms", $"android-{apiLevel}"), pkgRevision: pkgRevision)
-		{}
+		{
+			ApiLevel = apiLevel;
+		}
 	}
 
 	[Flags]
