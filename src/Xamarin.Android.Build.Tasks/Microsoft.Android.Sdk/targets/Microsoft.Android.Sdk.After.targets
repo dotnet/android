@@ -22,8 +22,6 @@ This file is imported *after* the Microsoft.NET.Sdk/Sdk.targets.
   <Import Project="Microsoft.Android.Sdk.Application.targets" Condition=" '$(AndroidApplication)' == 'true' " />
   <Import Project="Microsoft.Android.Sdk.AssemblyResolution.targets" />
   <Import Project="Microsoft.Android.Sdk.ILLink.targets" />
-  <!-- Only import this in VS 2019 16.x -->
-  <Import Project="Microsoft.Android.Sdk.NuGet.targets" Condition=" '$(MSBuildRuntimeType)' == 'Full' and '$(MSBuildVersion)' &lt; '17.0' " />
   <Import Project="Microsoft.Android.Sdk.ProjectCapabilities.targets" />
   <Import Project="Microsoft.Android.Sdk.Publish.targets" />
   <Import Project="Microsoft.Android.Sdk.RuntimeConfig.targets" />

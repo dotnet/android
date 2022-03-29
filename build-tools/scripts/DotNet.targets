@@ -14,25 +14,6 @@
     </ItemGroup>
     <RemoveDir Directories="@(_DirectoriesToRemove)" />
   </Target>
-  <Target Name="CreateWorkloadInstallers">
-    <MSBuild
-        Targets="ExtractWorkloadPacks"
-        Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj"
-        Properties="Configuration=$(Configuration)"
-    />
-    <MSBuild
-        Condition=" $([MSBuild]::IsOSPlatform('windows')) "
-        Targets="Restore;Build"
-        Projects="$(_Root)build-tools\create-dotnet-msi\create-dotnet-msi.csproj"
-        Properties="Configuration=$(Configuration)"
-    />
-    <MSBuild
-        Condition=" $([MSBuild]::IsOSPlatform('osx')) "
-        Targets="Restore;Build"
-        Projects="$(_Root)build-tools\create-dotnet-pkg\create-dotnet-pkg.csproj"
-        Properties="Configuration=$(Configuration)"
-    />
-  </Target>
   <Target Name="InstallMaui">
     <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' " />
     <PropertyGroup>

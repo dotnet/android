@@ -22,11 +22,6 @@ create-pkg:
 		$(if $(USE_COMMERCIAL_INSTALLER_NAME),/p:UseCommercialInstallerName="$(USE_COMMERCIAL_INSTALLER_NAME)") \
 		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
 
-create-workload-installers:
-	$(call DOTNET_BINLOG,create-workload-installers) /t:CreateWorkloadInstallers \
-		Xamarin.Android.sln \
-		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
-
 # create-vsix.csproj dependencies do not yet support `dotnet build`:
 #    .nuget/packages/microsoft.vssdk.buildtools/17.0.4207-preview4/build/Microsoft.VSSDK.BuildTools.targets(16,5): error MSB4801: The task factory "CodeTaskFactory" is not supported on the .NET Core version of MSBuild.
 create-vsix:
