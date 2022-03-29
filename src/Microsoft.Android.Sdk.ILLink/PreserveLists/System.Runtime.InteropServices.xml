@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+	<!-- Workaround for https://github.com/xamarin/xamarin-android/issues/6626, remove once https://github.com/dotnet/runtime/pull/68265 lands -->
+	<assembly fullname="System.Runtime.InteropServices">
+		<type fullname="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute" />
+	</assembly>
+</linker>

@@ -874,9 +874,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
 
-// #if defined (RELEASE) && defined (ANDROID) && defined (NET) && ENABLE_MARSHAL_METHODS
-// 	xamarin_app_init (get_function_pointer);
-// #endif // def RELEASE && def ANDROID && def NET
+#if defined (RELEASE) && defined (ANDROID) && defined (NET) && ENABLE_MARSHAL_METHODS
+	xamarin_app_init (get_function_pointer_at_startup);
+#endif // def RELEASE && def ANDROID && def NET
 }
 
 #if defined (NET)
@@ -2402,6 +2402,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif // ndef NET
 	}
 
+#if defined (RELEASE) && defined (ANDROID) && defined (NET) && ENABLE_MARSHAL_METHODS
+	xamarin_app_init (get_function_pointer_at_runtime);
+#endif // def RELEASE && def ANDROID && def NET
 	startup_in_progress = false;
 }
 

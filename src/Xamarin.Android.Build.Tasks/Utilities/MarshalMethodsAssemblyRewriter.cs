@@ -38,9 +38,16 @@ namespace Xamarin.Android.Tasks
 			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
 				foreach (MarshalMethodEntry method in methodList) {
 					Console.WriteLine ($"\t{method.NativeCallback.FullName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
+					Console.WriteLine ($"\t  NativeCallback == '{method.NativeCallback}'; Connector == '{method.Connector}'");
+					Console.WriteLine ($"\t  method.NativeCallback.CustomAttributes == {ToStringOrNull (method.NativeCallback?.CustomAttributes)}");
+					Console.WriteLine ($"\t  method.Connector.DeclaringType == {ToStringOrNull (method.Connector?.DeclaringType)}");
+					Console.WriteLine ($"\t  method.Connector.DeclaringType.Methods == {ToStringOrNull (method.Connector.DeclaringType?.Methods)}");
+					Console.WriteLine ($"\t  method.CallbackField == {ToStringOrNull (method.CallbackField)}");
+					Console.WriteLine ($"\t  method.CallbackField?.DeclaringType == {ToStringOrNull (method.CallbackField?.DeclaringType)}");
+					Console.WriteLine ($"\t  method.CallbackField?.DeclaringType.Fields == {ToStringOrNull (method.CallbackField?.DeclaringType?.Fields)}");
 					method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
-					method.Connector.DeclaringType.Methods.Remove (method.Connector);
-					method.CallbackField?.DeclaringType.Fields.Remove (method.CallbackField);
+					method.Connector?.DeclaringType?.Methods?.Remove (method.Connector);
+					method.CallbackField?.DeclaringType?.Fields?.Remove (method.CallbackField);
 				}
 			}
 
@@ -95,9 +102,18 @@ namespace Xamarin.Android.Tasks
 				Files.CopyIfChanged (source, target);
 				try {
 					File.Delete (source);
-				} catch (Exception ex) {
+				} catch (Exception) {
 					log.LogWarning ($"Unable to delete source file '{source}' when moving it to '{target}'");
 				}
+			}
+
+			string ToStringOrNull (object? o)
+			{
+				if (o == null) {
+					return "'null'";
+				}
+
+				return o.ToString ();
 			}
 		}
 

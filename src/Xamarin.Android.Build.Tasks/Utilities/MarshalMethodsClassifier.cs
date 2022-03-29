@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers;
@@ -370,18 +371,19 @@ namespace Xamarin.Android.Tasks
 		void StoreMethod (string connectorName, MethodDefinition registeredMethod, MarshalMethodEntry entry)
 		{
 			string typeName = registeredMethod.DeclaringType.FullName.Replace ('/', '+');
-			string key = $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{connectorName}";
+			string key = $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{registeredMethod.Name}";
 
-			// Several classes can override the same method, we need to generate the marshal method only once
-			if (marshalMethods.ContainsKey (key)) {
-				return;
-			}
-
+			// Several classes can override the same method, we need to generate the marshal method only once, at the same time
+			// keeping track of overloads
 			if (!marshalMethods.TryGetValue (key, out IList<MarshalMethodEntry> list) || list == null) {
 				list = new List<MarshalMethodEntry> ();
 				marshalMethods.Add (key, list);
 			}
-			list.Add (entry);
+
+			string registeredName = registeredMethod.FullName;
+			if (list.Count == 0 || !list.Any (me => String.Compare (registeredName, me.RegisteredMethod.FullName, StringComparison.Ordinal) == 0)) {
+				list.Add (entry);
+			}
 		}
 
 		void StoreAssembly (AssemblyDefinition asm)

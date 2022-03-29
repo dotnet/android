@@ -5,13 +5,31 @@
 
 using namespace xamarin::android::internal;
 
-void MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void *&target_ptr) noexcept
+template<bool NeedsLocking>
+force_inline void
+MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void *&target_ptr) noexcept
 {
+	// We don't check for valid return values from image loader, class and method lookup because if any
+	// of them fails to find the requested entity, they will return `null`.  In consequence, we can pass
+	// these pointers without checking all the way to `mono_method_get_unmanaged_callers_only_ftnptr`, after
+	// which call we check for errors.  This saves some time (not much, but definitely more than zero)
 	MonoImage *image = MonoImageLoader::get_from_index (mono_image_index);
 
-	// TODO: implement MonoClassLoader with caching. Best to use indexes instead of keying on tokens.
-	MonoClass *method_klass = mono_class_get (image, class_index);
-	MonoMethod *method = mono_get_method (image, method_token, method_klass);
+	if (XA_UNLIKELY (class_index >= marshal_methods_number_of_classes)) {
+		log_fatal (LOG_DEFAULT,
+		           "Internal error: invalid index for class cache (expected at most %u, got %u)",
+		           marshal_methods_number_of_classes - 1,
+		           class_index
+		);
+		abort ();
+	}
+
+	MarshalMethodsManagedClass &klass = marshal_methods_class_cache[class_index];
+	if (klass.klass == nullptr) {
+		klass.klass = mono_class_get (image, klass.token);
+	}
+
+	MonoMethod *method = mono_get_method (image, method_token, klass.klass);
 
 	MonoError error;
 	void *ret = mono_method_get_unmanaged_callers_only_ftnptr (method, &error);
@@ -24,5 +42,22 @@ void MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t
 		abort ();
 	}
 
-	target_ptr = ret;
+	if constexpr (NeedsLocking) {
+		// TODO: use atomic write
+		target_ptr = ret;
+	} else {
+		target_ptr = ret;
+	}
+}
+
+void
+MonodroidRuntime::get_function_pointer_at_startup (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void *&target_ptr) noexcept
+{
+	get_function_pointer<false> (mono_image_index, class_index, method_token, target_ptr);
+}
+
+void
+MonodroidRuntime::get_function_pointer_at_runtime (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void *&target_ptr) noexcept
+{
+	get_function_pointer<true> (mono_image_index, class_index, method_token, target_ptr);
 }

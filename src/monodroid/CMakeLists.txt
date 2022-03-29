@@ -50,7 +50,7 @@ option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFA
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 option(USE_CCACHE "Use ccache, if found, to speed up recompilation" ${CCACHE_OPTION_DEFAULT})
 
-set(ENABLE_MARSHAL_METHODS False)
+set(ENABLE_MARSHAL_METHODS True)
 
 if((MINGW OR NOT WIN32) AND USE_CCACHE)
   if(CMAKE_CXX_COMPILER MATCHES "/ccache/")
