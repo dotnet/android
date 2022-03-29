@@ -104,8 +104,10 @@ namespace generator.SourceWriters
 
 			var staticMethods = iface.Methods.Where (m => m.IsStatic);
 
-			if (iface.Fields.Any () || staticMethods.Any ())
+			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 &&
+					(iface.Fields.Any () || staticMethods.Any ())) {
 				pre_sibling_types.Add (new InterfaceMemberAlternativeClass (iface, opt, context));
+			}
 		}
 
 		void AddInterfaceEventHandler (InterfaceGen iface, CodeGenerationOptions opt, CodeGeneratorContext context)

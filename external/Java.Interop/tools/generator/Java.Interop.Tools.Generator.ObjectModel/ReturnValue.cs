@@ -4,6 +4,7 @@ using System.IO;
 using System.Xml;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Utils;
+using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation {
 
@@ -107,6 +108,12 @@ namespace MonoDroid.Generation {
 
 		public string ToNative (CodeGenerationOptions opt, string var_name)
 		{
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				if ((sym is GenericTypeParameter) || (sym is GenericSymbol)) {
+					return $"({var_name}.?PeerReference ?? default)";
+				}
+				return sym.ToNative (opt, var_name);
+			}
 			return ((sym is GenericTypeParameter) || (sym is GenericSymbol)) ? String.Format ("JNIEnv.ToLocalJniHandle ({0})", var_name) : sym.ToNative (opt, var_name);
 		}
 
@@ -118,6 +125,11 @@ namespace MonoDroid.Generation {
 			if (targetType == "string")
 				return string.Format ("{0}?.ToString ()", name);
 			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				return "global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
+					(rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? sym.FullName) : sym.FullName) +
+					$">(({opt.GetSafeIdentifier (rgm != null ? rgm.ToInteroperableJavaObject (name) : name)}?.PeerReference ?? default).Handle)";
+			}
 			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
 			                      rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? sym.FullName) : sym.FullName,
 			                      opt.GetSafeIdentifier (rgm != null ? rgm.ToInteroperableJavaObject (name) : name),

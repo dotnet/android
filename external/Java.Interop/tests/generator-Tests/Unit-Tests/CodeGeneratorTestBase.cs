@@ -83,16 +83,40 @@ namespace generatortests
 			return gens;
 		}
 
-		protected void AssertExpected (string testName, string actual)
+		protected void AssertTargetedExpected (string testName, string actual)
 		{
+			WriteActualContents (testName, actual);
+
+			var expected    = GetTargetedExpected (testName);
+			Assert.AreEqual (expected, actual.NormalizeLineEndings ());
+		}
+
+		protected void AssertOriginalExpected (string testName, string actual)
+		{
+			WriteActualContents (testName, actual);
+
 			var expected    = GetOriginalExpected (testName);
 			Assert.AreEqual (expected.NormalizeLineEndings (), actual.NormalizeLineEndings (),
 					GetAssertionMessage ($"Test `{testName}` failed.", expected, actual));
 		}
 
-		protected void AssertTargetExpected (string testName, string actual)
+		protected void WriteActualContents (string testName, string contents)
 		{
-			var expected    = GetOriginalTargetExpected (testName);
+			var t = this.TargetedDirectoryOverride;
+			if (string.IsNullOrEmpty (t))
+				t = this.CommonDirectoryOverride;
+			if (string.IsNullOrEmpty (t))
+				t = GetType ().Name;
+			var dir = Path.Combine ("__jonp", t);
+			Directory.CreateDirectory (dir);
+			File.WriteAllText (Path.Combine (dir, testName + ".txt"), contents);
+		}
+
+		protected void AssertOriginalTargetExpected (string testName, string actual)
+		{
+			WriteActualContents (testName, actual);
+
+			var expected = GetOriginalTargetExpected (testName);
 			Assert.AreEqual (expected.NormalizeLineEndings (), actual.NormalizeLineEndings (),
 					GetAssertionMessage ($"Test `{testName}` failed.", expected, actual));
 		}

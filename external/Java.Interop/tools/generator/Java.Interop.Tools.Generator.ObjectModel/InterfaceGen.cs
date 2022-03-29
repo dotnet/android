@@ -243,6 +243,9 @@ namespace MonoDroid.Generation
 
 		public override string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)
 		{
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				return $"({varname}.?PeerReference ?? default)";
+			}
 			return string.Format ("JNIEnv.ToLocalJniHandle ({0})", varname);
 			/*
 			if (String.IsNullOrEmpty (Marshaler))

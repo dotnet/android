@@ -302,6 +302,13 @@ namespace MonoDroid.Generation
 
 			return value;
 		}
+
+		public string GetStringArrayToCharSequenceArrayMethodName ()
+		{
+			return CodeGenerationTarget == CodeGenerationTarget.JavaInterop1
+				? "ICharSequenceExtensions.ToCharSequenceArray"
+				: "CharSequence.ArrayFromStringArray";
+		}
 	}
 }
 

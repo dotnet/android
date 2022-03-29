@@ -83,7 +83,7 @@ namespace Java.IO {
 		public abstract int Read ();
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='read' and count(parameter)=1 and parameter[1][@type='byte[]']]"
-		public virtual unsafe int Read (global::System.Collections.Generic.IList<SByte> buffer)
+		public virtual unsafe int Read (global::Java.Interop.JavaSByteArray buffer)
 		{
 			const string __id = "read.([B)I";
 			var native_buffer = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray (buffer);
@@ -93,7 +93,7 @@ namespace Java.IO {
 				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
 				return __rm;
 			} finally {
-				if (buffer != null) {
+				if (native_buffer != null) {
 					native_buffer.DisposeUnlessReferenced ();
 				}
 				global::System.GC.KeepAlive (buffer);
@@ -101,7 +101,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='read' and count(parameter)=3 and parameter[1][@type='byte[]'] and parameter[2][@type='int'] and parameter[3][@type='int']]"
-		public virtual unsafe int Read (global::System.Collections.Generic.IList<SByte> buffer, int byteOffset, int byteCount)
+		public virtual unsafe int Read (global::Java.Interop.JavaSByteArray buffer, int byteOffset, int byteCount)
 		{
 			const string __id = "read.([BII)I";
 			var native_buffer = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray (buffer);
@@ -113,7 +113,7 @@ namespace Java.IO {
 				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
 				return __rm;
 			} finally {
-				if (buffer != null) {
+				if (native_buffer != null) {
 					native_buffer.DisposeUnlessReferenced ();
 				}
 				global::System.GC.KeepAlive (buffer);

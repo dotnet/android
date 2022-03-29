@@ -2,16 +2,22 @@
   <!-- For now, just bind java.lang.* -->
   <remove-node path="//api/package[not(starts-with(@name, 'java.lang'))]" />
 
-  <!-- For now, just bind Class, Object, Throwable -->
-  <remove-node path="//api/package/interface" />
-  <remove-node path="//api/package/class[not(@name = 'Object'
-      or @name = 'BootstrapMethodError'
-      or @name = 'Class'
-      or @name = 'Math'
-      or @name = 'Number'
-      or @name = 'Throwable'
-    )]"
-  />
+  <!-- Type / Namespace conflicts -->
+  <ns-replace source="java.lang.module" replacement="Java.Lang.Modules" />
 
-  <attr path="/api/package[@name='java.lang']/class[@name='Object']/method[@name='finalize']" name="managedName">JavaFinalize</attr>
+  <!-- Bind `Object.finalize()` as `Object.JavaFinalize()` -->
+  <attr path="/api/package[@name='java.lang']//method[@name='finalize' and count(parameter)=0]" name="managedName">JavaFinalize</attr>
+  <!-- warning CS0672: Member 'Enum.JavaFinalize()' overrides obsolete member 'Object.JavaFinalize()'. Add the Obsolete attribute to 'Enum.JavaFinalize()'. -->
+  <attr path="/api/package[@name='java.lang']/class[@name='Enum']/method[@name='finalize' and count(parameter)=0]" name="deprecated">deprecated</attr>
+
+  <!-- AbstractStringBuilder is package-private; fixity fix -->
+  <remove-node path="//api/package[@name='java.lang']/class[@name='AbstractStringBuilder']" />
+
+  <attr path="/api/package[@name='java.lang']/class[@name='StringBuilder']" name="extends">java.lang.Object</attr>
+  <remove-node path="//api/package[@name='java.lang']/class[@name='StringBuilder']/method[@jni-return='Ljava/lang/AbstractStringBuilder;']" />
+  <remove-node path="//api/package[@name='java.lang']/class[@name='StringBuilder']/method[@jni-return='Ljava/lang/Appendable;']" />
+
+  <attr path="/api/package[@name='java.lang']/class[@name='StringBuffer']" name="extends">java.lang.Object</attr>
+  <remove-node path="//api/package[@name='java.lang']/class[@name='StringBuffer']/method[@jni-return='Ljava/lang/AbstractStringBuilder;']" />
+  <remove-node path="//api/package[@name='java.lang']/class[@name='StringBuffer']/method[@jni-return='Ljava/lang/Appendable;']" />
 </metadata>

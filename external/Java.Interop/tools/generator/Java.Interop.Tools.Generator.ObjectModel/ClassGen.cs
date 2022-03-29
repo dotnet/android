@@ -339,8 +339,13 @@ namespace MonoDroid.Generation
 			base.ResetValidation ();
 		}
 
-		public override string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null) =>
-			$"JNIEnv.ToLocalJniHandle ({varname})";
+		public override string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)
+		{
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				return $"({varname}.?PeerReference ?? default)";
+			}
+			return $"JNIEnv.ToLocalJniHandle ({varname})";
+		}
 
 		public override void UpdateEnumsInInterfaceImplementation ()
 		{

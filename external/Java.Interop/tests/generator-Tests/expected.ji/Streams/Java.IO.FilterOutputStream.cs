@@ -19,6 +19,25 @@ namespace Java.IO {
 		{
 		}
 
+		// Metadata.xml XPath constructor reference: path="/api/package[@name='java.io']/class[@name='FilterOutputStream']/constructor[@name='FilterOutputStream' and count(parameter)=1 and parameter[1][@type='java.io.OutputStream']]"
+		public unsafe FilterOutputStream (global::Java.IO.OutputStream @out) : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		{
+			const string __id = "(Ljava/io/OutputStream;)V";
+
+			if (PeerReference.IsValid)
+				return;
+
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (@out);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+			} finally {
+				global::System.GC.KeepAlive (@out);
+			}
+		}
+
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='FilterOutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='int']]"
 		public override unsafe void Write (int oneByte)
 		{

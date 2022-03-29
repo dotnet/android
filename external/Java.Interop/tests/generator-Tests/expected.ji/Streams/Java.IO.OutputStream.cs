@@ -56,7 +56,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='byte[]']]"
-		public virtual unsafe void Write (global::System.Collections.Generic.IList<SByte> buffer)
+		public virtual unsafe void Write (global::Java.Interop.JavaSByteArray buffer)
 		{
 			const string __id = "write.([B)V";
 			var native_buffer = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray (buffer);
@@ -65,7 +65,7 @@ namespace Java.IO {
 				__args [0] = new JniArgumentValue (native_buffer);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
-				if (buffer != null) {
+				if (native_buffer != null) {
 					native_buffer.DisposeUnlessReferenced ();
 				}
 				global::System.GC.KeepAlive (buffer);
@@ -73,7 +73,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write' and count(parameter)=3 and parameter[1][@type='byte[]'] and parameter[2][@type='int'] and parameter[3][@type='int']]"
-		public virtual unsafe void Write (global::System.Collections.Generic.IList<SByte> buffer, int offset, int count)
+		public virtual unsafe void Write (global::Java.Interop.JavaSByteArray buffer, int offset, int count)
 		{
 			const string __id = "write.([BII)V";
 			var native_buffer = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray (buffer);
@@ -84,7 +84,7 @@ namespace Java.IO {
 				__args [2] = new JniArgumentValue (count);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
-				if (buffer != null) {
+				if (native_buffer != null) {
 					native_buffer.DisposeUnlessReferenced ();
 				}
 				global::System.GC.KeepAlive (buffer);

@@ -221,14 +221,16 @@ namespace generatortests
 
 			var ctor_name = className.Contains ('.') ? className.Substring (className.LastIndexOf ('.') + 1) : className;
 			@class.Ctors.Add (CreateConstructor (@class, ctor_name, options));
-			@class.Ctors.Add (CreateConstructor (@class, ctor_name, options, new Parameter ("p0", "java.lang.String", "string", false)));
+			@class.Ctors.Add (CreateConstructor (@class, ctor_name, options,
+				new Parameter ("p0", "java.lang.String", options.SymbolTable.Lookup ("java.lang.String", null).FullName, false)));
 
 			@class.Properties.Add (CreateProperty (@class, "Count", "int", options));
 			@class.Properties.Add (CreateProperty (@class, "Key", "java.lang.String", options));
 			@class.Properties.Add (CreateProperty (@class, "StaticCount", "int", options, true));
 			@class.Properties.Add (CreateProperty (@class, "AbstractCount", "int", options, false, true));
 
-			@class.Methods.Add (CreateMethod (@class, "GetCountForKey", options, "int", false, parameters: new Parameter ("key", "java.lang.String", "string", false)));
+			@class.Methods.Add (CreateMethod (@class, "GetCountForKey", options, "int", false,
+				parameters: new Parameter ("key", "java.lang.String", options.SymbolTable.Lookup ("java.lang.String", null).FullName, false)));
 			@class.Methods.Add (CreateMethod (@class, "Key", options, "java.lang.String"));
 			@class.Methods.Add (CreateMethod (@class, "StaticMethod", options, "void", true));
 			@class.Methods.Add (CreateMethod (@class, "AbstractMethod", options, "void", false, true));
@@ -273,7 +275,8 @@ namespace generatortests
 			iface.Properties.Add (CreateProperty (iface, "StaticCount", "int", options, true));
 			iface.Properties.Add (CreateProperty (iface, "AbstractCount", "int", options, false, true));
 
-			iface.Methods.Add (CreateMethod (iface, "GetCountForKey", options, "int", false, parameters: new Parameter ("key", "java.lang.String", "string", false)));
+			iface.Methods.Add (CreateMethod (iface, "GetCountForKey", options, "int", false,
+				parameters: new Parameter ("key", "java.lang.String", options.SymbolTable.Lookup ("java.lang.String", null).FullName, false)));
 			iface.Methods.Add (CreateMethod (iface, "Key", options, "java.lang.String"));
 			iface.Methods.Add (CreateMethod (iface, "StaticMethod", options, "void", true));
 			iface.Methods.Add (CreateMethod (iface, "AbstractMethod", options, "void", false, true));
@@ -313,7 +316,7 @@ namespace generatortests
 		{
 			var list = new ParameterList {
 				new Parameter ("value", "int", "int", false),
-				new Parameter ("str", "java.lang.String", "string", false),
+				new Parameter ("str", "java.lang.String", options.SymbolTable.Lookup ("java.lang.String", null).FullName, false),
 				new Parameter ("flag", "int", "OptionTypes", true)
 			};
 

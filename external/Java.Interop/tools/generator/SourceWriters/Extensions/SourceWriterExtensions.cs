@@ -352,7 +352,7 @@ namespace generator.SourceWriters
 					writer.WriteLine ($"var {pname} = {p.Name} == null ? null : new global::Java.Lang.String ({p.Name});");
 				} else if (p.Type == "Java.Lang.ICharSequence[]" || p.Type == "params Java.Lang.ICharSequence[]") {
 					pname = p.GetName ("jlca_");
-					writer.WriteLine ($"var {pname} = CharSequence.ArrayFromStringArray({p.Name});");
+					writer.WriteLine ($"var {pname} = {opt.GetStringArrayToCharSequenceArrayMethodName ()} ({p.Name});");
 				}
 
 				if (call.Length > 0)
@@ -367,7 +367,7 @@ namespace generator.SourceWriters
 				case "void":
 					break;
 				case "Java.Lang.ICharSequence[]":
-					writer.WriteLine ("var __rsval = CharSequence.ArrayToStringArray (__result);");
+					writer.WriteLine ($"var __rsval = {opt.GetStringArrayToCharSequenceArrayMethodName ()} (__result);");
 					break;
 				case "Java.Lang.ICharSequence":
 					writer.WriteLine ("var __rsval = __result?.ToString ();");

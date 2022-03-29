@@ -7,7 +7,7 @@ public partial class MyClass {
 	{
 	}
 
-	public unsafe System.Collections.Generic.IList<Int32> UIntProp {
+	public unsafe Java.Interop.JavaInt32Array? UIntProp {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UIntProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_UIntProp.()[I";
@@ -26,7 +26,7 @@ public partial class MyClass {
 				__args [0] = new JniArgumentValue (native_value);
 				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 			} finally {
-				if (value != null) {
+				if (native_value != null) {
 					native_value.DisposeUnlessReferenced ();
 				}
 				global::System.GC.KeepAlive (value);
@@ -34,7 +34,7 @@ public partial class MyClass {
 		}
 	}
 
-	public unsafe System.Collections.Generic.IList<Int16> UShortProp {
+	public unsafe Java.Interop.JavaInt16Array? UShortProp {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UShortProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_UShortProp.()[S";
@@ -53,7 +53,7 @@ public partial class MyClass {
 				__args [0] = new JniArgumentValue (native_value);
 				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 			} finally {
-				if (value != null) {
+				if (native_value != null) {
 					native_value.DisposeUnlessReferenced ();
 				}
 				global::System.GC.KeepAlive (value);
@@ -61,7 +61,7 @@ public partial class MyClass {
 		}
 	}
 
-	public unsafe System.Collections.Generic.IList<Int64> ULongProp {
+	public unsafe Java.Interop.JavaInt64Array? ULongProp {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_ULongProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_ULongProp.()[J";
@@ -80,7 +80,7 @@ public partial class MyClass {
 				__args [0] = new JniArgumentValue (native_value);
 				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 			} finally {
-				if (value != null) {
+				if (native_value != null) {
 					native_value.DisposeUnlessReferenced ();
 				}
 				global::System.GC.KeepAlive (value);
@@ -88,7 +88,7 @@ public partial class MyClass {
 		}
 	}
 
-	public unsafe System.Collections.Generic.IList<SByte> UByteProp {
+	public unsafe Java.Interop.JavaSByteArray? UByteProp {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UByteProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_UByteProp.()[B";
@@ -107,7 +107,7 @@ public partial class MyClass {
 				__args [0] = new JniArgumentValue (native_value);
 				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 			} finally {
-				if (value != null) {
+				if (native_value != null) {
 					native_value.DisposeUnlessReferenced ();
 				}
 				global::System.GC.KeepAlive (value);

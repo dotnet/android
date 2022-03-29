@@ -15,8 +15,8 @@ namespace generator.SourceWriters
 		// }
 		public CharSequenceEnumeratorMethod ()
 		{
-			Name = "System.Collections.IEnumerable.GetEnumerator";
-			ReturnType = new TypeReferenceWriter ("System.Collections.IEnumerator");
+			Name = "global::System.Collections.IEnumerable.GetEnumerator";
+			ReturnType = new TypeReferenceWriter ("global::System.Collections.IEnumerator");
 
 			Body.Add ("return GetEnumerator ();");
 		}		
@@ -32,7 +32,7 @@ namespace generator.SourceWriters
 		public CharSequenceGenericEnumeratorMethod ()
 		{
 			Name = "GetEnumerator";
-			ReturnType = new TypeReferenceWriter ("System.Collections.Generic.IEnumerator<char>");
+			ReturnType = new TypeReferenceWriter ("global::System.Collections.Generic.IEnumerator<char>");
 
 			IsPublic = true;
 

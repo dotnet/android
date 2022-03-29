@@ -1,35 +1,8 @@
-[Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
-public abstract class MyInterface : Java.Lang.Object {
-	internal MyInterface ()
-	{
-	}
-
-	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='StaticMethod' and count(parameter)=0]"
-	public static unsafe void StaticMethod ()
-	{
-		const string __id = "StaticMethod.()V";
-		try {
-			_members.StaticMethods.InvokeVoidMethod (__id, null);
-		} finally {
-		}
-	}
-
-	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
-
-}
-
-[Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
-[global::System.Obsolete ("Use the 'MyInterface' type. This type will be removed in a future release.", error: true)]
-public abstract class MyInterfaceConsts : MyInterface {
-	private MyInterfaceConsts ()
-	{
-	}
-
-}
-
 // Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
 [global::Java.Interop.JniTypeSignature ("java/code/IMyInterface", GenerateJavaPeer=false)]
 public partial interface IMyInterface : IJavaPeerable {
+	private static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
+
 	int Count {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Count' and count(parameter)=0]"
 		get; 
@@ -38,7 +11,7 @@ public partial interface IMyInterface : IJavaPeerable {
 		set; 
 	}
 
-	string Key {
+	string? Key {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Key' and count(parameter)=0]"
 		get; 
 
@@ -54,13 +27,45 @@ public partial interface IMyInterface : IJavaPeerable {
 		set; 
 	}
 
+	static unsafe int StaticCount {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_StaticCount' and count(parameter)=0]"
+		get {
+			const string __id = "get_StaticCount.()I";
+			try {
+				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+				return __rm;
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_StaticCount' and count(parameter)=1 and parameter[1][@type='int']]"
+		set {
+			const string __id = "set_StaticCount.(I)V";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.StaticMethods.InvokeVoidMethod (__id, __args);
+			} finally {
+			}
+		}
+	}
+
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='GetCountForKey' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
-	int GetCountForKey (string key);
+	int GetCountForKey (string? key);
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='Key' and count(parameter)=0]"
-	string Key ();
+	string? Key ();
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='AbstractMethod' and count(parameter)=0]"
 	void AbstractMethod ();
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='StaticMethod' and count(parameter)=0]"
+	public static unsafe void StaticMethod ()
+	{
+		const string __id = "StaticMethod.()V";
+		try {
+			_members.StaticMethods.InvokeVoidMethod (__id, null);
+		} finally {
+		}
+	}
 
 }

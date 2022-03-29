@@ -57,7 +57,7 @@ internal sealed partial class AnimatorListenerImplementor : global::Java.Lang.Ob
 	}
 
 	#pragma warning disable 0649
-	public EventHandler<AnimationEndEventArgs> OnAnimationEndHandler;
+	public EventHandler<AnimationEndEventArgs>? OnAnimationEndHandler;
 	#pragma warning restore 0649
 
 	public bool OnAnimationEnd (int param1)
@@ -71,7 +71,7 @@ internal sealed partial class AnimatorListenerImplementor : global::Java.Lang.Ob
 	}
 
 	#pragma warning disable 0649
-	public EventHandler<AnimationEndEventArgs> OnAnimationEndHandler;
+	public EventHandler<AnimationEndEventArgs>? OnAnimationEndHandler;
 	#pragma warning restore 0649
 
 	public bool OnAnimationEnd (int param1, int param2)

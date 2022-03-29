@@ -355,6 +355,9 @@ namespace MonoDroid.Generation
 
 		protected void GenerateAnnotationAttribute (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				return;
+			}
 			if (ShouldGenerateAnnotationAttribute) {
 				var baseName = Namespace.Length > 0 ? FullName.Substring (Namespace.Length + 1) : FullName;
 				var attrClassNameBase = baseName.Substring (TypeNamePrefix.Length) + "Attribute";

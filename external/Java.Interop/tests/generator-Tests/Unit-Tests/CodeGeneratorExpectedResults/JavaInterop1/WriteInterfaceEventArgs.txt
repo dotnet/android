@@ -1,2 +1,2 @@
-public delegate int MyIGetCountForKeyHandler (string key);
+public delegate int MyIGetCountForKeyHandler (string? key);
 

@@ -9,147 +9,147 @@ namespace Xamarin.Test {
 	public partial class SomeObject : global::Java.Lang.Object {
 
 		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='myStrings']"
-		public IList<string> MyStrings {
+		public global::Java.Interop.JavaObjectArray<string> MyStrings {
 			get {
 				const string __id = "myStrings.[Ljava/lang/String;";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<string>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaObjectArray<string> >(ref __v, JniObjectReferenceOptions.Copy);
 			}
 			set {
 				const string __id = "myStrings.[Ljava/lang/String;";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<string>.ToLocalJniHandle (value);
 				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+
 				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					GC.KeepAlive (value);
 				}
 			}
 		}
 
 
 		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='myInts']"
-		public IList<int> MyInts {
+		public global::Java.Interop.JavaInt32Array MyInts {
 			get {
 				const string __id = "myInts.[I";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<int>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt32Array >(ref __v, JniObjectReferenceOptions.Copy);
 			}
 			set {
 				const string __id = "myInts.[I";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<int>.ToLocalJniHandle (value);
 				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+
 				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					GC.KeepAlive (value);
 				}
 			}
 		}
 
 
 		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='mybools']"
-		public IList<bool> Mybools {
+		public global::Java.Interop.JavaBooleanArray Mybools {
 			get {
 				const string __id = "mybools.[Z";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<bool>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaBooleanArray >(ref __v, JniObjectReferenceOptions.Copy);
 			}
 			set {
 				const string __id = "mybools.[Z";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<bool>.ToLocalJniHandle (value);
 				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+
 				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					GC.KeepAlive (value);
 				}
 			}
 		}
 
 
 		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='myObjects']"
-		public IList<Java.Lang.Object> MyObjects {
+		public global::Java.Interop.JavaObjectArray<global::Java.Lang.Object> MyObjects {
 			get {
 				const string __id = "myObjects.[Ljava/lang/Object;";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<global::Java.Lang.Object>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaObjectArray<global::Java.Lang.Object> >(ref __v, JniObjectReferenceOptions.Copy);
 			}
 			set {
 				const string __id = "myObjects.[Ljava/lang/Object;";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<global::Java.Lang.Object>.ToLocalJniHandle (value);
 				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+
 				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					GC.KeepAlive (value);
 				}
 			}
 		}
 
 
 		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='myfloats']"
-		public IList<float> Myfloats {
+		public global::Java.Interop.JavaSingleArray Myfloats {
 			get {
 				const string __id = "myfloats.[F";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<float>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaSingleArray >(ref __v, JniObjectReferenceOptions.Copy);
 			}
 			set {
 				const string __id = "myfloats.[F";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<float>.ToLocalJniHandle (value);
 				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+
 				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					GC.KeepAlive (value);
 				}
 			}
 		}
 
 
 		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='mydoubles']"
-		public IList<double> Mydoubles {
+		public global::Java.Interop.JavaDoubleArray Mydoubles {
 			get {
 				const string __id = "mydoubles.[D";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<double>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaDoubleArray >(ref __v, JniObjectReferenceOptions.Copy);
 			}
 			set {
 				const string __id = "mydoubles.[D";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<double>.ToLocalJniHandle (value);
 				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+
 				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					GC.KeepAlive (value);
 				}
 			}
 		}
 
 
 		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='mylongs']"
-		public IList<long> Mylongs {
+		public global::Java.Interop.JavaInt64Array Mylongs {
 			get {
 				const string __id = "mylongs.[J";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<long>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt64Array >(ref __v, JniObjectReferenceOptions.Copy);
 			}
 			set {
 				const string __id = "mylongs.[J";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<long>.ToLocalJniHandle (value);
 				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+
 				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					GC.KeepAlive (value);
 				}
 			}
 		}

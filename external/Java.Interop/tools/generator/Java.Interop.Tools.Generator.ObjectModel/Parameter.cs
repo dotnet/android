@@ -256,11 +256,16 @@ namespace MonoDroid.Generation {
 			if (string.IsNullOrEmpty (targetType))
 				return name;
 			if (targetType == "string")
-				return string.Format ("{0}.ToString ()", name);
+				return string.Format ("{0}?.ToString ()", name);
 			if (targetType.EndsWith ("[]", StringComparison.Ordinal)) {
 				return string.Format ("{0}.ToArray<{1}> ()", name, targetType.Replace ("[]",""));
 			}
 			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				return "global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
+					opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? targetType) : targetType) +
+					$">(({name}?.PeerReference ?? default).Handle)";
+			}
 			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
 					opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? targetType) : targetType),
 					name,

@@ -8,7 +8,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='uint[]']]"
-	public unsafe System.Collections.Generic.IList<Int32> Echo (uint[] value)
+	public unsafe Java.Interop.JavaInt32Array? Echo (uint[]? value)
 	{
 		const string __id = "Echo.([I)[I";
 		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt32Array (value);
@@ -18,7 +18,7 @@ public partial class MyClass {
 			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
 			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt32Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		} finally {
-			if (value != null) {
+			if (native_value != null) {
 				native_value.DisposeUnlessReferenced ();
 			}
 			global::System.GC.KeepAlive (value);
@@ -26,7 +26,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ushort[]']]"
-	public unsafe System.Collections.Generic.IList<Int16> Echo (ushort[] value)
+	public unsafe Java.Interop.JavaInt16Array? Echo (ushort[]? value)
 	{
 		const string __id = "Echo.([S)[S";
 		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt16Array (value);
@@ -36,7 +36,7 @@ public partial class MyClass {
 			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
 			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt16Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		} finally {
-			if (value != null) {
+			if (native_value != null) {
 				native_value.DisposeUnlessReferenced ();
 			}
 			global::System.GC.KeepAlive (value);
@@ -44,7 +44,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ulong[]']]"
-	public unsafe System.Collections.Generic.IList<Int64> Echo (ulong[] value)
+	public unsafe Java.Interop.JavaInt64Array? Echo (ulong[]? value)
 	{
 		const string __id = "Echo.([J)[J";
 		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt64Array (value);
@@ -54,7 +54,7 @@ public partial class MyClass {
 			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
 			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt64Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		} finally {
-			if (value != null) {
+			if (native_value != null) {
 				native_value.DisposeUnlessReferenced ();
 			}
 			global::System.GC.KeepAlive (value);
@@ -62,7 +62,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ubyte[]']]"
-	public unsafe System.Collections.Generic.IList<SByte> Echo (byte[] value)
+	public unsafe Java.Interop.JavaSByteArray? Echo (byte[]? value)
 	{
 		const string __id = "Echo.([B)[B";
 		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray (value);
@@ -72,7 +72,7 @@ public partial class MyClass {
 			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
 			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaSByteArray>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		} finally {
-			if (value != null) {
+			if (native_value != null) {
 				native_value.DisposeUnlessReferenced ();
 			}
 			global::System.GC.KeepAlive (value);

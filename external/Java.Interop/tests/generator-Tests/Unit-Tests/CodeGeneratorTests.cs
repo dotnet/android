@@ -29,7 +29,7 @@ namespace generatortests
 			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			AssertTargetExpected (nameof (WriteKotlinUnsignedTypeMethodsClass), writer.ToString ());
+			AssertOriginalTargetExpected (nameof (WriteKotlinUnsignedTypeMethodsClass), writer.ToString ());
 		}
 
 		[Test]
@@ -52,7 +52,7 @@ namespace generatortests
 			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			AssertTargetExpected (nameof (WriteKotlinUnsignedTypePropertiesClass), writer.ToString ());
+			AssertOriginalTargetExpected (nameof (WriteKotlinUnsignedTypePropertiesClass), writer.ToString ());
 		}
 
 		[Test]
@@ -73,7 +73,7 @@ namespace generatortests
 			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			AssertTargetExpected (nameof (WriteKotlinUnsignedArrayTypeMethodsClass), writer.ToString ());
+			AssertOriginalTargetExpected (nameof (WriteKotlinUnsignedArrayTypeMethodsClass), writer.ToString ());
 		}
 
 		[Test]
@@ -96,7 +96,7 @@ namespace generatortests
 			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			AssertTargetExpected (nameof (WriteKotlinUnsignedArrayTypePropertiesClass), writer.ToString ());
+			AssertOriginalTargetExpected (nameof (WriteKotlinUnsignedArrayTypePropertiesClass), writer.ToString ());
 		}
 
 		[Test]
@@ -212,7 +212,7 @@ namespace generatortests
 			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteDuplicateInterfaceEventArgs), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteDuplicateInterfaceEventArgs), writer.ToString ());
 		}
 
 		[Test]
@@ -259,6 +259,18 @@ namespace generatortests
 	{
 		protected override CodeGenerationTarget Target => CodeGenerationTarget.JavaInterop1;
 		protected override string  CommonDirectoryOverride => "JavaInterop1";
+
+		protected override CodeGenerationOptions CreateOptions ()
+		{
+			var options = new CodeGenerationOptions {
+				CodeGenerationTarget            = Target,
+				SupportDefaultInterfaceMethods	= true,
+				SupportInterfaceConstants       = true,
+				SupportNestedInterfaceTypes     = true,
+				SupportNullableReferenceTypes   = true,
+			};
+			return options;
+		}
 	}
 
 	[TestFixture]
@@ -341,7 +353,7 @@ namespace generatortests
 			generator.WriteClassConstructors (@class, string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassConstructors)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassConstructors), writer.ToString ());
 		}
 
 		[Test]
@@ -351,7 +363,7 @@ namespace generatortests
 
 			generator.WriteClassHandle (@class, string.Empty, false);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassHandle)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassHandle), writer.ToString ());
 		}
 
 		[Test]
@@ -363,7 +375,7 @@ namespace generatortests
 			generator.WriteClassInvoker (@class, string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassInvoker)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassInvoker), writer.ToString ());
 		}
 
 		[Test]
@@ -373,7 +385,7 @@ namespace generatortests
 
 			generator.WriteClassInvokerHandle (@class, string.Empty, "Com.MyPackage.Foo");
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassInvokerHandle)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassInvokerHandle), writer.ToString ());
 		}
 
 		[Test]
@@ -387,7 +399,7 @@ namespace generatortests
 			generator.WriteClassInvokerMembers (@class, string.Empty, members);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassInvokerMembers)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassInvokerMembers), writer.ToString ());
 		}
 
 		[Test]
@@ -401,7 +413,7 @@ namespace generatortests
 			generator.WriteClassMethodInvokers (@class, @class.Methods, string.Empty, members, null);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassMethodInvokers)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassMethodInvokers), writer.ToString ());
 		}
 
 		[Test]
@@ -415,7 +427,7 @@ namespace generatortests
 			generator.WriteClassMethodInvokers (@class, @class.Methods, string.Empty, members, null);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassMethodInvokersWithSkips)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassMethodInvokersWithSkips), writer.ToString ());
 		}
 
 		[Test]
@@ -427,7 +439,7 @@ namespace generatortests
 			generator.WriteClassMethods (@class, string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassMethods)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassMethods), writer.ToString ());
 		}
 
 		[Test]
@@ -439,7 +451,7 @@ namespace generatortests
 			generator.WriteImplementedProperties (@class.Properties, string.Empty, @class.IsFinal, @class);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassProperties)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassProperties), writer.ToString ());
 		}
 
 		[Test]
@@ -453,7 +465,7 @@ namespace generatortests
 			generator.WriteClassPropertyInvokers (@class, @class.Properties, string.Empty, members);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassPropertyInvokers)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassPropertyInvokers), writer.ToString ());
 		}
 
 		[Test]
@@ -467,7 +479,7 @@ namespace generatortests
 			generator.WriteClassPropertyInvokers (@class, @class.Properties, string.Empty, members);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassPropertyInvokersWithSkips)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteClassPropertyInvokersWithSkips), writer.ToString ());
 		}
 
 		[Test]
@@ -480,7 +492,7 @@ namespace generatortests
 			generator.WriteConstructor (ctor, string.Empty, true, @class);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteCtor)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteCtor), writer.ToString ());
 		}
 
 		[Test]
@@ -496,7 +508,7 @@ namespace generatortests
 			generator.WriteConstructor (ctor, string.Empty, true, @class);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteCtorDeprecated)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteCtorDeprecated), writer.ToString ());
 		}
 
 		[Test]
@@ -512,7 +524,7 @@ namespace generatortests
 			generator.WriteConstructor (ctor, string.Empty, true, @class);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteCtorWithStringOverload)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteCtorWithStringOverload), writer.ToString ());
 		}
 
 		[Test]
@@ -558,7 +570,7 @@ namespace generatortests
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldConstant)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteFieldConstant), writer.ToString ());
 		}
 
 		[Test]
@@ -570,7 +582,7 @@ namespace generatortests
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldConstantWithIntValue)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteFieldConstantWithIntValue), writer.ToString ());
 		}
 
 		[Test]
@@ -582,7 +594,7 @@ namespace generatortests
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldConstantWithStringValue)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteFieldConstantWithStringValue), writer.ToString ());
 		}
 
 		[Test]
@@ -594,7 +606,7 @@ namespace generatortests
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteFieldGetBody (field, string.Empty, @class);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldGetBody)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteFieldGetBody), writer.ToString ());
 		}
 
 		[Test]
@@ -604,7 +616,7 @@ namespace generatortests
 
 			generator.WriteFieldIdField (field, string.Empty);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldIdField)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteFieldIdField), writer.ToString ());
 		}
 
 		[Test]
@@ -616,7 +628,7 @@ namespace generatortests
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldInt)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteFieldInt), writer.ToString ());
 		}
 
 		[Test]
@@ -628,7 +640,7 @@ namespace generatortests
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteFieldSetBody (field, string.Empty, @class);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldSetBody)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteFieldSetBody), writer.ToString ());
 		}
 
 		[Test]
@@ -640,7 +652,7 @@ namespace generatortests
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldString)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteFieldString), writer.ToString ());
 		}
 
 		[Test]
@@ -686,7 +698,7 @@ namespace generatortests
 			generator.WriteInterfaceInvoker (iface, string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertTargetExpected (nameof (WriteInterfaceInvoker), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteInterfaceInvoker), writer.ToString ());
 		}
 
 		[Test]
@@ -698,7 +710,7 @@ namespace generatortests
 			generator.WriteInterfaceListenerEvent (iface, string.Empty, "MyName", "MyNameSpec", "MyMethodName", "MyFullDelegateName", true, "MyWrefSuffix", "Add", "Remove");
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfaceListenerEvent), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceListenerEvent), writer.ToString ());
 		}
 
 		[Test]
@@ -710,7 +722,7 @@ namespace generatortests
 			generator.WriteInterfaceListenerEvent (iface, string.Empty, "MyName", "MyNameSpec", "MyMethodName", "MyFullDelegateName", true, "MyWrefSuffix", "AddMyName", "RemoveMyName", true);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfaceListenerEventWithHandlerArgument), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceListenerEventWithHandlerArgument), writer.ToString ());
 		}
 
 		[Test]
@@ -722,7 +734,7 @@ namespace generatortests
 			generator.WriteInterfaceListenerProperty (iface, string.Empty, "MyName", "MyNameSpec", "MyMethodName", "MyConnectorFmt", "MyFullDelegateName");
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfaceListenerProperty), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceListenerProperty), writer.ToString ());
 		}
 
 		[Test]
@@ -736,7 +748,7 @@ namespace generatortests
 			generator.WriteInterfaceMethodInvokers (iface, iface.Methods, string.Empty, members);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfaceMethodInvokers), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceMethodInvokers), writer.ToString ());
 		}
 
 		[Test]
@@ -750,7 +762,7 @@ namespace generatortests
 			generator.WriteInterfaceMethodInvokers (iface, iface.Methods, string.Empty, members);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfaceMethodInvokersWithSkips), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceMethodInvokersWithSkips), writer.ToString ());
 		}
 
 		[Test]
@@ -762,7 +774,7 @@ namespace generatortests
 			generator.WriteInterfaceMethods (iface, string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfaceMethods), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceMethods), writer.ToString ());
 		}
 
 		[Test]
@@ -774,7 +786,7 @@ namespace generatortests
 			generator.WriteInterfaceProperties (iface, string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfaceProperties), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceProperties), writer.ToString ());
 		}
 
 		[Test]
@@ -788,7 +800,7 @@ namespace generatortests
 			generator.WriteInterfacePropertyInvokers (iface, iface.Properties, string.Empty, members);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfacePropertyInvokers), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfacePropertyInvokers), writer.ToString ());
 		}
 
 		[Test]
@@ -802,7 +814,7 @@ namespace generatortests
 			generator.WriteInterfacePropertyInvokers (iface, iface.Properties, string.Empty, members);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfacePropertyInvokersWithSkips), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfacePropertyInvokersWithSkips), writer.ToString ());
 		}
 
 		[Test]
@@ -814,7 +826,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
-			AssertTargetExpected (nameof (WriteMethodAbstractWithVoidReturn), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodAbstractWithVoidReturn), writer.ToString ());
 		}
 
 		[Test]
@@ -826,7 +838,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
-			AssertTargetExpected (nameof (WriteMethodAsyncifiedWithIntReturn), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodAsyncifiedWithIntReturn), writer.ToString ());
 		}
 
 		[Test]
@@ -838,7 +850,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
-			AssertTargetExpected (nameof (WriteMethodAsyncifiedWithVoidReturn), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodAsyncifiedWithVoidReturn), writer.ToString ());
 		}
 
 		[Test]
@@ -850,7 +862,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethodBody (method, string.Empty, @class);
 
-			AssertTargetExpected (nameof (WriteMethodBody), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodBody), writer.ToString ());
 		}
 
 		[Test]
@@ -862,7 +874,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
-			AssertTargetExpected (nameof (WriteMethodFinalWithVoidReturn), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodFinalWithVoidReturn), writer.ToString ());
 		}
 
 		[Test]
@@ -873,7 +885,7 @@ namespace generatortests
 
 			generator.WriteMethodIdField (method, string.Empty);
 
-			AssertTargetExpected (nameof (WriteMethodIdField), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodIdField), writer.ToString ());
 		}
 
 		[Test]
@@ -885,7 +897,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
-			AssertTargetExpected (nameof (WriteMethodProtected), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodProtected), writer.ToString ());
 		}
 
 		[Test]
@@ -897,7 +909,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
-			AssertTargetExpected (nameof (WriteMethodStaticWithVoidReturn), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodStaticWithVoidReturn), writer.ToString ());
 		}
 
 		[Test]
@@ -909,7 +921,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
-			AssertTargetExpected (nameof (WriteMethodWithIntReturn), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodWithIntReturn), writer.ToString ());
 		}
 
 		[Test]
@@ -921,7 +933,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
-			AssertTargetExpected (nameof (WriteMethodWithStringReturn), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteMethodWithStringReturn), writer.ToString ());
 		}
 
 		[Test]
@@ -933,7 +945,7 @@ namespace generatortests
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteMethodWithVoidReturn), writer.ToString ());
 		}
 
 		[Test]
@@ -992,7 +1004,7 @@ namespace generatortests
 			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDeclaration)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteInterfaceDeclaration), writer.ToString ());
 		}
 
 		[Test]
@@ -1002,7 +1014,7 @@ namespace generatortests
 
 			generator.WriteProperty (@class.Properties.First (), @class, string.Empty);
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteProperty)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteProperty), writer.ToString ());
 		}
 	}
 
@@ -1025,7 +1037,7 @@ namespace generatortests
 			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			AssertTargetExpected (nameof (WriteClass), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteClass), writer.ToString ());
 		}
 
 		[Test]
@@ -1050,7 +1062,7 @@ namespace generatortests
 			generator.WriteType (iface, string.Empty, gen_info);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertTargetExpected (nameof (WriteInterface), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteInterface), writer.ToString ());
 		}
 
 		[Test]
@@ -1073,6 +1085,8 @@ namespace generatortests
 			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceEventArgs (iface, iface.Methods [0], string.Empty);
 			generator.Context.ContextTypes.Pop ();
+
+			WriteActualContents (nameof (WriteInterfaceEventArgs), writer.ToString ());
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventArgs)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -1100,6 +1114,8 @@ namespace generatortests
 			generator.WriteInterfaceEventArgs (iface as InterfaceGen, iface.Methods [0], string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
+			WriteActualContents (nameof (WriteInterfaceEventArgsWithParamArray), writer.ToString ());
+
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventArgsWithParamArray)), writer.ToString ().NormalizeLineEndings ());
 		}
 
@@ -1112,7 +1128,7 @@ namespace generatortests
 			generator.WriteInterfaceEventHandler (iface, string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfaceEventHandler), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceEventHandler), writer.ToString ());
 		}
 
 		[Test]
@@ -1124,7 +1140,7 @@ namespace generatortests
 			generator.WriteInterfaceEventHandlerImpl (iface, string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WriteInterfaceEventHandlerImpl), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceEventHandlerImpl), writer.ToString ());
 		}
 
 		[Test]
@@ -1139,7 +1155,7 @@ namespace generatortests
 
 			Assert.AreEqual (1, handlers.Count);
 			Assert.AreEqual ("GetCountForKey", handlers [0]);
-			AssertExpected (nameof (WriteInterfaceEventHandlerImplContent), writer.ToString ());
+			AssertOriginalExpected (nameof (WriteInterfaceEventHandlerImplContent), writer.ToString ());
 		}
 
 		[Test]
@@ -1149,7 +1165,7 @@ namespace generatortests
 
 			generator.WriteParameterListCallArgs (list, string.Empty, false);
 
-			AssertTargetExpected (nameof (WriteParameterListCallArgs), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteParameterListCallArgs), writer.ToString ());
 		}
 
 		[Test]
@@ -1159,7 +1175,7 @@ namespace generatortests
 
 			generator.WriteParameterListCallArgs (list, string.Empty, true);
 
-			AssertTargetExpected (nameof (WriteParameterListCallArgsForInvoker), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteParameterListCallArgsForInvoker), writer.ToString ());
 		}
 
 		[Test]
@@ -1169,7 +1185,7 @@ namespace generatortests
 
 			generator.WritePropertyAbstractDeclaration (@class.Properties.First (), string.Empty, @class);
 
-			AssertExpected (nameof (WritePropertyAbstractDeclaration), writer.ToString ());
+			AssertOriginalExpected (nameof (WritePropertyAbstractDeclaration), writer.ToString ());
 		}
 
 		[Test]
@@ -1179,7 +1195,7 @@ namespace generatortests
 
 			generator.WritePropertyCallbacks (@class.Properties.First (), string.Empty, @class);
 
-			AssertExpected (nameof (WritePropertyCallbacks), writer.ToString ());
+			AssertOriginalExpected (nameof (WritePropertyCallbacks), writer.ToString ());
 		}
 
 		[Test]
@@ -1189,7 +1205,7 @@ namespace generatortests
 
 			generator.WritePropertyDeclaration (@class.Properties.First (), string.Empty, @class, "ObjectAdapter");
 
-			AssertExpected (nameof (WritePropertyDeclaration), writer.ToString ());
+			AssertOriginalExpected (nameof (WritePropertyDeclaration), writer.ToString ());
 		}
 
 		[Test]
@@ -1199,7 +1215,7 @@ namespace generatortests
 
 			generator.WritePropertyStringVariant (@class.Properties.First (), string.Empty);
 
-			AssertExpected (nameof (WritePropertyStringVariant), writer.ToString ());
+			AssertOriginalExpected (nameof (WritePropertyStringVariant), writer.ToString ());
 		}
 
 		[Test]
@@ -1211,7 +1227,7 @@ namespace generatortests
 			generator.WritePropertyInvoker (@class.Properties.First (), string.Empty, @class);
 			generator.Context.ContextTypes.Pop ();
 
-			AssertExpected (nameof (WritePropertyInvoker), writer.ToString ());
+			AssertOriginalExpected (nameof (WritePropertyInvoker), writer.ToString ());
 		}
 
 		[Test]
@@ -1296,7 +1312,9 @@ namespace generatortests
 			</api>");
 
 			var declIface = gens.OfType<InterfaceGen> ().Single (c => c.Name == "IFlowIterator");
-			var declClass = declIface.NestedTypes.OfType<ClassGen> ().Single (c => c.Name == "FlowIteratorRangeIterator");
+			var declClass = options.SupportNestedInterfaceTypes
+				? declIface.NestedTypes.OfType<ClassGen> ().Single (c => c.Name == "RangeIterator")
+				: declIface.NestedTypes.OfType<ClassGen> ().Single (c => c.Name == "FlowIteratorRangeIterator");
 			var method = declClass.Methods.Single ();
 
 			var bmad = new BoundMethodAbstractDeclaration (declClass, method, options, null);
@@ -1304,7 +1322,12 @@ namespace generatortests
 
 			bmad.Write (source_writer);
 
-			var expected = @"Java.Lang.Object Com.Example.FlowIteratorRangeIterator.Next ()
+			var expected = options.SupportNestedInterfaceTypes
+				? @"Java.Lang.Object Com.Example.IFlowIterator.RangeIterator.Next ()
+					{
+					  throw new NotImplementedException ();
+					}"
+				: @"Java.Lang.Object Com.Example.FlowIteratorRangeIterator.Next ()
 					{
 					  throw new NotImplementedException ();
 					}";

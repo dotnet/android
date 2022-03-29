@@ -38,7 +38,7 @@ namespace MonoDroid.Generation {
 		public string FullName {
 			get {
 				if (!is_params && target == CodeGenerationTarget.JavaInterop1) {
-					return GetJavaInterop1ParameterType ();
+					return GetJavaInterop1MarshalType ();
 				}
 				return (is_params ? "params " : String.Empty) + ElementType + "[]";
 			}
@@ -135,14 +135,14 @@ namespace MonoDroid.Generation {
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				if (IsParams) {
 					return new[]{
-						$"if ({managed_name} != null) {{",
-						$"\t{native_name}.CopyTo ({managed_name}, 0);",
+						$"if ({native_name} != null) {{",
+						$"\t{native_name}.CopyTo ({managed_name}!, 0);",
 						$"\t{native_name}.Dispose ();",
 						$"}}",
 					};
 				}
 				return new[]{
-					$"if ({managed_name} != null) {{",
+					$"if ({native_name} != null) {{",
 					$"\t{native_name}.DisposeUnlessReferenced ();",
 					$"}}",
 				};
@@ -174,26 +174,6 @@ namespace MonoDroid.Generation {
 
 		public bool NeedsPrep { get { return true; } }
 
-		string GetJavaInterop1ParameterType ()
-		{
-			var typeParam = ElementType switch {
-				"string"    => "string",
-				_           => $"global::{ElementType}",
-			};
-			return sym.JniName switch {
-				"B" => "System.Collections.Generic.IList<SByte>",
-				"C" => "System.Collections.Generic.IList<Char>",
-				"D" => "System.Collections.Generic.IList<Double>",
-				"F" => "System.Collections.Generic.IList<Single>",
-				"I" => "System.Collections.Generic.IList<Int32>",
-				"J" => "System.Collections.Generic.IList<Int64>",
-				"S" => "System.Collections.Generic.IList<Int16>",
-				"V" => throw new InvalidOperationException ("`void` cannot be used as an array type."),
-				"Z" => "System.Collections.Generic.IList<Boolean>",
-				_   => $"System.Collections.Generic.IList<{typeParam}>",
-			};
-		}
-
 		string GetJavaInterop1MarshalMethod()
 		{
 			var typeParam = ElementType switch {
@@ -216,10 +196,6 @@ namespace MonoDroid.Generation {
 
 		string GetJavaInterop1MarshalType ()
 		{
-			var typeParam = ElementType switch {
-				"string"    => "string",
-				_           => $"global::{ElementType}",
-			};
 			return sym.JniName switch {
 				"B" => "Java.Interop.JavaSByteArray",
 				"C" => "Java.Interop.JavaCharArray",
@@ -230,7 +206,7 @@ namespace MonoDroid.Generation {
 				"S" => "Java.Interop.JavaInt16Array",
 				"V" => throw new InvalidOperationException ("`void` cannot be used as an array type."),
 				"Z" => "Java.Interop.JavaBooleanArray",
-				_   => $"Java.Interop.JavaObjectArray<{typeParam}>",
+				_   => $"Java.Interop.JavaObjectArray<{ElementType}>",
 			};
 		}
 	}

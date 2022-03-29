@@ -197,7 +197,16 @@ namespace MonoDroid.Generation {
 			}
 			key = TypeNameUtilities.FilterPrimitiveFullName (key) ?? key;
 
-			switch (key) {
+			if (target == CodeGenerationTarget.JavaInterop1) {
+				if (key == "java.lang.CharSequence") {
+					return CreateArray (char_seq, arrayRank, has_ellipsis);
+				}
+				if (key == "java.lang.String") {
+					return CreateArray (string_sym, arrayRank, has_ellipsis);
+				}
+			}
+
+			switch (this.target != CodeGenerationTarget.JavaInterop1 ? key : null) {
 			case "android.content.res.XmlResourceParser":
 				return CreateArray (xmlresourceparser_sym, arrayRank, has_ellipsis);
 			case "org.xmlpull.v1.XmlPullParser":

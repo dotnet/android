@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
+using Xamarin.Android.Binder;
 
 namespace generator.SourceWriters
 {
@@ -26,10 +27,12 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
 
+			string arrayConvertMethod = opt.GetStringArrayToCharSequenceArrayMethodName ();
+
 			HasGet = true;
 
 			if (is_array)
-				GetBody.Add ($"return CharSequence.ArrayToStringArray ({property.AdjustedName});");
+				GetBody.Add ($"return {arrayConvertMethod} ({property.AdjustedName});");
 			else
 				GetBody.Add ($"return {property.AdjustedName} == null ? null : {property.AdjustedName}.ToString ();");
 
@@ -39,7 +42,7 @@ namespace generator.SourceWriters
 			HasSet = true;
 
 			if (is_array) {
-				SetBody.Add ($"global::Java.Lang.ICharSequence[] jlsa = CharSequence.ArrayFromStringArray (value);");
+				SetBody.Add ($"global::Java.Lang.ICharSequence[] jlsa = {arrayConvertMethod} (value);");
 				SetBody.Add ($"{property.AdjustedName} = jlsa;");
 				SetBody.Add ($"foreach (var jls in jlsa) if (jls != null) jls.Dispose ();");
 			} else {

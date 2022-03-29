@@ -44,7 +44,7 @@
     <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
       <Generator>"$(GeneratorPath)"</Generator>
-      <_GenFlags>--public</_GenFlags>
+      <_GenFlags>--public --global</_GenFlags>
       <_Out>-o "$(IntermediateOutputPath)mcw"</_Out>
       <_Codegen>--codegen-target=JavaInterop1</_Codegen>
       <_Fixup>--fixup=Transforms/Metadata.xml</_Fixup>

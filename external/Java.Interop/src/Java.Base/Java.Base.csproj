@@ -4,7 +4,8 @@
     <TargetFrameworks>net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);8764</NoWarn>
+    <!-- TODO: CS0108 is due to e.g. interfaces re-abstracting default interface methods -->
+    <NoWarn>$(NoWarn);8764;CS0108</NoWarn>
     <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
 

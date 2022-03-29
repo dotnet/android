@@ -71,7 +71,7 @@ namespace generatortests
 			var references = referencePaths.Select (p => MetadataReference.CreateFromFile (p)).ToArray ();
 
 			string testCommandLine =
-				$"csc \"-out:{Path.GetFileName (assemblyFileName)}\" " +
+				$"csc -noconfig -nostdlib \"-out:{Path.GetFileName (assemblyFileName)}\" " +
 				$"-unsafe -t:library " +
 				string.Join (" ", preprocessorSymbols.Select (p => $"\"-define:{p}\"")) + " " +
 				string.Join (" ", referencePaths.Select (p => $"\"-r:{p}\"")) + " " +
