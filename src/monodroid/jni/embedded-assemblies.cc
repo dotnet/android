@@ -1131,7 +1131,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 
 	constexpr uint32_t INVALID_TYPE_INDEX = std::numeric_limits<uint32_t>::max ();
 	for (size_t i = 0; i < module.entry_count; i++) {
-		cur = &module.java_to_managed[i];
+		cur = const_cast<TypeMapEntry*> (&module.java_to_managed[i]);
 		cur->from = reinterpret_cast<char*>(java_pos);
 
 		uint32_t idx;
@@ -1146,7 +1146,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 		}
 		java_pos += java_entry_size;
 
-		cur = &module.managed_to_java[i];
+		cur = const_cast<TypeMapEntry*>(&module.managed_to_java[i]);
 		cur->from = reinterpret_cast<char*>(managed_pos);
 
 		memcpy (&idx, managed_pos + header.managed_name_width, sizeof (idx));

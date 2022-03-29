@@ -17,6 +17,7 @@
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\bin\i686-linux-android-ld" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\bin\i686-linux-android-strip" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\bin\ld" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\bin\llc" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\bin\llvm-mc" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\bin\llvm-strip" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\bin\x86_64-linux-android-as" />

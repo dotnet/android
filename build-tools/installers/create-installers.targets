@@ -324,6 +324,7 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\binutils\bin\as.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\binutils\bin\ld.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\binutils\bin\llc.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\binutils\bin\llvm-mc.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\binutils\bin\llvm-strip.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\binutils\bin\aarch64-linux-android-as.cmd" />

@@ -227,6 +227,7 @@ namespace Xamarin.Android.Prepare
 				// Unprefixed tools
 				new NDKTool (name: "as"),
 				new NDKTool (name: "ld"),
+				new NDKTool (name: "llc"),
 				new NDKTool (name: "llvm-mc"),
 				new NDKTool (name: "llvm-strip"),
 			};

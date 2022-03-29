@@ -48,8 +48,8 @@ struct TypeMap
 	uint32_t             entry_count;
 	char                *assembly_name;
 	uint8_t             *data;
-	TypeMapEntry        *java_to_managed;
-	TypeMapEntry        *managed_to_java;
+	const TypeMapEntry  *java_to_managed;
+	const TypeMapEntry  *managed_to_java;
 };
 #else
 struct TypeMapModuleEntry
@@ -63,9 +63,9 @@ struct TypeMapModule
 	uint8_t                   module_uuid[16];
 	uint32_t                  entry_count;
 	uint32_t                  duplicate_count;
-	TypeMapModuleEntry       *map;
-	TypeMapModuleEntry       *duplicate_map;
-	char                     *assembly_name;
+	TypeMapModuleEntry const *map;
+	TypeMapModuleEntry const *duplicate_map;
+	char const               *assembly_name;
 	MonoImage                *image;
 	uint32_t                  java_name_width;
 	uint8_t                  *java_map;
@@ -228,28 +228,28 @@ struct DSOCacheEntry
 	void          *handle;
 };
 
-MONO_API uint64_t format_tag;
+MONO_API MONO_API_EXPORT const uint64_t format_tag;
 
 #if defined (DEBUG) || !defined (ANDROID)
-MONO_API const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
+MONO_API MONO_API_EXPORT const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 #else
-MONO_API const uint32_t map_module_count;
-MONO_API const uint32_t java_type_count;
-MONO_API const uint32_t java_name_width;
-MONO_API const TypeMapModule map_modules[];
-MONO_API const TypeMapJava map_java[];
+MONO_API MONO_API_EXPORT const uint32_t map_module_count;
+MONO_API MONO_API_EXPORT const uint32_t java_type_count;
+MONO_API MONO_API_EXPORT const uint32_t java_name_width;
+MONO_API MONO_API_EXPORT const TypeMapModule map_modules[];
+MONO_API MONO_API_EXPORT const TypeMapJava map_java[];
 #endif
 
-MONO_API CompressedAssemblies compressed_assemblies;
-MONO_API ApplicationConfig application_config;
-MONO_API const char* app_environment_variables[];
-MONO_API const char* app_system_properties[];
+MONO_API MONO_API_EXPORT CompressedAssemblies compressed_assemblies;
+MONO_API MONO_API_EXPORT const ApplicationConfig application_config;
+MONO_API MONO_API_EXPORT const char* const app_environment_variables[];
+MONO_API MONO_API_EXPORT const char* const app_system_properties[];
 
-MONO_API const char* mono_aot_mode_name;
+MONO_API MONO_API_EXPORT const char* const mono_aot_mode_name;
 
-MONO_API XamarinAndroidBundledAssembly bundled_assemblies[];
-MONO_API AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
-MONO_API AssemblyStoreRuntimeData assembly_stores[];
+MONO_API MONO_API_EXPORT XamarinAndroidBundledAssembly bundled_assemblies[];
+MONO_API MONO_API_EXPORT AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
+MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_stores[];
 
-MONO_API DSOCacheEntry dso_cache[];
+MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
 #endif // __XAMARIN_ANDROID_TYPEMAP_H
