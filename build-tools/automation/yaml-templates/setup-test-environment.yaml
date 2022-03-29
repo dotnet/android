@@ -60,8 +60,9 @@ steps:
   displayName: restore NUnit.Console
   inputs:
     command: restore
-    projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj
-    restoreArguments: -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android.Build.Tests.binlog
+    projects: src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj
+    restoreArguments: -bl:bin/Test${{ parameters.configuration }}/restore-Xamarin.Android.Build.Tests.binlog
+    workingDirectory: ${{ parameters.xaSourcePath }}
 
 - task: DotNetCoreCLI@2
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
