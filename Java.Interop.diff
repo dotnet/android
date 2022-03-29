@@ -1,0 +1,283 @@
+diff --git a/src/Java.Interop.NamingCustomAttributes/Android.Runtime/RegisterAttribute.cs b/src/Java.Interop.NamingCustomAttributes/Android.Runtime/RegisterAttribute.cs
+index ec1ea955..7f8e1a1b 100644
+--- a/src/Java.Interop.NamingCustomAttributes/Android.Runtime/RegisterAttribute.cs
++++ b/src/Java.Interop.NamingCustomAttributes/Android.Runtime/RegisterAttribute.cs
+@@ -1,5 +1,7 @@
+ using System;
+ 
++using Mono.Cecil;
++
+ namespace Android.Runtime {
+ 
+ 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Property)]
+@@ -23,7 +25,21 @@ namespace Android.Runtime {
+ 			this.connector = connector;
+ 			this.signature = signature;
+ 		}
++#if HAVE_CECIL
++		public RegisterAttribute (string name, CustomAttribute originAttribute)
++			: this (name)
++		{
++			OriginAttribute = originAttribute;
++		}
++
++		public RegisterAttribute (string name, string signature, string connector, CustomAttribute originAttribute)
++			: this (name, signature, connector)
++		{
++			OriginAttribute = originAttribute;
++		}
+ 
++		public CustomAttribute OriginAttribute { get; }
++#endif
+ 		public string Connector {
+ 			get { return connector; }
+ 			set { connector = value; }
+diff --git a/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs b/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs
+index d30bce4a..afde1e48 100644
+--- a/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs
++++ b/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs
+@@ -25,40 +25,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 		JavaInterop1,
+ 	}
+ 
+-	public class OverriddenMethodDescriptor
++	public abstract class JavaCallableMethodClassifier
+ 	{
+-		static readonly char[] methodDescSplitChars = new char[] { ':' };
+-
+-		public string JavaPackageName { get; }
+-		public string NativeName      { get; }
+-		public string JniSignature    { get; }
+-		public string Connector       { get; }
+-		public string ManagedTypeName { get; }
+-		public string OriginalDescString  { get; }
+-
+-		public OverriddenMethodDescriptor (string javaPackageName, string methodDescription, string fallbackManagedTypeName)
+-		{
+-			OriginalDescString = methodDescription;
+-			JavaPackageName = javaPackageName;
+-			string[] parts = methodDescription.Split (methodDescSplitChars, 4);
+-
+-			if (parts.Length < 2) {
+-				throw new InvalidOperationException ($"Unexpected format for method description. Expected at least 2 parts, got {parts.Length} from: '{methodDescription}'");
+-			}
+-
+-			NativeName = parts[0];
+-			JniSignature = parts[1];
+-			if (parts.Length > 2) {
+-				Connector = parts[2];
+-				if (parts.Length > 3) {
+-					ManagedTypeName = TypeDefinitionRocks.CecilTypeNameToReflectionTypeName (parts[3]);
+-				}
+-			}
+-
+-			if (String.IsNullOrEmpty (ManagedTypeName)) {
+-				ManagedTypeName = fallbackManagedTypeName;
+-			}
+-		}
++		public abstract bool ShouldBeDynamicallyRegistered (MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute);
+ 	}
+ 
+ 	 public class JavaCallableWrapperGenerator {
+@@ -95,21 +64,22 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 		List<Signature> methods = new List<Signature> ();
+ 		List<Signature> ctors   = new List<Signature> ();
+ 		List<JavaCallableWrapperGenerator> children;
+-		List<OverriddenMethodDescriptor> overriddenMethodDescriptors;
++
+ 		readonly IMetadataResolver cache;
++		readonly JavaCallableMethodClassifier methodClassifier;
+ 
+ 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+ 		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object []> log)
+ 			: this (type, null, log, resolver: null)
+ 		{ }
+ 
+-		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, TypeDefinitionCache cache)
+-			: this (type, log, (IMetadataResolver) cache)
++		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, TypeDefinitionCache cache, JavaCallableMethodClassifier methodClassifier = null)
++			: this (type, log, (IMetadataResolver) cache, methodClassifier)
+ 		{
+ 		}
+ 
+-		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, IMetadataResolver resolver)
+-			: this (type, null, log, resolver)
++		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, IMetadataResolver resolver, JavaCallableMethodClassifier methodClassifier = null)
++			: this (type, null, log, resolver, methodClassifier)
+ 		{
+ 			if (type.HasNestedTypes) {
+ 				children = new List<JavaCallableWrapperGenerator> ();
+@@ -117,7 +87,6 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 			}
+ 		}
+ 
+-		public  IList<OverriddenMethodDescriptor> OverriddenMethodDescriptors => overriddenMethodDescriptors;
+ 		public  string          ApplicationJavaClass            { get; set; }
+ 		public  JavaPeerStyle   CodeGenerationTarget            { get; set; }
+ 
+@@ -125,6 +94,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 
+ 		public bool HasExport { get; private set; }
+ 
++		// If there are no methods, we need to generate "empty" registration because of backward compatibility
++		public bool HasDynamicallyRegisteredMethods => methods.Count == 0 || methods.Any ((Signature sig) => sig.IsDynamicallyRegistered);
++
+ 		/// <summary>
+ 		/// The Java source code to be included in Instrumentation.onCreate
+ 		///
+@@ -152,8 +124,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 			HasExport |= children.Any (t => t.HasExport);
+ 		}
+ 
+-		JavaCallableWrapperGenerator (TypeDefinition type, string outerType, Action<string, object[]> log, IMetadataResolver resolver)
++		JavaCallableWrapperGenerator (TypeDefinition type, string outerType, Action<string, object[]> log, IMetadataResolver resolver, JavaCallableMethodClassifier methodClassifier = null)
+ 		{
++			this.methodClassifier = methodClassifier;
+ 			this.type = type;
+ 			this.log = log;
+ 			this.cache = resolver ?? new TypeDefinitionCache ();
+@@ -366,12 +339,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 			// attr.Resolve ();
+ 			RegisterAttribute r = null;
+ 			if (attr.ConstructorArguments.Count == 1)
+-				r = new RegisterAttribute ((string) attr.ConstructorArguments [0].Value);
++				r = new RegisterAttribute ((string) attr.ConstructorArguments [0].Value, attr);
+ 			else if (attr.ConstructorArguments.Count == 3)
+ 				r = new RegisterAttribute (
+ 						(string) attr.ConstructorArguments [0].Value,
+ 						(string) attr.ConstructorArguments [1].Value,
+-						(string) attr.ConstructorArguments [2].Value);
++						(string) attr.ConstructorArguments [2].Value,
++						attr);
+ 			if (r != null) {
+ 				var v = attr.Properties.FirstOrDefault (p => p.Name == "DoNotGenerateAcw");
+ 				r.DoNotGenerateAcw = v.Name == null ? false : (bool) v.Argument.Value;
+@@ -384,7 +358,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 			// attr.Resolve ();
+ 			RegisterAttribute r = null;
+ 			if (attr.ConstructorArguments.Count == 1)
+-				r = new RegisterAttribute ((string) attr.ConstructorArguments [0].Value);
++				r = new RegisterAttribute ((string) attr.ConstructorArguments [0].Value, attr);
+ 			if (r != null) {
+ 				var v = attr.Properties.FirstOrDefault (p => p.Name == "GenerateJavaPeer");
+ 				if (v.Name == null) {
+@@ -403,7 +377,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 			if (attr.ConstructorArguments.Count == 2)
+ 				r = new RegisterAttribute ((string) attr.ConstructorArguments [0].Value,
+ 					(string) attr.ConstructorArguments [1].Value,
+-					"");
++				        "",
++				        attr);
+ 			return r;
+ 		}
+ 
+@@ -467,7 +442,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 					if (attr.Name.Contains ("-impl") || (attr.Name.Length > 7 && attr.Name[attr.Name.Length - 8] == '-'))
+ 						Diagnostic.Error (4217, LookupSource (implementedMethod), Localization.Resources.JavaCallableWrappers_XA4217, attr.Name);
+ 
+-					var msig = new Signature (implementedMethod, attr);
++					bool shouldBeDynamicallyRegistered = methodClassifier?.ShouldBeDynamicallyRegistered (registeredMethod, implementedMethod, attr.OriginAttribute) ?? true;
++					var msig = new Signature (implementedMethod, attr, shouldBeDynamicallyRegistered);
+ 					if (!registeredMethod.IsConstructor && !methods.Any (m => m.Name == msig.Name && m.Params == msig.Params))
+ 						methods.Add (msig);
+ 				}
+@@ -542,21 +518,38 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 
+ 			GenerateHeader (writer);
+ 
+-			writer.WriteLine ("/** @hide */");
+-			writer.WriteLine ("\tpublic static final String __md_methods;");
+-			if (children != null) {
+-				foreach (var i in Enumerable.Range (1, children.Count))
+-					writer.WriteLine ("\tstatic final String __md_{0}_methods;", i);
++			bool needCtor = false;
++			if (HasDynamicallyRegisteredMethods) {
++				needCtor = true;
++				writer.WriteLine ("/** @hide */");
++				writer.WriteLine ("\tpublic static final String __md_methods;");
+ 			}
+-			writer.WriteLine ("\tstatic {");
+-			GenerateRegisterType (writer, this, "__md_methods");
++
+ 			if (children != null) {
+-				for (int i = 0; i < children.Count; ++i) {
+-					string methods = string.Format ("__md_{0}_methods", i + 1);
+-					GenerateRegisterType (writer, children [i], methods);
++				for (int i = 0; i < children.Count; i++) {
++					if (!children[i].HasDynamicallyRegisteredMethods) {
++						continue;
++					}
++					needCtor = true;
++					writer.WriteLine ("\tstatic final String __md_{0}_methods;", i + 1);
++				}
++			}
++
++			if (needCtor) {
++				writer.WriteLine ("\tstatic {");
++
++				if (HasDynamicallyRegisteredMethods) {
++					GenerateRegisterType (writer, this, "__md_methods");
++				}
++
++				if (children != null) {
++					for (int i = 0; i < children.Count; ++i) {
++						string methods = string.Format ("__md_{0}_methods", i + 1);
++						GenerateRegisterType (writer, children [i], methods);
++					}
+ 				}
++				writer.WriteLine ("\t}");
+ 			}
+-			writer.WriteLine ("\t}");
+ 
+ 			GenerateBody (writer);
+ 
+@@ -710,16 +703,19 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 
+ 		void GenerateRegisterType (TextWriter sw, JavaCallableWrapperGenerator self, string field)
+ 		{
+-			if (overriddenMethodDescriptors == null) {
+-				overriddenMethodDescriptors = new List<OverriddenMethodDescriptor> ();
++			string managedTypeName = self.type.GetPartialAssemblyQualifiedName (cache);
++			string javaTypeName = $"{package}.{name}";
++
++			if (!self.HasDynamicallyRegisteredMethods) {
++				return;
+ 			}
+ 
+ 			sw.WriteLine ("\t\t{0} = ", field);
+-			string managedTypeName = self.type.GetPartialAssemblyQualifiedName (cache);
+-			string javaTypeName = $"{package}.{name}";
++
+ 			foreach (Signature method in self.methods) {
+-				sw.WriteLine ("\t\t\t\"{0}\\n\" +", method.Method);
+-				overriddenMethodDescriptors.Add (new OverriddenMethodDescriptor (javaTypeName, method.Method, managedTypeName));
++				if (method.IsDynamicallyRegistered) {
++					sw.WriteLine ("\t\t\t\"{0}\\n\" +", method.Method);
++				}
+ 			}
+ 			sw.WriteLine ("\t\t\t\"\";");
+ 			if (CannotRegisterInStaticConstructor (self.type))
+@@ -772,12 +768,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 
+ 		class Signature {
+ 
+-			public Signature (MethodDefinition method, RegisterAttribute register) : this (method, register, null, null) {}
++			public Signature (MethodDefinition method, RegisterAttribute register, bool shouldBeDynamicallyRegistered = true) : this (method, register, null, null, shouldBeDynamicallyRegistered) {}
+ 
+-			public Signature (MethodDefinition method, RegisterAttribute register, string managedParameters, string outerType)
++			public Signature (MethodDefinition method, RegisterAttribute register, string managedParameters, string outerType, bool shouldBeDynamicallyRegistered = true)
+ 				: this (register.Name, register.Signature, register.Connector, managedParameters, outerType, null)
+ 			{
+ 				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes);
++				IsDynamicallyRegistered = shouldBeDynamicallyRegistered;
+ 			}
+ 
+ 			public Signature (MethodDefinition method, ExportAttribute export, IMetadataResolver cache)
+@@ -880,6 +877,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 			public readonly string Method;
+ 			public readonly bool IsExport;
+ 			public readonly bool IsStatic;
++			public readonly bool IsDynamicallyRegistered = true;
+ 			public readonly string [] ThrownTypeNames;
+ 			public readonly string Annotations;
+ 		}

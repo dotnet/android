@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 
 using Java.Interop.Tools.TypeNameMappings;
@@ -17,6 +18,12 @@ namespace Xamarin.Android.Tasks
 {
 	class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
 	{
+		sealed class MarshalMethodInfo
+		{
+			public MarshalMethodEntry Method { get; }
+			public string NativeSymbolName   { get; }
+		}
+
 		// This is here only to generate strongly-typed IR
 		internal sealed class MonoClass
 		{}
@@ -29,15 +36,17 @@ namespace Xamarin.Android.Tasks
 			MonoClass  klass;
 		};
 
-		public ICollection<string> UniqueAssemblyNames { get; set; }
-		public int NumberOfAssembliesInApk { get; set; }
-		public List<OverriddenMethodDescriptor> OverriddenMethodDescriptors { get; set; }
+		public ICollection<string> UniqueAssemblyNames                       { get; set; }
+		public int NumberOfAssembliesInApk                                   { get; set; }
+		public IDictionary<string, MarshalMethodEntry> MarshalMethods        { get; set; }
 
 		StructureInfo<TypeMappingReleaseNativeAssemblyGenerator.MonoImage> monoImage;
 		StructureInfo<MonoClass> monoClass;
 
 		public override void Init ()
-		{}
+		{
+			Console.WriteLine ($"Marshal methods count: {MarshalMethods?.Count ?? 0}");
+		}
 
 		protected override void MapStructures (LlvmIrGenerator generator)
 		{
