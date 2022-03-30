@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProductVersion>12.2.0</ProductVersion>
+    <ProductVersion>12.2.4</ProductVersion>
     <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
          Rules:
          * Major/Minor match Android stable API level, such as 30.0 for API 30.
