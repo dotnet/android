@@ -24,22 +24,21 @@ jobs:
   - checkout: none
 
   - powershell: |
-      $json = @"
-      {
-          "triggeringbuild": {
-              "id": "$(Build.TriggeredBy.BuildId)",
-              "pipeline": "$(Build.TriggeredBy.DefinitionId)",
-              "project": "$(Build.TriggeredBy.ProjectID)"
+      $triggeringBuild = @{
+          "triggeringBuild" = @{
+              "id" = "$(Build.TriggeredBy.BuildId)"
+              "pipeline" = "$(Build.TriggeredBy.DefinitionId)"
+              "project" = "$(Build.TriggeredBy.ProjectID)"
           }
       }
-      "@
+      $json = $triggeringBuild | ConvertTo-Json
       New-Item -Path $(Build.StagingDirectory) -Name triggering-build.json -ItemType file -Value $json -Force
       $jsonContent = Get-Content "$(Build.StagingDirectory)\triggering-build.json" | ConvertFrom-Json
-      Write-Host Triggering Build Info: $jsonContent.triggeringbuild.project - $jsonContent.triggeringbuild.pipeline - $jsonContent.triggeringbuild.id
+      Write-Host Triggering Build Info: $jsonContent.triggeringBuild.project - $jsonContent.triggeringBuild.pipeline - $jsonContent.triggeringBuild.id
     displayName: write triggering-build.json
 
   - task: PublishPipelineArtifact@1
-    displayName: upload triggering-build.json
+    displayName: upload triggering-build-info
     inputs:
-      artifactName: triggering-build.json
+      artifactName: triggering-build-info
       targetPath: $(Build.StagingDirectory)\triggering-build.json
