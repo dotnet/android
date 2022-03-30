@@ -76,7 +76,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
 				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 				Assert.IsTrue (app_config.mono_components_mask == expectedMask, "Expected Mono Components mask 0x{expectedMask:x}, got 0x{app_config.mono_components_mask:x}");
@@ -126,13 +126,13 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
 				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
 				if (aot) {
 					foreach (var env in envFiles) {
-						StringAssert.Contains ("libaot-Mono.Android.dll.so", File.ReadAllText (env));
+						StringAssert.Contains ("libaot-Mono.Android.dll.so", File.ReadAllText (env.Path));
 					}
 				}
 

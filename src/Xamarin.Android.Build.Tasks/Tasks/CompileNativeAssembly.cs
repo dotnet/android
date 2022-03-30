@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tasks
 		public bool DebugBuild { get; set; }
 
 		[Required]
-		public string WorkingDirectory { get; set; }
+		public new string WorkingDirectory { get; set; }
 
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
@@ -57,7 +57,7 @@ namespace Xamarin.Android.Tasks
 			};
 
 			string assemblerName = Path.GetFileName (config.AssemblerPath);
-			LogDebugMessage ($"[Native Assembler] {psi.FileName} {psi.Arguments}");
+			LogDebugMessage ($"[LLVM llc] {psi.FileName} {psi.Arguments}");
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (s, e) => {
 					if (e.Data != null)
@@ -95,61 +95,26 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<Config> GetAssemblerConfigs ()
 		{
+			const string assemblerOptions =
+				"-O2 " +
+				"--debugger-tune=lldb " + // NDK uses lldb now
+				"--debugify-level=location+variables " +
+				"--fatal-warnings " +
+				"--filetype=obj " +
+				"--relocation-model=pic";
+			string llcPath = Path.Combine (AndroidBinUtilsDirectory, "llc");
+
 			foreach (ITaskItem item in Sources) {
-				string abi = item.GetMetadata ("abi")?.ToLowerInvariant ();
-				string prefix = String.Empty;
-				AndroidTargetArch arch;
-
-				switch (abi) {
-					case "armeabi-v7a":
-						prefix = Path.Combine (AndroidBinUtilsDirectory, "arm-linux-androideabi");
-						arch = AndroidTargetArch.Arm;
-						break;
-
-					case "arm64":
-					case "arm64-v8a":
-					case "aarch64":
-						prefix = Path.Combine (AndroidBinUtilsDirectory, "aarch64-linux-android");
-						arch = AndroidTargetArch.Arm64;
-						break;
-
-					case "x86":
-						prefix = Path.Combine (AndroidBinUtilsDirectory, "i686-linux-android");
-						arch = AndroidTargetArch.X86;
-						break;
-
-					case "x86_64":
-						prefix = Path.Combine (AndroidBinUtilsDirectory, "x86_64-linux-android");
-						arch = AndroidTargetArch.X86_64;
-						break;
-
-					default:
-						throw new NotSupportedException ($"Unsupported Android target architecture ABI: {abi}");
-				}
-
-				// We don't need the directory since our WorkingDirectory is (and must be) where all the
-				// sources are (because of the typemap.inc file being included by the other sources with
-				// a relative path of `.`)
+				// We don't need the directory since our WorkingDirectory is where all the sources are
 				string sourceFile = Path.GetFileName (item.ItemSpec);
-				var assemblerOptions = new List<string> {
-					"--warn",
-					"-o",
-					QuoteFileName (sourceFile.Replace (".s", ".o"))
-				};
-
-				if (DebugBuild)
-					assemblerOptions.Add ("-g");
-
-				assemblerOptions.Add (QuoteFileName (sourceFile));
-
-				string baseExecutablePath = $"{prefix}-as";
-				string executableDir = Path.GetDirectoryName (baseExecutablePath);
-				string executableName = MonoAndroidHelper.GetExecutablePath (executableDir, Path.GetFileName (baseExecutablePath));
+				string outputFile = QuoteFileName (sourceFile.Replace (".ll", ".o"));
+				string executableDir = Path.GetDirectoryName (llcPath);
+				string executableName = MonoAndroidHelper.GetExecutablePath (executableDir, Path.GetFileName (llcPath));
 
 				yield return new Config {
 					InputSource = item.ItemSpec,
 					AssemblerPath = Path.Combine (executableDir, executableName),
-					AssemblerOptions = String.Join (" ", assemblerOptions),
+					AssemblerOptions = $"{assemblerOptions} -o={outputFile} {QuoteFileName (sourceFile)}",
 				};
 			}
 		}

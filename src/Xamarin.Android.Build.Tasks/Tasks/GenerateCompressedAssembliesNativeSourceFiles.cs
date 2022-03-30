@@ -74,16 +74,18 @@ namespace Xamarin.Android.Tasks
 
 			void Generate (IDictionary<string, CompressedAssemblyInfo> dict)
 			{
+				var llvmAsmgen = new CompressedAssembliesNativeAssemblyGenerator (dict);
+				llvmAsmgen.Init ();
+
 				foreach (string abi in SupportedAbis) {
 					string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"compressed_assemblies.{abi.ToLowerInvariant ()}");
-					string asmFilePath = $"{baseAsmFilePath}.s";
-					var asmgen = new CompressedAssembliesNativeAssemblyGenerator (GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), dict, baseAsmFilePath);
+					string llvmIrFilePath = $"{baseAsmFilePath}.ll";
 
 					using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-						asmgen.Write (sw, asmFilePath);
+						llvmAsmgen.Write (GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, llvmIrFilePath);
 						sw.Flush ();
-						if (Files.CopyIfStreamChanged (sw.BaseStream, asmFilePath)) {
-							Log.LogDebugMessage ($"File {asmFilePath} was regenerated");
+						if (Files.CopyIfStreamChanged (sw.BaseStream, llvmIrFilePath)) {
+							Log.LogDebugMessage ($"File {llvmIrFilePath} was regenerated");
 						}
 					}
 				}
