@@ -1612,30 +1612,18 @@ stages:
 
 - stage: post_build
   displayName: Post Build
-#  dependsOn:
-#  - dotnet_prepare_release
-#  - finalize_installers
-#  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
-  condition: eq(variables['MicroBuildSignType'], 'Real')
+  dependsOn:
+  - dotnet_prepare_release
+  - finalize_installers
+  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
   jobs:
-#  - template: compliance/sbom/job.v1.yml@yaml
-#    parameters:
-#      artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
-#      statusContexts: [ 'vsts-devdiv artifacts' ]
-#      packageName: xamarin-android
-#      packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
-#      GitHub.Token: $(GitHub.Token)
-  # Run build https://devdiv.visualstudio.com/DevDiv/_build?definitionId=16022 which can be used to queue release definitions
-  # https://github.com/huserben/TfsExtensions/tree/b8d3cdd39d0eb132e953abb9cb05eeae3b314fe6/BuildTasks/triggerbuildtask/triggerbuildtaskV4
-  - job: queue_release_trigger
-    displayName: Queue Release Dependency
-#    dependsOn: SBOM
-#    timeoutInMinutes: 30
-    pool: $(VSEngMicroBuildPool)
-    workspace:
-      clean: all
-    steps:
-    - checkout: none
+  - template: compliance/sbom/job.v1.yml@yaml
+    parameters:
+      artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
+      statusContexts: [ 'vsts-devdiv artifacts' ]
+      packageName: xamarin-android
+      packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
+      GitHub.Token: $(GitHub.Token)
 
 - stage: code_analysis
   dependsOn: []
