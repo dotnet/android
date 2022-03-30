@@ -90,7 +90,6 @@ namespace Xamarin.Android.Build.Tests
 					"rc.bin",
 					"System.Private.CoreLib.dll",
 					"System.Runtime.dll",
-					"System.Runtime.CompilerServices.Unsafe.dll",
 					"System.Linq.dll",
 					"UnnamedProject.dll",
 				} :
