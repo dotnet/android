@@ -2,11 +2,16 @@
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
-trigger:
-- none
+trigger: none
+pr: none
 
-pr:
-- none
+resources:
+  pipelines:
+  - pipeline: macios
+    source: xamarin-macios
+    trigger:
+      stages:
+      - post_build
 
 jobs:
 - job: release_trigger

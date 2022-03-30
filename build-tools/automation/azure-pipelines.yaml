@@ -1636,14 +1636,6 @@ stages:
       clean: all
     steps:
     - checkout: none
-    - task: benjhuser.tfs-extensions-build-tasks.trigger-build-task.TriggerBuild@4
-      displayName: Trigger Release Dependency
-      inputs:
-        buildDefinition: 16022
-        useSameSourceVersion: false
-        waitForQueuedBuildsToFinish: true
-        authenticationMethod: OAuth Token
-        password: $(System.AccessToken)
 
 - stage: code_analysis
   dependsOn: []
