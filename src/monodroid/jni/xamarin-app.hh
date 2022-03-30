@@ -216,6 +216,9 @@ struct ApplicationConfig
 	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_assembly_store_files;
 	uint32_t number_of_dso_cache_entries;
+	uint32_t android_runtime_jnienv_class_token;
+	uint32_t jnienv_initialize_method_token;
+	uint32_t jnienv_registerjninatives_method_token;
 	MonoComponent mono_components_mask;
 	const char *android_package_name;
 };

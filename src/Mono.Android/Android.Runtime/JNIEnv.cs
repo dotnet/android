@@ -140,6 +140,9 @@ namespace Android.Runtime {
 			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
 		}
 
+#if NETCOREAPP
+		[UnmanagedCallersOnly]
+#endif
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
 			bool logTiming = (args->logCategories & (uint)LogCategories.Timing) != 0;
