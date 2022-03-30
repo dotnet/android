@@ -549,7 +549,6 @@ stages:
         testName: Mono.Android_TestsAppBundle
         project: tests/Mono.Android-Tests/Runtime-AppBundle/Mono.Android-TestsAppBundle.csproj
         testResultsFiles: TestResult-Mono.Android_TestsAppBundle-$(ApkTestConfiguration).xml
-        packageType: Aab
         artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_TestsAppBundle-Signed.aab
         artifactFolder: Aab
 
@@ -775,7 +774,6 @@ stages:
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aab.xml
         extraBuildArgs: /p:TestsFlavor=Aab /p:AndroidPackageFormat=aab
-        packageType: Aab
         artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: net6-Aab
         useDotNet: true

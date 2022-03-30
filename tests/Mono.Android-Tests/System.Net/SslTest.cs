@@ -39,7 +39,7 @@ namespace System.NetTests {
 			Exception  exception  = null;
 
 			var thread = new Thread (() => {
-				string url = "https://tls-test-1.internalx.com";
+				string url = "https://dotnet.microsoft.com/";
 
 				var downloadTask = new WebClient ().DownloadDataTaskAsync (url);
 				var completeTask = downloadTask.ContinueWith (t => {
