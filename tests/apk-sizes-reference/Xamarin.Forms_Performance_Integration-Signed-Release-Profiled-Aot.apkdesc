@@ -8,16 +8,16 @@
       "Size": 7191
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 68888
+      "Size": 68845
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 561679
+      "Size": 561664
     },
     "assemblies/Mono.Security.dll": {
       "Size": 68430
     },
     "assemblies/mscorlib.dll": {
-      "Size": 936261
+      "Size": 936255
     },
     "assemblies/Newtonsoft.Json.dll": {
       "Size": 319336
@@ -29,10 +29,10 @@
       "Size": 10201
     },
     "assemblies/System.Core.dll": {
-      "Size": 192206
+      "Size": 192207
     },
     "assemblies/System.Data.dll": {
-      "Size": 316107
+      "Size": 316106
     },
     "assemblies/System.dll": {
       "Size": 443196
@@ -41,13 +41,13 @@
       "Size": 16345
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 113285
+      "Size": 113286
     },
     "assemblies/System.Numerics.dll": {
-      "Size": 23251
+      "Size": 23252
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 193447
+      "Size": 193448
     },
     "assemblies/System.ServiceModel.Internals.dll": {
       "Size": 26590
@@ -116,7 +116,7 @@
       "Size": 21996
     },
     "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
-      "Size": 114910
+      "Size": 114909
     },
     "assemblies/Xamarin.Forms.Platform.Android.dll": {
       "Size": 367732
@@ -137,7 +137,7 @@
       "Size": 22716
     },
     "lib/armeabi-v7a/libaot-Java.Interop.dll.so": {
-      "Size": 288728
+      "Size": 289464
     },
     "lib/armeabi-v7a/libaot-Mono.Android.dll.so": {
       "Size": 987268
@@ -221,13 +221,13 @@
       "Size": 1112688
     },
     "lib/armeabi-v7a/libmono-native.so": {
-      "Size": 736396
+      "Size": 785140
     },
     "lib/armeabi-v7a/libmonodroid.so": {
-      "Size": 233204
+      "Size": 234360
     },
     "lib/armeabi-v7a/libmonosgen-2.0.so": {
-      "Size": 4456332
+      "Size": 4456612
     },
     "lib/armeabi-v7a/libxa-internal-api.so": {
       "Size": 48844
@@ -239,7 +239,7 @@
       "Size": 26524
     },
     "lib/x86/libaot-Java.Interop.dll.so": {
-      "Size": 265600
+      "Size": 266312
     },
     "lib/x86/libaot-Mono.Android.dll.so": {
       "Size": 818880
@@ -323,13 +323,13 @@
       "Size": 1459584
     },
     "lib/x86/libmono-native.so": {
-      "Size": 803352
+      "Size": 823560
     },
     "lib/x86/libmonodroid.so": {
-      "Size": 304284
+      "Size": 305648
     },
     "lib/x86/libmonosgen-2.0.so": {
-      "Size": 4212220
+      "Size": 4212360
     },
     "lib/x86/libxa-internal-api.so": {
       "Size": 61112
@@ -2159,5 +2159,5 @@
       "Size": 347268
     }
   },
-  "PackageSize": 17353168
+  "PackageSize": 17385936
 }
