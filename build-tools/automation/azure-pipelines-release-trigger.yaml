@@ -7,8 +7,8 @@ pr: none
 
 resources:
   pipelines:
-  - pipeline: macios
-    source: xamarin-macios
+  - pipeline: xamarin-android
+    source: Xamarin.Android
     trigger:
       stages:
       - post_build
