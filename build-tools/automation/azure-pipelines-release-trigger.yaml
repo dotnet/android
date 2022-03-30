@@ -12,7 +12,7 @@ jobs:
 - job: release_trigger
   displayName: Upload Info from Triggering Build
   timeoutInMinutes: 30
-  pool: $(VSEngMicroBuildPool)
+  pool: VSEngSS-MicroBuild2022-1ES
   workspace:
     clean: all
   steps:
