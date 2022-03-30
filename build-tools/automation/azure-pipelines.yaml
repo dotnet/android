@@ -1625,7 +1625,7 @@ stages:
 #      packageName: xamarin-android
 #      packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
 #      GitHub.Token: $(GitHub.Token)
-  # Run build https://devdiv.visualstudio.com/DevDiv/_build?definitionId=11674 which can be used to queue release definitions
+  # Run build https://devdiv.visualstudio.com/DevDiv/_build?definitionId=16022 which can be used to queue release definitions
   # https://github.com/huserben/TfsExtensions/tree/b8d3cdd39d0eb132e953abb9cb05eeae3b314fe6/BuildTasks/triggerbuildtask/triggerbuildtaskV4
   - job: queue_release_trigger
     displayName: Queue Release Dependency
@@ -1639,7 +1639,7 @@ stages:
     - task: benjhuser.tfs-extensions-build-tasks.trigger-build-task.TriggerBuild@4
       displayName: Trigger Release Dependency
       inputs:
-        buildDefinition: 11674
+        buildDefinition: 16022
         useSameSourceVersion: false
         waitForQueuedBuildsToFinish: true
         authenticationMethod: OAuth Token
