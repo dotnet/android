@@ -9,9 +9,9 @@ resources:
   pipelines:
   - pipeline: xamarin-android
     source: Xamarin.Android
-    trigger:
-      stages:
-      - post_build
+    trigger: true
+#      stages:
+#      - post_build
 
 jobs:
 - job: release_trigger
