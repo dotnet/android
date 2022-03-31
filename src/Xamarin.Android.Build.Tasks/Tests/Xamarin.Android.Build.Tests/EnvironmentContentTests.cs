@@ -51,7 +51,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				string intermediateOutputDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath);
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
 				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
 				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
@@ -128,7 +128,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				// AndroidEnableSGenConcurrent=False by default
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
 				Assert.IsTrue (envvars.ContainsKey (gcVarName), $"Environment should contain '{gcVarName}'.");
 				Assert.AreEqual (expectedDefaultValue, envvars[gcVarName], $"'{gcVarName}' should have been '{expectedDefaultValue}' when concurrent GC is disabled.");
@@ -170,7 +170,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
 
 				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
 				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
@@ -210,7 +210,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidHttpClientHandlerType", expectedDefaultValue);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
 				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
 				Assert.AreEqual (expectedDefaultValue, envvars[httpClientHandlerVarName]);
@@ -264,7 +264,7 @@ namespace Xamarin.Android.Build.Tests
 						}
 					}
 				}
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, string.Join (";", supportedAbis), true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, string.Join (";", supportedAbis), true);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
 				Assert.IsTrue (envvars.ContainsKey ("XA_TLS_PROVIDER"), "Environment should contain XA_TLS_PROVIDER.");
 				if (androidTlsProvider == string.Empty) {

@@ -111,49 +111,47 @@ namespace Xamarin.Android.Tasks
 				abis [abi] = GatherFilesForABI(item.ItemSpec, abi, ObjectFiles);
 			}
 
+			const string commonLinkerArgs =
+				"--unresolved-symbols=ignore-in-shared-libs " +
+				"--export-dynamic " +
+				"-soname libxamarin-app.so " +
+				"-z relro " +
+				"-z noexecstack " +
+				"--enable-new-dtags " +
+				"--eh-frame-hdr " +
+				"-shared " +
+				"--build-id " +
+				"--warn-shared-textrel " +
+				"--fatal-warnings";
+
+			string stripSymbolsArg = DebugBuild ? String.Empty : " -s";
+
+			string ld = Path.Combine (AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, "ld"));
+			var targetLinkerArgs = new List<string> ();
 			foreach (var kvp in abis) {
 				string abi = kvp.Key;
 				InputFiles inputs = kvp.Value;
-				AndroidTargetArch arch;
 
-				var linkerArgs = new List <string> {
-					"--unresolved-symbols=ignore-in-shared-libs",
-					"--export-dynamic",
-					"-soname", "libxamarin-app.so",
-					"-z", "relro",
-					"-z", "noexecstack",
-					"--enable-new-dtags",
-					"--eh-frame-hdr",
-					"-shared",
-					"--build-id",
-					"--warn-shared-textrel",
-					"--fatal-warnings",
-					"-o", QuoteFileName (inputs.OutputSharedLibrary),
-				};
-
+				targetLinkerArgs.Clear ();
 				string elf_arch;
 				switch (abi) {
 					case "armeabi-v7a":
-						arch = AndroidTargetArch.Arm;
-						linkerArgs.Add ("-X");
+						targetLinkerArgs.Add ("-X");
 						elf_arch = "armelf_linux_eabi";
 						break;
 
 					case "arm64":
 					case "arm64-v8a":
 					case "aarch64":
-						arch = AndroidTargetArch.Arm64;
-						linkerArgs.Add ("--fix-cortex-a53-843419");
+						targetLinkerArgs.Add ("--fix-cortex-a53-843419");
 						elf_arch = "aarch64linux";
 						break;
 
 					case "x86":
-						arch = AndroidTargetArch.X86;
 						elf_arch = "elf_i386";
 						break;
 
 					case "x86_64":
-						arch = AndroidTargetArch.X86_64;
 						elf_arch = "elf_x86_64";
 						break;
 
@@ -161,17 +159,20 @@ namespace Xamarin.Android.Tasks
 						throw new NotSupportedException ($"Unsupported Android target architecture ABI: {abi}");
 				}
 
-				linkerArgs.Add ("-m");
-				linkerArgs.Add (elf_arch);
+				targetLinkerArgs.Add ("-m");
+				targetLinkerArgs.Add (elf_arch);
 
 				foreach (string file in inputs.ObjectFiles) {
-					linkerArgs.Add (QuoteFileName (file));
+					targetLinkerArgs.Add (QuoteFileName (file));
 				}
 
-				string ld = MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, $"{NdkTools.GetBinutilsToolchainPrefix (arch)}ld");
+				targetLinkerArgs.Add ("-o");
+				targetLinkerArgs.Add (QuoteFileName (inputs.OutputSharedLibrary));
+
+				string targetArgs = String.Join (" ", targetLinkerArgs);
 				yield return new Config {
-					LinkerPath = Path.Combine (AndroidBinUtilsDirectory, ld),
-					LinkerOptions = String.Join (" ", linkerArgs),
+					LinkerPath = ld,
+					LinkerOptions = $"{commonLinkerArgs}{stripSymbolsArg} {targetArgs}",
 					OutputSharedLibrary = inputs.OutputSharedLibrary,
 				};
 			}

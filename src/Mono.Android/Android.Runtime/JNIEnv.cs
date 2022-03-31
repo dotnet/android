@@ -1562,26 +1562,14 @@ namespace Android.Runtime {
 			if (value == null)
 				throw new ArgumentNullException ("value");
 
-			elementType = elementType ?? value.GetType ().GetElementType ()!;
+			elementType ??= value.GetType ().GetElementType ()!;
 
 			if (elementType.IsArray) {
-				IntPtr array = IntPtr.Zero;
-				IntPtr grefArrayClass = FindClass (elementType);
+				IntPtr grefArrayElementClass = FindClass (elementType);
 				try {
-					array = NewObjectArray (value.Length, grefArrayClass, IntPtr.Zero);
-
-					for (int i = 0; i < value.Length; ++i) {
-						IntPtr subarray = NewArray ((Array) value.GetValue (i)!, elementType.GetElementType ());
-						SetObjectArrayElement (array, i, subarray);
-						DeleteLocalRef (subarray);
-					}
-
-					return array;
-				} catch {
-					DeleteLocalRef (array);
-					throw;
+					return NewArray (value, elementType, grefArrayElementClass);
 				} finally {
-					DeleteGlobalRef (grefArrayClass);
+					DeleteGlobalRef (grefArrayElementClass);
 				}
 			}
 
@@ -1596,12 +1584,39 @@ namespace Android.Runtime {
 				return IntPtr.Zero;
 
 			if (typeof (T).IsArray) {
-				return NewArray (array, typeof (T));
+				IntPtr grefArrayElementClass = FindClass (typeof (T));
+				try {
+					return NewArray (array, typeof (T), grefArrayElementClass);
+				} finally {
+					DeleteGlobalRef (grefArrayElementClass);
+				}
 			}
 
 			Func<Array, IntPtr> creator = GetConverter (CreateManagedToNativeArray, typeof (T), IntPtr.Zero);
 
 			return creator (array);
+		}
+
+		static IntPtr NewArray (Array value, Type elementType, IntPtr elementClass)
+		{
+			if (value == null)
+				throw new ArgumentNullException ("value");
+
+			IntPtr array = IntPtr.Zero;
+			try {
+				array = NewObjectArray (value.Length, elementClass, IntPtr.Zero);
+
+				for (int i = 0; i < value.Length; ++i) {
+					IntPtr subarray = NewArray ((Array) value.GetValue (i)!, elementType.GetElementType ());
+					SetObjectArrayElement (array, i, subarray);
+					DeleteLocalRef (subarray);
+				}
+
+				return array;
+			} catch {
+				DeleteLocalRef (array);
+				throw;
+			}
 		}
 
 		static Dictionary<Type, Action<IntPtr, int, object?>>? setNativeArrayElement;

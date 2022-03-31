@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Xamarin.Android.Prepare
 {
-	abstract partial class Step_InstallOpenJDK : StepWithDownloadProgress
+	abstract partial class Step_InstallOpenJDK : StepWithDownloadProgress, IBuildInventoryItem
 	{
 		const string XAVersionInfoFile = "xa_jdk_version.txt";
 		const string URLQueryFilePathField = "file_path";
@@ -35,6 +35,8 @@ namespace Xamarin.Android.Prepare
 		protected   abstract    Uri     JdkUrl          {get;}
 		protected   abstract    string  JdkCacheDir     {get;}
 		protected   abstract    string  RootDirName     {get;}
+		public string BuildToolName => ProductName;
+		public string BuildToolVersion => JdkVersion.ToString ();
 
 		protected override async Task<bool> Execute (Context context)
 		{
@@ -42,6 +44,8 @@ namespace Xamarin.Android.Prepare
 				Log.DebugLine ($"Found old OpenJDK directory at {Configurables.Paths.OldOpenJDKInstallDir}, removing");
 				Utilities.DeleteDirectorySilent (Configurables.Paths.OldOpenJDKInstallDir);
 			}
+
+			AddToInventory ();
 
 			string jdkInstallDir = JdkInstallDir;
 			if (OpenJDKExistsAndIsValid (jdkInstallDir, out string? installedVersion)) {
@@ -253,6 +257,13 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return true;
+		}
+
+		public void AddToInventory ()
+		{
+			if (!string.IsNullOrEmpty (BuildToolName) && !string.IsNullOrEmpty (BuildToolVersion) && !Context.Instance.BuildToolsInventory.ContainsKey (BuildToolName)) {
+				Context.Instance.BuildToolsInventory.Add (BuildToolName, BuildToolVersion);
+			}
 		}
 	}
 

@@ -1,0 +1,44 @@
+# Xamarin.Android Release Definition Trigger
+
+name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+
+trigger: none
+pr: none
+
+resources:
+  pipelines:
+  - pipeline: xamarin-android
+    source: Xamarin.Android
+    trigger:
+      stages:
+      - post_build
+
+jobs:
+- job: release_trigger
+  displayName: Upload Info from Triggering Build
+  timeoutInMinutes: 30
+  pool: VSEngSS-MicroBuild2022-1ES
+  workspace:
+    clean: all
+  steps:
+  - checkout: none
+
+  - powershell: |
+      $triggeringBuild = @{
+          "triggeringBuild" = @{
+              "id" = "$(Build.TriggeredBy.BuildId)"
+              "pipeline" = "$(Build.TriggeredBy.DefinitionId)"
+              "project" = "$(Build.TriggeredBy.ProjectID)"
+          }
+      }
+      $json = $triggeringBuild | ConvertTo-Json
+      New-Item -Path $(Build.StagingDirectory) -Name triggering-build.json -ItemType file -Value $json -Force
+      $jsonContent = Get-Content "$(Build.StagingDirectory)\triggering-build.json" | ConvertFrom-Json
+      Write-Host Triggering Build Info: $jsonContent.triggeringBuild.project - $jsonContent.triggeringBuild.pipeline - $jsonContent.triggeringBuild.id
+    displayName: write triggering-build.json
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload triggering-build-info
+    inputs:
+      artifactName: triggering-build-info
+      targetPath: $(Build.StagingDirectory)\triggering-build.json

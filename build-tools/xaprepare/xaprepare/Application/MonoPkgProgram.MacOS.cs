@@ -4,8 +4,11 @@ using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
 {
-	class MonoPkgProgram : PkgProgram
+	class MonoPkgProgram : PkgProgram, IBuildInventoryItem
 	{
+		public string BuildToolName => "MonoFramework-MDK";
+		public string BuildToolVersion => CurrentVersion;
+
 		public MonoPkgProgram (string name, string packageId, Uri? packageUrl = null)
 			: base (name, packageId, packageUrl)
 		{
@@ -24,8 +27,14 @@ namespace Xamarin.Android.Prepare
 
 		public override async Task<bool> Install ()
 		{
-			if (Context.Instance.CheckCondition (KnownConditions.AllowMonoUpdate))
-				return await base.Install ();
+			if (Context.Instance.CheckCondition (KnownConditions.AllowMonoUpdate)) {
+				bool installSucceeded = await base.Install ();
+				if (installSucceeded) {
+					await DetermineCurrentVersion ();
+					AddToInventory ();
+				}
+				return installSucceeded;
+			}
 
 			Log.ErrorLine ($"Mono needs to be updated but updates are disallowed in this scenario. Please run prepare with the '/s:{Scenario_UpdateMono.MyName}' parameter to update Mono.");
 			return false;
@@ -44,6 +53,21 @@ namespace Xamarin.Android.Prepare
 			// --version output instead.
 			SkipPkgUtilVersionCheck = true;
 			return await base.DetermineCurrentVersion ();
+		}
+
+		protected override async Task AfterDetect (bool installed)
+		{
+			if (!installed)
+				return;
+
+			AddToInventory ();
+		}
+
+		public void AddToInventory ()
+		{
+			if (!string.IsNullOrEmpty (BuildToolName) && !string.IsNullOrEmpty (BuildToolVersion) && !Context.Instance.BuildToolsInventory.ContainsKey (BuildToolName)) {
+				Context.Instance.BuildToolsInventory.Add (BuildToolName, BuildToolVersion);
+			}
 		}
 	}
 }

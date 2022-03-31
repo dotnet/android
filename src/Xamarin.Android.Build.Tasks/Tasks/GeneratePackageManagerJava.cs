@@ -383,39 +383,39 @@ namespace Xamarin.Android.Tasks
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
+			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
+				IsBundledApp = IsBundledApplication,
+				UsesMonoAOT = usesMonoAOT,
+				UsesMonoLLVM = EnableLLVM,
+				UsesAssemblyPreload = usesAssemblyPreload,
+				MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
+				AndroidPackageName = AndroidPackageName,
+				BrokenExceptionTransitions = brokenExceptionTransitions,
+				PackageNamingPolicy = pnp,
+				BoundExceptionType = boundExceptionType,
+				InstantRunEnabled = InstantRunEnabled,
+				JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
+				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
+				NumberOfAssembliesInApk = assemblyCount,
+				BundledAssemblyNameWidth = assemblyNameWidth,
+				NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
+				// and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
+				// runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
+				// and in the same order.
+				MonoComponents = monoComponents,
+				NativeLibraries = uniqueNativeLibraries,
+				HaveAssemblyStore = UseAssemblyStore,
+			};
+			appConfigAsmGen.Init ();
 
 			foreach (string abi in SupportedAbis) {
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
-				string asmFilePath = $"{baseAsmFilePath}.s";
-
-				var asmgen = new ApplicationConfigNativeAssemblyGenerator (GetAndroidTargetArchForAbi (abi), environmentVariables, systemProperties, Log) {
-					IsBundledApp = IsBundledApplication,
-					UsesMonoAOT = usesMonoAOT,
-					UsesMonoLLVM = EnableLLVM,
-					UsesAssemblyPreload = usesAssemblyPreload,
-					MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
-					AndroidPackageName = AndroidPackageName,
-					BrokenExceptionTransitions = brokenExceptionTransitions,
-					PackageNamingPolicy = pnp,
-					BoundExceptionType = boundExceptionType,
-					InstantRunEnabled = InstantRunEnabled,
-					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
-					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
-					NumberOfAssembliesInApk = assemblyCount,
-					BundledAssemblyNameWidth = assemblyNameWidth,
-					NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
-									  // and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
-									  // runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
-									  // and in the same order.
-					MonoComponents = monoComponents,
-					NativeLibraries = uniqueNativeLibraries,
-					HaveAssemblyStore = UseAssemblyStore,
-				};
+				string llFilePath  = $"{baseAsmFilePath}.ll";
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					asmgen.Write (sw, asmFilePath);
+					appConfigAsmGen.Write (GetAndroidTargetArchForAbi (abi), sw, llFilePath);
 					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, asmFilePath);
+					Files.CopyIfStreamChanged (sw.BaseStream, llFilePath);
 				}
 			}
 

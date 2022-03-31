@@ -374,6 +374,11 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public bool NoMingwW64 { get; set; } = false;
 
+		/// <summary>
+		///   Collection of programs or dependencies which should be written to the Build Tools Inventory .csv file.
+		/// </summary>
+		public Dictionary<string, string> BuildToolsInventory { get; set; } = new Dictionary<string, string> ();
+
 		static Context ()
 		{
 			Instance = new Context ();
@@ -842,6 +847,8 @@ namespace Xamarin.Android.Prepare
 				scenarioLog?.Dispose ();
 			}
 
+			WriteBuildToolsInventoryCsv ();
+
 			return true;
 		}
 
@@ -928,6 +935,19 @@ namespace Xamarin.Android.Prepare
 				Directory.CreateDirectory (logDirectory);
 
 			return logDirectory;
+		}
+
+		void WriteBuildToolsInventoryCsv ()
+		{
+			var inventoryFilePath = Path.Combine (Path.GetDirectoryName (MainLogFilePath), "buildtoolsinventory.csv");
+			var lines = new List<string> {
+				"BuildToolName,BuildToolVersion",
+			};
+
+			var sortedTools = BuildToolsInventory.OrderBy (b => b.Key, StringComparer.OrdinalIgnoreCase);
+			lines.AddRange (sortedTools.Select (t => $"{t.Key},{t.Value}"));
+			Log.StatusLine ($"Writing build tool inventory to: {inventoryFilePath}.");
+			File.WriteAllLines (inventoryFilePath, lines);
 		}
 	}
 }

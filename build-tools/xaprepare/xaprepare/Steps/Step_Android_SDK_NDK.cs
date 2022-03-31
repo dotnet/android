@@ -238,6 +238,8 @@ namespace Xamarin.Android.Prepare
 				return;
 			}
 
+			component.AddToInventory ();
+
 			const string statusMissing = "missing";
 			const string statusOutdated = "outdated";
 			const string statusInstalled = "installed";
