@@ -1612,10 +1612,11 @@ stages:
 
 - stage: post_build
   displayName: Post Build
-  dependsOn:
-  - dotnet_prepare_release
-  - finalize_installers
-  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
+  #dependsOn:
+  #- dotnet_prepare_release
+  #- finalize_installers
+  #condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
+  condition: eq(variables['MicroBuildSignType'], 'Real')
   jobs:
   - template: compliance/sbom/job.v1.yml@yaml
     parameters:
@@ -1624,6 +1625,12 @@ stages:
       packageName: xamarin-android
       packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
       GitHub.Token: $(GitHub.Token)
+  - job: empty_job
+    displayName: Empty Post Build Job
+    pool:
+      vmImage: $(HostedWinImage)
+    steps:
+    - checkout: none
 
 - stage: code_analysis
   dependsOn: []

@@ -26,9 +26,9 @@ jobs:
   - powershell: |
       $triggeringBuild = @{
           "triggeringBuild" = @{
-              "id" = "$(Build.TriggeredBy.BuildId)"
-              "pipeline" = "$(Build.TriggeredBy.DefinitionId)"
-              "project" = "$(Build.TriggeredBy.ProjectID)"
+              "id" = "$(resources.pipeline.xamarin-android.runID)"
+              "pipeline" = "$(resources.pipeline.xamarin-android.pipelineID)"
+              "project" = "$(resources.pipeline.xamarin-android.projectName)"
           }
       }
       $json = $triggeringBuild | ConvertTo-Json
