@@ -6,7 +6,7 @@ ms.assetid: FC0DBC08-EBCB-4D2D-AB3F-76B54E635C22
 ms.technology: xamarin-android
 author: jonpryor
 ms.author: jopryo
-ms.date: 03/01/2021
+ms.date: 03/29/2022
 ---
 
 # Build Properties
@@ -699,7 +699,7 @@ APK root directory. The format of the path is `lib\ARCH\wrap.sh` where
 ## AndroidJavadocVerbosity
 
 Specifies how "verbose"
-[C# XML Documentation Comments](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc)
+[C# XML Documentation Comments](/dotnet/csharp/codedoc)
 should be when importing Javadoc documentation within binding projects.
 
 Requires use of the
@@ -710,13 +710,13 @@ This is an enum-style property, with possible values of `full` or
 `intellisense`:
 
   * `intellisense`: Only emit the XML comments:
-    [`<exception/>](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#exception),
-    [`<param/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#param),
-    [`<returns/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#returns),
-    [`<summary/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#summary).
+    [`<exception/>`](/dotnet/csharp/codedoc#exception),
+    [`<param/>`](/dotnet/csharp/codedoc#param),
+    [`<returns/>`](/dotnet/csharp/codedoc#returns),
+    [`<summary/>`](/dotnet/csharp/codedoc#summary).
   * `full`: Emit `intellisense` elements, as well as
-    [`<remarks/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#remarks),
-    [`<seealso/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#seealso),
+    [`<remarks/>`](/dotnet/csharp/codedoc#remarks),
+    [`<seealso/>`](/dotnet/csharp/codedoc#seealso),
     and anything else that's supportable.
 
 The default value is `intellisense`.
@@ -1331,16 +1331,16 @@ Support for this property was added in Xamarin.Android 11.3.
 
 A string property which allows
 the developer to customize the `versionCode` in the manifest.
-See [Creating the Version Code for the APK](~/android/deploy-test/building-apps/abi-specific-apks.md)
+See [Creating the Version Code for the APK](~/android/deploy-test/building-apps/abi-specific-apks.md#creating-the-version-code-for-the-apk)
 for information on deciding a `versionCode`.
 
-ome examples, if `abi` is `armeabi` and `versionCode` in the manifest
-s `123`, `{abi}{versionCode}`
-ill produce a versionCode of `1123` when `$(AndroidCreatePackagePerAbi)`
-s True, otherwise will produce a value of 123.
-f `abi` is `x86_64` and `versionCode` in the manifest
-s `44`. This will produce `544` when `$(AndroidCreatePackagePerAbi)`
-s True, otherwise will produce a value of `44`.
+Some examples, if `abi` is `armeabi` and `versionCode` in the manifest
+is `123`, `{abi}{versionCode}`
+will produce a versionCode of `1123` when `$(AndroidCreatePackagePerAbi)`
+is True, otherwise will produce a value of 123.
+If `abi` is `x86_64` and `versionCode` in the manifest
+is `44`. This will produce `544` when `$(AndroidCreatePackagePerAbi)`
+is True, otherwise will produce a value of `44`.
 
 If we include a left padding format string
 `{abi}{versionCode:0000}`,
