@@ -219,7 +219,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetPack ([Values ("net6.0", "net7.0")] string dotnetVersion, [Values ("android", "android31")] string platform)
 		{
-			var targetFramework = dotnetVersion + platform;
+			var targetFramework = $"{dotnetVersion}-{platform}";
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 				IsRelease = true,
