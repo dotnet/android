@@ -74,6 +74,11 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
         <target state="new">The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.</target>
         <note>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</note>
       </trans-unit>
+      <trans-unit id="XA2000_gcParams_bridgeImpl">
+        <source>Support for the 'MONO_GC_PARAMS=bridge-implementation=old' value will be removed in .NET 7.</source>
+        <target state="new">Support for the 'MONO_GC_PARAMS=bridge-implementation=old' value will be removed in .NET 7.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="XA4233">
         <source>The &lt;AndroidNamespaceReplacement&gt; for '{0}' does not specify a 'Replacement' attribute.</source>
         <target state="new">The &lt;AndroidNamespaceReplacement&gt; for '{0}' does not specify a 'Replacement' attribute.</target>
