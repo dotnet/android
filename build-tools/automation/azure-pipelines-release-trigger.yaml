@@ -38,7 +38,7 @@ jobs:
       $json = $triggeringBuild | ConvertTo-Json
       New-Item -Path $(Build.StagingDirectory) -Name triggering-build.json -ItemType file -Value $json -Force
       $jsonContent = Get-Content "$(Build.StagingDirectory)\triggering-build.json" | ConvertFrom-Json
-      Write-Host Triggering Build Info: $jsonContent.triggeringBuild.project - $jsonContent.triggeringBuild.pipeline - $jsonContent.triggeringBuild.id
+      Write-Host Triggering Pipeline and Run IDs: $jsonContent.triggeringBuild.pipeline - $jsonContent.triggeringBuild.id
     displayName: write triggering-build.json
 
   - task: PublishPipelineArtifact@1
