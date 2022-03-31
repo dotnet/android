@@ -1093,10 +1093,22 @@ MonodroidRuntime::init_android_runtime (
 		);
 	}
 
-	MonoClass *runtime = mono_class_get (image, application_config.android_runtime_jnienv_class_token);
-	abort_unless (runtime != nullptr, "INTERNAL ERROR: unable to find the Android.Runtime.JNIEnv class!");
+	MonoClass *runtime;
+	MonoMethod *method;
 
-	MonoMethod *method = mono_get_method (image, application_config.jnienv_initialize_method_token, runtime);
+	if constexpr (is_running_on_desktop) {
+#if defined (NET6)
+		runtime = mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+#else
+		runtime = utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+#endif // def NET6
+		method = mono_class_get_method_from_name (runtime, "Initialize", 1);
+	} else {
+		runtime = mono_class_get (image, application_config.android_runtime_jnienv_class_token);
+		method = mono_get_method (image, application_config.jnienv_initialize_method_token, runtime);
+	}
+
+	abort_unless (runtime != nullptr, "INTERNAL ERROR: unable to find the Android.Runtime.JNIEnv class!");
 	abort_unless (method != nullptr, "INTERNAL ERROR: Unable to find the Android.Runtime.JNIEnv.Initialize method!");
 
 	MonoAssembly *ji_assm;
@@ -1122,7 +1134,11 @@ MonodroidRuntime::init_android_runtime (
 	 * so always make sure we have the freshest handle to the method.
 	 */
 	if (registerType == nullptr || is_running_on_desktop) {
-		registerType = mono_get_method (image, application_config.jnienv_registerjninatives_method_token, runtime);
+		if constexpr (is_running_on_desktop) {
+			registerType = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
+		} else {
+			registerType = mono_get_method (image, application_config.jnienv_registerjninatives_method_token, runtime);
+		}
 	}
 	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.RegisterJniNatives!");
 
@@ -1148,19 +1164,18 @@ MonodroidRuntime::init_android_runtime (
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
 		partial_time.mark_start ();
 
-#if defined (NET6)
+#if defined (NET6) && defined (ANDROID)
 	MonoError error;
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (mono_method_get_unmanaged_callers_only_ftnptr (method, &error));
 	abort_unless (initialize != nullptr, "Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnv.Initialize method");
 	initialize (&init);
-
-#else // def NET6
+#else // def NET6 && def ANDROID
 	void *args [] = {
 		&init,
 	};
 
 	utils.monodroid_runtime_invoke (domain, method, nullptr, args, nullptr);
-#endif // ndef NET6
+#endif // ndef NET6 && ndef ANDROID
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		partial_time.mark_end ();
