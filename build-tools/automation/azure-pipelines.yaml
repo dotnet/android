@@ -1618,13 +1618,13 @@ stages:
   #condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
   condition: eq(variables['MicroBuildSignType'], 'Real')
   jobs:
-  - template: compliance/sbom/job.v1.yml@yaml
-    parameters:
-      artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
-      statusContexts: [ 'vsts-devdiv artifacts' ]
-      packageName: xamarin-android
-      packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
-      GitHub.Token: $(GitHub.Token)
+#  - template: compliance/sbom/job.v1.yml@yaml
+#    parameters:
+#      artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
+#      statusContexts: [ 'vsts-devdiv artifacts' ]
+#      packageName: xamarin-android
+#      packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
+#      GitHub.Token: $(GitHub.Token)
   - job: empty_job
     displayName: Empty Post Build Job
     pool:
