@@ -23,12 +23,16 @@ jobs:
   steps:
   - checkout: none
 
+  - powershell: 'gci env: | format-table -autosize -wrap'
+    displayName: print environment variables
+
   - powershell: |
       $triggeringBuild = @{
           "triggeringBuild" = @{
               "id" = "$(resources.pipeline.xamarin-android.runID)"
               "pipeline" = "$(resources.pipeline.xamarin-android.pipelineID)"
-              "project" = "$(resources.pipeline.xamarin-android.projectName)"
+              "branch" = "$(resources.pipeline.xamarin-android.sourceBranch)"
+              "commit" = "$(resources.pipeline.xamarin-android.sourceCommit)"
           }
       }
       $json = $triggeringBuild | ConvertTo-Json
