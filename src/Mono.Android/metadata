@@ -1699,7 +1699,15 @@
   <!-- This method was already specified on a base interface, ignore to avoid "breakage" report. -->
   <remove-node api-since="33" path="/api/package[@name='java.util']/interface[@name='Deque']/method[@name='addAll' and count(parameter)=1 and parameter[1][@type='java.util.Collection&lt;? extends E&gt;']]" />
 
-	<!--
+  <!-- Rename Namespaces -->
+  <attr api-since="33" path="/api/package[@name='android.os.vibrator']" name="managedName">Android.OS.Vibrators</attr>
+  <attr api-since="33" path="/api/package[@name='android.app.appsearch.observer']" name="managedName">Android.App.AppSearch.Observers</attr>
+  <attr api-since="33" path="/api/package[@name='android.supplementalapi']" name="managedName">Android.SupplementalApi</attr>
+
+  <!-- Base method is 'protected', overriding method cannot change it to 'public' -->
+  <attr api-since ="33" path="/api/package[@name='android.media.tv.interactive']/class[@name='TvInteractiveAppView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
+
+    <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
     
