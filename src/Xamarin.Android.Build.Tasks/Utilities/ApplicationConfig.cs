@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tasks
 	//   uint64_t |  ulong
 	//   int64_t  |  long
 	//   char*    |  string
-	//   
+	//
 	// Names should be the same as in the above struct, but it's not a requirement
 	// (they will be used only to generate comments in the native code)
 	sealed class ApplicationConfig
@@ -41,6 +41,9 @@ namespace Xamarin.Android.Tasks
 		public uint   bundled_assembly_name_width;
 		public uint   number_of_assembly_store_files;
 		public uint   number_of_dso_cache_entries;
+		public uint   android_runtime_jnienv_class_token;
+		public uint   jnienv_initialize_method_token;
+		public uint   jnienv_registerjninatives_method_token;
 		public uint   mono_components_mask;
 		public string android_package_name = String.Empty;
 	}

@@ -166,6 +166,9 @@ namespace Xamarin.Android.Tasks
 		public int NumberOfAssembliesInApk { get; set; }
 		public int NumberOfAssemblyStoresInApks { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
+		public int AndroidRuntimeJNIEnvToken { get; set; }
+		public int JNIEnvInitializeToken { get; set; }
+		public int JNIEnvRegisterJniNativesToken { get; set; }
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; }
@@ -204,6 +207,9 @@ namespace Xamarin.Android.Tasks
 				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
 				number_of_assembly_store_files = (uint)NumberOfAssemblyStoresInApks,
 				number_of_dso_cache_entries = (uint)dsoCache.Count,
+				android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
+				jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
+				jnienv_registerjninatives_method_token = (uint)JNIEnvRegisterJniNativesToken,
 				mono_components_mask = (uint)MonoComponents,
 				android_package_name = AndroidPackageName,
 			};
