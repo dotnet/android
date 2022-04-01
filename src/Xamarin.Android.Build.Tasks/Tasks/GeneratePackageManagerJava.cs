@@ -202,8 +202,12 @@ namespace Xamarin.Android.Tasks
 					var lineToWrite = line;
 					if (lineToWrite.StartsWith ("MONO_LOG_LEVEL=", StringComparison.Ordinal))
 						haveLogLevel = true;
-					if (lineToWrite.StartsWith ("MONO_GC_PARAMS=", StringComparison.Ordinal))
+					if (lineToWrite.StartsWith ("MONO_GC_PARAMS=", StringComparison.Ordinal)) {
 						haveMonoGCParams = true;
+						if (lineToWrite.IndexOf ("bridge-implementation=old", StringComparison.Ordinal) >= 0) {
+							Log.LogCodedWarning ("XA2000", Properties.Resources.XA2000_gcParams_bridgeImpl);
+						}
+					}
 					if (lineToWrite.StartsWith ("XAMARIN_BUILD_ID=", StringComparison.Ordinal))
 						havebuildId = true;
 					if (lineToWrite.StartsWith ("MONO_DEBUG=", StringComparison.Ordinal)) {
