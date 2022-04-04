@@ -24,15 +24,16 @@ const TypeMap type_map = {
 #else
 const uint32_t map_module_count = 0;
 const uint32_t java_type_count = 0;
-const uint32_t java_name_width = 0;
+const char* const java_type_names[] = {};
 
-const TypeMapModule map_modules[] = {};
+TypeMapModule map_modules[] = {};
 const TypeMapJava map_java[] = {};
+const xamarin::android::hash_t map_java_hashes[] = {};
 #endif
 
 CompressedAssemblies compressed_assemblies = {
-	/*.count = */ 0,
-	/*.descriptors = */ nullptr,
+	.count = 0,
+	.descriptors = nullptr,
 };
 
 //
