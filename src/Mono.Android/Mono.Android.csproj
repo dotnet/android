@@ -386,8 +386,8 @@
   <Target Name="GetTargetPath" />
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <!-- Only build the 'net6.0' version of 'Mono.Android.dll' for the latest stable Android version or higher. -->
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &lt; '$(AndroidLatestStableApiLevel)' ">
+  <!-- Only build the 'net6.0' version of 'Mono.Android.dll' for the default API level that is supported or higher. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &lt; '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 
