@@ -61,7 +61,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     </ItemGroup>
     <GetAotAssemblies
         AndroidAotMode="$(AndroidAotMode)"
-        AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+        AndroidNdkDirectory="$(AndroidNdkDirectory)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         AndroidApiLevel="$(_AndroidApiLevel)"
         MinimumSupportedApiLevel="$(AndroidMinimumSupportedApiLevel)"

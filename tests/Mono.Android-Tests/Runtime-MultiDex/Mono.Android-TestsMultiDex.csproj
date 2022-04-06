@@ -29,6 +29,7 @@
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+    <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

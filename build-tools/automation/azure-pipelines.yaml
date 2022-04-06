@@ -697,10 +697,6 @@ stages:
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
-        # TODO: disable LLVM test, see:
-        # https://github.com/dotnet/runtime/issues/68914
-        # https://github.com/dotnet/runtime/issues/73304
-        condition: false
         configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
