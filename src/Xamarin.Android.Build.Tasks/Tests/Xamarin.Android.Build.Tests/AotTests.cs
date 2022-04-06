@@ -441,9 +441,8 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		[Ignore ("Ignore while investigating/fixing.")]
 		[Category ("LLVM")]
-		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode, [Values (false, true)] bool skipDebugSymbols)
+		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode, [Values (false, true)] bool includeDebugSymbols)
 		{
 			AssertAotModeSupported (androidAotMode);
 
@@ -454,6 +453,9 @@ namespace "+ libName + @" {
 			var supportedAbi = "arm64-v8a";
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty ("EnableLLVM", true.ToString ());
+			proj.SetProperty ("DebugSymbols", includeDebugSymbols.ToString ());
+			if (includeDebugSymbols)
+				proj.SetProperty ("Optimize", false.ToString ());
 			if (!string.IsNullOrEmpty (androidAotMode))
 				proj.SetProperty ("AndroidAotMode", androidAotMode);
 
@@ -469,18 +471,20 @@ namespace "+ libName + @" {
 					xaAssemblySize = ZipHelper.ReadFileFromZip (apk, $"lib/{supportedAbi}/libaot-Mono.Android.dll.so").Length;
 				}
 
-				string additionalArgs = "no-write-symbols";
-				if (skipDebugSymbols) {
-					additionalArgs += ",nodebug";
-				}
-				proj.SetProperty ("AndroidAotAdditionalArguments", additionalArgs);
+				if (includeDebugSymbols)
+					proj.SetProperty ("AndroidAotAdditionalArguments", "no-write-symbols,nodebug");
+
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
 				FileAssert.Exists (apkPath);
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					xaAssemblySizeNoSymbol = ZipHelper.ReadFileFromZip (apk, $"lib/{supportedAbi}/libaot-Mono.Android.dll.so").Length;
 				}
 				Assert.IsTrue (xaAssemblySize > 0 && xaAssemblySizeNoSymbol > 0, $"Mono.Android.dll.so size was not updated after first or second build. Before: '{xaAssemblySize}' After: '{xaAssemblySizeNoSymbol}'.");
-				Assert.Less (xaAssemblySizeNoSymbol, xaAssemblySize, "Mono.Android.dll.so should have been smaller after 'no-write-symbols' build.");
+				if (!includeDebugSymbols) {
+					Assert.AreEqual (xaAssemblySizeNoSymbol, xaAssemblySize, "Mono.Android.dll.so should be the same size for both builds that stripped symbols.");
+				} else {
+					Assert.Less (xaAssemblySizeNoSymbol, xaAssemblySize, "Mono.Android.dll.so should have been smaller after 'no-write-symbols' build.");
+				}
 			}
 		}
 
