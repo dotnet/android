@@ -5,6 +5,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   updateVS: false
   jdkTestFolder: $(JAVA_HOME_11_X64)
+  remove_dotnet: false
 
 steps:
 - checkout: self
@@ -36,6 +37,8 @@ steps:
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
 - template: use-dot-net.yaml
+  parameters:
+    remove_dotnet: ${{ parameters.remove_dotnet }}
 
 - task: DotNetCoreCLI@2
   displayName: shut down existing build daemons
