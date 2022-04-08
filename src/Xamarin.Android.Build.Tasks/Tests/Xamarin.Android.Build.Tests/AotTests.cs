@@ -441,6 +441,7 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
+		[Ignore ("Ignore while investigating/fixing.")]
 		[Category ("LLVM")]
 		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode, [Values (false, true)] bool skipDebugSymbols)
 		{
