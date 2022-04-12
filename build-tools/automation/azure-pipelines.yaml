@@ -14,7 +14,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/pjc/arcade-8645
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
@@ -1341,6 +1341,12 @@ stages:
       propsArtifactName: nuget-unsigned
       signType: $(MicroBuildSignType)
       runInParallel: false
+      postConvertSteps:
+      - task: MicroBuildCodesignVerify@3
+        displayName: verify signed msi content
+        inputs:
+          TargetFolders: $(Build.StagingDirectory)\bin\manifests
+          ExcludeSNVerify: true
 
   # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
   - job: push_signed_nugets
@@ -1569,6 +1575,12 @@ stages:
           /p:VsixPath=$(XA.Unsigned.Vsix)
           /p:OutDir=$(Build.StagingDirectory)/
           /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-vsix-content.binlog
+
+    - task: MicroBuildCodesignVerify@3
+      displayName: verify signed vsix content
+      inputs:
+        TargetFolders: $(Build.StagingDirectory)
+        ExcludeSNVerify: true
 
     - task: MSBuild@1
       displayName: rezip .vsix
