@@ -728,6 +728,7 @@ namespace Xamarin.Android.Build.Tests
 
 			const string runtimeIdentifier = "android-arm";
 			var proj = new XASdkProject {
+				TargetFramework = targetFramework,
 				IsRelease = isRelease
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
