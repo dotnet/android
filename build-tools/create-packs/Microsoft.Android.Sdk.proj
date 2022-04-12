@@ -105,7 +105,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets"
         DestinationFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\$(BundledVersionsFileName)"
-        Replacements="@AndroidPackVersionLong@=$(AndroidPackVersionLong)" >
+        Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel)" >
     </ReplaceFileContents>
   </Target>
 

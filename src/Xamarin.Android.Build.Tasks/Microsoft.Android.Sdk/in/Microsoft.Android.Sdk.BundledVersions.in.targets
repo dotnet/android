@@ -8,14 +8,12 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 -->
 <Project>
   <PropertyGroup>
-    <AndroidNETSdkVersion>@AndroidPackVersionLong@</AndroidNETSdkVersion>
-    <XamarinAndroidVersion>@AndroidPackVersionLong@</XamarinAndroidVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetPlatformVersion)' == '31.0' ">
-    <_AndroidRuntimePackId>32</_AndroidRuntimePackId>
+    <AndroidNETSdkVersion>@ANDROID_PACK_VERSION_LONG@</AndroidNETSdkVersion>
+    <XamarinAndroidVersion>@ANDROID_PACK_VERSION_LONG@</XamarinAndroidVersion>
   </PropertyGroup>
   <PropertyGroup>
     <_AndroidTargetingPackId>$(TargetPlatformVersion.TrimEnd('.0'))</_AndroidTargetingPackId>
+    <_AndroidRuntimePackId Condition=" '$(_AndroidTargetingPackId)' &lt; '@ANDROID_LATEST_STABLE_API_LEVEL@' ">@ANDROID_LATEST_STABLE_API_LEVEL@</_AndroidRuntimePackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidRuntimePackId>
   </PropertyGroup>
   <ItemGroup>

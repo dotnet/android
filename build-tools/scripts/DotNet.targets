@@ -8,13 +8,13 @@
     <MSBuild
          Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=net6.0;AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);DisableApiCompatibilityCheck=true" >
-    </MSBuild>
+         Properties="TargetFramework=net6.0;AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);DisableApiCompatibilityCheck=true"
+    />
     <MSBuild
          Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=net6.0;AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);DisableApiCompatibilityCheck=true" >
-    </MSBuild>
+         Properties="TargetFramework=net6.0;AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);DisableApiCompatibilityCheck=true"
+    />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
     <!-- Clean up old, previously restored packages -->
