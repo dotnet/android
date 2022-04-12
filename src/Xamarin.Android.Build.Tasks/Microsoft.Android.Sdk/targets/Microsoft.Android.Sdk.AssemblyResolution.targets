@@ -14,15 +14,6 @@ _ResolveAssemblies MSBuild target.
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.StripNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
-  <!-- HACK: workaround for: https://github.com/dotnet/sdk/issues/19891 -->
-  <Target Name="_RemoveLinuxFrameworkReferences"
-      AfterTargets="ProcessFrameworkReferences">
-    <ItemGroup>
-      <_ProblematicRIDs Include="linux-arm;linux-arm64;linux-x86;linux-x64" />
-      <PackageDownload Remove="Microsoft.AspNetCore.App.Runtime.%(_ProblematicRIDs.Identity)" />
-    </ItemGroup>
-  </Target>
-
   <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
     <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
     <OutDir     Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutDir>
@@ -204,26 +195,6 @@ _ResolveAssemblies MSBuild target.
         IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
-    <ItemGroup>
-      <_StrippedFrameworkNativeLibrary Include="@(FrameworkNativeLibrary->'$(IntermediateOutputPath)native\%(RuntimeIdentifier)\%(Filename)%(Extension)')" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_StripFrameworkNativeLibraries"
-      Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' "
-      DependsOnTargets="_IncludeNativeSystemLibraries"
-      Inputs="@(FrameworkNativeLibrary)"
-      Outputs="@(_StrippedFrameworkNativeLibrary)">
-    <StripNativeLibraries
-        SourceFiles="@(FrameworkNativeLibrary)"
-        DestinationFiles="@(_StrippedFrameworkNativeLibrary)"
-        ToolPath="$(AndroidBinUtilsDirectory)"
-    />
-    <ItemGroup Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">
-      <FrameworkNativeLibrary Remove="@(FrameworkNativeLibrary)"/>
-      <FrameworkNativeLibrary Include="@(_StrippedFrameworkNativeLibrary)"/>
-      <FileWrites Include="@(_StrippedFrameworkNativeLibrary)" />
-    </ItemGroup>
   </Target>
 
 </Project>

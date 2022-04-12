@@ -16,6 +16,26 @@ namespace Xamarin.Android.Build.Tests
 {
 	class EnvironmentHelper
 	{
+		public sealed class EnvironmentFile
+		{
+			public readonly string Path;
+			public readonly string ABI;
+
+			public EnvironmentFile (string path, string abi)
+			{
+				if (String.IsNullOrEmpty (path)) {
+					throw new ArgumentException ("must not be null or empty", nameof (path));
+				}
+
+				if (String.IsNullOrEmpty (abi)) {
+					throw new ArgumentException ("must not be null or empty", nameof (abi));
+				}
+
+				Path = path;
+				ABI = abi;
+			}
+		}
+
 		// This must be identical to the like-named structure in src/monodroid/jni/xamarin-app.h
 		public sealed class ApplicationConfig
 		{
@@ -36,14 +56,20 @@ namespace Xamarin.Android.Build.Tests
 			public uint   bundled_assembly_name_width;
 			public uint   number_of_assembly_store_files;
 			public uint   number_of_dso_cache_entries;
+			public uint   android_runtime_jnienv_class_token;
+			public uint   jnienv_initialize_method_token;
+			public uint   jnienv_registerjninatives_method_token;
 			public uint   mono_components_mask;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 19;
+		const uint ApplicationConfigFieldCount = 22;
+
+		const string ApplicationConfigSymbolName = "application_config";
+		const string AppEnvironmentVariablesSymbolName = "app_environment_variables";
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
-		static readonly Regex stringLabelRegex = new Regex ("^\\.L\\.autostr\\.[0-9]+:", RegexOptions.Compiled);
+		static readonly Regex assemblerLabelRegex = new Regex ("^[_.a-zA-Z0-9]+:", RegexOptions.Compiled);
 
 		static readonly HashSet <string> expectedPointerTypes = new HashSet <string> (StringComparer.Ordinal) {
 			".long",
@@ -57,9 +83,9 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		static readonly string[] requiredSharedLibrarySymbols = {
-			"app_environment_variables",
+			AppEnvironmentVariablesSymbolName,
 			"app_system_properties",
-			"application_config",
+			ApplicationConfigSymbolName,
 			"map_modules",
 			"map_module_count",
 			"java_type_count",
@@ -68,9 +94,76 @@ namespace Xamarin.Android.Build.Tests
 			"mono_aot_mode_name",
 		};
 
+		static readonly string executableExtension;
+
+		static EnvironmentHelper ()
+		{
+			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
+				executableExtension = ".exe";
+			} else {
+				executableExtension = String.Empty;
+			}
+		}
+
+		static string GenerateNativeAssemblyFromLLVM (string llvmIrFilePath)
+		{
+			Assert.AreEqual (".ll", Path.GetExtension (llvmIrFilePath), $"Invalid file extension for '{llvmIrFilePath}'");
+
+			// Should match the arguments passed to llc by the CompileNativeAssembly task (except for the `--filetype` argument)
+			const string assemblerOptions =
+				"-O2 " +
+				"--debugger-tune=lldb " + // NDK uses lldb now
+				"--debugify-level=location+variables " +
+				"--fatal-warnings " +
+				"--filetype=asm " +
+				"--relocation-model=pic";
+
+			string llc = Path.Combine (BaseTest.SetUp.OSBinDirectory, "binutils", "bin", $"llc{executableExtension}");
+			string outputFilePath = Path.ChangeExtension (llvmIrFilePath, ".s");
+			RunCommand (llc, $"{assemblerOptions} -o \"{outputFilePath}\" \"{llvmIrFilePath}\"");
+
+			Assert.IsTrue (File.Exists (outputFilePath), $"Generated native assembler file '{outputFilePath}' does not exist");
+
+			return outputFilePath;
+		}
+
+		static NativeAssemblyParser CreateAssemblyParser (EnvironmentFile envFile)
+		{
+			string assemblerFilePath = GenerateNativeAssemblyFromLLVM (envFile.Path);
+			return new NativeAssemblyParser (assemblerFilePath, envFile.ABI);
+		}
+
+		static NativeAssemblyParser.AssemblerSymbol GetRequiredSymbol (string symbolName, EnvironmentFile envFile, NativeAssemblyParser parser)
+		{
+			if (!parser.Symbols.TryGetValue (symbolName, out NativeAssemblyParser.AssemblerSymbol symbol)) {
+				Assert.Fail ($"Required symbol '{symbolName}' cannot be found in the '{envFile.Path}' file.");
+			}
+
+			Assert.IsNotNull (symbol, $"Assembler symbol '{symbolName}' must not be null in environment file '{envFile.Path}'");
+			Assert.IsTrue (symbol.Contents.Count > 0, $"Assembler symbol '{symbolName}' must have at least one line of contents in environment file '{envFile.Path}'");
+
+			return symbol;
+		}
+
+		static string GetStringContents (NativeAssemblyParser.AssemblerSymbol symbol, EnvironmentFile envFile, NativeAssemblyParser parser, int minimumLength = 1)
+		{
+			string[] field = GetField (envFile.Path, parser.SourceFilePath, symbol.Contents[0].Contents, symbol.Contents[0].LineNumber);
+
+			Assert.IsTrue (field.Length >= 2, $"First line of symbol '{symbol.Name}' must have at least two fields in environment file '{parser.SourceFilePath}'. File generated from '{envFile.Path}'");
+			Assert.IsTrue (String.Compare (".asciz", field[0], StringComparison.Ordinal) == 0, $"First line of symbol '{symbol.Name}' must begin with the '.asciz' directive in environment file '{parser.SourceFilePath}'. Instead it was '{field[0]}'. File generated from '{envFile.Path}'");
+
+			// the extra 2 characters account for the enclosing '"'
+			Assert.IsTrue (field[1].Length > 2 + minimumLength, $"Symbol '{symbol.Name}' must not be a string at least {minimumLength} characters long in environment file '{parser.SourceFilePath}'. File generated from '{envFile.Path}'");
+
+			string s = field[1].Trim ();
+			Assert.IsTrue (s[0] == '"' && s[s.Length - 1] == '"', $"Symbol '{symbol.Name}' value must be enclosed in double quotes in environment file '{parser.SourceFilePath}'. File generated from '{envFile.Path}'");
+
+			return field[1].Trim ('"');
+		}
+
 		// Reads all the environment files, makes sure they all have identical contents in the
 		// `application_config` structure and returns the config if the condition is true
-		public static ApplicationConfig ReadApplicationConfig (List<string> envFilePaths)
+		public static ApplicationConfig ReadApplicationConfig (List<EnvironmentFile> envFilePaths)
 		{
 			if (envFilePaths.Count == 0)
 				return null;
@@ -78,164 +171,162 @@ namespace Xamarin.Android.Build.Tests
 			ApplicationConfig app_config = ReadApplicationConfig (envFilePaths [0]);
 
 			for (int i = 1; i < envFilePaths.Count; i++) {
-				AssertApplicationConfigIsIdentical (app_config, envFilePaths [0], ReadApplicationConfig (envFilePaths[i]), envFilePaths[i]);
+				AssertApplicationConfigIsIdentical (app_config, envFilePaths [0].Path, ReadApplicationConfig (envFilePaths[i]), envFilePaths[i].Path);
 			}
 
 			return app_config;
 		}
 
-		static ApplicationConfig ReadApplicationConfig (string envFile)
+		static ApplicationConfig ReadApplicationConfig (EnvironmentFile envFile)
 		{
-			string[] lines = File.ReadAllLines (envFile, Encoding.UTF8);
-			var strings = new Dictionary<string, string> (StringComparer.Ordinal);
+			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
+
+			if (!parser.Symbols.TryGetValue (ApplicationConfigSymbolName, out NativeAssemblyParser.AssemblerSymbol appConfigSymbol)) {
+				Assert.Fail ($"Symbol '{ApplicationConfigSymbolName}' not found in LLVM IR file '{envFile.Path}'");
+			}
+
+			Assert.IsTrue (appConfigSymbol.Size != 0, $"{ApplicationConfigSymbolName} size as specified in the '.size' directive must not be 0");
+
 			var pointers = new List <string> ();
-
 			var ret = new ApplicationConfig ();
-			bool gatherFields = false;
 			uint fieldCount = 0;
-			for (int i = 0; i < lines.Length; i++) {
-				string line = lines [i];
-				if (IsCommentLine (line))
-					continue;
+			string[] field;
 
-				string[] field;
-				if (stringLabelRegex.IsMatch (line)) {
-					string label = line.Substring (0, line.Length - 1);
+			foreach (NativeAssemblyParser.AssemblerSymbolItem item in appConfigSymbol.Contents) {
+				field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
 
-					line = lines [++i];
-					field = GetField (envFile, line, i);
-					AssertFieldType (envFile, ".asciz", field [0], i);
-					strings [label] = AssertIsAssemblerString (envFile, field [1], i);
-					continue;
+				if (String.Compare (".zero", field[0], StringComparison.Ordinal) == 0) {
+					continue; // padding, we can safely ignore it
 				}
-
-				if (String.Compare ("application_config:", line.Trim (), StringComparison.Ordinal) == 0) {
-					gatherFields = true;
-					continue;
-				}
-
-				if (!gatherFields)
-					continue;
-
-				field = GetField (envFile, line, i);
-				if (String.Compare (".zero", field [0], StringComparison.Ordinal) == 0)
-					continue; // structure padding
 
 				switch (fieldCount) {
 					case 0: // uses_mono_llvm: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.uses_mono_llvm = ConvertFieldToBool ("uses_mono_llvm", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.uses_mono_llvm = ConvertFieldToBool ("uses_mono_llvm", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 1: // uses_mono_aot: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.uses_mono_aot = ConvertFieldToBool ("uses_mono_aot", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.uses_mono_aot = ConvertFieldToBool ("uses_mono_aot", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 2: // uses_assembly_preload: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.uses_assembly_preload = ConvertFieldToBool ("uses_assembly_preload", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.uses_assembly_preload = ConvertFieldToBool ("uses_assembly_preload", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 3: // is_a_bundled_app: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.is_a_bundled_app = ConvertFieldToBool ("is_a_bundled_app", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.is_a_bundled_app = ConvertFieldToBool ("is_a_bundled_app", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 4: // broken_exception_transitions: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.broken_exception_transitions = ConvertFieldToBool ("broken_exception_transitions", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.broken_exception_transitions = ConvertFieldToBool ("broken_exception_transitions", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 5: // instant_run_enabled: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.instant_run_enabled = ConvertFieldToBool ("instant_run_enabled", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.instant_run_enabled = ConvertFieldToBool ("instant_run_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 6: // jni_add_native_method_registration_attribute_present: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.jni_add_native_method_registration_attribute_present = ConvertFieldToBool ("jni_add_native_method_registration_attribute_present", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.jni_add_native_method_registration_attribute_present = ConvertFieldToBool ("jni_add_native_method_registration_attribute_present", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 7: // have_runtime_config_blob: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.have_runtime_config_blob = ConvertFieldToBool ("have_runtime_config_blob", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.have_runtime_config_blob = ConvertFieldToBool ("have_runtime_config_blob", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 8: // have_assemblies_blob: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.have_assemblies_blob = ConvertFieldToBool ("have_assemblies_blob", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.have_assemblies_blob = ConvertFieldToBool ("have_assemblies_blob", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 9: // bound_stream_io_exception_type: byte / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.bound_stream_io_exception_type = ConvertFieldToByte ("bound_stream_io_exception_type", envFile, i, field [1]);
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.bound_stream_io_exception_type = ConvertFieldToByte ("bound_stream_io_exception_type", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 10: // package_naming_policy: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.package_naming_policy = ConvertFieldToUInt32 ("package_naming_policy", envFile, i, field [1]);
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.package_naming_policy = ConvertFieldToUInt32 ("package_naming_policy", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 11: // environment_variable_count: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.environment_variable_count = ConvertFieldToUInt32 ("environment_variable_count", envFile, i, field [1]);
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.environment_variable_count = ConvertFieldToUInt32 ("environment_variable_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 12: // system_property_count: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile, i, field [1]);
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 13: // number_of_assemblies_in_apk: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.number_of_assemblies_in_apk = ConvertFieldToUInt32 ("number_of_assemblies_in_apk", envFile, i, field [1]);
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.number_of_assemblies_in_apk = ConvertFieldToUInt32 ("number_of_assemblies_in_apk", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 14: // bundled_assembly_name_width: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile, i, field [1]);
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 15: // number_of_assembly_store_files: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.number_of_assembly_store_files = ConvertFieldToUInt32 ("number_of_assembly_store_files", envFile, i, field [1]);
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.number_of_assembly_store_files = ConvertFieldToUInt32 ("number_of_assembly_store_files", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 16: // number_of_dso_cache_entries: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile, i, field [1]);
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 17: // mono_components_mask: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
-						ret.mono_components_mask = ConvertFieldToUInt32 ("mono_components_mask", envFile, i, field [1]);
+					case 17: // android_runtime_jnienv_class_token: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("android_runtime_jnienv_class_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 18: // android_package_name: string / [pointer type]
-						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
+					case 18: // jnienv_initialize_method_token: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("jnienv_initialize_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 19: // jnienv_registerjninatives_method_token: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("jnienv_registerjninatives_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 20: // mono_components_mask: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.mono_components_mask = ConvertFieldToUInt32 ("mono_components_mask", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 21: // android_package_name: string / [pointer type]
+						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;
 				}
 				fieldCount++;
-
-				if (String.Compare (".size", field [0], StringComparison.Ordinal) == 0) {
-					fieldCount--;
-					Assert.IsTrue (field [1].StartsWith ("application_config", StringComparison.Ordinal), $"Mismatched .size directive in '{envFile}:{i}'");
-					gatherFields = false; // We've reached the end of the application_config structure
-				}
 			}
-			Assert.AreEqual (ApplicationConfigFieldCount, fieldCount, $"Invalid 'application_config' field count in environment file '{envFile}'");
-			Assert.AreEqual (1, pointers.Count, $"Invalid number of string pointers in 'application_config' structure in environment file '{envFile}'");
-			Assert.IsTrue (strings.TryGetValue (pointers [0], out ret.android_package_name), $"Invalid package name string pointer in 'application_config' structure in environment file '{envFile}'");
-			Assert.IsFalse (String.IsNullOrEmpty (ret.android_package_name), $"Package name field in 'application_config' in environment file '{envFile}' must not be null or empty");
+
+			Assert.AreEqual (1, pointers.Count, $"Invalid number of string pointers in 'application_config' structure in environment file '{envFile.Path}'");
+
+			NativeAssemblyParser.AssemblerSymbol androidPackageNameSymbol = GetRequiredSymbol (pointers[0], envFile, parser);
+			ret.android_package_name = GetStringContents (androidPackageNameSymbol, envFile, parser);
+
+			Assert.AreEqual (ApplicationConfigFieldCount, fieldCount, $"Invalid 'application_config' field count in environment file '{envFile.Path}'");
+			Assert.IsFalse (String.IsNullOrEmpty (ret.android_package_name), $"Package name field in 'application_config' in environment file '{envFile.Path}' must not be null or empty");
 
 			return ret;
 		}
 
 		// Reads all the environment files, makes sure they contain the same environment variables (both count
 		// and contents) and then returns a dictionary filled with the variables.
-		public static Dictionary<string, string> ReadEnvironmentVariables (List<string> envFilePaths)
+		public static Dictionary<string, string> ReadEnvironmentVariables (List<EnvironmentFile> envFilePaths)
 		{
 			if (envFilePaths.Count == 0)
 				return null;
@@ -245,52 +336,28 @@ namespace Xamarin.Android.Build.Tests
 				return envvars;
 
 			for (int i = 1; i < envFilePaths.Count; i++) {
-				AssertDictionariesAreEqual (envvars, envFilePaths [0], ReadEnvironmentVariables (envFilePaths[i]), envFilePaths[i]);
+				AssertDictionariesAreEqual (envvars, envFilePaths [0].Path, ReadEnvironmentVariables (envFilePaths[i]), envFilePaths[i].Path);
 			}
 
 			return envvars;
 		}
 
-		static Dictionary<string, string> ReadEnvironmentVariables (string envFile)
+		static Dictionary<string, string> ReadEnvironmentVariables (EnvironmentFile envFile)
 		{
-			string[] lines = File.ReadAllLines (envFile, Encoding.UTF8);
-			var strings = new Dictionary<string, string> (StringComparer.Ordinal);
+			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
+
+			if (!parser.Symbols.TryGetValue (AppEnvironmentVariablesSymbolName, out NativeAssemblyParser.AssemblerSymbol appEnvvarsSymbol)) {
+				Assert.Fail ($"Symbol '{AppEnvironmentVariablesSymbolName}' not found in LLVM IR file '{envFile.Path}'");
+			}
+
+			Assert.IsTrue (appEnvvarsSymbol.Size != 0, $"{AppEnvironmentVariablesSymbolName} size as specified in the '.size' directive must not be 0");
+
+			string[] field;
 			var pointers = new List <string> ();
+			foreach (NativeAssemblyParser.AssemblerSymbolItem item in appEnvvarsSymbol.Contents) {
+				field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
 
-			bool gatherPointers = false;
-			for (int i = 0; i < lines.Length; i++) {
-				string line = lines [i];
-				if (IsCommentLine (line))
-					continue;
-
-				string[] field;
-				if (stringLabelRegex.IsMatch (line)) {
-					string label = line.Substring (0, line.Length - 1);
-
-					line = lines [++i];
-					field = GetField (envFile, line, i);
-
-					AssertFieldType (envFile, ".asciz", field [0], i);
-					strings [label] = AssertIsAssemblerString (envFile, field [1], i);
-					continue;
-				}
-
-				if (String.Compare ("app_environment_variables:", line.Trim (), StringComparison.Ordinal) == 0) {
-					gatherPointers = true;
-					continue;
-				}
-
-				if (!gatherPointers)
-					continue;
-
-				field = GetField (envFile, line, i);
-				if (String.Compare (".size", field [0], StringComparison.Ordinal) == 0) {
-					Assert.IsTrue (field [1].StartsWith ("app_environment_variables", StringComparison.Ordinal), $"Mismatched .size directive in '{envFile}:{i}'");
-					gatherPointers = false; // We've reached the end of the environment variable array
-					continue;
-				}
-
-				Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
+				Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{parser.SourceFilePath}:{item.LineNumber}': {field [0]}. File generated from '{envFile.Path}'");
 				pointers.Add (field [1].Trim ());
 			}
 
@@ -300,14 +367,11 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (pointers.Count % 2 == 0, "Environment variable array must have an even number of elements");
 			for (int i = 0; i < pointers.Count; i += 2) {
-				string name;
+				NativeAssemblyParser.AssemblerSymbol symbol = GetRequiredSymbol (pointers[i], envFile, parser);
+				string name = GetStringContents (symbol, envFile, parser);
 
-				Assert.IsTrue (strings.TryGetValue (pointers [i], out name), $"[name] String with label '{pointers [i]}' not found in '{envFile}'");
-				Assert.IsFalse (String.IsNullOrEmpty (name), $"Environment variable name must not be null or empty in {envFile} for string label '{pointers [i]}'");
-
-				string value;
-				Assert.IsTrue (strings.TryGetValue (pointers [i + 1], out value), $"[value] String with label '{pointers [i + 1]}' not found in '{envFile}'");
-				Assert.IsNotNull (value, $"Environnment variable value must not be null in '{envFile}' for string label '{pointers [i + 1]}'");
+				symbol = GetRequiredSymbol (pointers[i + 1], envFile, parser);
+				string value = GetStringContents (symbol, envFile, parser, minimumLength: 0);
 
 				ret [name] = value;
 			}
@@ -315,37 +379,17 @@ namespace Xamarin.Android.Build.Tests
 			return ret;
 		}
 
-		static bool IsCommentLine (string line)
-		{
-			string l = line?.Trim ();
-			if (String.IsNullOrEmpty (l)) {
-				return false;
-			}
-
-			return l.StartsWith ("/*", StringComparison.Ordinal) ||
-				l.StartsWith ("//", StringComparison.Ordinal) ||
-				l.StartsWith ("#", StringComparison.Ordinal) ||
-				l.StartsWith ("@", StringComparison.Ordinal);
-		}
-
-		static string[] GetField (string file, string line, int lineNumber)
+		static string[] GetField (string llvmAssemblerFile, string nativeAssemblerFile, string line, ulong lineNumber)
 		{
 			string[] ret = line?.Trim ()?.Split ('\t');
-			Assert.IsTrue (ret.Length >= 2, $"Invalid assembler field format in file '{file}:{lineNumber}': '{line}'");
+			Assert.IsTrue (ret.Length >= 2, $"Invalid assembler field format in file '{nativeAssemblerFile}:{lineNumber}': '{line}'. File generated from '{llvmAssemblerFile}'");
 
 			return ret;
 		}
 
-		static void AssertFieldType (string file, string expectedType, string value, int lineNumber)
+		static void AssertFieldType (string llvmAssemblerFile, string nativeAssemblerFile, string expectedType, string value, ulong lineNumber)
 		{
-			Assert.AreEqual (expectedType, value, $"Expected the '{expectedType}' field type in file '{file}:{lineNumber}': {value}");
-		}
-
-		static string AssertIsAssemblerString (string file, string value, int lineNumber)
-		{
-			string v = value.Trim ();
-			Assert.IsTrue (v.StartsWith ("\"", StringComparison.Ordinal) && v.EndsWith("\"", StringComparison.Ordinal), $"Field value is not a valid assembler string in '{file}:{lineNumber}': {v}");
-			return v.Trim ('"');
+			Assert.AreEqual (expectedType, value, $"Expected the '{expectedType}' field type in file '{nativeAssemblerFile}:{lineNumber}': {value}. File generated from '{llvmAssemblerFile}'");
 		}
 
 		static void AssertDictionariesAreEqual (Dictionary <string, string> d1, string d1FileName, Dictionary <string, string> d2, string d2FileName)
@@ -370,15 +414,15 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (firstAppConfig.android_package_name, secondAppConfig.android_package_name, $"Field 'android_package_name' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 		}
 
-		public static List<string> GatherEnvironmentFiles (string outputDirectoryRoot, string supportedAbis, bool required)
+		public static List<EnvironmentFile> GatherEnvironmentFiles (string outputDirectoryRoot, string supportedAbis, bool required)
 		{
-			var environmentFiles = new List <string> ();
+			var environmentFiles = new List <EnvironmentFile> ();
 
 			foreach (string abi in supportedAbis.Split (';')) {
-				string envFilePath = Path.Combine (outputDirectoryRoot, "android", $"environment.{abi}.s");
+				string envFilePath = Path.Combine (outputDirectoryRoot, "android", $"environment.{abi}.ll");
 
 				Assert.IsTrue (File.Exists (envFilePath), $"Environment file {envFilePath} does not exist");
-				environmentFiles.Add (envFilePath);
+				environmentFiles.Add (new EnvironmentFile (envFilePath, abi));
 			}
 
 			if (required)
@@ -428,9 +472,30 @@ namespace Xamarin.Android.Build.Tests
 
 		static void AssertSharedLibraryHasRequiredSymbols (string dsoPath, string readElfPath)
 		{
+			(List<string> stdout_lines, List<string> _) = RunCommand (readElfPath, $"--dyn-syms \"{dsoPath}\"");
+
+			var symbols = new HashSet<string> (StringComparer.Ordinal);
+			foreach (string line in stdout_lines) {
+				string[] fields = line.Split (readElfFieldSeparator, StringSplitOptions.RemoveEmptyEntries);
+				if (fields.Length < 8 || !fields [0].EndsWith (":", StringComparison.Ordinal))
+					continue;
+				string symbolName = fields [7].Trim ();
+				if (String.IsNullOrEmpty (symbolName))
+					continue;
+
+				symbols.Add (symbolName);
+			}
+
+			foreach (string symbol in requiredSharedLibrarySymbols) {
+				Assert.IsTrue (symbols.Contains (symbol), $"Symbol '{symbol}' is missing from '{dsoPath}'");
+			}
+		}
+
+		static (List<string> stdout, List<string> stderr) RunCommand (string executablePath, string arguments = null)
+		{
 			var psi = new ProcessStartInfo {
-				FileName = readElfPath,
-				Arguments = $"--dyn-syms \"{dsoPath}\"",
+				FileName = executablePath,
+				Arguments = arguments,
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				UseShellExecute = false,
@@ -477,25 +542,11 @@ namespace Xamarin.Android.Build.Tests
 				if (!exited || process.ExitCode != 0) {
 					DumpLines ("stdout", stdout_lines);
 					DumpLines ("stderr", stderr_lines);
-					Assert.Fail ($"Failed to validate application environment SharedLibrary '{dsoPath}'");
+					Assert.Fail ($"Command '{psi.FileName} {psi.Arguments}' failed to run or exited with error code");
 				}
 			}
 
-			var symbols = new HashSet<string> (StringComparer.Ordinal);
-			foreach (string line in stdout_lines) {
-				string[] fields = line.Split (readElfFieldSeparator, StringSplitOptions.RemoveEmptyEntries);
-				if (fields.Length < 8 || !fields [0].EndsWith (":", StringComparison.Ordinal))
-					continue;
-				string symbolName = fields [7].Trim ();
-				if (String.IsNullOrEmpty (symbolName))
-					continue;
-
-				symbols.Add (symbolName);
-			}
-
-			foreach (string symbol in requiredSharedLibrarySymbols) {
-				Assert.IsTrue (symbols.Contains (symbol), $"Symbol '{symbol}' is missing from '{dsoPath}'");
-			}
+			return (stdout_lines, stderr_lines);
 		}
 
 		static void DumpLines (string streamName, List <string> lines)
@@ -509,34 +560,34 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static bool ConvertFieldToBool (string fieldName, string envFile, int fileLine, string value)
+		static bool ConvertFieldToBool (string fieldName, string llvmAssemblerEnvFile, string nativeAssemblerEnvFile, ulong fileLine, string value)
 		{
 			// Allow both decimal and hexadecimal values
-			Assert.IsTrue (value.Length > 0 && value.Length <= 3, $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid boolean value (length not between 1 and 3)");
+			Assert.IsTrue (value.Length > 0 && value.Length <= 3, $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid boolean value (length not between 1 and 3). File generated from '{llvmAssemblerEnvFile}'");
 
 			uint fv;
-			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid boolean value (not a valid integer)");
-			Assert.IsTrue (fv == 0 || fv == 1, $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid boolean value (not a valid boolean value 0 or 1)");
+			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid boolean value (not a valid integer). File generated from '{llvmAssemblerEnvFile}'");
+			Assert.IsTrue (fv == 0 || fv == 1, $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid boolean value (not a valid boolean value 0 or 1). File generated from '{llvmAssemblerEnvFile}'");
 
 			return fv == 1;
 		}
 
-		static uint ConvertFieldToUInt32 (string fieldName, string envFile, int fileLine, string value)
+		static uint ConvertFieldToUInt32 (string fieldName, string llvmAssemblerEnvFile, string nativeAssemblerEnvFile, ulong fileLine, string value)
 		{
-			Assert.IsTrue (value.Length > 0, $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint32_t value (not long enough)");
+			Assert.IsTrue (value.Length > 0, $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint32_t value (not long enough). File generated from '{llvmAssemblerEnvFile}'");
 
 			uint fv;
-			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint32_t value (not a valid integer)");
+			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint32_t value (not a valid integer). File generated from '{llvmAssemblerEnvFile}'");
 
 			return fv;
 		}
 
-		static byte ConvertFieldToByte (string fieldName, string envFile, int fileLine, string value)
+		static byte ConvertFieldToByte (string fieldName, string llvmAssemblerEnvFile, string nativeAssemblerEnvFile, ulong fileLine, string value)
 		{
-			Assert.IsTrue (value.Length > 0, $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint8_t value (not long enough)");
+			Assert.IsTrue (value.Length > 0, $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint8_t value (not long enough). File generated from '{llvmAssemblerEnvFile}'");
 
 			byte fv;
-			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {envFile}:{fileLine} is not a valid uint8_t value (not a valid integer)");
+			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint8_t value (not a valid integer). File generated from '{llvmAssemblerEnvFile}'");
 
 			return fv;
 		}

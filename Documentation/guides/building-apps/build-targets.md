@@ -6,7 +6,7 @@ ms.assetid: 17DE89FF-F316-4620-B865-EF6E0963A29C
 ms.technology: xamarin-android
 author: jonpryor
 ms.author: jopryo
-ms.date: 09/17/2020
+ms.date: 03/29/2022
 ---
 
 # Build Targets

@@ -5,6 +5,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   updateVS: false
   jdkTestFolder: $(JAVA_HOME_11_X64)
+  remove_dotnet: false
 
 steps:
 - checkout: self
@@ -36,6 +37,8 @@ steps:
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
 - template: use-dot-net.yaml
+  parameters:
+    remove_dotnet: ${{ parameters.remove_dotnet }}
 
 - task: DotNetCoreCLI@2
   displayName: shut down existing build daemons
@@ -53,7 +56,7 @@ steps:
 
 - template: run-xaprepare.yaml
   parameters:
-    arguments: --s=AndroidTestDependencies
+    arguments: --s=AndroidTestDependencies  --android-sdk-platforms="19,21,26,32"
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - task: DotNetCoreCLI@2
@@ -61,7 +64,9 @@ steps:
   inputs:
     command: restore
     projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj
-    restoreArguments: --configfile ${{ parameters.xaSourcePath }}/NuGet.config -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android.Build.Tests.binlog
+    restoreArguments: -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android.Build.Tests.binlog
+    nugetConfigPath: ${{ parameters.xaSourcePath }}/NuGet.config
+    feedsToUse: config
 
 - task: DotNetCoreCLI@2
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
 {
-	class HomebrewProgram : Program
+	class HomebrewProgram : Program, IBuildInventoryItem
 	{
 		static readonly char[] lineSplit = new [] { '\n' };
 
@@ -16,6 +16,10 @@ namespace Xamarin.Android.Prepare
 		public string HomebrewTapName           { get; } = String.Empty;
 		public Uri? HomebrewFormulaUrl           { get; }
 		public bool Pin                         { get; set; }
+
+		public string BuildToolName => Name;
+
+		public string BuildToolVersion => CurrentVersion;
 
 		public HomebrewProgram (string homebrewPackageName, string? executableName = null)
 			: this (homebrewPackageName, homebrewTap: null, executableName: executableName)
@@ -64,6 +68,9 @@ namespace Xamarin.Android.Prepare
 				success = await runner.Upgrade (installName);
 			} else
 				success = await runner.Install (installName);
+
+			await DetermineCurrentVersion ();
+			AddToInventory ();
 
 			if (!success || !Pin)
 				return success;
@@ -185,6 +192,8 @@ namespace Xamarin.Android.Prepare
 			if (!installed)
 				return;
 
+			AddToInventory ();
+
 			var runner = new BrewRunner (Context.Instance);
 			if (InstalledButWrongVersion) {
 				Log.DebugLine ($"Unpinning {Name} as wrong version installed (may show warnings if package isn't pinned)");
@@ -221,6 +230,13 @@ namespace Xamarin.Android.Prepare
 			if (lines.Length == 0)
 				return String.Empty;
 			return lines [0];
+		}
+
+		public void AddToInventory ()
+		{
+			if (!string.IsNullOrEmpty (BuildToolName) && !string.IsNullOrEmpty (BuildToolVersion) && !Context.Instance.BuildToolsInventory.ContainsKey (BuildToolName)) {
+				Context.Instance.BuildToolsInventory.Add (BuildToolName, BuildToolVersion);
+			}
 		}
 	}
 }

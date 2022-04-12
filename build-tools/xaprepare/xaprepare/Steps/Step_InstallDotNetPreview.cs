@@ -7,8 +7,11 @@ using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
 {
-	class Step_InstallDotNetPreview : StepWithDownloadProgress
+	class Step_InstallDotNetPreview : StepWithDownloadProgress, IBuildInventoryItem
 	{
+		public string BuildToolName => "dotnet-preview";
+		public string BuildToolVersion => Context.Instance.Properties.GetRequiredValue (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion);
+
 		public Step_InstallDotNetPreview ()
 			: base ("Install required .NET Preview SDK locally")
 		{ }
@@ -18,15 +21,16 @@ namespace Xamarin.Android.Prepare
 			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
 			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
-			var dotnetPreviewVersion = context.Properties.GetRequiredValue (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion);
 
 			// Always delete the bin/$(Configuration)/dotnet/ directory
 			Utilities.DeleteDirectory (dotnetPath);
 
-			if (!await InstallDotNetAsync (context, dotnetPath, dotnetPreviewVersion)) {
-				Log.ErrorLine ($"Installation of dotnet SDK {dotnetPreviewVersion} failed.");
+			if (!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion)) {
+				Log.ErrorLine ($"Installation of dotnet SDK {BuildToolVersion} failed.");
 				return false;
 			}
+
+			AddToInventory ();
 
 			// Delete all relevant NuGet package install directories, as we could possibly be using a new runtime commit with a previously installed version (6.0.0)
 			var runtimeDirs = Directory.GetDirectories (Configurables.Paths.XAPackagesDir, "microsoft.netcore.app.runtime.mono.android*");
@@ -128,6 +132,13 @@ namespace Xamarin.Android.Prepare
 		bool TestDotNetSdk (string dotnetTool)
 		{
 			return Utilities.RunCommand (dotnetTool, new string [] { "--version" });
+		}
+
+		public void AddToInventory ()
+		{
+			if (!string.IsNullOrEmpty (BuildToolName) && !string.IsNullOrEmpty (BuildToolVersion) && !Context.Instance.BuildToolsInventory.ContainsKey (BuildToolName)) {
+				Context.Instance.BuildToolsInventory.Add (BuildToolName, BuildToolVersion);
+			}
 		}
 
 	}

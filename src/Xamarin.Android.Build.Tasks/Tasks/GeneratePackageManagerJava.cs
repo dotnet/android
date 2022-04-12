@@ -3,7 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -202,8 +204,12 @@ namespace Xamarin.Android.Tasks
 					var lineToWrite = line;
 					if (lineToWrite.StartsWith ("MONO_LOG_LEVEL=", StringComparison.Ordinal))
 						haveLogLevel = true;
-					if (lineToWrite.StartsWith ("MONO_GC_PARAMS=", StringComparison.Ordinal))
+					if (lineToWrite.StartsWith ("MONO_GC_PARAMS=", StringComparison.Ordinal)) {
 						haveMonoGCParams = true;
+						if (lineToWrite.IndexOf ("bridge-implementation=old", StringComparison.Ordinal) >= 0) {
+							Log.LogCodedWarning ("XA2000", Properties.Resources.XA2000_gcParams_bridgeImpl);
+						}
+					}
 					if (lineToWrite.StartsWith ("XAMARIN_BUILD_ID=", StringComparison.Ordinal))
 						havebuildId = true;
 					if (lineToWrite.StartsWith ("MONO_DEBUG=", StringComparison.Ordinal)) {
@@ -324,9 +330,22 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			int android_runtime_jnienv_class_token = -1;
+			int jnienv_initialize_method_token = -1;
+			int jnienv_registerjninatives_method_token = -1;
 			foreach (var assembly in ResolvedAssemblies) {
 				updateNameWidth (assembly);
 				updateAssemblyCount (assembly);
+
+				if (android_runtime_jnienv_class_token != -1) {
+					continue;
+				}
+
+				if (!assembly.ItemSpec.EndsWith ("Mono.Android.dll", StringComparison.OrdinalIgnoreCase)) {
+					continue;
+				}
+
+				GetRequiredTokens (assembly.ItemSpec, out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
 			}
 
 			if (!UseAssemblyStore) {
@@ -383,39 +402,42 @@ namespace Xamarin.Android.Tasks
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
+			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
+				IsBundledApp = IsBundledApplication,
+				UsesMonoAOT = usesMonoAOT,
+				UsesMonoLLVM = EnableLLVM,
+				UsesAssemblyPreload = usesAssemblyPreload,
+				MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
+				AndroidPackageName = AndroidPackageName,
+				BrokenExceptionTransitions = brokenExceptionTransitions,
+				PackageNamingPolicy = pnp,
+				BoundExceptionType = boundExceptionType,
+				InstantRunEnabled = InstantRunEnabled,
+				JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
+				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
+				NumberOfAssembliesInApk = assemblyCount,
+				BundledAssemblyNameWidth = assemblyNameWidth,
+				NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
+				// and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
+				// runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
+				// and in the same order.
+				MonoComponents = monoComponents,
+				NativeLibraries = uniqueNativeLibraries,
+				HaveAssemblyStore = UseAssemblyStore,
+				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
+				JNIEnvInitializeToken = jnienv_initialize_method_token,
+				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
+			};
+			appConfigAsmGen.Init ();
 
 			foreach (string abi in SupportedAbis) {
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
-				string asmFilePath = $"{baseAsmFilePath}.s";
-
-				var asmgen = new ApplicationConfigNativeAssemblyGenerator (GetAndroidTargetArchForAbi (abi), environmentVariables, systemProperties, Log) {
-					IsBundledApp = IsBundledApplication,
-					UsesMonoAOT = usesMonoAOT,
-					UsesMonoLLVM = EnableLLVM,
-					UsesAssemblyPreload = usesAssemblyPreload,
-					MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
-					AndroidPackageName = AndroidPackageName,
-					BrokenExceptionTransitions = brokenExceptionTransitions,
-					PackageNamingPolicy = pnp,
-					BoundExceptionType = boundExceptionType,
-					InstantRunEnabled = InstantRunEnabled,
-					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
-					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
-					NumberOfAssembliesInApk = assemblyCount,
-					BundledAssemblyNameWidth = assemblyNameWidth,
-					NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
-									  // and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
-									  // runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
-									  // and in the same order.
-					MonoComponents = monoComponents,
-					NativeLibraries = uniqueNativeLibraries,
-					HaveAssemblyStore = UseAssemblyStore,
-				};
+				string llFilePath  = $"{baseAsmFilePath}.ll";
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					asmgen.Write (sw, asmFilePath);
+					appConfigAsmGen.Write (GetAndroidTargetArchForAbi (abi), sw, llFilePath);
 					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, asmFilePath);
+					Files.CopyIfStreamChanged (sw.BaseStream, llFilePath);
 				}
 			}
 
@@ -440,6 +462,72 @@ namespace Xamarin.Android.Tasks
 			string ValidAssemblerString (string s)
 			{
 				return s.Replace ("\"", "\\\"");
+			}
+		}
+
+		void GetRequiredTokens (string assemblyFilePath, out int android_runtime_jnienv_class_token, out int jnienv_initialize_method_token, out int jnienv_registerjninatives_method_token)
+		{
+			using (var pe = new PEReader (File.OpenRead (assemblyFilePath))) {
+				GetRequiredTokens (pe.GetMetadataReader (), out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
+			}
+
+			if (android_runtime_jnienv_class_token == -1 || jnienv_initialize_method_token == -1 || jnienv_registerjninatives_method_token == -1) {
+				throw new InvalidOperationException ($"Unable to find the required Android.Runtime.JNIEnv method tokens");
+			}
+		}
+
+		void GetRequiredTokens (MetadataReader reader, out int android_runtime_jnienv_class_token, out int jnienv_initialize_method_token, out int jnienv_registerjninatives_method_token)
+		{
+			android_runtime_jnienv_class_token = -1;
+			jnienv_initialize_method_token = -1;
+			jnienv_registerjninatives_method_token = -1;
+
+			TypeDefinition? typeDefinition = null;
+
+			foreach (TypeDefinitionHandle typeHandle in reader.TypeDefinitions) {
+				TypeDefinition td = reader.GetTypeDefinition (typeHandle);
+				if (!TypeMatches (td)) {
+					continue;
+				}
+
+				typeDefinition = td;
+				android_runtime_jnienv_class_token = MetadataTokens.GetToken (reader, typeHandle);
+				break;
+			}
+
+			if (typeDefinition == null) {
+				return;
+			}
+
+			foreach (MethodDefinitionHandle methodHandle in typeDefinition.Value.GetMethods ()) {
+				MethodDefinition md = reader.GetMethodDefinition (methodHandle);
+				string name = reader.GetString (md.Name);
+
+				if (jnienv_initialize_method_token == -1 && String.Compare (name, "Initialize", StringComparison.Ordinal) == 0) {
+					jnienv_initialize_method_token = MetadataTokens.GetToken (reader, methodHandle);
+				} else if (jnienv_registerjninatives_method_token == -1 && String.Compare (name, "RegisterJniNatives", StringComparison.Ordinal) == 0) {
+					jnienv_registerjninatives_method_token = MetadataTokens.GetToken (reader, methodHandle);
+				}
+
+				if (jnienv_initialize_method_token != -1 && jnienv_registerjninatives_method_token != -1) {
+					break;
+				}
+			}
+
+
+			bool TypeMatches (TypeDefinition td)
+			{
+				string ns = reader.GetString (td.Namespace);
+				if (String.Compare (ns, "Android.Runtime", StringComparison.Ordinal) != 0) {
+					return false;
+				}
+
+				string name = reader.GetString (td.Name);
+				if (String.Compare (name, "JNIEnv", StringComparison.Ordinal) != 0) {
+					return false;
+				}
+
+				return true;
 			}
 		}
 	}

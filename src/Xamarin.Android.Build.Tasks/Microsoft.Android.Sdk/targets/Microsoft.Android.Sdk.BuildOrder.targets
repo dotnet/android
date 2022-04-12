@@ -74,7 +74,6 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CheckApkPerAbiFlag;
       _LintChecks;
       _IncludeNativeSystemLibraries;
-      _StripFrameworkNativeLibraries;
       _CheckGoogleSdkRequirements;
     </_PrepareBuildApkDependsOnTargets>
   </PropertyGroup>

@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Xamarin.Android.Prepare
 {
-	class AndroidToolchainComponent : AppObject
+	class AndroidToolchainComponent : AppObject, IBuildInventoryItem
 	{
 		public string Name                { get; }
 		public string DestDir             { get; }
@@ -12,9 +12,11 @@ namespace Xamarin.Android.Prepare
 		public bool NoSubdirectory        { get; }
 		public string? PkgRevision        { get; }
 		public AndroidToolchainComponentType DependencyType { get; }
+		public string BuildToolName       { get; }
+		public string BuildToolVersion    { get; }
 
 		public AndroidToolchainComponent (string name, string destDir, Uri? relativeUrl = null, bool isMultiVersion = false, bool noSubdirectory = false, string? pkgRevision = null,
-			AndroidToolchainComponentType dependencyType = AndroidToolchainComponentType.CoreDependency)
+			AndroidToolchainComponentType dependencyType = AndroidToolchainComponentType.CoreDependency, string buildToolName = "", string buildToolVersion = "")
 		{
 			if (String.IsNullOrEmpty (name))
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -28,14 +30,27 @@ namespace Xamarin.Android.Prepare
 			NoSubdirectory = noSubdirectory;
 			PkgRevision = pkgRevision;
 			DependencyType = dependencyType;
+			BuildToolName = string.IsNullOrEmpty (buildToolName) ? $"android-sdk-{name}" : buildToolName;
+			BuildToolVersion = buildToolVersion;
+		}
+
+		public void AddToInventory ()
+		{
+			if (!string.IsNullOrEmpty (BuildToolName) && !string.IsNullOrEmpty (BuildToolVersion) && !Context.Instance.BuildToolsInventory.ContainsKey (BuildToolName)) {
+				Context.Instance.BuildToolsInventory.Add (BuildToolName, BuildToolVersion);
+			}
 		}
 	}
 
 	class AndroidPlatformComponent : AndroidToolchainComponent
 	{
+		public string ApiLevel { get; }
+
 		public AndroidPlatformComponent (string name, string apiLevel, string pkgRevision)
-			: base (name, Path.Combine ("platforms", $"android-{apiLevel}"), pkgRevision: pkgRevision)
-		{}
+			: base (name, Path.Combine ("platforms", $"android-{apiLevel}"), pkgRevision: pkgRevision, buildToolName: $"android-sdk-{name}", buildToolVersion:$"{apiLevel}.{pkgRevision}")
+		{
+			ApiLevel = apiLevel;
+		}
 	}
 
 	[Flags]

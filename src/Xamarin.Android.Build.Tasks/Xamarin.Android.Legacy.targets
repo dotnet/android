@@ -12,6 +12,7 @@ projects. .NET 5 projects will not import this file.
 
   <PropertyGroup>
     <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">Java</AndroidBoundExceptionType>
+    <AndroidGenerateResourceDesigner Condition=" '$(AndroidGenerateResourceDesigner)' == '' ">True</AndroidGenerateResourceDesigner>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidBuildApplicationPackage)' == 'True' And '$(AndroidApplication)' == 'True' ">
@@ -708,7 +709,8 @@ projects. .NET 5 projects will not import this file.
         AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
         YieldDuringToolExecution="$(YieldDuringToolExecution)"
         EnableLLVM="$(EnableLLVM)"
-        Profiles="@(_AotProfiles)">
+        Profiles="@(_AotProfiles)"
+        StripLibraries="$(_AndroidAotStripLibraries)">
       <Output TaskParameter="NativeLibrariesReferences" ItemName="_AdditionalNativeLibraryReferences" />
     </Aot>
 

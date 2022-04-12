@@ -6,7 +6,7 @@
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
 // designer on desktop.
-uint64_t format_tag = FORMAT_TAG;
+const uint64_t format_tag = FORMAT_TAG;
 
 #if defined (DEBUG) || !defined (ANDROID)
 static TypeMapEntry java_to_managed[] = {};
@@ -39,7 +39,8 @@ CompressedAssemblies compressed_assemblies = {
 // Config settings below **must** be valid for Desktop builds as the default `libxamarin-app.{dll,dylib,so}` is used by
 // the Designer
 //
-ApplicationConfig application_config = {
+constexpr char android_package_name[] = "com.xamarin.test";
+const ApplicationConfig application_config = {
 	.uses_mono_llvm = false,
 	.uses_mono_aot = false,
 	.uses_assembly_preload = false,
@@ -57,13 +58,16 @@ ApplicationConfig application_config = {
 	.bundled_assembly_name_width = 0,
 	.number_of_assembly_store_files = 2,
 	.number_of_dso_cache_entries = 2,
+	.android_runtime_jnienv_class_token = 1,
+	.jnienv_initialize_method_token = 2,
+	.jnienv_registerjninatives_method_token = 3,
 	.mono_components_mask = MonoComponent::None,
-	.android_package_name = "com.xamarin.test",
+	.android_package_name = android_package_name,
 };
 
-const char* mono_aot_mode_name = "normal";
-const char* app_environment_variables[] = {};
-const char* app_system_properties[] = {};
+const char* const mono_aot_mode_name = "normal";
+const char* const app_environment_variables[] = {};
+const char* const app_system_properties[] = {};
 
 static constexpr size_t AssemblyNameWidth = 128;
 

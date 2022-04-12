@@ -126,6 +126,10 @@ namespace xamarin::android::internal
 			int             jniAddNativeMethodRegistrationAttributePresent;
 		};
 
+#if defined (NET6)
+		using jnienv_initialize_fn = void (*) (JnienvInitializeArgs*);
+#endif
+
 	private:
 		static constexpr char base_apk_name[] = "/base.apk";
 		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50;

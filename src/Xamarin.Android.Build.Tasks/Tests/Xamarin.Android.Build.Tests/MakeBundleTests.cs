@@ -159,7 +159,7 @@ namespace Xamarin.Android.Build.Tests
 			string sonameField;
 
 			if (elfReaderLlvm) {
-				arguments = "-dynamic-table";
+				arguments = "--dynamic-table";
 				sonameField = "SONAME";
 			} else {
 				arguments = "-d";

@@ -6,7 +6,7 @@ ms.assetid: 5EBEE1A5-3879-45DD-B1DE-5CD4327C2656
 ms.technology: xamarin-android
 author: jonpryor
 ms.author: jopryo
-ms.date: 03/01/2021
+ms.date: 03/29/2022
 ---
 
 # Build Items
