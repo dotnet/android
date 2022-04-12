@@ -35,6 +35,7 @@
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
 #include "startup-aware-lock.hh"
+#include "timing-internal.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -93,10 +94,10 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 				exit (FATAL_EXIT_MISSING_ASSEMBLY);
 			}
 
-			bool log_timing = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
-			timing_period decompress_time;
+			bool log_timing = FastTiming::enabled () && !FastTiming::is_bare_mode ();
+			size_t decompress_time_index;
 			if (XA_UNLIKELY (log_timing)) {
-				decompress_time.mark_start ();
+				decompress_time_index = internal_timing->start_event (TimingEventKind::AssemblyDecompression);
 			}
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
@@ -113,8 +114,8 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
 
 			if (XA_UNLIKELY (log_timing)) {
-				decompress_time.mark_end ();
-				TIMING_LOG_INFO (decompress_time, "%s LZ4 decompression time", name);
+				internal_timing->end_event (decompress_time_index, true /* uses_more_info */);
+				internal_timing->add_more_info (decompress_time_index, name);
 			}
 
 			if (ret < 0) {
@@ -774,10 +775,10 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 {
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+	size_t total_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		timing = new Timing ();
-		total_time.mark_start ();
+		total_time_index = internal_timing->start_event (TimingEventKind::JavaToManaged);
 	}
 
 	if (XA_UNLIKELY (java_type == nullptr)) {
@@ -797,10 +798,8 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 	hash_t hash = xxhash::hash (reinterpret_cast<const char*>(type_chars), static_cast<size_t>(name_len));
 	MonoReflectionType *ret = typemap_java_to_managed (hash, java_type);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
-
-		Timing::info (total_time, "Typemap.java_to_managed: end, total time");
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index);
 	}
 
 	return ret;
@@ -924,10 +923,10 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 const char*
 EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type, const uint8_t *mvid) noexcept
 {
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+	size_t total_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		timing = new Timing ();
-		total_time.mark_start ();
+		total_time_index = internal_timing->start_event (TimingEventKind::ManagedToJava);
 	}
 
 	MonoType *type = mono_reflection_type_get_type (reflection_type);
@@ -938,10 +937,8 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 
 	const char *ret = typemap_managed_to_java (type, mono_class_from_mono_type (type), mvid);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
-
-		Timing::info (total_time, "Typemap.managed_to_java: end, total time");
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index);
 	}
 
 	return ret;

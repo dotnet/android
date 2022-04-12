@@ -24,6 +24,7 @@ void init_reference_logging (const char *override_dir);
 typedef enum _LogTimingCategories {
 	LOG_TIMING_DEFAULT = 0,
 	LOG_TIMING_BARE = 1 << 0,
+	LOG_TIMING_FAST_BARE = 1 << 1,
 } LogTimingCategories;
 
 extern unsigned int log_timing_categories;
@@ -45,4 +46,8 @@ enum class LogLevel : unsigned int
 	Fatal   = 0x07,
 	Silent  = 0x08
 };
+
+// A slightly faster alternative to other log functions as it doesn't parse the message
+// for format placeholders nor it uses variable arguments
+void log_write (LogCategories category, LogLevel level, const char *message) noexcept;
 #endif

@@ -23,6 +23,7 @@ public class Runtime {
 	public static native void switchToContext (int contextID);
 	public static native void destroyContexts (int[] contextIDs);
 	public static native void propagateUncaughtException (Thread javaThread, Throwable javaException);
+	public static native void dumpTimingData ();
 }
 
 final class XamarinUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {

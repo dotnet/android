@@ -35,6 +35,11 @@ public class MonoPackageManager {
 				);
 				context.registerReceiver (new mono.android.app.NotifyTimeZoneChanges (), timezoneChangedFilter);
 
+				android.content.IntentFilter dumpTimingDataFilter = new android.content.IntentFilter (
+						"mono.android.app.DUMP_TIMING_DATA"
+				);
+				context.registerReceiver (new mono.android.app.DumpTimingData (), dumpTimingDataFilter);
+
 				Locale locale       = Locale.getDefault ();
 				String language     = locale.getLanguage () + "-" + locale.getCountry ();
 				String filesDir     = context.getFilesDir ().getAbsolutePath ();

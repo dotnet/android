@@ -66,6 +66,12 @@ namespace xamarin::android::internal
 		static constexpr size_t APP_DIRS_FILES_DIR_INDEX = 0;
 		static constexpr size_t APP_DIRS_CACHE_DIR_INDEX = 1;
 		static constexpr size_t APP_DIRS_DATA_DIR_INDEX = 2;
+
+		// 64-bit unsigned or 64-bit signed with sign
+		static constexpr size_t MAX_INTEGER_DIGIT_COUNT_BASE10 = 21;
+
+		// Documented in NDK's <android/log.h> comments
+		static constexpr size_t MAX_LOGCAT_MESSAGE_LENGTH = 1023;
 	};
 }
 #endif // __SHARED_CONSTANTS_HH

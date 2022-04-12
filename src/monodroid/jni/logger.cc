@@ -60,6 +60,12 @@ __android_log_vprint (int prio, const char* tag, const char* fmt, va_list ap)
   putchar ('\n');
   fflush (stdout);
 }
+
+static void
+__android_log_write (int prio, const char* tag, const char* message)
+{
+	printf ("%d [%s] %s\n", prio, tag, message);
+}
 #endif
 
 unsigned int log_categories = LOG_NONE;
@@ -237,6 +243,12 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 			continue;
 		}
 
+		if (param.starts_with ("timing=fast-bare")) {
+			log_categories |= LOG_TIMING;
+			log_timing_categories |= LOG_TIMING_FAST_BARE;
+			continue;
+		}
+
 		if (param.starts_with ("timing=bare")) {
 			log_categories |= LOG_TIMING;
 			log_timing_categories |= LOG_TIMING_BARE;
@@ -318,4 +330,36 @@ log_debug_nocheck (LogCategories category, const char *format, ...)
 		return;
 
 	DO_LOG (ANDROID_LOG_DEBUG, category, format, args);
+}
+
+constexpr android_LogPriority DEFAULT_PRIORITY = ANDROID_LOG_INFO;
+
+// relies on the fact that the LogLevel enum has sequential values
+static constexpr android_LogPriority loglevel_map[] = {
+	DEFAULT_PRIORITY, // Unknown
+	DEFAULT_PRIORITY, // Default
+	ANDROID_LOG_VERBOSE, // Verbose
+	ANDROID_LOG_DEBUG, // Debug
+	ANDROID_LOG_INFO, // Info
+	ANDROID_LOG_WARN, // Warn
+	ANDROID_LOG_ERROR, // Error
+	ANDROID_LOG_FATAL, // Fatal
+	ANDROID_LOG_SILENT, // Silent
+};
+
+static constexpr size_t loglevel_map_max_index = (sizeof(loglevel_map) / sizeof(android_LogPriority)) - 1;
+
+void
+log_write (LogCategories category, LogLevel level, const char *message) noexcept
+{
+	size_t map_index = static_cast<size_t>(level);
+	android_LogPriority priority;
+
+	if (map_index > loglevel_map_max_index) {
+		priority = DEFAULT_PRIORITY;
+	} else {
+		priority = loglevel_map[map_index];
+	}
+
+	__android_log_write (priority, CATEGORY_NAME (category), message);
 }

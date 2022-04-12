@@ -157,12 +157,73 @@ categories:
     Enable logging for messages related to network activity.
   * `timing=bare`
     Enable logging of native code performance information, without
-    logging method execution timing information to a file.
+    logging method execution timing information to a file.  Timed
+    events are logged to `logcat` immediately, which affects the
+    accuracy of measurements and introduces an element of
+    unpredictability to measurements.
+  * `timing=fast-bare`
+    Similar to `timing=bare` above, but the timings aren't logged
+    until the `mono.android.app.DUMP_TIMING_DATA` broadcast is sent to
+    the application.  This can be done with `adb shell am broadcast -a
+    mono.android.app.DUMP_TIMING_DATA [PACKAGE_NAME]` command.
   * `timing`
     Enable logging of native code performance information, including
     method execution timing which is written to a file named
     `methods.txt`.  `timing=bare` should be used in preference to this
     category.
+
+#### Timing events format
+
+In any of the timing modes, the logged messages have the following
+format:
+
+```
+<TAG>: [<S>/<E>] <MESSAGE>; elapsed s:ms::ns
+```
+
+Where:
+
+All lower case and punctuation characters are verbatim in every message
+
+`<TAG>` is always `monodroid-timing`
+
+`<S>` denotes a "stage":
+
+  * `0`: events before control is handed over to the managed runtime
+    (the "native init" stage)
+  * `1`: events after the above "native init" stage
+  * `2`: used only in the `timing=fast-bare` mode to mark the summary
+    information.
+
+`<E>` denotes an "event":
+
+  * For the `0` and `1` stages it's one of
+    * `0`: assembly decompression
+    * `1`: assembly load
+    * `2`: assembly preload
+    * `3`: initialization and start of debugging
+    * `4`: timing subsystem initialization
+    * `5`: java-to-managed type lookup
+    * `6`: managed-to-java type lookup
+    * `7`: Mono runtime initialization
+    * `8`: native to managed transition (a call to
+      `Android.Runtime.JNIEnv.Initialize`)
+    * `9`: time spent registering the runtime config blob on NET6+
+    * `10`: managed type registration
+    * `11`: total time spent initializing the native runtime
+    * `12`: unspecified event
+  * For the `2` stage it's one of:
+    * `1`: mode marker message logged at the very beginning of the app
+    * `2`: performance results "heading"
+    * `3`: no events logged message
+    * `4`: accumulated results "heading"
+    * `5`: total time spent loading assemblies
+    * `6`: total time spent performing java-to-managed type lookups
+    * `7`: total time spent performing managed-to-java type lookups
+
+The format is meant to make it easier for scripts/other software which
+look at the log to find timing events without having to rely on the
+actual wording of the event message.
 
 ### debug.mono.max_grefc
 
