@@ -43,7 +43,7 @@
     },
     "Microsoft.Android.Ref.31": {
       "kind": "framework",
-      "version": "31.0.101-preview.11.117"
+      "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Ref.32": {
       "kind": "framework",
