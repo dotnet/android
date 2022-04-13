@@ -82,14 +82,19 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     />
   </Target>
 
-  <Target Name="_AddClassicInstallers" >
+  <Target Name="_SignVsix" >
+    <ItemGroup>
+      <FilesToSign Include="$(OutDir)\Xamarin.Android.Sdk-*.vsix">
+        <Authenticode>VsixSHA2</Authenticode>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_SignPkg" >
     <ItemGroup>
       <FilesToSign Include="$(OutDir)\xamarin.android-*.pkg">
         <Authenticode>MacDeveloper</Authenticode>
         <Zip>true</Zip>
-      </FilesToSign>
-      <FilesToSign Include="$(OutDir)\Xamarin.Android.Sdk-*.vsix">
-        <Authenticode>VsixSHA2</Authenticode>
       </FilesToSign>
     </ItemGroup>
   </Target>
