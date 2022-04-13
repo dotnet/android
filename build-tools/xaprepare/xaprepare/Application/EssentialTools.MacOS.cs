@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace Xamarin.Android.Prepare
 {
@@ -23,6 +24,11 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (brewPath))
 				BrewPath = context.OS.Which ("brew", required: true);
 			ReportToolPath (brewPath);
+			if (File.Exists (brewPath)) {
+				(bool success, string version) = Utilities.GetProgramVersion (brewPath);
+				if (success)
+					context.BuildToolsInventory.Add ("homebrew", version);
+			}
 
 			Log.StatusLine ($"  {context.Characters.Bullet} pkgutil", ConsoleColor.White);
 			if (String.IsNullOrEmpty (pkgutilPath))

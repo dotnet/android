@@ -850,8 +850,9 @@ namespace Xamarin.Android.Net
 		/// <param name="conn">Pre-configured connection instance</param>
 		protected virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
-			Action a = AssertSelf;
-			return Task.Run (a);
+			AssertSelf ();
+			
+			return Task.CompletedTask;
 		}
 
 		internal Task SetupRequestInternal (HttpRequestMessage request, HttpURLConnection conn)

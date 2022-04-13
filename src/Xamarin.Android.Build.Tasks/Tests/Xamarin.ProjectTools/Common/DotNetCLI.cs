@@ -148,7 +148,8 @@ namespace Xamarin.ProjectTools
 				$"\"{projectOrSolution}\"",
 				"/noconsolelogger",
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
-				$"/bl:\"{Path.Combine (testDir, $"{binlog}.binlog")}\""
+				$"/bl:\"{Path.Combine (testDir, $"{binlog}.binlog")}\"",
+				"/p:_DisableParallelAot=true",
 			};
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");

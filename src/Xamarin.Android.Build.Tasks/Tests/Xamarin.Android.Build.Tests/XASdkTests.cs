@@ -344,10 +344,14 @@ namespace Xamarin.Android.Build.Tests
 				.Replace ("Resource.Id.myButton", "0");
 
 			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Build(target: "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" }), "Designtime build should succeed.");
+			var intermediate = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
+			var resource_designer_cs = Path.Combine (intermediate, "designtime",  "Resource.designer.cs");
+			FileAssert.DoesNotExist (resource_designer_cs);
+
 			Assert.IsTrue (dotnet.Build (), "build should succeed");
 
-			var intermediate = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
-			var resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
+			resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
 			FileAssert.DoesNotExist (resource_designer_cs);
 
 			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
@@ -598,13 +602,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var rids = runtimeIdentifiers.Split (';');
-			if (isRelease) {
-				// Check for stripped native libraries
-				foreach (var rid in rids) {
-					FileAssert.Exists (Path.Combine (intermediateOutputPath, "native", rid, "libmono-android.release.so"));
-					FileAssert.Exists (Path.Combine (intermediateOutputPath, "native", rid, "libmonosgen-2.0.so"));
-				}
-			}
 
 			// Check AndroidManifest.xml
 			var manifestPath = Path.Combine (intermediateOutputPath, "android", "AndroidManifest.xml");

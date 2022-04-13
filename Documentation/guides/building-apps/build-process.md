@@ -6,7 +6,7 @@ ms.assetid: 3BE5EE1E-3FF6-4E95-7C9F-7B443EE3E94C
 ms.technology: xamarin-android
 author: davidortinau
 ms.author: daortin
-ms.date: 03/01/2021
+ms.date: 03/29/2022
 ---
 
 # Build Process
