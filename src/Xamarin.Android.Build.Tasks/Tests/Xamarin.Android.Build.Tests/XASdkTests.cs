@@ -634,7 +634,7 @@ namespace Xamarin.Android.Build.Tests
 			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore, rids);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
-			helper.AssertContainsEntry ($"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
+			helper.AssertContainsEntry ($"assemblies/Mono.Android.dll",        shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
@@ -646,7 +646,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 				if (aot) {
 					helper.AssertContainsEntry ($"lib/{abi}/libaot-{proj.ProjectName}.dll.so");
-					helper.AssertContainsEntry ($"lib/{abi}/libaot-System.Linq.dll.so");
+					helper.AssertContainsEntry ($"lib/{abi}/libaot-Mono.Android.dll.so");
 				}
 			}
 		}
