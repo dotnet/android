@@ -24,6 +24,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\IJniNameProviderAttribute.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' or '$(TargetFramework)' == 'netstandard2.0' ">
+    <Compile Include="$(ThirdPartySourcePath)System.Diagnostics.CodeAnalysis/DynamicallyAccessedMembersAttribute.cs" />
     <Compile Include="$(ThirdPartySourcePath)System.Diagnostics.CodeAnalysis/DynamicallyAccessedMemberTypes.cs" />
     <Compile Include="$(ThirdPartySourcePath)System.Diagnostics.CodeAnalysis/DynamicDependencyAttribute.cs" />
     <Compile Include="$(ThirdPartySourcePath)System.Runtime.CompilerServices/UnconditionalSuppressMessageAttribute.cs" />
