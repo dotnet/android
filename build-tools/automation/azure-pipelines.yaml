@@ -115,7 +115,8 @@ stages:
 
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
-        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/binutils/bin/*.pdb .
+        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/binutils/bin/*.pdb
+        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy Windows toolchain pdb files
 
