@@ -37,10 +37,15 @@ typedef struct dirent monodroid_dirent_t;
 #endif
 
 #define force_inline inline __attribute__((always_inline))
+#define never_inline __attribute__((noinline))
 #endif // _MSV_VER
 
 #ifndef force_inline
 #define force_inline inline
+#endif
+
+#ifndef never_inline
+#define never_inline
 #endif
 
 #ifndef inline

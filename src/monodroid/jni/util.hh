@@ -106,7 +106,7 @@ namespace xamarin::android
 		ssize_t          recv_uninterrupted (int fd, void *buf, size_t len);
 		jclass           get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref = false);
 
-		bool should_log (LogCategories category) const
+		static bool should_log (LogCategories category) noexcept
 		{
 			return (log_categories & category) != 0;
 		}

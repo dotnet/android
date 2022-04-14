@@ -40,18 +40,9 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		internal sealed class TypeMapEntryArrayComparer : IComparer<TypeMapReleaseEntry>
-		{
-			public int Compare (TypeMapReleaseEntry left, TypeMapReleaseEntry right)
-			{
-				return String.CompareOrdinal (left.JavaName, right.JavaName);
-			}
-		}
-
 		internal sealed class TypeMapReleaseEntry
 		{
 			public string JavaName;
-			public int JavaNameLength;
 			public string ManagedTypeName;
 			public uint Token;
 			public int AssemblyNameIndex = -1;
@@ -67,7 +58,6 @@ namespace Xamarin.Android.Tasks
 			public TypeMapReleaseEntry[] Types;
 			public Dictionary<uint, TypeMapReleaseEntry> DuplicateTypes;
 			public string AssemblyName;
-			public string AssemblyNameLabel;
 			public string OutputFilePath;
 
 			public Dictionary<string, TypeMapReleaseEntry> TypesScratch;
@@ -343,7 +333,6 @@ namespace Xamarin.Android.Tasks
 		bool GenerateRelease (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, ApplicationConfigTaskState appConfState)
 		{
 			int assemblyId = 0;
-			int maxJavaNameLength = 0;
 			var knownAssemblies = new Dictionary<string, int> (StringComparer.Ordinal);
 			var tempModules = new Dictionary<byte[], ModuleReleaseData> ();
 			Dictionary <AssemblyDefinition, int> moduleCounter = null;
@@ -392,15 +381,11 @@ namespace Xamarin.Android.Tasks
 				// a Java type name to a managed type. This fixes https://github.com/xamarin/xamarin-android/issues/4660
 				var entry = new TypeMapReleaseEntry {
 					JavaName = javaName,
-					JavaNameLength = outputEncoding.GetByteCount (javaName),
 					ManagedTypeName = td.FullName,
 					Token = td.MetadataToken.ToUInt32 (),
 					AssemblyNameIndex = knownAssemblies [assemblyName],
 					SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
 				};
-
-				if (entry.JavaNameLength > maxJavaNameLength)
-					maxJavaNameLength = entry.JavaNameLength;
 
 				if (moduleData.TypesScratch.ContainsKey (entry.JavaName)) {
 					// This is disabled because it costs a lot of time (around 150ms per standard XF Integration app
@@ -415,19 +400,19 @@ namespace Xamarin.Android.Tasks
 			var modules = tempModules.Values.ToArray ();
 			Array.Sort (modules, new ModuleUUIDArrayComparer ());
 
-			var typeMapEntryComparer = new TypeMapEntryArrayComparer ();
 			foreach (ModuleReleaseData module in modules) {
 				if (module.TypesScratch.Count == 0) {
 					module.Types = Array.Empty<TypeMapReleaseEntry> ();
 					continue;
 				}
 
+				// No need to sort here, the LLVM IR generator will compute hashes and sort
+				// the array on write.
 				module.Types = module.TypesScratch.Values.ToArray ();
-				Array.Sort (module.Types, typeMapEntryComparer);
 			}
 
 			NativeTypeMappingData data;
-			data = new NativeTypeMappingData (logger, modules, maxJavaNameLength + 1);
+			data = new NativeTypeMappingData (logger, modules);
 
 			var generator = new TypeMappingReleaseNativeAssemblyGenerator (data);
 			generator.Init ();

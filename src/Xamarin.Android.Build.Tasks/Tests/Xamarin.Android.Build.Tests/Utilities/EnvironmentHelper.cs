@@ -89,7 +89,7 @@ namespace Xamarin.Android.Build.Tests
 			"map_modules",
 			"map_module_count",
 			"java_type_count",
-			"java_name_width",
+			"map_java_hashes",
 			"map_java",
 			"mono_aot_mode_name",
 		};

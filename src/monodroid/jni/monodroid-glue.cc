@@ -1043,8 +1043,22 @@ MonodroidRuntime::init_android_runtime (
 #endif // ndef NET6
 	JNIEnv *env, jclass runtimeClass, jobject loader)
 {
-	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
-	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
+	constexpr char icall_typemap_java_to_managed[] = "Java.Interop.TypeManager::monodroid_typemap_java_to_managed";
+	constexpr char icall_typemap_managed_to_java[] = "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java";
+
+#if defined (RELEASE) && defined (ANDROID)
+	// The reason for these using is that otherwise the compiler will complain about not being
+	// able to cast overloaded methods to const void* pointers.
+	using j2mFn = MonoReflectionType* (*)(MonoString *java_type);
+	using m2jFn = const char* (*)(MonoReflectionType *type, const uint8_t *mvid);
+
+	mono_add_internal_call (icall_typemap_java_to_managed, reinterpret_cast<const void*>(static_cast<j2mFn>(EmbeddedAssemblies::typemap_java_to_managed)));
+	mono_add_internal_call (icall_typemap_managed_to_java, reinterpret_cast<const void*>(static_cast<m2jFn>(EmbeddedAssemblies::typemap_managed_to_java)));
+#else
+	mono_add_internal_call (icall_typemap_java_to_managed, reinterpret_cast<const void*>(typemap_java_to_managed));
+	mono_add_internal_call (icall_typemap_managed_to_java, reinterpret_cast<const void*>(typemap_managed_to_java));
+#endif // def RELEASE && def ANDROID
+
 #if defined (NET6)
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
 	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
@@ -1138,6 +1152,10 @@ MonodroidRuntime::init_android_runtime (
 			registerType = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
 		} else {
 			registerType = mono_get_method (image, application_config.jnienv_registerjninatives_method_token, runtime);
+#if defined (NET6) && defined (ANDROID)
+			MonoError error;
+			jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn>(mono_method_get_unmanaged_callers_only_ftnptr (registerType, &error));
+#endif // def NET6 && def ANDROID
 		}
 	}
 	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.RegisterJniNatives!");
@@ -1960,17 +1978,19 @@ MonodroidRuntime::monodroid_unhandled_exception (MonoObject *java_exception)
 }
 #endif // def NET6
 
+#if !defined (RELEASE) || !defined (ANDROID)
 MonoReflectionType*
-MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name)
+MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name) noexcept
 {
 	return embeddedAssemblies.typemap_java_to_managed (java_type_name);
 }
 
 const char*
-MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid)
+MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept
 {
 	return embeddedAssemblies.typemap_managed_to_java (type, mvid);
 }
+#endif // !def RELEASE || !def ANDROID
 
 #if defined (WINDOWS)
 const char*
@@ -2429,7 +2449,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 	);
 }
 
-inline void
+force_inline void
 MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods)
 {
 	timing_period total_time;
@@ -2439,20 +2459,13 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
 		total_time.mark_start ();
 
-	int managedType_len = env->GetStringLength (managedType);
+	jsize managedType_len = env->GetStringLength (managedType);
 	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-		type.assign (mt_ptr, strlen (mt_ptr));
-		env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-		log_info_nocheck (LOG_TIMING, "Runtime.register: registering type `%s`", type.get ());
-	}
-
-	int methods_len = env->GetStringLength (methods);
+	jsize methods_len = env->GetStringLength (methods);
 	const jchar *methods_ptr = env->GetStringChars (methods, nullptr);
 
+#if !defined (NET6) || !defined (ANDROID)
 	void *args[] = {
 		&managedType_ptr,
 		&managedType_len,
@@ -2460,8 +2473,9 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		&methods_ptr,
 		&methods_len,
 	};
-
 	MonoMethod *register_jni_natives = registerType;
+#endif // ndef NET6 || ndef ANDROID
+
 #if !defined (NET6)
 	MonoDomain *domain = utils.get_current_domain (/* attach_thread_if_needed */ false);
 	mono_jit_thread_attach (domain);
@@ -2475,7 +2489,11 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 
 	utils.monodroid_runtime_invoke (domain, register_jni_natives, nullptr, args, nullptr);
 #else // ndef NET6
+#if !defined (ANDROID)
 	mono_runtime_invoke (register_jni_natives, nullptr, args, nullptr);
+#else
+	jnienv_register_jni_natives (managedType_ptr, managedType_len, nativeClass, methods_ptr, methods_len);
+#endif // ndef ANDROID
 #endif // def NET6
 
 	env->ReleaseStringChars (methods, methods_ptr);
@@ -2483,6 +2501,12 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
+
+		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
+		type.assign (mt_ptr, strlen (mt_ptr));
+		env->ReleaseStringUTFChars (managedType, mt_ptr);
+
+		log_info_nocheck (LOG_TIMING, "Runtime.register: registering type `%s`", type.get ());
 
 		Timing::info (total_time, "Runtime.register: end time");
 #if !defined (NET6)

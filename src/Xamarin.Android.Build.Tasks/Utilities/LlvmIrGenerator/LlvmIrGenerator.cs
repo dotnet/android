@@ -51,7 +51,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		sealed class StringSymbolInfo
+		public sealed class StringSymbolInfo
 		{
 			public readonly string SymbolName;
 			public readonly ulong Size;
@@ -377,8 +377,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			string symbolName = WriteUniqueString ($"__{info.Name}_{smi.Info.Name}", str, ref structStringCounter, out ulong size);
-			instance.AddPointerData (smi, symbolName, size);
+			StringSymbolInfo stringSymbol = WriteUniqueString ($"__{info.Name}_{smi.Info.Name}", str, ref structStringCounter);
+			instance.AddPointerData (smi, stringSymbol.SymbolName, stringSymbol.Size);
 
 			return true;
 		}
@@ -477,10 +477,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				);
 
 				arrayOutput.WriteLine ("[");
-				string fieldIndent = $"{Indent}{Indent}";
 				for (int i = 0; i < count; i++) {
 					StructureInstance<T> instance = instances[i];
 
+					arrayOutput.WriteLine ($"{Indent}; {i}");
 					WriteStructureBody (info, instance, bodyWriterOptions);
 					if (i < count - 1) {
 						arrayOutput.Write (", ");
@@ -506,6 +506,76 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
 		{
 			WriteStructureArray<T> (info, instances, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
+		}
+
+		public void WriteArray (IList<string> values, string symbolName)
+		{
+			WriteEOL ();
+			WriteEOL (symbolName);
+
+			ulong arrayStringCounter = 0;
+			var strings = new List<StringSymbolInfo> ();
+
+			foreach (string s in values) {
+				StringSymbolInfo symbol = WriteUniqueString ($"__{symbolName}", s, ref arrayStringCounter, LlvmIrVariableOptions.LocalConstexprString);
+				strings.Add (new StringSymbolInfo (symbol.SymbolName, symbol.Size));
+			}
+
+			if (strings.Count > 0) {
+				Output.WriteLine ();
+			}
+
+			WriteStringArray (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer, strings);
+		}
+
+		public void WriteArray<T> (IList<T> values, LlvmIrVariableOptions options, string symbolName, Func<int, T, string?>? commentProvider = null) where T: struct
+		{
+			bool optimizeOutput = commentProvider == null;
+
+			WriteGlobalSymbolStart (symbolName, options);
+			string elementType = MapManagedTypeToIR (typeof (T), out ulong size);
+			Output.WriteLine ($"[{values.Count} x {elementType}] [");
+			Output.Write (Indent);
+			for (int i = 0; i < values.Count; i++) {
+				if (i != 0) {
+					if (optimizeOutput) {
+						Output.Write (',');
+						if (i % 8 == 0) {
+							Output.WriteLine ($" ; {i - 8}..{i - 1}");
+							Output.Write (Indent);
+						} else {
+							Output.Write (' ');
+						}
+					} else {
+						Output.Write (Indent);
+					}
+				}
+
+				Output.Write ($"{elementType} {values[i]}");
+
+				if (!optimizeOutput) {
+					bool last = i == values.Count - 1;
+					if (!last) {
+						Output.Write (',');
+					}
+
+					string? comment = commentProvider (i, values[i]);
+					if (!String.IsNullOrEmpty (comment)) {
+						Output.Write ($" ; {comment}");
+					}
+
+					if (!last) {
+						Output.WriteLine ();
+					}
+				}
+			}
+			if (optimizeOutput && values.Count / 8 != 0) {
+				int idx = values.Count - (values.Count % 8);
+				Output.Write ($" ; {idx}..{values.Count - 1}");
+			}
+
+			Output.WriteLine ();
+			Output.WriteLine ($"], align {GetAggregateAlignment ((int)size, size * (ulong)values.Count)}");
 		}
 
 		void AssertArraySize<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, ulong length, ulong expectedLength)
@@ -911,7 +981,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteEOL ();
 			WriteEOL (symbolName);
 
-			var strings = new List<(ulong stringSize, string varName)> ();
+			var strings = new List<StringSymbolInfo> ();
 			long i = 0;
 			ulong arrayStringCounter = 0;
 
@@ -923,19 +993,31 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				WriteArrayString (value, $"v_{i}");
 				i++;
 			}
+
 			if (strings.Count > 0) {
 				Output.WriteLine ();
 			}
 
-			WriteGlobalSymbolStart (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer);
+			WriteStringArray (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer, strings);
+
+			void WriteArrayString (string str, string symbolSuffix)
+			{
+				StringSymbolInfo symbol = WriteUniqueString ($"__{symbolName}_{symbolSuffix}", str, ref arrayStringCounter, LlvmIrVariableOptions.LocalConstexprString);
+				strings.Add (new StringSymbolInfo (symbol.SymbolName, symbol.Size));
+			}
+		}
+
+		void WriteStringArray (string symbolName, LlvmIrVariableOptions options, List<StringSymbolInfo> strings)
+		{
+			WriteGlobalSymbolStart (symbolName, options);
 			Output.Write ($"[{strings.Count} x i8*]");
 
 			if (strings.Count > 0) {
 				Output.WriteLine (" [");
 
 				for (int j = 0; j < strings.Count; j++) {
-					ulong size = strings[j].stringSize;
-					string varName = strings[j].varName;
+					ulong size = strings[j].Size;
+					string varName = strings[j].SymbolName;
 
 					//
 					// Syntax: https://llvm.org/docs/LangRef.html#getelementptr-instruction
@@ -961,12 +1043,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				Output.Write ("]");
 			}
 			Output.WriteLine ($", align {GetAggregateAlignment (PointerSize, arraySize)}");
-
-			void WriteArrayString (string str, string symbolSuffix)
-			{
-				string name = WriteUniqueString ($"__{symbolName}_{symbolSuffix}", str, ref arrayStringCounter, LlvmIrVariableOptions.LocalConstexprString, out ulong size);
-				strings.Add (new (size, name));
-			}
 		}
 
 		/// <summary>
@@ -1073,20 +1149,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// string value.  If a new symbol is written, its name is constructed by combining prefix (<paramref name="potentialSymbolNamePrefix"/>) with value
 		/// of a string counter referenced by the <paramref name="counter"/> parameter.  Symbol is created as a local, C++ constexpr style string.
 		/// </summary>
-		public string WriteUniqueString (string potentialSymbolName, string value, ref ulong counter)
+		public StringSymbolInfo WriteUniqueString (string potentialSymbolName, string value, ref ulong counter)
 		{
-			return WriteUniqueString (potentialSymbolName, value, ref counter, LlvmIrVariableOptions.LocalConstexprString, out _);
-		}
-
-		/// <summary>
-		/// Writes a string, creating a new symbol if the <paramref name="value"/> is unique or returns name of a previously created symbol with the same
-		/// string value.  If a new symbol is written, its name is constructed by combining prefix (<paramref name="potentialSymbolNamePrefix"/>) with value
-		/// of a string counter referenced by the <paramref name="counter"/> parameter.  Symbol is created as a local, C++ constexpr style string.
-		//  String size (in bytes) is returned in <paramref name="stringSize"/>.
-		/// </summary>
-		public string WriteUniqueString (string potentialSymbolName, string value, ref ulong counter, out ulong stringSize)
-		{
-			return WriteUniqueString (potentialSymbolName, value, ref counter, LlvmIrVariableOptions.LocalConstexprString, out stringSize);
+			return WriteUniqueString (potentialSymbolName, value, ref counter, LlvmIrVariableOptions.LocalConstexprString);
 		}
 
 		/// <summary>
@@ -1095,25 +1160,23 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// of a string counter referenced by the <paramref name="counter"/> parameter.  Symbol options (writeability, visibility etc) are specified in the <paramref
 		/// name="options"/> parameter.  String size (in bytes) is returned in <paramref name="stringSize"/>.
 		/// </summary>
-		public string WriteUniqueString (string potentialSymbolNamePrefix, string value, ref ulong counter, LlvmIrVariableOptions options, out ulong stringSize)
+		public StringSymbolInfo WriteUniqueString (string potentialSymbolNamePrefix, string value, ref ulong counter, LlvmIrVariableOptions options)
 		{
 			if (value == null) {
-				stringSize = 0;
 				return null;
 			}
 
 			StringSymbolInfo info;
 			if (stringSymbolCache.TryGetValue (value, out info)) {
-				stringSize = info.Size;
-				return info.SymbolName;
+				return info;
 			}
 
 			string newSymbolName = $"{potentialSymbolNamePrefix}.{counter++}";
-			WriteString (newSymbolName, value, options, out stringSize);
+			WriteString (newSymbolName, value, options, out ulong stringSize);
 			info = new StringSymbolInfo (newSymbolName, stringSize);
 			stringSymbolCache.Add (value, info);
 
-			return info.SymbolName;
+			return info;
 		}
 
 		public virtual void WriteFileTop ()

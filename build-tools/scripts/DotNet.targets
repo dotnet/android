@@ -5,6 +5,16 @@
   <Target Name="PackDotNet">
     <MSBuild Projects="$(_Root)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
     <MSBuild Projects="$(_Root)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
+    <MSBuild
+         Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
+         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
+         Properties="TargetFramework=net6.0;AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);DisableApiCompatibilityCheck=true"
+    />
+    <MSBuild
+         Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
+         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
+         Properties="TargetFramework=net6.0;AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);DisableApiCompatibilityCheck=true"
+    />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
     <!-- Clean up old, previously restored packages -->
@@ -46,18 +56,5 @@
         EnvironmentVariables="DOTNET_MULTILEVEL_LOOKUP=0"
     />
     <RemoveDir Directories="$(_TempDirectory)" />
-  </Target>
-  <Target Name="BuildDotNetPreviewApiLevel">
-    <ItemGroup>
-      <_DotNetPreviewProperties Include="TargetFramework=net6.0" />
-      <_DotNetPreviewProperties Include="AndroidApiLevel=$(AndroidLatestUnstableApiLevel)" />
-      <_DotNetPreviewProperties Include="AndroidPlatformId=$(AndroidLatestUnstablePlatformId)" />
-      <_DotNetPreviewProperties Include="AndroidFrameworkVersion=$(AndroidLatestUnstableFrameworkVersion)" />
-      <_DotNetPreviewProperties Include="AndroidPreviousFrameworkVersion=$(AndroidLatestStableFrameworkVersion)" />
-    </ItemGroup>
-    <MSBuild
-        Projects="$(XamarinAndroidSourcePath)src\Mono.Android\Mono.Android.csproj"
-        Properties="@(_DotNetPreviewProperties)"
-    />
   </Target>
 </Project>

@@ -5,10 +5,10 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 55104
+      "Size": 55106
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 88405
+      "Size": 88461
     },
     "assemblies/rc.bin": {
       "Size": 1083
@@ -26,7 +26,7 @@
       "Size": 2374
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3542
+      "Size": 3546
     },
     "classes.dex": {
       "Size": 345328
@@ -47,7 +47,7 @@
       "Size": 150032
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 8680
+      "Size": 9424
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213

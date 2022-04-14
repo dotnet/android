@@ -216,8 +216,20 @@ namespace Xamarin.Android.Build.Tests
 			dotnet.AssertHasNoWarnings ();
 		}
 
+		static readonly object[] DotNetPackTargetFrameworks = new object[] {
+			new object[] {
+				"net6.0-android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+			new object[] {
+				$"net6.0-android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+		};
+
 		[Test]
-		public void DotNetPack ([Values ("net6.0-android", "net6.0-android31")] string targetFramework)
+		[TestCaseSource (nameof (DotNetPackTargetFrameworks))]
+		public void DotNetPack (string targetFramework, int apiLevel)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
@@ -228,6 +240,9 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			if (IsPreviewFrameworkVersion (targetFramework)) {
+				proj.SetProperty ("EnablePreviewFeatures", "true");
+			}
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidResource ("Resources\\raw\\bar.txt") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
@@ -249,8 +264,8 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android31.0/{proj.ProjectName}.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android{apiLevel}.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android{apiLevel}.0/{proj.ProjectName}.aar");
 			}
 		}
 
@@ -619,7 +634,7 @@ namespace Xamarin.Android.Build.Tests
 			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore, rids);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
-			helper.AssertContainsEntry ($"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
+			helper.AssertContainsEntry ($"assemblies/Mono.Android.dll",        shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
@@ -631,7 +646,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 				if (aot) {
 					helper.AssertContainsEntry ($"lib/{abi}/libaot-{proj.ProjectName}.dll.so");
-					helper.AssertContainsEntry ($"lib/{abi}/libaot-System.Linq.dll.so");
+					helper.AssertContainsEntry ($"lib/{abi}/libaot-Mono.Android.dll.so");
 				}
 			}
 		}
@@ -677,17 +692,67 @@ namespace Xamarin.Android.Build.Tests
 			dotnet.AssertHasNoWarnings ();
 		}
 
-		[Test]
-		public void DotNetPublish ([Values (false, true)] bool isRelease)
+		static readonly object[] DotNetTargetFrameworks = new object[] {
+			new object[] {
+				"net6.0-android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+			new object[] {
+				$"net6.0-android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+			new object[] {
+				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"net6.0-android{XABuildConfig.AndroidLatestStableApiLevel}.0",
+				XABuildConfig.AndroidLatestStableApiLevel,
+			},
+			new object[] {
+				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"net6.0-android{XABuildConfig.AndroidLatestUnstableApiLevel}.0",
+				XABuildConfig.AndroidLatestUnstableApiLevel,
+			},
+		};
+
+		static bool IsPreviewFrameworkVersion (string targetFramework)
 		{
+			return (targetFramework.Contains ($"{XABuildConfig.AndroidLatestUnstableApiLevel}")
+				&& XABuildConfig.AndroidLatestUnstableApiLevel != XABuildConfig.AndroidLatestStableApiLevel);
+		}
+
+		[Test]
+		public void DotNetPublish ([Values (false, true)] bool isRelease, [ValueSource(nameof(DotNetTargetFrameworks))] object[] data)
+		{
+			var targetFramework = (string)data[0];
+			var apiLevel = (int)data[1];
+
+			if (string.IsNullOrEmpty (targetFramework))
+				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
+
 			const string runtimeIdentifier = "android-arm";
 			var proj = new XASdkProject {
+				TargetFramework = targetFramework,
 				IsRelease = isRelease
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+
+			var preview = IsPreviewFrameworkVersion (targetFramework);
+			if (preview) {
+				proj.SetProperty ("EnablePreviewFeatures", "true");
+			}
+
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Publish (), "first `dotnet publish` should succeed");
-			dotnet.AssertHasNoWarnings ();
+			// NOTE: Preview API levels emit XA4211
+			if (!preview) {
+				dotnet.AssertHasNoWarnings ();
+			}
+
+			var refDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
+			var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", "net6.0", "Mono.Android.dll");
+			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
+
+			var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
+			var runtimeDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Runtime.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
+			var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", "net6.0", "Mono.Android.dll");
+			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
 
 			var publishDirectory = Path.Combine (FullProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
 			var apk = Path.Combine (publishDirectory, $"{proj.PackageName}.apk");
@@ -773,14 +838,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MauiTargetFramework ([Values ("net6.0-android", "net6.0-android31", "net6.0-android31.0", "net6.0-android32.0")] string targetFramework)
+		[TestCaseSource (nameof (DotNetTargetFrameworks))]
+		public void MauiTargetFramework (string targetFramework, int apiLevel)
 		{
+			if (string.IsNullOrEmpty (targetFramework))
+				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
+
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 			};
-			// Re-enable when we have unstable API 33
-			// bool preview = targetFramework.Contains("33");
-			bool preview = false;
+
+			var preview = IsPreviewFrameworkVersion (targetFramework);
 			if (preview) {
 				library.SetProperty ("EnablePreviewFeatures", "true");
 			}
