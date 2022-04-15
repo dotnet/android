@@ -4,6 +4,10 @@
     <GeneratorPath>$(UtilityOutputFullPath)generator.dll</GeneratorPath>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.GenAPI" GeneratePathProperty="true" IncludeAssets="none" />
+  </ItemGroup>
+
   <Target Name="_GetJavaBaseJmodPath">
     <PropertyGroup Condition=" '$(Java11SdkDirectory)' != '' ">
       <_JavaBaseJmod>$(Java11SdkDirectory)/jmods/java.base.jmod</_JavaBaseJmod>
@@ -73,6 +77,19 @@
     <PropertyGroup>
       <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
     </PropertyGroup>
+  </Target>
+
+  <Target Name="_GenerateRefApi"
+      Condition=" '$(PkgMicrosoft_DotNet_GenAPI)' != '' And '$(TargetPath)' != '' "
+      AfterTargets="Build"
+      Inputs="$(TargetPath)"
+      Outputs="..\Java.Base-ref.cs">
+    <PropertyGroup>
+      <_GenApi>$(PkgMicrosoft_DotNet_GenAPI)/tools/netcoreapp3.1/Microsoft.DotNet.GenAPI.dll</_GenApi>
+      <_Output>-o "../Java.Base-ref.cs"</_Output>
+      <_Libpath>--lib-path "$(OutputPath.TrimEnd('\'))"</_Libpath>
+    </PropertyGroup>
+    <Exec Command="$(DotnetToolPath) $(_GenApi) &quot;$(TargetPath)&quot; $(_Libpath) $(_Output)" />
   </Target>
 
 </Project>

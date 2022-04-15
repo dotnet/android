@@ -1,6 +1,8 @@
 <metadata>
   <!-- For now, just bind java.lang.* -->
-  <remove-node path="//api/package[not(starts-with(@name, 'java.lang'))]" />
+  <remove-node path="//api/package[not(starts-with(@name, 'java.lang')
+      or starts-with(@name, 'java.io')
+      )]" />
 
   <!-- Type / Namespace conflicts -->
   <ns-replace source="java.lang.module" replacement="Java.Lang.Modules" />

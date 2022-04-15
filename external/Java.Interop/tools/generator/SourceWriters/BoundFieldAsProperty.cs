@@ -152,7 +152,12 @@ namespace generator.SourceWriters
 			writer.Write ($"\t_members.{indirect}.SetValue (__id{(field.IsStatic ? "" : ", this")}, ");
 
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				writer.WriteLine ($"{(invokeType != "Object" ? arg : $"{arg}?.PeerReference ?? default")});");
+				if (invokeType != "Object" || have_prep) {
+					writer.Write (arg);
+				} else {
+					writer.Write ($"{arg}?.PeerReference ?? default");
+				}
+				writer.WriteLine (");");
 			} else {
 				writer.WriteLine ($"{(invokeType != "Object" ? arg : "new JniObjectReference (" + arg + ")")});");
 			}
