@@ -1563,7 +1563,7 @@ stages:
         solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
-          /t:_AddVsixContent;Build
+          /t:AddVsixContent;Build
           /p:SignType=$(MicroBuildSignType)
           /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)\MicroBuild\Plugins
           /p:VsixPath=$(XA.Unsigned.Vsix)
@@ -1576,7 +1576,7 @@ stages:
         solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
-          /t:_ZipVsixContent
+          /t:ZipVsixContent
           /p:VsixPath=$(XA.Unsigned.Vsix)
           /p:OutDir=$(Build.StagingDirectory)\
           /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\zip-vsix-content.binlog
@@ -1587,7 +1587,7 @@ stages:
         solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
-          /t:_SignVsix;Build
+          /t:SignVsix;Build
           /p:SignType=$(MicroBuildSignType)
           /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)\MicroBuild\Plugins
           /p:OutDir=$(System.DefaultWorkingDirectory)\vsix-artifact
@@ -1669,7 +1669,7 @@ stages:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
-          /t:_SignPkg;Build
+          /t:SignPkg;Build
           /p:SignType=$(MicroBuildSignType)
           /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
           /p:OutDir=$(System.DefaultWorkingDirectory)/storage-artifacts
