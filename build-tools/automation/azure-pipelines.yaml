@@ -14,7 +14,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/dev/pjc/arcade-8645
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
