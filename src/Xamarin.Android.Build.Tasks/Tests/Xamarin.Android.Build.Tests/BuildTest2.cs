@@ -1068,9 +1068,49 @@ namespace UnamedProject
 			}
 		}
 
+		static readonly object [] BuildProguardEnabledProjectSource = new object [] {
+			new object [] {
+				/* isRelease */ false,
+				/* dexTool */   "dx",
+				/* linkTool */  "",
+				/* rid */       "",
+			},
+			new object [] {
+				/* isRelease */ false,
+				/* dexTool */   "d8",
+				/* linkTool */  "",
+				/* rid */       "",
+			},
+			new object [] {
+				/* isRelease */ true,
+				/* dexTool */   "dx",
+				/* linkTool */  "proguard",
+				/* rid */       "",
+			},
+			new object [] {
+				/* isRelease */ true,
+				/* dexTool */   "d8",
+				/* linkTool */  "proguard",
+				/* rid */       "",
+			},
+			new object [] {
+				/* isRelease */ true,
+				/* dexTool */   "d8",
+				/* linkTool */  "r8",
+				/* rid */       "",
+			},
+			new object [] {
+				/* isRelease */ true,
+				/* dexTool */   "d8",
+				/* linkTool */  "r8",
+				/* rid */       "android-arm64",
+			},
+		};
+
 		[Test]
+		[TestCaseSource (nameof (BuildProguardEnabledProjectSource))]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void BuildProguardEnabledProject ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
+		public void BuildProguardEnabledProject (bool isRelease, string dexTool, string linkTool, string rid)
 		{
 			AssertDexToolSupported (dexTool);
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -1078,7 +1118,13 @@ namespace UnamedProject
 				DexTool = dexTool,
 				LinkTool = linkTool,
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled Project(1){isRelease}{dexTool}{linkTool}"))) {
+			if (!string.IsNullOrEmpty (rid)) {
+				if (!Builder.UseDotNet) {
+					Assert.Ignore ("Skipping test, as it is valid for .NET 6+ only.");
+				}
+				proj.SetProperty ("RuntimeIdentifier", rid);
+			}
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){isRelease}{dexTool}{linkTool}{rid}"))) {
 				if (dexTool == "d8" && linkTool == "proguard") {
 					b.ThrowOnBuildFailure = false;
 					Assert.IsFalse (b.Build (proj), "Build should have failed.");
@@ -1090,19 +1136,26 @@ namespace UnamedProject
 				}
 
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				// warning XA4304: ProGuard configuration file 'XYZ' was not found.
+				StringAssertEx.DoesNotContain ("XA4304", b.LastBuildOutput, "Output should *not* contain XA4304 warnings");
+
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				if (!string.IsNullOrEmpty (rid)) {
+					intermediate = Path.Combine (intermediate, rid);
+				}
 
 				var toolbar_class = Builder.UseDotNet ? "androidx.appcompat.widget.Toolbar" : "android.support.v7.widget.Toolbar";
 				if (isRelease && !string.IsNullOrEmpty (linkTool)) {
-					var proguardProjectPrimary = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "proguard", "proguard_project_primary.cfg");
+					var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
 					FileAssert.Exists (proguardProjectPrimary);
 					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
 
-					var aapt_rules = b.Output.GetIntermediaryPath ("aapt_rules.txt");
+					var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
 					FileAssert.Exists (aapt_rules);
 					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (aapt_rules), $"-keep class {toolbar_class}"), $"`{toolbar_class}` should exist in `{aapt_rules}`!");
 				}
 
-				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);
 				var classes = new [] {
 					"Lmono/MonoRuntimeProvider;",
