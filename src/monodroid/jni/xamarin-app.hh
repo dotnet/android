@@ -7,6 +7,7 @@
 #include <mono/metadata/image.h>
 
 #include "monodroid.h"
+#include "xxhash.hh"
 
 static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
@@ -75,7 +76,7 @@ struct TypeMapJava
 {
 	uint32_t module_index;
 	uint32_t type_token_id;
-	uint8_t  java_name[];
+	uint32_t java_name_index;
 };
 #endif
 
@@ -216,6 +217,9 @@ struct ApplicationConfig
 	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_assembly_store_files;
 	uint32_t number_of_dso_cache_entries;
+	uint32_t android_runtime_jnienv_class_token;
+	uint32_t jnienv_initialize_method_token;
+	uint32_t jnienv_registerjninatives_method_token;
 	MonoComponent mono_components_mask;
 	const char *android_package_name;
 };
@@ -235,9 +239,10 @@ MONO_API MONO_API_EXPORT const TypeMap type_map; // MUST match src/Xamarin.Andro
 #else
 MONO_API MONO_API_EXPORT const uint32_t map_module_count;
 MONO_API MONO_API_EXPORT const uint32_t java_type_count;
-MONO_API MONO_API_EXPORT const uint32_t java_name_width;
-MONO_API MONO_API_EXPORT const TypeMapModule map_modules[];
+MONO_API MONO_API_EXPORT const char* const java_type_names[];
+MONO_API MONO_API_EXPORT TypeMapModule map_modules[];
 MONO_API MONO_API_EXPORT const TypeMapJava map_java[];
+MONO_API MONO_API_EXPORT const xamarin::android::hash_t map_java_hashes[];
 #endif
 
 MONO_API MONO_API_EXPORT CompressedAssemblies compressed_assemblies;

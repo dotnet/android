@@ -29,6 +29,7 @@ jobs:
     - template: setup-test-environment.yaml
       parameters:
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        remove_dotnet: true
 
     - task: DownloadPipelineArtifact@1
       inputs:

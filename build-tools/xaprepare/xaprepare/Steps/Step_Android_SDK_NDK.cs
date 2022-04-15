@@ -253,6 +253,14 @@ namespace Xamarin.Android.Prepare
 				return;
 			}
 
+			// If only specific Android SDK platforms were requested, ignore ones that were not requested
+			if (component is AndroidPlatformComponent apc && context.AndroidSdkPlatforms.Any ()) {
+				if (!context.AndroidSdkPlatforms.Contains (apc.ApiLevel)) {
+					LogStatus ($"skipping, not requested", padLeft, Log.InfoColor);
+					return;
+				}
+			}
+
 			if (missing)
 				LogStatus (statusMissing, padLeft, ConsoleColor.Magenta);
 			else

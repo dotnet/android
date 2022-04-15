@@ -117,6 +117,19 @@ stages:
       parameters:
         condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
+    - script: >
+        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
+        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/binutils/bin/*.pdb
+        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: copy Windows toolchain pdb files
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload Windows toolchain pdb files
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+
     - template: yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
@@ -155,6 +168,13 @@ stages:
       displayName: set JI_JAVA_HOME
 
     - template: yaml-templates\use-dot-net.yaml
+      parameters:
+        remove_dotnet: true
+
+    # xabuild still depends on .NET Core 3 or earlier
+    - template: yaml-templates\use-dot-net.yaml
+      parameters:
+        version: 3.1.417
 
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.

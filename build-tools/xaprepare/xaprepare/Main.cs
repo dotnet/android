@@ -34,6 +34,7 @@ namespace Xamarin.Android.Prepare
 			public string? MonoArchiveCustomUrl { get; set; }
 			public bool EnableAll              { get; set; }
 			public RefreshableComponent RefreshList { get; set; }
+			public IEnumerable<string> AndroidSdkPlatforms { get; set; } = Enumerable.Empty<string> ();
 		}
 
 		public static int Main (string[] args)
@@ -112,6 +113,7 @@ namespace Xamarin.Android.Prepare
 				{"ignore-max-mono-version=", $"Ignore the maximum supported Mono version restriction", v => parsedOptions.IgnoreMaxMonoVersion = ParseBoolean (v)},
 				{"ignore-min-mono-version=", $"Ignore the minimum supported Mono version restriction", v => parsedOptions.IgnoreMinMonoVersion = ParseBoolean (v)},
 				{"mono-archive-url=", "Use a specific URL for the mono archive.", v => parsedOptions.MonoArchiveCustomUrl = v?.Trim () },
+				{"android-sdk-platforms=", "Comma separated list of Android SDK platform levels to be installed. Defaults to all if no value is provided.", v => parsedOptions.AndroidSdkPlatforms = ParseAndroidSdkPlatformLevels (v?.Trim () ?? String.Empty) },
 				"",
 				{"h|help", "Show this help message", v => parsedOptions.ShowHelp = true },
 			};
@@ -148,6 +150,7 @@ namespace Xamarin.Android.Prepare
 			Context.Instance.MonoArchiveCustomUrl  = parsedOptions.MonoArchiveCustomUrl ?? String.Empty;
 			Context.Instance.EnableAllTargets      = parsedOptions.EnableAll;
 			Context.Instance.ComponentsToRefresh   = parsedOptions.RefreshList;
+			Context.Instance.AndroidSdkPlatforms   = parsedOptions.AndroidSdkPlatforms;
 
 			if (!String.IsNullOrEmpty (parsedOptions.Configuration))
 				Context.Instance.Configuration = parsedOptions.Configuration!;
@@ -340,5 +343,9 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
+		static IEnumerable<string> ParseAndroidSdkPlatformLevels (string list)
+		{
+			return list.Split (',').Select (item => item.Trim ());
+		}
 	}
 }

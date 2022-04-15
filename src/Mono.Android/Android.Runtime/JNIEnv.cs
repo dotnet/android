@@ -119,6 +119,9 @@ namespace Android.Runtime {
 		[DllImport ("libc")]
 		static extern int gettid ();
 
+#if NETCOREAPP
+		[UnmanagedCallersOnly]
+#endif
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
@@ -140,6 +143,9 @@ namespace Android.Runtime {
 			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
 		}
 
+#if NETCOREAPP
+		[UnmanagedCallersOnly]
+#endif
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
 			bool logTiming = (args->logCategories & (uint)LogCategories.Timing) != 0;

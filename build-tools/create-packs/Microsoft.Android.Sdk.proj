@@ -101,57 +101,11 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <BundledVersionsFileName>Microsoft.Android.Sdk.BundledVersions.targets</BundledVersionsFileName>
     </PropertyGroup>
 
-    <ItemGroup>
-      <_AndroidNETAppRuntimePackRids Include="android-arm;android-arm64;android-x86;android-x64" />
-    </ItemGroup>
-
-    <PropertyGroup>
-      <BundledVersionsContent>
-<![CDATA[
-<!--
-***********************************************************************************************
-$(BundledVersionsFileName)
-WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
-          created a backup copy.  Incorrect changes to this file will make it
-          impossible to load or build your projects from the command-line or the IDE.
-***********************************************************************************************
--->
-<Project>
-  <PropertyGroup>
-    <AndroidNETSdkVersion>$(AndroidPackVersionLong)</AndroidNETSdkVersion>
-    <XamarinAndroidVersion>$(AndroidPackVersionLong)</XamarinAndroidVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '%24(TargetPlatformVersion)' == '31.0' ">
-    <_AndroidTargetingPackId>31</_AndroidTargetingPackId>
-    <_AndroidTargetingPackVersion>31.0.101-preview.11.117</_AndroidTargetingPackVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <_AndroidTargetingPackId Condition=" '%24(_AndroidTargetingPackId)' == '' ">$(AndroidLatestStableApiLevel)</_AndroidTargetingPackId>
-    <_AndroidTargetingPackVersion Condition=" '%24(_AndroidTargetingPackVersion)' == '' ">**FromWorkload**</_AndroidTargetingPackVersion>
-    <_AndroidRuntimePackId Condition=" '%24(_AndroidRuntimePackId)' == '' ">$(AndroidLatestStableApiLevel)</_AndroidRuntimePackId>
-    <_AndroidRuntimePackVersion Condition=" '%24(_AndroidRuntimePackVersion)' == '' ">**FromWorkload**</_AndroidRuntimePackVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <KnownFrameworkReference
-        Include="Microsoft.Android"
-        TargetFramework="$(DotNetTargetFramework)"
-        RuntimeFrameworkName="Microsoft.Android"
-        LatestRuntimeFrameworkVersion="%24(_AndroidRuntimePackVersion)"
-        TargetingPackName="Microsoft.Android.Ref.%24(_AndroidTargetingPackId)"
-        TargetingPackVersion="%24(_AndroidTargetingPackVersion)"
-        RuntimePackNamePatterns="Microsoft.Android.Runtime.%24(_AndroidRuntimePackId).**RID**"
-        RuntimePackRuntimeIdentifiers="@(_AndroidNETAppRuntimePackRids, '%3B')"
-        Profile="Android"
-    />
-  </ItemGroup>
-</Project>
-]]>
-      </BundledVersionsContent>
-    </PropertyGroup>
-
-    <WriteLinesToFile File="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\$(BundledVersionsFileName)"
-                      Lines="$(BundledVersionsContent)"
-                      Overwrite="true" />
+    <ReplaceFileContents
+        SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets"
+        DestinationFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\$(BundledVersionsFileName)"
+        Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel)" >
+    </ReplaceFileContents>
   </Target>
 
 </Project>

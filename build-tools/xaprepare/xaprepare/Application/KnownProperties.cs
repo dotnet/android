@@ -7,6 +7,7 @@ namespace Xamarin.Android.Prepare
 		public const string AndroidCmakeVersionPath             = "AndroidCmakeVersionPath";
 		public const string AndroidDefaultTargetDotnetApiLevel  = "AndroidDefaultTargetDotnetApiLevel";
 		public const string AndroidLatestStableApiLevel         = "AndroidLatestStableApiLevel";
+		public const string AndroidLatestUnstableApiLevel       = "AndroidLatestUnstableApiLevel";
 		public const string AndroidLatestStableFrameworkVersion = "AndroidLatestStableFrameworkVersion";
 		public const string AndroidMxeFullPath                  = "AndroidMxeFullPath";
 		public const string AndroidNdkDirectory                 = "AndroidNdkDirectory";

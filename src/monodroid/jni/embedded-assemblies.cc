@@ -550,8 +550,8 @@ EmbeddedAssemblies::install_preload_hooks_for_alc ()
 #endif // def NET6
 
 template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_precalculated_size>
-const Entry*
-EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nmemb, [[maybe_unused]] size_t precalculated_size)
+force_inline const Entry*
+EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nmemb, [[maybe_unused]] size_t precalculated_size) noexcept
 {
 	static_assert (compare != nullptr, "compare is a required template parameter");
 
@@ -601,9 +601,65 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 	return nullptr;
 }
 
+force_inline ssize_t
+EmbeddedAssemblies::binary_search (hash_t key, const hash_t *arr, size_t n) noexcept
+{
+	ssize_t left = -1;
+	ssize_t right = static_cast<ssize_t>(n);
+
+	while (right - left > 1) {
+		ssize_t middle = (left + right) >> 1;
+		if (arr[middle] < key) {
+			left = middle;
+		} else {
+			right = middle;
+		}
+	}
+
+	return arr[right] == key ? right : -1;
+}
+
+force_inline ptrdiff_t
+EmbeddedAssemblies::binary_search_branchless (hash_t x, const hash_t *arr, uint32_t len) noexcept
+{
+	const hash_t *base = arr;
+	while (len > 1) {
+		uint32_t half = len >> 1;
+		// __builtin_prefetch(&base[(len - half) / 2]);
+		// __builtin_prefetch(&base[half + (len - half) / 2]);
+		base = (base[half] < x ? &base[half] : base);
+		len -= half;
+	}
+
+	//return *(base + (*base < x));
+	ptrdiff_t ret = (base + (*base < x)) - arr;
+	return arr[ret] == x ? ret : -1;
+}
+
+#if defined (RELEASE) && defined (ANDROID)
+force_inline const TypeMapModuleEntry*
+EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept
+{
+	ssize_t left = -1;
+	ssize_t right = static_cast<ssize_t>(n);
+	ssize_t middle;
+
+	while (right - left > 1) {
+		middle = (left + right) >> 1;
+		if (arr[middle].type_token_id < key) {
+			left = middle;
+		} else {
+			right = middle;
+		}
+	}
+
+	return arr[right].type_token_id == key ? &arr[right] : nullptr;
+}
+#endif // def RELEASE && def ANDROID
+
 #if defined (DEBUG) || !defined (ANDROID)
-int
-EmbeddedAssemblies::compare_type_name (const char *type_name, const TypeMapEntry *entry)
+force_inline int
+EmbeddedAssemblies::compare_type_name (const char *type_name, const TypeMapEntry *entry) noexcept
 {
 	if (entry == nullptr)
 		return 1;
@@ -611,38 +667,39 @@ EmbeddedAssemblies::compare_type_name (const char *type_name, const TypeMapEntry
 	return strcmp (type_name, entry->from);
 }
 
-MonoReflectionType*
-EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
+force_inline MonoReflectionType*
+EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const MonoString *java_type) noexcept
 {
+	c_unique_ptr<char> java_type_name {mono_string_to_utf8 (const_cast<MonoString*>(java_type))};
 	const TypeMapEntry *entry = nullptr;
 
 	if (application_config.instant_run_enabled) {
 		TypeMap *module;
 		for (size_t i = 0; i < type_map_count; i++) {
 			module = &type_maps[i];
-			entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, module->java_to_managed, module->entry_count);
+			entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name.get (), module->java_to_managed, module->entry_count);
 			if (entry != nullptr)
 				break;
 		}
 	} else {
-		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, type_map.java_to_managed, type_map.entry_count);
+		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name.get (), type_map.java_to_managed, type_map.entry_count);
 	}
 
 	if (XA_UNLIKELY (entry == nullptr)) {
-		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
+		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name.get ());
 		return nullptr;
 	}
 
 	const char *managed_type_name = entry->to;
 	if (managed_type_name == nullptr) {
-		log_debug (LOG_ASSEMBLY, "typemap: Java type '%s' maps either to an open generic type or an interface type.", java_type_name);
+		log_debug (LOG_ASSEMBLY, "typemap: Java type '%s' maps either to an open generic type or an interface type.", java_type_name.get ());
 		return nullptr;
 	}
-	log_debug (LOG_DEFAULT, "typemap: Java type '%s' corresponds to managed type '%s'", java_type_name, managed_type_name);
+ 	log_debug (LOG_DEFAULT, "typemap: Java type '%s' corresponds to managed type '%s'", java_type_name.get (), managed_type_name);
 
 	MonoType *type = mono_reflection_type_from_name (const_cast<char*>(managed_type_name), nullptr);
 	if (XA_UNLIKELY (type == nullptr)) {
-		log_info (LOG_ASSEMBLY, "typemap: managed type '%s' (mapped from Java type '%s') could not be loaded", managed_type_name, java_type_name);
+		log_info (LOG_ASSEMBLY, "typemap: managed type '%s' (mapped from Java type '%s') could not be loaded", managed_type_name, java_type_name.get ());
 		return nullptr;
 	}
 
@@ -655,46 +712,44 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	return ret;
 }
 #else
-MonoReflectionType*
-EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
+force_inline MonoReflectionType*
+EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept
 {
-	TypeMapModule *module;
-	const TypeMapJava *java_entry = binary_search<const char, TypeMapJava, compare_java_name, true> (java_type_name, map_java, java_type_count, type_map_java_struct_size);
-	if (java_entry == nullptr) {
-		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
+	// In microbrenchmarks, `binary_search_branchless` is faster than `binary_search` but in "real" application tests,
+	// the simple version appears to yield faster startup... Leaving both for now, for further investigation and
+	// potential optimizations
+	ssize_t idx = binary_search (hash, map_java_hashes, java_type_count);
+	//ptrdiff_t idx = binary_search_branchless (hash, map_java_hashes, java_type_count);
+
+	TypeMapJava const* java_entry = idx >= 0 ? &map_java[idx] : nullptr;
+	TypeMapModule *module = java_entry != nullptr && java_entry->module_index < map_module_count ? &map_modules[java_entry->module_index] : nullptr;
+	if (module == nullptr) {
+		if (java_entry == nullptr) {
+			log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s' (hash 0x%zx)", to_utf8 (java_type_name).get (), hash);
+		} else {
+			log_warn (LOG_ASSEMBLY, "typemap: mapping from Java type '%s' to managed type has invalid module index %u", to_utf8 (java_type_name).get (), java_entry->module_index);
+		}
 		return nullptr;
 	}
 
-	if (java_entry->module_index >= map_module_count) {
-		log_warn (LOG_ASSEMBLY, "typemap: mapping from Java type '%s' to managed type has invalid module index", java_type_name);
-		return nullptr;
-	}
-
-	module = const_cast<TypeMapModule*>(&map_modules[java_entry->module_index]);
-	const TypeMapModuleEntry *entry = binary_search <uint32_t, TypeMapModuleEntry, compare_type_token> (&java_entry->type_token_id, module->map, module->entry_count);
+	const TypeMapModuleEntry *entry = binary_search (java_entry->type_token_id, module->map, module->entry_count);
 	if (entry == nullptr) {
-		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping from Java type '%s' to managed type with token ID %u in module [%s]", java_type_name, java_entry->type_token_id, MonoGuidString (module->module_uuid).get ());
+		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping from Java type '%s' to managed type with token ID %u in module [%s]", to_utf8 (java_type_name).get (), java_entry->type_token_id, MonoGuidString (module->module_uuid).get ());
 		return nullptr;
 	}
-	uint32_t type_token_id = java_entry->type_token_id;
 
 	if (module->image == nullptr) {
 		module->image = mono_image_loaded (module->assembly_name);
 		if (module->image == nullptr) {
-			// TODO: load
-			log_error (LOG_ASSEMBLY, "typemap: assembly '%s' not loaded yet!", module->assembly_name);
-		}
-
-		if (module->image == nullptr) {
-			log_error (LOG_ASSEMBLY, "typemap: unable to load assembly '%s' when looking up managed type corresponding to Java type '%s'", module->assembly_name, java_type_name);
+			log_error (LOG_ASSEMBLY, "typemap: unable to load assembly '%s' when looking up managed type corresponding to Java type '%s'", module->assembly_name, to_utf8 (java_type_name).get ());
 			return nullptr;
 		}
 	}
 
-	log_debug (LOG_ASSEMBLY, "typemap: java type '%s' corresponds to managed token id %u (0x%x)", java_type_name, type_token_id, type_token_id);
-	MonoClass *klass = mono_class_get (module->image, static_cast<uint32_t>(type_token_id));
-	if (klass == nullptr) {
-		log_error (LOG_ASSEMBLY, "typemap: unable to find managed type with token ID %u in assembly '%s', corresponding to Java type '%s'", type_token_id, module->assembly_name, java_type_name);
+	log_debug (LOG_ASSEMBLY, "typemap: java type '%s' corresponds to managed token id %u (0x%x)", to_utf8 (java_type_name).get (), java_entry->type_token_id, java_entry->type_token_id);
+	MonoClass *klass = mono_class_get (module->image, java_entry->type_token_id);
+	if (klass == nullptr) [[unlikely]] {
+		log_error (LOG_ASSEMBLY, "typemap: unable to find managed type with token ID %u in assembly '%s', corresponding to Java type '%s'", java_entry->type_token_id, module->assembly_name, to_utf8 (java_type_name).get ());
 		return nullptr;
 	}
 
@@ -708,26 +763,16 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 #endif
 	MonoReflectionType *ret = mono_type_get_object (domain, mono_class_get_type (klass));
 	if (ret == nullptr) {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type with token ID %u in assembly '%s', corresponding to Java type '%s'", type_token_id, module->assembly_name, java_type_name);
+		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type with token ID %u in assembly '%s', corresponding to Java type '%s'", java_entry->type_token_id, module->assembly_name, to_utf8 (java_type_name).get ());
 		return nullptr;
 	}
 
 	return ret;
 }
-
-int
-EmbeddedAssemblies::compare_java_name (const char *java_name, const TypeMapJava *entry)
-{
-	if (entry == nullptr || entry->java_name[0] == '\0') {
-		return -1;
-	}
-
-	return strcmp (java_name, reinterpret_cast<const char*>(entry->java_name));
-}
 #endif
 
 MonoReflectionType*
-EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type)
+EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 {
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
@@ -740,13 +785,17 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type)
 		return nullptr;
 	}
 
-	c_unique_ptr<char> java_type_name {mono_string_to_utf8 (java_type)};
-	if (XA_UNLIKELY (!java_type_name || *java_type_name == '\0')) {
-		log_warn (LOG_ASSEMBLY, "typemap: empty Java type name passed to 'typemap_java_to_managed'");
+	// We need to generate hash for all the bytes, and since MonoString is Unicode, we double the length to get the
+	// number of bytes.
+	int name_len = mono_string_length (java_type) << 1;
+	if (XA_UNLIKELY (name_len <= 0)) {
+		log_warn (LOG_ASSEMBLY, "typemap: empty 'java_type' passed to 'typemap_java_to_managed'");
 		return nullptr;
 	}
 
-	MonoReflectionType *ret = typemap_java_to_managed (java_type_name.get ());
+	const mono_unichar2 *type_chars = mono_string_chars (java_type);
+	hash_t hash = xxhash::hash (reinterpret_cast<const char*>(type_chars), static_cast<size_t>(name_len));
+	MonoReflectionType *ret = typemap_java_to_managed (hash, java_type);
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
@@ -758,8 +807,8 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type)
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
-inline const TypeMapEntry*
-EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name)
+force_inline const TypeMapEntry*
+EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name) noexcept
 {
 	const TypeMapEntry *entry = nullptr;
 
@@ -778,8 +827,8 @@ EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name)
 	return entry;
 }
 
-inline const char*
-EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, [[maybe_unused]] const uint8_t *mvid)
+force_inline const char*
+EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, [[maybe_unused]] const uint8_t *mvid) noexcept
 {
 	c_unique_ptr<char> type_name {mono_type_get_name_full (type, MONO_TYPE_NAME_FORMAT_FULL_NAME)};
 	MonoImage *image = mono_class_get_image (klass);
@@ -802,59 +851,38 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 	return entry->to;
 }
 #else
-inline int
-EmbeddedAssemblies::compare_type_token (const uint32_t *token, const TypeMapModuleEntry *entry)
-{
-	if (entry == nullptr) {
-		log_fatal (LOG_ASSEMBLY, "typemap: compare_type_token: entry is nullptr");
-		exit (FATAL_EXIT_MISSING_ASSEMBLY);
-	}
-
-	if (*token < entry->type_token_id)
-		return -1;
-	if (*token > entry->type_token_id)
-		return 1;
-	return 0;
-}
-
-inline int
-EmbeddedAssemblies::compare_mvid (const uint8_t *mvid, const TypeMapModule *module)
+force_inline int
+EmbeddedAssemblies::compare_mvid (const uint8_t *mvid, const TypeMapModule *module) noexcept
 {
 	return memcmp (mvid, module->module_uuid, sizeof(module->module_uuid));
 }
 
-inline const char*
-EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, const uint8_t *mvid)
+force_inline const char*
+EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept
 {
-	if (mvid == nullptr) {
-		log_warn (LOG_ASSEMBLY, "typemap: no mvid specified in call to typemap_managed_to_java");
-		return nullptr;
-	}
-
-	const TypeMapModule *map;
-	size_t map_entry_count;
-	map = map_modules;
-	map_entry_count = map_module_count;
-
-	const TypeMapModule *match = binary_search<uint8_t, TypeMapModule, compare_mvid> (mvid, map, map_entry_count);
+	const TypeMapModule *match = mvid != nullptr ? binary_search<uint8_t, TypeMapModule, compare_mvid> (mvid, map_modules, map_module_count) : nullptr;
 	if (match == nullptr) {
-		log_info (LOG_ASSEMBLY, "typemap: module matching MVID [%s] not found.", MonoGuidString (mvid).get ());
-		return nullptr;
-	}
-
-	if (match->map == nullptr) {
-		log_warn (LOG_ASSEMBLY, "typemap: module with MVID [%s] has no associated type map.", MonoGuidString (mvid).get ());
+		if (mvid == nullptr) {
+			log_warn (LOG_ASSEMBLY, "typemap: no mvid specified in call to typemap_managed_to_java");
+		} else {
+			log_info (LOG_ASSEMBLY, "typemap: module matching MVID [%s] not found.", MonoGuidString (mvid).get ());
+		}
 		return nullptr;
 	}
 
 	uint32_t token = mono_class_get_type_token (klass);
 	log_debug (LOG_ASSEMBLY, "typemap: MVID [%s] maps to assembly %s, looking for token %d (0x%x), table index %d", MonoGuidString (mvid).get (), match->assembly_name, token, token, token & 0x00FFFFFF);
 	// Each map entry is a pair of 32-bit integers: [TypeTokenID][JavaMapArrayIndex]
-	const TypeMapModuleEntry *entry = binary_search <uint32_t, TypeMapModuleEntry, compare_type_token> (&token, match->map, match->entry_count);
+	const TypeMapModuleEntry *entry = match->map != nullptr ? binary_search (token, match->map, match->entry_count) : nullptr;
 	if (entry == nullptr) {
+		if (match->map == nullptr) {
+			log_warn (LOG_ASSEMBLY, "typemap: module with mvid [%s] has no associated type map.", MonoGuidString (mvid).get ());
+			return nullptr;
+		}
+
 		if (match->duplicate_count > 0 && match->duplicate_map != nullptr) {
 			log_debug (LOG_ASSEMBLY, "typemap: searching module [%s] duplicate map for token %u (0x%x)", MonoGuidString (mvid).get (), token, token);
-			entry = binary_search <uint32_t, TypeMapModuleEntry, compare_type_token> (&token, match->duplicate_map, match->duplicate_count);
+			entry = binary_search (token, match->duplicate_map, match->duplicate_count);
 		}
 
 		if (entry == nullptr) {
@@ -863,15 +891,17 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		}
 	}
 
-	uint32_t java_entry_count;
-	java_entry_count = java_type_count;
-	if (entry->java_map_index >= java_entry_count) {
+	if (XA_UNLIKELY (entry->java_map_index >= java_type_count)) {
 		log_warn (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) has invalid Java type index %u", token, token, MonoGuidString (mvid).get (), match->assembly_name, entry->java_map_index);
 		return nullptr;
 	}
 
-	const TypeMapJava *java_entry = reinterpret_cast<const TypeMapJava*> (reinterpret_cast<const uint8_t*>(map_java) + (type_map_java_struct_size * entry->java_map_index));
-	const char *ret = reinterpret_cast<const char*>(java_entry->java_name);
+	TypeMapJava const& java_entry = map_java[entry->java_map_index];
+	if (XA_UNLIKELY (java_entry.java_name_index >= java_type_count)) {
+		log_warn (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) points to invalid Java type at index %u (invalid type name index %u)", token, token, MonoGuidString (mvid).get (), match->assembly_name, entry->java_map_index, java_entry.java_name_index);
+		return nullptr;
+	}
+	const char *ret = java_type_names[java_entry.java_name_index];
 
 	if (XA_UNLIKELY (ret == nullptr)) {
 		log_warn (LOG_ASSEMBLY, "typemap: empty Java type name returned for entry at index %u", entry->java_map_index);
@@ -892,7 +922,7 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 #endif
 
 const char*
-EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type, const uint8_t *mvid)
+EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type, const uint8_t *mvid) noexcept
 {
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
