@@ -1351,9 +1351,23 @@ stages:
       artifactName: nuget-signed
       artifactPatterns: |
         !*Darwin*
-      propsArtifactName: nuget-unsigned
+      propsArtifactName: $(NuGetArtifactName)
       signType: $(MicroBuildSignType)
       runInParallel: false
+      postConvertSteps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          artifactName: $(NuGetArtifactName)
+          downloadPath: $(Build.StagingDirectory)\sign-verify
+          patterns: |
+            **/SignVerifyIgnore.txt
+
+      - task: MicroBuildCodesignVerify@3
+        displayName: verify signed msi content
+        inputs:
+          TargetFolders: $(Build.StagingDirectory)\bin\manifests
+          ExcludeSNVerify: true
+          ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
   # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
   - job: push_signed_nugets
@@ -1477,8 +1491,7 @@ stages:
 
   - job: push_to_nuget_org
     displayName: Push to NuGet.org
-    pool:
-      vmImage: $(HostedWinImage)
+    pool: $(VSEngMicroBuildPool)
     dependsOn: wait_for_nuget_org_approval
     condition: eq(dependencies.wait_for_nuget_org_approval.result, 'Succeeded')
     steps:
@@ -1518,13 +1531,109 @@ stages:
   dependsOn: mac_build
   condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
   jobs:
-  # Check - "Xamarin.Android (Prepare Classic Release Sign and Upload)"
+  # Check - "Xamarin.Android (Prepare Classic Release Sign VSIX)"
+  - job: sign_vsix
+    displayName: Sign VSIX
+    pool: $(VSEngMicroBuildPool)
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\vsix-artifact
+        patterns: |
+          Xamarin.Android*.vsix
+
+    - powershell: |
+        $vsix = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\vsix-artifact\*" -Include *.vsix -File
+        if (![System.IO.File]::Exists($vsix)) {
+            throw [System.IO.FileNotFoundException] "Did not find .vsix file in $(System.DefaultWorkingDirectory)\vsix-artifact"
+        }
+        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Vsix]$vsix"
+      displayName: set variables to unsigned installers
+
+    - powershell: |
+        $signList = "$(System.DefaultWorkingDirectory)\build-tools\create-packs\SignList.xml"
+        (Get-Content $signList).Replace("*", "%2A") | Set-Content -Path $signList
+      displayName: Escape SignList.xml
+
+    - template: yaml-templates\install-microbuild-tooling.yaml
+
+    - task: MSBuild@1
+      displayName: msbuild /t:Restore sign-content.proj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\restore-sign-content.binlog
+
+    - task: MSBuild@1
+      displayName: unzip and sign .vsix content
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:AddVsixContent;Build
+          /p:SignType=$(MicroBuildSignType)
+          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)\MicroBuild\Plugins
+          /p:VsixPath=$(XA.Unsigned.Vsix)
+          /p:OutDir=$(Build.StagingDirectory)\
+          /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\sign-vsix-content.binlog
+
+    - task: MSBuild@1
+      displayName: rezip .vsix
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:ZipVsixContent
+          /p:VsixPath=$(XA.Unsigned.Vsix)
+          /p:OutDir=$(Build.StagingDirectory)\
+          /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\zip-vsix-content.binlog
+
+    - task: MSBuild@1
+      displayName: sign .vsix
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:SignVsix;Build
+          /p:SignType=$(MicroBuildSignType)
+          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)\MicroBuild\Plugins
+          /p:OutDir=$(System.DefaultWorkingDirectory)\vsix-artifact
+          /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\sign-vsix.binlog
+
+    - task: MicroBuildCodesignVerify@3
+      displayName: verify signed .vsix
+      inputs:
+        TargetFolders: $(System.DefaultWorkingDirectory)\vsix-artifact
+        ExcludeSNVerify: true
+        ApprovalListPathForCerts: $(System.DefaultWorkingDirectory)\build-tools\create-packs\SignVerifyIgnore.txt
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload signed vsix
+      inputs:
+        artifactName: vsix-signed
+        targetPath: $(XA.Unsigned.Vsix)
+
+    - template: yaml-templates\remove-microbuild-tooling.yaml
+
+    - template: yaml-templates\upload-results.yaml
+      parameters:
+        artifactName: Clasic Signing Results - vsix
+        includeBuildResults: true
+
+  # Check - "Xamarin.Android (Prepare Classic Release Notarize and Upload)"
   - job: sign_upload_storage
-    displayName: Sign and Upload
+    dependsOn: sign_vsix
+    displayName: Notarize and Upload
     pool:
       name: $(MacBuildPoolName)
       vmImage: $(MacBuildPoolImage)
-    timeoutInMinutes: 210
+    timeoutInMinutes: 180
     workspace:
       clean: all
     variables:
@@ -1543,17 +1652,19 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
         patterns: |
           xamarin.android*.pkg
-          Xamarin.Android*.vsix
           updateinfo
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vsix-signed
+        downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
 
     - powershell: |
         $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File
-        $vsix = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.vsix -File
-        if (![System.IO.File]::Exists($pkg) -or ![System.IO.File]::Exists($vsix)) {
-            throw [System.IO.FileNotFoundException] "Did not find .pkg or .vsix file in $(System.DefaultWorkingDirectory)/storage-artifacts"
+        if (![System.IO.File]::Exists($pkg)) {
+            throw [System.IO.FileNotFoundException] "Did not find .pkg file in $(System.DefaultWorkingDirectory)/storage-artifacts"
         }
         Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
-        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Vsix]$vsix"
       displayName: set variables to unsigned installers
 
     - template: yaml-templates/install-microbuild-tooling.yaml
@@ -1565,46 +1676,17 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
 
-    - powershell: |
-        $signList = "$(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/SignList.xml"
-        (Get-Content $signList).Replace("*", "%2A") | Set-Content -Path $signList
-      displayName: Escape SignList.xml
-
     - task: MSBuild@1
-      displayName: unzip and sign .vsix content
+      displayName: sign .pkg
       inputs:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
-          /t:_AddVsixContent;Build
-          /p:SignType=$(MicroBuildSignType)
-          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-          /p:VsixPath=$(XA.Unsigned.Vsix)
-          /p:OutDir=$(Build.StagingDirectory)/
-          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-vsix-content.binlog
-
-    - task: MSBuild@1
-      displayName: rezip .vsix
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:_ZipVsixContent
-          /p:VsixPath=$(XA.Unsigned.Vsix)
-          /p:OutDir=$(Build.StagingDirectory)/
-          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/zip-vsix-content.binlog
-
-    - task: MSBuild@1
-      displayName: sign classic installers
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:_AddClassicInstallers;Build
+          /t:SignPkg;Build
           /p:SignType=$(MicroBuildSignType)
           /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
           /p:OutDir=$(System.DefaultWorkingDirectory)/storage-artifacts
-          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-installers.binlog
+          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-pkg.binlog
 
     - script: >
         cd $(System.DefaultWorkingDirectory)/release-scripts &&
@@ -1627,7 +1709,7 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-        artifactName: Legacy Signing Results - macOS
+        artifactName: Classic Signing Results - pkg
         includeBuildResults: true
 
 - stage: post_build
