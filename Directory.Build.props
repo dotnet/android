@@ -1,7 +1,8 @@
 <Project>
 
   <PropertyGroup>
-    <DotNetTargetFramework>net7.0</DotNetTargetFramework>
+    <DotNetTargetFrameworkVersion>7.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <!-- Used for bootstrap, command-line tooling, and desktop NUnit projects -->
     <DotNetStableTargetFramework>net6.0</DotNetStableTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>

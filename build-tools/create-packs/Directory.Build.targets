@@ -18,9 +18,9 @@
   <Target Name="_GenerateFrameworkListFile" >
     <!-- Hardcode framework attributes -->
     <ItemGroup>
-      <FrameworkListRootAttributes Include="Name" Value=".NET 6.0 - Android" />
+      <FrameworkListRootAttributes Include="Name" Value=".NET $(DotNetTargetFrameworkVersion) - Android" />
       <FrameworkListRootAttributes Include="TargetFrameworkIdentifier" Value=".NETCoreApp" />
-      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="6.0" />
+      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="$(DotNetTargetFrameworkVersion)" />
       <FrameworkListRootAttributes Include="FrameworkName" Value="Microsoft.Android" />
     </ItemGroup>
 
@@ -57,12 +57,12 @@
   </Target>
 
   <Target Name="_CreateDefaultRefPack"
-      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidDefaultTargetDotnetApiLevel)\Mono.Android.dll') ">
+      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetTargetFramework)-android$(AndroidDefaultTargetDotnetApiLevel)\Mono.Android.dll') ">
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
   </Target>
 
   <Target Name="_CreatePreviewPacks"
-      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidUnstableTargetFramework)\Mono.Android.dll') ">
+      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetTargetFramework)-android$(DotNetAndroidUnstableTargetFramework)\Mono.Android.dll') ">
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-x86 -p:AndroidABI=x86-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />

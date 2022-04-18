@@ -1412,7 +1412,9 @@ stages:
         packagesToPush: $(Build.StagingDirectory)\nuget-signed\*.nupkg
         nuGetFeedType: external
         publishFeedCredentials: $(DotNetFeedCredential)
-      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+      condition: false
+      # Enable once we have access to the dnceng-dotnet7 feed.
+      #condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
     - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
       parameters:
