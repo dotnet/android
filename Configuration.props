@@ -60,7 +60,7 @@
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
     <_XABinRelativeInstallPrefix>lib\xamarin.android</_XABinRelativeInstallPrefix>
     <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\$(_XABinRelativeInstallPrefix)\</XAInstallPrefix>
-    <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidStableTargetFramework)\</_MonoAndroidNETOutputDir>
+    <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\</_MonoAndroidNETOutputDir>
     <MingwDependenciesRootDirectory Condition=" '$(MingwDependenciesRootDirectory)' == '' ">$(MSBuildThisFileDirectory)\bin\Build$(Configuration)\mingw-deps</MingwDependenciesRootDirectory>
     <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>
     <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx64)</HostCxx>
