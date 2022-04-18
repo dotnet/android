@@ -160,16 +160,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			if (Builder.UseDotNet) {
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}System.Console.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.Linq.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.Net.Http.dll");
-				} else {
-					expectedFiles.Add ("root/assemblies/System.Console.dll");
-					expectedFiles.Add ("root/assemblies/System.Linq.dll");
-					expectedFiles.Add ("root/assemblies/System.Net.Http.dll");
-				}
-
 				//These are random files from Google Play Services .aar files
 				expectedFiles.Add ("root/play-services-base.properties");
 				expectedFiles.Add ("root/play-services-basement.properties");
@@ -199,6 +189,11 @@ namespace Xamarin.Android.Build.Tests
 				expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
 				if (Builder.UseDotNet) {
+					if (usesAssemblyBlobs) {
+						expectedFiles.Add ($"{blobEntryPrefix}System.Private.CoreLib.dll");
+					} else {
+						expectedFiles.Add ($"root/assemblies/{abi}/System.Private.CoreLib.dll");
+					}
 					expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
 					expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
 				} else {
@@ -247,16 +242,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			if (Builder.UseDotNet) {
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}System.Console.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.Linq.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.Net.Http.dll");
-				} else {
-					expectedFiles.Add ("base/root/assemblies/System.Console.dll");
-					expectedFiles.Add ("base/root/assemblies/System.Linq.dll");
-					expectedFiles.Add ("base/root/assemblies/System.Net.Http.dll");
-				}
-
 				//These are random files from Google Play Services .aar files
 				expectedFiles.Add ("base/root/play-services-base.properties");
 				expectedFiles.Add ("base/root/play-services-basement.properties");
@@ -286,6 +271,11 @@ namespace Xamarin.Android.Build.Tests
 				expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
 				if (Builder.UseDotNet) {
+					if (usesAssemblyBlobs) {
+						expectedFiles.Add ($"{blobEntryPrefix}System.Private.CoreLib.dll");
+					} else {
+						expectedFiles.Add ($"base/root/assemblies/{abi}/System.Private.CoreLib.dll");
+					}
 					expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
 					expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
 				} else {
