@@ -218,26 +218,30 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
 			new object[] {
-				"net6.0-android",
+				"net6.0",
+				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 			new object[] {
-				$"net6.0-android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				"net6.0",
+				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 			new object[] {
-				"net7.0-android",
+				"net7.0",
+				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 			new object[] {
-				$"net7.0-android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				"net7.0",
+				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (DotNetPackTargetFrameworks))]
-		public void DotNetPack (string targetFramework, int apiLevel)
+		public void DotNetPack (string dotnetVersion, string platform, int apiLevel)
 		{
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var proj = new XASdkProject (outputType: "Library") {
@@ -703,19 +707,29 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object[] DotNetTargetFrameworks = new object[] {
 			new object[] {
-				"net6.0-android",
+				"net6.0",
+				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 			new object[] {
-				$"net6.0-android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				"net7.0",
+				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 			new object[] {
-				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"net6.0-android{XABuildConfig.AndroidLatestStableApiLevel}.0",
+				"net7.0",
+				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+
+			new object[] {
+				"net7.0",
+				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}.0",
 				XABuildConfig.AndroidLatestStableApiLevel,
 			},
 			new object[] {
-				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"net6.0-android{XABuildConfig.AndroidLatestUnstableApiLevel}.0",
+				"net7.0",
+				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}.0",
 				XABuildConfig.AndroidLatestUnstableApiLevel,
 			},
 		};
@@ -729,12 +743,14 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetPublish ([Values (false, true)] bool isRelease, [ValueSource(nameof(DotNetTargetFrameworks))] object[] data)
 		{
-			var targetFramework = (string)data[0];
-			var apiLevel = (int)data[1];
+			var dotnetVersion = (string)data[0];
+			var platform = (string)data[1];
+			var apiLevel = (int)data[2];
 
-			if (string.IsNullOrEmpty (targetFramework))
+			if (string.IsNullOrEmpty (platform))
 				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
 
+			var targetFramework = $"{dotnetVersion}-{platform}";
 			const string runtimeIdentifier = "android-arm";
 			var proj = new XASdkProject {
 				TargetFramework = targetFramework,
@@ -755,12 +771,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var refDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
-			var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", "net6.0", "Mono.Android.dll");
+			var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
 			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
 
 			var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
 			var runtimeDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Runtime.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
-			var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", "net6.0", "Mono.Android.dll");
+			var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", dotnetVersion, "Mono.Android.dll");
 			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
 
 			var publishDirectory = Path.Combine (FullProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
@@ -848,11 +864,12 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (DotNetTargetFrameworks))]
-		public void MauiTargetFramework (string targetFramework, int apiLevel)
+		public void MauiTargetFramework (string dotnetVersion, string platform, int apiLevel)
 		{
-			if (string.IsNullOrEmpty (targetFramework))
+			if (string.IsNullOrEmpty (platform))
 				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
 
+			var targetFramework = $"{dotnetVersion}-{platform}";
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 			};
