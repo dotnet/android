@@ -37,7 +37,7 @@ public partial class MyClass {
 		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 			return;
 
-		IntPtr native_p0 = JNIEnv.NewString (p0);
+		IntPtr native_p0 = JNIEnv.NewString ((string?)p0);
 		try {
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (native_p0);
@@ -153,7 +153,7 @@ public partial class MyClass {
 		[Register ("set_Key", "(Ljava/lang/String;)V", "Getset_Key_Ljava_lang_String_Handler")]
 		set {
 			const string __id = "set_Key.(Ljava/lang/String;)V";
-			IntPtr native_value = JNIEnv.NewString (value);
+			IntPtr native_value = JNIEnv.NewString ((string?)value);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (native_value);
@@ -253,7 +253,7 @@ public partial class MyClass {
 	public virtual unsafe int GetCountForKey (string? key)
 	{
 		const string __id = "GetCountForKey.(Ljava/lang/String;)I";
-		IntPtr native_key = JNIEnv.NewString (key);
+		IntPtr native_key = JNIEnv.NewString ((string?)key);
 		try {
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (native_key);

@@ -134,7 +134,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 		set {
 			if (id_set_Key_Ljava_lang_String_ == IntPtr.Zero)
 				id_set_Key_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "set_Key", "(Ljava/lang/String;)V");
-			IntPtr native_value = JNIEnv.NewString (value);
+			IntPtr native_value = JNIEnv.NewString ((string)value);
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue (native_value);
 			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_set_Key_Ljava_lang_String_, __args);
@@ -214,7 +214,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	{
 		if (id_GetCountForKey_Ljava_lang_String_ == IntPtr.Zero)
 			id_GetCountForKey_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "GetCountForKey", "(Ljava/lang/String;)I");
-		IntPtr native_key = JNIEnv.NewString (key);
+		IntPtr native_key = JNIEnv.NewString ((string)key);
 		JValue* __args = stackalloc JValue [1];
 		__args [0] = new JValue (native_key);
 		var __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_GetCountForKey_Ljava_lang_String_, __args);

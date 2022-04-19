@@ -67,7 +67,7 @@ namespace Xamarin.Test {
 		{
 			if (id_useThis_Ljava_lang_String_ == IntPtr.Zero)
 				id_useThis_Ljava_lang_String_ = JNIEnv.GetStaticMethodID (class_ref, "useThis", "(Ljava/lang/String;)Ljava/lang/String;");
-			IntPtr native_this = JNIEnv.NewString (this_);
+			IntPtr native_this = JNIEnv.NewString ((string)this_);
 			try {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (native_this);

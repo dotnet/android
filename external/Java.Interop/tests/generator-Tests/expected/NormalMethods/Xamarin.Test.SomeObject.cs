@@ -286,7 +286,7 @@ namespace Xamarin.Test {
 		{
 			if (id_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ == IntPtr.Zero)
 				id_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "VoidMethodWithParams", "(Ljava/lang/String;ILjava/lang/Object;)V");
-			IntPtr native_astring = JNIEnv.NewString (astring);
+			IntPtr native_astring = JNIEnv.NewString ((string)astring);
 			try {
 				JValue* __args = stackalloc JValue [3];
 				__args [0] = new JValue (native_astring);

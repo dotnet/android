@@ -37,7 +37,7 @@ static IntPtr id_ctor_Ljava_lang_String_;
 	if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 		return;
 
-	IntPtr native_p0 = JNIEnv.NewString (p0);
+	IntPtr native_p0 = JNIEnv.NewString ((string)p0);
 	try {
 		JValue* __args = stackalloc JValue [1];
 		__args [0] = new JValue (native_p0);

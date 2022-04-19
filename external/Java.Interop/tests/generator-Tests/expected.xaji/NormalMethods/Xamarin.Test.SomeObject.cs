@@ -254,7 +254,7 @@ namespace Xamarin.Test {
 		public virtual unsafe void VoidMethodWithParams (string astring, int anint, global::Java.Lang.Object anObject)
 		{
 			const string __id = "VoidMethodWithParams.(Ljava/lang/String;ILjava/lang/Object;)V";
-			IntPtr native_astring = JNIEnv.NewString (astring);
+			IntPtr native_astring = JNIEnv.NewString ((string)astring);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [3];
 				__args [0] = new JniArgumentValue (native_astring);

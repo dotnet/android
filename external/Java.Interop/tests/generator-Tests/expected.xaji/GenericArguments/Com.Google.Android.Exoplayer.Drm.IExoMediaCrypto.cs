@@ -92,7 +92,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		{
 			if (id_requiresSecureDecoderComponent_Ljava_lang_String_ == IntPtr.Zero)
 				id_requiresSecureDecoderComponent_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "requiresSecureDecoderComponent", "(Ljava/lang/String;)Z");
-			IntPtr native_p0 = JNIEnv.NewString (p0);
+			IntPtr native_p0 = JNIEnv.NewString ((string)p0);
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue (native_p0);
 			var __ret = JNIEnv.CallBooleanMethod (((global::Java.Lang.Object) this).Handle, id_requiresSecureDecoderComponent_Ljava_lang_String_, __args);

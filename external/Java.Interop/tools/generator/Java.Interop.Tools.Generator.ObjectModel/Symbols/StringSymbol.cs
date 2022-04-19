@@ -123,7 +123,7 @@ namespace MonoDroid.Generation {
 				};
 			}
 			return new[]{
-				$"IntPtr {native_name} = JNIEnv.NewString ({managed_name});",
+				$"IntPtr {native_name} = JNIEnv.NewString ((string{opt.NullableOperator}){managed_name});",
 			};
 		}
 

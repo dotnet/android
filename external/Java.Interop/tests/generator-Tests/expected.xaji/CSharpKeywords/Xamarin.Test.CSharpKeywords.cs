@@ -71,7 +71,7 @@ namespace Xamarin.Test {
 		public static unsafe string UseThis (string this_)
 		{
 			const string __id = "useThis.(Ljava/lang/String;)Ljava/lang/String;";
-			IntPtr native_this = JNIEnv.NewString (this_);
+			IntPtr native_this = JNIEnv.NewString ((string)this_);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (native_this);

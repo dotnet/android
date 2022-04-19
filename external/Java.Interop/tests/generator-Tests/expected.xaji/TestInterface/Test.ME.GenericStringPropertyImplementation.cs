@@ -101,7 +101,7 @@ namespace Test.ME {
 			[Register ("SetObject", "(Ljava/lang/String;)V", "GetSetObject_Ljava_lang_String_Handler")]
 			set {
 				const string __id = "SetObject.(Ljava/lang/String;)V";
-				IntPtr native_value = JNIEnv.NewString (value);
+				IntPtr native_value = JNIEnv.NewString ((string)value);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue (native_value);

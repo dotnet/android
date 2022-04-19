@@ -58,7 +58,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		public unsafe bool RequiresSecureDecoderComponent (string p0)
 		{
 			const string __id = "requiresSecureDecoderComponent.(Ljava/lang/String;)Z";
-			IntPtr native_p0 = JNIEnv.NewString (p0);
+			IntPtr native_p0 = JNIEnv.NewString ((string)p0);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (native_p0);

@@ -75,7 +75,7 @@ namespace Xamarin.Test {
 			[Register ("setSomeString", "(Ljava/lang/String;)V", "")]
 			set {
 				const string __id = "setSomeString.(Ljava/lang/String;)V";
-				IntPtr native_value = JNIEnv.NewString (value);
+				IntPtr native_value = JNIEnv.NewString ((string)value);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue (native_value);

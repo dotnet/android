@@ -23,7 +23,7 @@ public virtual unsafe int GetCountForKey (string key)
 {
 	if (id_GetCountForKey_Ljava_lang_String_ == IntPtr.Zero)
 		id_GetCountForKey_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "GetCountForKey", "(Ljava/lang/String;)I");
-	IntPtr native_key = JNIEnv.NewString (key);
+	IntPtr native_key = JNIEnv.NewString ((string)key);
 	try {
 		JValue* __args = stackalloc JValue [1];
 		__args [0] = new JValue (native_key);

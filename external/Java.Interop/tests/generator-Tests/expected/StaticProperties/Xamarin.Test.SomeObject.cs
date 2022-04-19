@@ -70,7 +70,7 @@ namespace Xamarin.Test {
 			set {
 				if (id_setSomeString_Ljava_lang_String_ == IntPtr.Zero)
 					id_setSomeString_Ljava_lang_String_ = JNIEnv.GetStaticMethodID (class_ref, "setSomeString", "(Ljava/lang/String;)V");
-				IntPtr native_value = JNIEnv.NewString (value);
+				IntPtr native_value = JNIEnv.NewString ((string)value);
 				try {
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (native_value);
