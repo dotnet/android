@@ -251,7 +251,11 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo { }",
 					}
-				}
+				},
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 			if (IsPreviewFrameworkVersion (targetFramework)) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
@@ -754,7 +758,11 @@ namespace Xamarin.Android.Build.Tests
 			const string runtimeIdentifier = "android-arm";
 			var proj = new XASdkProject {
 				TargetFramework = targetFramework,
-				IsRelease = isRelease
+				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
@@ -842,7 +850,11 @@ namespace Xamarin.Android.Build.Tests
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 					}
-				}
+				},
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 
 			using var b = new Builder ();
@@ -872,6 +884,10 @@ namespace Xamarin.Android.Build.Tests
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
