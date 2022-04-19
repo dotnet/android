@@ -81,6 +81,8 @@ Enable lazy (delayed) loading of AOT-d assemblies, instead of
 preloading them at the startup.  Defaults to `True` for Release builds
 with any form of AOT enabled.
 
+Introduced in .NET 6.
+
 ## AndroidApkDigestAlgorithm
 
 A string value which specifies
