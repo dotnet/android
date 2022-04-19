@@ -44,6 +44,7 @@ constexpr char android_package_name[] = "com.xamarin.test";
 const ApplicationConfig application_config = {
 	.uses_mono_llvm = false,
 	.uses_mono_aot = false,
+	.aot_lazy_load = false,
 	.uses_assembly_preload = false,
 	.is_a_bundled_app = false,
 	.broken_exception_transitions = false,
