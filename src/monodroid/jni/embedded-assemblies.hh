@@ -39,6 +39,12 @@ namespace xamarin::android::internal {
 	struct TypeMappingInfo;
 #endif
 
+#if defined (RELEASE) && defined (ANDROID)
+#define STATIC_IN_ANDROID_RELEASE static
+#else
+#define STATIC_IN_ANDROID_RELEASE
+#endif // def RELEASE && def ANDROID
+
 #if defined (HAVE_CONCEPTS)
 	template<typename T>
 	concept ByteArrayContainer = requires (T a) {
@@ -97,20 +103,19 @@ namespace xamarin::android::internal {
 	public:
 #if defined (RELEASE) && defined (ANDROID)
 		EmbeddedAssemblies () noexcept
-			: type_map_java_struct_size (calc_type_map_java_struct_size ())
 		{}
 #endif  // def RELEASE && def ANDROID
 
 #if defined (DEBUG) || !defined (ANDROID)
 		void try_load_typemaps_from_directory (const char *path);
 #endif
-		const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid);
+		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
 
 		void install_preload_hooks_for_appdomains ();
 #if defined (NET6)
 		void install_preload_hooks_for_alc ();
 #endif // def NET6
-		MonoReflectionType* typemap_java_to_managed (MonoString *java_type);
+		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (MonoString *java_type) noexcept;
 
 		/* returns current number of *all* assemblies found from all invocations */
 		template<bool (*should_register_fn)(const char*)>
@@ -162,21 +167,8 @@ namespace xamarin::android::internal {
 		}
 
 	private:
-#if defined (RELEASE) && defined (ANDROID)
-		static size_t calc_type_map_java_struct_size ()
-		{
-			size_t struct_size = sizeof(TypeMapJava) + java_name_width;
-			size_t padding = struct_size % alignof(TypeMapJava);
-			if (padding > 0) {
-				struct_size += alignof(TypeMapJava) - padding;
-			}
-
-			return struct_size;
-		}
-#endif // def RELEASE && def ANDROID
-
-		const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid);
-		MonoReflectionType* typemap_java_to_managed (const char *java_type_name);
+		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept;
+		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 #if defined (NET6)
@@ -206,7 +198,7 @@ namespace xamarin::android::internal {
 		bool typemap_load_file (int dir_fd, const char *dir_path, const char *file_path, TypeMap &module);
 		bool typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module);
 		static ssize_t do_read (int fd, void *buf, size_t count);
-		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name);
+		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name) noexcept;
 #endif // DEBUG || !ANDROID
 
 		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename);
@@ -278,17 +270,23 @@ namespace xamarin::android::internal {
 				;
 		}
 
+		static force_inline c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
+		{
+			return c_unique_ptr<char> (mono_string_to_utf8 (const_cast<MonoString*>(s)));
+		}
+
 		bool is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept;
 
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
-		const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0);
+		static const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0) noexcept;
+		static ssize_t binary_search (hash_t key, const hash_t *arr, size_t n) noexcept;
+		static ptrdiff_t binary_search_branchless (hash_t x, const hash_t *arr, uint32_t len) noexcept;
 
 #if defined (DEBUG) || !defined (ANDROID)
-		static int compare_type_name (const char *type_name, const TypeMapEntry *entry);
+		static int compare_type_name (const char *type_name, const TypeMapEntry *entry) noexcept;
 #else
-		static int compare_mvid (const uint8_t *mvid, const TypeMapModule *module);
-		static int compare_type_token (const uint32_t *token, const TypeMapModuleEntry *entry);
-		static int compare_java_name (const char *java_name, const TypeMapJava *entry);
+		static int compare_mvid (const uint8_t *mvid, const TypeMapModule *module) noexcept;
+		static const TypeMapModuleEntry* binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept;
 #endif
 		template<bool NeedsNameAlloc>
 		void set_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
@@ -305,10 +303,6 @@ namespace xamarin::android::internal {
 		bool                   have_and_want_debug_symbols;
 		size_t                 bundled_assembly_index = 0;
 		size_t                 number_of_found_assemblies = 0;
-
-#if defined (RELEASE) && defined (ANDROID)
-		const size_t          type_map_java_struct_size;
-#endif  // def RELEASE && def ANDROID
 
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;

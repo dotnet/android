@@ -30,7 +30,7 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     </PackageReference>
   </ItemGroup>
 
-  <Target Name="_AddMachOEntitlements" >
+  <Target Name="AddMachOEntitlements" >
     <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;%(_MSBuildFilesUnixSignAndHarden.EntitlementsPath)&quot; &quot;%(_MSBuildFilesUnixSignAndHarden.Identity)&quot;" />
     <ItemGroup>
       <FilesToSign Include="@(_MSBuildFilesUnixSign)">
@@ -44,7 +44,7 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     </ItemGroup>
   </Target>
 
-  <Target Name="_AddVsixContent" >
+  <Target Name="AddVsixContent" >
     <RemoveDir Directories="$(UnzippedVsixDir)" />
     <MakeDir Directories="$(UnzippedVsixDir)" />
     <Unzip
@@ -74,7 +74,7 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     </ItemGroup>
   </Target>
 
-  <Target Name="_ZipVsixContent" >
+  <Target Name="ZipVsixContent" >
     <Delete Files="$(VsixPath)" />
     <ZipDirectory
         SourceDirectory="$(UnzippedVsixDir)"
@@ -82,14 +82,19 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     />
   </Target>
 
-  <Target Name="_AddClassicInstallers" >
+  <Target Name="SignVsix" >
+    <ItemGroup>
+      <FilesToSign Include="$(OutDir)\Xamarin.Android.Sdk-*.vsix">
+        <Authenticode>VsixSHA2</Authenticode>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="SignPkg" >
     <ItemGroup>
       <FilesToSign Include="$(OutDir)\xamarin.android-*.pkg">
         <Authenticode>MacDeveloper</Authenticode>
         <Zip>true</Zip>
-      </FilesToSign>
-      <FilesToSign Include="$(OutDir)\Xamarin.Android.Sdk-*.vsix">
-        <Authenticode>VsixSHA2</Authenticode>
       </FilesToSign>
     </ItemGroup>
   </Target>

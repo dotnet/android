@@ -128,6 +128,7 @@ namespace xamarin::android::internal
 
 #if defined (NET6)
 		using jnienv_initialize_fn = void (*) (JnienvInitializeArgs*);
+		using jnienv_register_jni_natives_fn = void (*)(const jchar *typeName_ptr, int32_t typeName_len, jclass jniClass, const jchar *methods_ptr, int32_t methods_len);
 #endif
 
 	private:
@@ -332,9 +333,11 @@ namespace xamarin::android::internal
 		static void jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo);
 		static void thread_start (MonoProfiler *prof, uintptr_t tid);
 		static void thread_end (MonoProfiler *prof, uintptr_t tid);
-		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type_name);
+#if !defined (RELEASE) || !defined (ANDROID)
+		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type_name) noexcept;
+		static const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
+#endif // !def RELEASE || !def ANDROID
 
-		static const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid);
 #if defined (NET6)
 		static void monodroid_debugger_unhandled_exception (MonoException *ex);
 #endif
@@ -382,6 +385,9 @@ namespace xamarin::android::internal
 		static bool         startup_in_progress;
 
 #if defined (NET6)
+#if defined (ANDROID)
+		jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
+#endif
 		MonoAssemblyLoadContextGCHandle default_alc = nullptr;
 
 		static std::mutex             pinvoke_map_write_lock;

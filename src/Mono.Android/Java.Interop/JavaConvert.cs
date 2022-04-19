@@ -84,7 +84,7 @@ namespace Java.Interop {
 			return null;
 		}
 
-		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType (Type t)
+		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type t)
 		{
 			MethodInfo m = t.GetMethod ("FromJniHandle", BindingFlags.Static | BindingFlags.Public)!;
 			return (Func<IntPtr, JniHandleOwnership, object>) Delegate.CreateDelegate (
