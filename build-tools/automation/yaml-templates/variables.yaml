@@ -11,8 +11,6 @@ variables:
   value: installers-unsigned
 - name: TestAssembliesArtifactName
   value: test-assemblies
-- name: WindowsToolchainPdbArtifactName
-  value: windows-toolchain-pdb
 - name: NUnitConsoleVersion
   value: 3.11.1
 - name: NUnit.NumberOfTestWorkers

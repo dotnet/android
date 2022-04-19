@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_LlvmLibExtension Condition=" '$(HostOS)' == 'Linux' ">so.14</_LlvmLibExtension>
+    <_LlvmLibExtension Condition=" '$(HostOS)' == 'Linux' ">so.13</_LlvmLibExtension>
     <_LlvmLibExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</_LlvmLibExtension>
   </PropertyGroup>
 
@@ -26,10 +26,15 @@
 
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldCOFF.$(_LlvmLibExtension)" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldCommon.$(_LlvmLibExtension)" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldCore.$(_LlvmLibExtension)" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldDriver.$(_LlvmLibExtension)" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldELF.$(_LlvmLibExtension)" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldMachO.$(_LlvmLibExtension)" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldMachO2.$(_LlvmLibExtension)" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldMinGW.$(_LlvmLibExtension)" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldReaderWriter.$(_LlvmLibExtension)" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldWasm.$(_LlvmLibExtension)" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\liblldYAML.$(_LlvmLibExtension)" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\libLLVMAArch64AsmParser.$(_LlvmLibExtension)" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\libLLVMAArch64CodeGen.$(_LlvmLibExtension)" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\binutils\lib\libLLVMAArch64Desc.$(_LlvmLibExtension)" />

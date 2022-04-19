@@ -58,8 +58,6 @@ namespace Xamarin.Android.Prepare
 
 		bool CopyToDestination (Context context, string label, string sourceDir, string destinationDir, string osName = HostName, string[]? executableExtensions = null)
 		{
-			bool isWindows = osName == "windows";
-
 			Log.StatusLine ();
 			Log.StatusLine ($"Installing for {label}:");
 
@@ -76,7 +74,7 @@ namespace Xamarin.Android.Prepare
 
 			void CopyLibraries ()
 			{
-				if (isWindows) {
+				if (osName == "windows") {
 					return;
 				}
 
@@ -102,23 +100,6 @@ namespace Xamarin.Android.Prepare
 
 					Log.StatusLine ($"  {context.Characters.Bullet} Installing ", toolName, tailColor: ConsoleColor.White);
 					Utilities.CopyFile (toolSourcePath, toolDestinationPath);
-					File.WriteAllText (versionMarkerPath, DateTime.UtcNow.ToString ());
-
-					if (!isWindows) {
-						continue;
-					}
-
-					toolSourcePath = Path.ChangeExtension (toolSourcePath, ".pdb");
-					if (!File.Exists (toolSourcePath)) {
-						continue;
-					}
-
-					toolDestinationPath = Path.ChangeExtension (toolDestinationPath, ".pdb");
-
-					Log.StatusLine ($"  {context.Characters.Bullet} Installing ", toolName, tailColor: ConsoleColor.White);
-					Utilities.CopyFile (toolSourcePath, toolDestinationPath);
-
-					versionMarkerPath = GetVersionMarker (toolDestinationPath);
 					File.WriteAllText (versionMarkerPath, DateTime.UtcNow.ToString ());
 				}
 			}
