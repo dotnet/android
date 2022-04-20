@@ -44,6 +44,9 @@
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' ">True</AndroidUseLatestPlatformSdk>
+    <DotNetTargetFrameworkVersion>6.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
+    <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
     <DotNetAndroidStableTargetFramework>$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)</DotNetAndroidStableTargetFramework>
     <DotNetAndroidUnstableTargetFramework>$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)</DotNetAndroidUnstableTargetFramework>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
