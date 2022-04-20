@@ -66,8 +66,8 @@ namespace Xamarin.Android.Tasks
 			at com.android.dx.command.Main.main(Main.java:106)
 		*/
 		const string ExceptionRegExString = @"(?<exception>java.lang.+):(?<error>.+)";
-		protected static readonly Regex CodeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
-		protected static readonly Regex ExceptionRegEx = new Regex (ExceptionRegExString, RegexOptions.Compiled);
+		static readonly Regex codeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
+		static readonly Regex exceptionRegEx = new Regex (ExceptionRegExString, RegexOptions.Compiled);
 		bool foundError = false;
 		List<string> errorLines = new List<string> ();
 		StringBuilder errorText = new StringBuilder ();
@@ -85,6 +85,10 @@ namespace Xamarin.Android.Tasks
 		protected override string ToolName {
 			get { return OS.IsWindows ? "java.exe" : "java"; }
 		}
+
+		protected virtual Regex CodeErrorRegEx => codeErrorRegEx;
+
+		protected virtual Regex ExceptionRegEx => exceptionRegEx;
 
 		protected override bool HandleTaskExecutionErrors ()
 		{
@@ -136,10 +140,8 @@ namespace Xamarin.Android.Tasks
 					errorText.Clear ();
 				}
 				file = match.Groups ["file"].Value;
-				line = int.Parse (match.Groups ["line"].Value) + 1;
 				var error = match.Groups ["error"].Value;
-				column = 0;
-
+				GetLineNumber (match.Groups ["line"].Value, out line, out column);
 				errorText.AppendLine (error);
 				return true;
 			} else if (exceptionMatch.Success) {
@@ -166,6 +168,12 @@ namespace Xamarin.Android.Tasks
 				errorText.AppendLine (singleLine);
 			}
 			return true;
+		}
+
+		protected virtual void GetLineNumber (string match, out int line, out int column)
+		{
+			line = int.Parse (match) + 1;
+			column = 0;
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
