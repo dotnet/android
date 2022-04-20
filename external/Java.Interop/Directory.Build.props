@@ -8,6 +8,15 @@
     <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
+    
+    <!-- 
+      Workaround for https://github.com/NuGet/Home/issues/6461 (VSWin Only)
+      Even though we don't build NuGet packages, it still attempts to build the NuGet package name, which includes 
+      the assembly version if PackageVersion isn't specified. Because our assemblies have different versions
+      per-TFM, that causes a problem because the package can't have multiple versions in it.  
+      Set a dummy PackageVersion because we don't actually need it.
+    -->
+    <PackageVersion>1.0.0.0</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup>
