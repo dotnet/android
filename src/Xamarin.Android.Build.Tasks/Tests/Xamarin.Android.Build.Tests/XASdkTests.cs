@@ -233,7 +233,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (DotNetPackTargetFrameworks))]
 		public void DotNetPack (string dotnetVersion, string platform, int apiLevel)
 		{
-			var targetFramework = dotnetVersion + platform;
+			var targetFramework = $"{dotnetVersion}-{platform}";
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
 				IsRelease = true,
