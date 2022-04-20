@@ -34,7 +34,7 @@
 
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
     <DefineConstants Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
-    <OutputPath>$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)</OutputPath>
+    <OutputPath>$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
