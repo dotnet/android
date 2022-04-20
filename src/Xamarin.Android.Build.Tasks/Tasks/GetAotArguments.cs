@@ -293,23 +293,27 @@ namespace Xamarin.Android.Tasks
 				libs.Add (Path.Combine (androidLibPath, "libm.so"));
 
 				ldFlags.Append ($"\\\"{string.Join ("\\\";\\\"", libs)}\\\"");
+			} else {
+				if (ldFlags.Length > 0) {
+					ldFlags.Append (' ');
+				}
+
+				//
+				// This flag is needed for Mono AOT to work correctly with the LLVM 14 `lld` linker due to the following change:
+				//
+				//   The AArch64 port now supports adrp+ldr and adrp+add optimizations. --no-relax can suppress the optimization.
+				//
+				// Without the flag, `lld` will modify AOT-generated code in a way that the Mono runtime doesn't support. Until
+				// the runtime issue is fixed, we need to pass this flag then.
+				//
+				ldFlags.Append ("--no-relax");
 			}
 
-			if (ldFlags.Length > 0) {
-				ldFlags.Append (' ');
-			}
-
-			//
-			// This flag is needed for Mono AOT to work correctly with the LLVM 14 `lld` linker due to the following change:
-			//
-			//   The AArch64 port now supports adrp+ldr and adrp+add optimizations. --no-relax can suppress the optimization.
-			//
-			// Without the flag, `lld` will modify AOT-generated code in a way that the Mono runtime doesn't support. Until
-			// the runtime issue is fixed, we need to pass this flag then.
-			//
-			ldFlags.Append ("--no-relax");
 			if (StripLibraries) {
-				ldFlags.Append (" -s");
+				if (ldFlags.Length > 0) {
+					ldFlags.Append (' ');
+				}
+				ldFlags.Append ("-s");
 			}
 
 			return ldFlags.ToString ();
