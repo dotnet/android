@@ -78,7 +78,7 @@ variables:
   - name: MacBuildPoolImage
     value: ''
   - name: DotNetTargetFramework
-    value: 'net7.0'
+    value: 'net6.0'
   - name: DotNetStableTargetFramework
     value: 'net6.0'
 
@@ -642,7 +642,7 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration).xml
         extraBuildArgs: /p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: net6-Default
+        artifactFolder: $(DotNetTargetFramework)-Default
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -653,7 +653,7 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aab.xml
         extraBuildArgs: /p:TestsFlavor=Aab /p:AndroidPackageFormat=aab
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: net6-Aab
+        artifactFolder: $(DotNetTargetFramework)-Aab
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -664,7 +664,7 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Interpreter.xml
         extraBuildArgs: /p:TestsFlavor=Interpreter /p:UseInterpreter=True /p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: net6-Interpreter
+        artifactFolder: $(DotNetTargetFramework)-Interpreter
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -675,7 +675,7 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aot.xml
         extraBuildArgs: /p:TestsFlavor=Aot /p:RunAOTCompilation=true /p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: net6-aot
+        artifactFolder: $(DotNetTargetFramework)-aot
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -686,7 +686,7 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)AotLlvm.xml
         extraBuildArgs: /p:TestsFlavor=AotLlvm /p:RunAOTCompilation=true /p:EnableLlvm=true /p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: net6-aotllvm
+        artifactFolder: $(DotNetTargetFramework)-aotllvm
         useDotNet: true
 
     - task: MSBuild@1
@@ -721,7 +721,7 @@ stages:
         condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(XA.Build.Configuration)
         plotGroup: Test times
-        plotTitle: Runtime merged net6
+        plotTitle: Runtime merged $(DotNetTargetFramework)
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android.NET_Tests-times.csv
 
     - template: yaml-templates/fail-on-issue.yaml
@@ -825,7 +825,7 @@ stages:
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
-        testResultsFile: TestResult-NET6SmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-NETSmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/upload-results.yaml
       parameters:
