@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
-    <OutputPath>$(_MonoAndroidNETOutputDir)</OutputPath>
+    <OutputPath>$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">

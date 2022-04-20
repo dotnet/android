@@ -52,13 +52,13 @@
   <Target Name="_GenerateMsxDocXmls"
       DependsOnTargets="_FindFrameworkDirs;_FindDocSourceFiles"
       Inputs="@(_MsxDocSourceFile)"
-      Outputs="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml');@(_MsxDocAssembly->'$(_MonoAndroidNETOutputDir)%(Identity).xml')">
+      Outputs="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml');@(_MsxDocAssembly->'$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\%(Identity).xml')">
     <Exec Command="$(ManagedRuntime) &quot;$(MSBuildSrcDir)mdoc.exe&quot; --debug export-msxdoc -o &quot;$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml&quot; &quot;%(_MsxDocAssembly.SourceDir)&quot;" />
     <Copy
         SourceFiles="$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml"
-        DestinationFolder="$(_MonoAndroidNETOutputDir)"
+        DestinationFolder="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\"
     />
-    <Touch Files="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml');@(_MsxDocAssembly->'$(_MonoAndroidNETOutputDir)%(Identity).xml')" />
+    <Touch Files="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml');@(_MsxDocAssembly->'$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\%(Identity).xml')" />
   </Target>
   <Target Name="_GenerateMsxDocXmlRedirects"
       DependsOnTargets="_FindFrameworkDirs"
