@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Java.Interop.Tools.Diagnostics;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -252,7 +253,7 @@ namespace Xamarin.Android.Tasks
 		string GetLdFlags(NdkTools ndk, AndroidTargetArch arch, int level, string toolPrefix)
 		{
 			var toolchainPath = toolPrefix.Substring (0, toolPrefix.LastIndexOf (Path.DirectorySeparatorChar));
-			var ldFlags = string.Empty;
+			var ldFlags = new StringBuilder ();
 			if (EnableLLVM) {
 				string androidLibPath = string.Empty;
 				try {
@@ -291,19 +292,27 @@ namespace Xamarin.Android.Tasks
 				libs.Add (Path.Combine (androidLibPath, "libc.so"));
 				libs.Add (Path.Combine (androidLibPath, "libm.so"));
 
-				ldFlags = $"\\\"{string.Join ("\\\";\\\"", libs)}\\\"";
+				ldFlags.Append ($"\\\"{string.Join ("\\\";\\\"", libs)}\\\"");
 			}
 
-			if (!StripLibraries) {
-				return ldFlags;
+			if (ldFlags.Length > 0) {
+				ldFlags.Append (' ');
 			}
 
-			const string StripFlag = "-s";
-			if (ldFlags.Length == 0) {
-				return StripFlag;
+			//
+			// This flag is needed for Mono AOT to work correctly with the LLVM 14 `lld` linker due to the following change:
+			//
+			//   The AArch64 port now supports adrp+ldr and adrp+add optimizations. --no-relax can suppress the optimization.
+			//
+			// Without the flag, `lld` will modify AOT-generated code in a way that the Mono runtime doesn't support. Until
+			// the runtime issue is fixed, we need to pass this flag then.
+			//
+			ldFlags.Append ("--no-relax");
+			if (StripLibraries) {
+				ldFlags.Append (" -s");
 			}
 
-			return $"{ldFlags} {StripFlag}";
+			return ldFlags.ToString ();
 		}
 
 		static string GetNdkToolchainLibraryDir (NdkTools ndk, string binDir, string archDir = null)
