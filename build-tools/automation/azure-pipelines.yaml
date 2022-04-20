@@ -630,6 +630,17 @@ stages:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
 
+    # Set up dependencies to run tests in both debug and release configurations
+    - task: DotNetCoreCLI@2
+      displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+      inputs:
+        projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
+
+    - script: make prepare CONFIGURATION=Debug JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
+      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
+      displayName: prepare java.interop
+
     - script: make prepare CONFIGURATION=$(XA.Build.Configuration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
       workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
       displayName: prepare java.interop
@@ -637,23 +648,33 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests
+        testName: Mono.Android.NET_Tests-$(XA.Build.Configuration)
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration).xml
-        extraBuildArgs: /p:AndroidPackageFormat=apk
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-$(XA.Build.Configuration)
+        useDotNet: true
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        buildConfiguration: $(XA.Build.Configuration)
+        configuration: Debug
+        testName: Mono.Android.NET_Tests-Debug
+        project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-Debug.xml
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: $(DotNetTargetFramework)-Default
+        artifactFolder: $(DotNetTargetFramework)-Debug
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-Aab
+        testName: Mono.Android.NET_Tests-NoAab
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aab.xml
-        extraBuildArgs: /p:TestsFlavor=Aab /p:AndroidPackageFormat=aab
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-Aab
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)NoAab.xml
+        extraBuildArgs: -p:TestsFlavor=NoAab -p:AndroidPackageFormat=apk
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+        artifactFolder: $(DotNetTargetFramework)-NoAab
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -662,20 +683,20 @@ stages:
         testName: Mono.Android.NET_Tests-Interpreter
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Interpreter.xml
-        extraBuildArgs: /p:TestsFlavor=Interpreter /p:UseInterpreter=True /p:AndroidPackageFormat=apk
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+        extraBuildArgs: -p:TestsFlavor=Interpreter -p:UseInterpreter=True
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-Interpreter
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-Aot
+        testName: Mono.Android.NET_Tests-NoLink
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aot.xml
-        extraBuildArgs: /p:TestsFlavor=Aot /p:RunAOTCompilation=true /p:AndroidPackageFormat=apk
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: $(DotNetTargetFramework)-aot
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)NoAot.xml
+        extraBuildArgs: -p:TestsFlavor=NoAot -p:RunAOTCompilation=false
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-NoAOT
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -684,9 +705,9 @@ stages:
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)AotLlvm.xml
-        extraBuildArgs: /p:TestsFlavor=AotLlvm /p:RunAOTCompilation=true /p:EnableLlvm=true /p:AndroidPackageFormat=apk
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: $(DotNetTargetFramework)-aotllvm
+        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLlvm=true
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-AotLlvm
         useDotNet: true
 
     - task: MSBuild@1
@@ -701,7 +722,12 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: Test Results - APKs .NET - macOS
+        artifactName: Test Results - APKs .NET $(XA.Build.Configuration) - macOS
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Test Results - APKs .NET Debug - macOS
+        configuration: Debug
 
     - task: MSBuild@1
       displayName: build plots-to-appinsights

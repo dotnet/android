@@ -1,4 +1,5 @@
 parameters:
+  buildConfiguration: $(XA.Build.Configuration)
   configuration: $(XA.Build.Configuration)
   xaSourcePath: $(System.DefaultWorkingDirectory)
   testName: ""
@@ -29,7 +30,7 @@ steps:
 - ${{ if eq(parameters.useDotNet, true) }}:
   - template: run-dotnet-preview.yaml
     parameters:
-      configuration: ${{ parameters.configuration }}
+      configuration: ${{ parameters.buildConfiguration }}
       xaSourcePath: ${{ parameters.xaSourcePath }}
       displayName: run ${{ parameters.testName }}
       project: ${{ parameters.project }}
