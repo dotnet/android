@@ -691,12 +691,12 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-NoLink
+        testName: Mono.Android.NET_Tests-NoAot
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)NoAot.xml
         extraBuildArgs: -p:TestsFlavor=NoAot -p:RunAOTCompilation=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-NoAOT
+        artifactFolder: $(DotNetTargetFramework)-NoAot
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
