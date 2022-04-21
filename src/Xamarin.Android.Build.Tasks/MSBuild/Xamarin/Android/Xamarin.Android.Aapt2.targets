@@ -152,7 +152,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_UpdateAndroidResgenAapt2">
   <PropertyGroup>
     <AndroidAapt2LinkExtraArgs Condition=" $(AndroidResgenExtraArgs.Contains('--no-version-vectors')) And !($(AndroidAapt2LinkExtraArgs.Contains('--no-version-vectors'))) ">--no-version-vectors $(AndroidAapt2LinkExtraArgs) </AndroidAapt2LinkExtraArgs>
-    <_Aapt2ProguardRules Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)aapt_rules.txt</_Aapt2ProguardRules>
   </PropertyGroup>
   <Aapt2Link
       Condition=" '$(_AndroidResourceDesignerFile)' != '' "
@@ -176,12 +175,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ToolPath="$(Aapt2ToolPath)"
       ToolExe="$(Aapt2ToolExe)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-      ProguardRuleOutput="$(_Aapt2ProguardRules)"
   />
-  <ItemGroup Condition=" '$(_Aapt2ProguardRules)' != '' And Exists('$(_Aapt2ProguardRules)') ">
-    <ProguardConfiguration Include="$(_Aapt2ProguardRules)" />
-    <FileWrites Include="$(_Aapt2ProguardRules)" />
-  </ItemGroup>
   <ItemGroup>
     <FileWrites Include="$(IntermediateOutputPath)R.txt" Condition=" Exists ('$(IntermediateOutputPath)R.txt') " />
   </ItemGroup>
@@ -213,6 +207,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <PropertyGroup>
     <_ProtobufFormat Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</_ProtobufFormat>
     <_ProtobufFormat Condition=" '$(_ProtobufFormat)' == '' ">False</_ProtobufFormat>
+    <_Aapt2ProguardRules Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)aapt_rules.txt</_Aapt2ProguardRules>
   </PropertyGroup>
   <Aapt2Link
       AndroidManifestFile="$(_AndroidManifestAbs)"
@@ -242,6 +237,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ToolPath="$(Aapt2ToolPath)"
       ToolExe="$(Aapt2ToolExe)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+      ProguardRuleOutput="$(_Aapt2ProguardRules)"
   />
+  <ItemGroup Condition=" '$(_Aapt2ProguardRules)' != '' And Exists('$(_Aapt2ProguardRules)') ">
+    <ProguardConfiguration Include="$(_Aapt2ProguardRules)" />
+    <FileWrites Include="$(_Aapt2ProguardRules)" />
+  </ItemGroup>
 </Target>
 </Project>
