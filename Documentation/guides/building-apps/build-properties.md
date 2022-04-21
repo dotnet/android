@@ -538,6 +538,12 @@ deprecated API's to work.
 
 **Experimental**. This property was added in Xamarin.Android 6.1.
 
+## AndroidFragmentType
+
+Specifies the default fully qualified type to be used for all `<fragment>` layout
+elements when generating the layout bindings code. The property defaults to the standard
+Android `Android.App.Fragment` type.
+
 ## AndroidGenerateJniMarshalMethods
 
 A bool property which
