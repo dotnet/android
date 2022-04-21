@@ -138,7 +138,7 @@ namespace Binding {
 
     CommonSampleLibrary.LogFragment __fragmentWithExplicitManagedType;
     public CommonSampleLibrary.LogFragment fragmentWithExplicitManagedType => FindFragment (global::Xamarin.Android.Tests.CodeBehindFew.Resource.Id.fragmentWithExplicitManagedType, __fragmentWithExplicitManagedType, ref __fragmentWithExplicitManagedType);
-                
+
     global::Android.App.Fragment __fragmentWithInferredType;
     public global::Android.App.Fragment fragmentWithInferredType => FindFragment (global::Xamarin.Android.Tests.CodeBehindFew.Resource.Id.fragmentWithInferredType, __fragmentWithInferredType, ref __fragmentWithInferredType);
   }
@@ -201,7 +201,7 @@ class MainActivity : Activity {
      // or `null` if unknown
      return null;
   }
-  
+
   protected override void OnCreate (Bundle savedInstanceState)
   {
     base.OnCreate (savedInstanceState);
@@ -263,7 +263,7 @@ namespace Example {
     Binding.Main __layout_binding;
 
     public override void SetContentView (global::Android.Views.View view);
-    void SetContentView (global::Android.Views.View view, 
+    void SetContentView (global::Android.Views.View view,
 	                     global::Xamarin.Android.Design.LayoutBinding.OnLayoutItemNotFoundHandler onLayoutItemNotFound);
 
     public override void SetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params);
@@ -314,7 +314,7 @@ Java.Lang.Object OnLayoutItemNotFound (int resourceId, Type expectedViewType)
   // or `null` if unknown
   return null;
 }
-  
+
 partial class MainActivity : Activity {
   protected override void OnCreate (Bundle savedInstanceState)
   {
@@ -489,7 +489,7 @@ a number of very simple adjustments to try to match the code, such as:
   * Look up a number of hard-coded types in internal tables. Currently the list includes the following types:
 
       * `WebView` -> `Android.Webkit.WebView`
-	
+
   * Strip number of hard-coded namespace *prefixes*. Currently the list includes the following prefixes:
 
     * `com.google.`
@@ -509,7 +509,7 @@ namespace declaration to the root element of the layout and the
 />
 ```
 
-Will use the `CommonSampleLibrary.LogFragment` type for the native type `commonsamplelibrary.LogFragment`. 
+Will use the `CommonSampleLibrary.LogFragment` type for the native type `commonsamplelibrary.LogFragment`.
 
 You can avoid adding the XML namespace declaration and the
 `xamarin:managedType` attribute by simply naming the type using its managed
@@ -534,12 +534,12 @@ The Android ecosystem currently supports two distinct implementations of the `Fr
 
 And in the near future, the AndroidX project will introduce the third type:
 
-    * Androidx.Fragment.App.Fragment
+    * AndroidX.Fragment.App.Fragment
 
 All three of those classes are **not** compatible with each other and so special care must be
 taken when generating binding code for `<fragment>` elements in the layout files. Xamarin.Android must
 choose one `Fragment` implementation as the default one to be used if the `<fragment>` element does not
-have any specific type (managed or otherwise) specified. Binding code generator uses the `AndroidFragmentType` 
+have any specific type (managed or otherwise) specified. Binding code generator uses the `AndroidFragmentType`
 MSBuild property for that purpose. The property can be overriden by the user to specify a type different
 than the default one. The property is set to `Android.App.Fragment` by default, unless overriden by the
 support libraries or the future AndroidX libraries.

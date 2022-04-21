@@ -209,8 +209,8 @@ namespace Xamarin.Android.Tasks
 			if (!GetRequiredMetadata (item, CalculateLayoutCodeBehind.WidgetCollectionKeyMetadata, out collectionKey))
 				return;
 
-			ICollection<LayoutWidget> widgets;
-			if (!CalculateLayoutCodeBehind.LayoutWidgets.TryGetValue (collectionKey, out widgets) || widgets.Count == 0) {
+			ICollection<LayoutWidget> widgets = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ICollection<LayoutWidget>> (collectionKey, RegisteredTaskObjectLifetime.Build);
+			if ((widgets?.Count ?? 0) == 0) {
 				string inputPaths = String.Join ("; ", resourceItems.Select (i => i.ItemSpec));
 				LogCodedWarning ("XA4222", Properties.Resources.XA4222, inputPaths);
 				return;
