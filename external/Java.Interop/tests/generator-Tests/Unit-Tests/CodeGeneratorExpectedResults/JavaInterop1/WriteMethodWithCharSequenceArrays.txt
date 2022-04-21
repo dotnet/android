@@ -1,0 +1,41 @@
+// Metadata.xml XPath class reference: path="/api/package[@name='com.example']/class[@name='MyClass']"
+[global::Java.Interop.JniTypeSignature ("com/example/MyClass", GenerateJavaPeer=false)]
+public partial class MyClass : Java.Lang.Object {
+	static readonly JniPeerMembers _members = new JniPeerMembers ("com/example/MyClass", typeof (MyClass));
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members; }
+	}
+
+	protected MyClass (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+	{
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='com.example']/class[@name='MyClass']/method[@name='echo' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence[]']]"
+	public virtual unsafe Java.Interop.JavaObjectArray<Java.Lang.ICharSequence>? Echo (Java.Interop.JavaObjectArray<Java.Lang.ICharSequence>? messages)
+	{
+		const string __id = "echo.([Ljava/lang/CharSequence;)[Ljava/lang/CharSequence;";
+		var native_messages = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalObjectArray<global::Java.Lang.ICharSequence> (messages);
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_messages);
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaObjectArray<Java.Lang.ICharSequence>>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+		} finally {
+			if (native_messages != null) {
+				native_messages.DisposeUnlessReferenced ();
+			}
+			global::System.GC.KeepAlive (messages);
+		}
+	}
+
+	public Java.Interop.JavaObjectArray<string>? Echo (Java.Interop.JavaObjectArray<string>? messages)
+	{
+		Java.Interop.JavaObjectArray<Java.Lang.ICharSequence>? __result = Echo (messages);
+		var __rsval = __result;
+		return __rsval;
+	}
+
+}

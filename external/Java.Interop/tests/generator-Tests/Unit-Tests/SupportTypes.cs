@@ -266,6 +266,18 @@ namespace generatortests
 			return iface;
 		}
 
+		public static TestField CreateField (string fieldName, CodeGenerationOptions options, string fieldType, bool isStatic = false)
+		{
+			var field = new TestField (fieldType, fieldName);
+
+			if (isStatic)
+				field.SetStatic ();
+
+			field.Validate (options, null, new CodeGeneratorContext ());
+
+			return field;
+		}
+
 		public static TestInterface CreateInterface (string interfaceName, CodeGenerationOptions options)
 		{
 			var iface = CreateEmptyInterface (interfaceName);

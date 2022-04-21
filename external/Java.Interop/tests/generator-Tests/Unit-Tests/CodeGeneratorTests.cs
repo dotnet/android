@@ -1053,6 +1053,26 @@ namespace generatortests
 		}
 
 		[Test]
+		public void WriteObjectField ()
+		{
+			options.SymbolTable.AddType (new TestClass (null, "Java.Lang.Object"));
+			var eClass = new TestClass ("Java.Lang.Object", "java.code.Example");
+			options.SymbolTable.AddType (eClass);
+
+			var @class = new TestClass ("Object", "java.code.MyClass");
+
+			var field   = SupportTypeBuilder.CreateField ("field", options, "java.code.Example");
+
+			@class.Fields.Add (field);
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			AssertTargetedExpected (nameof (WriteObjectField), writer.ToString ());
+		}
+
+		[Test]
 		public void WriteInterface ()
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
@@ -1156,6 +1176,33 @@ namespace generatortests
 			Assert.AreEqual (1, handlers.Count);
 			Assert.AreEqual ("GetCountForKey", handlers [0]);
 			AssertOriginalExpected (nameof (WriteInterfaceEventHandlerImplContent), writer.ToString ());
+		}
+
+		[Test]
+		public void WriteMethodWithCharSequenceArrays ()
+		{
+			var gens = ParseApiDefinition (@"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+
+			  <package name='com.example' jni-name='com/example'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/example/MyClass;'>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='echo' jni-signature='([Ljava/lang/Charsequence;])[Ljava/lang/CharSequence;' bridge='false' native='false' return='java.lang.CharSequence[]' jni-return='[Ljava/lang/CharSequence;' static='false' synchronized='false' synthetic='false' visibility='public'>
+			        <parameter name='messages' type='java.lang.CharSequence[]' jni-type='[Ljava/lang/CharSequence;'>
+			        </parameter>
+			      </method>
+			    </class>
+			  </package>
+			</api>");
+
+			var @class = gens.OfType<ClassGen> ().First (c => c.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			AssertOriginalTargetExpected (nameof (WriteMethodWithCharSequenceArrays), writer.ToString ());
 		}
 
 		[Test]

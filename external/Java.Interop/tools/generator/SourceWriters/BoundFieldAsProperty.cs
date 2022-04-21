@@ -144,11 +144,13 @@ namespace generator.SourceWriters
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 &&
 						field.SetParameters.HasCleanup &&
 						!have_prep) {
+					arg = native_arg;
 					writer.WriteLine ($"IntPtr {native_arg} = global::Android.Runtime.JNIEnv.ToLocalJniHandle (value);");
 				}
 			}
 
 			writer.WriteLine ("try {");
+
 			writer.Write ($"\t_members.{indirect}.SetValue (__id{(field.IsStatic ? "" : ", this")}, ");
 
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
@@ -161,7 +163,6 @@ namespace generator.SourceWriters
 			} else {
 				writer.WriteLine ($"{(invokeType != "Object" ? arg : "new JniObjectReference (" + arg + ")")});");
 			}
-			writer.WriteLine ();
 
 			writer.WriteLine ("} finally {");
 			writer.Indent ();

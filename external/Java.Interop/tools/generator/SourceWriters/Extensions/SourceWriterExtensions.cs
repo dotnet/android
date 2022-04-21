@@ -367,7 +367,7 @@ namespace generator.SourceWriters
 				case "void":
 					break;
 				case "Java.Lang.ICharSequence[]":
-					writer.WriteLine ($"var __rsval = {opt.GetStringArrayToCharSequenceArrayMethodName ()} (__result);");
+					writer.WriteLine ("var __rsval = CharSequence.ArrayToStringArray (__result);");
 					break;
 				case "Java.Lang.ICharSequence":
 					writer.WriteLine ("var __rsval = __result?.ToString ();");

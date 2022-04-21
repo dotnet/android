@@ -1,0 +1,31 @@
+// Metadata.xml XPath class reference: path="/api/package[@name='java.code']/class[@name='MyClass']"
+[global::Java.Interop.JniTypeSignature ("java/code/MyClass", GenerateJavaPeer=false)]
+public partial class MyClass {
+
+	// Metadata.xml XPath field reference: path="/api/package[@name='java.code']/class[@name='MyClass']/field[@name='field']"
+	public java.code.Example? field {
+		get {
+			const string __id = "field.Ljava/code/Example;";
+
+			var __v = _members.InstanceFields.GetObjectValue (__id, this);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<java.code.Example? >(ref __v, JniObjectReferenceOptions.Copy);
+		}
+		set {
+			const string __id = "field.Ljava/code/Example;";
+
+			try {
+				_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+
+			} finally {
+				GC.KeepAlive (value);
+			}
+		}
+	}
+
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
+
+	protected MyClass (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+	{
+	}
+
+}
