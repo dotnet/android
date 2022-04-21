@@ -309,7 +309,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void SuccessfulBuild_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb);
+			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false);
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -335,6 +335,40 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void SuccessfulAndroidXApp ()
+		{
+			RunTest ("SuccessfulAndroidXApp", many: true, dtb: false, runner: SuccessfulBuild_AndroidX);
+		}
+
+		void SuccessfulBuild_AndroidX (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
+		{
+			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:true, "__HAVE_ANDROIDX__");
+			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
+
+			CopyLogs (testInfo, true);
+			Assert.That (success, Is.True, "Build should have succeeded");
+
+			CopyGeneratedFiles (testInfo);
+
+			foreach (SourceFile src in generated_sources) {
+				foreach (SourceFileMember member in src) {
+					string type = member.Type.Replace ("global::Android.App.Fragment", "global::AndroidX.Fragment.App.Fragment");
+					string generatedFile = Path.Combine (testInfo.GeneratedPath, src.Path);
+					if (member.IsMethod)
+						Assert.That (SourceHasMethod (generatedFile, member.Visibility, type, member.Name, member.Arguments), Is.True, $"Method {member.Name} must exist in {generatedFile}");
+					else
+						Assert.That (SourceHasProperty (generatedFile, member.Visibility, type, member.Name, member.IsExpressionBody), Is.True, $"Property {member.Name} must exist in {generatedFile}");
+				}
+			}
+
+			if (dtb)
+				return; // DTB doesn't produce binaries
+
+			foreach (string binaryName in produced_binaries)
+				AssertExists (testInfo.TestName, Path.Combine (testInfo.BinPath, binaryName));
+		}
+
+		[Test]
 		public void FailedBuildFew_ConflictingFragment ()
 		{
 			RunTest ("FailedBuildFew_ConflictingFragment", many: false, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest);
@@ -348,7 +382,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void FailedBuild_ConflictingFragment_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_FRAGMENT");
+			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_FRAGMENT");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -376,7 +410,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void FailedBuild_ConflictingTextView_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_TEXTVIEW");
+			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_TEXTVIEW");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -404,7 +438,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void FailedBuild_ConflictingButton_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_BUTTON");
+			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_BUTTON");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -432,7 +466,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void FailedBuild_ConflictingLinearLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_LINEARLAYOUT");
+			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_LINEARLAYOUT");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -460,7 +494,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void FailedBuild_ConflictingRelativeLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_RELATIVELAYOUT");
+			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_RELATIVELAYOUT");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -479,7 +513,7 @@ namespace Xamarin.Android.Build.Tests
 			return isDTB ? "Compile" : "SignAndroidPackage";
 		}
 
-		string[] GetBuildProperties (LocalBuilder builder, bool manyBuild, bool dtbBuild, params string[] extraConstants)
+		string[] GetBuildProperties (LocalBuilder builder, bool manyBuild, bool dtbBuild, bool referenceAndroidX, params string[] extraConstants)
 		{
 			var ret = new List <string> {
 				"AndroidGenerateLayoutBindings=true"
@@ -492,6 +526,9 @@ namespace Xamarin.Android.Build.Tests
 				ret.Add ("BuildingInsideVisualStudio=True");
 				ret.Add ("SkipCompilerExecution=True");
 				ret.Add ("ProvideCommandLineArgs=True");
+			}
+			if (referenceAndroidX) {
+				ret.Add ("ReferenceAndroidX=True");
 			}
 
 			if (extraConstants != null && extraConstants.Length > 0) {
