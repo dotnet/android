@@ -4,7 +4,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>monoandroid10;net6.0</TargetFrameworks>
+    <TargetFrameworks>monoandroid10;$(DotNetTargetFramework)</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoStdLib>true</NoStdLib>
@@ -21,8 +21,8 @@
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-    <OutputPath>$(_MonoAndroidNETOutputDir)</OutputPath>
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
+    <OutputPath>$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -57,7 +57,7 @@
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <!-- Only build the 'net6.0' version of 'Mono.Android.Export.dll' for the latest stable Android version. -->
+  <!-- Only build the .NET 6+ version of 'Mono.Android.Export.dll' for the latest stable Android version. -->
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' != '$(AndroidLatestStableApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>

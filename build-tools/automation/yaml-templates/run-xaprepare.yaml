@@ -3,7 +3,7 @@ parameters:
   name:
   configuration: $(XA.Build.Configuration)
   xaSourcePath: $(System.DefaultWorkingDirectory)
-  framework: net6.0
+  framework: $(DotNetStableTargetFramework)
   condition: succeeded()
   arguments:
 

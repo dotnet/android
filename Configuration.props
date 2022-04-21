@@ -58,7 +58,7 @@
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
     <_XABinRelativeInstallPrefix>lib\xamarin.android</_XABinRelativeInstallPrefix>
     <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\$(_XABinRelativeInstallPrefix)\</XAInstallPrefix>
-    <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidApiLevel)\</_MonoAndroidNETOutputDir>
+    <_MonoAndroidNETOutputRoot>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</_MonoAndroidNETOutputRoot>
     <MingwDependenciesRootDirectory Condition=" '$(MingwDependenciesRootDirectory)' == '' ">$(MSBuildThisFileDirectory)\bin\Build$(Configuration)\mingw-deps</MingwDependenciesRootDirectory>
     <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>
     <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx64)</HostCxx>
@@ -246,7 +246,7 @@
     <XAShouldAnalyzeAssembly>True</XAShouldAnalyzeAssembly>
   </PropertyGroup>
 
-  <!-- The net6.0 versions of these analyzers are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
+  <!-- The .NET 6+ versions of these analyzers are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
   <PropertyGroup Condition=" '$(TargetFramework)' != '' And (!$(TargetFramework.StartsWith('nets')) And !$(TargetFramework.StartsWith('net4')) And !$(TargetFramework.StartsWith('monoandroid'))) ">
     <XABuildingForNetCoreApp>True</XABuildingForNetCoreApp>
   </PropertyGroup>

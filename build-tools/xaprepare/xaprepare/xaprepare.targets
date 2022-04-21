@@ -63,6 +63,7 @@
       <Replacement Include="@CommandLineToolsVersion@=$(CommandLineToolsVersion)" />
       <Replacement Include="@DotNetPreviewPath@=$(DotNetPreviewPath)" />
       <Replacement Include="@DotNetPreviewVersionBand@=$(DotNetPreviewVersionBand)" />
+      <Replacement Include="@DotNetSdkManifestsFolder@=$(DotNetSdkManifestsFolder)" />
       <Replacement Include="@DotNetMonoManifestVersionBand@=$(DotNetMonoManifestVersionBand)" />
       <Replacement Include="@DotNetEmscriptenManifestVersionBand@=$(DotNetEmscriptenManifestVersionBand)" />
       <Replacement Include="@MicrosoftDotnetSdkInternalPackageVersion@=$(MicrosoftDotnetSdkInternalPackageVersion)" />
