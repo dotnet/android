@@ -52,7 +52,7 @@
       <_PackageVersion>$(ProductVersion)</_PackageVersion>
       <_PackageVersionBuild>$(XAVersionCommitCount)</_PackageVersionBuild>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+    <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
       <_PackageVersion>$(AndroidPackVersion)</_PackageVersion>
       <_PackageVersionBuild>$(PackVersionCommitCount)</_PackageVersionBuild>
     </PropertyGroup>

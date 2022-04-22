@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0-android$(AndroidLatestStableApiLevel)</TargetFramework>
+    <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
     <RootNamespace>Xamarin.Android.Tests.CodeBehindBuildTests</RootNamespace>
     <OutputType>Exe</OutputType>
     <AndroidGenerateLayoutBindings>True</AndroidGenerateLayoutBindings>
@@ -62,5 +62,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CommonSampleLibrary\CommonSampleLibrary.NET.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(ReferenceAndroidX)' == 'True' ">
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.4.1.1" />
   </ItemGroup>
 </Project>

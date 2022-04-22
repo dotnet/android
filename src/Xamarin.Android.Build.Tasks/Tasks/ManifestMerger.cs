@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
@@ -32,8 +31,38 @@ namespace Xamarin.Android.Tasks
 
 		public string ExtraArgs { get; set; }
 
+		/*
+		 * obj\Debug\AndroidManifest.xml:12:5-16:15 Error:
+		 * 	android:exported needs to be explicitly specified for element <service#crc642ecd25190884e03d.TestService>. Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported` when the corresponding component has an intent filter defined. See https://developer.android.com/guide/topics/manifest/activity-element#exported for details.
+		 */
+		static readonly Regex manifestErrorRegEx = new Regex (@"(?<file>.+AndroidManifest\.xml):(?<line>\d+:\d+).+Error:(?<error>.+)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
 		string tempFile;
 		string responseFile;
+
+		protected override Regex CodeErrorRegEx => manifestErrorRegEx;
+
+		protected override void GetLineNumber (string match, out int line, out int column)
+		{
+			if (string.IsNullOrEmpty (match)) {
+				line = 0;
+				column = 0;
+				return;
+			}
+
+			// obj\Debug\AndroidManifest.xml:12:5
+			var split = match.Split (':');
+			if (int.TryParse (split [0], out line)) {
+				line++;
+			}
+			if (split.Length > 1) {
+				if (int.TryParse (split [1], out column)) {
+					column--;
+				}
+			} else {
+				column = 0;
+			}
+		}
 
 		public override bool Execute ()
 		{
@@ -111,14 +140,6 @@ namespace Xamarin.Android.Tasks
 			File.WriteAllText (responseFile, sb.ToString ());
 			cmd.AppendFileNameIfNotNull (responseFile);
 			return cmd;
-		}
-
-		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
-		{
-			if (ExitCode > 0) {
-				Log.LogCodedError (DefaultErrorCode, singleLine);
-			}
-			base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}
 }

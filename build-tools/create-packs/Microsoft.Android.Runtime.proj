@@ -14,7 +14,7 @@ projects that use the Microsoft.Android framework in .NET 5.
     <AndroidABI Condition=" '$(AndroidABI)' == '' ">arm64-v8a-net6</AndroidABI>
     <PackageId>Microsoft.Android.Runtime.$(AndroidApiLevel).$(AndroidRID)</PackageId>
     <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
-    <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\net6.0</_AndroidRuntimePackAssemblyPath>
+    <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>
   </PropertyGroup>
 
@@ -35,9 +35,9 @@ projects that use the Microsoft.Android framework in .NET 5.
 
     <ItemGroup>
       <_AndroidRuntimePackAssemblies Include="$(JavaInteropSourceDirectory)\bin\$(Configuration)-net6.0\Java.Interop.dll" />
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputDir)Mono.Android.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\Mono.Android.dll" />
       <!-- Always include stable Mono.Android.Export.dll -->
-      <_AndroidRuntimePackAssemblies Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
       <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.debug.so" />
       <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />

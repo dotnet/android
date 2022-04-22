@@ -18,9 +18,9 @@
   <Target Name="_GenerateFrameworkListFile" >
     <!-- Hardcode framework attributes -->
     <ItemGroup>
-      <FrameworkListRootAttributes Include="Name" Value=".NET 6.0 - Android" />
+      <FrameworkListRootAttributes Include="Name" Value=".NET $(DotNetTargetFrameworkVersion) - Android" />
       <FrameworkListRootAttributes Include="TargetFrameworkIdentifier" Value=".NETCoreApp" />
-      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="6.0" />
+      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="$(DotNetTargetFrameworkVersion)" />
       <FrameworkListRootAttributes Include="FrameworkName" Value="Microsoft.Android" />
     </ItemGroup>
 
@@ -57,12 +57,12 @@
   </Target>
 
   <Target Name="_CreateDefaultRefPack"
-      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidDefaultTargetDotnetApiLevel)\Mono.Android.dll') ">
+      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidDefaultTargetDotnetApiLevel)\Mono.Android.dll') ">
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
   </Target>
 
   <Target Name="_CreatePreviewPacks"
-      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestUnstableApiLevel)\Mono.Android.dll') ">
+      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\Mono.Android.dll') ">
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-x86 -p:AndroidABI=x86-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
@@ -96,7 +96,7 @@
     </ItemGroup>
     <PropertyGroup>
       <_WLPackVersion>@(_WLManifest->'%(Filename)'->Replace('Microsoft.NET.Sdk.Android.Manifest-$(DotNetPreviewVersionBand).', ''))</_WLPackVersion>
-      <_SdkManifestsFolder>$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\</_SdkManifestsFolder>
+      <_SdkManifestsFolder>$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\</_SdkManifestsFolder>
     </PropertyGroup>
     <Unzip
         SourceFiles="@(_WLManifest)"
@@ -148,8 +148,8 @@
     </ItemGroup>
     <ItemGroup>
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)metadata" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.sdk.android" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.workload.android" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.android" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.workload.android" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Ref.%(_PackApiLevels.Identity)" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-arm" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-arm64" />
