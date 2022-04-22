@@ -36,8 +36,8 @@ namespace Xamarin.Android.Prepare
 
 			// Allow using git from $PATH if it has the right version
 			(bool success, string bv) = Utilities.GetProgramVersion (git.Name);
-			if (success && Version.TryParse (bv, out Version gitVersion)
-				&& Version.TryParse (git.MinimumVersion, out Version gitMinVersion)) {
+			if (success && Version.TryParse (bv, out Version gitVersion) &&
+					Version.TryParse (git.MinimumVersion, out Version gitMinVersion)) {
 				if (gitVersion < gitMinVersion)
 					Dependencies.Add (git);
 
