@@ -77,10 +77,6 @@ variables:
     value: VSEng-Xamarin-RedmondMac-Android-Untrusted
   - name: MacBuildPoolImage
     value: ''
-  - name: DotNetTargetFramework
-    value: 'net6.0'
-  - name: DotNetStableTargetFramework
-    value: 'net6.0'
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
