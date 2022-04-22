@@ -1152,7 +1152,10 @@ namespace UnamedProject
 
 					var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
 					FileAssert.Exists (aapt_rules);
-					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (aapt_rules), $"-keep class {toolbar_class}"), $"`{toolbar_class}` should exist in `{aapt_rules}`!");
+					var lines = File.ReadAllLines (aapt_rules);
+					Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {toolbar_class}"), $"`{toolbar_class}` should exist in `{aapt_rules}`!");
+					var activity_class = $"{proj.PackageName}.MainActivity";
+					Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {activity_class}"), $"`{activity_class}` should exist in `{aapt_rules}`!");
 				}
 
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
