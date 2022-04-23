@@ -77,10 +77,6 @@ variables:
     value: VSEng-Xamarin-RedmondMac-Android-Untrusted
   - name: MacBuildPoolImage
     value: ''
-  - name: DotNetTargetFramework
-    value: 'net7.0'
-  - name: DotNetStableTargetFramework
-    value: 'net6.0'
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -116,6 +112,19 @@ stages:
     - template: yaml-templates/remove-microbuild-tooling.yaml
       parameters:
         condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - script: >
+        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
+        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/binutils/bin/*.pdb
+        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: copy Windows toolchain pdb files
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload Windows toolchain pdb files
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
 
     - template: yaml-templates/upload-results.yaml
       parameters:
