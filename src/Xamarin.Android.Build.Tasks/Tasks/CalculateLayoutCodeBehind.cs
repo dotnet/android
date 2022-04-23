@@ -33,24 +33,6 @@ namespace Xamarin.Android.Tasks
 			public List<ITaskItem> LayoutPartialClassItems;
 		}
 
-		// This is VERY, VERY inefficient, bad design etc etc. However, we need to be able to share state
-		// between this task and GenerateLayoutBindings and about the only way to do it in MSBuild is with the
-		// BuildEngine4.RegisterTaskObject method which... does not exist in xbuild so, currently, we cannot use
-		// it. A more elegant way would be to create a custome implementation of ITaskItem, but that won't work
-		// because MSBuild takes our ITaskItems and clones them as TaskItem, so we lose everything.
-		// A static singleton object is the remaining option, almost the worst one (we could also serialize the
-		// widget lits to a string, base64 encode it and put it as metadata but that would be way, way, way too
-		// bad)
-		//
-		// We need to share the state or parse the layouts twice - once here to come up with the definite set of
-		// layouts that can have code generated for them and second time in GenerateLayoutBindings to find
-		// elements with ids etc. With shared state we can do all of this here and let the generator task work
-		// only on the collection of widegts - thus saving lots of time.
-		//
-		// Once we drop xbuild we can throw this away and use BuildEngine4.RegisterTaskObject
-		//
-		internal static readonly ConcurrentDictionary <string, ICollection <LayoutWidget>> LayoutWidgets = new ConcurrentDictionary <string, ICollection<LayoutWidget>> ();
-
 		static readonly char[] partialClassNameSplitChars = { ';' };
 
 		public const int ParallelGenerationThreshold = 20; // Minimum number of ResourceFiles to trigger
@@ -545,7 +527,7 @@ namespace Xamarin.Android.Tasks
 		{
 			string key = Guid.NewGuid ().ToString ();
 			LogDebugMessage ($"Registering {widgets?.Count} widgets for key {key}");
-			LayoutWidgets [key] = widgets;
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (key, widgets, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
 			return key;
 		}
 

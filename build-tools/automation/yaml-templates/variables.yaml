@@ -29,3 +29,7 @@ variables:
   value: VSEngSS-MicroBuild2022-1ES
 - name: TeamName
   value: XamarinAndroid
+- name: DotNetTargetFramework
+  value: net6.0
+- name: DotNetStableTargetFramework
+  value: net6.0

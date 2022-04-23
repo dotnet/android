@@ -33,18 +33,18 @@ by projects that use the Microsoft.Android framework in .NET 5.
     <ItemGroup>
       <!-- TODO: build Java.Interop.dll for .NET 7 -->
       <_AndroidRefPackAssemblies Include="$(JavaInteropSourceDirectory)\bin\$(Configuration)-net6.0\ref\Java.Interop.dll" />
-      <_AndroidRefPackAssemblies Include="$(_MonoAndroidNETOutputDir)ref\Mono.Android.dll" />
+      <_AndroidRefPackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\ref\Mono.Android.dll" />
       <!-- Always include stable Mono.Android.Export.dll -->
-      <_AndroidRefPackAssemblies Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidStableTargetFramework)\ref\Mono.Android.Export.dll" />
+      <_AndroidRefPackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)\ref\Mono.Android.Export.dll" />
       <FrameworkListFileClass Include="@(_AndroidRefPackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
     </ItemGroup>
 
     <ItemGroup>
       <_PackageFiles Include="@(_AndroidRefPackAssemblies)" PackagePath="$(_AndroidRefPackAssemblyPath)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
-      <_PackageFiles Include="$(_MonoAndroidNETOutputDir)Java.Interop.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
-      <_PackageFiles Include="$(_MonoAndroidNETOutputDir)Mono.Android.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
-      <_PackageFiles Include="$(_MonoAndroidNETOutputDir)mono.android.jar" PackagePath="$(_AndroidRefPackAssemblyPath)" />
-      <_PackageFiles Include="$(_MonoAndroidNETOutputDir)mono.android.dex" PackagePath="$(_AndroidRefPackAssemblyPath)" />
+      <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\Java.Interop.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
+      <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\Mono.Android.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
+      <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\mono.android.jar" PackagePath="$(_AndroidRefPackAssemblyPath)" />
+      <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\mono.android.dex" PackagePath="$(_AndroidRefPackAssemblyPath)" />
     </ItemGroup>
   </Target>
 

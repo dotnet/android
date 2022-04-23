@@ -86,7 +86,8 @@ _ResolveAssemblies MSBuild target.
     </MSBuild>
     <!-- Properties produced by the inner build in Microsoft.Android.Sdk.ILLink.targets -->
     <PropertyGroup>
-      <_InnerIntermediateOutputPath>$(IntermediateOutputPath)%(_RIDs.Identity)\</_InnerIntermediateOutputPath>
+      <_InnerIntermediateOutputPath Condition=" '$(RuntimeIdentifier)' == '' ">$(IntermediateOutputPath)%(_RIDs.Identity)\</_InnerIntermediateOutputPath>
+      <_InnerIntermediateOutputPath Condition=" '$(RuntimeIdentifier)' != '' ">$(IntermediateOutputPath)</_InnerIntermediateOutputPath>
       <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(_InnerIntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
       <_AndroidLinkFlag Condition=" '$(RuntimeIdentifier)' == '' " >$(_InnerIntermediateOutputPath)link.flag</_AndroidLinkFlag>
     </PropertyGroup>

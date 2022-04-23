@@ -63,8 +63,8 @@ core workload SDK packs imported by WorkloadManifest.targets.
     />
 
     <ItemGroup>
-      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidStableTargetFramework)\AndroidApiInfo.xml" />
-      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidUnstableTargetFramework)\AndroidApiInfo.xml" Condition="Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(DotNetAndroidUnstableTargetFramework)\AndroidApiInfo.xml')" />
+      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" />
+      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml" Condition="Exists('$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml')" />
       <!-- Microsoft.Android.Sdk.ILLink output -->
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
@@ -80,7 +80,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.pdb" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\Version*" PackagePath="tools" />
+      <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)Version*" PackagePath="tools" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" PackagePath="targets" />

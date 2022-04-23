@@ -29,7 +29,6 @@ namespace Xamarin.ProjectTools
 				SetProperty ("TargetFramework", "net7.0-android");
 				SetProperty ("EnableDefaultItems", "false");
 				SetProperty ("AppendTargetFrameworkToOutputPath", "false");
-				SetProperty ("AppendRuntimeIdentifierToOutputPath", "false");
 			} else {
 				AddReferences ("System"); // default
 				SetProperty ("Platform", "AnyCPU", "'$(Platform)' == ''");

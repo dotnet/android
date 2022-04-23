@@ -720,6 +720,7 @@ namespace Xamarin.Android.Build.Tests
 				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
+
 			new object[] {
 				"net7.0",
 				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
