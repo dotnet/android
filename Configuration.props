@@ -44,8 +44,6 @@
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' ">True</AndroidUseLatestPlatformSdk>
-    <DotNetAndroidStableTargetFramework>$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)</DotNetAndroidStableTargetFramework>
-    <DotNetAndroidUnstableTargetFramework>$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)</DotNetAndroidUnstableTargetFramework>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
