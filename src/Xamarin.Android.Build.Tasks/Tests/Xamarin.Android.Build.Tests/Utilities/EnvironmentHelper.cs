@@ -135,8 +135,8 @@ namespace Xamarin.Android.Build.Tests
 
 					case 2:
 						// aot_lazy_load: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.uses_mono_aot = ConvertFieldToBool ("aot_lazy_load", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						AssertFieldType (envFile, ".byte", field [0], i);
+						ret.uses_mono_aot = ConvertFieldToBool ("aot_lazy_load", envFile, i, field [1]);
 						break;
 
 					case 3: // uses_assembly_preload: bool / .byte
