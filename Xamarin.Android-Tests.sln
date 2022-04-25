@@ -94,8 +94,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Aidl-
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Aidl", "src\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj", "{302D9D2E-1F98-4374-9B6B-922F78620C4B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Net.Tests", "tests\Xamarin.Android.Net-Tests\Xamarin.Android.Net-Tests.csproj", "{629E079E-D898-4C71-ACB9-B4F58C22B892}"
-EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		tests\Mono.Android-Tests\Mono.Android-Test.Shared.projitems*{0ab4956e-6fb9-4da0-9d49-ab65a3ff403a}*SharedItemsImports = 13
