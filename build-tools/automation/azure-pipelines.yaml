@@ -482,15 +482,6 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.Net-Tests
-        project: tests/Xamarin.Android.Net-Tests/Xamarin.Android.Net-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.Net_Tests.nunit-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Net_Tests-Signed.apk
-        artifactFolder: Default
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
         testName: Xamarin.Forms-Performance-Integration
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
         testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration).xml
