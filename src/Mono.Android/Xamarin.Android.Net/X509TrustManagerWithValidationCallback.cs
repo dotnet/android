@@ -44,25 +44,20 @@ namespace Xamarin.Android.Net
 			var sslPolicyErrors = SslPolicyErrors.None;
 			var certificates = ConvertCertificates (javaChain);
 
-			try
-			{
+			try {
 				_internalTrustManager?.CheckServerTrusted (javaChain, authType);
-			}
-			catch (JavaCertificateException)
-			{
+			} catch (JavaCertificateException) {
 				sslPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
 			}
 
 			X509Certificate2? certificate = certificates.FirstOrDefault ();
 			using X509Chain chain = CreateChain (certificates);
 
-			if (certificate == null)
-			{
+			if (certificate == null) {
 				sslPolicyErrors |= SslPolicyErrors.RemoteCertificateNotAvailable;
 			}
 
-			if (!_serverCertificateCustomValidationCallback (_request, certificate, chain, sslPolicyErrors))
-			{
+			if (!_serverCertificateCustomValidationCallback (_request, certificate, chain, sslPolicyErrors)) {
 				throw new JavaCertificateException("The remote certificate was rejected by the provided RemoteCertificateValidationCallback.");
 			}
 		}

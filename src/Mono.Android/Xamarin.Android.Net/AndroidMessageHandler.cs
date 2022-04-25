@@ -851,7 +851,7 @@ namespace Xamarin.Android.Net
 		protected virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
 			AssertSelf ();
-			
+
 			return Task.CompletedTask;
 		}
 
@@ -1023,8 +1023,7 @@ namespace Xamarin.Android.Net
 			var kmf = ConfigureKeyManagerFactory (keyStore);
 			var tmf = ConfigureTrustManagerFactory (keyStore);
 
-			if (tmf == null)
-			{
+			if (tmf == null) {
 				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
 				// there is no point in changing the behavior of the default SSL socket factory
 				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
@@ -1061,7 +1060,6 @@ namespace Xamarin.Android.Net
 				return keyStore;
 			}
 		}
-
 
 		void HandlePreAuthentication (HttpURLConnection httpConnection)
 		{
