@@ -21,6 +21,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			public bool   uses_mono_llvm;
 			public bool   uses_mono_aot;
+			public bool   aot_lazy_load;
 			public bool   uses_assembly_preload;
 			public bool   is_a_bundled_app;
 			public bool   broken_exception_transitions;
@@ -39,7 +40,7 @@ namespace Xamarin.Android.Build.Tests
 			public uint   mono_components_mask;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 19;
+		const uint ApplicationConfigFieldCount = 20;
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -132,87 +133,93 @@ namespace Xamarin.Android.Build.Tests
 						ret.uses_mono_aot = ConvertFieldToBool ("uses_mono_aot", envFile, i, field [1]);
 						break;
 
-					case 2: // uses_assembly_preload: bool / .byte
+					case 2:
+						// aot_lazy_load: bool / .byte
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.uses_mono_aot = ConvertFieldToBool ("aot_lazy_load", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 3: // uses_assembly_preload: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.uses_assembly_preload = ConvertFieldToBool ("uses_assembly_preload", envFile, i, field [1]);
 						break;
 
-					case 3: // is_a_bundled_app: bool / .byte
+					case 4: // is_a_bundled_app: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.is_a_bundled_app = ConvertFieldToBool ("is_a_bundled_app", envFile, i, field [1]);
 						break;
 
-					case 4: // broken_exception_transitions: bool / .byte
+					case 5: // broken_exception_transitions: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.broken_exception_transitions = ConvertFieldToBool ("broken_exception_transitions", envFile, i, field [1]);
 						break;
 
-					case 5: // instant_run_enabled: bool / .byte
+					case 6: // instant_run_enabled: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.instant_run_enabled = ConvertFieldToBool ("instant_run_enabled", envFile, i, field [1]);
 						break;
 
-					case 6: // jni_add_native_method_registration_attribute_present: bool / .byte
+					case 7: // jni_add_native_method_registration_attribute_present: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.jni_add_native_method_registration_attribute_present = ConvertFieldToBool ("jni_add_native_method_registration_attribute_present", envFile, i, field [1]);
 						break;
 
-					case 7: // have_runtime_config_blob: bool / .byte
+					case 8: // have_runtime_config_blob: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.have_runtime_config_blob = ConvertFieldToBool ("have_runtime_config_blob", envFile, i, field [1]);
 						break;
 
-					case 8: // have_assemblies_blob: bool / .byte
+					case 9: // have_assemblies_blob: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.have_assemblies_blob = ConvertFieldToBool ("have_assemblies_blob", envFile, i, field [1]);
 						break;
 
-					case 9: // bound_stream_io_exception_type: byte / .byte
+					case 10: // bound_stream_io_exception_type: byte / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.bound_stream_io_exception_type = ConvertFieldToByte ("bound_stream_io_exception_type", envFile, i, field [1]);
 						break;
 
-					case 10: // package_naming_policy: uint32_t / .word | .long
+					case 11: // package_naming_policy: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.package_naming_policy = ConvertFieldToUInt32 ("package_naming_policy", envFile, i, field [1]);
 						break;
 
-					case 11: // environment_variable_count: uint32_t / .word | .long
+					case 12: // environment_variable_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.environment_variable_count = ConvertFieldToUInt32 ("environment_variable_count", envFile, i, field [1]);
 						break;
 
-					case 12: // system_property_count: uint32_t / .word | .long
+					case 13: // system_property_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile, i, field [1]);
 						break;
 
-					case 13: // number_of_assemblies_in_apk: uint32_t / .word | .long
+					case 14: // number_of_assemblies_in_apk: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.number_of_assemblies_in_apk = ConvertFieldToUInt32 ("number_of_assemblies_in_apk", envFile, i, field [1]);
 						break;
 
-					case 14: // bundled_assembly_name_width: uint32_t / .word | .long
+					case 15: // bundled_assembly_name_width: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile, i, field [1]);
 						break;
 
-					case 15: // number_of_assembly_store_files: uint32_t / .word | .long
+					case 16: // number_of_assembly_store_files: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.number_of_assembly_store_files = ConvertFieldToUInt32 ("number_of_assembly_store_files", envFile, i, field [1]);
 						break;
 
-					case 16: // number_of_dso_cache_entries: uint32_t / .word | .long
+					case 17: // number_of_dso_cache_entries: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile, i, field [1]);
 						break;
 
-					case 17: // mono_components_mask: uint32_t / .word | .long
+					case 18: // mono_components_mask: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.mono_components_mask = ConvertFieldToUInt32 ("mono_components_mask", envFile, i, field [1]);
 						break;
 
-					case 18: // android_package_name: string / [pointer type]
+					case 19: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;
