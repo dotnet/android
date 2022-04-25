@@ -157,7 +157,22 @@ namespace Xamarin.Android.Net
 
 		public bool CheckCertificateRevocationList { get; set; } = false;
 
-		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? ServerCertificateCustomValidationCallback { get; set; }
+		X509TrustManagerWithValidationCallback.Helper? _callbackTrustManagerHelper = null;
+
+		Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? _serverCertificateCustomValidationCallback;
+
+		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? ServerCertificateCustomValidationCallback
+		{
+			get
+			{
+				return _serverCertificateCustomValidationCallback;
+			}
+			set
+			{
+				_callbackTrustManagerHelper = value != null ? new X509TrustManagerWithValidationCallback.Helper (value) : null;
+				_serverCertificateCustomValidationCallback = value;
+			}
+		}
 
 		// See: https://developer.android.com/reference/javax/net/ssl/SSLSocket#protocols
 		public SslProtocols SslProtocols { get; set; } =
@@ -1026,17 +1041,16 @@ namespace Xamarin.Android.Net
 			if (tmf == null) {
 				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
 				// there is no point in changing the behavior of the default SSL socket factory
-				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
+				if (!gotCerts && _callbackTrustManagerHelper == null)
 					return;
 
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
 				tmf?.Init (gotCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
 			}
 
-			ITrustManager[]? trustManagers =
-				ServerCertificateCustomValidationCallback == null
-					? tmf?.GetTrustManagers ()
-					: X509TrustManagerWithValidationCallback.Inject(tmf?.GetTrustManagers (), requestMessage, ServerCertificateCustomValidationCallback);
+			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
+			
+			trustManagers = _callbackTrustManagerHelper?.Inject (trustManagers, requestMessage);
 
 			var context = SSLContext.GetInstance ("TLS");
 			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);

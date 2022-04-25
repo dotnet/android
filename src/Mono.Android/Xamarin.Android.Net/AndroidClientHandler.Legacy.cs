@@ -838,7 +838,7 @@ namespace Xamarin.Android.Net
 
 			// SSL context must be set up as soon as possible, before adding any content or
 			// headers. Otherwise Java won't use the socket factory
-			SetupSSL (httpConnection as HttpsURLConnection, request);
+			SetupSSL (httpConnection as HttpsURLConnection);
 			if (request.Content != null)
 				AddHeaders (httpConnection, request.Content.Headers);
 			AddHeaders (httpConnection, request.Headers);
@@ -893,7 +893,7 @@ namespace Xamarin.Android.Net
 			return null;
 		}
 
-		void SetupSSL (HttpsURLConnection? httpsConnection, HttpRequestMessage requestMessage)
+		void SetupSSL (HttpsURLConnection? httpsConnection)
 		{
 			if (httpsConnection == null)
 				return;
@@ -917,19 +917,16 @@ namespace Xamarin.Android.Net
 			var tmf = ConfigureTrustManagerFactory (keyStore);
 
 			if (tmf == null) {
-				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
+				// If there are no trusted certs and no custom trust manager
 				// there is no point in changing the behavior of the default SSL socket factory
-				if (!gotCerts && ServerCertificateCustomValidationCallback == null)
+				if (!gotCerts)
 					return;
 
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
-				tmf?.Init (gotCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
+				tmf?.Init (keyStore);
 			}
 
-			ITrustManager[]? trustManagers =
-				ServerCertificateCustomValidationCallback == null
-					? tmf?.GetTrustManagers ()
-					: X509TrustManagerWithValidationCallback.Inject(tmf?.GetTrustManagers (), requestMessage, ServerCertificateCustomValidationCallback);
+			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
 
 			var context = SSLContext.GetInstance ("TLS");
 			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
