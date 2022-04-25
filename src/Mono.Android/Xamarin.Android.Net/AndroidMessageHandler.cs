@@ -163,12 +163,8 @@ namespace Xamarin.Android.Net
 
 		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? ServerCertificateCustomValidationCallback
 		{
-			get
-			{
-				return _serverCertificateCustomValidationCallback;
-			}
-			set
-			{
+			get => _serverCertificateCustomValidationCallback;
+			set {
 				_callbackTrustManagerHelper = value != null ? new X509TrustManagerWithValidationCallback.Helper (value) : null;
 				_serverCertificateCustomValidationCallback = value;
 			}
