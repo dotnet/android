@@ -8,7 +8,7 @@ using Xamarin.Android.Net;
 
 using NUnit.Framework;
 
-namespace Xamarin.Android.Net.Tests
+namespace Xamarin.Android.NetTests
 {
 	[Category ("InetAccess")]
 	public abstract class ServerCertificateCustomValidationCallbackTest
