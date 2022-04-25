@@ -56,12 +56,9 @@ namespace Xamarin.Android.NetTests
 
 			var client = new HttpClient (handler);
 
-			try
-			{
+			try {
 				await client.GetStringAsync ("https://microsoft.com/");
-			}
-			catch (Javax.Net.Ssl.SSLHandshakeException)
-			{
+			} catch (Javax.Net.Ssl.SSLHandshakeException) {
 				expectedExceptionHasBeenThrown = true;
 			}
 
@@ -84,12 +81,9 @@ namespace Xamarin.Android.NetTests
 
 			var client = new HttpClient (handler);
 
-			try
-			{
+			try {
 				await client.GetStringAsync ("https://self-signed.badssl.com/");
-			}
-			catch (Javax.Net.Ssl.SSLHandshakeException)
-			{
+			} catch (Javax.Net.Ssl.SSLHandshakeException) {
 				exceptionWasThrown = true;
 			}
 
