@@ -47,8 +47,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)System.Threading\InterlockedTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.Net\ServerCertificateCustomValidationCallbackTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\MainActivity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\NonJavaObject.cs" />

@@ -11,17 +11,15 @@ using NUnit.Framework;
 namespace Xamarin.Android.NetTests
 {
 	[Category ("InetAccess")]
-	public abstract class ServerCertificateCustomValidationCallbackTest
+	public sealed class AndroidMessageHandlerTests
 	{
-		protected abstract HttpMessageHandler CreateHandlerWithCallback(Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback);
-
 		[Test]
-		public async Task ApproveRequest ()
+		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
 		{
 			bool callbackHasBeenCalled = false;
 
-			var handler = CreateHandlerWithCallback(
-				(request, cert, chain, errors) => {
+			var handler = new AndroidMessageHandler {
+				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
 					Assert.NotNull (request, "request");
 					Assert.AreEqual ("microsoft.com", request.RequestUri.Host);
 					Assert.NotNull (cert, "cert");
@@ -33,7 +31,7 @@ namespace Xamarin.Android.NetTests
 					callbackHasBeenCalled = true;
 					return true;
 				}
-			);
+			};
 
 			var client = new HttpClient (handler);
 			await client.GetStringAsync ("https://microsoft.com/");
@@ -42,17 +40,17 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
-		public async Task RejectRequest ()
+		public async Task ServerCertificateCustomValidationCallback_RejectRequest ()
 		{
 			bool callbackHasBeenCalled = false;
 			bool expectedExceptionHasBeenThrown = false;
 
-			var handler = CreateHandlerWithCallback(
-				(request, cert, chain, errors) => {
+			var handler = new AndroidMessageHandler {
+				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
 					callbackHasBeenCalled = true;
 					return false;
 				}
-			);
+			};
 
 			var client = new HttpClient (handler);
 
@@ -67,17 +65,17 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
-		public async Task ApprovesRequestWithInvalidCertificate ()
+		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
 			bool exceptionWasThrown = false;
 
-			var handler = CreateHandlerWithCallback(
-				(request, cert, chain, errors) => {
+			var handler = new AndroidMessageHandler {
+				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
 					callbackHasBeenCalled = true;
 					return true;
 				}
-			);
+			};
 
 			var client = new HttpClient (handler);
 
@@ -90,25 +88,5 @@ namespace Xamarin.Android.NetTests
 			Assert.IsTrue (callbackHasBeenCalled, "Custom validation callback hasn't been called");
 			Assert.IsFalse (exceptionWasThrown, "the ssl handshake exception has been thrown");
 		}
-	}
-
-	[TestFixture]
-	public class AndroidMessageHandler_ServerCertificateCustomValidationCallbackTest : ServerCertificateCustomValidationCallbackTest
-	{
-		protected override HttpMessageHandler CreateHandlerWithCallback(Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
-			=> new Xamarin.Android.Net.AndroidMessageHandler
-			{
-				ServerCertificateCustomValidationCallback = callback
-			};
-	}
-
-	[TestFixture]
-	public class AndroidClientHandler_ServerCertificateCustomValidationCallbackTest : ServerCertificateCustomValidationCallbackTest
-	{
-		protected override HttpMessageHandler CreateHandlerWithCallback(Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
-			=> new Xamarin.Android.Net.AndroidClientHandler
-			{
-				ServerCertificateCustomValidationCallback = callback
-			};
 	}
 }
