@@ -163,7 +163,7 @@ namespace Xamarin.Android.Net
 		{
 			get => _callbackTrustManagerHelper?.Callback;
 			set {
-				_callbackTrustManagerHelper = value != null ? new X509TrustManagerWithValidationCallback.Helper { Callback = value } : null;
+				_callbackTrustManagerHelper = value != null ? new X509TrustManagerWithValidationCallback.Helper (value) : null;
 			}
 		}
 

@@ -18,7 +18,12 @@ namespace Xamarin.Android.Net
 	{
 		internal sealed class Helper
 		{
-			public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> Callback { get; init; }
+			public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> Callback { get; }
+
+			public Helper (Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
+			{
+				Callback = callback;
+			}
 
 			public ITrustManager[] Inject (
 				ITrustManager[]? trustManagers,
