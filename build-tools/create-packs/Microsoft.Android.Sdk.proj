@@ -29,7 +29,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions;_GetLicense">
     <PropertyGroup>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
-      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-net6.0\</NetCoreAppToolsSourceDir>
+      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-$(DotNetStableTargetFramework)\</NetCoreAppToolsSourceDir>
     </PropertyGroup>
 
     <ItemGroup>
@@ -63,8 +63,8 @@ core workload SDK packs imported by WorkloadManifest.targets.
     />
 
     <ItemGroup>
-      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" />
-      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml" Condition="Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml')" />
+      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" />
+      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml" Condition="Exists('$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml')" />
       <!-- Microsoft.Android.Sdk.ILLink output -->
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
@@ -80,7 +80,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.pdb" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\Version*" PackagePath="tools" />
+      <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)Version*" PackagePath="tools" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" PackagePath="targets" />
@@ -89,6 +89,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <_PackageFiles Include="$(IntermediateOutputPath)UnixFilePermissions.xml" PackagePath="data" Condition=" '$(HostOS)' != 'Windows' " />
       <_PackageFiles Include="$(MSBuildThisFileDirectory)\linux-README.md" PackagePath="\README.md" Condition=" '$(HostOS)' == 'Linux' " />
       <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
+      <None Include="$(MSBuildThisFileDirectory)SignVerifyIgnore.txt" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 
@@ -98,14 +99,13 @@ core workload SDK packs imported by WorkloadManifest.targets.
   <Target Name="_GenerateBundledVersions"
       DependsOnTargets="_GetDefaultPackageVersion" >
     <PropertyGroup>
-      <_AndroidNETAppTargetFramework>net6.0</_AndroidNETAppTargetFramework>
       <BundledVersionsFileName>Microsoft.Android.Sdk.BundledVersions.targets</BundledVersionsFileName>
     </PropertyGroup>
 
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets"
         DestinationFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\$(BundledVersionsFileName)"
-        Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel)" >
+        Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel);@DOTNET_TARGET_FRAMEWORK@=$(DotNetTargetFramework)" >
     </ReplaceFileContents>
   </Target>
 

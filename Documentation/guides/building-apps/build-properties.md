@@ -75,6 +75,14 @@ Added in Xamarin.Android 10.1.
 
 The port that `aprofutil` should connect to when obtaining profiling data.
 
+## AndroidAotEnableLazyLoad
+
+Enable lazy (delayed) loading of AOT-d assemblies, instead of
+preloading them at the startup.  Defaults to `True` for Release builds
+with any form of AOT enabled.
+
+Introduced in .NET 6.
+
 ## AndroidApkDigestAlgorithm
 
 A string value which specifies
@@ -537,6 +545,12 @@ removed in commit [f0d565fe](https://github.com/xamarin/xamarin-android/commit/f
 deprecated API's to work.
 
 **Experimental**. This property was added in Xamarin.Android 6.1.
+
+## AndroidFragmentType
+
+Specifies the default fully qualified type to be used for all `<fragment>` layout
+elements when generating the layout bindings code. The property defaults to the standard
+Android `Android.App.Fragment` type.
 
 ## AndroidGenerateJniMarshalMethods
 

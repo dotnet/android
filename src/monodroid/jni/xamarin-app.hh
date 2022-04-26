@@ -202,6 +202,7 @@ struct ApplicationConfig
 {
 	bool uses_mono_llvm;
 	bool uses_mono_aot;
+	bool aot_lazy_load;
 	bool uses_assembly_preload;
 	bool is_a_bundled_app;
 	bool broken_exception_transitions;

@@ -8,12 +8,12 @@
     <MSBuild
          Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=net6.0;AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);DisableApiCompatibilityCheck=true"
+         Properties="TargetFramework=$(DotNetTargetFramework);AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);DisableApiCompatibilityCheck=true"
     />
     <MSBuild
          Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=net6.0;AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);DisableApiCompatibilityCheck=true"
+         Properties="TargetFramework=$(DotNetTargetFramework);AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);DisableApiCompatibilityCheck=true"
     />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
@@ -41,7 +41,7 @@
     <ItemGroup>
       <_WLManifest Include="$(_TempDirectory)\microsoft.net.sdk.maui.manifest-$(MauiVersionBand)\$(MauiVersion)\data\WorkloadManifest.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\microsoft.net.sdk.maui" />
+    <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.maui" />
 
     <!-- dotnet workload install maui-android -->
     <ItemGroup>

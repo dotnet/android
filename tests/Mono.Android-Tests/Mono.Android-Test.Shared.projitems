@@ -129,14 +129,14 @@
     <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)libs\x86_64\libreuse-threads.so" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net6.0-android$(AndroidLatestStableApiLevel)' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != '$(DotNetAndroidTargetFramework)' ">
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\TestRunner.Core\TestRunner.Core.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\TestRunner.NUnit\TestRunner.NUnit.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)Java.Interop-Tests\Java.Interop-Tests.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)Mono.Android-Test.Library\Mono.Android-Test.Library.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0-android$(AndroidLatestStableApiLevel)' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(DotNetAndroidTargetFramework)' ">
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\TestRunner.Core\TestRunner.Core.NET.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\TestRunner.NUnit\TestRunner.NUnit.NET.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />

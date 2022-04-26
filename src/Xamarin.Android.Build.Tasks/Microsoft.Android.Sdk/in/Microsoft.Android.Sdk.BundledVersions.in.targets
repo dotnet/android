@@ -19,7 +19,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
   <ItemGroup>
     <KnownFrameworkReference
         Include="Microsoft.Android"
-        TargetFramework="net6.0"
+        TargetFramework="@DOTNET_TARGET_FRAMEWORK@"
         RuntimeFrameworkName="Microsoft.Android"
         LatestRuntimeFrameworkVersion="**FromWorkload**"
         TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"

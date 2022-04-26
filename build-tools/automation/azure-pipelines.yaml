@@ -113,6 +113,19 @@ stages:
       parameters:
         condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
+    - script: >
+        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
+        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/binutils/bin/*.pdb
+        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: copy Windows toolchain pdb files
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload Windows toolchain pdb files
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+
     - template: yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
@@ -250,7 +263,7 @@ stages:
       parameters:
         useDotNet: true
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net6.0\Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-SmokeMSBuildTests-WinDotnetBuild-$(XA.Build.Configuration).xml
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
 
@@ -613,6 +626,17 @@ stages:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
 
+    # Set up dependencies to run tests in both debug and release configurations
+    - task: DotNetCoreCLI@2
+      displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+      inputs:
+        projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
+
+    - script: make prepare CONFIGURATION=Debug JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
+      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
+      displayName: prepare java.interop
+
     - script: make prepare CONFIGURATION=$(XA.Build.Configuration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
       workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
       displayName: prepare java.interop
@@ -620,23 +644,33 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests
+        testName: Mono.Android.NET_Tests-$(XA.Build.Configuration)
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration).xml
-        extraBuildArgs: /p:AndroidPackageFormat=apk
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: net6-Default
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-$(XA.Build.Configuration)
+        useDotNet: true
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        buildConfiguration: $(XA.Build.Configuration)
+        configuration: Debug
+        testName: Mono.Android.NET_Tests-Debug
+        project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-Debug.xml
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+        artifactFolder: $(DotNetTargetFramework)-Debug
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-Aab
+        testName: Mono.Android.NET_Tests-NoAab
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aab.xml
-        extraBuildArgs: /p:TestsFlavor=Aab /p:AndroidPackageFormat=aab
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: net6-Aab
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)NoAab.xml
+        extraBuildArgs: -p:TestsFlavor=NoAab -p:AndroidPackageFormat=apk
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+        artifactFolder: $(DotNetTargetFramework)-NoAab
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -645,20 +679,20 @@ stages:
         testName: Mono.Android.NET_Tests-Interpreter
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Interpreter.xml
-        extraBuildArgs: /p:TestsFlavor=Interpreter /p:UseInterpreter=True /p:AndroidPackageFormat=apk
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: net6-Interpreter
+        extraBuildArgs: -p:TestsFlavor=Interpreter -p:UseInterpreter=True
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-Interpreter
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-Aot
+        testName: Mono.Android.NET_Tests-NoAot
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Aot.xml
-        extraBuildArgs: /p:TestsFlavor=Aot /p:RunAOTCompilation=true /p:AndroidPackageFormat=apk
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: net6-aot
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)NoAot.xml
+        extraBuildArgs: -p:TestsFlavor=NoAot -p:RunAOTCompilation=false
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-NoAot
         useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -667,9 +701,9 @@ stages:
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)AotLlvm.xml
-        extraBuildArgs: /p:TestsFlavor=AotLlvm /p:RunAOTCompilation=true /p:EnableLlvm=true /p:AndroidPackageFormat=apk
-        artifactSource: bin/Test$(XA.Build.Configuration)/net6.0-android/Mono.Android.NET_Tests-Signed.apk
-        artifactFolder: net6-aotllvm
+        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLlvm=true
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-AotLlvm
         useDotNet: true
 
     - task: MSBuild@1
@@ -684,7 +718,12 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: Test Results - APKs .NET - macOS
+        artifactName: Test Results - APKs .NET $(XA.Build.Configuration) - macOS
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Test Results - APKs .NET Debug - macOS
+        configuration: Debug
 
     - task: MSBuild@1
       displayName: build plots-to-appinsights
@@ -704,7 +743,7 @@ stages:
         condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(XA.Build.Configuration)
         plotGroup: Test times
-        plotTitle: Runtime merged net6
+        plotTitle: Runtime merged $(DotNetTargetFramework)
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android.NET_Tests-times.csv
 
     - template: yaml-templates/fail-on-issue.yaml
@@ -806,9 +845,9 @@ stages:
       parameters:
         useDotNet: true
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net6.0/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
-        testResultsFile: TestResult-NET6SmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-NETSmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -913,7 +952,7 @@ stages:
       job_name: mac_dotnet_tests_1
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -922,7 +961,7 @@ stages:
       job_name: mac_dotnet_tests_2
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -931,7 +970,7 @@ stages:
       job_name: mac_dotnet_tests_3
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -940,7 +979,7 @@ stages:
       job_name: mac_dotnet_tests_4
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -949,7 +988,7 @@ stages:
       job_name: mac_dotnet_tests_5
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -958,7 +997,7 @@ stages:
       job_name: mac_dotnet_tests_6
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Xamarin.Android (Test MSBuild One .NET - Windows)
@@ -969,7 +1008,7 @@ stages:
       job_name: win_dotnet_tests_1
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -979,7 +1018,7 @@ stages:
       job_name: win_dotnet_tests_2
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -989,7 +1028,7 @@ stages:
       job_name: win_dotnet_tests_3
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
 - stage: msbuilddevice_tests
@@ -1038,7 +1077,7 @@ stages:
       job_name: mac_dotnetdevice_tests_1
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
@@ -1047,7 +1086,7 @@ stages:
       job_name: mac_dotnetdevice_tests_2
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
@@ -1056,7 +1095,7 @@ stages:
       job_name: mac_dotnetdevice_tests_3
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
@@ -1065,7 +1104,7 @@ stages:
       job_name: mac_dotnetdevice_tests_4
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'net6.0'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
 - stage: designer_tests
@@ -1338,9 +1377,23 @@ stages:
       artifactName: nuget-signed
       artifactPatterns: |
         !*Darwin*
-      propsArtifactName: nuget-unsigned
+      propsArtifactName: $(NuGetArtifactName)
       signType: $(MicroBuildSignType)
       runInParallel: false
+      postConvertSteps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          artifactName: $(NuGetArtifactName)
+          downloadPath: $(Build.StagingDirectory)\sign-verify
+          patterns: |
+            **/SignVerifyIgnore.txt
+
+      - task: MicroBuildCodesignVerify@3
+        displayName: verify signed msi content
+        inputs:
+          TargetFolders: $(Build.StagingDirectory)\bin\manifests
+          ExcludeSNVerify: true
+          ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
   # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
   - job: push_signed_nugets
@@ -1464,8 +1517,7 @@ stages:
 
   - job: push_to_nuget_org
     displayName: Push to NuGet.org
-    pool:
-      vmImage: $(HostedWinImage)
+    pool: $(VSEngMicroBuildPool)
     dependsOn: wait_for_nuget_org_approval
     condition: eq(dependencies.wait_for_nuget_org_approval.result, 'Succeeded')
     steps:
@@ -1505,13 +1557,109 @@ stages:
   dependsOn: mac_build
   condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
   jobs:
-  # Check - "Xamarin.Android (Prepare Classic Release Sign and Upload)"
+  # Check - "Xamarin.Android (Prepare Classic Release Sign VSIX)"
+  - job: sign_vsix
+    displayName: Sign VSIX
+    pool: $(VSEngMicroBuildPool)
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\vsix-artifact
+        patterns: |
+          Xamarin.Android*.vsix
+
+    - powershell: |
+        $vsix = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\vsix-artifact\*" -Include *.vsix -File
+        if (![System.IO.File]::Exists($vsix)) {
+            throw [System.IO.FileNotFoundException] "Did not find .vsix file in $(System.DefaultWorkingDirectory)\vsix-artifact"
+        }
+        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Vsix]$vsix"
+      displayName: set variables to unsigned installers
+
+    - powershell: |
+        $signList = "$(System.DefaultWorkingDirectory)\build-tools\create-packs\SignList.xml"
+        (Get-Content $signList).Replace("*", "%2A") | Set-Content -Path $signList
+      displayName: Escape SignList.xml
+
+    - template: yaml-templates\install-microbuild-tooling.yaml
+
+    - task: MSBuild@1
+      displayName: msbuild /t:Restore sign-content.proj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\restore-sign-content.binlog
+
+    - task: MSBuild@1
+      displayName: unzip and sign .vsix content
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:AddVsixContent;Build
+          /p:SignType=$(MicroBuildSignType)
+          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)\MicroBuild\Plugins
+          /p:VsixPath=$(XA.Unsigned.Vsix)
+          /p:OutDir=$(Build.StagingDirectory)\
+          /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\sign-vsix-content.binlog
+
+    - task: MSBuild@1
+      displayName: rezip .vsix
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:ZipVsixContent
+          /p:VsixPath=$(XA.Unsigned.Vsix)
+          /p:OutDir=$(Build.StagingDirectory)\
+          /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\zip-vsix-content.binlog
+
+    - task: MSBuild@1
+      displayName: sign .vsix
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:SignVsix;Build
+          /p:SignType=$(MicroBuildSignType)
+          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)\MicroBuild\Plugins
+          /p:OutDir=$(System.DefaultWorkingDirectory)\vsix-artifact
+          /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\sign-vsix.binlog
+
+    - task: MicroBuildCodesignVerify@3
+      displayName: verify signed .vsix
+      inputs:
+        TargetFolders: $(System.DefaultWorkingDirectory)\vsix-artifact
+        ExcludeSNVerify: true
+        ApprovalListPathForCerts: $(System.DefaultWorkingDirectory)\build-tools\create-packs\SignVerifyIgnore.txt
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload signed vsix
+      inputs:
+        artifactName: vsix-signed
+        targetPath: $(XA.Unsigned.Vsix)
+
+    - template: yaml-templates\remove-microbuild-tooling.yaml
+
+    - template: yaml-templates\upload-results.yaml
+      parameters:
+        artifactName: Clasic Signing Results - vsix
+        includeBuildResults: true
+
+  # Check - "Xamarin.Android (Prepare Classic Release Notarize and Upload)"
   - job: sign_upload_storage
-    displayName: Sign and Upload
+    dependsOn: sign_vsix
+    displayName: Notarize and Upload
     pool:
       name: $(MacBuildPoolName)
       vmImage: $(MacBuildPoolImage)
-    timeoutInMinutes: 210
+    timeoutInMinutes: 180
     workspace:
       clean: all
     variables:
@@ -1530,17 +1678,19 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
         patterns: |
           xamarin.android*.pkg
-          Xamarin.Android*.vsix
           updateinfo
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vsix-signed
+        downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
 
     - powershell: |
         $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File
-        $vsix = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.vsix -File
-        if (![System.IO.File]::Exists($pkg) -or ![System.IO.File]::Exists($vsix)) {
-            throw [System.IO.FileNotFoundException] "Did not find .pkg or .vsix file in $(System.DefaultWorkingDirectory)/storage-artifacts"
+        if (![System.IO.File]::Exists($pkg)) {
+            throw [System.IO.FileNotFoundException] "Did not find .pkg file in $(System.DefaultWorkingDirectory)/storage-artifacts"
         }
         Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
-        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Vsix]$vsix"
       displayName: set variables to unsigned installers
 
     - template: yaml-templates/install-microbuild-tooling.yaml
@@ -1552,46 +1702,17 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
 
-    - powershell: |
-        $signList = "$(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/SignList.xml"
-        (Get-Content $signList).Replace("*", "%2A") | Set-Content -Path $signList
-      displayName: Escape SignList.xml
-
     - task: MSBuild@1
-      displayName: unzip and sign .vsix content
+      displayName: sign .pkg
       inputs:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
-          /t:_AddVsixContent;Build
-          /p:SignType=$(MicroBuildSignType)
-          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-          /p:VsixPath=$(XA.Unsigned.Vsix)
-          /p:OutDir=$(Build.StagingDirectory)/
-          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-vsix-content.binlog
-
-    - task: MSBuild@1
-      displayName: rezip .vsix
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:_ZipVsixContent
-          /p:VsixPath=$(XA.Unsigned.Vsix)
-          /p:OutDir=$(Build.StagingDirectory)/
-          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/zip-vsix-content.binlog
-
-    - task: MSBuild@1
-      displayName: sign classic installers
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:_AddClassicInstallers;Build
+          /t:SignPkg;Build
           /p:SignType=$(MicroBuildSignType)
           /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
           /p:OutDir=$(System.DefaultWorkingDirectory)/storage-artifacts
-          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-installers.binlog
+          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-pkg.binlog
 
     - script: >
         cd $(System.DefaultWorkingDirectory)/release-scripts &&
@@ -1614,7 +1735,7 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-        artifactName: Legacy Signing Results - macOS
+        artifactName: Classic Signing Results - pkg
         includeBuildResults: true
 
 - stage: post_build

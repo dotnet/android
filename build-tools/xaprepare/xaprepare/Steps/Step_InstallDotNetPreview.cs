@@ -50,7 +50,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests", context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionBand));
+			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests", context.Properties.GetRequiredValue (KnownProperties.DotNetSdkManifestsFolder));
 
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.* listed in package-download.proj
 			var destination = Path.Combine (sdk_manifests, "microsoft.net.workload.mono.toolchain");

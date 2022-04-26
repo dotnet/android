@@ -332,6 +332,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true' or '$(BundleAssemblies)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
+  <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
@@ -1604,6 +1605,7 @@ because xbuild doesn't support framework reference assemblies.
     Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
     Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
     AndroidAotMode="$(AndroidAotMode)"
+    AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
     EnableLLVM="$(EnableLLVM)"
     HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
     TlsProvider="$(AndroidTlsProvider)"

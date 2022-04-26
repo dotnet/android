@@ -4,7 +4,7 @@
   <Import Project="..\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\Mono.Android-Test.Shared.projitems')" />
 
   <PropertyGroup>
-    <TargetFramework>net6.0-android$(AndroidLatestStableApiLevel)</TargetFramework>
+    <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
     <RootNamespace>Xamarin.Android.RuntimeTests</RootNamespace>
     <OutputType>Exe</OutputType>
     <SignAssembly>true</SignAssembly>

@@ -4,7 +4,7 @@
     <Company>Microsoft Corporation</Company>
     <Copyright>2020 Microsoft Corporation</Copyright>
     <Version>0.0.1</Version>
-    <TargetFrameworks>net6.0</TargetFrameworks>
+    <TargetFrameworks>$(DotNetStableTargetFramework)</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../../bin/$(Configuration)/bin/typemap-tool</OutputPath>
     <OutputType>Exe</OutputType>

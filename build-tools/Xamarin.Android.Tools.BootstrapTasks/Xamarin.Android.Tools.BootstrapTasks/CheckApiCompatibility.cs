@@ -35,7 +35,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		static readonly string assemblyToValidate = "Mono.Android.dll";
 
-		static readonly string netCoreAppVersion = "net6.0";
 		static string compatApiCommand = null;
 
 		// Path where Microsoft.DotNet.ApiCompat nuget package is located
@@ -89,7 +88,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			}
 
 			// For non netcoreapp assemblies we should compare against previous version.
-			if (TargetImplementationPath.IndexOf (netCoreAppVersion, StringComparison.OrdinalIgnoreCase) == -1) {
+			if (TargetImplementationPath.IndexOf ("MonoAndroid", StringComparison.OrdinalIgnoreCase) != -1) {
 
 				// Get the previous api implementation path by replacing the current api string with the previous one.
 				var previousTargetImplementationPath = new DirectoryInfo (TargetImplementationPath.Replace (ApiLevel, previousApiLevel));

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;$(DotNetStableTargetFramework)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <LangVersion>8.0</LangVersion>
     <RootNamespace>Xamarin.Android.Prepare</RootNamespace>
@@ -54,9 +54,9 @@
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
     <PackageReference Include="Mono.Unix" Version="7.0.0-final.1.21369.2" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Private.Uri" Version="4.3.2" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" GeneratePathProperty="true" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
   </ItemGroup>
 
   <Import Project="xaprepare.targets" Condition=" $(MSBuildToolsPath.IndexOf('omnisharp')) &lt; 0 " />

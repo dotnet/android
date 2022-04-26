@@ -400,9 +400,7 @@
   <PropertyGroup>
     <RunTestAppDependsOn>
       AcquireAndroidTarget;
-      SignAndroidPackage;
-      DeployTestApks;
-      DeployTestAabs;
+      Install;
       CheckAndRecordApkSizes;
       RunTestApks;
       UndeployTestApks;
