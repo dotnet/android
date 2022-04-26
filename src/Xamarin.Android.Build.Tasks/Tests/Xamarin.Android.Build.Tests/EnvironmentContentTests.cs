@@ -215,12 +215,23 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
 				Assert.AreEqual (expectedDefaultValue, envvars[httpClientHandlerVarName]);
 
+				var runtime_config_json = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.runtimeconfig.json");
+				if (Builder.UseDotNet) {
+					FileAssert.Exists (runtime_config_json);
+					StringAssertEx.Contains ("\"System.Net.Http.UseNativeHttpHandler\": false", File.ReadAllLines (runtime_config_json), $"{runtime_config_json} should contain System.Net.Http.UseNativeHttpHandler=false");
+				}
+
 				proj.SetProperty ("AndroidHttpClientHandlerType", expectedUpdatedValue);
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
 				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
 				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
 				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
 				Assert.AreEqual (expectedUpdatedValue, envvars[httpClientHandlerVarName]);
+
+				if (Builder.UseDotNet) {
+					FileAssert.Exists (runtime_config_json);
+					StringAssertEx.Contains ("\"System.Net.Http.UseNativeHttpHandler\": true", File.ReadAllLines (runtime_config_json), $"{runtime_config_json} should contain System.Net.Http.UseNativeHttpHandler=true");
+				}
 			}
 		}
 
