@@ -11,8 +11,14 @@ using NUnit.Framework;
 namespace Xamarin.Android.NetTests
 {
 	[Category ("InetAccess")]
-	public sealed class AndroidMessageHandlerTests
+	[TestFixture]
+	public sealed class AndroidMessageHandlerTests : AndroidHandlerTestBase
 	{
+		protected override HttpMessageHandler CreateHandler ()
+		{
+			return new AndroidMessageHandler ();
+		}
+
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
 		{

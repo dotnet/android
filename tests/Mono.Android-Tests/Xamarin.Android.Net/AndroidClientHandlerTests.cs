@@ -346,14 +346,5 @@ namespace Xamarin.Android.NetTests {
 				}
 			}
 		}
-
-		[TestFixture]
-		public class AndroidMessageHandlerTests : AndroidHandlerTestBase
-		{
-			protected override HttpMessageHandler CreateHandler ()
-			{
-				return new AndroidMessageHandler ();
-			}
-		}
 	}
 }
