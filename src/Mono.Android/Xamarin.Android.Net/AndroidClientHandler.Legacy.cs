@@ -911,34 +911,10 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-			var keyStore = InitializeKeyStore (out bool gotCerts);
-			keyStore = ConfigureKeyStore (keyStore);
-			var kmf = ConfigureKeyManagerFactory (keyStore);
-			var tmf = ConfigureTrustManagerFactory (keyStore);
 
-			if (tmf == null) {
-				// If there are no trusted certs and no custom trust manager
-				// there is no point in changing the behavior of the default SSL socket factory
-				if (!gotCerts)
-					return;
-
-				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
-				tmf?.Init (keyStore);
-			}
-
-			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
-
-			var context = SSLContext.GetInstance ("TLS");
-			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
-			httpsConnection.SSLSocketFactory = context?.SocketFactory;
-		}
-
-		KeyStore? InitializeKeyStore (out bool gotCerts)
-		{
 			var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
 			keyStore?.Load (null, null);
-			gotCerts = TrustedCerts?.Count > 0;
-
+			bool gotCerts = TrustedCerts?.Count > 0;
 			if (gotCerts) {
 				for (int i = 0; i < TrustedCerts!.Count; i++) {
 					Certificate cert = TrustedCerts [i];
@@ -947,8 +923,24 @@ namespace Xamarin.Android.Net
 					keyStore?.SetCertificateEntry ($"ca{i}", cert);
 				}
 			}
+			keyStore = ConfigureKeyStore (keyStore);
+			var kmf = ConfigureKeyManagerFactory (keyStore);
+			var tmf = ConfigureTrustManagerFactory (keyStore);
 
-			return keyStore;
+			if (tmf == null) {
+				// If there are no certs and no trust manager factory, we can't use a custom manager
+				// because it will cause all the HTTPS requests to fail because of unverified trust
+				// chain
+				if (!gotCerts)
+					return;
+
+				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
+				tmf?.Init (keyStore);
+			}
+
+			var context = SSLContext.GetInstance ("TLS");
+			context?.Init (kmf?.GetKeyManagers (), tmf?.GetTrustManagers (), null);
+			httpsConnection.SSLSocketFactory = context?.SocketFactory;
 		}
 
 		void HandlePreAuthentication (HttpURLConnection httpConnection)
