@@ -1007,9 +1007,8 @@ namespace Xamarin.Android.Net
 
 		void SetupSSL (HttpsURLConnection? httpsConnection, HttpRequestMessage requestMessage)
 		{
-			if (httpsConnection == null) {
+			if (httpsConnection == null)
 				return;
-			}
 
 			var socketFactory = ConfigureCustomSSLSocketFactory (httpsConnection);
 			if (socketFactory != null) {
