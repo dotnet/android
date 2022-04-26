@@ -38,7 +38,6 @@
     <Compile Include="System\AppContextTests.cs" />
     <!-- Mono.Data.Sqlite is not supported in .NET 6 -->
     <Compile Remove="..\Mono.Data.Sqlite\SqliteTests.cs" />
-    <Compile Include="..\Xamarin.Android.Net\ServerCertificateCustomValidationCallbackTest.cs" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
