@@ -26,6 +26,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public bool   uses_mono_llvm;
 		public bool   uses_mono_aot;
+		public bool   aot_lazy_load;
 		public bool   uses_assembly_preload;
 		public bool   is_a_bundled_app;
 		public bool   broken_exception_transitions;

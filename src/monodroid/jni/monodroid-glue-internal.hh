@@ -38,9 +38,16 @@
 #undef NDEBUG_UNDEFINE
 #endif
 
+//#include <mono/utils/mono-publib.h>
 #include <mono/jit/mono-private-unstable.h>
 #include <mono/metadata/mono-private-unstable.h>
 #endif
+
+#if defined (NET6)
+// See https://github.com/dotnet/runtime/pull/67024
+// See https://github.com/xamarin/xamarin-android/issues/6935
+extern mono_bool mono_opt_aot_lazy_assembly_load;
+#endif // def NET6
 
 namespace xamarin::android::internal
 {

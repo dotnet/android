@@ -102,6 +102,7 @@ namespace Xamarin.Android.Tasks
 		public bool UsesMonoLLVM { get; set; }
 		public bool UsesAssemblyPreload { get; set; }
 		public string MonoAOTMode { get; set; }
+		public bool AotEnableLazyLoad { get; set; }
 		public string AndroidPackageName { get; set; }
 		public bool BrokenExceptionTransitions { get; set; }
 		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
@@ -149,6 +150,7 @@ namespace Xamarin.Android.Tasks
 			var application_config = new ApplicationConfig {
 				uses_mono_llvm = UsesMonoLLVM,
 				uses_mono_aot = UsesMonoAOT,
+				aot_lazy_load = AotEnableLazyLoad,
 				uses_assembly_preload = UsesAssemblyPreload,
 				is_a_bundled_app = IsBundledApp,
 				broken_exception_transitions = BrokenExceptionTransitions,

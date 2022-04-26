@@ -2110,6 +2110,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_wrapper &home = applicationDirs[SharedConstants::APP_DIRS_FILES_DIR_INDEX];
 
 #if defined (NET6)
+	mono_opt_aot_lazy_assembly_load = application_config.aot_lazy_load ? TRUE : FALSE;
+
 	{
 		MonoVMProperties monovm_props { home };
 

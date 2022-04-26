@@ -73,6 +73,7 @@ namespace Xamarin.Android.Tasks
 		public string Debug { get; set; }
 		public ITaskItem[] Environments { get; set; }
 		public string AndroidAotMode { get; set; }
+		public bool AndroidAotEnableLazyLoad { get; set; }
 		public bool EnableLLVM { get; set; }
 		public string HttpClientHandlerType { get; set; }
 		public string TlsProvider { get; set; }
@@ -398,6 +399,7 @@ namespace Xamarin.Android.Tasks
 					UsesMonoLLVM = EnableLLVM,
 					UsesAssemblyPreload = usesAssemblyPreload,
 					MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
+					AotEnableLazyLoad = AndroidAotEnableLazyLoad,
 					AndroidPackageName = AndroidPackageName,
 					BrokenExceptionTransitions = brokenExceptionTransitions,
 					PackageNamingPolicy = pnp,
