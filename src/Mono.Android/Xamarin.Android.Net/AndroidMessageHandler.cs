@@ -1042,7 +1042,9 @@ namespace Xamarin.Android.Net
 
 			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
 
-			trustManagers = _callbackTrustManagerHelper?.Inject (trustManagers, requestMessage);
+			if (_callbackTrustManagerHelper != null) {
+				trustManagers = _callbackTrustManagerHelper.Inject (trustManagers, requestMessage);
+			}
 
 			var context = SSLContext.GetInstance ("TLS");
 			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
