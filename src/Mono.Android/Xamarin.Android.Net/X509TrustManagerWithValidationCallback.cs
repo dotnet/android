@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
+using Android.Runtime;
 using Javax.Net.Ssl;
 
 using JavaCertificateException = Java.Security.Cert.CertificateException;
@@ -12,6 +13,7 @@ using JavaX509Certificate = Java.Security.Cert.X509Certificate;
 
 namespace Xamarin.Android.Net
 {
+	[Register ("xamarin/android/net/X509TrustManagerWithValidationCallback")]
 	internal sealed class X509TrustManagerWithValidationCallback : Java.Lang.Object, IX509TrustManager
 	{
 		internal sealed class Helper
@@ -37,7 +39,12 @@ namespace Xamarin.Android.Net
 			IX509TrustManager? internalTrustManager,
 			HttpRequestMessage request,
 			Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
+			: base (
+					JNIEnv.StartCreateInstance ("xamarin/android/net/X509TrustManagerWithValidationCallback", "()V"),
+					JniHandleOwnership.TransferLocalRef)
 		{
+			JNIEnv.FinishCreateInstance (Handle, "()V");
+
 			_request = request;
 			_internalTrustManager = internalTrustManager;
 			_serverCertificateCustomValidationCallback = serverCertificateCustomValidationCallback;
