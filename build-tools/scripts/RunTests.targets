@@ -84,7 +84,7 @@
         Condition=" '$(HostOS)' != 'Windows' "
     />
     <SetEnvironmentVariable Name="ANDROID_SDK_PATH" Value="$(AndroidSdkFullPath)" />
-    <MSBuild
+    <MSBuild 
         ContinueOnError="ErrorAndContinue"
         Projects="$(JavaInteropSourceDirectory)\build-tools\scripts\RunNUnitTests.targets"
         Properties="AndroidSdkDirectory=$(AndroidSdkDirectory)"
@@ -132,11 +132,11 @@
         <_BinLog>$(_XABinLogPrefix)-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))-%(Filename)-AOT.binlog"</_BinLog>
       </_ApkTestProjectAot>
     </ItemGroup>
-    <Exec
+    <Exec 
         Command="$(_XABuild) %(_ApkTestProjectAot.Identity) %(_ApkTestProjectAot._BinLog) /t:SignAndroidPackage $(_XABuildProperties) /p:AotAssemblies=True"
         Condition=" '$(_CrossCompilerAvailable)' == 'True' "
     />
-    <MSBuild
+    <MSBuild 
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
         Targets="$(RunApkTestsTarget)"

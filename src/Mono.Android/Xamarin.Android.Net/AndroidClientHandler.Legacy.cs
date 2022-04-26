@@ -911,7 +911,6 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-
 			var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
 			keyStore?.Load (null, null);
 			bool gotCerts = TrustedCerts?.Count > 0;
@@ -933,7 +932,7 @@ namespace Xamarin.Android.Net
 				// chain
 				if (!gotCerts)
 					return;
-
+				
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
 				tmf?.Init (keyStore);
 			}
@@ -942,7 +941,7 @@ namespace Xamarin.Android.Net
 			context?.Init (kmf?.GetKeyManagers (), tmf?.GetTrustManagers (), null);
 			httpsConnection.SSLSocketFactory = context?.SocketFactory;
 		}
-
+		
 		void HandlePreAuthentication (HttpURLConnection httpConnection)
 		{
 			var data = PreAuthenticationData;
