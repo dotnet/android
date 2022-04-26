@@ -159,14 +159,11 @@ namespace Xamarin.Android.Net
 
 		X509TrustManagerWithValidationCallback.Helper? _callbackTrustManagerHelper = null;
 
-		Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? _serverCertificateCustomValidationCallback;
-
 		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? ServerCertificateCustomValidationCallback
 		{
-			get => _serverCertificateCustomValidationCallback;
+			get => _callbackTrustManagerHelper?.Callback;
 			set {
-				_callbackTrustManagerHelper = value != null ? new X509TrustManagerWithValidationCallback.Helper (value) : null;
-				_serverCertificateCustomValidationCallback = value;
+				_callbackTrustManagerHelper = value != null ? new X509TrustManagerWithValidationCallback.Helper { Callback = value } : null;
 			}
 		}
 
@@ -1045,7 +1042,7 @@ namespace Xamarin.Android.Net
 			}
 
 			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
-			
+
 			trustManagers = _callbackTrustManagerHelper?.Inject (trustManagers, requestMessage);
 
 			var context = SSLContext.GetInstance ("TLS");

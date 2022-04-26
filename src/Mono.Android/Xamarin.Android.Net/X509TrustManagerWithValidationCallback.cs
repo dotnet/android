@@ -16,12 +16,7 @@ namespace Xamarin.Android.Net
 	{
 		internal sealed class Helper
 		{
-			Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> _serverCertificateCustomValidationCallback;
-
-			public Helper (Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
-			{
-				_serverCertificateCustomValidationCallback = serverCertificateCustomValidationCallback;
-			}
+			public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> Callback { get; init; }
 
 			public ITrustManager[] Inject (
 				ITrustManager[]? trustManagers,
@@ -29,7 +24,7 @@ namespace Xamarin.Android.Net
 			{
 				IX509TrustManager? x509TrustManager = trustManagers?.OfType<IX509TrustManager> ().FirstOrDefault ();
 				IEnumerable<ITrustManager> otherTrustManagers = trustManagers?.Where (manager => manager != x509TrustManager) ?? Enumerable.Empty<ITrustManager> ();
-				var trustManagerWithCallback = new X509TrustManagerWithValidationCallback (x509TrustManager, requestMessage, _serverCertificateCustomValidationCallback);
+				var trustManagerWithCallback = new X509TrustManagerWithValidationCallback (x509TrustManager, requestMessage, Callback);
 				return otherTrustManagers.Prepend (trustManagerWithCallback).ToArray ();
 			}
 		}
