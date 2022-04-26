@@ -342,9 +342,6 @@ namespace Xamarin.Android.Build.Tests
 
 		void SuccessfulBuild_AndroidX (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test not required under Legacy Projects.");
-
 			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:true, "__HAVE_ANDROIDX__");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 

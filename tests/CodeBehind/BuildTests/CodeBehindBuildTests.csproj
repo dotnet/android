@@ -26,6 +26,9 @@
   <PropertyGroup Condition="Exists('..\..\..\Configuration.props')">
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(AndroidFrameworkVersion)' == '' ">
+    <TargetFrameworkVersion>v12.0</TargetFrameworkVersion>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
@@ -110,6 +113,9 @@
       <Project>{7A5FB23C-6B26-461A-8BBD-02392DCE3C11}</Project>
       <Name>CommonSampleLibrary</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(ReferenceAndroidX)' == 'True' ">
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.4.1.1" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>
