@@ -14,22 +14,31 @@ namespace Xamarin.Android.Net
 {
 	internal sealed class X509TrustManagerWithValidationCallback : Java.Lang.Object, IX509TrustManager
 	{
+		internal sealed class Helper
+		{
+			Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> _serverCertificateCustomValidationCallback;
+
+			public Helper (Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
+			{
+				_serverCertificateCustomValidationCallback = serverCertificateCustomValidationCallback;
+			}
+
+			public ITrustManager[] Inject (
+				ITrustManager[]? trustManagers,
+				HttpRequestMessage requestMessage)
+			{
+				IX509TrustManager? x509TrustManager = trustManagers?.OfType<IX509TrustManager> ().FirstOrDefault ();
+				IEnumerable<ITrustManager> otherTrustManagers = trustManagers?.Where (manager => manager != x509TrustManager) ?? Enumerable.Empty<ITrustManager> ();
+				var trustManagerWithCallback = new X509TrustManagerWithValidationCallback (x509TrustManager, requestMessage, _serverCertificateCustomValidationCallback);
+				return otherTrustManagers.Prepend (trustManagerWithCallback).ToArray ();
+			}
+		}
+
 		private readonly IX509TrustManager? _internalTrustManager;
 		private readonly HttpRequestMessage _request;
 		private readonly Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> _serverCertificateCustomValidationCallback;
 
-		public static ITrustManager[] Inject(
-			ITrustManager[]? trustManagers,
-			HttpRequestMessage requestMessage,
-			Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
-		{
-			IX509TrustManager? x509TrustManager = trustManagers?.OfType<IX509TrustManager> ().FirstOrDefault ();
-			IEnumerable<ITrustManager> otherTrustManagers = trustManagers?.Where (manager => manager != x509TrustManager) ?? Enumerable.Empty<ITrustManager> ();
-			var trustManagerWithCallback = new X509TrustManagerWithValidationCallback (x509TrustManager, requestMessage, serverCertificateCustomValidationCallback);
-			return otherTrustManagers.Prepend (trustManagerWithCallback).ToArray ();
-		}
-
-		public X509TrustManagerWithValidationCallback(
+		private X509TrustManagerWithValidationCallback (
 			IX509TrustManager? internalTrustManager,
 			HttpRequestMessage request,
 			Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
@@ -58,7 +67,7 @@ namespace Xamarin.Android.Net
 			}
 
 			if (!_serverCertificateCustomValidationCallback (_request, certificate, chain, sslPolicyErrors)) {
-				throw new JavaCertificateException("The remote certificate was rejected by the provided RemoteCertificateValidationCallback.");
+				throw new JavaCertificateException ("The remote certificate was rejected by the provided RemoteCertificateValidationCallback.");
 			}
 		}
 
