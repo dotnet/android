@@ -8,13 +8,13 @@
       <Uri>https://github.com/dotnet/linker</Uri>
       <Sha>24e38a5ded83c1b499f70e4463c7a64e315b804b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="7.0.0-preview.4.22179.7" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="7.0.0-preview.5.22225.6" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>cbf3f9c43649035f59e626792f82e7b579c44865</Sha>
+      <Sha>6387a2dc3de16e2f22c8e49678bee33506260c46</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Manifest-7.0.100" Version="7.0.0-preview.4.22178.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Manifest-7.0.100" Version="7.0.0-preview.4.22215.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>ac46fa88e66788611803e55bb856bd9b508183c9</Sha>
+      <Sha>f41e658e85769eef222f5f7571038edbd2d1d9d8</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
