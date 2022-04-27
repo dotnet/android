@@ -44,5 +44,6 @@
 			<field name="refs_added" />
 			<field name="weak_handle" />
 		</type>
+		<type fullname="Xamarin.Android.Net.X509TrustManagerWithValidationCallback" preserve="methods" />
 	</assembly>
 </linker>
