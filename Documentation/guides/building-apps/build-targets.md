@@ -65,6 +65,12 @@ aprofutil $(AProfUtilExtraOptions) -s -v -f -p $(AndroidAotProfilerPort) -o "$(A
 
 Added in Xamarin.Android 10.2.
 
+## GetAndroidDependencies
+
+Creates the `@(AndroidDependency)` item group, which is used by the
+[`InstallAndroidDependencies`](#installandroiddependencies) target to determine
+which Android SDK packages to install.
+
 ## Install
 
 [Creates, signs](#signandroidpackage), and installs the Android package onto
@@ -79,6 +85,16 @@ Android package may be installed to or removed from.
 # Use `/Library/Frameworks/Mono.framework/Commands/msbuild` on OS X
 MSBuild /t:Install ProjectName.csproj /p:AdbTarget=-e
 ```
+
+## InstallAndroidDependencies
+
+Calls the [`GetAndroidDependencies`](#getandroiddependencies) target, then installs
+the Android SDK packages specified in the `@(AndroidDependency)` item group.
+
+The [`$(AndroidManifestType)`](~/android/deploy-test/building-apps/build-properties.md#androidmanifesttype)
+MSBuild property controls which
+[Visual Studio SDK Manager repository](xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection)
+is used for package name and package version detection, and URLs to download.
 
 ## SignAndroidPackage
 
