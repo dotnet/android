@@ -155,7 +155,7 @@ namespace Xamarin.Android.Tasks.Legacy
 			}
 			if (maxApiLevel < 0)
 				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_Platforms,
-						platformsDir, Path.DirectorySeparatorChar, Android);
+						platformsDir, AndroidSdkPath, Path.DirectorySeparatorChar, Android);
 			return maxApiLevel;
 		}
 

@@ -902,12 +902,12 @@ In this message, the term "handheld app" means "app for handheld devices."
       </trans-unit>
       <trans-unit id="XA5300_Android_Platforms">
         <source>No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.</source>
-        <target state="translated">'{0}' konumunda yüklü Android platformu yok. Lütfen `{1}{2}tools{2}{3}` programıyla bir SDK Platform yükleyin.</target>
+        <target state="needs-review-translation">'{0}' konumunda yüklü Android platformu yok. Lütfen `{1}{2}tools{2}{3}` programıyla bir SDK Platform yükleyin.</target>
         <note>The following are literal names and should not be translated: SDK Platform, {1}{2}tools{2}{3}
-{0} - The missing tool name
-{1} - The parent directory
+{0} - Android SDK platforms directory path
+{1} - Android SDK directory path
 {2} - The directory separator character
-{3} - The installer program name</note>
+{3} - The Android SDK installer program name</note>
       </trans-unit>
       <trans-unit id="XA5300_Android_SDK">
         <source>The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.</source>
