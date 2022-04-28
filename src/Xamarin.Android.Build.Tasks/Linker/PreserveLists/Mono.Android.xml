@@ -59,7 +59,6 @@
 			<field name="refs_added" />
 			<field name="weak_handle" />
 		</type>
-		<type fullname="Xamarin.Android.Net.X509TrustManagerWithValidationCallback" />
 	</assembly>
 	<assembly fullname="mscorlib">
 		<type fullname="System.Diagnostics.Debugger">
