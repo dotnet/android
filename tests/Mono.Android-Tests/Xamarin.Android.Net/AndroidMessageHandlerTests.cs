@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -62,7 +63,7 @@ namespace Xamarin.Android.NetTests
 
 			try {
 				await client.GetStringAsync ("https://microsoft.com/");
-			} catch (Javax.Net.Ssl.SSLHandshakeException) {
+			} catch (WebException) {
 				expectedExceptionHasBeenThrown = true;
 			}
 
@@ -87,7 +88,7 @@ namespace Xamarin.Android.NetTests
 
 			try {
 				await client.GetStringAsync ("https://self-signed.badssl.com/");
-			} catch (Javax.Net.Ssl.SSLHandshakeException) {
+			} catch (WebException) {
 				exceptionWasThrown = true;
 			}
 
