@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -11,9 +10,8 @@ using NUnit.Framework;
 
 namespace Xamarin.Android.NetTests
 {
-	[Category ("InetAccess")]
 	[TestFixture]
-	public sealed class AndroidMessageHandlerTests : AndroidHandlerTestBase
+	public class AndroidMessageHandlerTests : AndroidHandlerTestBase
 	{
 		protected override HttpMessageHandler CreateHandler ()
 		{
@@ -43,14 +41,14 @@ namespace Xamarin.Android.NetTests
 			var client = new HttpClient (handler);
 			await client.GetStringAsync ("https://microsoft.com/");
 
-			Assert.IsTrue (callbackHasBeenCalled, "Custom validation callback hasn't been called");
+			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 		}
 
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_RejectRequest ()
 		{
 			bool callbackHasBeenCalled = false;
-			bool expectedExceptionHasBeenThrown = false;
+			bool exceptionWasThrown = false;
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -63,19 +61,21 @@ namespace Xamarin.Android.NetTests
 
 			try {
 				await client.GetStringAsync ("https://microsoft.com/");
-			} catch (WebException) {
-				expectedExceptionHasBeenThrown = true;
+			} catch {
+				// System.Net.WebException is thrown in Debug mode
+				// Java.Security.Cert.CertificateException is thrown in Release mode
+				exceptionWasThrown = true;
 			}
 
-			Assert.IsTrue (callbackHasBeenCalled, "Custom validation callback hasn't been called");
-			Assert.IsTrue (expectedExceptionHasBeenThrown, "the expected exception hasn't been thrown");
+			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
+			Assert.IsTrue (exceptionWasThrown, "validation callback hasn't rejected the request");
 		}
 
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
-			bool exceptionWasThrown = false;
+			Exception? exception = null;
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -88,12 +88,12 @@ namespace Xamarin.Android.NetTests
 
 			try {
 				await client.GetStringAsync ("https://self-signed.badssl.com/");
-			} catch (WebException) {
-				exceptionWasThrown = true;
+			} catch (Exception e) {
+				exception = e;
 			}
 
-			Assert.IsTrue (callbackHasBeenCalled, "Custom validation callback hasn't been called");
-			Assert.IsFalse (exceptionWasThrown, "the ssl handshake exception has been thrown");
+			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
+			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 		}
 	}
 }
