@@ -3,8 +3,8 @@
   "author": "Microsoft",
   "classifications": [ "Android", "Mobile" ],
   "identity": "Microsoft.Android.AndroidBinding",
-  "name": "Android Java Library Binding (Preview)",
-  "description": "A project for creating a .NET 6 Android class library that binds to a native Java library",
+  "name": "Android Java Library Binding",
+  "description": "A project for creating a .NET Android class library that binds to a native Java library",
   "shortName": "android-bindinglib",
   "tags": {
     "language": "C#",
