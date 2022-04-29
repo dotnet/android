@@ -3,8 +3,8 @@
   "author": "Microsoft",
   "classifications": [ "Android", "Mobile" ],
   "identity": "Microsoft.Android.AndroidApp",
-  "name": "Android Application (Preview)",
-  "description": "A project for creating a .NET 6 Android application",
+  "name": "Android Application",
+  "description": "A project for creating a .NET Android application",
   "shortName": "android",
   "tags": {
     "language": "C#",
