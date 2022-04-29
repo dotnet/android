@@ -219,7 +219,7 @@ namespace xamarin::android::internal
 			ns_out = ret == 0 ? static_cast<uint64_t>(tv_ctm.tv_nsec) : 0;
 #else
 			ret = gettimeofday (&tv_ctm, static_cast<timestruct*> (nullptr));
-			ns_out = ret == 0 ? tv_ctm.tv_usec * 1000LL : 0;
+			ns_out = ret == 0 ? static_cast<uint64_t>(tv_ctm.tv_usec * 1000LL) : 0;
 #endif
 			seconds_out = ret == 0 ? tv_ctm.tv_sec : 0;
 		}
