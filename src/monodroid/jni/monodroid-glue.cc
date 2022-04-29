@@ -1939,7 +1939,7 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 		internal_timing->end_event (total_time_index, true /* uses-more_info */);
 
 		static_local_string<SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10> more_info;
-		more_info.append (static_cast<size_t>(i + 1));
+		more_info.append (static_cast<uint64_t>(i + 1));
 		internal_timing->add_more_info (total_time_index, more_info);
 	}
 }
