@@ -758,7 +758,7 @@ namespace xamarin::android::internal
 					"Attempt to store too much data in a buffer (capacity: %u; exceeded by: %u)",
 					buffer.size (), needed_space - buffer.size ()
 				);
-				exit (1);
+				abort ();
 			}
 		}
 
