@@ -48,7 +48,11 @@ projects that use the Microsoft.Android framework in .NET 5.
 
     <ItemGroup>
       <_PackageFiles Include="@(_AndroidRuntimePackAssemblies)" PackagePath="$(_AndroidRuntimePackAssemblyPath)" TargetPath="$(_AndroidRuntimePackAssemblyPath)" />
-      <_PackageFiles Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" PackagePath="$(_AndroidRuntimePackAssemblyPath)" />
+      <!-- TODO: workaround for
+        https://github.com/dotnet/runtime/issues/67660
+        https://github.com/dotnet/linker/issues/2203
+      -->
+      <!-- <_PackageFiles Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" PackagePath="$(_AndroidRuntimePackAssemblyPath)" /> -->
       <_PackageFiles Include="@(_AndroidRuntimePackAssets)" PackagePath="$(_AndroidRuntimePackNativePath)" TargetPath="$(_AndroidRuntimePackNativePath)" IsNative="true" />
     </ItemGroup>
   </Target>
