@@ -122,16 +122,15 @@ namespace Xamarin.Android.Tasks
 		{
 			// Group by assembly file name
 			foreach (var group in InputAssemblies.Where (Filter).GroupBy (a => Path.GetFileName (a.ItemSpec))) {
-				// HACK: Use file size instead of MVID, revert this later!
-				// see: https://github.com/dotnet/runtime/issues/45649
-				// see: https://github.com/dotnet/linker/issues/2203
-				var fileSizes = new HashSet<long> ();
+				// Get the unique list of MVIDs
+				var mvids = new HashSet<Guid> ();
 				bool? frameworkAssembly = null, hasMonoAndroidReference = null;
 				foreach (var assembly in group) {
-					using var stream = File.OpenRead (assembly.ItemSpec);
-					using var pe = new PEReader (stream);
+					using var pe = new PEReader (File.OpenRead (assembly.ItemSpec));
 					var reader = pe.GetMetadataReader ();
-					fileSizes.Add (stream.Length);
+					var module = reader.GetModuleDefinition ();
+					var mvid = reader.GetGuid (module.Mvid);
+					mvids.Add (mvid);
 
 					// Calculate %(FrameworkAssembly) and %(HasMonoAndroidReference) for the first
 					if (frameworkAssembly == null) {
@@ -145,7 +144,7 @@ namespace Xamarin.Android.Tasks
 					assembly.SetMetadata ("HasMonoAndroidReference", hasMonoAndroidReference.ToString ());
 				}
 				// If we end up with more than 1 unique mvid, we need *all* assemblies
-				if (fileSizes.Count > 1) {
+				if (mvids.Count > 1) {
 					foreach (var assembly in group) {
 						var symbol = GetOrCreateSymbolItem (symbols, assembly);
 						SetDestinationSubDirectory (assembly, group.Key, symbol, isDuplicate: true);
