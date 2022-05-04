@@ -125,6 +125,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
 
   <Target Name="CleanLibraryProjectIntermediaries">
     <Delete Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+    <Delete Files="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" />
     <Delete Files="$(_AndroidLibraryImportsCache)" />
     <Delete Files="$(_AndroidLibraryProjectImportsCache)" />
     <Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />

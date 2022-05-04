@@ -92,13 +92,14 @@ namespace Xamarin.Android.Build.Tests
 			proj.AndroidClassParser = classParser;
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				b.BuildLogFile = "clean.log";
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded");
 				var ignoreFiles = new string [] {
 					"TemporaryGeneratedFile",
 					"FileListAbsolute.txt",
 				};
 				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
-					.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i)));
+					.Where (x => !ignoreFiles.Any (i => Path.GetFileName (x).Contains (i)));
 				CollectionAssert.IsEmpty (files, $"{proj.IntermediateOutputPath} should have no files.");
 			}
 		}
