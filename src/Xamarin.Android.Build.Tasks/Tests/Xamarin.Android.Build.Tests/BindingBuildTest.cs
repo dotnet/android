@@ -97,6 +97,8 @@ namespace Xamarin.Android.Build.Tests
 				var ignoreFiles = new string [] {
 					"TemporaryGeneratedFile",
 					"FileListAbsolute.txt",
+					"assets.cache",
+					"Resource.designer.cs",
 				};
 				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
 					.Where (x => !ignoreFiles.Any (i => Path.GetFileName (x).Contains (i)));
