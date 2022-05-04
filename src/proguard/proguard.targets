@@ -13,7 +13,7 @@
       Inputs="$(MSBuildThisFile)"
       Outputs="@(_Outputs)">
     <Exec
-        Command="&quot;../gradlew&quot; fatJar $(GradleArgs)"
+        Command="&quot;../gradlew&quot; assemble $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(ProGuardSourceFullPath)/base"
     />
