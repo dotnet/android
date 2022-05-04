@@ -1702,7 +1702,7 @@
   <!-- Rename Namespaces -->
   <attr api-since="33" path="/api/package[@name='android.os.vibrator']" name="managedName">Android.OS.Vibrators</attr>
   <attr api-since="33" path="/api/package[@name='android.app.appsearch.observer']" name="managedName">Android.App.AppSearch.Observers</attr>
-  <attr api-since="33" path="/api/package[@name='android.supplementalapi']" name="managedName">Android.SupplementalApi</attr>
+  <attr api-since="33" path="/api/package[@name='android.adservices']" name="managedName">Android.AdServices</attr>
 
   <!-- Base method is 'protected', overriding method cannot change it to 'public' -->
   <attr api-since ="33" path="/api/package[@name='android.media.tv.interactive']/class[@name='TvInteractiveAppView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
