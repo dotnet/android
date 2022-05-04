@@ -80,7 +80,7 @@ namespace xamarin::android::internal
 		TimingEventPoint start;
 		TimingEventPoint end;
 		TimingEventKind  kind;
-		std::string      more_info;
+		const char*      more_info;
 	};
 
 #if defined (HAVE_CONCEPTS)
@@ -174,6 +174,7 @@ namespace xamarin::android::internal
 			mark (ev.start);
 			ev.kind = kind;
 			ev.before_managed = MonodroidRuntime::is_startup_in_progress ();
+			ev.more_info = nullptr;
 
 			return index;
 		}
@@ -195,7 +196,7 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			events[event_index].more_info.assign (str.get (), str.length ());
+			events[event_index].more_info = utils.strdup_new (str.get (), str.length ());
 			log (events[event_index], false /* skip_log_if_more_info_missing */);
 		}
 
@@ -205,7 +206,7 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			events[event_index].more_info.assign (str, strlen (str));
+			events[event_index].more_info = utils.strdup_new (str, strlen (str));
 			log (events[event_index], false /* skip_log_if_more_info_missing */);
 		}
 
@@ -408,8 +409,8 @@ namespace xamarin::android::internal
 			message.append ("] ");
 
 			append_event_kind_description (event.kind, message);
-			if (event.more_info.length () > 0) {
-				message.append (event.more_info.c_str (), event.more_info.size ());
+			if (event.more_info != nullptr && *event.more_info != '\0') {
+				message.append (event.more_info, strlen (event.more_info));
 			}
 
 			constexpr char COLON[] = ":";
@@ -450,7 +451,7 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			if (skip_log_if_more_info_missing && event.more_info.empty ()) {
+			if (skip_log_if_more_info_missing && (event.more_info == nullptr || *event.more_info == '\0')) {
 				return;
 			}
 
