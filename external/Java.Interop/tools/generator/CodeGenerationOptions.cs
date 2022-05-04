@@ -267,7 +267,7 @@ namespace MonoDroid.Generation
 			// (ReturnValue.ToNative() takes an argument which could be either an expression or mere symbol.)
 			if (name [name.Length-1] != ')' && !name.Contains ('.') && !name.StartsWith ("@", StringComparison.Ordinal)) {
 				if (!IdentifierValidator.IsValidIdentifier (name) ||
-						Array.BinarySearch (TypeNameUtilities.reserved_keywords, name) >= 0) {
+						Array.BinarySearch (TypeNameUtilities.reserved_keywords, name, StringComparer.Ordinal) >= 0) {
 					name = name + "_";
 				}
 			}

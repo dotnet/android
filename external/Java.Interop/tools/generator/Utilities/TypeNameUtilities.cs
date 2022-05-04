@@ -80,8 +80,8 @@ namespace MonoDroid.Generation
 		{
 			if (name == "event")
 				return "e";
-			
-			if (Array.BinarySearch (reserved_keywords, name) >= 0)
+
+			if (Array.BinarySearch (reserved_keywords, name, StringComparer.Ordinal) >= 0)
 				return "@" + name;
 
 			return name;

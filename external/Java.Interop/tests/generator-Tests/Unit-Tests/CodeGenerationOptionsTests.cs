@@ -1,4 +1,5 @@
-using System;
+using System.Collections.Generic;
+using System.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
@@ -79,5 +80,17 @@ namespace generatortests
 
 			Assert.AreEqual ("uint", opt.GetTypeReferenceName (primitive_uint));
 		}
+
+		[Test, TestCaseSource (nameof (ReservedKeywords))]
+		[SetCulture ("cs-CZ")]
+		public void GetSafeIdentifierCultureInvariant (string keyword)
+		{
+			var opt = new CodeGenerationOptions ();
+
+			Assert.AreEqual ($"{keyword}_", opt.GetSafeIdentifier (keyword));
+		}
+
+		private static IEnumerable<TestCaseData> ReservedKeywords
+			=> TypeNameUtilities.reserved_keywords.Select (keyword => new TestCaseData (keyword));
 	}
 }
