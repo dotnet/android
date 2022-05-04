@@ -16,9 +16,6 @@
       <_SubmoduleBranchInfo Include="external/Java.Interop">
         <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
-      <_SubmoduleBranchInfo Include="external/proguard">
-        <OutputPropertyName>_BuildInfo_ProguardCommit</OutputPropertyName>
-      </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/sqlite">
         <OutputPropertyName>_BuildInfo_SqliteCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>

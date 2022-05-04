@@ -7,7 +7,8 @@
 
   <Import Project="..\..\Configuration.props" />
 
-  <!-- https://dev.azure.com/xamarin/public/_artifacts/feed/Xamarin.Android/NuGet/Xamarin.Android.Proguard/12.3.1%20sha.bbba5a2/overview -->
+  <!-- https://dev.azure.com/xamarin/public/_artifacts/feed/Xamarin.Android/NuGet/Xamarin.Android.Proguard/12.3.1%20sha.bbba5a2/overview
+       https://github.com/Guardsquare/proguard/commit/912d149394fc96072905735649327d4101980832 -->
   <ItemGroup>
     <PackageReference Include="Xamarin.Android.Proguard" Version="12.3.1" GeneratePathProperty="true" />
   </ItemGroup>

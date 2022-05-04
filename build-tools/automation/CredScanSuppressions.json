@@ -36,14 +36,6 @@
         {
             "file": "external\\android-api-docs\\docs\\Mono.Android\\en\\Javax.Crypto.Interfaces\\IPBEKey.xml",
             "_justification": "Android API documentation, does not contain a password."
-        },
-        {
-            "file": "external\\proguard\\examples\\android\\debug.keystore",
-            "_justification": "Dummy keystore file from a proguard example."
-        },
-        {
-            "file": "external\\proguard\\examples\\android-plugin\\debug.keystore",
-            "_justification": "Dummy keystore file from a proguard example."
         }
     ]
 }
