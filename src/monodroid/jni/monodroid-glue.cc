@@ -1873,7 +1873,10 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		internal_timing->end_event (total_time_index, true /* uses_more_info */);
 
-		dynamic_local_string<SENSIBLE_PATH_MAX> more_info { " (ALC): " };
+		constexpr char PREFIX[] = " (ALC): ";
+		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1;
+
+		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
 		more_info.append_c (assm_name);
 		internal_timing->add_more_info (total_time_index, more_info);
 	}
@@ -1912,7 +1915,10 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		internal_timing->end_event (total_time_index, true /* uses_more_info */);
 
-		dynamic_local_string<SENSIBLE_PATH_MAX> more_info { " (domain): " };
+		constexpr char PREFIX[] = " (domain): ";
+		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1;
+
+		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
 		more_info.append_c (assm_name);
 		internal_timing->add_more_info (total_time_index, more_info);
 	}
