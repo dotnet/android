@@ -1,48 +1,27 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <_InputJar>$(PkgXamarin_Android_Proguard)\proguard\lib\proguard.jar</_InputJar>
     <_OutputJar>$(OutputPath)lib/proguard.jar</_OutputJar>
+    <_InputBat>$(PkgXamarin_Android_Proguard)\proguard\\bin\proguard.bat</_InputBat>
     <_OutputBat>$(OutputPath)bin\proguard.bat</_OutputBat>
+    <_InputSh>$(PkgXamarin_Android_Proguard)\proguard\bin\proguard.sh</_InputSh>
     <_OutputSh>$(OutputPath)bin/proguard.sh</_OutputSh>
+    <_InputLicense>$(PkgXamarin_Android_Proguard)\proguard\license.md</_InputLicense>
     <_OutputLicense>$(OutputPath)license.md</_OutputLicense>
   </PropertyGroup>
   <ItemGroup>
+    <_Inputs Include="$(_InputJar);$(_InputBat);$(_InputSh);$(_InputLicense)" />
     <_Outputs Include="$(_OutputJar);$(_OutputBat);$(_OutputSh);$(_OutputLicense)" />
   </ItemGroup>
-  <Target Name="_BuildProGuard"
+  <Target Name="_CopyProGuard"
       BeforeTargets="Build"
-      Inputs="$(MSBuildThisFile)"
+      Inputs="$(MSBuildThisFile);@(_Inputs)"
       Outputs="@(_Outputs)">
-    <Exec
-        Command="&quot;../gradlew&quot; assemble $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(ProGuardSourceFullPath)/base"
-    />
-    <MakeDir Directories="$(OutputPath)" />
     <Copy
-        SourceFiles="../../external/proguard/lib/proguard.jar"
-        DestinationFiles="$(_OutputJar)"
-    />
-    <Copy
-        SourceFiles="../../external/proguard/bin/proguard.bat"
-        DestinationFiles="$(_OutputBat)"
-    />
-    <Copy
-        SourceFiles="../../external/proguard/bin/proguard.sh"
-        DestinationFiles="$(_OutputSh)"
-    />
-    <Copy
-        SourceFiles="../../external/proguard/docs/md/license.md"
-        DestinationFiles="$(_OutputLicense)"
+        SourceFiles="@(_Inputs)"
+        DestinationFiles="@(_Outputs)"
     />
     <Touch Files="@(_Outputs)" />
-  </Target>
-  <Target Name="_CleanProGuard" BeforeTargets="Clean">
-    <Delete Files="@(_Outputs)" />
-    <Exec
-        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(ProGuardSourceFullPath)/base"
-    />
   </Target>
   <Target Name="CoreCompile" />
 </Project>

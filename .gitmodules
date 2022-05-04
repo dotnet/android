@@ -30,11 +30,6 @@
     path = external/opentk
     url = https://github.com/mono/opentk.git
     branch = main
-[submodule "external/proguard"]
-    path = external/proguard
-    url = https://github.com/Guardsquare/proguard.git
-    branch = master
-    ignore = dirty
 [submodule "external/robin-map"]
     path = external/robin-map
     url = https://github.com/Tessil/robin-map.git
