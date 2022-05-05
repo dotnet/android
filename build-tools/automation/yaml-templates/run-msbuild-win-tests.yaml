@@ -26,16 +26,16 @@ jobs:
 
     - template: clean.yaml
 
+    - template: setup-test-environment.yaml
+      parameters:
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        remove_dotnet: true
+
     # Install a stable verison of .NET for classic tests
     - ${{ if ne(parameters.target_framework, parameters.dotnet_targetframework) }}:
       - template: use-dot-net.yaml
         parameters:
           version: 6.0.202
-          remove_dotnet: true
-
-    - template: setup-test-environment.yaml
-      parameters:
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - task: DownloadPipelineArtifact@1
       inputs:
