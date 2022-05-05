@@ -8,6 +8,7 @@ namespace Xamarin.Test {
 	[global::Java.Interop.JniTypeSignature ("xamarin/test/I2", GenerateJavaPeer=false)]
 	public partial interface II2 : IJavaPeerable {
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='I2']/method[@name='close' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("close", "()V")]
 		void Close ();
 
 	}

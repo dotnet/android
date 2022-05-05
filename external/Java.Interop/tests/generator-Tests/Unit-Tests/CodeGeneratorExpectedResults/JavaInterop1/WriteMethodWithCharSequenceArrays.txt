@@ -14,6 +14,7 @@ public partial class MyClass : Java.Lang.Object {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.example']/class[@name='MyClass']/method[@name='echo' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence[]']]"
+	[global::Java.Interop.JniMethodSignature ("echo", "([Ljava/lang/CharSequence;)[Ljava/lang/CharSequence;")]
 	public virtual unsafe Java.Interop.JavaObjectArray<Java.Lang.ICharSequence>? Echo (Java.Interop.JavaObjectArray<Java.Lang.ICharSequence>? messages)
 	{
 		const string __id = "echo.([Ljava/lang/CharSequence;)[Ljava/lang/CharSequence;";

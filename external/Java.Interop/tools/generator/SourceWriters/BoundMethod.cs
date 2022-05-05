@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using MonoDroid.Generation;
@@ -74,9 +75,9 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.IsVirtual ? method.GetConnectorNameFull (opt) : string.Empty, additionalProperties: method.AdditionalAttributeString ()));
-			}
+			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.IsVirtual ? method.GetConnectorNameFull (opt) : string.Empty, additionalProperties: method.AdditionalAttributeString ()) {
+				MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Method,
+			});
 
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
 			this.AddMethodParameters (method.Parameters, opt);

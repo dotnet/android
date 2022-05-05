@@ -21,6 +21,7 @@ namespace Java.Interop.Tools
 			bool    help        = false;
 			string  outputPath  = null;
 			int     verbosity   = 0;
+			var     style       = JavaPeerStyle.XAJavaInterop1;
 
 			var options = new OptionSet {
 				"Usage: jcw-gen.exe OPTIONS* ASSEMBLY+ [@RESPONSE-FILES]",
@@ -36,6 +37,9 @@ namespace Java.Interop.Tools
 				{ "o=",
 				  "{DIRECTORY} to write Java source code to.",
 				  v => outputPath = v },
+				{ "codegen-target=",
+				  "STYLE of Java Callable Wrappers to generate",
+				  (JavaPeerStyle? v) => style = v.HasValue ? v.Value : style },
 				{ "v:",
 				  "Logging verbosity.",
 				  (int? v) => verbosity = v.HasValue ? v.Value : verbosity + 1 },
@@ -68,7 +72,7 @@ namespace Java.Interop.Tools
 				var types = scanner.GetJavaTypes (assemblies, resolver)
 					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache));
 				foreach (var type in types) {
-					GenerateJavaCallableWrapper (type, outputPath, cache);
+					GenerateJavaCallableWrapper (type, outputPath, cache, style);
 				}
 				return 0;
 			}
@@ -81,13 +85,14 @@ namespace Java.Interop.Tools
 			}
 		}
 
-		static void GenerateJavaCallableWrapper (TypeDefinition type, string outputPath, TypeDefinitionCache cache)
+		static void GenerateJavaCallableWrapper (TypeDefinition type, string outputPath, TypeDefinitionCache cache, JavaPeerStyle style)
 		{
 			if (type.IsInterface) {
 				return;
 			}
 
 			var generator = new JavaCallableWrapperGenerator (type, log: Console.WriteLine, cache) {
+				CodeGenerationTarget    = style,
 			};
 			generator.Generate (outputPath);
 		}

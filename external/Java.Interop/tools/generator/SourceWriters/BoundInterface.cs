@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using MonoDroid.Generation;
@@ -50,12 +51,16 @@ namespace generator.SourceWriters
 					? iface.FullName.Replace ('.', '/')
 					: iface.Namespace + "." + iface.FullName.Substring (iface.Namespace.Length + 1).Replace ('.', '/');
 
+				var noAcw       = false;
+				var memberType  = (MemberTypes?) null;
 				if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-					Attributes.Add (new JniTypeSignatureAttr (iface.RawJniName, false));
+					noAcw       = true;
+					memberType  = MemberTypes.TypeInfo;
 				}
-				else {
-					Attributes.Add (new RegisterAttr (iface.RawJniName, string.Empty, signature + "Invoker", additionalProperties: iface.AdditionalAttributeString ()));
-				}
+
+				Attributes.Add (new RegisterAttr (iface.RawJniName, string.Empty, signature + "Invoker", noAcw, additionalProperties: iface.AdditionalAttributeString ()) {
+					MemberType	    = memberType,
+				});
 			}
 
 			if (iface.TypeParameters != null && iface.TypeParameters.Any ())

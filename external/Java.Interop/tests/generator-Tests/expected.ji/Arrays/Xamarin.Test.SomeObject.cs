@@ -21,7 +21,6 @@ namespace Xamarin.Test {
 
 				try {
 					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-
 				} finally {
 					GC.KeepAlive (value);
 				}
@@ -42,7 +41,6 @@ namespace Xamarin.Test {
 
 				try {
 					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-
 				} finally {
 					GC.KeepAlive (value);
 				}
@@ -63,7 +61,6 @@ namespace Xamarin.Test {
 
 				try {
 					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-
 				} finally {
 					GC.KeepAlive (value);
 				}
@@ -84,7 +81,6 @@ namespace Xamarin.Test {
 
 				try {
 					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-
 				} finally {
 					GC.KeepAlive (value);
 				}
@@ -105,7 +101,6 @@ namespace Xamarin.Test {
 
 				try {
 					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-
 				} finally {
 					GC.KeepAlive (value);
 				}
@@ -126,7 +121,6 @@ namespace Xamarin.Test {
 
 				try {
 					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-
 				} finally {
 					GC.KeepAlive (value);
 				}
@@ -147,7 +141,6 @@ namespace Xamarin.Test {
 
 				try {
 					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-
 				} finally {
 					GC.KeepAlive (value);
 				}

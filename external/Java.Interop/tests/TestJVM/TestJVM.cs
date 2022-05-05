@@ -30,7 +30,7 @@ namespace Java.InteropTests
 					builder.ClassPath.Add (Path.Combine (dir, jar));
 			}
 			builder.AddOption ("-Xcheck:jni");
-			builder.TypeManager                 = new JreTypeManager ();
+			builder.TypeManager                 = new TestTypeManager ();
 
 			return builder;
 		}
@@ -97,7 +97,13 @@ namespace Java.InteropTests
 			this.typeMappings = typeMappings;
 		}
 
-		class JreTypeManager : JniTypeManager {
+		class TestTypeManager :
+#if NET
+			JreTypeManager
+#else   // !NET
+			JniTypeManager
+#endif  // !NET
+		{
 
 			protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 			{

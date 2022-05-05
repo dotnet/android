@@ -66,7 +66,7 @@ namespace Java.Interop {
 			}
 			int key = value.JniIdentityHashCode;
 			lock (RegisteredInstances) {
-				List<IJavaPeerable> peers;
+				List<IJavaPeerable>? peers;
 				if (!RegisteredInstances.TryGetValue (key, out peers)) {
 					peers = new List<IJavaPeerable> () {
 						value,
@@ -124,7 +124,7 @@ namespace Java.Interop {
 			int key = GetJniIdentityHashCode (reference);
 
 			lock (RegisteredInstances) {
-				List<IJavaPeerable> peers;
+				List<IJavaPeerable>? peers;
 				if (!RegisteredInstances.TryGetValue (key, out peers))
 					return null;
 
@@ -149,7 +149,7 @@ namespace Java.Interop {
 
 			int key = value.JniIdentityHashCode;
 			lock (RegisteredInstances) {
-				List<IJavaPeerable> peers;
+				List<IJavaPeerable>? peers;
 				if (!RegisteredInstances.TryGetValue (key, out peers))
 					return;
 
@@ -211,7 +211,7 @@ namespace Java.Interop {
 						reference,
 						runtime.ValueManager.GetJniIdentityHashCode (reference).ToString ("x"),
 						JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
-						cinfo.DeclaringType.FullName);
+						cinfo.DeclaringType?.FullName);
 				Debug.WriteLine (m);
 
 				throw new NotSupportedException (m, e);

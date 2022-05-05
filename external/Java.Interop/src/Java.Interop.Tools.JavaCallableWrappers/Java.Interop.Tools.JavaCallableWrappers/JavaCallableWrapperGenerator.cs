@@ -20,6 +20,11 @@ using static Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager;
 
 namespace Java.Interop.Tools.JavaCallableWrappers {
 
+	public enum JavaPeerStyle {
+		XAJavaInterop1,
+		JavaInterop1,
+	}
+
 	 public class JavaCallableWrapperGenerator {
 
 		class JavaFieldInfo {
@@ -76,6 +81,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		}
 
 		public  string          ApplicationJavaClass            { get; set; }
+		public  JavaPeerStyle   CodeGenerationTarget            { get; set; }
 
 		public bool GenerateOnCreateOverrides { get; set; }
 
@@ -101,7 +107,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					continue;
 				if (!JavaNativeTypeManager.IsNonStaticInnerClass (nt, cache))
 					continue;
-				children.Add (new JavaCallableWrapperGenerator (nt, JavaNativeTypeManager.ToJniName (type), log, cache));
+				children.Add (new JavaCallableWrapperGenerator (nt, JavaNativeTypeManager.ToJniName (type, cache), log, cache));
 				if (nt.HasNestedTypes)
 					AddNestedTypes (nt);
 			}
@@ -117,7 +123,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			if (type.IsEnum || type.IsInterface || type.IsValueType)
 				Diagnostic.Error (4200, LookupSource (type), Localization.Resources.JavaCallableWrappers_XA4200, type.FullName);
 
-			string jniName = JavaNativeTypeManager.ToJniName (type);
+			string jniName = JavaNativeTypeManager.ToJniName (type, resolver);
 			if (jniName == null)
 				Diagnostic.Error (4201, LookupSource (type), Localization.Resources.JavaCallableWrappers_XA4201, type.FullName);
 			if (!string.IsNullOrEmpty (outerType)) {
@@ -157,7 +163,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 									r.FullName);
 						return d;
 					})
-					.Where (d => GetRegisterAttributes (d).Any ())
+					.Where (d => GetTypeRegistrationAttributes (d).Any ())
 					.SelectMany (d => d.Methods)
 					.Where (m => !m.IsStatic)) {
 				AddMethod (imethod, imethod);
@@ -168,7 +174,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			};
 			foreach (var bt in type.GetBaseTypes (cache)) {
 				ctorTypes.Add (bt);
-				RegisterAttribute rattr = GetRegisterAttributes (bt).FirstOrDefault ();
+				RegisterAttribute rattr = GetMethodRegistrationAttributes (bt).FirstOrDefault ();
 				if (rattr != null && rattr.DoNotGenerateAcw)
 					break;
 			}
@@ -271,7 +277,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					return;
 				}
 
-				RegisterAttribute rattr = GetRegisterAttributes (ctor).FirstOrDefault ();
+				RegisterAttribute rattr = GetMethodRegistrationAttributes (ctor).FirstOrDefault ();
 				if (rattr != null) {
 					if (ctors.Any (c => c.JniSignature == rattr.Signature))
 						return;
@@ -335,6 +341,34 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			return r;
 		}
 
+		internal static RegisterAttribute RegisterFromJniTypeSignatureAttribute (CustomAttribute attr)
+		{
+			// attr.Resolve ();
+			RegisterAttribute r = null;
+			if (attr.ConstructorArguments.Count == 1)
+				r = new RegisterAttribute ((string) attr.ConstructorArguments [0].Value);
+			if (r != null) {
+				var v = attr.Properties.FirstOrDefault (p => p.Name == "GenerateJavaPeer");
+				if (v.Name == null) {
+					r.DoNotGenerateAcw = false;
+				} else if (v.Name == "GenerateJavaPeer") {
+					r.DoNotGenerateAcw = ! (bool) v.Argument.Value;
+				}
+			}
+			return r;
+		}
+
+		internal static RegisterAttribute RegisterFromJniMethodSignatureAttribute (CustomAttribute attr)
+		{
+			// attr.Resolve ();
+			RegisterAttribute r = null;
+			if (attr.ConstructorArguments.Count == 2)
+				r = new RegisterAttribute ((string) attr.ConstructorArguments [0].Value,
+					(string) attr.ConstructorArguments [1].Value,
+					"");
+			return r;
+		}
+
 		ExportAttribute ToExportAttribute (CustomAttribute attr, IMemberDefinition declaringMember)
 		{
 			var name = attr.ConstructorArguments.Count > 0 ? (string) attr.ConstructorArguments [0].Value : declaringMember.Name;
@@ -351,9 +385,24 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			return new ExportFieldAttribute ((string) attr.ConstructorArguments [0].Value);
 		}
 
-		static IEnumerable<RegisterAttribute> GetRegisterAttributes (Mono.Cecil.ICustomAttributeProvider p)
+		internal static IEnumerable<RegisterAttribute> GetTypeRegistrationAttributes (Mono.Cecil.ICustomAttributeProvider p)
 		{
-			return GetAttributes<RegisterAttribute> (p, a => ToRegisterAttribute (a));
+			foreach (var a in GetAttributes<RegisterAttribute> (p, a => ToRegisterAttribute (a))) {
+				yield return a;
+			}
+			foreach (var c in p.GetCustomAttributes ("Java.Interop.JniTypeSignatureAttribute")) {
+				yield return RegisterFromJniTypeSignatureAttribute (c);
+			}
+		}
+
+		static IEnumerable<RegisterAttribute> GetMethodRegistrationAttributes (Mono.Cecil.ICustomAttributeProvider p)
+		{
+			foreach (var a in GetAttributes<RegisterAttribute> (p, a => ToRegisterAttribute (a))) {
+				yield return a;
+			}
+			foreach (var c in p.GetCustomAttributes ("Java.Interop.JniMethodSignatureAttribute")) {
+				yield return RegisterFromJniMethodSignatureAttribute (c);
+			}
 		}
 
 		IEnumerable<ExportAttribute> GetExportAttributes (IMemberDefinition p)
@@ -375,7 +424,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		void AddMethod (MethodDefinition registeredMethod, MethodDefinition implementedMethod)
 		{
 			if (registeredMethod != null)
-				foreach (RegisterAttribute attr in GetRegisterAttributes (registeredMethod)) {
+				foreach (RegisterAttribute attr in GetMethodRegistrationAttributes (registeredMethod)) {
 					// Check for Kotlin-mangled methods that cannot be overridden
 					if (attr.Name.Contains ("-impl") || (attr.Name.Length > 7 && attr.Name[attr.Name.Length - 8] == '-'))
 						Diagnostic.Error (4217, LookupSource (implementedMethod), Localization.Resources.JavaCallableWrappers_XA4217, attr.Name);
@@ -544,19 +593,27 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			sw.WriteLine ("public " + (type.IsAbstract ? "abstract " : "") + "class " + name);
 
-			string extendsType = GetJavaTypeName (type.BaseType);
+			string extendsType = GetJavaTypeName (type.BaseType, cache);
 			if (extendsType == "android.app.Application" && !string.IsNullOrEmpty (ApplicationJavaClass))
 				extendsType = ApplicationJavaClass;
 			sw.WriteLine ("\textends " + extendsType);
 			sw.WriteLine ("\timplements");
-			sw.Write ("\t\tmono.android.IGCUserPeer");
+			sw.Write ("\t\t");
+			switch (CodeGenerationTarget) {
+				case JavaPeerStyle.JavaInterop1:
+					sw.Write ("com.xamarin.java_interop.GCUserPeerable");
+					break;
+				default:
+					sw.Write ("mono.android.IGCUserPeer");
+					break;
+			}
 			IEnumerable<TypeDefinition> ifaces = type.Interfaces.Select (ifaceInfo => ifaceInfo.InterfaceType)
 				.Select (r => r.Resolve ())
-				.Where (d => GetRegisterAttributes (d).Any ());
+				.Where (d => GetTypeRegistrationAttributes (d).Any ());
 			if (ifaces.Any ()) {
 				foreach (TypeDefinition iface in ifaces) {
 					sw.WriteLine (",");
-					sw.Write ("\t\t{0}", GetJavaTypeName (iface));
+					sw.Write ("\t\t{0}", GetJavaTypeName (iface, cache));
 				}
 			}
 			sw.WriteLine ();
@@ -590,16 +647,23 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 						w.WriteLine ("\t\tsuper.onCreate (arguments);");
 				});
 
+			string addRef       = "monodroidAddReference";
+			string clearRefs    = "monodroidClearReferences";
+			if (CodeGenerationTarget == JavaPeerStyle.JavaInterop1) {
+				addRef      = "jiAddManagedReference";
+				clearRefs   = "jiClearManagedReferences";
+			}
+
 			sw.WriteLine ();
 			sw.WriteLine ("\tprivate java.util.ArrayList refList;");
-			sw.WriteLine ("\tpublic void monodroidAddReference (java.lang.Object obj)");
+			sw.WriteLine ($"\tpublic void {addRef} (java.lang.Object obj)");
 			sw.WriteLine ("\t{");
 			sw.WriteLine ("\t\tif (refList == null)");
 			sw.WriteLine ("\t\t\trefList = new java.util.ArrayList ();");
 			sw.WriteLine ("\t\trefList.add (obj);");
 			sw.WriteLine ("\t}");
 			sw.WriteLine ();
-			sw.WriteLine ("\tpublic void monodroidClearReferences ()");
+			sw.WriteLine ($"\tpublic void {clearRefs} ()");
 			sw.WriteLine ("\t{");
 			sw.WriteLine ("\t\tif (refList != null)");
 			sw.WriteLine ("\t\t\trefList.clear ();");
@@ -612,9 +676,19 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			foreach (Signature method in self.methods)
 				sw.WriteLine ("\t\t\t\"{0}\\n\" +", method.Method);
 			sw.WriteLine ("\t\t\t\"\";");
-			if (!CannotRegisterInStaticConstructor (self.type))
-				sw.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {2});",
-						self.type.GetPartialAssemblyQualifiedName (cache), self.name, field);
+			if (CannotRegisterInStaticConstructor (self.type))
+				return;
+			string format = null;
+			switch (CodeGenerationTarget) {
+				case JavaPeerStyle.JavaInterop1:
+					format = "com.xamarin.java_interop.ManagedPeer.registerNativeMembers ({1}.class, \"{0}\", {2});";
+					break;
+				default:
+					format = "mono.android.Runtime.register (\"{0}\", {1}.class, {2});";
+					break;
+			}
+			sw.Write ("\t\t");
+			sw.WriteLine (format, self.type.GetPartialAssemblyQualifiedName (cache), self.name, field);
 		}
 
 		void GenerateFooter (TextWriter sw)
@@ -636,10 +710,10 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			}
 		}
 
-		static string GetJavaTypeName (TypeReference r)
+		static string GetJavaTypeName (TypeReference r, IMetadataResolver cache)
 		{
 			TypeDefinition d = r.Resolve ();
-			string jniName = JavaNativeTypeManager.ToJniName (d);
+			string jniName = JavaNativeTypeManager.ToJniName (d, cache);
 			if (jniName == null)
 				Diagnostic.Error (4201, Localization.Resources.JavaCallableWrappers_XA4201, r.FullName);
 			return jniName.Replace ('/', '.').Replace ('$', '.');
@@ -780,8 +854,19 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t\tandroid.util.Log.i(\"MonoDroid-Timing\", \"{0}..ctor({1}): time: \"+java.lang.System.currentTimeMillis());", name, ctor.Params);
 #endif
 			if (!CannotRegisterInStaticConstructor (type)) {
-				sw.WriteLine ("\t\tif (getClass () == {0}.class)", name);
-				sw.WriteLine ("\t\t\tmono.android.TypeManager.Activate (\"{0}\", \"{1}\", this, new java.lang.Object[] {{ {2} }});", type.GetPartialAssemblyQualifiedName (cache), ctor.ManagedParameters, ctor.ActivateCall);
+				string format = null;
+				switch (CodeGenerationTarget) {
+					case JavaPeerStyle.JavaInterop1:
+						format = "com.xamarin.java_interop.ManagedPeer.construct (this, \"{0}\", \"{1}\", new java.lang.Object[] {{ {2} }});";
+						break;
+					default:
+						format = "mono.android.TypeManager.Activate (\"{0}\", \"{1}\", this, new java.lang.Object[] {{ {2} }});";
+						break;
+				}
+				sw.WriteLine ("\t\tif (getClass () == {0}.class) {{", name);
+				sw.Write ("\t\t\t");
+				sw.WriteLine (format, type.GetPartialAssemblyQualifiedName (cache), ctor.ManagedParameters, ctor.ActivateCall);
+				sw.WriteLine ("\t\t}");
 			}
 			sw.WriteLine ("\t}");
 		}

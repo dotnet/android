@@ -113,13 +113,16 @@ public partial class MyClass {
 
 	public abstract int AbstractCount {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_AbstractCount' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("get_AbstractCount", "()I")]
 		get; 
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_AbstractCount' and count(parameter)=1 and parameter[1][@type='int']]"
+		[global::Java.Interop.JniMethodSignature ("set_AbstractCount", "(I)V")]
 		set; 
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='GetCountForKey' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+	[global::Java.Interop.JniMethodSignature ("GetCountForKey", "(Ljava/lang/String;)I")]
 	public virtual unsafe int GetCountForKey (string? key)
 	{
 		const string __id = "GetCountForKey.(Ljava/lang/String;)I";
@@ -135,6 +138,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Key' and count(parameter)=0]"
+	[global::Java.Interop.JniMethodSignature ("Key", "()Ljava/lang/String;")]
 	public virtual unsafe string? Key ()
 	{
 		const string __id = "Key.()Ljava/lang/String;";
@@ -146,6 +150,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='StaticMethod' and count(parameter)=0]"
+	[global::Java.Interop.JniMethodSignature ("StaticMethod", "()V")]
 	public static unsafe void StaticMethod ()
 	{
 		const string __id = "StaticMethod.()V";

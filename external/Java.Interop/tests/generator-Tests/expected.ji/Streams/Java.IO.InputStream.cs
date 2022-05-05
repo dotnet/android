@@ -36,6 +36,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='available' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("available", "()I")]
 		public virtual unsafe int Available ()
 		{
 			const string __id = "available.()I";
@@ -47,6 +48,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='close' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("close", "()V")]
 		public virtual unsafe void Close ()
 		{
 			const string __id = "close.()V";
@@ -57,6 +59,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='mark' and count(parameter)=1 and parameter[1][@type='int']]"
+		[global::Java.Interop.JniMethodSignature ("mark", "(I)V")]
 		public virtual unsafe void Mark (int readlimit)
 		{
 			const string __id = "mark.(I)V";
@@ -69,6 +72,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='markSupported' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("markSupported", "()Z")]
 		public virtual unsafe bool MarkSupported ()
 		{
 			const string __id = "markSupported.()Z";
@@ -83,6 +87,7 @@ namespace Java.IO {
 		public abstract int Read ();
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='read' and count(parameter)=1 and parameter[1][@type='byte[]']]"
+		[global::Java.Interop.JniMethodSignature ("read", "([B)I")]
 		public virtual unsafe int Read (global::Java.Interop.JavaSByteArray buffer)
 		{
 			const string __id = "read.([B)I";
@@ -101,6 +106,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='read' and count(parameter)=3 and parameter[1][@type='byte[]'] and parameter[2][@type='int'] and parameter[3][@type='int']]"
+		[global::Java.Interop.JniMethodSignature ("read", "([BII)I")]
 		public virtual unsafe int Read (global::Java.Interop.JavaSByteArray buffer, int byteOffset, int byteCount)
 		{
 			const string __id = "read.([BII)I";
@@ -121,6 +127,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='reset' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("reset", "()V")]
 		public virtual unsafe void Reset ()
 		{
 			const string __id = "reset.()V";
@@ -131,6 +138,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='skip' and count(parameter)=1 and parameter[1][@type='long']]"
+		[global::Java.Interop.JniMethodSignature ("skip", "(J)J")]
 		public virtual unsafe long Skip (long byteCount)
 		{
 			const string __id = "skip.(J)J";
@@ -160,6 +168,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='read' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("read", "()I")]
 		public override unsafe int Read ()
 		{
 			const string __id = "read.()I";

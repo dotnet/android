@@ -20,6 +20,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject2']/method[@name='irrelevant' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("irrelevant", "()V")]
 		public virtual unsafe void Irrelevant ()
 		{
 			const string __id = "irrelevant.()V";
@@ -49,6 +50,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='I1']/method[@name='close' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("close", "()V")]
 		public override unsafe void Close ()
 		{
 			const string __id = "close.()V";

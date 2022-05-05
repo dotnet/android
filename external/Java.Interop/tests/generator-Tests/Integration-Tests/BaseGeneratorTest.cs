@@ -125,9 +125,11 @@ namespace generatortests
 		{
 			Run (CodeGenerationTarget.XamarinAndroid,   Path.Combine ("out", outputRelativePath),       apiDescriptionFile,     Path.Combine ("expected", expectedRelativePath),        additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
 			Run (CodeGenerationTarget.XAJavaInterop1,   Path.Combine ("out.xaji", outputRelativePath),  apiDescriptionFile,     Path.Combine ("expected.xaji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
+#if NET
 			if (TryJavaInterop1) {
 				Run (CodeGenerationTarget.JavaInterop1,     Path.Combine ("out.ji", outputRelativePath),    apiDescriptionFile,     Path.Combine ("expected.ji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
 			}
+#endif  // NET
 		}
 
 		protected string FullPath (string path)

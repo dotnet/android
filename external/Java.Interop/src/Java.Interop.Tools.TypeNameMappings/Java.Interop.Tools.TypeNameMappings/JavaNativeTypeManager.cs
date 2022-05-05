@@ -497,6 +497,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 		// Keep in sync with ToJniNameFromAttributes(Type) and ToJniName(Type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
 		public static string ToJniName (TypeDefinition type) =>
 			ToJniName (type, resolver: null);
 
@@ -505,8 +506,9 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		public static string ToJniName (TypeDefinition type, IMetadataResolver? resolver)
 		{
-			return ToJniName (type, ExportParameterKind.Unspecified, resolver) ??
+			var x = ToJniName (type, ExportParameterKind.Unspecified, resolver) ??
 				"java/lang/Object";
+			return x;
 		}
 
 		static string? ToJniName (TypeDefinition type, ExportParameterKind exportKind, IMetadataResolver? cache)
@@ -520,7 +522,8 @@ namespace Java.Interop.Tools.TypeNameMappings
 			if (type.FullName == "System.String")
 				return "java/lang/String";
 
-			if (!type.ImplementsInterface ("Android.Runtime.IJavaObject", cache)) {
+			if (!type.ImplementsInterface ("Android.Runtime.IJavaObject", cache) && 
+					!type.ImplementsInterface ("Java.Interop.IJavaPeerable", cache)) {
 				return GetSpecialExportJniType (type.FullName, exportKind);
 			}
 
@@ -535,6 +538,26 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 		static string? ToJniNameFromAttributes (TypeDefinition type, IMetadataResolver? resolver)
+		{
+			return ToJniNameFromAttributesForAndroid (type, resolver) ??
+				ToJniNameFromAttributesForInterop (type, resolver);
+		}
+
+		static string? ToJniNameFromAttributesForInterop (TypeDefinition type, IMetadataResolver? resolver)
+		{
+			var attr = type.CustomAttributes.FirstOrDefault (a =>
+				Resolve (resolver, a.AttributeType)
+				.FullName == "Java.Interop.JniTypeSignatureAttribute");
+			if (attr == null) {
+				return null;
+			}
+			var carg    = attr.ConstructorArguments.FirstOrDefault ();
+			if (carg.Type == null || carg.Type.FullName != "System.String")
+				return null;
+			return (string) carg.Value;
+		}
+
+		static string? ToJniNameFromAttributesForAndroid (TypeDefinition type, IMetadataResolver? resolver)
 		{
 			#region CustomAttribute alternate name support
 			var attrs = type.CustomAttributes.Where (a => Resolve (resolver, a.AttributeType).Interfaces.Any (it => it.InterfaceType.FullName == typeof (IJniNameProviderAttribute).FullName));

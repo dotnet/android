@@ -20,6 +20,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='close' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("close", "()V")]
 		public virtual unsafe void Close ()
 		{
 			const string __id = "close.()V";

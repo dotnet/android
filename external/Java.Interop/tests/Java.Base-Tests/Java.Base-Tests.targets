@@ -1,0 +1,49 @@
+<Project>
+
+  <ItemGroup>
+    <_BuildJavaBaseTestsJarInputs Include="$(TargetPath)" />
+    <_BuildJavaBaseTestsJarInputs Include="$(MSBuildThisFileFullPath)" />
+    <_BuildJavaBaseTestsJarInputs Include="$(MSBuildThisFileFullPath)" />
+    <_BuildJavaBaseTestsJarInputs Include="java\**\*.java" />
+  </ItemGroup>
+
+  <Target Name="_CreateJavaCallableWrappers"
+      Condition=" '$(TargetPath)' != '' "
+      AfterTargets="Build"
+      Inputs="@(_BuildJavaBaseTestsJarInputs)"
+      Outputs="$(IntermediateOutputPath)java\.stamp">
+    <RemoveDir Directories="$(IntermediateOutputPath)java" />
+    <MakeDir Directories="$(IntermediateOutputPath)java" />
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+      <_RefAsmDirs Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_JcwGen>"$(ToolOutputFullPath)/jcw-gen.dll"</_JcwGen>
+      <_Target>--codegen-target JavaInterop1</_Target>
+      <_Output>-o "$(IntermediateOutputPath)/java"</_Output>
+      <_Libpath>@(_RefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
+    </PropertyGroup>
+    <Exec Command="$(DotnetToolPath) $(_JcwGen) &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
+    <Touch Files="$(IntermediateOutputPath)java\.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <ItemGroup>
+    <_JcwSource Include="$(IntermediateOutputPath)java\**\*.java;java\**\*.java" />
+  </ItemGroup>
+
+  <Target Name="_BuildJavaBaseTestsJar"
+      Condition=" '$(TargetPath)' != '' "
+      AfterTargets="_CreateJavaCallableWrappers"
+      Inputs="$(IntermediateOutputPath)java\.stamp;@(_JcwSource)"
+      Outputs="$(OutputPath)java.base-tests.jar">
+    <RemoveDir Directories="$(IntermediateOutputPath)classes" />
+    <MakeDir Directories="$(IntermediateOutputPath)classes" />
+    <ItemGroup>
+      <_JcwSourceReal Include="$(IntermediateOutputPath)java\**\*.java;java\**\*.java" />
+    </ItemGroup>
+    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)classes&quot; -classpath &quot;$(OutputPath)/java-interop.jar&quot; @(_JcwSourceReal->'%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)java.base-tests.jar&quot; -C &quot;$(IntermediateOutputPath)classes&quot; ." />
+  </Target>
+
+</Project>

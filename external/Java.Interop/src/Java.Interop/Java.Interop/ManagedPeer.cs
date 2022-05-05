@@ -182,7 +182,7 @@ namespace Java.Interop {
 				IntPtr n_nativeClass,
 				IntPtr n_assemblyQualifiedName,
 				IntPtr n_methods);
-		static void RegisterNativeMembers (
+		static unsafe void RegisterNativeMembers (
 				IntPtr jnienv,
 				IntPtr klass,
 				IntPtr n_nativeClass,
@@ -195,11 +195,25 @@ namespace Java.Interop {
 				var nativeClass     = new JniType (ref r_nativeClass, JniObjectReferenceOptions.Copy);
 
 				var assemblyQualifiedName   = JniEnvironment.Strings.ToString (new JniObjectReference (n_assemblyQualifiedName));
-				var methods                 = JniEnvironment.Strings.ToString (new JniObjectReference (n_methods));
+				var type                    = Type.GetType (assemblyQualifiedName!, throwOnError: true)!;
+				var methodsRef              = new JniObjectReference (n_methods);
 
-				var type    = Type.GetType (assemblyQualifiedName!, throwOnError: true)!;
+#if NET
 
+				int methodsLength           = JniEnvironment.Strings.GetStringLength (methodsRef);
+				var methodsChars            = JniEnvironment.Strings.GetStringChars (methodsRef, null);
+				var methods                 = new ReadOnlySpan<char>(methodsChars, methodsLength);
+				try {
+					JniEnvironment.Runtime.TypeManager.RegisterNativeMembers (nativeClass, type, methods);
+				}
+				finally {
+					JniEnvironment.Strings.ReleaseStringChars (methodsRef, methodsChars);
+				}
+#else   // NET
+				var methods                 = JniEnvironment.Strings.ToString (methodsRef);
 				JniEnvironment.Runtime.TypeManager.RegisterNativeMembers (nativeClass, type, methods);
+#endif  // NET
+
 			}
 			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				Debug.WriteLine (e.ToString ());

@@ -88,9 +88,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 			if (JavaNativeTypeManager.IsNonStaticInnerClass (type, resolver))
 				return true;
 
-			foreach (var r in type.GetCustomAttributes (typeof (global::Android.Runtime.RegisterAttribute))) {
-
-				if (JavaCallableWrapperGenerator.ToRegisterAttribute (r).DoNotGenerateAcw) {
+			foreach (var c in JavaCallableWrapperGenerator.GetTypeRegistrationAttributes (type)) {
+				if (c.DoNotGenerateAcw) {
 					return true;
 				}
 			}

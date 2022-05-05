@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Schema;
@@ -26,11 +27,10 @@ namespace generator.SourceWriters
 			foreach (var igen in klass.GetAllDerivedInterfaces ().Where (i => i.IsGeneric))
 				Implements.Add (opt.GetOutputName (igen.FullName));
 
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				Attributes.Add (new JniTypeSignatureAttr (klass.RawJniName, false));
-			} else {
-				Attributes.Add (new RegisterAttr (klass.RawJniName, noAcw: true, additionalProperties: klass.AdditionalAttributeString ()) { UseGlobal = true });
-			}
+			Attributes.Add (new RegisterAttr (klass.RawJniName, noAcw: true, additionalProperties: klass.AdditionalAttributeString ()) {
+				UseGlobal       = true,
+				MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.TypeInfo,
+			});
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
 

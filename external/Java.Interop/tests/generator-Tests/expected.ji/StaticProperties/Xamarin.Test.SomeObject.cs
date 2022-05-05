@@ -66,6 +66,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeObject' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("getSomeObject", "()Ljava/lang/Object;")]
 		public static unsafe global::Java.Lang.Object GetSomeObject ()
 		{
 			const string __id = "getSomeObject.()Ljava/lang/Object;";
@@ -77,6 +78,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeObject' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
+		[global::Java.Interop.JniMethodSignature ("setSomeObject", "(Ljava/lang/Object;)V")]
 		public static unsafe void SetSomeObject (global::Java.Lang.Object newvalue)
 		{
 			const string __id = "setSomeObject.(Ljava/lang/Object;)V";

@@ -178,9 +178,9 @@ namespace Java.Interop
 				foreach (var m in methods) {
 					if (m.Marshaler.GetType ().GenericTypeArguments.Length != 0) {
 						var method  = m.Marshaler.Method;
-						Debug.WriteLine ($"JNIEnv::RegisterNatives() given a generic delegate type.  .NET Core doesn't like this.");
+						Debug.WriteLine ($"JNIEnv::RegisterNatives() given a generic delegate type `{m.Marshaler.GetType()}`.  .NET Core doesn't like this.");
 						Debug.WriteLine ($"  Java: {m.Name}{m.Signature}");
-						Debug.WriteLine ($"  Marshaler Type={m.Marshaler.GetType ().FullName} Method={method.DeclaringType!.FullName}.{method.Name}");
+						Debug.WriteLine ($"  Marshaler Type={m.Marshaler.GetType ().FullName} Method={method.DeclaringType?.FullName}.{method.Name}");
 					}
 				}
 #endif  // DEBUG && NETCOREAPP

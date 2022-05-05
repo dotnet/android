@@ -20,6 +20,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='methodAsInt' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("methodAsInt", "()I")]
 		public static unsafe int MethodAsInt ()
 		{
 			const string __id = "methodAsInt.()I";
@@ -31,6 +32,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='methodAsString' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("methodAsString", "()Ljava/lang/String;")]
 		public static unsafe string MethodAsString ()
 		{
 			const string __id = "methodAsString.()Ljava/lang/String;";
@@ -43,6 +45,7 @@ namespace Xamarin.Test {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='Obsoletemethod' and count(parameter)=0]"
 		[Obsolete (@"Deprecated please use methodAsString")]
+		[global::Java.Interop.JniMethodSignature ("Obsoletemethod", "()Ljava/lang/String;")]
 		public static unsafe string Obsoletemethod ()
 		{
 			const string __id = "Obsoletemethod.()Ljava/lang/String;";

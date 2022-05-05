@@ -44,7 +44,7 @@ namespace generatortests
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDefaultMethod)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteInterfaceDefaultMethod), writer.ToString ());
 		}
 
 		[Test]
@@ -66,7 +66,7 @@ namespace generatortests
 			generator.WriteType (iface2, string.Empty, new GenerationInfo (null, null, null));
 
 			// IMyInterface2 should generate the method as abstract, not a default method
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceRedeclaredDefaultMethod)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteInterfaceRedeclaredDefaultMethod), writer.ToString ());
 		}
 
 		[Test]
@@ -85,7 +85,7 @@ namespace generatortests
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDefaultProperty)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteInterfaceDefaultProperty), writer.ToString ());
 		}
 
 		[Test]
@@ -104,7 +104,7 @@ namespace generatortests
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDefaultPropertyGetterOnly)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteInterfaceDefaultPropertyGetterOnly), writer.ToString ());
 		}
 
 
@@ -123,7 +123,7 @@ namespace generatortests
 			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteDefaultInterfaceMethodInvoker)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteDefaultInterfaceMethodInvoker), writer.ToString ());
 		}
 
 		[Test]
@@ -205,7 +205,7 @@ namespace generatortests
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteStaticInterfaceMethod)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteStaticInterfaceMethod), writer.ToString ());
 		}
 
 		[Test]
@@ -226,7 +226,7 @@ namespace generatortests
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteStaticInterfaceProperty)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteStaticInterfaceProperty), writer.ToString ());
 		}
 
 		readonly string nested_interface_api = @"<api>
@@ -267,7 +267,7 @@ namespace generatortests
 
 			generator.WriteType (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteUnnestedInterfaceTypes)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteUnnestedInterfaceTypes), writer.ToString ());
 		}
 
 		[Test]
@@ -285,7 +285,7 @@ namespace generatortests
 
 			generator.WriteType (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteNestedInterfaceTypes)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteNestedInterfaceTypes), writer.ToString ());
 		}
 
 		[Test]
@@ -303,7 +303,7 @@ namespace generatortests
 
 			generator.WriteType (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteNestedInterfaceClass)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteNestedInterfaceClass), writer.ToString ());
 		}
 
 		[Test]
@@ -363,7 +363,7 @@ namespace generatortests
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
-			Assert.AreEqual (GetTargetedExpected (nameof (ObsoleteInterfaceAlternativeClass)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (ObsoleteInterfaceAlternativeClass), writer.ToString ());
 		}
 
 		[Test]
@@ -488,7 +488,7 @@ namespace generatortests
 
 			var generated = writer.ToString ();
 
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceFieldAsDimProperty)), writer.ToString ().NormalizeLineEndings ());
+			AssertTargetedExpected (nameof (WriteInterfaceFieldAsDimProperty), writer.ToString ());
 		}
 	}
 }

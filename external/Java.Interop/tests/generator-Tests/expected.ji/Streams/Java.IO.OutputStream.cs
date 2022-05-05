@@ -36,6 +36,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='close' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("close", "()V")]
 		public virtual unsafe void Close ()
 		{
 			const string __id = "close.()V";
@@ -46,6 +47,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='flush' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("flush", "()V")]
 		public virtual unsafe void Flush ()
 		{
 			const string __id = "flush.()V";
@@ -56,6 +58,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='byte[]']]"
+		[global::Java.Interop.JniMethodSignature ("write", "([B)V")]
 		public virtual unsafe void Write (global::Java.Interop.JavaSByteArray buffer)
 		{
 			const string __id = "write.([B)V";
@@ -73,6 +76,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write' and count(parameter)=3 and parameter[1][@type='byte[]'] and parameter[2][@type='int'] and parameter[3][@type='int']]"
+		[global::Java.Interop.JniMethodSignature ("write", "([BII)V")]
 		public virtual unsafe void Write (global::Java.Interop.JavaSByteArray buffer, int offset, int count)
 		{
 			const string __id = "write.([BII)V";
@@ -111,6 +115,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='int']]"
+		[global::Java.Interop.JniMethodSignature ("write", "(I)V")]
 		public override unsafe void Write (int oneByte)
 		{
 			const string __id = "write.(I)V";

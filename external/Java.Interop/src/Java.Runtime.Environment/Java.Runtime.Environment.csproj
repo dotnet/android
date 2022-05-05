@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -17,7 +17,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Java.Interop\Java.Interop.csproj" />
-    <ProjectReference Include="..\..\src\java-interop\java-interop.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Java.Interop.Export\Java.Interop.Export.csproj" />
+    <ProjectReference Include="..\java-interop\java-interop.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <Import Project="Java.Runtime.Environment.targets" />

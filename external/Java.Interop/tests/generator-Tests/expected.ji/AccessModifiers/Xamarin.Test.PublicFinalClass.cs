@@ -20,6 +20,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']/method[@name='publicMethod' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("publicMethod", "()V")]
 		public unsafe void PublicMethod ()
 		{
 			const string __id = "publicMethod.()V";
@@ -30,6 +31,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PackageClassB']/method[@name='packageMethodB' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("packageMethodB", "()V")]
 		public unsafe void PackageMethodB ()
 		{
 			const string __id = "packageMethodB.()V";
@@ -40,6 +42,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PackageClassA']/method[@name='packageMethodA' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("packageMethodA", "()V")]
 		public unsafe void PackageMethodA ()
 		{
 			const string __id = "packageMethodA.()V";

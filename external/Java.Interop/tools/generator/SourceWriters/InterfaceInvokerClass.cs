@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Schema;
@@ -26,12 +27,10 @@ namespace generator.SourceWriters
 
 			bool ji = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1;
 
-			if (ji) {
-				Attributes.Add (new JniTypeSignatureAttr (iface.RawJniName, false));
-			}
-			else {
-				Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) { UseGlobal = true });
-			}
+			Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) {
+				UseGlobal       = true,
+				MemberType	    = (!ji) ? null : (MemberTypes?) MemberTypes.TypeInfo,
+			});
 
 			Fields.Add (new PeerMembersField (opt, iface.RawJniName, $"{iface.Name}Invoker", false));
 

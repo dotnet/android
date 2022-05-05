@@ -251,11 +251,35 @@ namespace Java.Interop {
 				yield break;
 			}
 
+#if NET
+			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
+			{
+				TryRegisterNativeMembers (nativeClass, type, methods);
+			}
+
+			protected bool TryRegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
+			{
+				AssertValid ();
+
+#pragma warning disable CS1717
+				methods = methods;
+#pragma warning restore CS1717
+
+				return TryLoadJniMarshalMethods (nativeClass, type, null) || TryRegisterNativeMembers (nativeClass, type, null, null);
+			}
+#endif  // NET
+
+#if NET
+			[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
+#endif  // NET
 			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 			{
 				TryRegisterNativeMembers (nativeClass, type, methods);
 			}
 
+#if NET
+			[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
+#endif  // NET
 			protected bool TryRegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 			{
 				AssertValid ();

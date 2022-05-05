@@ -21,25 +21,31 @@ namespace Xamarin.Test {
 
 		public abstract int SomeInteger {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeInteger' and count(parameter)=0]"
+			[global::Java.Interop.JniMethodSignature ("getSomeInteger", "()I")]
 			get; 
 
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeInteger' and count(parameter)=1 and parameter[1][@type='int']]"
+			[global::Java.Interop.JniMethodSignature ("setSomeInteger", "(I)V")]
 			set; 
 		}
 
 		public abstract global::Java.Lang.Object SomeObjectProperty {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeObjectProperty' and count(parameter)=0]"
+			[global::Java.Interop.JniMethodSignature ("getSomeObjectProperty", "()Ljava/lang/Object;")]
 			get; 
 
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeObjectProperty' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
+			[global::Java.Interop.JniMethodSignature ("setSomeObjectProperty", "(Ljava/lang/Object;)V")]
 			set; 
 		}
 
 		public abstract string SomeString {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeString' and count(parameter)=0]"
+			[global::Java.Interop.JniMethodSignature ("getSomeString", "()Ljava/lang/String;")]
 			get; 
 
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeString' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+			[global::Java.Interop.JniMethodSignature ("setSomeString", "(Ljava/lang/String;)V")]
 			set; 
 		}
 

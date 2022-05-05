@@ -32,6 +32,9 @@ TESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop.Tools.Generator-Tests.dll \
 	bin/Test$(CONFIGURATION)/Xamarin.SourceWriter-Tests.dll
 
+NET_TESTS = \
+	bin/Test$(CONFIGURATION)-net6.0/Java.Base-Tests.dll
+
 PTESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll
 
@@ -44,6 +47,7 @@ run-all-tests:
 	r=0; \
 	$(MAKE) run-tests                 || r=1 ; \
 	$(MAKE) run-test-jnimarshal       || r=1 ; \
+	$(MAKE) run-net-tests             || r=1 ; \
 	$(MAKE) run-ptests                || r=1 ; \
 	$(MAKE) run-java-source-utils-tests     || r=1 ; \
 	exit $$r;
@@ -121,6 +125,11 @@ endef
 run-tests: $(TESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	r=0; \
 	$(foreach t,$(TESTS), $(call RUN_TEST,$(t),1)) \
+	exit $$r;
+
+run-net-tests: $(NET_TESTS) bin/Test$(CONFIGURATION)-net6.0/$(JAVA_INTEROP_LIB)
+	r=0; \
+	$(foreach t,$(NET_TESTS), dotnet test $(t) || r=1) \
 	exit $$r;
 
 run-ptests: $(PTESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)

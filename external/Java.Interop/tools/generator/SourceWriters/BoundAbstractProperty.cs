@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using MonoDroid.Generation;
@@ -46,9 +47,9 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
 
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.GetConnectorNameFull (opt), additionalProperties: property.Getter.AdditionalAttributeString ()));
-			}
+			GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.GetConnectorNameFull (opt), additionalProperties: property.Getter.AdditionalAttributeString ()) {
+				MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Method,
+			});
 
 			SourceWriterExtensions.AddMethodCustomAttributes (GetterAttributes, property.Getter);
 
@@ -61,9 +62,9 @@ namespace generator.SourceWriters
 				SourceWriterExtensions.AddSupportedOSPlatform (SetterAttributes, property.Setter, opt);
 
 				SourceWriterExtensions.AddMethodCustomAttributes (SetterAttributes, property.Setter);
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, property.Setter.GetConnectorNameFull (opt), additionalProperties: property.Setter.AdditionalAttributeString ()));
-				}
+				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, property.Setter.GetConnectorNameFull (opt), additionalProperties: property.Setter.AdditionalAttributeString ()) {
+					MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Method,
+				});
 			}
 		}
 

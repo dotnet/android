@@ -39,6 +39,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='FilterOutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='int']]"
+		[global::Java.Interop.JniMethodSignature ("write", "(I)V")]
 		public override unsafe void Write (int oneByte)
 		{
 			const string __id = "write.(I)V";

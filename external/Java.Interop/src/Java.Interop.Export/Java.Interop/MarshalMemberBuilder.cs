@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 
 using Java.Interop.Expressions;
@@ -241,15 +242,6 @@ namespace Java.Interop {
 
 		static Type GetMarshalerType (Type returnType, List<Type> funcTypeParams, Type declaringType)
 		{
-			// `mscorlib.dll` & `System.Core.dll` only provide Action<…>/Func<…> types for up to 16 parameters
-			if (funcTypeParams.Count <= 16) {
-				if (returnType != null)
-					funcTypeParams.Add (returnType);
-				return returnType == null
-					? Expression.GetActionType (funcTypeParams.ToArray ())
-					: Expression.GetFuncType (funcTypeParams.ToArray ());
-			}
-
 			// Too many parameters; does a `_JniMarshal_*` type exist in the type's declaring assembly?
 			funcTypeParams.RemoveRange (0, 2);
 			var marshalDelegateName = new StringBuilder ();
@@ -265,11 +257,58 @@ namespace Java.Interop {
 			}
 
 			Type marshalDelegateType = declaringType.Assembly.GetType (marshalDelegateName.ToString (), throwOnError: false);
+			if (marshalDelegateType != null) {
+				return marshalDelegateType;
+			}
 
+#if !NET
 			// Punt?; System.Linq.Expressions will automagically produce the needed delegate type.
 			// Unfortunately, this won't work with jnimarshalmethod-gen.exe.
 			return marshalDelegateType;
+#else   // NET
+			return CreateMarshalDelegateType (marshalDelegateName.ToString (), returnType, funcTypeParams);
+#endif  // NET
 		}
+
+#if NET
+		static object           ab_lock         = new object ();
+		static AssemblyBuilder  assemblyBuilder;
+		static ModuleBuilder    moduleBuilder;
+		static Type[]           DelegateCtorSignature;
+
+		static Type CreateMarshalDelegateType (string name, Type returnType, List<Type> funcTypeParams)
+		{
+			lock (ab_lock) {
+				if (assemblyBuilder == null) {
+					var aname       = new AssemblyName ("jni-marshal-method-delegates");
+					assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly (aname, AssemblyBuilderAccess.Run);
+					moduleBuilder   = assemblyBuilder.DefineDynamicModule (aname.Name!);
+
+					DelegateCtorSignature = new Type[] {
+						typeof (object),
+						typeof (IntPtr)
+					};
+				}
+				funcTypeParams.Insert (0, typeof (IntPtr));
+				funcTypeParams.Insert (0, typeof (IntPtr));
+				var typeBuilder = moduleBuilder.DefineType (
+					name,
+					TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass,
+					typeof (MulticastDelegate)
+				);
+
+				const MethodAttributes      CtorAttributes      = MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public;
+				const MethodImplAttributes  ImplAttributes      = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
+				const MethodAttributes      InvokeAttributes    = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual;
+
+				typeBuilder.DefineConstructor (CtorAttributes, CallingConventions.Standard, DelegateCtorSignature)
+					.SetImplementationFlags (ImplAttributes);
+				typeBuilder.DefineMethod ("Invoke", InvokeAttributes, returnType, funcTypeParams.ToArray ())
+					.SetImplementationFlags (ImplAttributes);
+				return typeBuilder.CreateTypeInfo ();
+			}
+		}
+#endif  // NET
 
 		static char GetJniMarshalDelegateParameterIdentifier (Type type)
 		{

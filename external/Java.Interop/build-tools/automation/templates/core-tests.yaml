@@ -131,6 +131,15 @@ steps:
   continueOnError: true
 
 - task: DotNetCoreCLI@2
+  displayName: 'Tests: Java.Base'
+  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+  inputs:
+    command: test
+    testRunTitle: Java.Base (net6.0 - ${{ parameters.platformName }})
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Base-Tests.dll
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
   displayName: 'Tests: java-source-utils'
   inputs:
     command: build

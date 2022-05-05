@@ -8,6 +8,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='uint[]']]"
+	[global::Java.Interop.JniMethodSignature ("Echo", "([I)[I")]
 	public unsafe Java.Interop.JavaInt32Array? Echo (uint[]? value)
 	{
 		const string __id = "Echo.([I)[I";
@@ -26,6 +27,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ushort[]']]"
+	[global::Java.Interop.JniMethodSignature ("Echo", "([S)[S")]
 	public unsafe Java.Interop.JavaInt16Array? Echo (ushort[]? value)
 	{
 		const string __id = "Echo.([S)[S";
@@ -44,6 +46,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ulong[]']]"
+	[global::Java.Interop.JniMethodSignature ("Echo", "([J)[J")]
 	public unsafe Java.Interop.JavaInt64Array? Echo (ulong[]? value)
 	{
 		const string __id = "Echo.([J)[J";
@@ -62,6 +65,7 @@ public partial class MyClass {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ubyte[]']]"
+	[global::Java.Interop.JniMethodSignature ("Echo", "([B)[B")]
 	public unsafe Java.Interop.JavaSByteArray? Echo (byte[]? value)
 	{
 		const string __id = "Echo.([B)[B";

@@ -20,6 +20,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='IOException']/method[@name='printStackTrace' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("printStackTrace", "()V")]
 		public virtual unsafe void PrintStackTrace ()
 		{
 			const string __id = "printStackTrace.()V";

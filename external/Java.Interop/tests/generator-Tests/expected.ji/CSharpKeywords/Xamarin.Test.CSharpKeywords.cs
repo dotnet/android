@@ -20,6 +20,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='usePartial' and count(parameter)=1 and parameter[1][@type='int']]"
+		[global::Java.Interop.JniMethodSignature ("usePartial", "(I)Ljava/lang/String;")]
 		public virtual unsafe string UsePartial (int partial)
 		{
 			const string __id = "usePartial.(I)Ljava/lang/String;";
@@ -33,6 +34,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='useThis' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+		[global::Java.Interop.JniMethodSignature ("useThis", "(Ljava/lang/String;)Ljava/lang/String;")]
 		public static unsafe string UseThis (string this_)
 		{
 			const string __id = "useThis.(Ljava/lang/String;)Ljava/lang/String;";

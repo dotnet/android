@@ -39,7 +39,7 @@ namespace Java.Interop {
 			JniVersion  = JniVersion.v1_2;
 			ClassPath   = new Collection<string> () {
 				Path.Combine (
-					Path.GetDirectoryName (typeof (JreRuntimeOptions).Assembly.Location),
+					Path.GetDirectoryName (typeof (JreRuntimeOptions).Assembly.Location) ?? throw new NotSupportedException (),
 					"java-interop.jar"),
 			};
 		}
@@ -73,7 +73,7 @@ namespace Java.Interop {
 		static JreRuntime ()
 		{
 			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				var baseDir = Path.GetDirectoryName (typeof (JreRuntime).Assembly.Location);
+				var baseDir = Path.GetDirectoryName (typeof (JreRuntime).Assembly.Location) ?? throw new NotSupportedException ();
 				var newDir  = Path.Combine (baseDir, Environment.Is64BitProcess ? "win-x64" : "win-x86");
 				NativeMethods.AddDllDirectory (newDir);
 			}
@@ -88,6 +88,10 @@ namespace Java.Interop {
 		{
 			if (builder == null)
 				throw new ArgumentNullException ("builder");
+
+#if NET
+			builder.TypeManager     ??= new JreTypeManager ();
+#endif  // NET
 
 			bool onMono = Type.GetType ("Mono.Runtime", throwOnError: false) != null;
 			if (onMono) {
@@ -106,7 +110,7 @@ namespace Java.Interop {
 				IntPtr errorPtr = IntPtr.Zero;
 				int r = NativeMethods.java_interop_jvm_load_with_error_message (builder.JvmLibraryPath!, out errorPtr);
 				if (r != 0) {
-					string error = Marshal.PtrToStringAnsi (errorPtr);
+					string? error = Marshal.PtrToStringAnsi (errorPtr);
 					NativeMethods.java_interop_free (errorPtr);
 					throw new Exception ($"Could not load JVM path `{builder.JvmLibraryPath}`: {error} ({r})!");
 				}
@@ -151,7 +155,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public override string GetCurrentManagedThreadName ()
+		public override string? GetCurrentManagedThreadName ()
 		{
 			return Thread.CurrentThread.Name;
 		}

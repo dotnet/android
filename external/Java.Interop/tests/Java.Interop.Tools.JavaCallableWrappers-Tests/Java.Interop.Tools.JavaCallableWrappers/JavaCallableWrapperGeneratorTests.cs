@@ -439,16 +439,18 @@ public class ExportsConstructors
 	public ExportsConstructors ()
 	{
 		super ();
-		if (getClass () == ExportsConstructors.class)
+		if (getClass () == ExportsConstructors.class) {
 			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", """", this, new java.lang.Object[] {  });
+		}
 	}
 
 
 	public ExportsConstructors (int p0)
 	{
 		super (p0);
-		if (getClass () == ExportsConstructors.class)
+		if (getClass () == ExportsConstructors.class) {
 			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", """", this, new java.lang.Object[] { p0 });
+		}
 	}
 
 	private java.util.ArrayList refList;
@@ -493,24 +495,27 @@ public class ExportsThrowsConstructors
 	public ExportsThrowsConstructors () throws java.lang.Throwable
 	{
 		super ();
-		if (getClass () == ExportsThrowsConstructors.class)
+		if (getClass () == ExportsThrowsConstructors.class) {
 			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", """", this, new java.lang.Object[] {  });
+		}
 	}
 
 
 	public ExportsThrowsConstructors (int p0) throws java.lang.Throwable
 	{
 		super (p0);
-		if (getClass () == ExportsThrowsConstructors.class)
+		if (getClass () == ExportsThrowsConstructors.class) {
 			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", """", this, new java.lang.Object[] { p0 });
+		}
 	}
 
 
 	public ExportsThrowsConstructors (java.lang.String p0)
 	{
 		super (p0);
-		if (getClass () == ExportsThrowsConstructors.class)
+		if (getClass () == ExportsThrowsConstructors.class) {
 			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", """", this, new java.lang.Object[] { p0 });
+		}
 	}
 
 	private java.util.ArrayList refList;

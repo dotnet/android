@@ -63,7 +63,7 @@ namespace Java.Interop {
 			base.OnSetRuntime (runtime);
 		}
 
-		static TextWriter? CreateTextWriter (string path)
+		static TextWriter CreateTextWriter (string path)
 		{
 			return new StreamWriter (path, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
 		}
@@ -122,7 +122,7 @@ namespace Java.Interop {
 		{
 			if (grefLog == null)
 				return;
-			grefLog.WriteLine (format, args);
+			grefLog.WriteLine (format, args!);
 			grefLog.Flush ();
 		}
 

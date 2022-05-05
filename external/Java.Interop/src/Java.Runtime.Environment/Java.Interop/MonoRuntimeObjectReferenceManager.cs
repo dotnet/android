@@ -124,7 +124,7 @@ namespace Java.Interop {
 		{
 			if (!LogGlobalReferenceMessages)
 				return;
-			NativeMethods.java_interop_gc_bridge_gref_log_message (bridge, 0, string.Format (format, args));
+			NativeMethods.java_interop_gc_bridge_gref_log_message (bridge, 0, string.Format (format, args!));
 			NativeMethods.java_interop_gc_bridge_gref_log_message (bridge, 0, "\n");
 		}
 

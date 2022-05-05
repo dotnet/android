@@ -81,7 +81,7 @@ namespace Java.Interop {
 			lock (RegisteredInstances) {
 				foreach (var o in RegisteredInstances.Values) {
 					foreach (var r in o) {
-						IJavaPeerable t;
+						IJavaPeerable? t;
 						if (!r.TryGetTarget (out t))
 							continue;
 						t.Dispose ();
@@ -134,7 +134,7 @@ namespace Java.Interop {
 			}
 			int key = value.JniIdentityHashCode;
 			lock (RegisteredInstances) {
-				List<WeakReference<IJavaPeerable>> peers;
+				List<WeakReference<IJavaPeerable>>? peers;
 				if (!RegisteredInstances.TryGetValue (key, out peers)) {
 					peers = new List<WeakReference<IJavaPeerable>> () {
 						new WeakReference<IJavaPeerable>(value, trackResurrection: true),
@@ -145,7 +145,7 @@ namespace Java.Interop {
 
 				for (int i = peers.Count - 1; i >= 0; i--) {
 					var wp = peers [i];
-					IJavaPeerable   p;
+					IJavaPeerable?  p;
 					if (!wp.TryGetTarget (out p)) {
 						// Peer was collected
 						peers.RemoveAt (i);
@@ -197,13 +197,13 @@ namespace Java.Interop {
 
 			int key = value.JniIdentityHashCode;
 			lock (RegisteredInstances) {
-				List<WeakReference<IJavaPeerable>> peers;
+				List<WeakReference<IJavaPeerable>>? peers;
 				if (!RegisteredInstances.TryGetValue (key, out peers))
 					return;
 
 				for (int i = peers.Count - 1; i >= 0; i--) {
 					var wp = peers [i];
-					IJavaPeerable   p;
+					IJavaPeerable?  p;
 					if (!wp.TryGetTarget (out p)) {
 						// Peer was collected
 						peers.RemoveAt (i);
@@ -229,13 +229,13 @@ namespace Java.Interop {
 			int key = GetJniIdentityHashCode (reference);
 
 			lock (RegisteredInstances) {
-				List<WeakReference<IJavaPeerable>> peers;
+				List<WeakReference<IJavaPeerable>>? peers;
 				if (!RegisteredInstances.TryGetValue (key, out peers))
 					return null;
 
 				for (int i = peers.Count - 1; i >= 0; i--) {
 					var wp = peers [i];
-					IJavaPeerable   p;
+					IJavaPeerable?  p;
 					if (!wp.TryGetTarget (out p)) {
 						// Peer was collected
 						peers.RemoveAt (i);
@@ -269,7 +269,7 @@ namespace Java.Interop {
 						reference,
 						runtime.ValueManager.GetJniIdentityHashCode (reference).ToString ("x"),
 						JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
-						cinfo.DeclaringType.FullName);
+						cinfo.DeclaringType?.FullName);
 				Debug.WriteLine (m);
 
 				throw new NotSupportedException (m, e);

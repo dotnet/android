@@ -165,12 +165,12 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			var typeMap = GetTypeMapping (
 					t => t.IsInterface || t.HasGenericParameters,
 					JavaNativeTypeManager.ToJniName,
-					t => t.GetPartialAssemblyQualifiedName (Cache));
+					(t, c) => t.GetPartialAssemblyQualifiedName (c));
 
 			WriteBinaryMapping (output, typeMap);
 		}
 
-		Dictionary<string, string> GetTypeMapping (Func<TypeDefinition, bool> skipType, Func<TypeDefinition, string> key, Func<TypeDefinition, string> value)
+		Dictionary<string, string> GetTypeMapping (Func<TypeDefinition, bool> skipType, Func<TypeDefinition, IMetadataResolver, string> key, Func<TypeDefinition, IMetadataResolver, string> value)
 		{
 			var typeMap     = new Dictionary<string, TypeDefinition> ();
 			var aliases     = new Dictionary<string, List<string>> ();
@@ -178,7 +178,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				if (skipType (type))
 					continue;
 
-				var k = key (type);
+				var k = key (type, Cache);
 
 				TypeDefinition e;
 				if (!typeMap.TryGetValue (k, out e)) {
@@ -194,9 +194,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					List<string> a;
 					if (!aliases.TryGetValue (k, out a)) {
 						aliases.Add (k, a = new List<string> ());
-						a.Add (value (e));
+						a.Add (value (e, Cache));
 					}
-					a.Add (value (type));
+					a.Add (value (type, Cache));
 				}
 			}
 			foreach (var e in aliases.OrderBy (e => e.Key)) {
@@ -206,7 +206,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					Log (TraceLevel.Info, $"  Ignoring: {o}");
 				}
 			}
-			return typeMap.ToDictionary (e => e.Key, e => value (e.Value));
+			return typeMap.ToDictionary (e => e.Key, e => value (e.Value, Cache));
 		}
 
 		static void WriteBinaryMapping (Stream o, Dictionary<string, string> mapping)
@@ -258,7 +258,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			var typeMap = GetTypeMapping (
 					t => false,
-					t => t.GetPartialAssemblyQualifiedName (Cache),
+					(t, c) => t.GetPartialAssemblyQualifiedName (c),
 					JavaNativeTypeManager.ToJniName);
 
 			WriteBinaryMapping (output, typeMap);

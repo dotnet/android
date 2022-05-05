@@ -20,6 +20,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='BasePublicClass']/method[@name='baseMethod' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("baseMethod", "()V")]
 		public virtual unsafe void BaseMethod ()
 		{
 			const string __id = "baseMethod.()V";

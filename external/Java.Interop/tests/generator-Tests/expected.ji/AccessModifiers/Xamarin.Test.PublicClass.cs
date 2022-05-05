@@ -11,6 +11,7 @@ namespace Xamarin.Test {
 		[global::Java.Interop.JniTypeSignature ("xamarin/test/PublicClass$ProtectedInterface", GenerateJavaPeer=false)]
 		protected internal partial interface IProtectedInterface : IJavaPeerable {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='PublicClass.ProtectedInterface']/method[@name='foo' and count(parameter)=0]"
+			[global::Java.Interop.JniMethodSignature ("foo", "()V")]
 			void Foo ();
 
 		}
@@ -44,6 +45,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicClass']/method[@name='foo' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("foo", "()V")]
 		public virtual unsafe void Foo ()
 		{
 			const string __id = "foo.()V";
