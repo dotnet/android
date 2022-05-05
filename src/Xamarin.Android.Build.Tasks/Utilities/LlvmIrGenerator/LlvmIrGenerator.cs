@@ -423,11 +423,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return named;
 		}
 
-		void WriteStructureArrayEnd<T> (StructureInfo<T> info, string? symbolName, ulong count, bool named, bool skipFinalComment = false, TextWriter? output = null)
+		void WriteStructureArrayEnd<T> (StructureInfo<T> info, string? symbolName, ulong count, bool named, bool skipFinalComment = false, TextWriter? output = null, bool isArrayOfPointers = false)
 		{
 			output = EnsureOutput (output);
 
-			output.Write ($", align {GetAggregateAlignment (info.MaxFieldAlignment, info.Size * count)}");
+			int alignment = isArrayOfPointers ? PointerSize : GetAggregateAlignment (info.MaxFieldAlignment, info.Size * count);
+			output.Write ($", align {alignment}");
 			if (named && !skipFinalComment) {
 				WriteEOL ($"end of '{symbolName!}' array", output);
 			} else {
@@ -438,21 +439,21 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// <summary>
 		/// Writes an array of <paramref name="count"/> zero-initialized entries.  <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
 		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
+		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null, bool isArrayOfPointers = false)
 		{
 			bool named = WriteStructureArrayStart<T> (info, null, options, symbolName, initialComment);
+			string pointerAsterisk = isArrayOfPointers ? "*" : String.Empty;
+			Output.Write ($"[{count} x %struct.{info.Name}{pointerAsterisk}] zeroinitializer");
 
-			Output.Write ($"[{count} x %struct.{info.Name}] zeroinitializer");
-
-			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: true);
+			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: true, isArrayOfPointers: isArrayOfPointers);
 		}
 
 		/// <summary>
 		/// Writes an array of <paramref name="count"/> zero-initialized entries. The array will be generated as a local, writable symbol.
 		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
+		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null, bool isArrayOfPointers = false)
 		{
-			WriteStructureArray<T> (info, count, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
+			WriteStructureArray<T> (info, count, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment, isArrayOfPointers);
 		}
 
 		/// <summary>

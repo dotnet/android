@@ -150,6 +150,7 @@ namespace Xamarin.Android.Tasks
 		StructureInfo<XamarinAndroidBundledAssembly>? xamarinAndroidBundledAssemblyStructureInfo;
 		StructureInfo<AssemblyStoreSingleAssemblyRuntimeData> assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
 		StructureInfo<AssemblyStoreRuntimeData> assemblyStoreRuntimeDataStructureInfo;
+		StructureInfo<TypeMappingReleaseNativeAssemblyGenerator.MonoImage> monoImage;
 
 		public bool IsBundledApp { get; set; }
 		public bool UsesMonoAOT { get; set; }
@@ -305,6 +306,7 @@ namespace Xamarin.Android.Tasks
 			assemblyStoreRuntimeDataStructureInfo = generator.MapStructure<AssemblyStoreRuntimeData> ();
 			xamarinAndroidBundledAssemblyStructureInfo = generator.MapStructure<XamarinAndroidBundledAssembly> ();
 			dsoCacheEntryStructureInfo = generator.MapStructure<DSOCacheEntry> ();
+			monoImage = generator.MapStructure<TypeMappingReleaseNativeAssemblyGenerator.MonoImage> ();
 		}
 
 		protected override void Write (LlvmIrGenerator generator)
@@ -320,6 +322,30 @@ namespace Xamarin.Android.Tasks
 			WriteDSOCache (generator);
 			WriteBundledAssemblies (generator);
 			WriteAssemblyStoreAssemblies (generator);
+
+			WriteAssemblyImageCache (generator);
+		}
+
+		void WriteAssemblyImageCache (LlvmIrGenerator generator)
+		{
+			generator.WriteStructureArray (monoImage, (ulong)NumberOfAssembliesInApk, "assembly_image_cache", isArrayOfPointers: true);
+
+			if (generator.Is64Bit) {
+				WriteHashes<ulong> ();
+			} else {
+				WriteHashes<uint> ();
+			}
+
+			void WriteHashes<T> () where T: struct
+			{
+				// TODO: hash all assembly names here
+				var hashes = new List<T> ();
+				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
+					hashes.Add (default(T));
+				}
+
+				generator.WriteArray (hashes, LlvmIrVariableOptions.GlobalConstant, "assembly_image_cache_index");
+			}
 		}
 
 		void WriteAssemblyStoreAssemblies (LlvmIrGenerator generator)

@@ -875,7 +875,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 #endif
 
 #if defined (RELEASE) && defined (ANDROID)
-	xamarin_app_init (&xa_app_context);
+	//	xamarin_app_init (&xa_app_context);
 #endif // def RELEASE && def ANDROID
 }
 
@@ -2505,6 +2505,16 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		total_time_index = internal_timing->start_event (TimingEventKind::RuntimeRegister);
 	}
 
+	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
+	log_info (LOG_DEFAULT, "[TESTING] Registering managed type: '%s'", mt_ptr);
+	bool ignore = strcmp (mt_ptr, "HelloAndroid.MainActivity, HelloAndroid") == 0;
+	env->ReleaseStringUTFChars (managedType, mt_ptr);
+
+	if (ignore) {
+		log_info (LOG_DEFAULT, "[TESTING] This type's registration is ignored");
+		return;
+	}
+
 	jsize managedType_len = env->GetStringLength (managedType);
 	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
 	int methods_len = env->GetStringLength (methods);
@@ -2624,3 +2634,20 @@ JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[may
 	monodroidRuntime.propagate_uncaught_exception (domain, env, javaThread, javaException);
 #endif // ndef NET
 }
+
+#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+static void (*android_app_activity_on_create_bundle) (JNIEnv *env, jclass klass, jobject savedInstanceState) = nullptr;
+
+JNIEXPORT void
+JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv *env, jclass klass, jobject savedInstanceState)
+{
+	log_info (LOG_DEFAULT, "%s (%p, %p, %p)", __PRETTY_FUNCTION__, env, klass, savedInstanceState);
+
+	if (android_app_activity_on_create_bundle == nullptr) {
+		//		MonoImage *image = mono_load;
+	}
+
+	// TODO: obtain the function pointer for the symbol below
+	android_app_activity_on_create_bundle (env, klass, savedInstanceState);
+}
+#endif // def RELEASE && def ANDROID && def NET6

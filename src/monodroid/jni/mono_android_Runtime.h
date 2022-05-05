@@ -87,6 +87,9 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_propagateUncaughtException
 JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTimingData
   (JNIEnv *, jclass);
 
+JNIEXPORT void JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2
+  (JNIEnv *, jclass, jobject);
+
 #ifdef __cplusplus
 }
 #endif

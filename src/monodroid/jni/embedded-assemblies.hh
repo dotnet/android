@@ -29,6 +29,7 @@
 #include "strings.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
+#include "mono-image-loader.hh"
 #include "shared-constants.hh"
 #include "xxhash.hh"
 
@@ -52,8 +53,18 @@ namespace xamarin::android::internal {
 		a.data ();
 		requires std::same_as<typename T::value_type, uint8_t>;
 	};
+
+	template<typename T>
+	concept LoaderData = requires (T a) {
+		requires std::same_as<T, bool>
+#if defined (NET6)
+		|| std::same_as<T, MonoAssemblyLoadContextGCHandle>
+#endif
+		;
+	};
 #else
 #define ByteArrayContainer class
+#define LoaderData typename
 #endif
 
 	class EmbeddedAssemblies final
@@ -171,23 +182,27 @@ namespace xamarin::android::internal {
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
-#if defined (NET)
-		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, MonoError *error);
-#endif // def NET
-		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
-		MonoAssembly* individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept;
-		MonoAssembly* assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept;
-		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only);
+
+		template<LoaderData TLoaderData>
+		MonoAssembly* individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept;
+
+		template<LoaderData TLoaderData>
+		MonoAssembly* assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept;
+
+		template<LoaderData TLoaderData>
+		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, bool ref_only) noexcept;
 
 		template<bool LogMapping>
 		void map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept;
 		void map_assembly (XamarinAndroidBundledAssembly& file) noexcept;
 		void map_debug_data (XamarinAndroidBundledAssembly& file) noexcept;
+
+		template<LoaderData TLoaderData>
 		MonoAssembly* load_bundled_assembly (
 			XamarinAndroidBundledAssembly& assembly,
 			dynamic_local_string<SENSIBLE_PATH_MAX> const& name,
 			dynamic_local_string<SENSIBLE_PATH_MAX> const& abi_name,
-			std::function<MonoImage*(uint8_t*, uint32_t, const char*)> loader,
+			TLoaderData loader_data,
 			bool ref_only) noexcept;
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -279,8 +294,6 @@ namespace xamarin::android::internal {
 
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
 		static const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0) noexcept;
-		static ssize_t binary_search (hash_t key, const hash_t *arr, size_t n) noexcept;
-		static ptrdiff_t binary_search_branchless (hash_t x, const hash_t *arr, uint32_t len) noexcept;
 
 #if defined (DEBUG) || !defined (ANDROID)
 		static int compare_type_name (const char *type_name, const TypeMapEntry *entry) noexcept;

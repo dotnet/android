@@ -263,6 +263,11 @@ MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_stores[];
 
 MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
 
+#if defined (RELEASE) && defined (ANDROID)
+MONO_API MONO_API_EXPORT MonoImage* assembly_image_cache[];
+MONO_API MONO_API_EXPORT xamarin::android::hash_t assembly_image_cache_index[];
+
 MONO_API_EXPORT void xamarin_app_init ();
+#endif
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

@@ -145,9 +145,19 @@ DSOCacheEntry dso_cache[] = {
 	},
 };
 
-#if defined (RELEASE)
-void xamarin_app_init (xamarin::android::internal::AppContext *context)
+#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+MonoImage* assembly_image_cache[] = {
+	nullptr,
+	nullptr,
+
+};
+MONO_API MONO_API_EXPORT xamarin::android::hash_t assembly_image_cache_index[] = {
+	0,
+	0,
+};
+
+void xamarin_app_init ([[maybe_unused]] xamarin::android::internal::AppContext *context)
 {
 	// Dummy
 }
-#endif // def RELEASE
+#endif // def RELEASE && def ANDROID && def NET6
