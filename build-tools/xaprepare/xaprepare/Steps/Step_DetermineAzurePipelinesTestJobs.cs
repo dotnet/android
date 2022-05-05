@@ -67,11 +67,6 @@ namespace Xamarin.Android.Prepare
 					testAreas.Add ("Designer");
 				}
 
-				if (file.Contains ("external/proguard")) {
-					testAreas.Add ("MSBuild");
-					testAreas.Add ("MSBuildDevice");
-				}
-
 				if (file.Contains ("external/sqlite")) {
 					testAreas.Add ("MSBuildDevice");
 				}

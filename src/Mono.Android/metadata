@@ -1702,7 +1702,7 @@
   <!-- Rename Namespaces -->
   <attr api-since="33" path="/api/package[@name='android.os.vibrator']" name="managedName">Android.OS.Vibrators</attr>
   <attr api-since="33" path="/api/package[@name='android.app.appsearch.observer']" name="managedName">Android.App.AppSearch.Observers</attr>
-  <attr api-since="33" path="/api/package[@name='android.supplementalapi']" name="managedName">Android.SupplementalApi</attr>
+  <attr api-since="33" path="/api/package[@name='android.adservices']" name="managedName">Android.AdServices</attr>
 
   <!-- Base method is 'protected', overriding method cannot change it to 'public' -->
   <attr api-since ="33" path="/api/package[@name='android.media.tv.interactive']/class[@name='TvInteractiveAppView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
@@ -1743,4 +1743,14 @@
   <attr api-since="32" path="/api//*[contains(@merge.SourceFile,'api-Sv2.xml.in')]" name="api-since">32</attr>
   <attr api-since="33" path="/api//*[contains(@merge.SourceFile,'api-33.xml.in')]" name="api-since">33</attr>
   <attr api-since="33" path="/api//*[contains(@merge.SourceFile,'api-Tiramisu.xml.in')]" name="api-since">33</attr>
+
+  <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
+
+  <!-- These methods were moved from a base SpannableStringInternal class to the SpannableString class.
+       Because of the way 'api-merge' works, this makes them appear as 'api-since' = 29, but they have always been available.  -->
+  <attr api-since="29" path="/api/package[@name='android.text']/class[@name='SpannableString']/method[@name='charAt' and count(parameter)=1 and parameter[1][@type='int']]" name="api-since"></attr>
+  <attr api-since="29" path="/api/package[@name='android.text']/class[@name='SpannableString']/method[@name='getChars' and count(parameter)=4 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='char[]'] and parameter[4][@type='int']]" name="api-since"></attr>
+  <attr api-since="29" path="/api/package[@name='android.text']/class[@name='SpannableString']/method[@name='length' and count(parameter)=0]" name="api-since"></attr>
+  <attr api-since="29" path="/api/package[@name='android.text']/class[@name='SpannableString']/method[@name='toString' and count(parameter)=0]" name="api-since"></attr>
+
 </metadata>
