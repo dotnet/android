@@ -111,7 +111,6 @@
     <MingwZlibRootDirectory32>$(MingwZlibRootDirectory)\i686-w64-mingw32</MingwZlibRootDirectory32>
     <MingwZlibRootDirectory64>$(MingwZlibRootDirectory)\x86_64-w64-mingw32</MingwZlibRootDirectory64>
     <MingwZlibLibraryName>libz.a</MingwZlibLibraryName>
-    <ProGuardSourceDirectory Condition=" '$(ProGuardSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\proguard</ProGuardSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
     <ThirdPartySourcePath>$(MSBuildThisFileDirectory)src-ThirdParty\</ThirdPartySourcePath>
@@ -169,7 +168,6 @@
     <LinkerSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LinkerSourceDirectory)'))</LinkerSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
     <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
-    <ProGuardSourceFullPath>$([System.IO.Path]::GetFullPath ('$(ProGuardSourceDirectory)'))</ProGuardSourceFullPath>
   </PropertyGroup>
   <PropertyGroup>
     <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools\</AdbToolPath>
