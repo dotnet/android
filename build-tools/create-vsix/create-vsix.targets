@@ -72,13 +72,13 @@
     <ReplaceFileContents
         SourceFile="Xamarin.Android.Sdk.pkgdef.in"
         DestinationFile="Xamarin.Android.Sdk.pkgdef"
-        Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(XAVersionCommitCount);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch);@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@PROGUARD_COMMIT@=$(_BuildInfo_ProguardCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
+        Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(XAVersionCommitCount);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch);@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
     </ReplaceFileContents>
 
     <ReplaceFileContents
         SourceFile="VSPackage.resx.in"
         DestinationFile="VSPackage.resx"
-        Replacements="@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@PROGUARD_COMMIT@=$(_BuildInfo_ProguardCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
+        Replacements="@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
     </ReplaceFileContents>
   </Target>
   <Target Name="_GetVsixPath"
