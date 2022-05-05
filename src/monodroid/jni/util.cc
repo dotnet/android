@@ -21,6 +21,7 @@
 
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/class.h>
 
 #include "java-interop-util.h"
 

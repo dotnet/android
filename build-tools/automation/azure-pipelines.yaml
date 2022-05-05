@@ -53,8 +53,9 @@ variables:
   value: $[and(ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
 - name: RunAllTests
   value: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
+  # XamarinBuildDownload disabled, due to: https://github.com/dotnet/runtime/issues/68734
 - name: DotNetNUnitCategories
-  value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger & TestCategory != SystemApplication'
+  value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger & TestCategory != SystemApplication & TestCategory != XamarinBuildDownload'
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - group: AzureDevOps-Artifact-Feeds-Pats
   - group: DotNet-MSRC-Storage
@@ -697,6 +698,8 @@ stages:
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
+        # TODO: disable LLVM test, see: https://github.com/dotnet/runtime/issues/68914
+        condition: false
         configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
@@ -1434,7 +1437,9 @@ stages:
         packagesToPush: $(Build.StagingDirectory)\nuget-signed\*.nupkg
         nuGetFeedType: external
         publishFeedCredentials: $(DotNetFeedCredential)
-      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+      condition: false
+      # NET7TODO: Enable once we have access to the dnceng-dotnet7 feed.
+      #condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
     - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
       parameters:

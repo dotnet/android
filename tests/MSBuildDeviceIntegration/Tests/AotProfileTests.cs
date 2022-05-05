@@ -7,6 +7,9 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[Category ("UsesDevice"), Category ("AOT"), Category ("ProfiledAOT"), Category ("Node-3")]
+	// TODO: either we get .NET 7 support for https://github.com/dotnet/runtime/issues/56989
+	// Or update for .NET 7: https://github.com/jonathanpeppers/Mono.Profiler.Android
+	[Category ("DotNetIgnore")]
 	public class AotProfileTests : DeviceTest
 	{
 

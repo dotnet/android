@@ -2,7 +2,7 @@
 # We prefer this over the UseDotNet task so that we can always clean up old/unstable versions on disk.
 
 parameters:
-  version: $(DotNet6Version)
+  version: $(DotNetSdkVersion)
   remove_dotnet: false
 
 steps:

@@ -296,7 +296,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("XamarinBuildDownload")]
 		public void BuildAMassiveApp ()
 		{
 			var testPath = Path.Combine ("temp", "BuildAMassiveApp");

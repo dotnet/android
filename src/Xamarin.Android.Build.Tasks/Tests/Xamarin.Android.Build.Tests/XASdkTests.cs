@@ -227,6 +227,16 @@ namespace Xamarin.Android.Build.Tests
 				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
+			new object[] {
+				"net7.0",
+				"android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+			new object[] {
+				"net7.0",
+				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
 		};
 
 		[Test]
@@ -241,7 +251,11 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo { }",
 					}
-				}
+				},
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 			if (IsPreviewFrameworkVersion (targetFramework)) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
@@ -702,18 +716,24 @@ namespace Xamarin.Android.Build.Tests
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 			new object[] {
-				"net6.0",
+				"net7.0",
+				"android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+
+			new object[] {
+				"net7.0",
 				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 
 			new object[] {
-				"net6.0",
+				"net7.0",
 				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}.0",
 				XABuildConfig.AndroidLatestStableApiLevel,
 			},
 			new object[] {
-				"net6.0",
+				"net7.0",
 				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}.0",
 				XABuildConfig.AndroidLatestUnstableApiLevel,
 			},
@@ -739,7 +759,11 @@ namespace Xamarin.Android.Build.Tests
 			const string runtimeIdentifier = "android-arm";
 			var proj = new XASdkProject {
 				TargetFramework = targetFramework,
-				IsRelease = isRelease
+				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
@@ -755,14 +779,16 @@ namespace Xamarin.Android.Build.Tests
 				dotnet.AssertHasNoWarnings ();
 			}
 
-			var refDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
-			var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
-			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
+			if (dotnetVersion != "net6.0") {
+				var refDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
+				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
+				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
 
-			var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
-			var runtimeDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Runtime.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
-			var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", dotnetVersion, "Mono.Android.dll");
-			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
+				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
+				var runtimeDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Runtime.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
+				var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", dotnetVersion, "Mono.Android.dll");
+				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
+			}
 
 			var publishDirectory = Path.Combine (FullProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
 			var apk = Path.Combine (publishDirectory, $"{proj.PackageName}.apk");
@@ -819,7 +845,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void XamarinLegacySdk ([Values ("net6.0")] string dotnetVersion)
+		public void XamarinLegacySdk ([Values ("net6.0", "net7.0")] string dotnetVersion)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha4",
@@ -827,7 +853,11 @@ namespace Xamarin.Android.Build.Tests
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 					}
-				}
+				},
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 
 			using var b = new Builder ();
@@ -857,6 +887,10 @@ namespace Xamarin.Android.Build.Tests
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
