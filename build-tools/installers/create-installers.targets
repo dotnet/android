@@ -241,8 +241,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\MULTIDEX_JAR_LICENSE" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\lib\proguard.jar"/>
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\license.md" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\lib\proguard.jar"  ExcludeFromAndroidNETSdk="true"/>
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\license.md"        ExcludeFromAndroidNETSdk="true"/>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\startup.aotprofile" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\startup-xf.aotprofile" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\r8.jar" />
@@ -320,7 +320,7 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libZipSharpNative.pdb" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libZipSharpNative.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libZipSharpNative.pdb" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\binutils\aarch64-linux-android-as.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\binutils\aarch64-linux-android-ld.exe" />
@@ -385,7 +385,7 @@
     <!-- A second libMono.Unix.{dylib,so} is needed for libZipSharp.dll to load -->
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libMono.Unix.so" />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libMono.Unix.dylib" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\proguard\bin\proguard.sh" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\proguard\bin\proguard.sh"  ExcludeFromAndroidNETSdk="true" />
   </ItemGroup>
   <!-- Allow us to exclude mono bundle files for PR builds -->
   <ItemGroup Condition="'$(IncludeMonoBundleComponents)' == 'True'">
