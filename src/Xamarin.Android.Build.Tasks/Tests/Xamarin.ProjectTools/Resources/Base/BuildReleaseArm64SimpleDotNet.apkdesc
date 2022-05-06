@@ -5,40 +5,40 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 54979
+      "Size": 54983
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 88930
+      "Size": 88910
     },
     "assemblies/rc.bin": {
       "Size": 1083
     },
     "assemblies/System.Linq.dll": {
-      "Size": 10111
+      "Size": 9965
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 537771
+      "Size": 514908
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2415
+      "Size": 2408
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3553
+      "Size": 3552
     },
     "classes.dex": {
       "Size": 347336
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 382272
+      "Size": 383056
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 4693664
+      "Size": 4666544
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 767264
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 88288
+      "Size": 90168
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 146816
@@ -80,5 +80,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2987924
+  "PackageSize": 2959252
 }

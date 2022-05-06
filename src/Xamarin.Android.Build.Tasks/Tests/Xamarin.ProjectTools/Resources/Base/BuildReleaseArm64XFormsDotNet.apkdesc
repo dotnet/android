@@ -8,13 +8,13 @@
       "Size": 7114
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 61933
+      "Size": 61928
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 445196
+      "Size": 445108
     },
     "assemblies/mscorlib.dll": {
-      "Size": 3892
+      "Size": 3884
     },
     "assemblies/netstandard.dll": {
       "Size": 5603
@@ -23,103 +23,103 @@
       "Size": 1083
     },
     "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 11440
+      "Size": 10774
     },
     "assemblies/System.Collections.dll": {
-      "Size": 16972
+      "Size": 16148
     },
     "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 8518
+      "Size": 7926
     },
     "assemblies/System.ComponentModel.dll": {
-      "Size": 2018
+      "Size": 2009
     },
     "assemblies/System.ComponentModel.Primitives.dll": {
-      "Size": 2729
+      "Size": 2624
     },
     "assemblies/System.ComponentModel.TypeConverter.dll": {
-      "Size": 6183
+      "Size": 6097
     },
     "assemblies/System.Console.dll": {
-      "Size": 6955
+      "Size": 6575
     },
     "assemblies/System.Core.dll": {
-      "Size": 2059
+      "Size": 2052
     },
     "assemblies/System.Diagnostics.TraceSource.dll": {
-      "Size": 6939
+      "Size": 6572
     },
     "assemblies/System.dll": {
-      "Size": 2415
+      "Size": 2408
     },
     "assemblies/System.Drawing.dll": {
-      "Size": 2097
+      "Size": 2090
     },
     "assemblies/System.Drawing.Primitives.dll": {
-      "Size": 12257
+      "Size": 12121
     },
     "assemblies/System.IO.Compression.dll": {
-      "Size": 17346
+      "Size": 16637
     },
     "assemblies/System.IO.IsolatedStorage.dll": {
-      "Size": 10469
+      "Size": 10043
     },
     "assemblies/System.Linq.dll": {
-      "Size": 19935
+      "Size": 19774
     },
     "assemblies/System.Linq.Expressions.dll": {
-      "Size": 182164
+      "Size": 177472
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 66181
+      "Size": 65481
     },
     "assemblies/System.Net.Primitives.dll": {
-      "Size": 22518
+      "Size": 22196
     },
     "assemblies/System.Net.Requests.dll": {
-      "Size": 3664
+      "Size": 3656
     },
     "assemblies/System.ObjectModel.dll": {
-      "Size": 9137
+      "Size": 8537
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 778570
+      "Size": 752607
     },
     "assemblies/System.Private.DataContractSerialization.dll": {
-      "Size": 192732
+      "Size": 185319
     },
     "assemblies/System.Private.Uri.dll": {
-      "Size": 43511
+      "Size": 42813
     },
     "assemblies/System.Private.Xml.dll": {
-      "Size": 222925
+      "Size": 216413
     },
     "assemblies/System.Private.Xml.Linq.dll": {
-      "Size": 17268
+      "Size": 16687
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2605
+      "Size": 2601
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 2024
+      "Size": 2019
     },
     "assemblies/System.Runtime.Serialization.Formatters.dll": {
-      "Size": 2672
+      "Size": 2548
     },
     "assemblies/System.Runtime.Serialization.Primitives.dll": {
-      "Size": 3988
+      "Size": 3827
     },
     "assemblies/System.Security.Cryptography.dll": {
-      "Size": 8048
+      "Size": 7788
     },
     "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 206070
+      "Size": 157341
     },
     "assemblies/System.Xml.dll": {
-      "Size": 1914
+      "Size": 1907
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 117242
+      "Size": 117240
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5942
@@ -191,16 +191,16 @@
       "Size": 3460008
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 382272
+      "Size": 383056
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 4693664
+      "Size": 4666544
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 767264
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 88288
+      "Size": 90168
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 146816
@@ -1961,5 +1961,5 @@
       "Size": 341228
     }
   },
-  "PackageSize": 8360269
+  "PackageSize": 8249677
 }
