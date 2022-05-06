@@ -19,7 +19,7 @@
       <_RefAsmDirs Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
     </ItemGroup>
     <PropertyGroup>
-      <_JcwGen>"$(ToolOutputFullPath)/jcw-gen.dll"</_JcwGen>
+      <_JcwGen>"$(UtilityOutputFullPath)/jcw-gen.dll"</_JcwGen>
       <_Target>--codegen-target JavaInterop1</_Target>
       <_Output>-o "$(IntermediateOutputPath)/java"</_Output>
       <_Libpath>@(_RefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
