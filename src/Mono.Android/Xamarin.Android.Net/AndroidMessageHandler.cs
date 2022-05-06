@@ -582,12 +582,12 @@ namespace Xamarin.Android.Net
 					}
 				}
 
+				CopyHeaders (httpConnection, ret);
+				ParseCookies (ret, connectionUri);
+
 				if (disposeRet) {
 					ret.Dispose ();
 					ret = null!;
-				} else {
-					CopyHeaders (httpConnection, ret);
-					ParseCookies (ret, connectionUri);
 				}
 
 				// We don't want to pass the authorization header onto the next location
