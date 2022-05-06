@@ -267,7 +267,8 @@ EmbeddedAssemblies::load_bundled_assembly (
 
 	MonoImageOpenStatus status;
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
-	if (a == nullptr) {
+	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
 		return nullptr;
 	}
 
@@ -442,7 +443,8 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 
 	MonoImageOpenStatus status;
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
-	if (a == nullptr) {
+	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
 		return nullptr;
 	}
 
@@ -454,7 +456,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 
 template<LoaderData TLoaderData>
 force_inline MonoAssembly*
-EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, bool ref_only) noexcept
+EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, bool ref_only) noexcept
 {
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
@@ -484,7 +486,8 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData load
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data, MonoError *error)
 {
-	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error);
+	constexpr bool ref_only = false;
+	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error, ref_only);
 }
 #else // def NET
 
@@ -496,7 +499,7 @@ EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_
 {
 	constexpr bool ref_only = false;
 
-	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, ref_only);
+	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
 #endif // ndef NET
 
@@ -505,7 +508,7 @@ EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unu
 {
 	constexpr bool ref_only = false;
 
-	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, ref_only);
+	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
 
 void

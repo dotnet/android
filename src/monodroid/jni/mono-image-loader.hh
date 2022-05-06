@@ -46,16 +46,17 @@ namespace xamarin::android::internal {
 #if defined (NET6)
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, MonoAssemblyLoadContextGCHandle alc_gchandle, hash_t name_hash, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
+			MonoImageOpenStatus status;
 			MonoImage *image = mono_image_open_from_data_alc (
 				alc_gchandle,
 				reinterpret_cast<char*>(assembly_data),
 				assembly_data_size,
 				0 /* need_copy */,
-				nullptr /* status */,
+				&status,
 				name.get ()
 			);
 
-			return stash_and_return (image, name_hash);
+			return stash_and_return (image, status, name_hash);
 		}
 
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, MonoAssemblyLoadContextGCHandle alc_gchandle, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
@@ -66,16 +67,17 @@ namespace xamarin::android::internal {
 
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, bool ref_only, hash_t name_hash, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
+			MonoImageOpenStatus status;
 			MonoImage *image = mono_image_open_from_data_with_name (
 				reinterpret_cast<char*>(assembly_data),
 				assembly_data_size,
 				0,
-				nullptr,
+				&status,
 				ref_only,
 				name.get ()
 			);
 
-			return stash_and_return (image, name_hash);
+			return stash_and_return (image, status, name_hash);
 		}
 
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, bool ref_only, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
@@ -93,8 +95,13 @@ namespace xamarin::android::internal {
 #endif // def RELEASE && def ANDROID
 		}
 
-		force_inline static MonoImage* stash_and_return (MonoImage *image, [[maybe_unused]] hash_t hash) noexcept
+		force_inline static MonoImage* stash_and_return (MonoImage *image, MonoImageOpenStatus status, [[maybe_unused]] hash_t hash) noexcept
 		{
+			if (image == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+				log_warn (LOG_ASSEMBLY, "Failed to open assembly image for '%s'. %s", mono_image_strerror (status));
+				return nullptr;
+			}
+
 #if defined (RELEASE) && defined (ANDROID) && defined (NET6)
 			ssize_t index = find_index (hash);
 			if (index < 0) {

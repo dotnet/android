@@ -190,7 +190,7 @@ namespace xamarin::android::internal {
 		MonoAssembly* assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept;
 
 		template<LoaderData TLoaderData>
-		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, bool ref_only) noexcept;
+		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, MonoError *error, bool ref_only) noexcept;
 
 		template<bool LogMapping>
 		void map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept;
