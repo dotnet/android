@@ -225,6 +225,63 @@ The format is meant to make it easier for scripts/other software which
 look at the log to find timing events without having to rely on the
 actual wording of the event message.
 
+#### Reading the timing information
+
+`timing` and `timing=bare` modes write all the event messages to
+`logcat` immediately, so it is sufficient to either watch the `logcat`
+buffer in real time:
+
+```
+adb logcat
+```
+
+or dump the buffer it after the timing sequence is entirely recorded:
+
+```
+adb logcat -d > logcat.txt
+```
+
+The `timing=fast-bare` mode is slightly more involved in that in
+requires the broadcast to be sent before data is logged in `logcat`.
+The following sequence of commands can be placed in a script and used
+to obtain the information:
+
+```shell
+# Enable only timing log messages, to minimize impact on application
+# performance
+$ adb shell setprop debug.mono.log timing=fast-bare
+
+# Build and install the application
+$ dotnet build -t:Install -p:Configuration=Release
+
+# Increase logcat buffer size so that we don't miss any messages
+$ adb logcat -G 16M
+
+# Clear logcat buffer
+$ adb logcat -c
+
+# Start the activity and wait for the startup process to finish. This
+# is marked by Android by logging the `Displayed` message in logcat,
+# formatted similarly to:
+#
+#  ActivityTaskManager: Displayed PACKAGE_NAME/ACTIVITY_NAME: +398ms
+#
+$ adb shell am start -n PACKAGE_NAME/ACTIVITY_NAME -S -W
+
+# Tell the timing infrastructure to log all the gathered events to
+# logcat:
+$ adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA PACKAGE_NAME
+
+# Dump logcat contents into a file
+adb logcat -d > logcat.txt
+```
+
+Technically, the broadcast can be sent to all applications running on
+the device, but in event there are more Xamarin.Android applications
+which happen to have timing enabled, the output could be confusing so
+it's better to send the broadcast to a specific application/package
+only.
+
 ### debug.mono.max_grefc
 
 If set, override the number of maximum global references.  The number
