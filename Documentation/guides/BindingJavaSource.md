@@ -89,7 +89,7 @@ public class MainActivity : Activity {
 
 # Limitations
 
-This feature is only available in .net 6.
+This feature is only available in .NET 7.
 
 You will be limited to standard java types and any types that
 are available in a .jar or .aar which you reference.
