@@ -11,7 +11,7 @@ var xml     = xmlTree.ToString ();
 
 Console.WriteLine (xml);
 
-var x = MamXmlParser.Parse (xml);
+var x = MamXmlParser.ParseStructured (xml);
 
 if (x.ReplacementTypes.Count != mam.ReplacementTypes.Count) {
 	Console.WriteLine ("missing types!");

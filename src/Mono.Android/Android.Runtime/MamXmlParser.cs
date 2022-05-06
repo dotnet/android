@@ -9,8 +9,9 @@ using System.Globalization;
 using System.IO;
 using System.Xml;
 
-using ReplacementTypesDict      = System.Collections.Generic.Dictionary<string, string>;
-using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<
+using ReplacementTypesDict              = System.Collections.Generic.Dictionary<string, string>;
+using ReplacementMethodsDictStrings     = System.Collections.Generic.Dictionary<string, string>;
+using ReplacementMethodsDictStructured  = System.Collections.Generic.Dictionary<
 	(string SourceType, string SourceName, string? SourceSignature),
 	(string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool IsStatic)
 >;
@@ -19,10 +20,33 @@ namespace Android.Runtime {
 
 	class MamXmlParser {
 
-		public static (ReplacementTypesDict ReplacementTypes, ReplacementMethodsDict ReplacementMethods) Parse (string xml)
+		// https://www.unicode.org/reports/tr15/tr15-18.html#Programming%20Language%20Identifiers
+		//  <identifier> ::= <identifier_start> ( <identifier_start> | <identifier_extend> )*
+		//  <identifier_start> ::= [{Lu}{Ll}{Lt}{Lm}{Lo}{Nl}]
+		//  <identifier_extend> ::= [{Mn}{Mc}{Nd}{Pc}{Cf}]
+		//
+		// Categories which can't be part of an identifier: Cc, Me, No, Pd, Pe, Pf, Pi, Po, Ps, Sc, Sk, Sm, So, Zl, Zp, Zs
+		//
+		// Use `\t` U+0009, Category=Cc, to separate out items in ReplacementMethodsDictStrings
+
+		public static (ReplacementTypesDict ReplacementTypes, ReplacementMethodsDictStrings ReplacementMethods) ParseStrings (string xml)
+		{
+			var (types, methodsStructured) = ParseStructured (xml);
+
+			var methodsStrings  = new ReplacementMethodsDictStrings ();
+			foreach (var e in methodsStructured) {
+				var key     = $"{e.Key.SourceType}\t{e.Key.SourceName}\t{e.Key.SourceSignature}";
+				var value   = $"{e.Value.TargetType}\t{e.Value.TargetName}\t{e.Value.TargetSignature}\t{e.Value.ParamCount?.ToString () ?? ""}\t{(e.Value.IsStatic ? "true" : "false")}";
+				methodsStrings [key] = value;
+			}
+
+			return (types, methodsStrings);
+		}
+
+		public static (ReplacementTypesDict ReplacementTypes, ReplacementMethodsDictStructured ReplacementMethods) ParseStructured (string xml)
 		{
 			var replacementTypes    = new ReplacementTypesDict ();
-			var replacementMethods  = new ReplacementMethodsDict ();
+			var replacementMethods  = new ReplacementMethodsDictStructured ();
 
 			using var t             = new StringReader (xml);
 			using var reader        = XmlReader.Create (t, new XmlReaderSettings { XmlResolver = null });
@@ -73,7 +97,7 @@ namespace Android.Runtime {
 			replacementTypes [from] = to;
 		}
 
-		static void ParseReplaceMethodAttributes (ReplacementMethodsDict replacementMethods, XmlReader reader)
+		static void ParseReplaceMethodAttributes (ReplacementMethodsDictStructured replacementMethods, XmlReader reader)
 		{
 			// <replace-method
 			//     source-type="jni-simple-type"

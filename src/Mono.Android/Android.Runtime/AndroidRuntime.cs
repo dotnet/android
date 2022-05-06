@@ -260,9 +260,6 @@ namespace Android.Runtime {
 				yield return t;
 		}
 
-#if NET
-		[RequiresPreviewFeatures]
-#endif  // NET
 		protected override string? GetSimpleReference (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
@@ -279,9 +276,6 @@ namespace Android.Runtime {
 			return null;
 		}
 
-#if NET
-		[RequiresPreviewFeatures]
-#endif  // NET
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
@@ -298,13 +292,11 @@ namespace Android.Runtime {
 		}
 
 #if NET
-		[RequiresPreviewFeatures]
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		{
 			return new[]{$"{jniSimpleReference}$-CC"};
 		}
 
-		[RequiresPreviewFeatures]
 		protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		{
 			if (JNIEnv.ReplacementTypes == null) {
@@ -318,13 +310,49 @@ namespace Android.Runtime {
 			return null;
 		}
 
-		[RequiresPreviewFeatures]
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		{
 			if (JNIEnv.ReplacementMethods == null) {
 				return null;
 			}
 			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: looking for replacement method for (\"{jniSourceType}\", \"{jniMethodName}\", \"{jniMethodSignature}\")");
+#if !STRUCTURED
+			if (!JNIEnv.ReplacementMethods.TryGetValue ($"{jniSourceType}\t{jniMethodName}\t{jniMethodSignature}", out var r) &&
+					!JNIEnv.ReplacementMethods.TryGetValue ($"{jniSourceType}\t{jniMethodName}\t{GetMethodSignatureWithoutReturnType ()}", out r) &&
+					!JNIEnv.ReplacementMethods.TryGetValue ($"{jniSourceType}\t{jniMethodName}\t", out r)) {
+				return null;
+			}
+			ReadOnlySpan<char> replacementInfo  = r;
+
+			var targetType      = GetNextString (ref replacementInfo);
+			var targetName      = GetNextString (ref replacementInfo);
+			var targetSig       = GetNextString (ref replacementInfo);
+			var paramCountStr   = GetNextString (ref replacementInfo);
+			var isStaticStr     = GetNextString (ref replacementInfo);
+
+			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: targetType={targetType.ToString ()}, targetName={targetName.ToString ()}, targetSig=`{targetSig.ToString()}`, paramCount={paramCountStr.ToString ()}, isStatic={isStaticStr.ToString ()}");
+
+			int paramCount      = 0;
+			if (!paramCountStr.IsEmpty &&
+					!int.TryParse (paramCountStr, 0, System.Globalization.CultureInfo.InvariantCulture, out paramCount)) {
+				return null;
+			}
+			bool isStatic       = false;
+			if (isStaticStr.Equals ("true", StringComparison.Ordinal)) {
+				isStatic        = true;
+			}
+
+			return new JniRuntime.ReplacementMethodInfo {
+					SourceJniType                   = jniSourceType,
+					SourceJniMethodName             = jniMethodName,
+					SourceJniMethodSignature        = jniMethodSignature,
+					TargetJniType                   = targetType.IsEmpty ? jniSourceType : new string (targetType),
+					TargetJniMethodName             = targetName.IsEmpty ? jniMethodName : new string (targetName),
+					TargetJniMethodSignature        = targetSig.IsEmpty ? jniMethodSignature : new string (targetSig),
+					TargetJniMethodParameterCount   = paramCount,
+					TargetJniMethodInstanceToStatic = isStatic,
+			};
+#else
 			if (!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, jniMethodSignature), out var r) &&
 					!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, GetMethodSignatureWithoutReturnType ()), out r) &&
 					!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, null), out r)) {
@@ -349,6 +377,7 @@ namespace Android.Runtime {
 					TargetJniMethodParameterCount   = paramCount,
 					TargetJniMethodInstanceToStatic = r.TurnStatic,
 			};
+#endif  // !STRUCTURED
 
 			string GetMethodSignatureWithoutReturnType ()
 			{
@@ -359,6 +388,19 @@ namespace Android.Runtime {
 			string GetValue (string? value)
 			{
 				return value == null ? "null" : $"\"{value}\"";
+			}
+
+			ReadOnlySpan<char> GetNextString (ref ReadOnlySpan<char> info)
+			{
+				int index = info.IndexOf ('\t');
+				var r     = info;
+				if (index >= 0) {
+					r       = info.Slice (0, index);
+					info    = info.Slice (index+1);
+					return r;
+				}
+				info = default;
+				return r;
 			}
 		}
 #endif  // NET
