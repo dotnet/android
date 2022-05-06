@@ -233,12 +233,12 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				"net6.0",
 				"android",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				31,
 			},
 			new object[] {
 				"net6.0",
-				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				"android31",
+				31,
 			},
 			new object[] {
 				"net7.0",

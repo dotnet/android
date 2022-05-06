@@ -23,32 +23,43 @@ namespace Xamarin.Android.Build.Tests
 				/* isRelease */      false,
 				/* xamarinForms */   false,
 				/* publishTrimmed */ default (bool?),
+				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   false,
 				/* publishTrimmed */ default (bool?),
+				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
 				/* isRelease */      false,
 				/* xamarinForms */   true,
 				/* publishTrimmed */ default (bool?),
+				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   true,
 				/* publishTrimmed */ default (bool?),
+				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   false,
 				/* publishTrimmed */ false,
+				/* targetFramework*/ "net7.0-android",
+			},
+			new object[] {
+				/* isRelease */      true,
+				/* xamarinForms */   true,
+				/* publishTrimmed */ true,
+				/* targetFramework*/ "net6.0-android",
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (DotNetInstallAndRunSource))]
-		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, bool? publishTrimmed)
+		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, bool? publishTrimmed, string targetFramework)
 		{
 			AssertHasDevices ();
 
@@ -62,6 +73,7 @@ namespace Xamarin.Android.Build.Tests
 					IsRelease = isRelease
 				};
 			}
+			proj.TargetFramework = targetFramework;
 			if (publishTrimmed != null) {
 				proj.SetProperty (KnownProperties.PublishTrimmed, publishTrimmed.ToString ());
 			}
@@ -137,12 +149,13 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("Debugger"), Category ("Node-4")]
-		public void DotNetDebug ()
+		public void DotNetDebug ([Values("net6.0-android", "net7.0-android")] string targetFramework)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			var proj = new XASdkProject ();
+			proj.TargetFramework = targetFramework;
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 

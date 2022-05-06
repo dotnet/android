@@ -28,18 +28,24 @@ about the various Microsoft.Android workloads.
       DependsOnTargets="_GetDefaultPackageVersion;_GetLicense">
     <PropertyGroup>
       <WorkloadManifestJsonPath>$(OutputPath)workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
+      <WorkloadManifestTargetsPath>$(OutputPath)workload-manifest\WorkloadManifest.targets</WorkloadManifestTargetsPath>
     </PropertyGroup>
 
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName ($(WorkloadManifestJsonPath)))" />
+    <MakeDir Directories="$(OutputPath)workload-manifest" />
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.json"
         DestinationFile="$(WorkloadManifestJsonPath)"
-        Replacements="@WORKLOAD_VERSION@=$(AndroidPackVersionLong)">
+        Replacements="@WORKLOAD_VERSION@=$(AndroidPackVersionLong);@NET6_VERSION@=$(AndroidNet6Version)">
+    </ReplaceFileContents>
+    <ReplaceFileContents
+        SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.targets"
+        DestinationFile="$(WorkloadManifestTargetsPath)"
+        Replacements="@NET6_VERSION@=$(AndroidNet6Version)">
     </ReplaceFileContents>
 
     <ItemGroup>
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.targets" PackagePath="data" />
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
+      <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="data" />
     </ItemGroup>
   </Target>
 
