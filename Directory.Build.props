@@ -26,6 +26,9 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>32.0.301</AndroidPackVersion>
+    <AndroidPackVersionPatchIndex>$(AndroidPackVersion.LastIndexOf("."))</AndroidPackVersionPatchIndex>
+    <AndroidPackVersionMajorMinor>$(AndroidPackVersion.Substring(0,$(AndroidPackVersionPatchIndex)))</AndroidPackVersionMajorMinor>
+    <AndroidPackVersionPatch>$(AndroidPackVersion.Substring($([MSBuild]::Add($(AndroidPackVersionPatchIndex), 1))))</AndroidPackVersionPatch>
     <AndroidPackVersionSuffix>rtm</AndroidPackVersionSuffix>
   </PropertyGroup>
 
