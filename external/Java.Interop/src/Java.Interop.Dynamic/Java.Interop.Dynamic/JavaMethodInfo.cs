@@ -15,7 +15,7 @@ namespace Java.Interop.Dynamic {
 
 	class JavaMethodInfo : JavaMethodBase {
 
-		public  JniType         ReturnType;
+		public  JniType?        ReturnType;
 
 		string  name;
 		bool    isStatic;
@@ -56,16 +56,16 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		public override unsafe object Invoke (IJavaPeerable self, JniArgumentValue* arguments)
+		public override unsafe object? Invoke (IJavaPeerable? self, JniArgumentValue* arguments)
 		{
 			AssertSelf (self);
 
 			if (IsStatic)
 				return InvokeStaticMethod (arguments);
-			return InvokeInstanceMethod (self, arguments);
+			return InvokeInstanceMethod (self!, arguments);
 		}
 
-		void AssertSelf (IJavaPeerable self)
+		void AssertSelf (IJavaPeerable? self)
 		{
 			if (IsStatic && self != null)
 				throw new ArgumentException (
@@ -77,10 +77,10 @@ namespace Java.Interop.Dynamic {
 						"self");
 		}
 
-		unsafe object InvokeInstanceMethod (IJavaPeerable self, JniArgumentValue* arguments)
+		unsafe object? InvokeInstanceMethod (IJavaPeerable self, JniArgumentValue* arguments)
 		{
 			var e   = GetSignatureReturnTypeStartIndex ();
-			switch (JniSignature [e + 1]) {
+			switch (JniSignature?[e + 1]) {
 			case 'Z':   return members.InstanceMethods.InvokeVirtualBooleanMethod (JniSignature, self, arguments);
 			case 'B':   return members.InstanceMethods.InvokeVirtualSByteMethod (JniSignature, self, arguments);
 			case 'C':   return members.InstanceMethods.InvokeVirtualCharMethod (JniSignature, self, arguments);
@@ -97,14 +97,14 @@ namespace Java.Interop.Dynamic {
 				members.InstanceMethods.InvokeVirtualVoidMethod (JniSignature, self, arguments);
 				return null;
 			default:
-				throw new NotSupportedException ("Unsupported argument type: " + JniSignature.Substring (e + 1));
+				throw new NotSupportedException ("Unsupported argument type: " + JniSignature?.Substring (e + 1));
 			}
 		}
 
-		unsafe object InvokeStaticMethod (JniArgumentValue* arguments)
+		unsafe object? InvokeStaticMethod (JniArgumentValue* arguments)
 		{
 			var e   = GetSignatureReturnTypeStartIndex ();
-			switch (JniSignature [e + 1]) {
+			switch (JniSignature?[e + 1]) {
 			case 'Z':   return members.StaticMethods.InvokeBooleanMethod (JniSignature, arguments);
 			case 'B':   return members.StaticMethods.InvokeSByteMethod (JniSignature, arguments);
 			case 'C':   return members.StaticMethods.InvokeCharMethod (JniSignature, arguments);
@@ -121,14 +121,14 @@ namespace Java.Interop.Dynamic {
 				members.StaticMethods.InvokeVoidMethod (JniSignature, arguments);
 				return null;
 			default:
-				throw new NotSupportedException ("Unsupported argument type: " + JniSignature.Substring (e + 1));
+				throw new NotSupportedException ("Unsupported argument type: " + JniSignature?.Substring (e + 1));
 			}
 		}
 
 		protected int GetSignatureReturnTypeStartIndex ()
 		{
-			int n = JniSignature.IndexOf (')');
-			if (n == JniSignature.Length - 1)
+			int n = JniSignature?.IndexOf (')') ?? -1;
+			if (n == JniSignature?.Length - 1 || n < 0)
 				throw new NotSupportedException (
 					string.Format ("Could not determine method return type from signature '{0}'.", JniSignature));
 			return n;

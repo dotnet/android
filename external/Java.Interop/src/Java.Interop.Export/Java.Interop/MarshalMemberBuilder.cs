@@ -51,7 +51,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniNativeMethodRegistration CreateMarshalToManagedMethodRegistration (JavaCallableAttribute export, MethodInfo method, Type type = null)
+		public JniNativeMethodRegistration CreateMarshalToManagedMethodRegistration (JavaCallableAttribute export, MethodInfo method, Type? type = null)
 		{
 			if (export == null)
 				throw new ArgumentNullException ("export");
@@ -98,13 +98,13 @@ namespace Java.Interop {
 			throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
 		}
 
-		Delegate CreateJniMethodMarshaler (MethodInfo method, JavaCallableAttribute export, Type type)
+		Delegate CreateJniMethodMarshaler (MethodInfo method, JavaCallableAttribute? export, Type? type)
 		{
 			var e = CreateMarshalToManagedExpression (method, export, type);
 			return e.Compile ();
 		}
 
-		public LambdaExpression CreateMarshalToManagedExpression (MethodInfo method, JavaCallableAttribute callable, Type type = null)
+		public LambdaExpression CreateMarshalToManagedExpression (MethodInfo method, JavaCallableAttribute? callable, Type? type = null)
 		{
 			if (method == null)
 				throw new ArgumentNullException ("method");
@@ -144,7 +144,9 @@ namespace Java.Interop {
 			};
 
 			var waitForGCBridge     = typeof(JniRuntime.JniValueManager)
-				.GetRuntimeMethod (nameof (JniRuntime.JniValueManager.WaitForGCBridgeProcessing), new Type [0]);
+				.GetRuntimeMethod (nameof (JniRuntime.JniValueManager.WaitForGCBridgeProcessing), new Type [0]) ??
+				throw new NotSupportedException ("Could not find JniRuntime.JniValueManager.WaitForGCBridgeProcessing()");
+
 			var marshalBody = new List<Expression> () {
 				Expression.Assign (jvm, GetRuntime ()),
 			};
@@ -155,10 +157,10 @@ namespace Java.Interop {
 			} else
 				marshalBody.Add (Expression.Call (Expression.Property (jvm, "ValueManager"), waitForGCBridge));
 
-			Expression self = null;
+			Expression? self        = null;
 			var marshalerContext    = new JniValueMarshalerContext (jvm, useVmVariable ? vm : null);
 			if (!method.IsStatic) {
-				var selfMarshaler   = Runtime.ValueManager.GetValueMarshaler (type);
+				var selfMarshaler   = Runtime.ValueManager.GetValueMarshaler (type!);
 				self                = selfMarshaler.CreateParameterToManagedExpression (marshalerContext, context, 0, type);
 			}
 
@@ -187,7 +189,7 @@ namespace Java.Interop {
 			Expression invoke = method.IsStatic
 				? Expression.Call (method, invokeParameters)
 				: Expression.Call (self, method, invokeParameters);
-			Expression ret = null;
+			Expression? ret     = null;
 			if (method.ReturnType == typeof (void)) {
 				envpVars.AddRange (marshalerContext.LocalVariables);
 
@@ -240,7 +242,7 @@ namespace Java.Interop {
 				: Expression.Lambda (marshalerType, body, bodyParams);
 		}
 
-		static Type GetMarshalerType (Type returnType, List<Type> funcTypeParams, Type declaringType)
+		static Type? GetMarshalerType (Type? returnType, List<Type> funcTypeParams, Type? declaringType)
 		{
 			// Too many parameters; does a `_JniMarshal_*` type exist in the type's declaring assembly?
 			funcTypeParams.RemoveRange (0, 2);
@@ -256,7 +258,7 @@ namespace Java.Interop {
 				marshalDelegateName.Append (GetJniMarshalDelegateParameterIdentifier (returnType));
 			}
 
-			Type marshalDelegateType = declaringType.Assembly.GetType (marshalDelegateName.ToString (), throwOnError: false);
+			Type? marshalDelegateType = declaringType?.Assembly.GetType (marshalDelegateName.ToString (), throwOnError: false);
 			if (marshalDelegateType != null) {
 				return marshalDelegateType;
 			}
@@ -272,11 +274,11 @@ namespace Java.Interop {
 
 #if NET
 		static object           ab_lock         = new object ();
-		static AssemblyBuilder  assemblyBuilder;
-		static ModuleBuilder    moduleBuilder;
-		static Type[]           DelegateCtorSignature;
+		static AssemblyBuilder? assemblyBuilder;
+		static ModuleBuilder?   moduleBuilder;
+		static Type[]?          DelegateCtorSignature;
 
-		static Type CreateMarshalDelegateType (string name, Type returnType, List<Type> funcTypeParams)
+		static Type? CreateMarshalDelegateType (string name, Type? returnType, List<Type> funcTypeParams)
 		{
 			lock (ab_lock) {
 				if (assemblyBuilder == null) {
@@ -291,7 +293,7 @@ namespace Java.Interop {
 				}
 				funcTypeParams.Insert (0, typeof (IntPtr));
 				funcTypeParams.Insert (0, typeof (IntPtr));
-				var typeBuilder = moduleBuilder.DefineType (
+				var typeBuilder = moduleBuilder!.DefineType (
 					name,
 					TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass,
 					typeof (MulticastDelegate)
@@ -328,7 +330,7 @@ namespace Java.Interop {
 			return 'L';
 		}
 
-		void CheckMarshalTypesMatch (MethodInfo method, string signature, ParameterInfo[] methodParameters)
+		void CheckMarshalTypesMatch (MethodInfo method, string? signature, ParameterInfo[] methodParameters)
 		{
 			if (signature == null)
 				return;
@@ -379,16 +381,17 @@ namespace Java.Interop {
 					jnienv);
 		}
 
-		static  readonly    MethodInfo  JniRuntime_ExceptionShouldTransitionToJni   = typeof(JniRuntime).GetRuntimeMethod ("ExceptionShouldTransitionToJni", new[] {
-			typeof (Exception),
-		});
+		static  readonly    MethodInfo  JniRuntime_ExceptionShouldTransitionToJni   =
+			typeof(JniRuntime).GetRuntimeMethod ("ExceptionShouldTransitionToJni", new[] { typeof (Exception) }) ??
+			throw new NotSupportedException ("Could not find `JniRuntime.ExceptionShouldTransitionToJni()`");
+		static  readonly    MethodInfo  JniTransition_SetPendingException   =
+			((Action<Exception>) (new JniTransition ().SetPendingException)).Method;
 
-		static CatchBlock CreateMarshalException  (ParameterExpression envp, ParameterExpression jvm, LabelTarget exit)
+		static CatchBlock CreateMarshalException  (ParameterExpression envp, ParameterExpression jvm, LabelTarget? exit)
 		{
-			var spe     = typeof (JniTransition).GetTypeInfo ().GetDeclaredMethod ("SetPendingException");
 			var ex      = Expression.Variable (typeof (Exception), "__e");
 			var body = new List<Expression> () {
-				Expression.Call (envp, spe, ex),
+				Expression.Call (envp, JniTransition_SetPendingException, ex),
 			};
 			if (exit != null) {
 				body.Add (Expression.Return (exit, Expression.Default (exit.Type)));
@@ -397,9 +400,11 @@ namespace Java.Interop {
 			return Expression.Catch (ex, Expression.Block (body), filter);
 		}
 
+		static readonly MethodInfo JniTransition_Dispose    = ((Action) (new JniTransition ().Dispose)).Method;
+
 		static Expression CreateDisposeJniEnvironment (ParameterExpression envp, IList<Expression> cleanup)
 		{
-			var disposeTransition   = Expression.Call (envp, typeof(JniTransition).GetTypeInfo ().GetDeclaredMethod ("Dispose"));
+			var disposeTransition   = Expression.Call (envp, JniTransition_Dispose);
 			return Expression.Block (
 					cleanup.Reverse ().Concat (new[]{ disposeTransition }));;
 		}
@@ -411,19 +416,21 @@ namespace Java.Interop {
 
 		static  MethodInfo  FormatterServices_GetUninitializedObject    =
 #if NETCOREAPP
-			typeof (System.Runtime.CompilerServices.RuntimeHelpers)
+			((Func<Type, object>) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject)
 #else   // !NETCOREAPP
-			typeof (System.Runtime.Serialization.FormatterServices)
+			((Func<Type, object>) System.Runtime.Serialization.FormatterServices.GetUninitializedObject)
 #endif  // NETCOREAPP
-			.GetRuntimeMethod ("GetUninitializedObject", new[]{typeof (Type)});
-		static  MethodInfo  IJavaPeerable_SetPeerReference              = typeof (IJavaPeerable).GetRuntimeMethod ("SetPeerReference", new[]{typeof (JniObjectReference)});
+			.Method;
+		static  MethodInfo  IJavaPeerable_SetPeerReference              =
+			typeof (IJavaPeerable).GetRuntimeMethod ("SetPeerReference", new[]{typeof (JniObjectReference)}) ??
+			throw new NotSupportedException ("Could not find IJavaPeerable.SetPeerReference()!");
 
-		public override Expression<Func<ConstructorInfo, JniObjectReference, object[], object>> CreateConstructActivationPeerExpression (ConstructorInfo constructor)
+		public override Expression<Func<ConstructorInfo, JniObjectReference, object?[]?, object>> CreateConstructActivationPeerExpression (ConstructorInfo constructor)
 		{
 			if (constructor == null)
 				throw new ArgumentNullException (nameof (constructor));
 
-			Func<object, object[], object>  mbi = constructor.Invoke;
+			Func<object?, object?[]?, object?>  mbi = constructor.Invoke;
 
 			var c   = Expression.Parameter (typeof (ConstructorInfo),       "constructor");
 			var r   = Expression.Parameter (typeof (JniObjectReference),    "reference");
@@ -438,7 +445,7 @@ namespace Java.Interop {
 					Expression.Call (Expression.Convert (s, typeof (IJavaPeerable)), IJavaPeerable_SetPeerReference, r),
 					Expression.Call (c, mbi.GetMethodInfo (), s, p),
 					s);
-			return Expression.Lambda<Func<ConstructorInfo, JniObjectReference, object[], object>> (b, new []{c, r, p});
+			return Expression.Lambda<Func<ConstructorInfo, JniObjectReference, object?[]?, object>> (b, new []{c, r, p});
 		}
 
 		public static string GetMarshalMethodName (string name, string signature)
@@ -462,7 +469,7 @@ namespace Java.Interop {
 
 	static class JniSignature {
 
-		public static Type GetMarshalReturnType (string signature)
+		public static Type? GetMarshalReturnType (string signature)
 		{
 			int idx = signature.LastIndexOf (')') + 1;
 			return ExtractMarshalTypeFromSignature (signature, ref idx);
@@ -475,13 +482,13 @@ namespace Java.Interop {
 				signature = signature.Substring (1, e >= 0 ? e-1 : signature.Length-1);
 			}
 			int i = 0;
-			Type t;
+			Type? t;
 			while ((t = ExtractMarshalTypeFromSignature (signature, ref i)) != null)
 				yield return t;
 		}
 
 		// as per: http://java.sun.com/j2se/1.5.0/docs/guide/jni/spec/types.html
-		static Type ExtractMarshalTypeFromSignature (string signature, ref int index)
+		static Type? ExtractMarshalTypeFromSignature (string signature, ref int index)
 		{
 			#if false
 			if (index >= signature.Length)

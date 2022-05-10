@@ -15,11 +15,11 @@ namespace Java.Interop.Dynamic {
 
 	abstract class JniMetaObject : DynamicMetaObject
 	{
-		protected   delegate    bool    TryInvokeMember     (IJavaPeerable self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object value);
+		protected   delegate    bool    TryInvokeMember     (IJavaPeerable self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object? value);
 
-		JavaClassInfo   info;
+		JavaClassInfo?  info;
 
-		public JniMetaObject (Expression parameter, object value, JavaClassInfo info)
+		public JniMetaObject (Expression parameter, object? value, JavaClassInfo info)
 			: base (parameter, BindingRestrictions.GetInstanceRestriction (parameter, value), value)
 		{
 			this.info       = info;
@@ -35,13 +35,16 @@ namespace Java.Interop.Dynamic {
 		{
 			if (info == null || info.Disposed)
 				return new string[0];
-			return info.Fields.Keys.Concat (
-				info.Methods.Keys
+			return (((IEnumerable<string>?) info.Fields?.Keys) ?? Array.Empty<string> ()).Concat (
+				((IEnumerable<string>?) info.Methods?.Keys) ?? Array.Empty<string> ()
 			);
 		}
 
 		public override DynamicMetaObject BindConvert (ConvertBinder binder)
 		{
+			if (info == null || info.Disposed)
+				throw new ObjectDisposedException (GetType ().FullName);
+
 			var vm = JniEnvironment.Runtime;
 			if (binder.Type == typeof (Type)) {
 				var sig     = JniTypeSignature.Parse (info.JniClassName);
@@ -50,7 +53,7 @@ namespace Java.Interop.Dynamic {
 				return new DynamicMetaObject (typeE, BindingRestrictions.GetTypeRestriction (typeE, binder.Type), type);
 			}
 
-			object value;
+			object? value;
 			try {
 				var r   = ConversionTarget;
 				value   = vm.ValueManager.GetValue (ref r, JniObjectReferenceOptions.Copy, binder.Type);
@@ -64,7 +67,10 @@ namespace Java.Interop.Dynamic {
 
 		public override DynamicMetaObject BindGetMember (GetMemberBinder binder)
 		{
-			List<JavaFieldInfo> overloads = GetFields (binder.Name);
+			if (info == null || info.Disposed)
+				throw new ObjectDisposedException (GetType ().FullName);
+
+			List<JavaFieldInfo>? overloads = GetFields (binder.Name);
 			if (overloads == null)
 				return binder.FallbackGetMember (this);
 
@@ -74,18 +80,18 @@ namespace Java.Interop.Dynamic {
 
 			var field = overloads.FirstOrDefault (f => f.IsStatic == true);
 
-			Func<IJavaPeerable, object>   getValue  = field.GetValue;
+			Func<IJavaPeerable, object?>  getValue  = field.GetValue;
 
 			var e = Expression.Call (Expression.Constant (field), getValue.GetMethodInfo (), GetSelf ());
 			return new DynamicMetaObject (e, BindingRestrictions.GetInstanceRestriction (Expression, Value));
 		}
 
-		protected static Expression ThrowObjectDisposedException (Type type = null)
+		protected static Expression ThrowObjectDisposedException (Type? type = null)
 		{
 			return Expression.Throw (Expression.Constant (new ObjectDisposedException (nameof (DynamicJavaClass))), type);
 		}
 
-		List<JavaFieldInfo> GetFields (string name)
+		List<JavaFieldInfo>? GetFields (string name)
 		{
 			if (info == null || info.Fields == null)
 				return null;
@@ -111,7 +117,7 @@ namespace Java.Interop.Dynamic {
 			if (applicable.Length == 0)
 				return binder.FallbackInvokeMember (this, args);
 
-			TryInvokeMember   invoke  = info.TryInvokeMember;
+			TryInvokeMember   invoke  = info!.TryInvokeMember;
 			var value       = Expression.Parameter (typeof (object), "value");
 			var fallback    = binder.FallbackInvokeMember (this, args);
 			var call        = Expression.Block (
@@ -124,7 +130,7 @@ namespace Java.Interop.Dynamic {
 			return new DynamicMetaObject (call, BindingRestrictions.GetInstanceRestriction (Expression, Value));
 		}
 
-		protected List<JavaMethodInfo> GetMethods (string name)
+		protected List<JavaMethodInfo>? GetMethods (string name)
 		{
 			if (info == null || info.Methods == null)
 				return null;
@@ -138,7 +144,7 @@ namespace Java.Interop.Dynamic {
 
 		public override DynamicMetaObject BindSetMember (SetMemberBinder binder, DynamicMetaObject value)
 		{
-			List<JavaFieldInfo> overloads = GetFields (binder.Name);
+			List<JavaFieldInfo>? overloads = GetFields (binder.Name);
 			if (overloads == null)
 				return binder.FallbackSetMember (this, value);
 

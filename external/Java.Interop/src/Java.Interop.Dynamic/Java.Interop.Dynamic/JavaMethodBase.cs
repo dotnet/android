@@ -17,20 +17,20 @@ namespace Java.Interop.Dynamic {
 
 		public      abstract    bool        IsConstructor   {get;}
 
-		public      abstract unsafe object  Invoke (IJavaPeerable self, JniArgumentValue* arguments);
+		public      abstract unsafe object? Invoke (IJavaPeerable? self, JniArgumentValue* arguments);
 
 		protected   abstract    string      JniReturnType   {get;}
 
 		public      JniObjectReference      PeerReference   {get; private set;}
-		public      string                  JniSignature    {get; private set;}
+		public      string?                 JniSignature    {get; private set;}
 
 		protected   JniPeerMembers          members;
 
-		List<JniObjectReference>            arguments;
+		List<JniObjectReference>?           arguments;
 		public  List<JniObjectReference>    ArgumentTypes {
 			get {
 				LookupArguments ();
-				return arguments;
+				return arguments!;
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace Java.Interop.Dynamic {
 			JniObjectReference.Dispose (ref pr);
 			PeerReference   = pr;
 
-			members     = null;
+			members     = null!;
 
 			if (arguments == null)
 				return;
@@ -90,7 +90,9 @@ namespace Java.Interop.Dynamic {
 				for (int i = 0; i < len; ++i) {
 					var p = JniEnvironment.Arrays.GetObjectArrayElement (parameters, i);
 					try {
-						var sig = JniTypeSignature.Parse (JniEnvironment.Types.GetJniTypeNameFromClass (p));
+						var typeName = JniEnvironment.Types.GetJniTypeNameFromClass (p) ??
+							throw new NotSupportedException ($"Could not determine class for {p}.");
+						var sig = JniTypeSignature.Parse (typeName);
 						sb.Append (sig.QualifiedReference);
 						arguments.Add (p.NewGlobalRef ());
 					} finally {
@@ -104,22 +106,22 @@ namespace Java.Interop.Dynamic {
 			JniSignature    = sb.ToString ();
 		}
 
-		public bool CompatibleWith (List<JniType> args, DynamicMetaObject[] dargs)
+		public bool CompatibleWith (List<JniType?> argumentTypes, DynamicMetaObject[] argumentValues)
 		{
 			LookupArguments ();
 
-			if (args.Count != arguments.Count)
+			if (argumentTypes.Count != arguments?.Count)
 				return false;
 
 			var vm = JniEnvironment.Runtime;
 
 			for (int i = 0; i < arguments.Count; ++i) {
-				if (args [i] == null) {
+				if (argumentTypes [i] == null) {
 					// Builtin type -- JNIEnv.FindClass("I") throws!
-					if (JniEnvironment.Types.GetJniTypeNameFromClass (arguments [i]) != vm.TypeManager.GetTypeSignature (dargs [i].LimitType).Name)
+					if (JniEnvironment.Types.GetJniTypeNameFromClass (arguments [i]) != vm.TypeManager.GetTypeSignature (argumentValues [i].LimitType).Name)
 						return false;
 				}
-				else if (!JniEnvironment.Types.IsAssignableFrom (arguments [i], args [i].PeerReference))
+				else if (!JniEnvironment.Types.IsAssignableFrom (arguments [i], argumentTypes [i]?.PeerReference ?? default))
 					return false;
 			}
 			return true;

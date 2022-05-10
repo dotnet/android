@@ -42,7 +42,7 @@ namespace Java.Interop.Dynamic {
 				return;
 
 			info.Dispose ();
-			info        = null;
+			info        = null!;
 			disposed    = true;
 		}
 

@@ -36,13 +36,17 @@ namespace Java.Interop.Dynamic {
 			get {return "V";}
 		}
 
-		public override unsafe object Invoke (IJavaPeerable self, JniArgumentValue* arguments)
+		public override unsafe object? Invoke (IJavaPeerable? self, JniArgumentValue* arguments)
 		{
+			var signature   = JniSignature ?? throw new InvalidOperationException ("No JniSignature!");
 			if (self == null) {
-				var h   = members.InstanceMethods.StartCreateInstance (JniSignature, typeof (JavaInstanceProxy), arguments);
+				var h   = members.InstanceMethods.StartCreateInstance (signature, typeof (JavaInstanceProxy), arguments);
 				self    = JniEnvironment.Runtime.ValueManager.GetValue<JavaInstanceProxy> (ref h, JniObjectReferenceOptions.CopyAndDispose);
+				if (self == null) {
+					throw new InvalidOperationException ($"Could not create instance of {members.ManagedPeerType}!");
+				}
 			}
-			members.InstanceMethods.FinishCreateInstance (JniSignature, self, arguments);
+			members.InstanceMethods.FinishCreateInstance (signature, self, arguments);
 			return new DynamicJavaInstance (self);
 		}
 	}

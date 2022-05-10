@@ -68,7 +68,7 @@ namespace Java.Interop.Dynamic {
 		public  static  JavaClassInfo   GetClassInfo (string jniClassName)
 		{
 			lock (Classes) {
-				JavaClassInfo info = _GetClassInfo (jniClassName);
+				JavaClassInfo? info = _GetClassInfo (jniClassName);
 				if (info != null) {
 					Interlocked.Increment (ref info.RefCount);
 					return info;
@@ -80,7 +80,7 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		static JavaClassInfo _GetClassInfo (string jniClassName)
+		static JavaClassInfo? _GetClassInfo (string jniClassName)
 		{
 			lock (Classes) {
 				WeakReference value;
@@ -114,19 +114,19 @@ namespace Java.Interop.Dynamic {
 
 		int         RefCount    = 1;
 
-		List<JavaConstructorInfo>                       constructors;
-		Dictionary<string, List<JavaFieldInfo>>         fields;
-		Dictionary<string, List<JavaMethodInfo>>        methods;
+		List<JavaConstructorInfo>?                      constructors;
+		Dictionary<string, List<JavaFieldInfo>>?        fields;
+		Dictionary<string, List<JavaMethodInfo>>?       methods;
 
-		public  List<JavaConstructorInfo>               Constructors {
+		public  List<JavaConstructorInfo>?              Constructors {
 			get {return LookupConstructors ();}
 		}
 
-		public  Dictionary<string, List<JavaFieldInfo>> Fields {
+		public  Dictionary<string, List<JavaFieldInfo>>?    Fields {
 			get {return LookupFields ();}
 		}
 
-		public Dictionary<string, List<JavaMethodInfo>> Methods {
+		public Dictionary<string, List<JavaMethodInfo>>?    Methods {
 			get {return LookupMethods ();}
 		}
 
@@ -152,7 +152,7 @@ namespace Java.Interop.Dynamic {
 					foreach (var name in methods.Keys.ToList ()) {
 						foreach (var info in methods [name])
 							info.Dispose ();
-						methods [name]    = null;
+						methods.Remove (name);
 					}
 				}
 
@@ -171,7 +171,7 @@ namespace Java.Interop.Dynamic {
 			return JniEnvironment.InstanceMethods.CallObjectMethod (method, Constructor_getParameterTypes);
 		}
 
-		List<JavaConstructorInfo> LookupConstructors ()
+		List<JavaConstructorInfo>? LookupConstructors ()
 		{
 			if (Members == null)
 				return null;
@@ -199,7 +199,7 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		Dictionary<string, List<JavaFieldInfo>> LookupFields ()
+		Dictionary<string, List<JavaFieldInfo>>? LookupFields ()
 		{
 			if (Members == null)
 				return null;
@@ -216,17 +216,18 @@ namespace Java.Interop.Dynamic {
 					for (int i  = 0; i < len; ++i) {
 						var field       = JniEnvironment.Arrays.GetObjectArrayElement (fields, i);
 						var n_name      = JniEnvironment.InstanceMethods.CallObjectMethod (field, Field_getName);
-						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.CopyAndDispose);
 						var isStatic    = IsStatic (field);
+						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.CopyAndDispose) ??
+							throw new InvalidOperationException ($"Could not determine field name at index {i}!");
 
-						List<JavaFieldInfo> overloads;
-						if (!Fields.TryGetValue (name, out overloads))
-							Fields.Add (name, overloads = new List<JavaFieldInfo> ());
+						List<JavaFieldInfo>? overloads = null;
+						if (!Fields?.TryGetValue (name, out overloads) ?? false)
+							Fields!.Add (name, overloads = new List<JavaFieldInfo> ());
 
 						var n_type      = JniEnvironment.InstanceMethods.CallObjectMethod (field, Field_getType);
 						using (var type = new JniType (ref n_type, JniObjectReferenceOptions.CopyAndDispose)) {
 							var sig = JniTypeSignature.Parse (type.Name);
-							overloads.Add (new JavaFieldInfo (Members, name + "." + sig.QualifiedReference, isStatic));
+							overloads?.Add (new JavaFieldInfo (Members, name + "." + sig.QualifiedReference, isStatic));
 						}
 
 						JniObjectReference.Dispose (ref field);
@@ -239,7 +240,7 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		Dictionary<string, List<JavaMethodInfo>> LookupMethods ()
+		Dictionary<string, List<JavaMethodInfo>>? LookupMethods ()
 		{
 			if (Members == null)
 				return null;
@@ -256,19 +257,20 @@ namespace Java.Interop.Dynamic {
 					for (int i  = 0; i < len; ++i) {
 						var method      = JniEnvironment.Arrays.GetObjectArrayElement (methods, i);
 						var n_name      = JniEnvironment.InstanceMethods.CallObjectMethod (method, Method_getName);
-						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.CopyAndDispose);
 						var isStatic    = IsStatic (method);
+						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.CopyAndDispose) ??
+							throw new InvalidOperationException ($"Could not determine method name at index {i}!");
 
-						List<JavaMethodInfo> overloads;
-						if (!Methods.TryGetValue (name, out overloads))
-							Methods.Add (name, overloads = new List<JavaMethodInfo> ());
+						List<JavaMethodInfo>? overloads = null;
+						if (!Methods?.TryGetValue (name, out overloads) ?? false)
+							Methods!.Add (name, overloads = new List<JavaMethodInfo> ());
 
 						var nrt = JniEnvironment.InstanceMethods.CallObjectMethod (method, Method_getReturnType);
 						var rt  = new JniType (ref nrt, JniObjectReferenceOptions.CopyAndDispose);
 						var m   = new JavaMethodInfo (Members, method, name, isStatic) {
 							ReturnType  = rt,
 						};
-						overloads.Add (m);
+						overloads?.Add (m);
 						JniObjectReference.Dispose (ref method);
 					}
 				} finally {
@@ -286,11 +288,11 @@ namespace Java.Interop.Dynamic {
 			return (s & JavaModifiers.Static) == JavaModifiers.Static;
 		}
 
-		internal unsafe bool TryInvokeMember (IJavaPeerable self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object value)
+		internal unsafe bool TryInvokeMember (IJavaPeerable self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object? value)
 		{
 			value       = null;
-			var vms     = (List<JniValueMarshaler>) null;
-			var states  = (JniValueMarshalerState[]) null;
+			var vms     = (List<JniValueMarshaler>?) null;
+			var states  = (JniValueMarshalerState[]?) null;
 
 			var jtypes  = GetJniTypes (args);
 			try {
@@ -313,18 +315,20 @@ namespace Java.Interop.Dynamic {
 			}
 			finally {
 				for (int i = 0; vms != null && i < vms.Count; ++i) {
+					if (states == null) {
+						continue;
+					}
 					vms [i].DestroyArgumentState (args [i].Value, ref states [i]);
 				}
 				for (int i = 0; i < jtypes.Count; ++i) {
-					if (jtypes [i] != null)
-						jtypes [i].Dispose ();
+					jtypes [i]?.Dispose ();
 				}
 			}
 		}
 
-		static List<JniType> GetJniTypes (DynamicMetaObject[] args)
+		static List<JniType?> GetJniTypes (DynamicMetaObject[] args)
 		{
-			var r   = new List<JniType> (args.Length);
+			var r   = new List<JniType?> (args.Length);
 			var vm  = JniEnvironment.Runtime;
 			foreach (var a in args) {
 				try {

@@ -38,7 +38,7 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		public object GetValue (IJavaPeerable self)
+		public object? GetValue (IJavaPeerable self)
 		{
 			AssertSelf (self);
 
@@ -59,7 +59,7 @@ namespace Java.Interop.Dynamic {
 						"self");
 		}
 
-		object GetStaticValue ()
+		object? GetStaticValue ()
 		{
 			var n   = GetSignatureStartIndex ();
 			switch (JniSignature [n + 1]) {
@@ -80,7 +80,7 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		object GetInstanceValue (IJavaPeerable self)
+		object? GetInstanceValue (IJavaPeerable self)
 		{
 			var n   = GetSignatureStartIndex ();
 			switch (JniSignature [n + 1]) {
@@ -110,7 +110,7 @@ namespace Java.Interop.Dynamic {
 			return n;
 		}
 
-		public void SetValue (IJavaPeerable self, object value)
+		public void SetValue (IJavaPeerable self, object? value)
 		{
 			AssertSelf (self);
 
@@ -121,18 +121,18 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		void SetStaticValue (object value)
+		void SetStaticValue (object? value)
 		{
 			var n   = GetSignatureStartIndex ();
 			switch (JniSignature [n + 1]) {
-			case 'Z':   members.StaticFields.SetValue (JniSignature, (bool)   value);   break;
-			case 'B':   members.StaticFields.SetValue (JniSignature, (byte)   value);   break;
-			case 'C':   members.StaticFields.SetValue (JniSignature, (char)   value);   break;
-			case 'S':   members.StaticFields.SetValue (JniSignature, (short)  value);   break;
-			case 'I':   members.StaticFields.SetValue (JniSignature, (int)    value);   break;
-			case 'J':   members.StaticFields.SetValue (JniSignature, (long)   value);   break;
-			case 'F':   members.StaticFields.SetValue (JniSignature, (float)  value);   break;
-			case 'D':   members.StaticFields.SetValue (JniSignature, (double) value);   break;
+			case 'Z':   members.StaticFields.SetValue (JniSignature, (bool)   value!);   break;
+			case 'B':   members.StaticFields.SetValue (JniSignature, (byte)   value!);   break;
+			case 'C':   members.StaticFields.SetValue (JniSignature, (char)   value!);   break;
+			case 'S':   members.StaticFields.SetValue (JniSignature, (short)  value!);   break;
+			case 'I':   members.StaticFields.SetValue (JniSignature, (int)    value!);   break;
+			case 'J':   members.StaticFields.SetValue (JniSignature, (long)   value!);   break;
+			case 'F':   members.StaticFields.SetValue (JniSignature, (float)  value!);   break;
+			case 'D':   members.StaticFields.SetValue (JniSignature, (double) value!);   break;
 			case 'L':
 			case '[':
 				if (value == null) {
@@ -152,18 +152,18 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		void SetInstanceValue (IJavaPeerable self, object value)
+		void SetInstanceValue (IJavaPeerable self, object? value)
 		{
 			var n   = GetSignatureStartIndex ();
 			switch (JniSignature [n + 1]) {
-			case 'Z':   members.InstanceFields.SetValue (JniSignature, self,    (bool)   value);   break;
-			case 'B':   members.InstanceFields.SetValue (JniSignature, self,    (byte)   value);   break;
-			case 'C':   members.InstanceFields.SetValue (JniSignature, self,    (char)   value);   break;
-			case 'S':   members.InstanceFields.SetValue (JniSignature, self,    (short)  value);   break;
-			case 'I':   members.InstanceFields.SetValue (JniSignature, self,    (int)    value);   break;
-			case 'J':   members.InstanceFields.SetValue (JniSignature, self,    (long)   value);   break;
-			case 'F':   members.InstanceFields.SetValue (JniSignature, self,    (float)  value);   break;
-			case 'D':   members.InstanceFields.SetValue (JniSignature, self,    (double) value);   break;
+			case 'Z':   members.InstanceFields.SetValue (JniSignature, self,    (bool)   value!);   break;
+			case 'B':   members.InstanceFields.SetValue (JniSignature, self,    (byte)   value!);   break;
+			case 'C':   members.InstanceFields.SetValue (JniSignature, self,    (char)   value!);   break;
+			case 'S':   members.InstanceFields.SetValue (JniSignature, self,    (short)  value!);   break;
+			case 'I':   members.InstanceFields.SetValue (JniSignature, self,    (int)    value!);   break;
+			case 'J':   members.InstanceFields.SetValue (JniSignature, self,    (long)   value!);   break;
+			case 'F':   members.InstanceFields.SetValue (JniSignature, self,    (float)  value!);   break;
+			case 'D':   members.InstanceFields.SetValue (JniSignature, self,    (double) value!);   break;
 			case 'L':
 			case '[':
 				if (value == null) {

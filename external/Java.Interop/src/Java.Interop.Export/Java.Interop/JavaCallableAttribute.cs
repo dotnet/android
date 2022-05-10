@@ -9,12 +9,12 @@ namespace Java.Interop {
 		{
 		}
 
-		public JavaCallableAttribute (string name)
+		public JavaCallableAttribute (string? name)
 		{
 			Name = name;
 		}
 
-		public  string  Name        {get; private set;}
-		public  string  Signature   {get; set;}
+		public  string?     Name        {get; private set;}
+		public  string?     Signature   {get; set;}
 	}
 }

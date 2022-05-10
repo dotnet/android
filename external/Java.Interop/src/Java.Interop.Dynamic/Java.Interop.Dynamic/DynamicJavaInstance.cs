@@ -23,7 +23,8 @@ namespace Java.Interop.Dynamic {
 
 			Value   = value;
 
-			var type    = JniEnvironment.Types.GetJniTypeNameFromInstance (value.PeerReference);
+			var type    = JniEnvironment.Types.GetJniTypeNameFromInstance (value.PeerReference) ??
+				throw new InvalidOperationException ($"Could not get JniType from value `{value}`.");
 			klass       = JavaClassInfo.GetClassInfo (type);
 		}
 
@@ -53,8 +54,8 @@ namespace Java.Interop.Dynamic {
 			}
 
 			disposed    = true;
-			Value       = null;
-			klass       = null;
+			Value       = null!;
+			klass       = null!;
 		}
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject (Expression parameter)
