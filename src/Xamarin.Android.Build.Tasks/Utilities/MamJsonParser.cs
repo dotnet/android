@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 
 using Newtonsoft.Json;
@@ -128,7 +129,13 @@ namespace Xamarin.Android.Tasks
 			}
 			if (types.Count == 0)
 				return null;
-			return "(" + string.Join ("", types) + ")";
+			var sig = new StringBuilder ();
+			sig.Append ("(");
+			foreach (var type in types) {
+				sig.Append (type);
+			}
+			sig.Append (")");
+			return sig.ToString ();
 		}
 
 		string JavaToJniType (string javaType)
@@ -136,17 +143,29 @@ namespace Xamarin.Android.Tasks
 			return javaType.Replace (".", "/");
 		}
 
+		StringBuilder JavaToJniType (StringBuilder javaType)
+		{
+			return javaType.Replace ('.', '/');
+		}
+
 		string? JavaToJniTypeSignature (string? javaType)
 		{
 			if (javaType == null) {
 				return null;
 			}
-			int arrayCount = 0;
-			while (javaType.EndsWith ("[]")) {
+			var jniType     = new StringBuilder (javaType);
+			int arrayCount  = 0;
+			while (jniType.Length > 2 && jniType [jniType.Length-2] == '[' && jniType [jniType.Length-1] == ']') {
 				arrayCount++;
-				javaType = javaType.Substring(0, javaType.Length - "[]".Length);
+				jniType.Length -= 2;
 			}
-			return new string('[', arrayCount) + "L" + JavaToJniType (javaType) + ";";
+			JavaToJniType (jniType);
+			jniType.Append (";");
+			jniType.Insert (0, 'L');
+			for (int i = 0; i < arrayCount; ++i) {
+				jniType.Insert (0, '[');
+			}
+			return jniType.ToString ();
 		}
 
 		void ReadGlobalMethodCalls (JToken globalMethodCalls)
