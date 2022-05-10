@@ -25,7 +25,7 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 | Platform        | Link   |
 |-----------------|--------|
 | **Commercial Xamarin.Android 12.3 (d17-2)** for Windows+Visual Studio 2022                 | [Download][commercial-d17-2-Windows-x86_64] |
-| **Commercial Xamarin.Android 12.3 (d17-2)** for macOS                                      | No Stable VSMac 2022 17.1 Release   |
+| **Commercial Xamarin.Android 12.3 (d17-2)** for macOS                                      | No Stable VSMac 2022 17.2 Release   |
 | **OSS Xamarin.Android (main)** for Ubuntu\*                                                | [![OSS Linux/Ubuntu x86_64][oss-ubuntu-x86_64-icon]][oss-ubuntu-x86_64-status] |
 
 *\* Please note that the OSS installer packages are not digitally signed.*
