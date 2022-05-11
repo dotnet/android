@@ -22,7 +22,6 @@
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
-    <EnablePreviewFeatures>True</EnablePreviewFeatures>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">

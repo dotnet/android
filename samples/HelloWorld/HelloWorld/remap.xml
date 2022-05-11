@@ -1,0 +1,3 @@
+<replacements>
+  <replace-type from="android/app/Activity" to="android/app/ListActivity" />
+</replacements>

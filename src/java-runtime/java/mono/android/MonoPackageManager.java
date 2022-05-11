@@ -176,20 +176,20 @@ public class MonoPackageManager {
 				return null;
 			}
 			for (String asset: assets) {
-				if (!asset.equals ("xa-mam-mapping.xml")) {
+				if (!asset.equals ("xa-remap-members.xml")) {
 					continue;
 				}
-				Log.d ("*jonp*", "# jonp: found `xa-mam-mapping.xml`; trying to load...");
-				InputStream s = manager.open ("xa-internal/xa-mam-mapping.xml");
-				Log.d ("*jonp*", "# jonp: s? " + (s != null));
-				byte[] contents = new byte[s.available ()];
-				int r = s.read (contents);
-				Log.d ("*jonp*", "# jonp: read " + r + " bytes from inputstream! expected " + contents.length + "!");
-				s.close ();
-				return contents;
+				try (InputStream s = manager.open ("xa-internal/xa-remap-members.xml")) {
+					byte[] contents = new byte[s.available ()];
+					int r = s.read (contents);
+					if (r != -1 && r != contents.length) {
+						Log.w ("monodroid", "Only read " + r + " bytes, not the expected " + contents.length + " bytes!");
+					}
+					return contents;
+				}
 			}
 		} catch (IOException e) {
-			Log.wtf ("*jonp*", "Error reading `xa-mam-mapping.xml`", e);
+			Log.wtf ("monodroid", "Error reading `xa-internal/xa-remap-members.xml`", e);
 		}
 		return null;
 	}
