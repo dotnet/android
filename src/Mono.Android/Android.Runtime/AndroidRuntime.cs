@@ -294,7 +294,15 @@ namespace Android.Runtime {
 #if NET
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		{
-			return new[]{$"{jniSimpleReference}$-CC"};
+			var slash       = jniSimpleReference.LastIndexOf ('/');
+			var desugarType = slash <= 0
+				? "Desugar" + jniSimpleReference
+				: jniSimpleReference.Substring (0, slash+1) + "Desugar" + jniSimpleReference.Substring (slash+1);
+
+			return new[]{
+				desugarType,
+				$"{jniSimpleReference}$-CC"
+			};
 		}
 
 		protected override string? GetReplacementTypeCore (string jniSimpleReference)
