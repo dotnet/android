@@ -263,11 +263,26 @@ MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_stores[];
 
 MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
 
-#if defined (RELEASE) && defined (ANDROID)
+#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+
+// Number of assembly name forms for which we generate hashes (essentially file name mutations. For instance
+// `HelloWorld.dll`, `HelloWorld`, `en-US/HelloWorld` etc). This is multiplied by the number of assemblies in the apk to
+// obtain number of entries in the `assembly_image_cache_hashes` and `assembly_image_cache_indices` entries
+constexpr uint32_t number_of_assembly_name_forms_in_image_cache = 2;
+
+// These 3 arrays constitute the cache used to store pointers to loaded managed assemblies.
+// Three arrays are used so that we can have multiple hashes pointing to the same MonoImage*.
+//
+// This is done by the `assembly_image_cache_hashes` containing hases for all mutations of some
+// assembly's name (e.g. with culture prefix, without extension etc) and position of that hash in
+// `assembly_image_cache_hashes` is an index into `assembly_image_cache_indices` which, in turn,
+// stores final index into the `assembly_image_cache` array.
+//
 MONO_API MONO_API_EXPORT MonoImage* assembly_image_cache[];
-MONO_API MONO_API_EXPORT xamarin::android::hash_t assembly_image_cache_index[];
+MONO_API MONO_API_EXPORT const uint32_t assembly_image_cache_indices[];
+MONO_API MONO_API_EXPORT const xamarin::android::hash_t assembly_image_cache_hashes[];
 
 MONO_API_EXPORT void xamarin_app_init ();
-#endif
+#endif // def RELEASE && def ANDROID && def NET6
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

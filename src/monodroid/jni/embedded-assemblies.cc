@@ -357,6 +357,10 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 		len -= sizeof(SharedConstants::DLL_EXTENSION) - 1;
 	}
 
+	std::string clipped_name;
+	clipped_name.assign (name.get (), len);
+	log_info (LOG_ASSEMBLY, "Clipped name: %s", clipped_name.c_str ());
+
 	hash_t name_hash = xxhash::hash (name.get (), len);
 	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
 
@@ -454,6 +458,9 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	return a;
 }
 
+// TODO: need to forbid loading assemblies into non-default ALC if they contain marshal method callbacks.
+//       The best way is probably to store the information in the assembly `MonoImage*` cache. We should
+//       abort() if the assembly contains marshal callbacks.
 template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, bool ref_only) noexcept

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 using Java.Interop.Tools.TypeNameMappings;
@@ -174,6 +175,7 @@ namespace Xamarin.Android.Tasks
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; }
+		public ICollection<string> UniqueAssemblyNames { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 		{
@@ -328,9 +330,18 @@ namespace Xamarin.Android.Tasks
 
 		void WriteAssemblyImageCache (LlvmIrGenerator generator)
 		{
+			if (UniqueAssemblyNames == null) {
+				throw new InvalidOperationException ("Internal error: unique assembly names not provided");
+			}
+
+			if (UniqueAssemblyNames.Count != NumberOfAssembliesInApk) {
+				throw new InvalidOperationException ("Internal error: number of assemblies in the apk doesn't match the number of unique assembly names");
+			}
+
+			bool is64Bit = generator.Is64Bit;
 			generator.WriteStructureArray (monoImage, (ulong)NumberOfAssembliesInApk, "assembly_image_cache", isArrayOfPointers: true);
 
-			if (generator.Is64Bit) {
+			if (is64Bit) {
 				WriteHashes<ulong> ();
 			} else {
 				WriteHashes<uint> ();
@@ -338,13 +349,42 @@ namespace Xamarin.Android.Tasks
 
 			void WriteHashes<T> () where T: struct
 			{
-				// TODO: hash all assembly names here
-				var hashes = new List<T> ();
-				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
-					hashes.Add (default(T));
-				}
+				var hashes = new Dictionary<T, (string name, uint index)> ();
+				uint index = 0;
+				foreach (string name in UniqueAssemblyNames) {
+					string clippedName = Path.GetFileNameWithoutExtension (name);
+					ulong hashFull = HashName (name, is64Bit);
+					ulong hashClipped = HashName (clippedName, is64Bit);
 
-				generator.WriteArray (hashes, LlvmIrVariableOptions.GlobalConstant, "assembly_image_cache_index");
+					//
+					// If the number of name forms changes, xamarin-app.hh MUST be updated to set value of the
+					// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
+					//
+					hashes.Add ((T)Convert.ChangeType (hashFull, typeof(T)), (name, index));
+					hashes.Add ((T)Convert.ChangeType (hashClipped, typeof(T)), (clippedName, index));
+
+					index++;
+				}
+				List<T> keys = hashes.Keys.ToList ();
+				keys.Sort ();
+
+				generator.WriteCommentLine ("Each entry maps hash of an assembly name to an index into the `assembly_image_cache` array");
+				generator.WriteArray (
+					keys,
+					LlvmIrVariableOptions.GlobalConstant,
+					"assembly_image_cache_hashes",
+					(int idx, T value) => $"{idx}: {hashes[value].name} => 0x{value:x} => {hashes[value].index}"
+				);
+
+				var indices = new List<uint> ();
+				for (int i = 0; i < keys.Count; i++) {
+					indices.Add (hashes[keys[i]].index);
+				}
+				generator.WriteArray (
+					indices,
+					LlvmIrVariableOptions.GlobalConstant,
+					"assembly_image_cache_indices"
+				);
 			}
 		}
 
@@ -368,21 +408,21 @@ namespace Xamarin.Android.Tasks
 
 			// We need to hash here, because the hash is architecture-specific
 			foreach (StructureInstance<DSOCacheEntry> entry in dsoCache) {
-				entry.Obj.hash = HashName (entry.Obj.HashedName);
+				entry.Obj.hash = HashName (entry.Obj.HashedName, is64Bit);
 			}
 			dsoCache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Obj.hash.CompareTo (b.Obj.hash));
 
 			generator.WriteStructureArray (dsoCacheEntryStructureInfo, dsoCache, "dso_cache");
+		}
 
-			ulong HashName (string name)
-			{
-				byte[] nameBytes = Encoding.UTF8.GetBytes (name);
-				if (is64Bit) {
-					return XXH64.DigestOf (nameBytes, 0, nameBytes.Length);
-				}
-
-				return (ulong)XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
+		ulong HashName (string name, bool is64Bit)
+		{
+			byte[] nameBytes = Encoding.UTF8.GetBytes (name);
+			if (is64Bit) {
+				return XXH64.DigestOf (nameBytes, 0, nameBytes.Length);
 			}
+
+			return (ulong)XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
 		}
 	}
 }

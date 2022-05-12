@@ -129,6 +129,10 @@ MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
 std::mutex MonodroidRuntime::dso_handle_write_lock;
 bool MonodroidRuntime::startup_in_progress = true;
 
+#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+XamarinAndroidAppContext MonodroidRuntime::xa_app_context;
+#endif
+
 #ifdef WINDOWS
 static const char* get_xamarin_android_msbuild_path (void);
 const char *BasicAndroidSystem::SYSTEM_LIB_PATH = get_xamarin_android_msbuild_path();
@@ -874,9 +878,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
 
-#if defined (RELEASE) && defined (ANDROID)
+#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
 	//	xamarin_app_init (&xa_app_context);
-#endif // def RELEASE && def ANDROID
+#endif // def RELEASE && def ANDROID && def NET6
 }
 
 #if defined (NET)
@@ -1348,11 +1352,9 @@ MonodroidRuntime::find_dso_cache_entry ([[maybe_unused]] hash_t hash) noexcept
 	size_t entry_count = application_config.number_of_dso_cache_entries;
 	DSOCacheEntry *entries = dso_cache;
 
-	log_debug (LOG_ASSEMBLY, "dso_cache: looking for hash 0x%zx", hash);
 	while (entry_count > 0) {
 		ret = entries + (entry_count / 2);
 		entry_hash = static_cast<hash_t> (ret->hash);
-		log_debug (LOG_ASSEMBLY, "dso_cache: entry_hash == 0x%zx", entry_hash);
 		auto result = hash <=> entry_hash;
 
 		if (result < 0) {
@@ -2636,7 +2638,8 @@ JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[may
 }
 
 #if defined (RELEASE) && defined (ANDROID) && defined (NET6)
-static void (*android_app_activity_on_create_bundle) (JNIEnv *env, jclass klass, jobject savedInstanceState) = nullptr;
+using android_app_activity_on_create_bundle_fn = void (*) (JNIEnv *env, jclass klass, jobject savedInstanceState);
+static android_app_activity_on_create_bundle_fn android_app_activity_on_create_bundle = nullptr;
 
 JNIEXPORT void
 JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv *env, jclass klass, jobject savedInstanceState)
@@ -2644,10 +2647,36 @@ JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv
 	log_info (LOG_DEFAULT, "%s (%p, %p, %p)", __PRETTY_FUNCTION__, env, klass, savedInstanceState);
 
 	if (android_app_activity_on_create_bundle == nullptr) {
-		//		MonoImage *image = mono_load;
+		void *fn = MonodroidRuntime::get_app_context ()->get_function_pointer (
+			16 /* Mono.Android.dll index */,
+			0x020000AF /* Android.App.Activity token */,
+			0x0600055B /* n_OnCreate_Landroid_os_Bundle_ */
+		);
+
+		android_app_activity_on_create_bundle = reinterpret_cast<android_app_activity_on_create_bundle_fn>(fn);
 	}
 
-	// TODO: obtain the function pointer for the symbol below
 	android_app_activity_on_create_bundle (env, klass, savedInstanceState);
+}
+
+using android_app_activity_on_create_view_fn = jobject (*) (JNIEnv *env, jclass klass, jobject view, jstring name, jobject context, jobject attrs);
+static android_app_activity_on_create_view_fn android_app_activity_on_create_view = nullptr;
+
+JNIEXPORT jobject
+JNICALL Java_helloandroid_MainActivity_n_1onCreateView__Landroid_view_View_2Ljava_lang_String_2Landroid_content_Context_2Landroid_util_AttributeSet_2 (JNIEnv *env, jclass klass, jobject view, jstring name, jobject context, jobject attrs)
+{
+	log_info (LOG_DEFAULT, "%s (%p, %p, %p, %p, %p, %p)", __PRETTY_FUNCTION__, env, klass, view, name, context, attrs);
+
+	if (android_app_activity_on_create_view == nullptr) {
+		void *fn = MonodroidRuntime::get_app_context ()->get_function_pointer (
+			16 /* Mono.Android.dll index */,
+			0x020000AF /* Android.App.Activity token */,
+			0x06000564 /* n_OnCreateView_Landroid_view_View_Ljava_lang_String_Landroid_content_Context_Landroid_util_AttributeSet_ */
+		);
+
+		android_app_activity_on_create_view = reinterpret_cast<android_app_activity_on_create_view_fn>(fn);
+	}
+
+	return android_app_activity_on_create_view (env, klass, view, name, context, attrs);
 }
 #endif // def RELEASE && def ANDROID && def NET6

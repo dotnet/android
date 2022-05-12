@@ -2,6 +2,7 @@
 #include <android/log.h>
 
 #include <mono/metadata/appdomain.h>
+#include <mono/metadata/class.h>
 #include <mono/metadata/object.h>
 
 #include "xamarin-app-marshaling-private.hh"
@@ -18,19 +19,7 @@ void XamarinAppMarshaling::init (AppContext *ctx) noexcept
 force_inline
 MonoObject* XamarinAppMarshaling::invoke_managed_method (uint8_t *module_uuid, uint32_t module_id, uint32_t type_token, uint32_t method_token, void **params) const noexcept
 {
-	// TODO: caching
-	// TODO: should we abort() if we can't find the image, class or method?
-	MonoImage  *image = context->lookup_mono_image (module_uuid);
-	MonoClass  *klass = mono_class_get (image, type_token);
-	MonoMethod *method = mono_get_method (image, method_token, klass);
-	MonoObject *exc = nullptr;
-	MonoObject *ret = mono_runtime_invoke (method, nullptr, params, &exc);
-
-	if (exc != nullptr) {
-		// TODO: call AndroidEnvironment.UnhandledException(exc)
-	}
-
-	return ret;
+	return nullptr;
 }
 
 MonoObject* monodroid_invoke_managed_method (uint8_t *module_uuid, uint32_t module_id,  uint32_t type_token, uint32_t method_token, void **params)

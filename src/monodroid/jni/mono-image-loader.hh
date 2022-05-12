@@ -3,6 +3,7 @@
 #define __MONO_IMAGE_LOADER_HH
 
 #include <cstdint>
+#include <cstddef>
 
 #include <mono/metadata/image.h>
 #if defined (NET6)
@@ -16,6 +17,10 @@
 #include "search.hh"
 #include "strings.hh"
 
+#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+#define USE_CACHE 1
+#endif
+
 namespace xamarin::android::internal {
 	enum class MonoImageLoaderContext
 	{
@@ -26,10 +31,14 @@ namespace xamarin::android::internal {
 	class MonoImageLoader final
 	{
 	public:
-#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+#if defined (USE_CACHE)
 		force_inline static MonoImage* get_from_index (size_t index) noexcept
 		{
-			return nullptr;
+			if (index >= application_config.number_of_assemblies_in_apk) {
+				return nullptr;
+			}
+
+			return get_from_index_quick (index);
 		}
 
 		force_inline static MonoImage* get_with_hash (hash_t hash) noexcept
@@ -39,13 +48,14 @@ namespace xamarin::android::internal {
 				return nullptr;
 			}
 
-			return get_from_index (static_cast<size_t>(index));
+			return get_from_index_quick (static_cast<size_t>(index));
 		}
-#endif // def RELEASE && def ANDROID && def NET6
+#endif // def USE_CACHE
 
 #if defined (NET6)
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, MonoAssemblyLoadContextGCHandle alc_gchandle, hash_t name_hash, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
+			log_info (LOG_DEFAULT, "Loading assembly %s; hash 0x%zx", name.get (), name_hash);
 			MonoImageOpenStatus status;
 			MonoImage *image = mono_image_open_from_data_alc (
 				alc_gchandle,
@@ -61,6 +71,7 @@ namespace xamarin::android::internal {
 
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, MonoAssemblyLoadContextGCHandle alc_gchandle, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
+
 			return load (name, alc_gchandle, xxhash::hash (name.get (), name.length ()), assembly_data, assembly_data_size);
 		}
 #endif
@@ -86,30 +97,39 @@ namespace xamarin::android::internal {
 		}
 
 	private:
+#if defined (USE_CACHE)
+		// Performs NO BOUNDS CHECKING (intended!)
+		force_inline static MonoImage* get_from_index_quick (size_t index) noexcept
+		{
+			return assembly_image_cache[index];
+		}
+
 		force_inline static ssize_t find_index (hash_t hash) noexcept
 		{
-#if defined (RELEASE) && defined (ANDROID)
-			return Search::binary_search (hash, assembly_image_cache_index, application_config.number_of_assemblies_in_apk);
-#else
-			return 0;
-#endif // def RELEASE && def ANDROID
+			ssize_t idx = Search::binary_search (hash, assembly_image_cache_hashes, number_of_cache_index_entries);
+			return idx >= 0 ? assembly_image_cache_indices[idx] : -1;
+
 		}
+#endif // def USE_CACHE
 
 		force_inline static MonoImage* stash_and_return (MonoImage *image, MonoImageOpenStatus status, [[maybe_unused]] hash_t hash) noexcept
 		{
+			log_info (LOG_DEFAULT, "Stashing image %p; hash 0x%zx", image, hash);
 			if (image == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
 				log_warn (LOG_ASSEMBLY, "Failed to open assembly image for '%s'. %s", mono_image_strerror (status));
 				return nullptr;
 			}
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+#if defined (USE_CACHE)
 			ssize_t index = find_index (hash);
+			log_info (LOG_DEFAULT, "Index matching the hash == %zd", index);
 			if (index < 0) {
 				// TODO: Warn?
 				return image;
 			}
 
-			// We don't need to worry about locking here.  Even if we're overwriting an entry just set from another
+			log_info (LOG_DEFAULT, "Stashing");
+			// We don't need to worry about locking here.  Even if we're overwriting an entry just set by another
 			// thread, the image pointer is going to be the same (at least currently, it will change when we have
 			// support for unloadable Assembly Load Contexts) and the actual write operation to the destination is
 			// atomic
@@ -117,6 +137,10 @@ namespace xamarin::android::internal {
 #endif // def RELEASE && def ANDROID && def NET6
 			return image;
 		}
+
+#if defined (USE_CACHE)
+		static size_t number_of_cache_index_entries;
+#endif // def USE_CACHE
 	};
 }
 #endif // ndef __MONO_IMAGE_LOADER_HH

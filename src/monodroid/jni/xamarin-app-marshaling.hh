@@ -13,7 +13,7 @@ namespace xamarin::android::internal
 	class AppContext
 	{
 	public:
-		virtual MonoImage *lookup_mono_image (uint8_t *module_uuid) = 0;
+		virtual void* get_function_pointer (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token) = 0;
 	};
 }
 

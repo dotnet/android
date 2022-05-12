@@ -486,6 +486,7 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/monodroid-glue.cc
+  ${SOURCES_DIR}/mono-image-loader.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
@@ -503,7 +504,7 @@ if(ANDROID)
     ${LZ4_SOURCES}
     )
 
-  if(NOT DEBUG_BUILD)
+  if(NOT DEBUG_BUILD AND ENABLE_NET6)
     list(APPEND XAMARIN_MONODROID_SOURCES
       ${SOURCES_DIR}/xamarin-android-app-context.cc
       )

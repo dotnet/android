@@ -299,8 +299,15 @@ namespace Xamarin.Android.Tasks
 
 			int assemblyCount = 0;
 			HashSet<string> archAssemblyNames = null;
+			var uniqueAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
+				string assemblyName = Path.GetFileName (assembly.ItemSpec);
+
+				if (!uniqueAssemblyNames.Contains (assemblyName)) {
+					uniqueAssemblyNames.Add (assemblyName);
+				}
+
 				if (!UseAssemblyStore) {
 					assemblyCount++;
 					return;
@@ -316,7 +323,6 @@ namespace Xamarin.Android.Tasks
 				} else {
 					archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
-					string assemblyName = Path.GetFileName (assembly.ItemSpec);
 					if (!archAssemblyNames.Contains (assemblyName)) {
 						assemblyCount++;
 						archAssemblyNames.Add (assemblyName);
@@ -429,6 +435,7 @@ namespace Xamarin.Android.Tasks
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 				JNIEnvInitializeToken = jnienv_initialize_method_token,
 				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
+				UniqueAssemblyNames = uniqueAssemblyNames,
 			};
 			appConfigAsmGen.Init ();
 

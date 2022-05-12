@@ -151,9 +151,21 @@ MonoImage* assembly_image_cache[] = {
 	nullptr,
 
 };
-MONO_API MONO_API_EXPORT xamarin::android::hash_t assembly_image_cache_index[] = {
+
+// Each element contains an index into `assembly_image_cache`
+const uint32_t assembly_image_cache_indices[] = {
 	0,
+	1,
+	1,
+	1,
+};
+
+// hashes point to indices in `assembly_image_cache_indices`
+const xamarin::android::hash_t assembly_image_cache_hashes[] = {
 	0,
+	1,
+	2,
+	3,
 };
 
 void xamarin_app_init ([[maybe_unused]] xamarin::android::internal::AppContext *context)

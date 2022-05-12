@@ -67,11 +67,11 @@ namespace xamarin::android::internal
 		}
 	};
 
-#if defined (RELEASE) && defined (ANDROID)
-	class XamarinAndroidAppContext : public AppContext
+#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+	class XamarinAndroidAppContext final : public AppContext
 	{
 	public:
-		virtual MonoImage *lookup_mono_image (uint8_t *module_uuid) override final;
+		virtual void* get_function_pointer (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token) override final;
 	};
 #endif // def RELEASE && def ANDROID
 
@@ -258,6 +258,14 @@ namespace xamarin::android::internal
 
 		char*	get_java_class_name_for_TypeManager (jclass klass);
 
+#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+		// TODO: remove after marshal methods are generated in libxamarin-app.so
+		static XamarinAndroidAppContext* get_app_context () noexcept
+		{
+			return &xa_app_context;
+		}
+#endif
+
 	private:
 #if defined (ANDROID)
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
@@ -422,9 +430,9 @@ namespace xamarin::android::internal
 		static void        *api_dso_handle;
 #endif // !def NET
 		static std::mutex   dso_handle_write_lock;
-#if defined (RELEASE) && defined (ANDROID)
-		XamarinAndroidAppContext xa_app_context;
-#endif // def RELEASE && def ANDROID
+#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+		static XamarinAndroidAppContext xa_app_context;
+#endif // def RELEASE && def ANDROID && def NET6
 	};
 }
 #endif
