@@ -12,7 +12,8 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <XamarinAndroidVersion>@ANDROID_PACK_VERSION_LONG@</XamarinAndroidVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <_AndroidTargetingPackId>$(TargetPlatformVersion.TrimEnd('.0'))</_AndroidTargetingPackId>
+    <_AndroidTargetingPackId Condition="$(TargetPlatformVersion.EndsWith('.0'))">$(TargetPlatformVersion.Substring(0, $(TargetPlatformVersion.LastIndexOf('.0'))))</_AndroidTargetingPackId>
+    <_AndroidTargetingPackId Condition="'$(_AndroidTargetingPackId)' == ''">$(TargetPlatformVersion)</_AndroidTargetingPackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidTargetingPackId)' &lt; '@ANDROID_LATEST_STABLE_API_LEVEL@' ">@ANDROID_LATEST_STABLE_API_LEVEL@</_AndroidRuntimePackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidRuntimePackId>
   </PropertyGroup>
