@@ -1429,6 +1429,12 @@ stages:
         artifactName: vs-msi-nugets
         downloadPath: $(Build.StagingDirectory)\nuget-signed
 
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        nuGetServiceConnections: $(DotNetFeedCredential)
+        forceReinstallCredentialProvider: true
+
     - task: NuGetCommand@2
       displayName: push nupkgs
       inputs:
