@@ -5,7 +5,7 @@
 
 using namespace xamarin::android::internal;
 
-void* XamarinAndroidAppContext::get_function_pointer (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token)
+void* MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token) noexcept
 {
 	MonoImage *image = MonoImageLoader::get_from_index (mono_image_index);
 

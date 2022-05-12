@@ -9,7 +9,6 @@
 #include "timing.hh"
 #include "cpp-util.hh"
 #include "xxhash.hh"
-#include "xamarin-app-marshaling.hh"
 
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
@@ -66,14 +65,6 @@ namespace xamarin::android::internal
 			return xamarin::android::xxhash::hash (s.c_str (), s.length ());
 		}
 	};
-
-#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
-	class XamarinAndroidAppContext final : public AppContext
-	{
-	public:
-		virtual void* get_function_pointer (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token) override final;
-	};
-#endif // def RELEASE && def ANDROID
 
 	class MonodroidRuntime
 	{
@@ -258,14 +249,6 @@ namespace xamarin::android::internal
 
 		char*	get_java_class_name_for_TypeManager (jclass klass);
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
-		// TODO: remove after marshal methods are generated in libxamarin-app.so
-		static XamarinAndroidAppContext* get_app_context () noexcept
-		{
-			return &xa_app_context;
-		}
-#endif
-
 	private:
 #if defined (ANDROID)
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
@@ -367,7 +350,12 @@ namespace xamarin::android::internal
 
 #if defined (NET)
 		static void monodroid_debugger_unhandled_exception (MonoException *ex);
-#endif
+
+#if defined (RELEASE) && defined (ANDROID)
+		static void* get_function_pointer (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token) noexcept;
+#endif // def RELEASE && def ANDROID
+#endif // def NET6
+
 
 #if defined (DEBUG)
 		void set_debug_env_vars (void);
@@ -430,9 +418,6 @@ namespace xamarin::android::internal
 		static void        *api_dso_handle;
 #endif // !def NET
 		static std::mutex   dso_handle_write_lock;
-#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
-		static XamarinAndroidAppContext xa_app_context;
-#endif // def RELEASE && def ANDROID && def NET6
 	};
 }
 #endif

@@ -9,10 +9,6 @@
 #include "monodroid.h"
 #include "xxhash.hh"
 
-#if defined (RELEASE)
-#include "xamarin-app-marshaling.hh"
-#endif // def RELEASE
-
 static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
@@ -282,7 +278,9 @@ MONO_API MONO_API_EXPORT MonoImage* assembly_image_cache[];
 MONO_API MONO_API_EXPORT const uint32_t assembly_image_cache_indices[];
 MONO_API MONO_API_EXPORT const xamarin::android::hash_t assembly_image_cache_hashes[];
 
-MONO_API_EXPORT void xamarin_app_init ();
+using get_function_pointer_fn = void*(*)(uint32_t mono_image_index, uint32_t class_token, uint32_t method_token);
+
+MONO_API_EXPORT void xamarin_app_init (get_function_pointer_fn fn);
 #endif // def RELEASE && def ANDROID && def NET6
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

@@ -1,78 +1,59 @@
 #include <cstdlib>
 #include <android/log.h>
 
+#include <jni.h>
+
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/class.h>
 #include <mono/metadata/object.h>
 
-#include "xamarin-app-marshaling-private.hh"
+#include "xamarin-app.hh"
 
-using namespace xamarin::android::internal;
+static get_function_pointer_fn get_function_pointer;
 
-static XamarinAppMarshaling xam;
-
-void XamarinAppMarshaling::init (AppContext *ctx) noexcept
+void xamarin_app_init (get_function_pointer_fn fn)
 {
-	context = ctx;
+	get_function_pointer = fn;
 }
 
-force_inline
-MonoObject* XamarinAppMarshaling::invoke_managed_method (uint8_t *module_uuid, uint32_t module_id, uint32_t type_token, uint32_t method_token, void **params) const noexcept
+using android_app_activity_on_create_bundle_fn = void (*) (JNIEnv *env, jclass klass, jobject savedInstanceState);
+static android_app_activity_on_create_bundle_fn android_app_activity_on_create_bundle = nullptr;
+
+JNIEXPORT void
+JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv *env, jclass klass, jobject savedInstanceState)
 {
-	return nullptr;
+	//	log_info (LOG_DEFAULT, "%s (%p, %p, %p)", __PRETTY_FUNCTION__, env, klass, savedInstanceState);
+
+	if (android_app_activity_on_create_bundle == nullptr) {
+		void *fn = get_function_pointer (
+			16 /* Mono.Android.dll index */,
+			0x020000AF /* Android.App.Activity token */,
+			0x0600055B /* n_OnCreate_Landroid_os_Bundle_ */
+		);
+
+		android_app_activity_on_create_bundle = reinterpret_cast<android_app_activity_on_create_bundle_fn>(fn);
+	}
+
+	android_app_activity_on_create_bundle (env, klass, savedInstanceState);
 }
 
-MonoObject* monodroid_invoke_managed_method (uint8_t *module_uuid, uint32_t module_id,  uint32_t type_token, uint32_t method_token, void **params)
-{
-	return xam.invoke_managed_method (module_uuid, module_id, type_token, method_token, params);
-}
+using android_app_activity_on_create_view_fn = jobject (*) (JNIEnv *env, jclass klass, jobject view, jstring name, jobject context, jobject attrs);
+static android_app_activity_on_create_view_fn android_app_activity_on_create_view = nullptr;
 
-jboolean monodroid_unbox_value_boolean (MonoObject *value)
+JNIEXPORT jobject
+JNICALL Java_helloandroid_MainActivity_n_1onCreateView__Landroid_view_View_2Ljava_lang_String_2Landroid_content_Context_2Landroid_util_AttributeSet_2 (JNIEnv *env, jclass klass, jobject view, jstring name, jobject context, jobject attrs)
 {
-	return xam.unbox_value<jboolean> (value);
-}
+	//	log_info (LOG_DEFAULT, "%s (%p, %p, %p, %p, %p, %p)", __PRETTY_FUNCTION__, env, klass, view, name, context, attrs);
 
-jbyte monodroid_unbox_value_byte (MonoObject *value)
-{
-	return xam.unbox_value<jbyte> (value);
-}
+	if (android_app_activity_on_create_view == nullptr) {
+		void *fn = get_function_pointer (
+			16 /* Mono.Android.dll index */,
+			0x020000AF /* Android.App.Activity token */,
+			0x06000564 /* n_OnCreateView_Landroid_view_View_Ljava_lang_String_Landroid_content_Context_Landroid_util_AttributeSet_ */
+		);
 
-jchar monodroid_unbox_value_char (MonoObject *value)
-{
-	return xam.unbox_value<jchar> (value);
-}
+		android_app_activity_on_create_view = reinterpret_cast<android_app_activity_on_create_view_fn>(fn);
+	}
 
-jdouble monodroid_unbox_value_double (MonoObject *value)
-{
-	return xam.unbox_value<jdouble> (value);
-}
-
-jfloat monodroid_unbox_value_float (MonoObject *value)
-{
-	return xam.unbox_value<jfloat> (value);
-}
-
-jint monodroid_unbox_value_int (MonoObject *value)
-{
-	return xam.unbox_value<jint> (value);
-}
-
-jlong monodroid_unbox_value_long (MonoObject *value)
-{
-	return xam.unbox_value<jlong> (value);
-}
-
-void* monodroid_unbox_value_pointer (MonoObject *value)
-{
-	return xam.unbox_value<void*> (value);
-}
-
-jshort monodroid_unbox_value_short (MonoObject *value)
-{
-	return xam.unbox_value<jshort> (value);
-}
-
-void xamarin_app_init (AppContext *context)
-{
-	xam.init (context);
+	return android_app_activity_on_create_view (env, klass, view, name, context, attrs);
 }

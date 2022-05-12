@@ -609,22 +609,17 @@ target_link_options(
   )
 
 if(ANDROID)
-  if(NOT DEBUG_BUILD)
+  if(NOT DEBUG_BUILD AND ENABLE_NET6)
     # The marshaling lib is used only when building for devices
     add_library(
       ${XAMARIN_APP_MARSHALING_LIB}
-      STATIC
+      SHARED
       ${XAMARIN_APP_MARSHALING_LIB_SOURCES}
       )
 
     target_link_libraries(
       ${XAMARIN_APP_MARSHALING_LIB}
       ${MONOSGEN_LIB_LINK}
-      )
-
-    target_link_libraries(
-      ${XAMARIN_APP_STUB_LIB}
-      ${XAMARIN_APP_MARSHALING_LIB}
       )
   endif()
 
@@ -735,3 +730,10 @@ target_link_libraries(
   ${XAMARIN_MONO_ANDROID_LIB}
   ${LINK_LIBS} xamarin-app
   )
+
+if((NOT DEBUG_BUILD) AND ANDROID AND ENABLE_NET6)
+  target_link_libraries(
+    ${XAMARIN_MONO_ANDROID_LIB}
+    ${XAMARIN_APP_MARSHALING_LIB}
+  )
+endif()

@@ -168,7 +168,7 @@ const xamarin::android::hash_t assembly_image_cache_hashes[] = {
 	3,
 };
 
-void xamarin_app_init ([[maybe_unused]] xamarin::android::internal::AppContext *context)
+void xamarin_app_init ([[maybe_unused]] get_function_pointer_fn fn)
 {
 	// Dummy
 }
