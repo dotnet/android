@@ -6,7 +6,7 @@ ms.assetid: 5EBEE1A5-3879-45DD-B1DE-5CD4327C2656
 ms.technology: xamarin-android
 author: jonpryor
 ms.author: jopryo
-ms.date: 03/29/2022
+ms.date: 05/11/2022
 ---
 
 # Build Items
@@ -88,6 +88,13 @@ package.
 
 Files with a Build action of `AndroidJavaSource` are Java source code which
 will be included in the final Android package.
+
+Starting with .NET 7, all `**\*.java` files within the project directory
+automatically have a Build action of `AndroidJavaSource`, *and* will be
+bound prior to the Assembly build.  This allows C# code to easily use
+types and members present within the `**\*.java` files.
+
+Set `%(AndroidJavaSource.Bind)` to False to disable this behavior.
 
 ## AndroidLibrary
 

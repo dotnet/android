@@ -52,7 +52,7 @@ This file is only used by binding projects.
       <FileWrites Include="$(IntermediateOutputPath)class-parse.rsp" />
       <!-- Created by <BindingGenerator /> -->
       <FileWrites Condition="Exists ('$(IntermediateOutputPath)java-resolution-report.log')" Include="$(IntermediateOutputPath)java-resolution-report.log" />
-    </ItemGroup>    
+    </ItemGroup>
   </Target>
 
   <Target Name="_GetJavaSourceJarJavadocFiles"
