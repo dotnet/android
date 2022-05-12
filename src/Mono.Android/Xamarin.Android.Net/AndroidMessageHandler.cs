@@ -139,6 +139,8 @@ namespace Xamarin.Android.Net
 
 		public bool UseProxy { get; set; } = true;
 
+		private bool CouldHaveNTCredentials => Proxy != null || Credentials != null;
+
 		public IWebProxy? Proxy { get; set; }
 
 		public ICredentials? Credentials { get; set; }
@@ -332,6 +334,19 @@ namespace Xamarin.Android.Net
 		/// <param name="request">Request provided by <see cref="System.Net.Http.HttpClient"/></param>
 		/// <param name="cancellationToken">Cancellation token.</param>
 		protected override async Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+		{
+			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
+
+#if !MONOANDROID1_0
+			if (CouldHaveNTCredentials && RequestNeedsAuthorization && NTAuthenticationHelper.TryGetSupportedAuthMethod (this, request, out var auth, out var credentials)) {
+				response = await NTAuthenticationHelper.SendAsync (this, request, response, auth, credentials, cancellationToken).ConfigureAwait (false);
+			}
+#endif
+
+			return response;
+		}
+
+		internal async Task <HttpResponseMessage> DoSendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
 			AssertSelf ();
 			if (request == null)
