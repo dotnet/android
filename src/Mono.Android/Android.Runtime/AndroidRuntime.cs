@@ -341,14 +341,23 @@ namespace Android.Runtime {
 
 			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: targetType={targetType.ToString ()}, targetName={targetName.ToString ()}, targetSig=`{targetSig.ToString()}`, paramCount={paramCountStr.ToString ()}, isStatic={isStaticStr.ToString ()}");
 
-			int paramCount      = 0;
-			if (!paramCountStr.IsEmpty &&
-					!int.TryParse (paramCountStr, 0, System.Globalization.CultureInfo.InvariantCulture, out paramCount)) {
-				return null;
+			int? paramCount     = null;
+			if (!paramCountStr.IsEmpty) {
+				if (!int.TryParse (paramCountStr, 0, System.Globalization.CultureInfo.InvariantCulture, out var count)) {
+					return null;
+				}
+				paramCount      = count;
 			}
+
 			bool isStatic       = false;
 			if (isStaticStr.Equals ("true", StringComparison.Ordinal)) {
 				isStatic        = true;
+			}
+
+			if (targetSig.IsEmpty && isStatic) {
+				paramCount          = paramCount ?? JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature);
+				paramCount++;
+				jniMethodSignature  = $"(L{jniSourceType};" + jniMethodSignature.Substring ("(".Length);
 			}
 
 			return new JniRuntime.ReplacementMethodInfo {

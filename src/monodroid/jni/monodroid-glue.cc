@@ -1192,7 +1192,7 @@ MonodroidRuntime::init_android_runtime (
 		native_to_managed_index = internal_timing->start_event (TimingEventKind::NativeToManagedTransition);
 	}
 
-	if (mappingXml != nullptr) {
+	if (mappingXml != nullptr && mappingXmlLen > 0) {
 		init.mappingXml             = env->GetByteArrayElements (mappingXml, nullptr);
 		init.mappingXmlLen          = mappingXmlLen;
 	}
@@ -2449,7 +2449,7 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava, jbyteArray mappingXml, jint mappingXmlLen, [[maybe_unused]] jstring packageName,
+                                [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava, [[maybe_unused]] jstring packageName,
                                 jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
@@ -2461,8 +2461,8 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		appDirs,
 		loader,
 		assembliesJava,
-		mappingXml,
-		mappingXmlLen,
+		/* mappingXml */ nullptr,
+		/* mappingXmlLen */ 0,
 		apiLevel,
 		/* isEmulator */ JNI_FALSE,
 		/* haveSplitApks */ JNI_FALSE

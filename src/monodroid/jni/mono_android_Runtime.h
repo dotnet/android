@@ -41,15 +41,6 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged
 
 /*
  * Class:     mono_android_Runtime
- * Method:    dumpTimingData
- * Signature: ()V
-*/
-JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTimingData
-  (JNIEnv *, jclass);
-
-#if !defined (ANDROID)
-/*
- * Class:     mono_android_Runtime
  * Method:    createNewContext
  * Signature: ([Ljava/lang/String;[Ljava/lang/String;Ljava/lang/ClassLoader;)I
  */
@@ -87,6 +78,14 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_destroyContexts
  */
 JNIEXPORT void JNICALL Java_mono_android_Runtime_propagateUncaughtException
   (JNIEnv *, jclass, jobject, jthrowable);
+
+/*
+ * Class:     mono_android_Runtime
+ * Method:    dumpTimingData
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTimingData
+  (JNIEnv *, jclass);
 
 #ifdef __cplusplus
 }

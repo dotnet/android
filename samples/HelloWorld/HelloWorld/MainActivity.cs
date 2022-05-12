@@ -9,7 +9,12 @@ namespace HelloWorld
 		Label           = "HelloWorld",
 		MainLauncher    = true,
 		Name            = "example.MainActivity")]
-	public class MainActivity : Activity
+	public class MainActivity :
+#if NET
+		Example.RemapActivity
+#else   // NET
+		Activity
+#endif  // NET
 	{
 		int count = 1;
 
