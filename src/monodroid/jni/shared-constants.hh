@@ -26,9 +26,9 @@ namespace xamarin::android::internal
 
 		static constexpr char DLL_EXTENSION[] = ".dll";
 
-#if defined (NET6)
+#if defined (NET)
 		static constexpr char RUNTIME_CONFIG_BLOB_NAME[] = "rc.bin";
-#endif // def NET6
+#endif // def NET
 
 #if defined (ANDROID) || defined (__linux__) || defined (__linux)
 		static constexpr char MONO_SGEN_SO[]      = "libmonosgen-2.0.so";

@@ -7,6 +7,8 @@ namespace Xamarin.Android.Prepare
 	{
 		public const string AndroidNdkVersion = "24";
 		public const string AndroidNdkPkgRevision = "24.0.8215888";
+		public const int NdkMinimumAPI = 21;
+		public const int NdkMinimumAPILegacy32 = 19;
 
 		public static readonly List<AndroidPlatform> AllPlatforms = new List<AndroidPlatform> {
 			new AndroidPlatform (apiName: "",                       apiLevel: 1,  platformID: "1"),
@@ -44,17 +46,12 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "Tiramisu",               apiLevel: 33, platformID: "Tiramisu",  include: "v12.1.99",   framework: "v12.1.99", stable: false),
 		};
 
-		// These are here until we can drop "legacy" targets and use only .NET6+
-		public const string AndroidArmV7a_NET6 = AbiNames.TargetJit.AndroidArmV7a + "_NET6";
-		public const string AndroidArmV8a_NET6 = AbiNames.TargetJit.AndroidArmV8a + "_NET6";
-		public const string AndroidX86_NET6    = AbiNames.TargetJit.AndroidX86 + "_NET6";
-		public const string AndroidX86_64_NET6 = AbiNames.TargetJit.AndroidX86_64 + "_NET6";
-
-		public static readonly Dictionary<string, uint> NdkMinimumAPI = new Dictionary<string, uint> {
-			{ AbiNames.TargetJit.AndroidArmV7a, 19 }, { AndroidArmV7a_NET6, 21 },
-			{ AbiNames.TargetJit.AndroidArmV8a, 21 }, { AndroidArmV8a_NET6, 21 },
-			{ AbiNames.TargetJit.AndroidX86,    19 }, { AndroidX86_NET6, 21 },
-			{ AbiNames.TargetJit.AndroidX86_64, 21 }, { AndroidX86_64_NET6, 21 },
+		public static readonly Dictionary<string, uint> NdkMinimumAPIMap = new Dictionary<string, uint> {
+			{ AbiNames.TargetJit.AndroidArmV7a, NdkMinimumAPILegacy32 },
+			{ AbiNames.TargetJit.AndroidArmV8a, NdkMinimumAPI },
+			{ AbiNames.TargetJit.AndroidX86,    NdkMinimumAPILegacy32 },
+			{ AbiNames.TargetJit.AndroidX86_64, NdkMinimumAPI },
 		};
+
 	}
 }

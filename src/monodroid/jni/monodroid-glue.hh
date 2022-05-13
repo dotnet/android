@@ -8,7 +8,7 @@
 #include <mono/metadata/appdomain.h>
 #include <mono/utils/mono-publib.h>
 
-#if !defined (NET6)
+#if !defined (NET)
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -17,7 +17,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-#endif // NET6
+#endif // NET
 
 int monodroid_get_system_property_from_overrides (const char *name, char ** value);
 JNIEnv* get_jnienv (void);

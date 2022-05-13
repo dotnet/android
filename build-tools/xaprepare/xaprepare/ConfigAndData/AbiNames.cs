@@ -149,5 +149,19 @@ namespace Xamarin.Android.Prepare
 			}
 			Log.Instance.DebugLine ();
 		}
+
+		public static string AbiToRuntimeIdentifier (string androidAbi)
+		{
+			if (androidAbi == TargetJit.AndroidArmV7a) {
+				return "android-arm";
+			} else if (androidAbi == TargetJit.AndroidArmV8a) {
+				return "android-arm64";
+			} else if (androidAbi == TargetJit.AndroidX86) {
+				return "android-x86";
+			} else if (androidAbi == TargetJit.AndroidX86_64) {
+				return "android-x64";
+			}
+			throw new InvalidOperationException ($"Unknown abi: {androidAbi}");
+		}
 	}
 }

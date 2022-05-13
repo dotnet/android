@@ -1,7 +1,7 @@
 #if !defined (__MONOVM_PROPERTIES_HH)
 #define __MONOVM_PROPERTIES_HH
 
-#if defined (NET6)
+#if defined (NET)
 #include <cstring>
 #include "monodroid-glue-internal.hh"
 #include "jni-wrappers.hh"
@@ -60,5 +60,5 @@ namespace xamarin::android::internal
 		constexpr static size_t N_PROPERTY_VALUES = sizeof(_property_values) / sizeof(const char*);
 	};
 }
-#endif // def NET6
+#endif // def NET
 #endif // ndef __MONOVM_PROPERTIES_HH

@@ -151,7 +151,7 @@ EmbeddedAssemblies::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	get_assembly_data (e.image_data, e.descriptor->data_size, "<assembly_store>", assembly_data, assembly_data_size);
 }
 
-#if defined (NET6)
+#if defined (NET)
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, [[maybe_unused]] MonoError *error)
 {
@@ -168,7 +168,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoad
 
 	return open_from_bundles (aname, loader, false /* ref_only */);
 }
-#endif // def NET6
+#endif // def NET
 
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
@@ -304,7 +304,7 @@ EmbeddedAssemblies::load_bundled_assembly (
 		return nullptr;
 	}
 
-#if !defined (NET6)
+#if !defined (NET)
 	// In dotnet the call is a no-op
 	mono_config_for_assembly (image);
 #endif
@@ -423,7 +423,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 		if (bba->debug_data_offset != 0) {
 			assembly_runtime_info.debug_info_data = rd.data_start + bba->debug_data_offset;
 		}
-#if !defined (NET6)
+#if !defined (NET)
 		if (bba->config_data_size != 0) {
 			assembly_runtime_info.config_data = rd.data_start + bba->config_data_offset;
 
@@ -433,7 +433,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 				utils.strdup_new (reinterpret_cast<const char*>(assembly_runtime_info.config_data))
 			);
 		}
-#endif // NET6
+#endif // NET
 
 		log_debug (
 			LOG_ASSEMBLY,
@@ -476,7 +476,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 		return nullptr;
 	}
 
-#if !defined (NET6)
+#if !defined (NET)
 	mono_config_for_assembly (image);
 #endif
 	return a;
@@ -509,19 +509,19 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 	return a;
 }
 
-#if defined (NET6)
+#if defined (NET)
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data, MonoError *error)
 {
 	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error);
 }
-#else // def NET6
+#else // def NET
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
 	return embeddedAssemblies.open_from_bundles (aname, true);
 }
-#endif // ndef NET6
+#endif // ndef NET
 
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
@@ -533,12 +533,12 @@ void
 EmbeddedAssemblies::install_preload_hooks_for_appdomains ()
 {
 	mono_install_assembly_preload_hook (open_from_bundles_full, nullptr);
-#if !defined (NET6)
+#if !defined (NET)
 	mono_install_assembly_refonly_preload_hook (open_from_bundles_refonly, nullptr);
-#endif // ndef NET6
+#endif // ndef NET
 }
 
-#if defined (NET6)
+#if defined (NET)
 void
 EmbeddedAssemblies::install_preload_hooks_for_alc ()
 {
@@ -548,7 +548,7 @@ EmbeddedAssemblies::install_preload_hooks_for_alc ()
 		0 /* append */
 	);
 }
-#endif // def NET6
+#endif // def NET
 
 template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_precalculated_size>
 force_inline const Entry*
@@ -754,9 +754,9 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 		return nullptr;
 	}
 
-#if defined (NET6)
+#if defined (NET)
 	// MonoVM in dotnet runtime doesn't use the `domain` parameter passed to `mono_type_get_object` (since AppDomains
-	// are gone in NET6+), in fact, the function `mono_type_get_object` calls (`mono_type_get_object_checked`) itself
+	// are gone in NET 6+), in fact, the function `mono_type_get_object` calls (`mono_type_get_object_checked`) itself
 	// calls `mono_get_root_domain`. Thus, we can save on a one function call here by passing `nullptr`
 	constexpr MonoDomain *domain = nullptr;
 #else

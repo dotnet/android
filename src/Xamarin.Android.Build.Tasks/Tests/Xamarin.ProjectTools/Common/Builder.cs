@@ -18,7 +18,7 @@ namespace Xamarin.ProjectTools
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
 		const int DefaultBuildTimeOut = 30;
 
-		string Arm32AbiDir => UseDotNet ? "armeabi-v7a-net6" : "armeabi-v7a";
+		string Arm32AbiDir => UseDotNet ? "android-arm" : "armeabi-v7a";
 
 		/// <summary>
 		/// If true, use `dotnet build` and IShortFormProject throughout the tests
