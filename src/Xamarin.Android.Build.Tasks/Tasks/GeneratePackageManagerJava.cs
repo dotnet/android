@@ -435,18 +435,34 @@ namespace Xamarin.Android.Tasks
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 				JNIEnvInitializeToken = jnienv_initialize_method_token,
 				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
-				UniqueAssemblyNames = uniqueAssemblyNames,
 			};
 			appConfigAsmGen.Init ();
 
+			var marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator () {
+				NumberOfAssembliesInApk = assemblyCount,
+				UniqueAssemblyNames = uniqueAssemblyNames,
+				OverriddenMethods = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<List<string>> (GenerateJavaStubs.MarshalMethodsRegisterTaskKey, RegisteredTaskObjectLifetime.Build)
+			};
+			marshalMethodsAsmGen.Init ();
+
 			foreach (string abi in SupportedAbis) {
-				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
-				string llFilePath  = $"{baseAsmFilePath}.ll";
+				string targetAbi = abi.ToLowerInvariant ();
+				string environmentBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{targetAbi}");
+				string marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
+				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
+				string marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
+
+				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+					appConfigAsmGen.Write (targetArch, sw, environmentLlFilePath);
+					sw.Flush ();
+					Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
+				}
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					appConfigAsmGen.Write (GetAndroidTargetArchForAbi (abi), sw, llFilePath);
+					marshalMethodsAsmGen.Write (targetArch, sw, marshalMethodsLlFilePath);
 					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, llFilePath);
+					Files.CopyIfStreamChanged (sw.BaseStream, marshalMethodsLlFilePath);
 				}
 			}
 

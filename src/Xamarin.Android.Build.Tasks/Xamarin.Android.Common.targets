@@ -1591,6 +1591,14 @@ because xbuild doesn't support framework reference assemblies.
     Mode="compressed">
       <Output TaskParameter="AssemblySources" ItemName="_CompressedAssembliesAssemblySource" />
   </PrepareAbiItems>
+  <PrepareAbiItems
+    BuildTargetAbis="@(_BuildTargetAbis)"
+    NativeSourcesDir="$(_NativeAssemblySourceDir)"
+    InstantRunEnabled="$(_InstantRunEnabled)"
+    Debug="$(AndroidIncludeDebugSymbols)"
+    Mode="marshal_methods">
+      <Output TaskParameter="AssemblySources" ItemName="_MarshalMethodsAssemblySource" />
+  </PrepareAbiItems>
 </Target>
 
 <Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_ReadAndroidManifest">
@@ -1901,6 +1909,9 @@ because xbuild doesn't support framework reference assemblies.
     <_CompressedNativeAssemblyTarget Include="@(_CompressedAssembliesAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_CompressedAssembliesAssemblySource.abi)</abi>
     </_CompressedNativeAssemblyTarget>
+    <_NativeAssemblyTarget Include="@(_MarshalMethodsAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+      <abi>%(_MarshalMethodsAssemblySource.abi)</abi>
+    </_NativeAssemblyTarget>
   </ItemGroup>
 </Target>
 
@@ -1920,10 +1931,10 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileNativeAssemblySources"
     DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
-    Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource)"
+    Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
-      Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource)"
+      Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       WorkingDirectory="$(_NativeAssemblySourceDir)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"

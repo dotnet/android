@@ -14,6 +14,7 @@ namespace Xamarin.Android.Tasks
 		const string TypeMapBase = "typemaps";
 		const string EnvBase = "environment";
 		const string CompressedAssembliesBase = "compressed_assemblies";
+		const string MarshalMethodsBase = "marshal_methods";
 
 		public override string TaskPrefix => "PAI";
 
@@ -50,6 +51,8 @@ namespace Xamarin.Android.Tasks
 				baseName = EnvBase;
 			} else if (String.Compare ("compressed", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
 				baseName = CompressedAssembliesBase;
+			} else if (String.Compare ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+				baseName = MarshalMethodsBase;
 			} else {
 				Log.LogError ($"Unknown mode: {Mode}");
 				return false;

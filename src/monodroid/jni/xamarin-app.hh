@@ -259,7 +259,15 @@ MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_stores[];
 
 MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
 
+//
+// Support for marshal methods
+//
 #if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+struct MarshalMethodsManagedClass
+{
+	const uint32_t   token;
+	MonoClass       *klass;
+};
 
 // Number of assembly name forms for which we generate hashes (essentially file name mutations. For instance
 // `HelloWorld.dll`, `HelloWorld`, `en-US/HelloWorld` etc). This is multiplied by the number of assemblies in the apk to
@@ -277,6 +285,10 @@ constexpr uint32_t number_of_assembly_name_forms_in_image_cache = 2;
 MONO_API MONO_API_EXPORT MonoImage* assembly_image_cache[];
 MONO_API MONO_API_EXPORT const uint32_t assembly_image_cache_indices[];
 MONO_API MONO_API_EXPORT const xamarin::android::hash_t assembly_image_cache_hashes[];
+
+// Number of unique classes which contain native callbacks we bind
+MONO_API MONO_API_EXPORT uint32_t marshal_methods_number_of_classes;
+MONO_API MONO_API_EXPORT MarshalMethodsManagedClass marshal_methods_class_cache[];
 
 using get_function_pointer_fn = void*(*)(uint32_t mono_image_index, uint32_t class_token, uint32_t method_token);
 
