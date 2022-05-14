@@ -59,10 +59,10 @@ variables:
   - group: AzureDevOps-Artifact-Feeds-Pats
   - group: DotNet-MSRC-Storage
   - name: DotNetFeedCredential
-    value: dotnet6-internal-dnceng-internal-feed
+    value: dotnet7-internal-dnceng-internal-feed
 - ${{ if ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - name: DotNetFeedCredential
-    value: dnceng-dotnet6
+    value: dnceng-dotnet7
 - ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Real
@@ -1436,9 +1436,7 @@ stages:
         packagesToPush: $(Build.StagingDirectory)\nuget-signed\*.nupkg
         nuGetFeedType: external
         publishFeedCredentials: $(DotNetFeedCredential)
-      condition: false
-      # NET7TODO: Enable once we have access to the dnceng-dotnet7 feed.
-      #condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
     - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
       parameters:
