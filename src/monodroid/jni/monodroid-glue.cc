@@ -2503,6 +2503,7 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		total_time_index = internal_timing->start_event (TimingEventKind::RuntimeRegister);
 	}
 
+#if defined (ENABLE_MARSHAL_METHODS)
 	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 	log_info (LOG_DEFAULT, "[TESTING] Registering managed type: '%s'", mt_ptr);
 	bool ignore = strcmp (mt_ptr, "HelloAndroid.MainActivity, HelloAndroid") == 0;
@@ -2512,6 +2513,7 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		log_info (LOG_DEFAULT, "[TESTING] This type's registration is ignored");
 		return;
 	}
+#endif
 
 	jsize managedType_len = env->GetStringLength (managedType);
 	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
