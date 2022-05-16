@@ -25,6 +25,36 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		JavaInterop1,
 	}
 
+	public class OverriddenMethodDescriptor
+	{
+		static readonly char[] methodDescSplitChars = new char[] { ':' };
+
+		public string JavaPackageName { get; }
+		public string NativeName      { get; }
+		public string JniSignature    { get; }
+		public string Connector       { get; }
+		public string ManagedTypeName { get; }
+
+		public OverriddenMethodDescriptor (string javaPackageName, string methodDescription)
+		{
+			JavaPackageName = javaPackageName;
+			string[] parts = methodDescription.Split (methodDescSplitChars, 4);
+
+			if (parts.Length < 2) {
+				throw new InvalidOperationException ($"Unexpected format for method description. Expected at least 2 parts, got {parts.Length} from: '{methodDescription}'");
+			}
+
+			NativeName = parts[0];
+			JniSignature = parts[1];
+			if (parts.Length > 2) {
+				Connector = parts[2];
+				if (parts.Length > 3) {
+					ManagedTypeName = parts[3];
+				}
+			}
+		}
+	}
+
 	 public class JavaCallableWrapperGenerator {
 
 		class JavaFieldInfo {
@@ -59,6 +89,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		List<Signature> methods = new List<Signature> ();
 		List<Signature> ctors   = new List<Signature> ();
 		List<JavaCallableWrapperGenerator> children;
+		List<OverriddenMethodDescriptor> overriddenMethodDescriptors;
 		readonly IMetadataResolver cache;
 
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
@@ -80,6 +111,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			}
 		}
 
+		public  IList<OverriddenMethodDescriptor> OverriddenMethodDescriptors => overriddenMethodDescriptors;
 		public  string          ApplicationJavaClass            { get; set; }
 		public  JavaPeerStyle   CodeGenerationTarget            { get; set; }
 
@@ -89,7 +121,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		/// <summary>
 		/// The Java source code to be included in Instrumentation.onCreate
-		/// 
+		///
 		/// Originally came from MonoRuntimeProvider.java delimited by:
 		/// // Mono Runtime Initialization {{{
 		/// // }}}
@@ -497,6 +529,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		public void Generate (TextWriter writer)
 		{
+			overriddenMethodDescriptors = new List<OverriddenMethodDescriptor> ();
 			if (!string.IsNullOrEmpty (package)) {
 				writer.WriteLine ("package " + package + ";");
 				writer.WriteLine ();
@@ -530,6 +563,17 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				}
 
 			GenerateFooter (writer);
+
+			string javaTypeName = $"{package}.{name}";
+			AddOverridenMethods (methods);
+			AddOverridenMethods (ctors);
+
+			void AddOverridenMethods (List<Signature> list)
+			{
+				foreach (Signature sig in list) {
+					overriddenMethodDescriptors.Add (new OverriddenMethodDescriptor (javaTypeName, sig.Method));
+				}
+			}
 		}
 
 		public void Generate (string outputPath)
@@ -958,5 +1002,3 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		}
 	}
 }
-
-
