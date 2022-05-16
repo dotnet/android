@@ -1592,6 +1592,7 @@ because xbuild doesn't support framework reference assemblies.
       <Output TaskParameter="AssemblySources" ItemName="_CompressedAssembliesAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
+    Condition=" '$(_EnableMarshalMethods)' == 'YesPlease' "
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
     InstantRunEnabled="$(_InstantRunEnabled)"

@@ -23,6 +23,10 @@
     <RollForward>Major</RollForward>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(MSBuildRuntimeType)' == 'Core' ">
+    <_EnableMarshalMethods>NoThanks</_EnableMarshalMethods> <!-- set to YesPlease to enable -->
+  </PropertyGroup>
+
   <PropertyGroup>
     <ProductVersion>12.3.99</ProductVersion>
     <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.

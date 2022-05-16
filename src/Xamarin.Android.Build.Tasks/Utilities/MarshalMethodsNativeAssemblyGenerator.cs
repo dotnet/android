@@ -1,3 +1,4 @@
+#if ENABLE_MARSHAL_METHODS
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,6 +6,8 @@ using System.Linq;
 using System.Text;
 
 using Java.Interop.Tools.TypeNameMappings;
+using Java.Interop.Tools.JavaCallableWrappers;
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -28,20 +31,13 @@ namespace Xamarin.Android.Tasks
 
 		public ICollection<string> UniqueAssemblyNames { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
-		public List<string> OverriddenMethods { get; set; }
+		public List<OverriddenMethodDescriptor> OverriddenMethodDescriptors { get; set; }
 
 		StructureInfo<TypeMappingReleaseNativeAssemblyGenerator.MonoImage> monoImage;
 		StructureInfo<MonoClass> monoClass;
 
 		public override void Init ()
-		{
-			if (OverriddenMethods != null) {
-				Console.WriteLine ("Overridden methods:");
-				foreach (string om in OverriddenMethods) {
-					Console.WriteLine ($"  {om}");
-				}
-			}
-		}
+		{}
 
 		protected override void MapStructures (LlvmIrGenerator generator)
 		{
@@ -115,3 +111,4 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
+#endif
