@@ -30,58 +30,19 @@
 #include "globals.hh"
 #include "monodroid-glue.hh"
 #include "cpp-util.hh"
+#include "timing-internal.hh"
 
 using namespace xamarin::android;
-
-#if defined (ANDROID) || defined (__linux__) || defined (__linux)
-using timestruct = timespec;
-#else
-using timestruct = timeval;
-#endif
+using namespace xamarin::android::internal;
 
 void timing_point::mark ()
 {
-	int ret;
-	uint64_t tail;
-	timestruct tv_ctm;
-
-#if defined (ANDROID) || defined (__linux__) || defined (__linux)
-	ret = clock_gettime (CLOCK_MONOTONIC, &tv_ctm);
-	tail = static_cast<uint64_t>(tv_ctm.tv_nsec);
-#else
-	ret = gettimeofday (&tv_ctm, static_cast<timestruct*> (nullptr));
-	tail = tv_ctm.tv_usec * 1000LL;
-#endif
-	if (ret != 0) {
-		sec = 0ULL;
-		ns = 0ULL;
-		return;
-	}
-
-	sec = tv_ctm.tv_sec;
-	ns = tail;
+	FastTiming::get_time (sec, ns);
 }
 
 timing_diff::timing_diff (const timing_period &period)
 {
-	uint64_t nsec;
-	if (period.end.ns < period.start.ns) {
-		sec = period.end.sec - period.start.sec - 1;
-		if (sec < 0)
-			sec = 0;
-		nsec = 1000000000ULL + period.end.ns - period.start.ns;
-	} else {
-		sec = period.end.sec - period.start.sec;
-		nsec = period.end.ns - period.start.ns;
-	}
-
-	ms = static_cast<uint32_t>(nsec / ms_in_nsec);
-	if (ms >= 1000) {
-		sec += ms / 1000;
-		ms = ms % 1000;
-	}
-
-	ns = static_cast<uint32_t>(nsec % ms_in_nsec);
+	FastTiming::calculate_interval (period.start, period.end, *this);
 }
 
 Util::Util ()

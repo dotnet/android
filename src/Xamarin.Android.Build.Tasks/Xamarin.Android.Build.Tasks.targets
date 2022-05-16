@@ -186,6 +186,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ManifestOverlays\Timing.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <_SharedRuntimeAssemblies Include="@(MonoProfileAssembly->'$(_SharedRuntimeBuildPath)v1.0\%(Identity)')" />
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Data.Sqlite.dll" />
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Posix.dll" />

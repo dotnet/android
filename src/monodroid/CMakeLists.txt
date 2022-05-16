@@ -480,6 +480,7 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
+  ${SOURCES_DIR}/timing-internal.cc
   ${SOURCES_DIR}/util.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc

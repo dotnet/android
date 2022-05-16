@@ -306,6 +306,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Compression.LZ4.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Hash.xxHash.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\ELFSharp.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\ManifestOverlays\Timing.xml" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />

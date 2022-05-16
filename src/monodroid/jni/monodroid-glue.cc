@@ -89,6 +89,7 @@
 #include "build-info.hh"
 #include "monovm-properties.hh"
 #include "startup-aware-lock.hh"
+#include "timing-internal.hh"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
@@ -797,7 +798,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	// TESTING UBSAN: integer overflow
 	//log_warn (LOG_DEFAULT, "Let us have an overflow: %d", INT_MAX + 1);
 
-	bool log_methods = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
+	bool log_methods = FastTiming::enabled () && !FastTiming::is_bare_mode ();
 	if (XA_UNLIKELY (log_methods)) {
 		std::unique_ptr<char> jit_log_path {utils.path_combine (androidSystem.get_override_dir (0), "methods.txt")};
 		jit_log = utils.monodroid_fopen (jit_log_path.get (), "a");
@@ -901,9 +902,10 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
 #if defined (NET6)
-	timing_period blob_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
-		blob_time.mark_start ();
+	size_t blob_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
+	}
 
 	if (embeddedAssemblies.have_runtime_config_blob ()) {
 		runtime_config_args.kind = 1;
@@ -911,9 +913,8 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
 	}
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		blob_time.mark_end ();
-		Timing::info (blob_time, "Register runtimeconfig binary blob");
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (blob_time_index);
 	}
 #endif // def NET6
 
@@ -942,7 +943,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 		constexpr char DOMAIN_NAME[] = "MonoAndroidDomain";
 		constexpr size_t DOMAIN_NAME_LENGTH = sizeof(DOMAIN_NAME) - 1;
-		constexpr size_t DOMAIN_NAME_TOTAL_SIZE = DOMAIN_NAME_LENGTH + MAX_INTEGER_DIGIT_COUNT_BASE10;
+		constexpr size_t DOMAIN_NAME_TOTAL_SIZE = DOMAIN_NAME_LENGTH + SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10;
 
 		static_local_string<DOMAIN_NAME_TOTAL_SIZE + 1> domain_name (DOMAIN_NAME_TOTAL_SIZE);
 		domain_name.append (DOMAIN_NAME);
@@ -1184,11 +1185,12 @@ MonodroidRuntime::init_android_runtime (
 
 	osBridge.initialize_on_runtime_init (env, runtimeClass);
 
-	log_info (LOG_DEFAULT, "Calling into managed runtime init");
+	log_debug (LOG_DEFAULT, "Calling into managed runtime init");
 
-	timing_period partial_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
-		partial_time.mark_start ();
+	size_t native_to_managed_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		native_to_managed_index = internal_timing->start_event (TimingEventKind::NativeToManagedTransition);
+	}
 
 #if defined (NET6) && defined (ANDROID)
 	MonoError error;
@@ -1203,9 +1205,8 @@ MonodroidRuntime::init_android_runtime (
 	utils.monodroid_runtime_invoke (domain, method, nullptr, args, nullptr);
 #endif // ndef NET6 && ndef ANDROID
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		partial_time.mark_end ();
-		Timing::info (partial_time, "Runtime.init: end native-to-managed transition");
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (native_to_managed_index);
 	}
 }
 
@@ -1856,9 +1857,10 @@ MonodroidRuntime::disable_external_signal_handlers (void)
 inline void
 MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly)
 {
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
-		total_time.mark_start ();
+	size_t total_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		total_time_index = internal_timing->start_event (TimingEventKind::AssemblyLoad);
+	}
 
 	const char *assm_name = assembly.get_cstr ();
 	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
@@ -1868,9 +1870,15 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 
 	mono_assembly_name_free (aname);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
-		TIMING_LOG_INFO (total_time, "Assembly load (ALC): %s", assm_name);
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index, true /* uses_more_info */);
+
+		constexpr char PREFIX[] = " (ALC): ";
+		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1;
+
+		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
+		more_info.append_c (assm_name);
+		internal_timing->add_more_info (total_time_index, more_info);
 	}
 }
 #endif // NET6
@@ -1878,9 +1886,10 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 inline void
 MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 {
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
-		total_time.mark_start ();
+	size_t total_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		total_time_index = internal_timing->start_event (TimingEventKind::AssemblyLoad);
+	}
 
 	const char *assm_name = assembly.get_cstr ();
 	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
@@ -1903,20 +1912,28 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 
 	mono_assembly_name_free (aname);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
-		TIMING_LOG_INFO (total_time, "Assembly load (domain): %s", assm_name);
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index, true /* uses_more_info */);
+
+		constexpr char PREFIX[] = " (domain): ";
+		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1;
+
+		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
+		more_info.append_c (assm_name);
+		internal_timing->add_more_info (total_time_index, more_info);
 	}
 }
 
 inline void
 MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preload, jstring_array_wrapper &assemblies)
 {
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
-		total_time.mark_start ();
+	size_t total_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		total_time_index = internal_timing->start_event (TimingEventKind::AssemblyPreload);
+	}
 
-	for (size_t i = 0; i < assemblies.get_length (); ++i) {
+	size_t i = 0;
+	for (i = 0; i < assemblies.get_length (); ++i) {
 		jstring_wrapper &assembly = assemblies [i];
 		load_assembly (ctx, assembly);
 		// only load the first "main" assembly if we are not preloading.
@@ -1924,10 +1941,12 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 			break;
 	}
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index, true /* uses-more_info */);
 
-		TIMING_LOG_INFO (total_time, "Finished loading assemblies: preloaded %u assemblies", assemblies.get_length ());
+		static_local_string<SharedConstants::INTEGER_BASE10_BUFFER_SIZE> more_info;
+		more_info.append (static_cast<uint64_t>(i + 1));
+		internal_timing->add_more_info (total_time_index, more_info);
 	}
 }
 
@@ -2142,10 +2161,13 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	std::unique_ptr<char[]> mono_log_mask (mono_log_mask_raw);
 	std::unique_ptr<char[]> mono_log_level (mono_log_level_raw);
 
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+	// If fast logging is disabled, log messages immediately
+	FastTiming::initialize ((log_timing_categories & LOG_TIMING_FAST_BARE) == 0);
+
+	size_t total_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		timing = new Timing ();
-		total_time.mark_start ();
+		total_time_index = internal_timing->start_event (TimingEventKind::TotalRuntimeInit);
 	}
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
@@ -2234,7 +2256,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	androidSystem.setup_process_args (runtimeApks);
 #if !defined (NET6)
 	// JIT stats based on perf counters are disabled in dotnet/mono
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE)) {
+	if (XA_UNLIKELY (FastTiming::enabled () && !FastTiming::is_bare_mode ())) {
 		mono_counters_enable (static_cast<int>(XA_LOG_COUNTERS));
 
 		dynamic_local_string<SENSIBLE_PATH_MAX> counters_path;
@@ -2329,16 +2351,15 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	__android_log_print (ANDROID_LOG_INFO, "*jonp*", "debug.mono.extra=%s", runtime_args);
 #endif
 
-	timing_period partial_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
-		partial_time.mark_start ();
+	size_t mono_runtime_init_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		mono_runtime_init_index = internal_timing->start_event (TimingEventKind::MonoRuntimeInit);
+	}
 
 	mono_runtime_init (runtime_args);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		partial_time.mark_end ();
-
-		Timing::info (partial_time, "Runtime.init: Mono runtime init");
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (mono_runtime_init_index);
 	}
 
 	jstring_array_wrapper assemblies (env, assembliesJava);
@@ -2373,16 +2394,14 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif // def ANDROID
 	}
 
-	startup_in_progress = false;
-
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
-
-		Timing::info (total_time, "Runtime.init: end, total time");
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index);
 #if !defined (NET6)
 		dump_counters ("## Runtime.init: end");
 #endif // ndef NET6
 	}
+
+	startup_in_progress = false;
 }
 
 #if !defined (NET6)
@@ -2464,17 +2483,15 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 force_inline void
 MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods)
 {
-	timing_period total_time;
+	size_t total_time_index;
 
-	dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
-
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
-		total_time.mark_start ();
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		total_time_index = internal_timing->start_event (TimingEventKind::RuntimeRegister);
+	}
 
 	jsize managedType_len = env->GetStringLength (managedType);
 	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
-
-	jsize methods_len = env->GetStringLength (methods);
+	int methods_len = env->GetStringLength (methods);
 	const jchar *methods_ptr = env->GetStringChars (methods, nullptr);
 
 #if !defined (NET6) || !defined (ANDROID)
@@ -2511,20 +2528,29 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 	env->ReleaseStringChars (methods, methods_ptr);
 	env->ReleaseStringChars (managedType, managedType_ptr);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index, true /* uses_more_info */);
 
+		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
 		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 		type.assign (mt_ptr, strlen (mt_ptr));
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
 
-		log_info_nocheck (LOG_TIMING, "Runtime.register: registering type `%s`", type.get ());
-
-		Timing::info (total_time, "Runtime.register: end time");
+		internal_timing->add_more_info (total_time_index, type);
 #if !defined (NET6)
 		dump_counters ("## Runtime.register: type=%s\n", type.get ());
 #endif
 	}
+}
+
+JNIEXPORT void
+JNICALL Java_mono_android_Runtime_dumpTimingData ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass klass)
+{
+	if (internal_timing == nullptr) {
+		return;
+	}
+
+	internal_timing->dump ();
 }
 
 JNIEXPORT void

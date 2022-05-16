@@ -205,7 +205,7 @@ _monodroid_timezone_get_default_id ()
 }
 
 static void
-_monodroid_counters_dump (const char *format, va_list args)
+_monodroid_counters_dump ([[maybe_unused]] const char *format, [[maybe_unused]] va_list args)
 {
 #if !defined (NET6)
 	monodroidRuntime.dump_counters_v (format, args);
@@ -220,7 +220,7 @@ monodroid_timing_start (const char *message)
 
 	managed_timing_sequence *ret = timing->get_available_sequence ();
 	if (message != nullptr) {
-		log_info (LOG_TIMING, message);
+		log_write (LOG_TIMING, LogLevel::Info, message);
 	}
 	ret->period.mark_start ();
 
