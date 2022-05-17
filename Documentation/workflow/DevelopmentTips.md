@@ -2,6 +2,18 @@
 
 Tips and tricks while developing Xamarin.Android.
 
+# Run MSBuild-Based On-Device Unit Tests
+
+The [`tests/MSBuildDeviceIntegration`](tests/MSBuildDeviceIntegration)
+directory contains NUnit-based unit tests which need to run against an attached
+Android device (hardware or emulator).  There are *lots* of tests in here, and
+running them all can take a significant amount of time.
+
+If you need to run only *one* `[Test]` method, you can use
+[`dotnet test --filter`](https://docs.microsoft.com/dotnet/core/testing/selective-unit-tests?pivots=mstest):
+
+    ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net6.0/MSBuildDeviceIntegration.dll --filter "Name~TypeAndMemberRemapping"
+
 # Update directory
 
 When a Xamarin.Android app launches on an Android device, and the app was

@@ -34,6 +34,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <_AndroidRemapMembers Include="Remaps.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="..\Resources\Resource.designer.cs" />
     <Compile Include="System\AppContextTests.cs" />
     <!-- Mono.Data.Sqlite is not supported in .NET 6 -->

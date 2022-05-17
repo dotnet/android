@@ -166,33 +166,20 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XASdkProject () {
 				IsRelease = isRelease,
 				OtherBuildItems = {
-					new AndroidItem._AndroidRemapMembers ("remap.xml") {
-						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
-<replacements>
-  <replace-type from='android/app/Activity' to='example/RemapActivity' />
-  <replace-method
-      source-type='example/RemapActivity'
-      source-method-name='onCreate'
-      target-type='example/RemapActivity'
-      target-method-name='onMyCreate' target-method-instance-to-static='false' />
-  <replace-method
-      source-type='android/view/View'
-      source-method-name='setOnClickListener'
-      target-type='example/ViewHelper'
-      target-method-name='mySetOnClickListener' target-method-instance-to-static='true' />
-</replacements>
-",
+					new AndroidItem._AndroidRemapMembers ("RemapActivity.xml") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => ResourceData.RemapActivityXml,
 					},
 					new AndroidItem.AndroidJavaSource ("RemapActivity.java") {
-						Encoding = Encoding.UTF8,
-						TextContent = () => ResourceData.RemapActivity,
+						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+						TextContent = () => ResourceData.RemapActivityJava,
 						Metadata = {
 							{ "Bind", "True" },
 						},
 					},
 				},
 			};
-			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", "global::Example.RemapActivity");
+			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": global::Example.RemapActivity");
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			var relativeProjDir = Path.Combine ("temp", TestName);
 			var fullProjDir     = Path.Combine (Root, relativeProjDir);
@@ -206,7 +193,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
 
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (fullProjDir, "logcat.log"), 30);
+				Path.Combine (fullProjDir, "logcat.log"));
 			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
 			var logcatOutput = File.ReadAllText (Path.Combine (fullProjDir, "logcat.log"));
 
