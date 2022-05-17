@@ -1128,7 +1128,7 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	domains_list = node;
 }
 
-#if !defined (NET6) && !defined (ANDROID)
+#if !defined (NET) && !defined (ANDROID)
 void
 OSBridge::remove_monodroid_domain (MonoDomain *domain)
 {
@@ -1168,4 +1168,4 @@ OSBridge::on_destroy_contexts ()
 	if (!domains_list)
 		osBridge.clear_mono_java_gc_bridge_info ();
 }
-#endif // ndef NET6 && ndef ANDROID
+#endif // ndef NET && ndef ANDROID

@@ -56,9 +56,9 @@
       <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt')" />
-      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-net6-Debug\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')" />
-      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-net6-Release\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
       <_ConfigureRuntimesOutputs Include="@(_HostRuntime->'$(IntermediateOutputPath)%(OutputDirectory)-Debug\CMakeCache.txt')" />
       <_ConfigureRuntimesOutputs Include="@(_HostRuntime->'$(IntermediateOutputPath)%(OutputDirectory)-Release\CMakeCache.txt')" />
     </ItemGroup>
@@ -82,29 +82,29 @@
       DependsOnTargets="_FindMonoDroidSources">
     <ItemGroup>
       <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt')" />
-      <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-net6-Debug\CMakeCache.txt')" />
+      <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
       <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')" />
-      <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-net6-Release\CMakeCache.txt')" />
+      <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
       <_BuildAndroidRuntimesInputs  Include="@(_MonoDroidSources)" />
       <_BuildAndroidRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)-net6\libmono-android.debug.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.debug.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)-net6\libmono-android.release.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.release.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\Debug\libxamarin-app.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)-net6\Debug\libxamarin-app.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\Release\libxamarin-app.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)-net6\Release\libxamarin-app.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
     </ItemGroup>
     <ItemGroup  Condition=" '$(EnableNativeAnalyzers)' == 'true' ">
       <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.debug.so')" />
-      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)-net6\libmono-android-checked+ubsan.debug.so')" />
+      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+ubsan.debug.so')" />
       <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.debug.so')" />
-      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)-net6\libmono-android-checked+asan.debug.so')" />
+      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+asan.debug.so')" />
       <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.release.so')" />
-      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)-net6\libmono-android-checked+asan.release.so')" />
+      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+asan.release.so')" />
       <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.release.so')" />
-      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)-net6\libmono-android-checked+ubsan.release.so')" />
+      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+ubsan.release.so')" />
     </ItemGroup>
   </Target>
 
@@ -119,7 +119,7 @@
 
     <Exec
         Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-net6-Debug"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug"
     />
 
     <Exec
@@ -129,7 +129,7 @@
 
     <Exec
         Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-net6-Release"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release"
     />
 
     <Touch Files="@(_BuildAndroidRuntimesOutputs)" />
@@ -147,7 +147,7 @@
 
     <Exec
         Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-net6-asan-Debug"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Debug"
     />
 
     <Exec
@@ -157,7 +157,7 @@
 
     <Exec
         Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-net6-ubsan-Debug"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Debug"
     />
 
     <Exec
@@ -167,7 +167,7 @@
 
     <Exec
         Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-net6-asan-Release"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Release"
     />
 
     <Exec
@@ -177,7 +177,7 @@
 
     <Exec
         Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-net6-ubsan-Release"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Release"
     />
 
     <Touch Files="@(_BuildAndroidAnalyzerRuntimesOutputs)" />

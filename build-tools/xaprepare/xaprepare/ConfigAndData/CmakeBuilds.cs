@@ -20,12 +20,12 @@ namespace Xamarin.Android.Prepare
 			public string Suffix = String.Empty;
 			public string MSBuildApiLevel = String.Empty;
 			public List<string>? ExtraOptions = null;
-			public bool IsNet6 = false;
+			public bool IsDotNet = false;
 			public bool IsHost = false;
 		};
 
 		const string msbuildApiLevelLegacy = "%(AndroidSupportedTargetJitAbi.ApiLevel)";
-		const string msbuildApiLevelNet6 = "%(AndroidSupportedTargetJitAbi.ApiLevelNET6)";
+		const string msbuildApiLevel = "%(AndroidSupportedTargetJitAbi.ApiLevelNET)";
 
 		// These two are configured in CmakeBuilds.Unix.cs, Windows doesn't use them
 		public static readonly string MxeToolchainBasePath = String.Empty;
@@ -77,6 +77,7 @@ namespace Xamarin.Android.Prepare
 			"-DANDROID_NATIVE_API_LEVEL=@NATIVE_API_LEVEL@",
 			"-DANDROID_PLATFORM=android-@NATIVE_API_LEVEL@",
 			"-DANDROID_ABI=@ABI@",
+			"-DANDROID_RID=@RID@",
 			"-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=\"@OUTPUT_DIRECTORY@\"",
 			"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=\"@OUTPUT_DIRECTORY@\"",
 			"\"@SOURCE_DIRECTORY@\"",
@@ -93,17 +94,17 @@ namespace Xamarin.Android.Prepare
 			"-DANDROID_CPP_FEATURES=\"rtti exceptions\"",
 		};
 
-		const string enableNet6 = "-DENABLE_NET6=ON";
-		public static readonly List<string> Net6ExtraOptions = new List<string> {
-			enableNet6,
+		const string enableNet = "-DENABLE_NET=ON";
+		public static readonly List<string> NetExtraOptions = new List<string> {
+			enableNet,
 		};
 
-		public static readonly List<string> Net6AsanExtraOptions = new List<string> (AsanExtraOptions) {
-			enableNet6,
+		public static readonly List<string> NetAsanExtraOptions = new List<string> (AsanExtraOptions) {
+			enableNet,
 		};
 
-		public static readonly List<string> Net6UbsanExtraOptions = new List<string> (UbsanExtraOptions) {
-			enableNet6,
+		public static readonly List<string> NetUbsanExtraOptions = new List<string> (UbsanExtraOptions) {
+			enableNet,
 		};
 
 		public static readonly List<RuntimeCommand> AndroidRuntimeCommands = new List<RuntimeCommand> {
@@ -132,30 +133,30 @@ namespace Xamarin.Android.Prepare
 			},
 
 			new RuntimeCommand {
-				Suffix = "net6-Debug",
+				Suffix = "Debug",
 				Configuration = "Release",
 				BuildType = "Debug",
-				MSBuildApiLevel = msbuildApiLevelNet6,
-				ExtraOptions = Net6ExtraOptions,
-				IsNet6 = true,
+				MSBuildApiLevel = msbuildApiLevel,
+				ExtraOptions = NetExtraOptions,
+				IsDotNet = true,
 			},
 
 			new RuntimeCommand {
-				Suffix = "net6-asan-Debug",
+				Suffix = "asan-Debug",
 				Configuration = "Release",
 				BuildType = "Debug",
-				MSBuildApiLevel = msbuildApiLevelNet6,
-				ExtraOptions = Net6AsanExtraOptions,
-				IsNet6 = true,
+				MSBuildApiLevel = msbuildApiLevel,
+				ExtraOptions = NetAsanExtraOptions,
+				IsDotNet = true,
 			},
 
 			new RuntimeCommand {
-				Suffix = "net6-ubsan-Debug",
+				Suffix = "ubsan-Debug",
 				Configuration = "Release",
 				BuildType = "Debug",
-				MSBuildApiLevel = msbuildApiLevelNet6,
-				ExtraOptions = Net6UbsanExtraOptions,
-				IsNet6 = true,
+				MSBuildApiLevel = msbuildApiLevel,
+				ExtraOptions = NetUbsanExtraOptions,
+				IsDotNet = true,
 			},
 
 			// Release builds
@@ -184,30 +185,30 @@ namespace Xamarin.Android.Prepare
 			},
 
 			new RuntimeCommand {
-				Suffix = "net6-Release",
+				Suffix = "Release",
 				Configuration = "Debug",
 				BuildType = "Release",
-				MSBuildApiLevel = msbuildApiLevelNet6,
-				ExtraOptions = Net6ExtraOptions,
-				IsNet6 = true,
+				MSBuildApiLevel = msbuildApiLevel,
+				ExtraOptions = NetExtraOptions,
+				IsDotNet = true,
 			},
 
 			new RuntimeCommand {
-				Suffix = "net6-asan-Release",
+				Suffix = "asan-Release",
 				Configuration = "Debug",
 				BuildType = "Release",
-				MSBuildApiLevel = msbuildApiLevelNet6,
-				ExtraOptions = Net6AsanExtraOptions,
-				IsNet6 = true,
+				MSBuildApiLevel = msbuildApiLevel,
+				ExtraOptions = NetAsanExtraOptions,
+				IsDotNet = true,
 			},
 
 			new RuntimeCommand {
-				Suffix = "net6-ubsan-Release",
+				Suffix = "ubsan-Release",
 				Configuration = "Debug",
 				BuildType = "Release",
-				MSBuildApiLevel = msbuildApiLevelNet6,
-				ExtraOptions = Net6UbsanExtraOptions,
-				IsNet6 = true,
+				MSBuildApiLevel = msbuildApiLevel,
+				ExtraOptions = NetUbsanExtraOptions,
+				IsDotNet = true,
 			},
 		};
 

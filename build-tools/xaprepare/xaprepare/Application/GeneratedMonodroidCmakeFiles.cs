@@ -38,28 +38,17 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		static readonly Dictionary<string, string> ApiLevelVariableNames = new Dictionary<string, string> (StringComparer.Ordinal) {
-			{ AbiNames.TargetJit.AndroidArmV7a, "NDK_LEGACY_API_ARMV7A" },
-			{ BuildAndroidPlatforms.AndroidArmV7a_NET6, "NDK_NET6_API_ARMV7A" },
-			{ AbiNames.TargetJit.AndroidArmV8a, "NDK_LEGACY_API_ARMV8A" },
-			{ BuildAndroidPlatforms.AndroidArmV8a_NET6, "NDK_NET6_API_ARMV8A" },
-			{ AbiNames.TargetJit.AndroidX86, "NDK_LEGACY_API_X86" },
-			{ BuildAndroidPlatforms.AndroidX86_NET6, "NDK_NET6_API_X86" },
-			{ AbiNames.TargetJit.AndroidX86_64, "NDK_LEGACY_API_X86_64" },
-			{ BuildAndroidPlatforms.AndroidX86_64_NET6, "NDK_NET6_API_X86_64" },
+		static readonly string[] JitAbis = new [] {
+			AbiNames.TargetJit.AndroidArmV7a,
+			AbiNames.TargetJit.AndroidArmV8a,
+			AbiNames.TargetJit.AndroidX86,
+			AbiNames.TargetJit.AndroidX86_64,
 		};
 
-		static readonly Dictionary<string, string> JitAbis = new Dictionary<string, string> (StringComparer.Ordinal) {
-			{ AbiNames.TargetJit.AndroidArmV7a, BuildAndroidPlatforms.AndroidArmV7a_NET6 },
-			{ AbiNames.TargetJit.AndroidArmV8a, BuildAndroidPlatforms.AndroidArmV8a_NET6 },
-			{ AbiNames.TargetJit.AndroidX86, BuildAndroidPlatforms.AndroidX86_NET6 },
-			{ AbiNames.TargetJit.AndroidX86_64, BuildAndroidPlatforms.AndroidX86_64_NET6 },
-		};
-
-		static readonly Dictionary<string, string> HostAbis = new Dictionary<string, string> (StringComparer.Ordinal) {
-			{ Context.Instance.OS.Type, String.Empty },
-			{ AbiNames.HostJit.Win32, String.Empty },
-			{ AbiNames.HostJit.Win64, String.Empty },
+		static readonly string[] HostAbis = new [] {
+			Context.Instance.OS.Type,
+			AbiNames.HostJit.Win32,
+			AbiNames.HostJit.Win64,
 		};
 
 		void GenerateShellConfig (Context context, StreamWriter sw)
@@ -108,16 +97,6 @@ namespace Xamarin.Android.Prepare
 			sw.WriteLine ($"NINJA=\"{context.Properties.GetRequiredValue(KnownProperties.NinjaPath)}\"");
 			sw.WriteLine ($"XA_BUILD_CONFIGURATION={context.Configuration}");
 			sw.WriteLine ($"XA_INSTALL_DIR=\"{Configurables.Paths.InstallMSBuildDir}/lib\"");
-			sw.WriteLine ();
-
-			WriteApiLevelVariable (AbiNames.TargetJit.AndroidArmV7a);
-			WriteApiLevelVariable (BuildAndroidPlatforms.AndroidArmV7a_NET6);
-			WriteApiLevelVariable (AbiNames.TargetJit.AndroidArmV8a);
-			WriteApiLevelVariable (BuildAndroidPlatforms.AndroidArmV8a_NET6);
-			WriteApiLevelVariable (AbiNames.TargetJit.AndroidX86);
-			WriteApiLevelVariable (BuildAndroidPlatforms.AndroidX86_NET6);
-			WriteApiLevelVariable (AbiNames.TargetJit.AndroidX86_64);
-			WriteApiLevelVariable (BuildAndroidPlatforms.AndroidX86_64_NET6);
 			sw.WriteLine ();
 
 			string indent = "\t";
@@ -216,11 +195,6 @@ namespace Xamarin.Android.Prepare
 				sw.WriteLine (" \"$@\"");
 			}
 
-			void WriteApiLevelVariable (string abi)
-			{
-				sw.WriteLine ($"{ApiLevelVariableNames[abi]}={BuildAndroidPlatforms.NdkMinimumAPI[abi]}");
-			}
-
 			void AppendFlags (StringBuilder sb, List<string> flags, string indent)
 			{
 				if (sb.Length > 0) {
@@ -241,15 +215,15 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		void WriteShellRuntimeCommand (StreamWriter sw, Dictionary<string, string> abis, CmakeBuilds.RuntimeCommand command, Dictionary<string, string> replacements)
+		void WriteShellRuntimeCommand (StreamWriter sw, IEnumerable<string> abis, CmakeBuilds.RuntimeCommand command, Dictionary<string, string> replacements)
 		{
 			var funcName = new StringBuilder ();
 			string indent = "\t";
 
-			foreach (var kvp in abis) {
-				string abi = kvp.Key;
-				string apiLevelVarName = command.IsNet6 ? kvp.Value : kvp.Key;
-				string outputDirName = command.IsNet6 ? $"{abi}-net6" : abi;
+			foreach (var a in abis) {
+				string abi = a;
+				uint minApiLevel = command.IsDotNet ? BuildAndroidPlatforms.NdkMinimumAPI : !command.IsHost ? BuildAndroidPlatforms.NdkMinimumAPIMap [abi] : 0;
+				string outputDirName = command.IsDotNet ? AbiNames.AbiToRuntimeIdentifier (abi) : abi;
 				string isMxe = "no";
 				string mxeBitness = String.Empty;
 				bool forMxe = false;
@@ -288,7 +262,7 @@ namespace Xamarin.Android.Prepare
 				sw.WriteLine ($"{indent}if [ -z \"${{build_directory}}\" ]; then");
 				sw.WriteLine ($"{indent}\tbuild_directory=\"${{MONODROID_OBJ_DIR}}\"");
 				sw.WriteLine ($"{indent}fi");
-				sw.WriteLine ($"{indent}__BUILD_DIR=\"${{build_directory}}/{abi}-{command.Suffix}\"");
+				sw.WriteLine ($"{indent}__BUILD_DIR=\"${{build_directory}}/{outputDirName}-{command.Suffix}\"");
 				sw.WriteLine ($"{indent}__OUTPUT_DIR=\"${{XA_INSTALL_DIR}}/{outputDirName}\"");
 				sw.WriteLine ($"{indent}__CONFIGURATION={command.Configuration}");
 				sw.WriteLine ($"{indent}__BUILD_TYPE={command.BuildType}");
@@ -296,7 +270,7 @@ namespace Xamarin.Android.Prepare
 				sw.WriteLine ($"{indent}__FORCE=\"${{force}}\"");
 				if (!command.IsHost) {
 					sw.WriteLine ($"{indent}__NATIVE_ABI={abi}");
-					sw.WriteLine ($"{indent}__NATIVE_API_LEVEL=${{{ApiLevelVariableNames[apiLevelVarName]}}}");
+					sw.WriteLine ($"{indent}__NATIVE_API_LEVEL=${{{minApiLevel}}}");
 				}
 				sw.WriteLine ();
 				if (!command.IsHost) {
@@ -360,6 +334,7 @@ namespace Xamarin.Android.Prepare
 				{ "@CmakeAndroidFlags@", "$(_CmakeAndroidFlags)" },
 				{ "@NATIVE_API_LEVEL@", "" },
 				{ "@ABI@", "%(AndroidSupportedTargetJitAbi.Identity)" },
+				{ "@RID@", "%(AndroidSupportedTargetJitAbi.AndroidRID)" },
 				{ "@OUTPUT_DIRECTORY@", "" },
 			};
 
@@ -429,14 +404,14 @@ namespace Xamarin.Android.Prepare
 
 		void WriteMSBuildConfigureAndroidRuntimeCommands (StreamWriter sw, string indent, CmakeBuilds.RuntimeCommand command, Dictionary<string, string> replacements)
 		{
-			const string LegacyOutputDirectory = "$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)";
-			const string Net6OutputDirectory = LegacyOutputDirectory + "-net6";
+			const string LegacyOutputDirectory = "%(AndroidSupportedTargetJitAbi.Identity)";
+			const string OutputDirectory = "%(AndroidSupportedTargetJitAbi.AndroidRID)";
 
 			WriteMSBuildConfigureRuntimeCommands (
 				sw,
 				indent,
-				$"$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-{command.Suffix}",
-				command.IsNet6 ? Net6OutputDirectory : LegacyOutputDirectory,
+				command.IsDotNet ? $"$(IntermediateOutputPath){OutputDirectory}-{command.Suffix}" : $"$(IntermediateOutputPath){LegacyOutputDirectory}-{command.Suffix}",
+				command.IsDotNet ? $"$(OutputPath){OutputDirectory}" : $"$(OutputPath){LegacyOutputDirectory}",
 				"@(AndroidSupportedTargetJitAbi)",
 				CmakeBuilds.ConfigureAndroidRuntimeCommandsCommonFlags,
 				command,
