@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
@@ -155,6 +156,70 @@ namespace Xamarin.Android.Build.Tests
 			}
 			WaitFor (2000);
 			Assert.IsTrue (breakpointHit, "Should have a breakpoint");
+		}
+
+		[Test]
+		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
+		{
+			AssertHasDevices ();
+
+			var proj = new XASdkProject () {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new AndroidItem._AndroidRemapMembers ("remap.xml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<replacements>
+  <replace-type from='android/app/Activity' to='example/RemapActivity' />
+  <replace-method
+      source-type='example/RemapActivity'
+      source-method-name='onCreate'
+      target-type='example/RemapActivity'
+      target-method-name='onMyCreate' target-method-instance-to-static='false' />
+  <replace-method
+      source-type='android/view/View'
+      source-method-name='setOnClickListener'
+      target-type='example/ViewHelper'
+      target-method-name='mySetOnClickListener' target-method-instance-to-static='true' />
+</replacements>
+",
+					},
+					new AndroidItem.AndroidJavaSource ("RemapActivity.java") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => ResourceData.RemapActivity,
+						Metadata = {
+							{ "Bind", "True" },
+						},
+					},
+				},
+			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", "global::Example.RemapActivity");
+			proj.SetRuntimeIdentifier (DeviceAbi);
+			var relativeProjDir = Path.Combine ("temp", TestName);
+			var fullProjDir     = Path.Combine (Root, relativeProjDir);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
+			var files = proj.Save ();
+			proj.Populate (relativeProjDir, files);
+			proj.CopyNuGetConfig (relativeProjDir);
+			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
+
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
+
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (fullProjDir, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
+			var logcatOutput = File.ReadAllText (Path.Combine (fullProjDir, "logcat.log"));
+
+			StringAssert.Contains (
+					"RemapActivity.onMyCreate() invoked!",
+					logcatOutput,
+					"Activity.onCreate() wasn't remapped to RemapActivity.onMyCreate()!"
+			);
+			StringAssert.Contains (
+					"ViewHelper.mySetOnClickListener() invoked!",
+					logcatOutput,
+					"View.setOnClickListener() wasn't remapped to ViewHelper.mySetOnClickListener()!"
+			);
 		}
 	}
 }

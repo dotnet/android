@@ -18,6 +18,7 @@ namespace Xamarin.Android.Build.Tests
 		static Lazy<byte []> apacheHttpClient_cs = new Lazy<byte []> (() => GetResourceData ("ApacheHttpClient.cs"));
 		static Lazy<byte []> javadocCopyright = new Lazy<byte []> (() => GetResourceData ("javadoc-copyright.xml"));
 		static Lazy<byte []> javaSourceTestExtension = new Lazy<byte []> (() => GetResourceData ("JavaSourceTestExtension.java"));
+		static Lazy<byte []> remapActivity = new Lazy<byte []> (() => GetResourceData ("RemapActivity.java"));
 
 		public  static  byte[]  JavaSourceJarTestJar            => javaSourceJarTestJar.Value;
 		public  static  byte[]  JavaSourceJarTestSourcesJar     => javaSourceJarTestSourcesJar.Value;
@@ -28,6 +29,7 @@ namespace Xamarin.Android.Build.Tests
 		public  static  byte [] JavadocCopyright => javadocCopyright.Value;
 
 		public  static  string JavaSourceTestExtension => Encoding.ASCII.GetString (javaSourceTestExtension.Value);
+		public  static  string RemapActivity => Encoding.UTF8.GetString (remapActivity.Value);
 
 		static byte[] GetResourceData (string name)
 		{
