@@ -10,7 +10,7 @@
     </Dependency>
     <Dependency Name="Microsoft.NETCore.App.Ref" Version="6.0.6">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>21d3425db4ef2e8d6d582fc4e2d2e3f7f22aca7e</Sha>
+      <Sha>15626cf7e26af1c3800127242e47237698faed61</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Emscripten.Manifest-6.0.300" Version="6.0.4" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
