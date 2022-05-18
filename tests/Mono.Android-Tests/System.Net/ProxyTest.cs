@@ -11,6 +11,7 @@ namespace System.NetTests {
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=14968
 		[Test]
+		[Category("DotNetIgnore")] // TODO: InvalidProgramException, see: https://github.com/dotnet/linker/issues/2799
 		public void QuoteInvalidQuoteUrlsShouldWork ()
 		{
 			string url      = "http://example.com/?query&foo|bar";
