@@ -472,7 +472,7 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package Xamarin_Build_Download = new Package {
 			Id = "Xamarin.Build.Download",
-			Version = "0.11.0",
+			Version = "0.11.2",
 		};
 		// NOTE: old version required for some tests
 		public static Package Xamarin_Build_Download_0_4_11 = new Package {

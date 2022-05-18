@@ -39,6 +39,14 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_register
 JNIEXPORT void JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged
   (JNIEnv *, jclass);
 
+/*
+ * Class:     mono_android_Runtime
+ * Method:    dumpTimingData
+ * Signature: ()V
+*/
+JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTimingData
+  (JNIEnv *, jclass);
+
 #if !defined (ANDROID)
 /*
  * Class:     mono_android_Runtime

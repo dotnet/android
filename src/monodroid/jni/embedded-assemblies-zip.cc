@@ -29,7 +29,7 @@ force_inline bool
 EmbeddedAssemblies::is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept
 {
 	return utils.ends_with (name, ".pdb")
-#if !defined (NET6)
+#if !defined (NET)
 		|| utils.ends_with (name, ".mdb")
 #endif
 		;
@@ -65,7 +65,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		return false;
 	}
 
-#if defined (NET6)
+#if defined (NET)
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
 		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
 			runtime_config_blob_found = true;
@@ -73,7 +73,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 			return false;
 		}
 	}
-#endif // def NET6
+#endif // def NET
 
 	// assemblies must be 4-byte aligned, or Bad Things happen
 	if ((state.data_offset & 0x3) != 0) {
@@ -124,7 +124,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			continue;
 		}
 
-#if !defined(NET6)
+#if !defined(NET)
 		if (utils.ends_with (entry_name, ".config")) {
 			char *assembly_name = strdup (basename (entry_name.get ()));
 			// Remove '.config' suffix
@@ -135,7 +135,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 
 			continue;
 		}
-#endif // ndef NET6
+#endif // ndef NET
 
 		if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION))
 			continue;

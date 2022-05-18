@@ -30,20 +30,20 @@ where OPTIONS is one or more of:
 
 Each <TARGET> is a name of the monodroid runtime configuration to build. Format:
 
-   {ARCH}-[net6-][CHECKER-]{CONFIGURATION}
+   {ARCH}-[CHECKER-]{CONFIGURATION}
 
-where strings in lower case (e.g. 'net6') are to be used verbatim and the ones in
-upper case (e.g. 'ARCH') are placeholders as defined below (alternative forms for
-each value are specified in parentheses). All values are case-insensitive:
+where strings in upper case (e.g. 'ARCH') are placeholders as defined below
+(alternative forms for each value are specified in parentheses).
+All values are case-insensitive:
 
-   ARCH is one of: armeabi-v7a (arm32, armv7), arm64-v8a (arm64, armv8), x86, x86_64 (x64), host, win32, win64
+   ARCH is one of: armeabi-v7a (arm32, armv7), arm64-v8a (arm64, armv8), x86, x86_64 (x64), host, win32, win64, android-arm, android-arm64, android-x86, android-x64
    CHECKER is one of: asan, ubsan
    CONFIGURATION is one of: release, debug
 
 Examples:
 
   ${MY_NAME} arm64-release
-  ${MY_NAME} x86-net6-release host-debug
+  ${MY_NAME} android-x86-release host-debug
   ${MY_NAME} x64-ubsan-release x86-net6-asan-debug
 
 EOF

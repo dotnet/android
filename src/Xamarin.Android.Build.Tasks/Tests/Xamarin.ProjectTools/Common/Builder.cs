@@ -16,8 +16,9 @@ namespace Xamarin.ProjectTools
 	{
 		const string SigSegvError = "Got a SIGSEGV while executing native code";
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
+		const int DefaultBuildTimeOut = 30;
 
-		string Arm32AbiDir => UseDotNet ? "armeabi-v7a-net6" : "armeabi-v7a";
+		string Arm32AbiDir => UseDotNet ? "android-arm" : "armeabi-v7a";
 
 		/// <summary>
 		/// If true, use `dotnet build` and IShortFormProject throughout the tests
@@ -404,7 +405,7 @@ namespace Xamarin.ProjectTools
 					p.Start ();
 					p.BeginOutputReadLine ();
 					p.BeginErrorReadLine ();
-					ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 15, 0).TotalMilliseconds);
+					ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, DefaultBuildTimeOut, 0).TotalMilliseconds);
 					if (psi.RedirectStandardOutput)
 						stdout.WaitOne ();
 					if (psi.RedirectStandardError)

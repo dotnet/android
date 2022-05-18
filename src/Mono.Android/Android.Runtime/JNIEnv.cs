@@ -148,13 +148,8 @@ namespace Android.Runtime {
 #endif
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			bool logTiming = (args->logCategories & (uint)LogCategories.Timing) != 0;
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
-			if (logTiming) {
-				total_timing_sequence = monodroid_timing_start ("JNIEnv.Initialize start");
-				partial_timing_sequence = monodroid_timing_start (null);
-			}
 
 			LogAssemblyCategory = (args->logCategories & (uint)LogCategories.Assembly) != 0;
 
@@ -202,10 +197,6 @@ namespace Android.Runtime {
 #if !MONOANDROID1_0
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
 #endif
-
-			if (logTiming) {
-				monodroid_timing_stop (total_timing_sequence, "JNIEnv.Initialize end");
-			}
 		}
 
 		internal static void Exit ()

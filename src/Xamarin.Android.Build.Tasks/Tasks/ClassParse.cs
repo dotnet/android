@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tasks
 					WriteLine (sw, $"\"{doc}\"");
 			}
 
-			cmd.AppendSwitch ($"@{responseFile}");
+			cmd.AppendSwitch ($"\"@{responseFile}\"");
 
 			return cmd.ToString ();
 		}

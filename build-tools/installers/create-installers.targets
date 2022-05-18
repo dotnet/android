@@ -288,6 +288,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.DX.targets"     ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.EmbeddedResource.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.FSharp.targets" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Javac.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Legacy.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.PCLSupport.props"                                    ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.PCLSupport.targets"                                  ExcludeFromAndroidNETSdk="true" />
@@ -305,6 +306,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Compression.LZ4.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Hash.xxHash.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\ELFSharp.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\ManifestOverlays\Timing.xml" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />

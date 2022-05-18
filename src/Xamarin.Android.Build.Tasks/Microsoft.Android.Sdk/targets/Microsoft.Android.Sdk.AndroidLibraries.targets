@@ -113,4 +113,8 @@ projects.
     <Touch Files="$(_AndroidStampDirectory)_ExtractAar.stamp" AlwaysCreate="true" />
   </Target>
 
+  <Target Name="_CleanAarCache">
+    <Delete Files="$(_AarCacheFile)" />
+  </Target>
+
 </Project>

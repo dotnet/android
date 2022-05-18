@@ -250,7 +250,7 @@ MonoAndroidInternalCalls_Impl::monodroid_timing_start (const char *message)
 
 	managed_timing_sequence *ret = timing->get_available_sequence ();
 	if (message != nullptr) {
-		log_info (LOG_TIMING, message);
+		log_write (LOG_TIMING, LogLevel::Info, message);
 	}
 	ret->period.mark_start ();
 

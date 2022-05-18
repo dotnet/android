@@ -26,9 +26,9 @@ namespace xamarin::android::internal
 
 		static constexpr char DLL_EXTENSION[] = ".dll";
 
-#if defined (NET6)
+#if defined (NET)
 		static constexpr char RUNTIME_CONFIG_BLOB_NAME[] = "rc.bin";
-#endif // def NET6
+#endif // def NET
 
 #if defined (ANDROID) || defined (__linux__) || defined (__linux)
 		static constexpr char MONO_SGEN_SO[]      = "libmonosgen-2.0.so";
@@ -66,6 +66,13 @@ namespace xamarin::android::internal
 		static constexpr size_t APP_DIRS_FILES_DIR_INDEX = 0;
 		static constexpr size_t APP_DIRS_CACHE_DIR_INDEX = 1;
 		static constexpr size_t APP_DIRS_DATA_DIR_INDEX = 2;
+
+		// 64-bit unsigned or 64-bit signed with sign
+		static constexpr size_t MAX_INTEGER_DIGIT_COUNT_BASE10 = 21;
+		static constexpr size_t INTEGER_BASE10_BUFFER_SIZE = MAX_INTEGER_DIGIT_COUNT_BASE10 + 1;
+
+		// Documented in NDK's <android/log.h> comments
+		static constexpr size_t MAX_LOGCAT_MESSAGE_LENGTH = 1023;
 	};
 }
 #endif // __SHARED_CONSTANTS_HH

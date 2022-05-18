@@ -35,6 +35,7 @@
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
 #include "startup-aware-lock.hh"
+#include "timing-internal.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -93,10 +94,10 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 				exit (FATAL_EXIT_MISSING_ASSEMBLY);
 			}
 
-			bool log_timing = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
-			timing_period decompress_time;
+			bool log_timing = FastTiming::enabled () && !FastTiming::is_bare_mode ();
+			size_t decompress_time_index;
 			if (XA_UNLIKELY (log_timing)) {
-				decompress_time.mark_start ();
+				decompress_time_index = internal_timing->start_event (TimingEventKind::AssemblyDecompression);
 			}
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
@@ -113,8 +114,8 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
 
 			if (XA_UNLIKELY (log_timing)) {
-				decompress_time.mark_end ();
-				TIMING_LOG_INFO (decompress_time, "%s LZ4 decompression time", name);
+				internal_timing->end_event (decompress_time_index, true /* uses_more_info */);
+				internal_timing->add_more_info (decompress_time_index, name);
 			}
 
 			if (ret < 0) {
@@ -150,7 +151,7 @@ EmbeddedAssemblies::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	get_assembly_data (e.image_data, e.descriptor->data_size, "<assembly_store>", assembly_data, assembly_data_size);
 }
 
-#if defined (NET6)
+#if defined (NET)
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, [[maybe_unused]] MonoError *error)
 {
@@ -167,7 +168,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoad
 
 	return open_from_bundles (aname, loader, false /* ref_only */);
 }
-#endif // def NET6
+#endif // def NET
 
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
@@ -303,7 +304,7 @@ EmbeddedAssemblies::load_bundled_assembly (
 		return nullptr;
 	}
 
-#if !defined (NET6)
+#if !defined (NET)
 	// In dotnet the call is a no-op
 	mono_config_for_assembly (image);
 #endif
@@ -422,7 +423,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 		if (bba->debug_data_offset != 0) {
 			assembly_runtime_info.debug_info_data = rd.data_start + bba->debug_data_offset;
 		}
-#if !defined (NET6)
+#if !defined (NET)
 		if (bba->config_data_size != 0) {
 			assembly_runtime_info.config_data = rd.data_start + bba->config_data_offset;
 
@@ -432,7 +433,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 				utils.strdup_new (reinterpret_cast<const char*>(assembly_runtime_info.config_data))
 			);
 		}
-#endif // NET6
+#endif // NET
 
 		log_debug (
 			LOG_ASSEMBLY,
@@ -475,7 +476,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 		return nullptr;
 	}
 
-#if !defined (NET6)
+#if !defined (NET)
 	mono_config_for_assembly (image);
 #endif
 	return a;
@@ -508,19 +509,19 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 	return a;
 }
 
-#if defined (NET6)
+#if defined (NET)
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data, MonoError *error)
 {
 	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error);
 }
-#else // def NET6
+#else // def NET
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
 	return embeddedAssemblies.open_from_bundles (aname, true);
 }
-#endif // ndef NET6
+#endif // ndef NET
 
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
@@ -532,12 +533,12 @@ void
 EmbeddedAssemblies::install_preload_hooks_for_appdomains ()
 {
 	mono_install_assembly_preload_hook (open_from_bundles_full, nullptr);
-#if !defined (NET6)
+#if !defined (NET)
 	mono_install_assembly_refonly_preload_hook (open_from_bundles_refonly, nullptr);
-#endif // ndef NET6
+#endif // ndef NET
 }
 
-#if defined (NET6)
+#if defined (NET)
 void
 EmbeddedAssemblies::install_preload_hooks_for_alc ()
 {
@@ -547,7 +548,7 @@ EmbeddedAssemblies::install_preload_hooks_for_alc ()
 		0 /* append */
 	);
 }
-#endif // def NET6
+#endif // def NET
 
 template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_precalculated_size>
 force_inline const Entry*
@@ -753,9 +754,9 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 		return nullptr;
 	}
 
-#if defined (NET6)
+#if defined (NET)
 	// MonoVM in dotnet runtime doesn't use the `domain` parameter passed to `mono_type_get_object` (since AppDomains
-	// are gone in NET6+), in fact, the function `mono_type_get_object` calls (`mono_type_get_object_checked`) itself
+	// are gone in NET 6+), in fact, the function `mono_type_get_object` calls (`mono_type_get_object_checked`) itself
 	// calls `mono_get_root_domain`. Thus, we can save on a one function call here by passing `nullptr`
 	constexpr MonoDomain *domain = nullptr;
 #else
@@ -774,10 +775,10 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 {
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+	size_t total_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		timing = new Timing ();
-		total_time.mark_start ();
+		total_time_index = internal_timing->start_event (TimingEventKind::JavaToManaged);
 	}
 
 	if (XA_UNLIKELY (java_type == nullptr)) {
@@ -797,10 +798,8 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 	hash_t hash = xxhash::hash (reinterpret_cast<const char*>(type_chars), static_cast<size_t>(name_len));
 	MonoReflectionType *ret = typemap_java_to_managed (hash, java_type);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
-
-		Timing::info (total_time, "Typemap.java_to_managed: end, total time");
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index);
 	}
 
 	return ret;
@@ -924,10 +923,10 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 const char*
 EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type, const uint8_t *mvid) noexcept
 {
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+	size_t total_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		timing = new Timing ();
-		total_time.mark_start ();
+		total_time_index = internal_timing->start_event (TimingEventKind::ManagedToJava);
 	}
 
 	MonoType *type = mono_reflection_type_get_type (reflection_type);
@@ -938,10 +937,8 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 
 	const char *ret = typemap_managed_to_java (type, mono_class_from_mono_type (type), mvid);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
-
-		Timing::info (total_time, "Typemap.managed_to_java: end, total time");
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index);
 	}
 
 	return ret;

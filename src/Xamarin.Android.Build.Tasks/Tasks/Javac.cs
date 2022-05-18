@@ -9,6 +9,7 @@ using System.Text;
 using System.Collections.Generic;
 using Xamarin.Tools.Zip;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
