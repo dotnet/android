@@ -148,7 +148,7 @@ DSOCacheEntry dso_cache[] = {
 //
 // Support for marshal methods
 //
-#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
 MonoImage* assembly_image_cache[] = {
 	nullptr,
 	nullptr,
@@ -188,4 +188,4 @@ void xamarin_app_init ([[maybe_unused]] get_function_pointer_fn fn)
 {
 	// Dummy
 }
-#endif // def RELEASE && def ANDROID && def NET6
+#endif // def RELEASE && def ANDROID && def NET

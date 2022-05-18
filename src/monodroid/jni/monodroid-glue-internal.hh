@@ -354,8 +354,7 @@ namespace xamarin::android::internal
 #if defined (RELEASE) && defined (ANDROID)
 		static void* get_function_pointer (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token) noexcept;
 #endif // def RELEASE && def ANDROID
-#endif // def NET6
-
+#endif // def NET
 
 #if defined (DEBUG)
 		void set_debug_env_vars (void);

@@ -57,7 +57,7 @@ namespace xamarin::android::internal {
 	template<typename T>
 	concept LoaderData = requires (T a) {
 		requires std::same_as<T, bool>
-#if defined (NET6)
+#if defined (NET)
 		|| std::same_as<T, MonoAssemblyLoadContextGCHandle>
 #endif
 		;

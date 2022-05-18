@@ -262,7 +262,7 @@ MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
 //
 // Support for marshal methods
 //
-#if defined (RELEASE) && defined (ANDROID) && defined (NET6)
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
 struct MarshalMethodsManagedClass
 {
 	const uint32_t   token;
@@ -293,6 +293,6 @@ MONO_API MONO_API_EXPORT MarshalMethodsManagedClass marshal_methods_class_cache[
 using get_function_pointer_fn = void*(*)(uint32_t mono_image_index, uint32_t class_token, uint32_t method_token);
 
 MONO_API_EXPORT void xamarin_app_init (get_function_pointer_fn fn);
-#endif // def RELEASE && def ANDROID && def NET6
+#endif // def RELEASE && def ANDROID && def NET
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

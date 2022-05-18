@@ -874,9 +874,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET6) && ENABLE_MARSHAL_METHODS
+#if defined (RELEASE) && defined (ANDROID) && defined (NET) && ENABLE_MARSHAL_METHODS
 	xamarin_app_init (get_function_pointer);
-#endif // def RELEASE && def ANDROID && def NET6
+#endif // def RELEASE && def ANDROID && def NET
 }
 
 #if defined (NET)

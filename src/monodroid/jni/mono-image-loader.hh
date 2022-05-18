@@ -6,7 +6,7 @@
 #include <cstddef>
 
 #include <mono/metadata/image.h>
-#if defined (NET6)
+#if defined (NET)
 #include <mono/metadata/mono-private-unstable.h>
 #endif
 #include <mono/metadata/object.h>
@@ -17,7 +17,7 @@
 #include "search.hh"
 #include "strings.hh"
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET6) && defined (ENABLE_MARSHAL_METHODS)
+#if defined (RELEASE) && defined (ANDROID) && defined (NET) && defined (ENABLE_MARSHAL_METHODS)
 #define USE_CACHE 1
 #endif
 
@@ -52,7 +52,7 @@ namespace xamarin::android::internal {
 		}
 #endif // def USE_CACHE
 
-#if defined (NET6)
+#if defined (NET)
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, MonoAssemblyLoadContextGCHandle alc_gchandle, hash_t name_hash, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
 			log_info (LOG_DEFAULT, "Loading assembly %s; hash 0x%zx", name.get (), name_hash);
@@ -74,7 +74,7 @@ namespace xamarin::android::internal {
 
 			return load (name, alc_gchandle, xxhash::hash (name.get (), name.length ()), assembly_data, assembly_data_size);
 		}
-#endif
+#endif // def NET
 
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, bool ref_only, hash_t name_hash, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
@@ -136,7 +136,7 @@ namespace xamarin::android::internal {
 			// support for unloadable Assembly Load Contexts) and the actual write operation to the destination is
 			// atomic
 			assembly_image_cache[index] = image;
-#endif // def RELEASE && def ANDROID && def NET6
+#endif // def RELEASE && def ANDROID && def NET
 			return image;
 		}
 
