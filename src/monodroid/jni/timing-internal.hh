@@ -11,11 +11,13 @@
 
 #undef HAVE_CONCEPTS
 
-// Xcode has supports for concepts only since 12.5
-#if __has_include (<concepts>)
+// Xcode has supports for concepts only since 12.5, however
+// even in 13.2 support for them appears buggy. Disable for
+// now
+#if __has_include (<concepts>) && !defined(__APPLE__)
 #define HAVE_CONCEPTS
 #include <concepts>
-#endif // __has_include
+#endif // __has_include && ndef __APPLE__
 
 #include "cpp-util.hh"
 #include "logger.hh"
