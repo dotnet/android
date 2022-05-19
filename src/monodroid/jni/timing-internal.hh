@@ -9,6 +9,13 @@
 #include <type_traits>
 #include <vector>
 
+#include "cpp-util.hh"
+#include "logger.hh"
+#include "startup-aware-lock.hh"
+#include "strings.hh"
+#include "util.hh"
+#include "shared-constants.hh"
+
 #undef HAVE_CONCEPTS
 
 // Xcode has supports for concepts only since 12.5, however
@@ -18,13 +25,6 @@
 #define HAVE_CONCEPTS
 #include <concepts>
 #endif // __has_include && ndef __APPLE__
-
-#include "cpp-util.hh"
-#include "logger.hh"
-#include "startup-aware-lock.hh"
-#include "strings.hh"
-#include "util.hh"
-#include "shared-constants.hh"
 
 namespace xamarin::android::internal
 {
