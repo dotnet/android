@@ -310,8 +310,8 @@ namespace Android.Runtime {
 			if (JNIEnv.ReplacementTypes == null) {
 				return null;
 			}
-			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: looking for replacement type for `{jniSimpleReference}`");
-			Logger.Log (LogLevel.Warn, "*jonp*", new System.Diagnostics.StackTrace (true).ToString ());
+			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: looking for replacement type for `{jniSimpleReference}`; ReplacementTypes? {JNIEnv.ReplacementTypes != null}");
+			// Logger.Log (LogLevel.Warn, "*jonp*", new System.Diagnostics.StackTrace (true).ToString ());
 			if (JNIEnv.ReplacementTypes.TryGetValue (jniSimpleReference, out var v)) {
 				Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: found replacement type: `{jniSimpleReference}` => `{v}`");
 				return v;

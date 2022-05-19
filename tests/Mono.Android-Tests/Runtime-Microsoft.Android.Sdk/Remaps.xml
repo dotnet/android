@@ -17,5 +17,11 @@
       source-type="java/lang/Runtime"
       source-method-name="remappedToGetRuntime"
       target-type="java/lang/Runtime"
-      target-method-name="getRuntime" target-method-instance-to-static="true" />
+      target-method-name="getRuntime" target-method-instance-to-static="false" />
+  <replace-method
+      source-type="com/xamarin/interop/RenameClassBase2"
+      source-method-name="hashCode"
+      source-method-signature="()"
+      target-type="com/xamarin/interop/RenameClassBase2"
+      target-method-name="myNewHashCode" target-method-instance-to-static="false" />
 </replacements>
