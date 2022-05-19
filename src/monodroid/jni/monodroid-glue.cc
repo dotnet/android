@@ -1195,8 +1195,8 @@ MonodroidRuntime::init_android_runtime (
 	if (mappingXml != nullptr && mappingXmlLen > 0) {
 		init.mappingXml             = env->GetByteArrayElements (mappingXml, nullptr);
 		init.mappingXmlLen          = mappingXmlLen;
+		log_warn (LOG_DEFAULT, "# jonp: mappingXml? len=%i, xml=%p", init.mappingXmlLen, init.mappingXml);
 	}
-	log_warn (LOG_DEFAULT, "# jonp: mappingXml? len=%i, xml=%p", init.mappingXmlLen, init.mappingXml);
 
 #if defined (NET) && defined (ANDROID)
 	MonoError error;

@@ -279,28 +279,40 @@ namespace Android.Runtime {
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
-			if (j != null) {
-				yield return
 #if NET
-					GetReplacementTypeCore (j) ??
+			j   = GetReplacementTypeCore (j) ?? j;
 #endif  // NET
-					j;
-			}
 			if (JNIEnv.IsRunningOnDesktop) {
-				yield return JavaNativeTypeManager.ToJniName (type);
+				string? d = JavaNativeTypeManager.ToJniName (type);
+				if (j != null && d != null) {
+					return new[]{j, d};
+				}
+				if (d != null) {
+					return new[]{d};
+				}
 			}
+			if (j != null) {
+				return new[]{j};
+			}
+			return Array.Empty<string> ();
 		}
 
 #if NET
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		{
-			var slash       = jniSimpleReference.LastIndexOf ('/');
-			var desugarType = slash <= 0
-				? "Desugar" + jniSimpleReference
-				: jniSimpleReference.Substring (0, slash+1) + "Desugar" + jniSimpleReference.Substring (slash+1);
+			ReadOnlySpan<char>  name    = jniSimpleReference;
+			int slash                   = name.LastIndexOf ('/');
+			var desugarType             = new StringBuilder (jniSimpleReference.Length + "Desugar".Length);
+			if (slash > 0) {
+				desugarType.Append (name.Slice (0, slash+1))
+					.Append ("Desugar")
+					.Append (name.Slice (slash+1));
+			} else {
+				desugarType.Append ("Desugar").Append (name);
+			}
 
 			return new[]{
-				desugarType,
+				desugarType.ToString (),
 				$"{jniSimpleReference}$-CC"
 			};
 		}
@@ -310,10 +322,7 @@ namespace Android.Runtime {
 			if (JNIEnv.ReplacementTypes == null) {
 				return null;
 			}
-			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: looking for replacement type for `{jniSimpleReference}`; ReplacementTypes? {JNIEnv.ReplacementTypes != null}");
-			// Logger.Log (LogLevel.Warn, "*jonp*", new System.Diagnostics.StackTrace (true).ToString ());
 			if (JNIEnv.ReplacementTypes.TryGetValue (jniSimpleReference, out var v)) {
-				Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: found replacement type: `{jniSimpleReference}` => `{v}`");
 				return v;
 			}
 			return null;
@@ -324,11 +333,10 @@ namespace Android.Runtime {
 			if (JNIEnv.ReplacementMethods == null) {
 				return null;
 			}
-			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: looking for replacement method for (\"{jniSourceType}\", \"{jniMethodName}\", \"{jniMethodSignature}\")");
 #if !STRUCTURED
-			if (!JNIEnv.ReplacementMethods.TryGetValue ($"{jniSourceType}\t{jniMethodName}\t{jniMethodSignature}", out var r) &&
-					!JNIEnv.ReplacementMethods.TryGetValue ($"{jniSourceType}\t{jniMethodName}\t{GetMethodSignatureWithoutReturnType ()}", out r) &&
-					!JNIEnv.ReplacementMethods.TryGetValue ($"{jniSourceType}\t{jniMethodName}\t", out r)) {
+			if (!JNIEnv.ReplacementMethods.TryGetValue (CreateReplacementMethodsKey (jniSourceType, jniMethodName, jniMethodSignature), out var r) &&
+					!JNIEnv.ReplacementMethods.TryGetValue (CreateReplacementMethodsKey (jniSourceType, jniMethodName, GetMethodSignatureWithoutReturnType ()), out r) &&
+					!JNIEnv.ReplacementMethods.TryGetValue (CreateReplacementMethodsKey (jniSourceType, jniMethodName, null), out r)) {
 				return null;
 			}
 			ReadOnlySpan<char> replacementInfo  = r;
@@ -338,8 +346,6 @@ namespace Android.Runtime {
 			var targetSig       = GetNextString (ref replacementInfo);
 			var paramCountStr   = GetNextString (ref replacementInfo);
 			var isStaticStr     = GetNextString (ref replacementInfo);
-
-			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: targetType={targetType.ToString ()}, targetName={targetName.ToString ()}, targetSig=`{targetSig.ToString()}`, paramCount={paramCountStr.ToString ()}, isStatic={isStaticStr.ToString ()}");
 
 			int? paramCount     = null;
 			if (!paramCountStr.IsEmpty) {
@@ -374,7 +380,6 @@ namespace Android.Runtime {
 			if (!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, jniMethodSignature), out var r) &&
 					!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, GetMethodSignatureWithoutReturnType ()), out r) &&
 					!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, null), out r)) {
-				Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: no method replacement found!");
 				return null;
 			}
 			var targetSig   = r.TargetSignature;
@@ -384,7 +389,6 @@ namespace Android.Runtime {
 				paramCount  = paramCount ?? JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature);
 				paramCount++;
 			}
-			Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: found replacement: ({GetValue (r.TargetType)}, {GetValue (r.TargetName)}, {GetValue (r.TargetSignature)}, {r.ParamCount?.ToString () ?? "null"}, {r.TurnStatic})");
 			return new JniRuntime.ReplacementMethodInfo {
 					SourceJniType                   = jniSourceType,
 					SourceJniMethodName             = jniMethodName,
@@ -421,6 +425,15 @@ namespace Android.Runtime {
 				return r;
 			}
 		}
+
+		static string CreateReplacementMethodsKey (string? sourceType, string? methodName, string? methodSignature) =>
+			new StringBuilder ()
+			.Append (sourceType)
+			.Append ('\t')
+			.Append (methodName)
+			.Append ('\t')
+			.Append (methodSignature)
+			.ToString ();
 #endif  // NET
 
 		delegate Delegate GetCallbackHandler ();

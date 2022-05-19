@@ -404,8 +404,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidCustomMetaDataForReferences Include="@(_AndroidAssemblySkipCases)" />
 </ItemGroup>
 
-<Target Name="_AddAndroidCustomMetaData"
-    DependsOnTargets="_ConvertAndroidMamMappingFileToXml;_CollectAndroidRemapMembers">
+<Target Name="_AddAndroidCustomMetaData">
   <AppendCustomMetadataToItemGroup
       Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
       Inputs="@(ReferencePath)"
