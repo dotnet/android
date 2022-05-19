@@ -2174,9 +2174,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_wrapper &home = applicationDirs[SharedConstants::APP_DIRS_FILES_DIR_INDEX];
 
 #if defined (NET)
-	// TODO: re-enable when we get on a newer .NET 7.
-	// We downgraded .NET 7 to workaround: https://github.com/dotnet/runtime/pull/68701
-	//mono_opt_aot_lazy_assembly_load = application_config.aot_lazy_load ? TRUE : FALSE;
+	mono_opt_aot_lazy_assembly_load = application_config.aot_lazy_load ? TRUE : FALSE;
 
 	{
 		MonoVMProperties monovm_props { home };
