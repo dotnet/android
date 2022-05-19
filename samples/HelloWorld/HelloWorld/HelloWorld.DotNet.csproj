@@ -10,24 +10,4 @@
   <ItemGroup>
     <Compile Remove="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <_AndroidRemapMembers Include="remap.xml" />
-  </ItemGroup>
-  <!--
-  <ItemGroup>
-    <PackageReference
-        Include="Microsoft.Intune.MAM.Remapper.Tasks"
-        Version="0.1.4635.1"
-        IncludeAssets="none"
-        GeneratePathProperty="True"
-        ReferenceOutputAssembly="False"
-    />
-  </ItemGroup>
-  <Target Name="_AddMamFiles"
-      BeforeTargets="_AddAndroidCustomMetaData">
-    <ItemGroup>
-      <_AndroidMamMappingFile Include="$(PkgMicrosoft_Intune_MAM_Remapper_Tasks)/content/MonoAndroid10/remapping-config.json" />
-    </ItemGroup>
-  </Target>
-  -->
 </Project>
