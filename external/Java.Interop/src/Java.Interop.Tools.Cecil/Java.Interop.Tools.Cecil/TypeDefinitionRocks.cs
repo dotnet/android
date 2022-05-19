@@ -143,7 +143,7 @@ namespace Java.Interop.Tools.Cecil {
 			return string.Format ("{0}, {1}",
 					// Cecil likes to use '/' as the nested type separator, while
 					// Reflection uses '+' as the nested type separator. Use Reflection.
-					type.FullName.Replace ('/', '+'),
+			                CecilTypeNameToReflectionTypeName (type.FullName),
 					type.GetPartialAssemblyName (resolver));
 		}
 
@@ -160,7 +160,7 @@ namespace Java.Interop.Tools.Cecil {
 			return string.Format ("{0}, {1}",
 					// Cecil likes to use '/' as the nested type separator, while
 					// Reflection uses '+' as the nested type separator. Use Reflection.
-					type.FullName.Replace ('/', '+'),
+			                CecilTypeNameToReflectionTypeName (type.FullName),
 					(def ?? type).Module.Assembly.Name.FullName);
 		}
 
@@ -188,5 +188,7 @@ namespace Java.Interop.Tools.Cecil {
 
 			return null;
 		}
+
+		public static string? CecilTypeNameToReflectionTypeName (string? typeName) => typeName?.Replace ('/', '+');
 	}
 }

@@ -34,9 +34,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		public string JniSignature    { get; }
 		public string Connector       { get; }
 		public string ManagedTypeName { get; }
+		public string OriginalDescString  { get; }
 
-		public OverriddenMethodDescriptor (string javaPackageName, string methodDescription)
+		public OverriddenMethodDescriptor (string javaPackageName, string methodDescription, string fallbackManagedTypeName)
 		{
+			OriginalDescString = methodDescription;
 			JavaPackageName = javaPackageName;
 			string[] parts = methodDescription.Split (methodDescSplitChars, 4);
 
@@ -49,8 +51,12 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			if (parts.Length > 2) {
 				Connector = parts[2];
 				if (parts.Length > 3) {
-					ManagedTypeName = parts[3];
+					ManagedTypeName = TypeDefinitionRocks.CecilTypeNameToReflectionTypeName (parts[3]);
 				}
+			}
+
+			if (String.IsNullOrEmpty (ManagedTypeName)) {
+				ManagedTypeName = fallbackManagedTypeName;
 			}
 		}
 	}
@@ -529,7 +535,6 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		public void Generate (TextWriter writer)
 		{
-			overriddenMethodDescriptors = new List<OverriddenMethodDescriptor> ();
 			if (!string.IsNullOrEmpty (package)) {
 				writer.WriteLine ("package " + package + ";");
 				writer.WriteLine ();
@@ -563,17 +568,6 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				}
 
 			GenerateFooter (writer);
-
-			string javaTypeName = $"{package}.{name}";
-			AddOverridenMethods (methods);
-			AddOverridenMethods (ctors);
-
-			void AddOverridenMethods (List<Signature> list)
-			{
-				foreach (Signature sig in list) {
-					overriddenMethodDescriptors.Add (new OverriddenMethodDescriptor (javaTypeName, sig.Method));
-				}
-			}
 		}
 
 		public void Generate (string outputPath)
@@ -716,9 +710,17 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		void GenerateRegisterType (TextWriter sw, JavaCallableWrapperGenerator self, string field)
 		{
+			if (overriddenMethodDescriptors == null) {
+				overriddenMethodDescriptors = new List<OverriddenMethodDescriptor> ();
+			}
+
 			sw.WriteLine ("\t\t{0} = ", field);
-			foreach (Signature method in self.methods)
+			string managedTypeName = self.type.GetPartialAssemblyQualifiedName (cache);
+			string javaTypeName = $"{package}.{name}";
+			foreach (Signature method in self.methods) {
 				sw.WriteLine ("\t\t\t\"{0}\\n\" +", method.Method);
+				overriddenMethodDescriptors.Add (new OverriddenMethodDescriptor (javaTypeName, method.Method, managedTypeName));
+			}
 			sw.WriteLine ("\t\t\t\"\";");
 			if (CannotRegisterInStaticConstructor (self.type))
 				return;
@@ -732,7 +734,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					break;
 			}
 			sw.Write ("\t\t");
-			sw.WriteLine (format, self.type.GetPartialAssemblyQualifiedName (cache), self.name, field);
+			sw.WriteLine (format, managedTypeName, self.name, field);
 		}
 
 		void GenerateFooter (TextWriter sw)
