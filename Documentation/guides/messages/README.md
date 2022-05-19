@@ -31,6 +31,10 @@ ms.date: 01/24/2020
 + APT0003: Invalid file name: It must contain only \[^a-zA-Z0-9_.\]+.
 + APT0004: Invalid file name: It must start with either A-Z or a-z or an underscore.
 
+## JAVAxxxx: Java Tool
+
++ [JAVA0000](java0000.md): Generic Java tool error
+
 ## JAVACxxxx: Java compiler
 
 + [JAVAC0000](javac0000.md): Generic Java compiler error

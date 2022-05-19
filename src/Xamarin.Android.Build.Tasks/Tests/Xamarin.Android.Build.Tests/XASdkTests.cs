@@ -1038,6 +1038,29 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 		}
 
 		[Test]
+		public void WearProjectJavaBuildFailure ()
+		{
+			var proj = new XASdkProject {
+				IsRelease = true,
+				PackageReferences = {
+					new Package { Id = "Xamarin.AndroidX.Wear", Version = "1.2.0.5" },
+					new Package { Id = "Xamarin.Android.Wear", Version = "2.2.0" },
+					new Package { Id = "Xamarin.AndroidX.PercentLayout", Version = "1.0.0.14" },
+					new Package { Id = "Xamarin.AndroidX.Legacy.Support.Core.UI", Version = "1.0.0.14" },
+				},
+				SupportedOSPlatformVersion = "23",
+			};
+			var builder = CreateDotNetBuilder (proj);
+			Assert.IsFalse (builder.Build (), $"{proj.ProjectName} should fail.");
+			var text = $"java.lang.RuntimeException";
+			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, text), $"Output did not contain '{text}'");
+			text = $"is defined multiple times";
+			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, text), $"Output did not contain '{text}'");
+			text = $"is from 'androidx.core.core.aar'";
+			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, text), $"Output did not contain '{text}'");
+		}
+
+		[Test]
 		public void BenchmarkDotNet ()
 		{
 			var proj = new XASdkProject {

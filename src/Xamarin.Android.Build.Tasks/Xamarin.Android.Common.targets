@@ -1538,6 +1538,8 @@ because xbuild doesn't support framework reference assemblies.
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       ManifestOverlayFiles="@(AndroidManifestOverlay)"
       ExtraArgs="$(AndroidManifestMergerExtraArgs)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
   />
   <ItemGroup>
     <FileWrites Include="$(IntermediateOutputPath)android\AndroidManifest.xml" />
@@ -2070,6 +2072,8 @@ because xbuild doesn't support framework reference assemblies.
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       CustomBuildConfigFile="$(AndroidBundleConfigurationFile)"
       MetaDataFiles="@(AndroidAppBundleMetaDataFile)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
   />
 </Target>
 
