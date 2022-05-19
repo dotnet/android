@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>SUPPORTED_OS_PLATFORM_VERSION</SupportedOSPlatformVersion>
+    <RootNamespace Condition="'$(name)' != '$(name{-VALUE-FORMS-}safe_namespace)'">AndroidApp1</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationId>com.companyname.AndroidApp1</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);XA4218</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Xamarin.AndroidX.Wear" Version="1.2.0.5" />
+  </ItemGroup>
+</Project>
