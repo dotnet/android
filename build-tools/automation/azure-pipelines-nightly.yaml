@@ -34,8 +34,7 @@ stages:
     displayName: macOS
     pool:
       name: VSEng-Xamarin-RedmondMac-Android-Untrusted
-      demands:
-      - agent.osversionfamily -equals 10.15
+      demands: macOS.Name -equals Monterey
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:

@@ -69,7 +69,7 @@ variables:
   - name: MacBuildPoolName
     value: Azure Pipelines
   - name: MacBuildPoolImage
-    value: internal-macos-11
+    value: internal-macos12
 - ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), eq(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Test
@@ -91,7 +91,7 @@ stages:
       name: $(MacBuildPoolName)
       vmImage: $(MacBuildPoolImage)
       ${{ if eq(variables['MacBuildPoolName'], 'VSEng-Xamarin-RedmondMac-Android-Untrusted') }}:
-        demands: agent.osversionfamily -equals 10.15
+        demands: macOS.Name -equals Monterey
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1119,7 +1119,7 @@ stages:
     condition: false #TODO: Enable once test issues are fixed.
     displayName: macOS
     pool:
-      vmImage: internal-macos-11
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
