@@ -17,21 +17,18 @@ namespace Java.Interop {
 		}
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType)
-			: this (jniPeerTypeName, managedPeerType, checkManagedPeerType: true, isInterface: false)
+			: this (jniPeerTypeName = GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: false)
 		{
-			if (managedPeerType == null)
-				throw new ArgumentNullException (nameof (managedPeerType));
-			if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
-				throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
+		}
 
-			Debug.Assert (
-					JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference == jniPeerTypeName,
-					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
-						managedPeerType.FullName,
-						JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference,
-						jniPeerTypeName));
-
-			ManagedPeerType = managedPeerType;
+		static string GetReplacementType (string jniPeerTypeName)
+		{
+#if NET
+			var replacement = JniEnvironment.Runtime.TypeManager.GetReplacementType (jniPeerTypeName);
+			if (replacement != null)
+				return replacement;
+#endif  // NET
+			return jniPeerTypeName;
 		}
 
 		JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType, bool isInterface = false)
@@ -45,12 +42,16 @@ namespace Java.Interop {
 				if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
 					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
 
-				Debug.Assert (
-					JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference == jniPeerTypeName,
-					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
-						managedPeerType.FullName,
-						JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference,
-						jniPeerTypeName));
+#if DEBUG
+				var signatureFromType   = JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType);
+				if (signatureFromType.SimpleReference != jniPeerTypeName) {
+					Debug.WriteLine ("WARNING-Java.Interop: ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
+							managedPeerType.FullName,
+							signatureFromType.SimpleReference,
+							jniPeerTypeName);
+					Debug.WriteLine (new System.Diagnostics.StackTrace (true));
+				}
+#endif  // DEBUG
 			}
 
 			JniPeerTypeName = jniPeerTypeName;

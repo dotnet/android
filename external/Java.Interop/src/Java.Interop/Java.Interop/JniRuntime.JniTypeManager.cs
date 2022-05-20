@@ -3,14 +3,81 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using System.Threading;
 
 namespace Java.Interop {
 
 	public partial class JniRuntime {
+
+#if NET
+		[SuppressMessage ("Design", "CA1034:Nested types should not be visible",
+			Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`; see 045b8af7.")]
+		public struct ReplacementMethodInfo : IEquatable<ReplacementMethodInfo>
+		{
+			public  string? SourceJniType                   {get; set;}
+			public  string? SourceJniMethodName             {get; set;}
+			public  string? SourceJniMethodSignature        {get; set;}
+			public  string? TargetJniType                   {get; set;}
+			public  string? TargetJniMethodName             {get; set;}
+			public  string? TargetJniMethodSignature        {get; set;}
+			public  int?    TargetJniMethodParameterCount   {get; set;}
+			public  bool    TargetJniMethodInstanceToStatic {get; set;}
+
+			public override bool Equals (object? obj)
+			{
+				if (obj is ReplacementMethodInfo o) {
+					return Equals (o);
+				}
+				return false;
+			}
+
+			public bool Equals (ReplacementMethodInfo other)
+			{
+				return string.Equals (SourceJniType, other.SourceJniType) &&
+					string.Equals (SourceJniMethodName, other.SourceJniMethodName) &&
+					string.Equals (SourceJniMethodSignature, other.SourceJniMethodSignature) &&
+					string.Equals (TargetJniType, other.TargetJniType) &&
+					string.Equals (TargetJniMethodName, other.TargetJniMethodName) &&
+					string.Equals (TargetJniMethodSignature, other.TargetJniMethodSignature) &&
+					TargetJniMethodParameterCount == other.TargetJniMethodParameterCount &&
+					TargetJniMethodInstanceToStatic == other.TargetJniMethodInstanceToStatic;
+			}
+
+			public override int GetHashCode ()
+			{
+				return (SourceJniType?.GetHashCode () ?? 0) ^
+					(SourceJniMethodName?.GetHashCode () ?? 0) ^
+					(SourceJniMethodSignature?.GetHashCode () ?? 0) ^
+					(TargetJniType?.GetHashCode () ?? 0) ^
+					(TargetJniMethodName?.GetHashCode () ?? 0) ^
+					(TargetJniMethodSignature?.GetHashCode () ?? 0) ^
+					(TargetJniMethodParameterCount?.GetHashCode () ?? 0) ^
+					TargetJniMethodInstanceToStatic.GetHashCode ();
+			}
+
+			public override string ToString ()
+			{
+				return $"{nameof (ReplacementMethodInfo)} {{ " +
+					$"{nameof (SourceJniType)} = \"{SourceJniType}\"" +
+					$", {nameof (SourceJniMethodName)} = \"{SourceJniMethodName}\"" +
+					$", {nameof (SourceJniMethodSignature)} = \"{SourceJniMethodSignature}\"" +
+					$", {nameof (TargetJniType)} = \"{TargetJniType}\"" +
+					$", {nameof (TargetJniMethodName)} = \"{TargetJniMethodName}\"" +
+					$", {nameof (TargetJniMethodSignature)} = \"{TargetJniMethodSignature}\"" +
+					$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString () ?? "null"}" +
+					$", {nameof (TargetJniMethodInstanceToStatic)} = {TargetJniMethodInstanceToStatic}" +
+					$"}}";
+			}
+
+			public static bool operator==(ReplacementMethodInfo a, ReplacementMethodInfo b) => a.Equals (b);
+			public static bool operator!=(ReplacementMethodInfo a, ReplacementMethodInfo b) => !a.Equals (b);
+		}
+#endif  // NET
 
 		public class JniTypeManager : IDisposable, ISetRuntime {
 
@@ -46,6 +113,18 @@ namespace Java.Interop {
 				throw new ObjectDisposedException (nameof (JniTypeManager));
 			}
 
+			internal static void AssertSimpleReference (string jniSimpleReference, string argumentName = "jniSimpleReference")
+			{
+				if (jniSimpleReference == null)
+					throw new ArgumentNullException (argumentName);
+				if (jniSimpleReference != null && jniSimpleReference.IndexOf (".", StringComparison.Ordinal) >= 0)
+					throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", argumentName);
+				if (jniSimpleReference != null && jniSimpleReference.StartsWith ("[", StringComparison.Ordinal))
+					throw new ArgumentException ("Arrays cannot be present in simplified type references.", argumentName);
+				if (jniSimpleReference != null && jniSimpleReference.StartsWith ("L", StringComparison.Ordinal) && jniSimpleReference.EndsWith (";", StringComparison.Ordinal))
+					throw new ArgumentException ("JNI type references are not supported.", argumentName);
+			}
+
 			// NOTE: This method needs to be kept in sync with GetTypeSignatures()
 			// This version of the method has removed IEnumerable for performance reasons.
 			public JniTypeSignature GetTypeSignature (Type type)
@@ -71,6 +150,12 @@ namespace Java.Interop {
 
 				var name = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
 				if (name != null) {
+#if NET
+					var altRef = GetReplacementType (name.SimpleReference);
+					if (altRef != null) {
+						return new JniTypeSignature (altRef, name.ArrayRank + rank, name.IsKeyword);
+					}
+#endif  // NET
 					return new JniTypeSignature (name.SimpleReference, name.ArrayRank + rank, name.IsKeyword);
 				}
 
@@ -229,15 +314,7 @@ namespace Java.Interop {
 			protected virtual IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 			{
 				AssertValid ();
-
-				if (jniSimpleReference == null)
-					throw new ArgumentNullException (nameof (jniSimpleReference));
-				if (jniSimpleReference != null && jniSimpleReference.IndexOf (".", StringComparison.Ordinal) >= 0)
-					throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", nameof (jniSimpleReference));
-				if (jniSimpleReference != null && jniSimpleReference.StartsWith ("[", StringComparison.Ordinal))
-					throw new ArgumentException ("Only simplified type references are supported.", nameof (jniSimpleReference));
-				if (jniSimpleReference != null && jniSimpleReference.StartsWith ("L", StringComparison.Ordinal) && jniSimpleReference.EndsWith (";", StringComparison.Ordinal))
-					throw new ArgumentException ("Only simplified type references are supported.", nameof (jniSimpleReference));
+				AssertSimpleReference (jniSimpleReference);
 
 				// Not sure why CS8604 is reported on following line when we check against null ~9 lines above...
 				return CreateGetTypesForSimpleReferenceEnumerator (jniSimpleReference!);
@@ -252,6 +329,43 @@ namespace Java.Interop {
 			}
 
 #if NET
+
+			public IReadOnlyList<string>? GetStaticMethodFallbackTypes (string jniSimpleReference)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+
+				return GetStaticMethodFallbackTypesCore (jniSimpleReference);
+			}
+
+			protected virtual IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimple) => null;
+
+			public string? GetReplacementType (string jniSimpleReference)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+
+				return GetReplacementTypeCore (jniSimpleReference);
+			}
+
+			protected virtual string? GetReplacementTypeCore (string jniSimpleReference) => null;
+
+			public ReplacementMethodInfo? GetReplacementMethodInfo (string jniSimpleReference, string jniMethodName, string jniMethodSignature)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+				if (string.IsNullOrEmpty (jniMethodName)) {
+					throw new ArgumentNullException (nameof (jniMethodName));
+				}
+				if (string.IsNullOrEmpty (jniMethodSignature)) {
+					throw new ArgumentNullException (nameof (jniMethodSignature));
+				}
+
+				return GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName, jniMethodSignature);
+			}
+
+			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, string jniMethodName, string jniMethodSignature) => null;
+
 			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 			{
 				TryRegisterNativeMembers (nativeClass, type, methods);

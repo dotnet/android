@@ -10,6 +10,11 @@ namespace Java.Interop
 
 		public      bool    IsStatic    {get; private set;}
 
+#if NET
+		internal    JniType?    StaticRedirect;
+		internal    int?        ParameterCount;
+#endif  //NET
+
 		internal    bool    IsValid {
 			get {return ID != IntPtr.Zero;}
 		}

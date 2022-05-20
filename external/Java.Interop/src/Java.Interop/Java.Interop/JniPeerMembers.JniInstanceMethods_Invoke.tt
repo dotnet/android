@@ -21,6 +21,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics;
 
 namespace Java.Interop {
 
@@ -29,35 +30,83 @@ namespace Java.Interop {
 		partial class JniInstanceMethods {
 <#
 	foreach (var returnType in jniReturnTypes) {
+		string byRefParamDecl       = returnType.ReturnType == "void" ? "" : ", out " + returnType.ReturnType + " r";
+		// string byRefParam           = returnType.ReturnType == "void" ? "" : " r";
+		string setByRefToDefault    = returnType.ReturnType == "void" ? "" : "r = default;";
+		string setByRefParam        = returnType.ReturnType == "void" ? "" : "r = ";
+		string returnByRefParam     = returnType.ReturnType == "void" ? "return" : "return r";
 #>
+
+#pragma warning disable CA1801
+			static unsafe bool TryInvoke<#= returnType.ManagedType #>StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters<#= byRefParamDecl #>)
+			{
+				<#= setByRefToDefault #>
+#if !NET
+				return false;
+#else  // NET
+				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
+					return false;
+				}
+
+				int c   = method.ParameterCount.Value;
+				Debug.Assert (c > 0);
+				var p   = stackalloc JniArgumentValue [c];
+				p [0]   = new JniArgumentValue (self);
+				for (int i = 0; i < c-1; ++i) {
+					p [i+1] = parameters [i];
+				}
+
+				<#= setByRefParam #>JniEnvironment.StaticMethods.CallStatic<#= returnType.JniCallType #>Method (method.StaticRedirect.PeerReference, method, p);
+				return true;
+#endif   // NET
+			}
+#pragma warning restore CA1801
 
 			public unsafe <#= returnType.ReturnType #> InvokeAbstract<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var m   = GetMethodInfo (encodedMember);
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvoke<#= returnType.ManagedType #>StaticRedirect (m, self, parameters<#= byRefParamDecl #>)) {
+						<#= returnByRefParam #>;
+					}
 
-				<#= returnType.ReturnType != "void" ? "var r   = " : "" #>JniEnvironment.InstanceMethods.Call<#= returnType.JniCallType #>Method (self.PeerReference, m, parameters);
-				GC.KeepAlive (self);
-				return<#= returnType.ReturnType == "void" ? "" : " r" #>;
+					<#= setByRefParam #>JniEnvironment.InstanceMethods.Call<#= returnType.JniCallType #>Method (self.PeerReference, m, parameters);
+					<#= returnByRefParam #>;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
 			}
 
 			public unsafe <#= returnType.ReturnType #> InvokeVirtual<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var declaringType   = DeclaringType;
-				if (Members.UsesVirtualDispatch (self, declaringType)) {
-					var m   = GetMethodInfo (encodedMember);
-					<#= returnType.ReturnType != "void" ? "var _nr = " : "" #>JniEnvironment.InstanceMethods.Call<#= returnType.JniCallType #>Method (self.PeerReference, m, parameters);
-					GC.KeepAlive (self);
-					return<#= returnType.ReturnType == "void" ? "" : " _nr" #>;
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvoke<#= returnType.ManagedType #>StaticRedirect (m, self, parameters<#= byRefParamDecl #>)) {
+							<#= returnByRefParam #>;
+						}
+						<#= setByRefParam #>JniEnvironment.InstanceMethods.Call<#= returnType.JniCallType #>Method (self.PeerReference, m, parameters);
+						<#= returnByRefParam #>;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvoke<#= returnType.ManagedType #>StaticRedirect (n, self, parameters<#= byRefParamDecl #>)) {
+							<#= returnByRefParam #>;
+						}
+						<#= setByRefParam #>JniEnvironment.InstanceMethods.CallNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						<#= returnByRefParam #>;
+					} while (false);
 				}
-				var j = Members.GetPeerMembers (self);
-				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				<#= returnType.ReturnType != "void" ? "var r = " : "" #>JniEnvironment.InstanceMethods.CallNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
-				GC.KeepAlive (self);
-				return<#= returnType.ReturnType == "void" ? "" : " r" #>;
+				finally {
+					GC.KeepAlive (self);
+				}
 			}
 
 			public unsafe <#= returnType.ReturnType #> InvokeNonvirtual<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
@@ -65,10 +114,16 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var m   = GetMethodInfo (encodedMember);
-
-				<#= returnType.ReturnType != "void" ? "var r   = " : "" #>JniEnvironment.InstanceMethods.CallNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, JniPeerType.PeerReference, m, parameters);
-				GC.KeepAlive (self);
-				return<#= returnType.ReturnType == "void" ? "" : " r" #>;
+				try {
+					if (TryInvoke<#= returnType.ManagedType #>StaticRedirect (m, self, parameters<#= byRefParamDecl #>)) {
+						<#= returnByRefParam #>;
+					}
+					<#= setByRefParam #>JniEnvironment.InstanceMethods.CallNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					<#= returnByRefParam #>;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
 			}
 <#
 	}

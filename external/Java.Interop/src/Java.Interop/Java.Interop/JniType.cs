@@ -25,6 +25,18 @@ namespace Java.Interop {
 			}
 		}
 
+#if NET
+		public static bool TryParse (string name, [NotNullWhen (true)] out JniType? type)
+		{
+			if (!JniEnvironment.Types.TryFindClass (name, out var peerReference)) {
+				type    = null;
+				return false;
+			}
+			type    = new JniType (ref peerReference, JniObjectReferenceOptions.CopyAndDispose);
+			return true;
+		}
+#endif  // NET
+
 		bool    registered;
 		JniObjectReference  peerReference;
 
@@ -236,6 +248,28 @@ namespace Java.Interop {
 			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
 		}
 
+#if NET
+		internal bool TryGetInstanceMethod (string name, string signature, [NotNullWhen(true)] out JniMethodInfo? method)
+		{
+			AssertValid ();
+
+			IntPtr thrown;
+			method  = null;
+			var id  = NativeMethods.java_interop_jnienv_get_method_id (JniEnvironment.EnvironmentPointer, out thrown, PeerReference.Handle, name, signature);
+			if (thrown != IntPtr.Zero) {
+				JniEnvironment.Exceptions.ExceptionClear ();
+				NativeMethods.java_interop_jnienv_delete_local_ref (JniEnvironment.EnvironmentPointer, thrown);
+				return false;
+			}
+			if (id == IntPtr.Zero) {
+				// …huh?  Should only happen if `thrown != IntPtr.Zero`, handled above.
+				return false;
+			}
+			method  = new JniMethodInfo (name, signature, id, isStatic: false);
+			return true;
+		}
+#endif  // NET
+
 		public JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, string name, string signature)
 		{
 			AssertValid ();
@@ -255,6 +289,28 @@ namespace Java.Interop {
 
 			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
 		}
+
+#if NET
+		internal bool TryGetStaticMethod (string name, string signature, [NotNullWhen(true)] out JniMethodInfo? method)
+		{
+			AssertValid ();
+
+			IntPtr thrown;
+			method  = null;
+			var id  = NativeMethods.java_interop_jnienv_get_static_method_id (JniEnvironment.EnvironmentPointer, out thrown, PeerReference.Handle, name, signature);
+			if (thrown != IntPtr.Zero) {
+				JniEnvironment.Exceptions.ExceptionClear ();
+				NativeMethods.java_interop_jnienv_delete_local_ref (JniEnvironment.EnvironmentPointer, thrown);
+				return false;
+			}
+			if (id == IntPtr.Zero) {
+				// …huh?  Should only happen if `thrown != IntPtr.Zero`, handled above.
+				return false;
+			}
+			method  = new JniMethodInfo (name, signature, id, isStatic: true);
+			return true;
+		}
+#endif  // NET
 
 		public JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, string name, string signature)
 		{

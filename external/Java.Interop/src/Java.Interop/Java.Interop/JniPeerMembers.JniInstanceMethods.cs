@@ -84,14 +84,46 @@ namespace Java.Interop
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
 			lock (InstanceMethods) {
-				if (!InstanceMethods.TryGetValue (encodedMember, out var m)) {
-					string method, signature;
-					JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
-					m = JniPeerType.GetInstanceMethod (method, signature);
-					InstanceMethods.Add (encodedMember, m);
+				if (InstanceMethods.TryGetValue (encodedMember, out var m)) {
+					return m;
 				}
-				return m;
 			}
+			string method, signature;
+			JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
+			var info = GetMethodInfo (method, signature);
+			lock (InstanceMethods) {
+				if (InstanceMethods.TryGetValue (encodedMember, out var m)) {
+					return m;
+				}
+				InstanceMethods.Add (encodedMember, info);
+			}
+			return info;
+		}
+
+		JniMethodInfo GetMethodInfo (string method, string signature)
+		{
+#if NET
+			var m              = (JniMethodInfo?) null;
+			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
+			if (newMethod.HasValue) {
+				var typeName   = newMethod.Value.TargetJniType ?? Members.JniPeerTypeName;
+				var methodName = newMethod.Value.TargetJniMethodName ?? method;
+				var methodSig  = newMethod.Value.TargetJniMethodSignature ?? signature;
+
+				using var t = new JniType (typeName);
+				if (newMethod.Value.TargetJniMethodInstanceToStatic &&
+						t.TryGetStaticMethod (methodName, methodSig, out m)) {
+					m.ParameterCount = newMethod.Value.TargetJniMethodParameterCount;
+					m.StaticRedirect = new JniType (typeName);
+					return m;
+				}
+				if (t.TryGetInstanceMethod (methodName, methodSig, out m)) {
+					return m;
+				}
+				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{typeName}.{methodName}.{methodSig}`!");
+			}
+#endif  // NET
+			return JniPeerType.GetInstanceMethod (method, signature);
 		}
 
 		public unsafe JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JniArgumentValue* parameters)

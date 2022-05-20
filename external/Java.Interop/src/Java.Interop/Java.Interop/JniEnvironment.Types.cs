@@ -31,7 +31,12 @@ namespace Java.Interop
 				}
 			}
 
-			public static unsafe JniObjectReference FindClass (string classname)
+			public static JniObjectReference FindClass (string classname)
+			{
+				return TryFindClass (classname, throwOnError: true);
+			}
+
+			static unsafe JniObjectReference TryFindClass (string classname, bool throwOnError)
 			{
 				if (classname == null)
 					throw new ArgumentNullException (nameof (classname));
@@ -85,6 +90,10 @@ namespace Java.Interop
 					}
 				}
 
+				if (!throwOnError) {
+					(pendingException as IJavaPeerable)?.Dispose ();
+					return default;
+				}
 				throw pendingException!;
 #endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
@@ -120,9 +129,26 @@ namespace Java.Interop
 				var loadClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
 				LogCreateLocalRef (loadClassThrown);
 				pendingException    = info.Runtime.GetExceptionForThrowable (ref loadClassThrown, JniObjectReferenceOptions.CopyAndDispose);
+				if (!throwOnError) {
+					(pendingException as IJavaPeerable)?.Dispose ();
+					return default;
+				}
 				throw pendingException!;
 #endif  // !FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			}
+
+#if NET
+			public static bool TryFindClass (string classname, out JniObjectReference instance)
+			{
+				if (classname == null)
+					throw new ArgumentNullException (nameof (classname));
+				if (classname.Length == 0)
+					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
+
+				instance = TryFindClass (classname, throwOnError: false);
+				return instance.IsValid;
+			}
+#endif  // NET
 
 			public static JniType? GetTypeFromInstance (JniObjectReference instance)
 			{

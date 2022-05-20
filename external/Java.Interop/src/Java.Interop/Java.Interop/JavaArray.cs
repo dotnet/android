@@ -231,9 +231,9 @@ namespace Java.Interop
 
 		object? IList.this [int index] {
 			get {return this [index];}
-#pragma warning disable 8601
+#pragma warning disable 8600,8601
 			set {this [index] = (T) value;}
-#pragma warning restore 8601
+#pragma warning restore 8600,8601
 		}
 
 		void ICollection.CopyTo (Array array, int index)

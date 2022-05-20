@@ -14,39 +14,60 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
+	public class TestJVMOptions : JreRuntimeOptions {
+
+		public TestJVMOptions (Assembly? callingAssembly = null)
+		{
+			CallingAssembly = callingAssembly ?? Assembly.GetCallingAssembly ();
+		}
+
+		public  ICollection<string>         JarFilePaths    {get;}      = new List<string> ();
+		public  Assembly                    CallingAssembly {get; set;}
+		public  Dictionary<string, Type>?   TypeMappings    {get; set;}
+	}
+
 	public class TestJVM : JreRuntime {
 
-		static JreRuntimeOptions CreateBuilder (string[] jars, Assembly caller)
+		public TestJVM (TestJVMOptions builder)
+			: base (OverrideOptions (builder))
 		{
-			var dir = Path.GetDirectoryName (typeof (TestJVM).Assembly.Location);
-			var builder = new JreRuntimeOptions () {
-				JvmLibraryPath                                  = GetJvmLibraryPath (),
-				JniAddNativeMethodRegistrationAttributePresent  = true,
-				JniGlobalReferenceLogWriter                     = GetLogOutput ("JAVA_INTEROP_GREF_LOG", "g-", caller),
-				JniLocalReferenceLogWriter                      = GetLogOutput ("JAVA_INTEROP_LREF_LOG", "l-", caller),
-			};
-			if (jars != null) {
-				foreach (var jar in jars)
-					builder.ClassPath.Add (Path.Combine (dir, jar));
-			}
+		}
+
+		static TestJVMOptions OverrideOptions (TestJVMOptions builder)
+		{
+			var dir = GetOutputDirectoryName ();
+
+			builder.JvmLibraryPath                                  = GetJvmLibraryPath ();
+			builder.JniAddNativeMethodRegistrationAttributePresent  = true;
+			builder.JniGlobalReferenceLogWriter                     = GetLogOutput ("JAVA_INTEROP_GREF_LOG", "g-", builder.CallingAssembly);
+			builder.JniLocalReferenceLogWriter                      = GetLogOutput ("JAVA_INTEROP_LREF_LOG", "l-", builder.CallingAssembly);
+
+			foreach (var jar in builder.JarFilePaths)
+				builder.ClassPath.Add (Path.Combine (dir, jar));
 			builder.AddOption ("-Xcheck:jni");
-			builder.TypeManager                 = new TestTypeManager ();
+			builder.TypeManager                 = builder.TypeManager ?? new TestJvmTypeManager (builder.TypeMappings);
 
 			return builder;
 		}
 
-		static TextWriter GetLogOutput (string envVar, string prefix, Assembly caller)
+		static string GetOutputDirectoryName ()
+		{
+			return Path.GetDirectoryName (typeof (TestJVM).Assembly.Location) ??
+				Environment.CurrentDirectory;
+		}
+
+		static TextWriter? GetLogOutput (string envVar, string prefix, Assembly caller)
 		{
 			var path    = Environment.GetEnvironmentVariable (envVar);
 			if (!string.IsNullOrEmpty (path))
 				return null;
 			path        = Path.Combine (
-					Path.GetDirectoryName (typeof (TestJVM).Assembly.Location),
+					GetOutputDirectoryName (),
 					prefix + Path.GetFileName (caller.Location) + ".txt");
 			return new StreamWriter (path, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
 		}
 
-		public static string GetJvmLibraryPath ()
+		public static string? GetJvmLibraryPath ()
 		{
 			var jdkDir  = ReadJavaSdkDirectoryFromJdkInfoProps ();
 			if (jdkDir != null) {
@@ -57,11 +78,14 @@ namespace Java.InteropTests
 			return jdk?.JdkJvmPath;
 		}
 
-		static string ReadJavaSdkDirectoryFromJdkInfoProps ()
+		static string? ReadJavaSdkDirectoryFromJdkInfoProps ()
 		{
 			var location    = typeof (TestJVM).Assembly.Location;
-			var binDir      = Path.GetDirectoryName (Path.GetDirectoryName (location));
+			var binDir      = Path.GetDirectoryName (Path.GetDirectoryName (location)) ?? Environment.CurrentDirectory;
 			var testDir     = Path.GetFileName (Path.GetDirectoryName (location));
+			if (testDir == null) {
+				return null;
+			}
 			if (!testDir.StartsWith ("Test", StringComparison.OrdinalIgnoreCase)) {
 				return null;
 			}
@@ -89,47 +113,67 @@ namespace Java.InteropTests
 			return jdkJvmPath.Value;
 		}
 
-		Dictionary<string, Type> typeMappings;
+		public TestJVM (string[]? jars = null, Dictionary<string, Type>? typeMappings = null)
+			: this (CreateOptions (jars, Assembly.GetCallingAssembly (), typeMappings))
+		{
+		}
 
-		public TestJVM (string[] jars = null, Dictionary<string, Type> typeMappings = null)
-			: base (CreateBuilder (jars, Assembly.GetCallingAssembly ()))
+		static TestJVMOptions CreateOptions (string[]? jarFiles, Assembly callingAssembly, Dictionary<string, Type>? typeMappings)
+		{
+			var o = new TestJVMOptions {
+				TypeMappings    = typeMappings,
+				CallingAssembly = callingAssembly,
+			};
+			if (jarFiles != null) {
+				foreach (var jar in jarFiles) {
+					o.JarFilePaths.Add (jar);
+				}
+			}
+			return o;
+		}
+	}
+
+	public class TestJvmTypeManager :
+#if NET
+			JreTypeManager
+#else   // !NET
+			JniRuntime.JniTypeManager
+#endif  // !NET
+	{
+
+		Dictionary<string, Type>? typeMappings;
+
+		public TestJvmTypeManager (Dictionary<string, Type>? typeMappings)
 		{
 			this.typeMappings = typeMappings;
 		}
 
-		class TestTypeManager :
-#if NET
-			JreTypeManager
-#else   // !NET
-			JniTypeManager
-#endif  // !NET
+		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 		{
+			foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference))
+				yield return t;
+			if (typeMappings == null)
+				yield break;
+			Type target;
+#pragma warning disable CS8600	// huh?
+			if (typeMappings.TryGetValue (jniSimpleReference, out target))
+				yield return target;
+#pragma warning restore CS8600
+		}
 
-			protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
-			{
-				foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference))
-					yield return t;
-				var mappings = ((TestJVM) Runtime).typeMappings;
-				Type target;
-				if (mappings != null && mappings.TryGetValue (jniSimpleReference, out target))
-					yield return target;
-			}
+		protected override IEnumerable<string> GetSimpleReferences (Type type)
+		{
+			return base.GetSimpleReferences (type)
+				.Concat (CreateSimpleReferencesEnumerator (type));
+		}
 
-			protected override IEnumerable<string> GetSimpleReferences (Type type)
-			{
-				return base.GetSimpleReferences (type)
-					.Concat (CreateSimpleReferencesEnumerator (type));
-			}
-
-			IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
-			{
-				var mappings = ((TestJVM) Runtime).typeMappings;
-				if (mappings == null)
-					yield break;
-				foreach (var e in mappings) {
-					if (e.Value == type)
-						yield return e.Key;
-				}
+		IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
+		{
+			if (typeMappings == null)
+				yield break;
+			foreach (var e in typeMappings) {
+				if (e.Value == type)
+					yield return e.Key;
 			}
 		}
 	}

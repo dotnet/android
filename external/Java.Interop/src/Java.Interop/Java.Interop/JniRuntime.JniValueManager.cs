@@ -402,9 +402,9 @@ namespace Java.Interop
 				targetType  = targetType ?? typeof (T);
 
 				if (typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
-#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8600,CS8601 // Possible null reference assignment.
 					return (T) JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
-#pragma warning restore CS8601 // Possible null reference assignment.
+#pragma warning restore CS8600,CS8601 // Possible null reference assignment.
 				}
 
 				var marshaler   = GetValueMarshaler<T> ();
@@ -481,9 +481,9 @@ namespace Java.Interop
 				}
 
 				if (typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
-#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8600,CS8601 // Possible null reference assignment.
 					return (T) JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
-#pragma warning restore CS8601 // Possible null reference assignment.
+#pragma warning restore CS8600,CS8601 // Possible null reference assignment.
 				}
 
 				var marshaler   = GetValueMarshaler<T> ();

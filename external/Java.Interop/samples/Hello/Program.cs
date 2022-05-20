@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 
 using Mono.Options;
@@ -9,10 +10,13 @@ namespace Hello
 {
 	class App
 	{
+		const int N = 1000000;
+
 		public static void Main (string[] args)
 		{
 			string? jvmPath             = global::Java.InteropTests.TestJVM.GetJvmLibraryPath ();
 			bool    createMultipleVMs   = false;
+			bool    reportTiming        = false;
 			bool    showHelp            = false;
 			var options = new OptionSet () {
 				"Using the JVM from C#!",
@@ -24,6 +28,9 @@ namespace Hello
 				{ "m",
 				  "Create multiple Java VMs.  This will likely creash.",
 				  v => createMultipleVMs = v != null },
+				{ "t",
+				  $"Timing; invoke Object.hashCode() {N} times, print average.",
+				  v => reportTiming = v != null },
 				{ "h|help",
 				  "Show this message and exit.",
 				  v => showHelp = v != null },
@@ -33,29 +40,42 @@ namespace Hello
 				options.WriteOptionDescriptions (Console.Out);
 				return;
 			}
-			Console.WriteLine ("Hello World!");
 			var builder = new JreRuntimeOptions () {
 				JniAddNativeMethodRegistrationAttributePresent  = true,
 				JvmLibraryPath                                  = jvmPath,
 			};
 			builder.AddOption ("-Xcheck:jni");
-			var jvm = builder.CreateJreVM ();
-			Console.WriteLine ($"JniRuntime.CurrentRuntime == jvm? {ReferenceEquals (JniRuntime.CurrentRuntime, jvm)}");
-			foreach (var h in JniRuntime.GetAvailableInvocationPointers ()) {
-				Console.WriteLine ("PRE: GetCreatedJavaVMHandles: {0}", h);
-			}
 
-			CreateJLO ();
+			var jvm = builder.CreateJreVM ();
+
+			if (reportTiming) {
+				ReportTiming ();
+				return;
+			}
 
 			if (createMultipleVMs) {
 				CreateAnotherJVM ();
+				return;
 			}
+
+			CreateJLO ();
 		}
 
 		static void CreateJLO ()
 		{
 			var jlo = new Java.Lang.Object ();
 			Console.WriteLine ($"binding? {jlo.ToString ()}");
+		}
+
+		static void ReportTiming ()
+		{
+			var jlo = new Java.Lang.Object ();
+			var t = Stopwatch.StartNew ();
+			for (int i = 0; i < N; ++i) {
+				jlo.GetHashCode ();
+			}
+			t.Stop ();
+			Console.WriteLine ($"Object.hashCode: {N} invocations. Total={t.Elapsed}; Average={t.Elapsed.TotalMilliseconds / (double) N}ms");
 		}
 
 		static unsafe void CreateAnotherJVM ()

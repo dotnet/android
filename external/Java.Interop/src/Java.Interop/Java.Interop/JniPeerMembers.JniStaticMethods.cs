@@ -25,15 +25,71 @@ namespace Java.Interop
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
 			lock (StaticMethods) {
-				if (!StaticMethods.TryGetValue (encodedMember, out var m)) {
-					string method, signature;
-					JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
-					m = Members.JniPeerType.GetStaticMethod (method, signature);
-					StaticMethods.Add (encodedMember, m);
+				if (StaticMethods.TryGetValue (encodedMember, out var m)) {
+					return m;
 				}
+			}
+			string method, signature;
+			JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
+			var info = GetMethodInfo (method, signature);
+			lock (StaticMethods) {
+				if (StaticMethods.TryGetValue (encodedMember, out var m)) {
+					return m;
+				}
+				StaticMethods.Add (encodedMember, info);
+			}
+			return info;
+		}
+
+		JniMethodInfo GetMethodInfo (string method, string signature)
+		{
+#if NET
+			var m              = (JniMethodInfo?) null;
+			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
+			if (newMethod.HasValue) {
+				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
+				if (t.TryGetStaticMethod (
+						newMethod.Value.TargetJniMethodName ?? method,
+						newMethod.Value.TargetJniMethodSignature ?? signature,
+						out m)) {
+					return m;
+				}
+			}
+			if (Members.JniPeerType.TryGetStaticMethod (method, signature, out m)) {
 				return m;
 			}
+			m   = FindInFallbackTypes (method, signature);
+			if (m != null) {
+				return m;
+			}
+#endif  // NET
+			return Members.JniPeerType.GetStaticMethod (method, signature);
 		}
+
+#if NET
+		JniMethodInfo? FindInFallbackTypes (string method, string signature)
+		{
+			var fallbackTypes  = JniEnvironment.Runtime.TypeManager.GetStaticMethodFallbackTypes (Members.JniPeerTypeName);
+			if (fallbackTypes == null) {
+				return null;
+			}
+			foreach (var ft in fallbackTypes) {
+				JniType? t = null;
+				try {
+					if (!JniType.TryParse (ft, out t)) {
+						continue;
+					}
+					if (t.TryGetStaticMethod (method, signature, out var m)) {
+						return m;
+					}
+				}
+				finally {
+					t?.Dispose ();
+				}
+			}
+			return null;
+		}
+#endif  // NET
 
 		public unsafe void InvokeVoidMethod (string encodedMember, JniArgumentValue* parameters)
 		{
