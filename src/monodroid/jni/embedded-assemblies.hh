@@ -4,14 +4,6 @@
 
 #include <array>
 
-#undef HAVE_CONCEPTS
-
-// Xcode has supports for concepts only since 12.5
-#if __has_include (<concepts>)
-#define HAVE_CONCEPTS
-#include <concepts>
-#endif // __has_include
-
 #include <cerrno>
 #include <cstring>
 #include <limits>
@@ -32,6 +24,14 @@
 #include "mono-image-loader.hh"
 #include "shared-constants.hh"
 #include "xxhash.hh"
+
+#undef HAVE_CONCEPTS
+
+// Xcode has supports for concepts only since 12.5
+#if __has_include (<concepts>)
+#define HAVE_CONCEPTS
+#include <concepts>
+#endif // __has_include
 
 struct TypeMapHeader;
 
