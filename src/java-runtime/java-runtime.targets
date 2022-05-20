@@ -54,7 +54,11 @@
     <_AndroidJar>"$(AndroidSdkDirectory)\platforms\android-$(AndroidJavaRuntimeApiLevel)\android.jar"</_AndroidJar>
   </PropertyGroup>
   <Exec
-      Command="&quot;$(JavaCPath)&quot; $(_Target) -d %(_RuntimeOutput.IntermediateRuntimeOutputPath) -bootclasspath $(_AndroidJar)$(PathSeparator)&quot;%(_RuntimeOutput.OutputJar)&quot; @%(_RuntimeOutput.IntermediateRuntimeClassesTxt)"
+      Command="&quot;$(JavaCPath)&quot; $(_Target) -d %(_RuntimeOutput.IntermediateRuntimeOutputPath) -h %(_RuntimeOutput.IntermediateRuntimeOutputPath) -bootclasspath $(_AndroidJar)$(PathSeparator)&quot;%(_RuntimeOutput.OutputJar)&quot; @%(_RuntimeOutput.IntermediateRuntimeClassesTxt)"
+  />
+  <Copy
+      SourceFiles="$(IntermediateOutputPath)release/mono_android_Runtime.h"
+      DestinationFolder="$(OutputPath)"
   />
   <!-- These files are auto generated at app build time so should be removed from the runtime.jar -->
   <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\mono\MonoPackageManager_Resources.class" />

@@ -27,6 +27,11 @@
     <Compile Include="..\..\tools\assembly-store-reader\AssemblyStore*.cs" />
     <EmbeddedResource Include="Resources\LinkDescTest\*.*" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\RemapActivity*">
+      <LogicalName>%(FileName)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="2.4.5" />
