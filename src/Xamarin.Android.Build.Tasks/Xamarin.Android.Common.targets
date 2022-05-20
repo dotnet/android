@@ -68,6 +68,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.LogErrorsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LogWarningsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MakeBundleNativeCodeExternal" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.MergeRemapXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.MamJsonToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MonoSymbolicate" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -429,6 +431,48 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <FilterAssemblies InputAssemblies="@(_ReferenceDependencyPaths)">
     <Output TaskParameter="OutputAssemblies" ItemName="_MonoAndroidReferenceDependencyPaths" />
   </FilterAssemblies>
+</Target>
+
+<Target Name="_ConvertAndroidMamMappingFileToXml"
+    Condition=" '@(_AndroidMamMappingFile->Count())' != '0' "
+    Inputs="@(_AndroidMamMappingFile)"
+    Outputs="$($(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml)">
+  <MakeDir
+      Condition=" '@(_AndroidMamMappingFile->Count())' != '0' "
+      Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
+  />
+  <MamJsonToXml
+      MappingFiles="@(_AndroidMamMappingFile)"
+      XmlMappingOutput="$($(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml)"
+  />
+  <Touch Files="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml" AlwaysCreate="true" />
+  <ItemGroup>
+    <FileWrites Include="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <_AndroidRemapMembers Include="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml" />
+  </ItemGroup>
+</Target>
+
+<Target Name="_CollectAndroidRemapMembers"
+    Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
+    Inputs="@(_AndroidRemapMembers)"
+    Outputs="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-remap-members.xml">
+  <MakeDir
+      Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
+      Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
+  />
+  <MergeRemapXml
+      InputRemapXmlFiles="@(_AndroidRemapMembers)"
+      OutputFile="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-remap-members.xml"
+  />
+  <ItemGroup>
+    <FileWrites Include="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-remap-members.xml" />
+  </ItemGroup>
+  <ItemGroup
+      Condition=" Exists ('$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-remap-members.xml') ">
+    <AndroidAsset Include="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-remap-members.xml" LogicalName="xa-internal/xa-remap-members.xml" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations">

@@ -22,6 +22,7 @@ namespace Xamarin.ProjectTools
 		public const string AndroidLibrary = "AndroidLibrary";
 		public const string AndroidLintConfig = "AndroidLintConfig";
 		public const string AndroidNativeLibrary = "AndroidNativeLibrary";
+		public const string _AndroidRemapMembers = "_AndroidRemapMembers";
 		public const string ProguardConfiguration = "ProguardConfiguration";
 		public const string TransformFile = "TransformFile";
 		public const string InputJar = "InputJar";

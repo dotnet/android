@@ -131,6 +131,8 @@ namespace xamarin::android::internal
 			int             packageNamingPolicy;
 			uint8_t         boundExceptionType;
 			int             jniAddNativeMethodRegistrationAttributePresent;
+			jbyte*          mappingXml;
+			int             mappingXmlLen;
 		};
 
 #if defined (NET)
@@ -174,7 +176,8 @@ namespace xamarin::android::internal
 		void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods);
 		void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-		                                             jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+		                                             jobjectArray assembliesJava, jbyteArray mappingXml, jint mappingXmlLen,
+		                                             jint apiLevel, jboolean isEmulator,
 		                                             jboolean haveSplitApks);
 #if !defined (ANDROID)
 		jint Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
@@ -299,9 +302,9 @@ namespace xamarin::android::internal
 		void parse_gdb_options ();
 		void mono_runtime_init (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args);
 #if defined (NET)
-		void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader);
+		void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader, jbyteArray mappingXml, jint mappingXmlLen);
 #else //def NET
-		void init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader);
+		void init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader, jbyteArray mappingXml, jint mappingXmlLen);
 		void setup_bundled_app (const char *dso_name);
 #endif // ndef NET
 		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
@@ -326,7 +329,7 @@ namespace xamarin::android::internal
 		MonoDomain*	create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks);
 		MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
 		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
-		                                          jobject loader, bool is_root_domain, bool force_preload_assemblies,
+		                                          jobject loader, jbyteArray mappingXml, jint mappingXmlLen, bool is_root_domain, bool force_preload_assemblies,
 		                                          bool have_split_apks);
 
 		void gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks);
