@@ -206,7 +206,7 @@ namespace Xamarin.Android.Prepare
 					continue;
 				}
 
-				string[] parts = line.Split (':', 3, StringSplitOptions.RemoveEmptyEntries);
+				string[] parts = line.Split (":", 3, StringSplitOptions.RemoveEmptyEntries);
 				if (parts.Length < 3) {
 					Log.WarningLine ($"dotnet-install URL line has unexpected number of parts. Expected 3, got {parts.Length}");
 					Log.WarningLine ($"Line: {line}");
