@@ -115,7 +115,6 @@ namespace Xamarin.Android.Prepare
 
 			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (archiveUrl);
 			if (!success) {
-				string message;
 				if (status == HttpStatusCode.NotFound) {
 					Log.ErrorLine ($"dotnet archive URL {archiveUrl} not found");
 				} else {
@@ -199,6 +198,7 @@ namespace Xamarin.Android.Prepare
 			string scriptReply = Utilities.GetStringFromStdout (scriptCommand, scriptArgs);
 			var archiveUrls = new List<string> ();
 
+			char[] fieldSplitChars = new char[] { ':' };
 			foreach (string l in scriptReply.Split (new char[] { '\n' })) {
 				string line = l.Trim ();
 
@@ -206,7 +206,7 @@ namespace Xamarin.Android.Prepare
 					continue;
 				}
 
-				string[] parts = line.Split (":", 3, StringSplitOptions.RemoveEmptyEntries);
+				string[] parts = line.Split (fieldSplitChars, 3);
 				if (parts.Length < 3) {
 					Log.WarningLine ($"dotnet-install URL line has unexpected number of parts. Expected 3, got {parts.Length}");
 					Log.WarningLine ($"Line: {line}");
