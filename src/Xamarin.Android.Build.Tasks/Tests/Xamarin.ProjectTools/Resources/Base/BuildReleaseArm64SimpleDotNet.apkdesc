@@ -5,58 +5,58 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 60751
+      "Size": 60736
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 153019
+      "Size": 152435
     },
     "assemblies/rc.bin": {
-      "Size": 1131
+      "Size": 1083
     },
     "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 8764
+      "Size": 8757
     },
     "assemblies/System.Collections.dll": {
-      "Size": 4201
+      "Size": 4196
     },
     "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 6239
+      "Size": 6232
     },
     "assemblies/System.Console.dll": {
-      "Size": 6507
+      "Size": 6502
     },
     "assemblies/System.IO.Compression.dll": {
-      "Size": 16164
+      "Size": 16259
     },
     "assemblies/System.Linq.dll": {
-      "Size": 10189
+      "Size": 10183
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 65063
+      "Size": 65104
     },
     "assemblies/System.Net.Primitives.dll": {
-      "Size": 21261
+      "Size": 21115
     },
     "assemblies/System.Net.Requests.dll": {
-      "Size": 3521
+      "Size": 3515
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 573152
+      "Size": 613751
     },
     "assemblies/System.Private.Uri.dll": {
-      "Size": 37760
+      "Size": 37595
     },
     "assemblies/System.Private.Xml.dll": {
-      "Size": 140763
+      "Size": 140804
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2412
+      "Size": 2405
     },
     "assemblies/System.Security.Cryptography.dll": {
-      "Size": 7437
+      "Size": 7391
     },
     "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 9596
+      "Size": 9591
     },
     "assemblies/UnnamedProject.dll": {
       "Size": 3560
@@ -68,7 +68,7 @@
       "Size": 484512
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 4667280
+      "Size": 4667768
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 767264
@@ -80,7 +80,7 @@
       "Size": 146816
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 15904
+      "Size": 15944
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
@@ -116,5 +116,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3451764
+  "PackageSize": 3492724
 }
