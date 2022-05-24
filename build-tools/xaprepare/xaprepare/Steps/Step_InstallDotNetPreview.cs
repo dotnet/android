@@ -78,9 +78,7 @@ namespace Xamarin.Android.Prepare
 					message = $"Failed to obtain dotnet-install size. HTTP status code: {status} ({(int)status})";
 				}
 
-				if (!ReportAndCheckCached (message)) {
-					return false;
-				}
+				ReportAndCheckCached (message, quietOnError: true); // size check isn't critical, just warn
 			}
 
 			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
@@ -95,7 +93,7 @@ namespace Xamarin.Android.Prepare
 			Utilities.DeleteFile (tempDotnetScriptPath);
 			return true;
 
-			bool ReportAndCheckCached (string message)
+			bool ReportAndCheckCached (string message, bool quietOnError = false)
 			{
 				if (File.Exists (dotnetScriptPath)) {
 					Log.WarningLine (message);
@@ -103,8 +101,10 @@ namespace Xamarin.Android.Prepare
 					return true;
 				}
 
-				Log.ErrorLine (message);
-				Log.ErrorLine ($"Cached installation script not found in {dotnetScriptPath}");
+				if (!quietOnError) {
+					Log.ErrorLine (message);
+					Log.ErrorLine ($"Cached installation script not found in {dotnetScriptPath}");
+				}
 				return false;
 			}
 		}
@@ -116,12 +116,10 @@ namespace Xamarin.Android.Prepare
 			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (archiveUrl);
 			if (!success) {
 				if (status == HttpStatusCode.NotFound) {
-					Log.ErrorLine ($"dotnet archive URL {archiveUrl} not found");
+					Log.WarningLine ($"dotnet archive URL {archiveUrl} not found");
 				} else {
-					Log.ErrorLine ($"Failed to obtain dotnet archive size. HTTP status code: {status} ({(int)status})");
+					Log.WarningLine ($"Failed to obtain dotnet archive size. HTTP status code: {status} ({(int)status})");
 				}
-
-				return false;
 			}
 
 			string tempArchiveDestinationPath = archiveDestinationPath + "-tmp";
