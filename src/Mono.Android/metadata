@@ -1700,7 +1700,7 @@
   <remove-node api-since="33" path="/api/package[@name='java.util']/interface[@name='Deque']/method[@name='addAll' and count(parameter)=1 and parameter[1][@type='java.util.Collection&lt;? extends E&gt;']]" />
 
   <!-- Rename Namespaces -->
-  <attr api-since="33" path="/api/package[@name='android.os.vibrator']" name="managedName">Android.OS.Vibrators</attr>
+  <attr api-since="33" path="/api/package[@name='android.app.sdksandbox']" name="managedName">Android.App.SdkSandbox</attr>
   <attr api-since="33" path="/api/package[@name='android.app.appsearch.observer']" name="managedName">Android.App.AppSearch.Observers</attr>
   <attr api-since="33" path="/api/package[@name='android.adservices']" name="managedName">Android.AdServices</attr>
 
