@@ -160,7 +160,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			args = new List<string> {
-				dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose", "--dry-run"
+				dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose"
 			};
 
 			if (runtimeOnly) {
