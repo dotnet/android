@@ -67,7 +67,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-30_r01",   apiLevel: "30", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-31_r01",   apiLevel: "31", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-32_r01",   apiLevel: "32", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-Tiramisu_r03",   apiLevel: "Tiramisu", pkgRevision: "3"),
+				new AndroidPlatformComponent ("platform-Tiramisu_r04",   apiLevel: "Tiramisu", pkgRevision: "4"),
 
 				new AndroidToolchainComponent ("sources-31_r01",   destDir: Path.Combine ("platforms", $"android-31", "src"), pkgRevision: "1", dependencyType: AndroidToolchainComponentType.BuildDependency),
 
