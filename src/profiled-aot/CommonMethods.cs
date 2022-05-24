@@ -35,3 +35,5 @@ static class CommonMethods
         return text;
     }
 }
+
+#pragma warning restore CA1310
