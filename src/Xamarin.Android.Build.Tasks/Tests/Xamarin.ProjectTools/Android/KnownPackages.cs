@@ -565,6 +565,10 @@ namespace Xamarin.ProjectTools
 			Version = "0.0.1-alpha",
 			TargetFramework = "MonoAndroid10",
 		};
+		public static Package Mono_AotProfiler_Android  = new Package {
+			Id = "Mono.AotProfiler.Android",
+			Version = "7.0.0-preview1",
+		};
 	}
 }
 

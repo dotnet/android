@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: "⚙ IDE"
-    url: https://docs.microsoft.com/en-us/visualstudio/ide/feedback-options
+    url: https://developercommunity.visualstudio.com/report?entry=problem
     about: Issues with Visual Studio for Windows or Mac, or the Android Designer should be filed using the tools inside the IDE.  This allows the proper logs to be collected and forwarded to the correct team(s).
   - name: "\U0001F4A1 Feature Request"
     url: https://developercommunity.visualstudio.com
     about: Feature requests are tracked on Visual Studio Developer Community because it provides good prioritization features like voting. Filing there helps ensure new features are properly considered.
   - name: "🙋‍♀️ Community Support"
-    url: https://docs.microsoft.com/en-us/answers/topics/dotnet-android.html
+    url: https://docs.microsoft.com/answers/topics/164819/dotnet-xamarin.html
     about: For issues that likely aren't bugs, Microsoft Q&A is a good place to ask for help.

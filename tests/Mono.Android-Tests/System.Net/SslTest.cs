@@ -27,7 +27,6 @@ namespace System.NetTests {
 
 		// https://xamarin.desk.com/agent/case/35534
 		[Test]
-		[Category("DotNetIgnore")] // TODO: InvalidProgramException, see: https://github.com/dotnet/linker/issues/2799
 		public void SslWithinTasksShouldWork ()
 		{
 			var cb = ServicePointManager.ServerCertificateValidationCallback;
@@ -70,7 +69,6 @@ namespace System.NetTests {
 		}
 
 		[Test]
-		[Category("DotNetIgnore")] // TODO: InvalidProgramException, see: https://github.com/dotnet/linker/issues/2799
 		public void HttpsShouldWork ()
 		{
 			RunIgnoringWebException (DoHttpsShouldWork);

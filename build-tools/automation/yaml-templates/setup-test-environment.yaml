@@ -63,8 +63,8 @@ steps:
   displayName: restore NUnit.Console
   inputs:
     command: restore
-    projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj
-    restoreArguments: -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.Android.Build.Tests.binlog
+    projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj
+    restoreArguments: -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.ProjectTools.binlog
     nugetConfigPath: ${{ parameters.xaSourcePath }}/NuGet.config
     feedsToUse: config
 
