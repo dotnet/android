@@ -22,7 +22,7 @@
 #include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
 
-#if defined (NET6)
+#if defined (NET)
 #include <mono/metadata/mono-private-unstable.h>
 #endif
 
@@ -112,9 +112,9 @@ namespace xamarin::android::internal {
 		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
 
 		void install_preload_hooks_for_appdomains ();
-#if defined (NET6)
+#if defined (NET)
 		void install_preload_hooks_for_alc ();
-#endif // def NET6
+#endif // def NET
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (MonoString *java_type) noexcept;
 
 		/* returns current number of *all* assemblies found from all invocations */
@@ -137,7 +137,7 @@ namespace xamarin::android::internal {
 
 		void set_assemblies_prefix (const char *prefix);
 
-#if defined (NET6)
+#if defined (NET)
 		void get_runtime_config_blob (const char *& area, uint32_t& size) const
 		{
 			area = static_cast<char*>(runtime_config_blob_mmap.area);
@@ -171,9 +171,9 @@ namespace xamarin::android::internal {
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
-#if defined (NET6)
+#if defined (NET)
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, MonoError *error);
-#endif // def NET6
+#endif // def NET
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
 		MonoAssembly* individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept;
 		MonoAssembly* assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept;
@@ -203,11 +203,11 @@ namespace xamarin::android::internal {
 
 		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename);
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
-#if defined (NET6)
+#if defined (NET)
 		static MonoAssembly* open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, char **assemblies_path, void *user_data, MonoError *error);
-#else // def NET6
+#else // def NET
 		static MonoAssembly* open_from_bundles_refonly (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
-#endif // ndef NET6
+#endif // ndef NET
 		static void get_assembly_data (uint8_t *data, uint32_t data_size, const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 		static void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 		static void get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
@@ -264,9 +264,9 @@ namespace xamarin::android::internal {
 		{
 			return
 				number_of_mapped_assembly_stores == application_config.number_of_assembly_store_files
-#if defined (NET6)
+#if defined (NET)
 				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob)
-#endif // NET6
+#endif // NET
 				;
 		}
 
@@ -311,10 +311,10 @@ namespace xamarin::android::internal {
 		size_t                 type_map_count;
 #endif // DEBUG || !ANDROID
 		const char            *assemblies_prefix_override = nullptr;
-#if defined (NET6)
+#if defined (NET)
 		md_mmap_info           runtime_config_blob_mmap{};
 		bool                   runtime_config_blob_found = false;
-#endif // def NET6
+#endif // def NET
 		uint32_t               number_of_mapped_assembly_stores = 0;
 		bool                   need_to_scan_more_apks = true;
 
@@ -323,8 +323,8 @@ namespace xamarin::android::internal {
 	};
 }
 
-#if !defined (NET6)
+#if !defined (NET)
 MONO_API int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
-#endif // ndef NET6
+#endif // ndef NET
 
 #endif /* INC_MONODROID_EMBEDDED_ASSEMBLIES_H */

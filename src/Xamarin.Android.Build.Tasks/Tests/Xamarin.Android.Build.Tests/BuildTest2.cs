@@ -423,7 +423,7 @@ class MemTest {
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("XamarinBuildDownload")]
 		[NonParallelizable] // parallel NuGet restore causes failures
 		public void BuildXamarinFormsMapsApplication ([Values (true, false)] bool multidex)
 		{
@@ -1178,13 +1178,15 @@ namespace UnamedProject
 				TextContent = () => "public class ManyMethods { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
-				Encoding = Encoding.ASCII
+				Encoding = Encoding.ASCII,
+				Metadata = { { "Bind", "False "}},
 			});
 			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
 				TextContent = () => "public class ManyMethods2 { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
-				Encoding = Encoding.ASCII
+				Encoding = Encoding.ASCII,
+				Metadata = { { "Bind", "False "}},
 			});
 			return proj;
 		}

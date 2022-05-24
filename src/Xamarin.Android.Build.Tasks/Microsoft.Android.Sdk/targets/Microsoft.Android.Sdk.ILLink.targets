@@ -14,6 +14,7 @@ This file contains the .NET 5-specific targets to customize ILLink
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
     <PropertyGroup>
+      <TrimmerRemoveSymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">true</TrimmerRemoveSymbols>
       <!--
         Used for the <ILLink DumpDependencies="$(_TrimmerDumpDependencies)" /> value:
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L150

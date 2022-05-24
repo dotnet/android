@@ -101,22 +101,22 @@ namespace xamarin::android::internal
 
 		bool is_interpreter_enabled () const
 		{
-#if !defined (NET6)
+#if !defined (NET)
 			// HACK! See below
 			return get_mono_aot_mode () == MonoAotMode::MONO_AOT_MODE_LAST && is_aot_mode_last_really_interpreter_mode ();
-#else   // defined (NET6)
+#else   // defined (NET)
 			return get_mono_aot_mode () == MonoAotMode::MONO_AOT_MODE_INTERP_ONLY;
-#endif  // !defined (NET6)
+#endif  // !defined (NET)
 		}
 
 		// Hack, see comment for `aot_mode_last_is_interpreter` at the bottom of the class declaration
 		bool is_aot_mode_last_really_interpreter_mode () const
 		{
-#if !defined(NET6)
+#if !defined(NET)
 			return aot_mode_last_is_interpreter;
-#else   // defined (NET6)
+#else   // defined (NET)
 			return false;
-#endif  // !defined (NET6)
+#endif  // !defined (NET)
 		}
 
 		void set_running_in_emulator (bool yesno)
@@ -159,7 +159,7 @@ namespace xamarin::android::internal
 		MonoAotMode aotMode = MonoAotMode::MONO_AOT_MODE_NONE;
 		bool running_in_emulator = false;
 
-#if !defined (NET6)
+#if !defined (NET)
 		// This is a hack because of the way Mono currently switches the full interpreter (no JIT) mode. In Mono
 		// **internal** headers there's an AOT mode macro, `MONO_EE_MODE_INTERP`, whose value is exactly the same as
 		// MonoAotMode::MONO_AOT_MODE_LAST.  However, we use `MonoAotMode::MONO_AOT_MODE_LAST` as a sentinel to indicate
@@ -170,7 +170,7 @@ namespace xamarin::android::internal
 		// See also: https://github.com/mono/mono/issues/18893
 		//
 		bool aot_mode_last_is_interpreter = false;
-#endif  // !defined (NET6)
+#endif  // !defined (NET)
 	};
 }
 #endif // !__ANDROID_SYSTEM_H

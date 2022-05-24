@@ -59,17 +59,17 @@ variables:
   - group: AzureDevOps-Artifact-Feeds-Pats
   - group: DotNet-MSRC-Storage
   - name: DotNetFeedCredential
-    value: dotnet6-internal-dnceng-internal-feed
+    value: dotnet7-internal-dnceng-internal-feed
 - ${{ if ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - name: DotNetFeedCredential
-    value: dnceng-dotnet6
+    value: dnceng-dotnet7
 - ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Real
   - name: MacBuildPoolName
     value: Azure Pipelines
   - name: MacBuildPoolImage
-    value: internal-macos-11
+    value: internal-macos12
 - ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), eq(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Test
@@ -91,7 +91,7 @@ stages:
       name: $(MacBuildPoolName)
       vmImage: $(MacBuildPoolImage)
       ${{ if eq(variables['MacBuildPoolName'], 'VSEng-Xamarin-RedmondMac-Android-Untrusted') }}:
-        demands: agent.osversionfamily -equals 10.15
+        demands: macOS.Name -equals Monterey
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -201,14 +201,17 @@ stages:
       displayName: Prepare Solution
       inputs:
         projects: Xamarin.Android.sln
-        arguments: '-c $(XA.Build.Configuration) -target:Prepare -m:1 -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
+        arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -m:1 -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
     # Build, pack .nupkgs, and extract workload packs to dotnet preview test directory
-    - task: DotNetCoreCLI@2
-      displayName: Build Solution
-      inputs:
-        projects: Xamarin.Android.sln
-        arguments: '-t:PackDotNet -c $(XA.Build.Configuration) -m:1 -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog'
+    - template: yaml-templates\run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: >-
+          -t:PackDotNet -c $(XA.Build.Configuration) -m:1 -v:n
+          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
+        displayName: Build Solution
+        continueOnError: false
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
@@ -236,7 +239,6 @@ stages:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
-          /restore
           /t:RunJavaInteropTests
           /p:SkipJSUTests=true
           /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
@@ -697,6 +699,8 @@ stages:
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
+        # TODO: disable LLVM test, see: https://github.com/dotnet/runtime/issues/68914
+        condition: false
         configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
@@ -1117,7 +1121,7 @@ stages:
     condition: false #TODO: Enable once test issues are fixed.
     displayName: macOS
     pool:
-      vmImage: internal-macos-11
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:

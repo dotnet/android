@@ -3,8 +3,8 @@
   "author": "Microsoft",
   "classifications": [ "Android", "Mobile" ],
   "identity": "Microsoft.Android.AndroidLib",
-  "name": "Android Class Library (Preview)",
-  "description": "A project for creating a .NET 6 Android class library",
+  "name": "Android Class Library",
+  "description": "A project for creating a .NET Android class library",
   "shortName": "androidlib",
   "tags": {
     "language": "C#",

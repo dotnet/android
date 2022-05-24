@@ -11,7 +11,6 @@ projects that use the Microsoft.Android framework in .NET 5.
 
   <PropertyGroup>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android-arm64</AndroidRID>
-    <AndroidABI Condition=" '$(AndroidABI)' == '' ">arm64-v8a-net6</AndroidABI>
     <PackageId>Microsoft.Android.Runtime.$(AndroidApiLevel).$(AndroidRID)</PackageId>
     <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
     <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
@@ -34,13 +33,14 @@ projects that use the Microsoft.Android framework in .NET 5.
     </PropertyGroup>
 
     <ItemGroup>
+      <!-- TODO: build Java.Interop.dll for .NET 7 -->
       <_AndroidRuntimePackAssemblies Include="$(JavaInteropSourceDirectory)\bin\$(Configuration)-net6.0\Java.Interop.dll" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\Mono.Android.dll" />
       <!-- Always include stable Mono.Android.Export.dll -->
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
-      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.debug.so" />
-      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
-      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />
+      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidRID)\libmono-android.debug.so" />
+      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidRID)\libmono-android.release.so" />
+      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidRID)\libxamarin-debug-app-helper.so" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />
     </ItemGroup>

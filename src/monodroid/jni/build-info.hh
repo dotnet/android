@@ -17,13 +17,6 @@ namespace xamarin::android::internal
 		static constexpr char xa_version[] = XA_VERSION;
 		static constexpr char date[] = __DATE__;
 
-		static constexpr bool is_net6 =
-#if NET6
-			true;
-#else // def NET6
-			false;
-#endif // ndef NET6
-
 		static constexpr char kind[] =
 #if defined (DEBUG)
 			"Debug";

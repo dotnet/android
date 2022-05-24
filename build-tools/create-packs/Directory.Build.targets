@@ -58,30 +58,30 @@
 
   <Target Name="_CreateDefaultRefPack"
       Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidDefaultTargetDotnetApiLevel)\Mono.Android.dll') ">
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
   </Target>
 
   <Target Name="_CreatePreviewPacks"
       Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\Mono.Android.dll') ">
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-x86 -p:AndroidABI=x86-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-x64 -p:AndroidABI=x86_64-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-arm   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-arm64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-x86   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=android-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
   </Target>
 
   <Target Name="CreateAllPacks"
       DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties;GetXAVersionInfo;_CleanNuGetDirectory;_CreatePreviewPacks;_CreateDefaultRefPack">
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-x86 -p:AndroidABI=x86-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-x64 -p:AndroidABI=x86_64-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:HostOS=Linux   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Linux' " />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:HostOS=Darwin  &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Darwin' " />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:HostOS=Windows &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidRID=android-x86   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidRID=android-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:HostOS=Linux   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Linux' " />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:HostOS=Darwin  &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Darwin' " />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:HostOS=Windows &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
     <ReplaceFileContents
         SourceFile="vs-workload.in.props"
         DestinationFile="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\vs-workload.props"
@@ -95,7 +95,7 @@
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.NET.Sdk.Android.Manifest-*.nupkg" />
     </ItemGroup>
     <PropertyGroup>
-      <_WLPackVersion>@(_WLManifest->'%(Filename)'->Replace('Microsoft.NET.Sdk.Android.Manifest-$(DotNetPreviewVersionBand).', ''))</_WLPackVersion>
+      <_WLPackVersion>@(_WLManifest->'%(Filename)'->Replace('Microsoft.NET.Sdk.Android.Manifest-$(DotNetAndroidManifestVersionBand).', ''))</_WLPackVersion>
       <_SdkManifestsFolder>$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\</_SdkManifestsFolder>
     </PropertyGroup>
     <Unzip
@@ -171,7 +171,7 @@
     <Error Condition="'@(BuildArtifacts)' == ''" Text="No packages to create manifest from." />
 
     <ItemGroup>
-      <ManifestBuildData Include="InitialAssetsLocation=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
+      <ManifestBuildData Include="InitialAssetsLocation=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json" />
       <ManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
       <ManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
       <ManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />

@@ -1,13 +1,13 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftDotnetSdkInternalPackageVersion>6.0.300-rtm.22214.7</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>6.0.200-1.22178.2</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>6.0.5</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftDotnetSdkInternalPackageVersion>7.0.100-preview.5.22273.1</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>7.0.100-1.22270.1</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>7.0.0-preview.5.22271.4</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion>6.0.4</MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion>
-    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
+    <MicrosoftNETWorkloadEmscriptenManifest70100Version>7.0.0-preview.5.22252.1</MicrosoftNETWorkloadEmscriptenManifest70100Version>
+    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenManifest70100Version)</MicrosoftNETWorkloadEmscriptenPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->

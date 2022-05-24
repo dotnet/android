@@ -42,7 +42,7 @@ else()
   set(STRIP_DEBUG_DEFAULT ON)
 endif()
 
-option(ENABLE_NET6 "Enable compilation for .NET6" OFF)
+option(ENABLE_NET "Enable compilation for .NET 6+" OFF)
 option(ENABLE_TIMING "Build with timing support" OFF)
 option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFAULT})
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
@@ -177,17 +177,17 @@ endif()
 
 include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
 
-if(ENABLE_NET6)
+if(ENABLE_NET)
   if(ANDROID_ABI MATCHES "^arm64-v8a")
-    set(NET6_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
+    set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
   elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
-    set(NET6_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM}")
+    set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM}")
   elseif(ANDROID_ABI MATCHES "^x86_64")
-    set(NET6_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86_64}")
+    set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86_64}")
   elseif(ANDROID_ABI MATCHES "^x86")
-    set(NET6_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86}")
+    set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86}")
   else()
-    message(FATAL "${ANDROID_ABI} is not supported for .NET6 builds")
+    message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
   endif()
 endif()
 
@@ -238,8 +238,8 @@ if (WIN32)
   include_directories(BEFORE "jni/win32")
 endif()
 
-if(ENABLE_NET6)
-  include_directories("${NET6_RUNTIME_DIR}/native/include/mono-2.0")
+if(ENABLE_NET)
+  include_directories("${NET_RUNTIME_DIR}/native/include/mono-2.0")
 else()
   include_directories("${XA_BIN_DIR}/include/mono-2.0")
 endif()
@@ -270,8 +270,8 @@ add_compile_definitions(_REENTRANT)
 add_compile_definitions(JI_DLL_EXPORT)
 add_compile_definitions(MONO_DLL_EXPORT)
 
-if(ENABLE_NET6)
-  add_compile_definitions(NET6)
+if(ENABLE_NET)
+  add_compile_definitions(NET)
   add_compile_definitions(JI_NO_VISIBILITY)
 endif()
 
@@ -414,9 +414,9 @@ endif()
 
 # Library directories
 if(ANDROID)
-  if(ENABLE_NET6)
-    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_ABI}-net6")
-    link_directories("${NET6_RUNTIME_DIR}/native")
+  if(ENABLE_NET)
+    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_RID}")
+    link_directories("${NET_RUNTIME_DIR}/native")
   else()
     set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
     link_directories("${XA_LIBRARY_OUTPUT_DIRECTORY}")
@@ -480,6 +480,7 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
+  ${SOURCES_DIR}/timing-internal.cc
   ${SOURCES_DIR}/util.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
@@ -517,7 +518,7 @@ if(UNIX)
     )
 endif()
 
-if(ANDROID AND ENABLE_NET6)
+if(ANDROID AND ENABLE_NET)
   list(APPEND XAMARIN_MONODROID_SOURCES
     ${SOURCES_DIR}/monovm-properties.cc
     ${SOURCES_DIR}/pinvoke-override-api.cc
@@ -552,7 +553,7 @@ set(XAMARIN_DEBUG_APP_HELPER_SOURCES
 # Build
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 
-if(NOT (ANDROID AND ENABLE_NET6))
+if(NOT (ANDROID AND ENABLE_NET))
   add_library(
     ${XAMARIN_INTERNAL_API_LIB}
     SHARED

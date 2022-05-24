@@ -262,7 +262,11 @@ OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newH
 	          threadName,
 	          threadId);
 	if (gref_to_logcat) {
-		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "%s", from);
+		}
 	}
 	if (!gref_log)
 		return c;
@@ -299,7 +303,11 @@ OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *thr
 	          threadName,
 	          threadId);
 	if (gref_to_logcat) {
-		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "%s", from);
+		}
 	}
 	if (!gref_log)
 		return;
@@ -334,7 +342,11 @@ OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject new
 	          threadName,
 	          threadId);
 	if (gref_to_logcat) {
-		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "%s", from);
+		}
 	}
 	if (!gref_log)
 		return;
@@ -369,7 +381,11 @@ OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *th
 	          threadName,
 	          threadId);
 	if (gref_to_logcat) {
-		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "%s", from);
+		}
 	}
 	if (!gref_log)
 		return;
@@ -400,7 +416,11 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 	          threadName,
 	          threadId);
 	if (lref_to_logcat) {
-		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_LREF);
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "%s", from);
+		}
 	}
 	if (!lref_log)
 		return;
@@ -430,7 +450,11 @@ OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, cons
 	          threadName,
 	          threadId);
 	if (lref_to_logcat) {
-		_write_stack_trace (nullptr, const_cast<char*>(from), LOG_LREF);
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "%s", from);
+		}
 	}
 	if (!lref_log)
 		return;
@@ -1128,7 +1152,7 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	domains_list = node;
 }
 
-#if !defined (NET6) && !defined (ANDROID)
+#if !defined (NET) && !defined (ANDROID)
 void
 OSBridge::remove_monodroid_domain (MonoDomain *domain)
 {
@@ -1168,4 +1192,4 @@ OSBridge::on_destroy_contexts ()
 	if (!domains_list)
 		osBridge.clear_mono_java_gc_bridge_info ();
 }
-#endif // ndef NET6 && ndef ANDROID
+#endif // ndef NET && ndef ANDROID

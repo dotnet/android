@@ -256,6 +256,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("XamarinBuildDownload")]
 		[NonParallelizable]
 		public void Check9PatchFilesAreProcessed ()
 		{

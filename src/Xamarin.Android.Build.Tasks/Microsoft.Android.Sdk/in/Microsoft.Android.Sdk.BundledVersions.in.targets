@@ -12,11 +12,24 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <XamarinAndroidVersion>@ANDROID_PACK_VERSION_LONG@</XamarinAndroidVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <_AndroidTargetingPackId>$(TargetPlatformVersion.TrimEnd('.0'))</_AndroidTargetingPackId>
+    <_AndroidTargetingPackId Condition="$(TargetPlatformVersion.EndsWith('.0'))">$(TargetPlatformVersion.Substring(0, $(TargetPlatformVersion.LastIndexOf('.0'))))</_AndroidTargetingPackId>
+    <_AndroidTargetingPackId Condition="'$(_AndroidTargetingPackId)' == ''">$(TargetPlatformVersion)</_AndroidTargetingPackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidTargetingPackId)' &lt; '@ANDROID_LATEST_STABLE_API_LEVEL@' ">@ANDROID_LATEST_STABLE_API_LEVEL@</_AndroidRuntimePackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidRuntimePackId>
   </PropertyGroup>
   <ItemGroup>
+    <!-- TODO: NET7TODO: Is this the right way to support building net6.0 projects? Need to bump versions as packages are release to NuGet.org as well -->
+    <KnownFrameworkReference
+        Include="Microsoft.Android"
+        TargetFramework="net6.0"
+        RuntimeFrameworkName="Microsoft.Android"
+        LatestRuntimeFrameworkVersion="32.0.300-rc.1.4"
+        TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"
+        TargetingPackVersion="32.0.300-rc.1.4"
+        RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidRuntimePackId).**RID**"
+        RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
+        Profile="Android"
+    />
     <KnownFrameworkReference
         Include="Microsoft.Android"
         TargetFramework="@DOTNET_TARGET_FRAMEWORK@"

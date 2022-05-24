@@ -25,9 +25,16 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				AotAssemblies = false,
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
-			AddDotNetProfilerNativeLibraries (proj);
+			
+			if (Builder.UseDotNet) {
+				// TODO: only needed in .NET 6+
+				// See https://github.com/dotnet/runtime/issues/56989
+				proj.PackageReferences.Add (KnownPackages.Mono_AotProfiler_Android);
+			}
+
 			var port = 9000 + new Random ().Next (1000);
 			proj.SetProperty ("AndroidAotProfilerPort", port.ToString ());
 			proj.AndroidManifest = string.Format (PermissionManifest, proj.PackageName);
@@ -47,36 +54,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.RunTarget (proj, "FinishAotProfiling", doNotCleanupOnUpdate: true), "Run of FinishAotProfiling should have succeeded.");
 				var customProfile = Path.Combine (Root, projDirectory, "custom.aprof");
 				FileAssert.Exists (customProfile);
-			}
-		}
-
-		void AddDotNetProfilerNativeLibraries (XamarinAndroidApplicationProject proj)
-		{
-			// TODO: only needed in .NET 6+
-			// See https://github.com/dotnet/runtime/issues/56989
-			if (!Builder.UseDotNet)
-				return;
-
-			// Files are built from dotnet/runtime & stored at:
-			const string github = "https://github.com/jonathanpeppers/android-profiled-aot";
-
-			proj.Sources.Add (new BuildItem ("None", "aprofutil") {
-				WebContent = $"{github}/raw/main/binaries/aprofutil"
-			});
-			proj.Sources.Add (new BuildItem ("None", "aprofutil.exe") {
-				WebContent = $"{github}/raw/main/binaries/aprofutil.exe"
-			});
-			proj.Sources.Add (new BuildItem ("None", "Mono.Profiler.Log.dll") {
-				WebContent = $"{github}/raw/main/binaries/Mono.Profiler.Log.dll"
-			});
-			proj.SetProperty ("AProfUtilToolPath", "$(MSBuildThisFileDirectory)");
-
-			foreach (var rid in proj.GetProperty (KnownProperties.RuntimeIdentifiers).Split (';')) {
-				//NOTE: each rid has the same file name, so using WebClient directly
-				var bytes = new WebClient ().DownloadData ($"{github}/raw/main/binaries/{rid}/libmono-profiler-aot.so");
-				proj.Sources.Add (new AndroidItem.AndroidNativeLibrary ($"{rid}\\libmono-profiler-aot.so") {
-					BinaryContent = () => bytes,
-				});
 			}
 		}
 	}

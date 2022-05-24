@@ -75,6 +75,14 @@ Added in Xamarin.Android 10.1.
 
 The port that `aprofutil` should connect to when obtaining profiling data.
 
+## AndroidAotEnableLazyLoad
+
+Enable lazy (delayed) loading of AOT-d assemblies, instead of
+preloading them at the startup.  Defaults to `True` for Release builds
+with any form of AOT enabled.
+
+Introduced in .NET 6.
+
 ## AndroidApkDigestAlgorithm
 
 A string value which specifies
@@ -892,6 +900,26 @@ If you want detailed output from the tool you can add the following to the
 ```
 
 Introduced in Xamarin.Android 11.x
+
+## AndroidManifestType
+
+An enum-style property with valid values of `Xamarin` or `GoogleV2`.
+This controls which repository is used by the
+[`InstallAndroidDependencies`](~/android/deploy-test/building-apps/build-targets.md#installandroiddependencies)
+target to determine which Android packages and package versions are
+available and can be installed.
+
+`Xamarin` is the **Approved List (Recommended)** repository within the
+[Visual Studio SDK Manager](xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
+
+`GoogleV2` is the **Full List (Unsupported)** repository within the
+[Visual Studio SDK Manager](xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
+
+Added in Xamarin.Android 12.4.  In Xamarin.Android 12.4, if `$(AndroidManifestType)`
+is not set, then `Xamarin` is used.
+
+Prior to Xamarin.Android 12.4, setting `$(AndroidManifestType)` has no effect, and
+`GoogleV2` is used.
 
 ## AndroidManifestPlaceholders
 

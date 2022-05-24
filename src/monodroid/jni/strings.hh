@@ -11,13 +11,12 @@
 #include "platform-compat.hh"
 #include "logger.hh"
 #include "helpers.hh"
+#include "shared-constants.hh"
 
 namespace xamarin::android::internal
 {
 	static constexpr size_t SENSIBLE_TYPE_NAME_LENGTH = 128;
 	static constexpr size_t SENSIBLE_PATH_MAX = 256;
-	// 64-bit unsigned or 64-bit signed with sign
-	static constexpr size_t MAX_INTEGER_DIGIT_COUNT_BASE10 = 21;
 
 #if DEBUG
 	static constexpr bool BoundsCheck = true;
@@ -467,42 +466,42 @@ namespace xamarin::android::internal
 
 		force_inline string_base& append (int16_t i) noexcept
 		{
-			resize_for_extra (MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (buffer.get (), i);
 			return *this;
 		}
 
 		force_inline string_base& append (uint16_t i) noexcept
 		{
-			resize_for_extra (MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
 
 		force_inline string_base& append (int32_t i) noexcept
 		{
-			resize_for_extra (MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
 
 		force_inline string_base& append (uint32_t i) noexcept
 		{
-			resize_for_extra (MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
 
 		force_inline string_base& append (int64_t i) noexcept
 		{
-			resize_for_extra (MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
 
 		force_inline string_base& append (uint64_t i) noexcept
 		{
-			resize_for_extra (MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
@@ -522,7 +521,7 @@ namespace xamarin::android::internal
 		}
 
 		template<size_t Size>
-		force_inline string_base& assign (const char (&s)[Size]) const noexcept
+		force_inline string_base& assign (const char (&s)[Size]) noexcept
 		{
 			return assign (s, Size - 1);
 		}
@@ -683,9 +682,9 @@ namespace xamarin::android::internal
 		{
 			static_assert (std::is_integral_v<Integer>);
 
-			resize_for_extra (MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			if constexpr (BoundsCheck) {
-				ensure_have_extra (MAX_INTEGER_DIGIT_COUNT_BASE10);
+				ensure_have_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			}
 
 			if (i == 0) {
@@ -696,8 +695,8 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			TChar temp_buf[MAX_INTEGER_DIGIT_COUNT_BASE10 + 1];
-			TChar *p = temp_buf + MAX_INTEGER_DIGIT_COUNT_BASE10;
+			TChar temp_buf[SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10 + 1];
+			TChar *p = temp_buf + SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10;
 			*p = NUL;
 			TChar *end = p;
 
@@ -757,9 +756,9 @@ namespace xamarin::android::internal
 				log_fatal (
 					LOG_DEFAULT,
 					"Attempt to store too much data in a buffer (capacity: %u; exceeded by: %u)",
-					buffer.size (), (idx + length) - buffer.size ()
+					buffer.size (), needed_space - buffer.size ()
 				);
-				exit (1);
+				abort ();
 			}
 		}
 
@@ -787,13 +786,20 @@ namespace xamarin::android::internal
 		using base = string_base<MaxStackSize, static_local_storage<MaxStackSize, TChar>, TChar>;
 
 	public:
-		explicit static_local_string (size_t initial_size) noexcept
+		explicit static_local_string (size_t initial_size = 0) noexcept
 			: base (initial_size)
 		{}
 
 		explicit static_local_string (const string_segment &token) noexcept
 			: base (token)
 		{}
+
+		template<size_t N>
+		explicit static_local_string (const char (&str)[N])
+			: base (N)
+		{
+			append (str);
+		}
 	};
 
 	template<size_t MaxStackSize, typename TChar = char>
@@ -809,6 +815,13 @@ namespace xamarin::android::internal
 		explicit dynamic_local_string (const string_segment &token) noexcept
 			: base (token)
 		{}
+
+		template<size_t N>
+		explicit dynamic_local_string (const char (&str)[N])
+			: base (N)
+		{
+			base::append (str);
+		}
 	};
 }
 #endif // __STRINGS_HH

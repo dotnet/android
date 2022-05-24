@@ -198,7 +198,7 @@ namespace Xamarin.Android.Build.Tests
 					foreach (var abi in abis) {
 						string runtimeAbiName;
 						if (Builder.UseDotNet) {
-							runtimeAbiName = $"{abi}-net6";
+							runtimeAbiName = AbiUtils.AbiToRuntimeIdentifier (abi);
 						} else {
 							runtimeAbiName = abi;
 						}

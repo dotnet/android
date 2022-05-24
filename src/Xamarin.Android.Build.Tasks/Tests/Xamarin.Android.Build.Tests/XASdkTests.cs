@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Reflection;
+using System.Text;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -118,6 +120,11 @@ namespace Xamarin.Android.Build.Tests
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
+			libB.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
+				Encoding = Encoding.ASCII,
+				TextContent = () => ResourceData.JavaSourceTestExtension,
+				Metadata = { { "Bind", "True"} },
+			});
 			libB.AddReference (libC);
 
 			activity = libB.Sources.FirstOrDefault (s => s.Include () == "MainActivity.cs");
@@ -125,6 +132,9 @@ namespace Xamarin.Android.Build.Tests
 				libB.Sources.Remove (activity);
 			var libBBuilder = CreateDotNetBuilder (libB, Path.Combine (path, libB.ProjectName));
 			Assert.IsTrue (libBBuilder.Build (), $"{libB.ProjectName} should succeed");
+
+			var projectJarHash = Files.HashString (Path.Combine (libB.IntermediateOutputPath,
+					"binding", "bin", $"{libB.ProjectName}.jar").Replace ("\\", "/"));
 
 			// Check .aar file for class library
 			var aarPath = Path.Combine (FullProjectDirectory, libB.OutputPath, $"{libB.ProjectName}.aar");
@@ -137,6 +147,7 @@ namespace Xamarin.Android.Build.Tests
 				aar.AssertContainsEntry (aarPath, ".net/env/190E30B3D205731E.env");
 				aar.AssertContainsEntry (aarPath, ".net/env/2CBDAB7FEEA94B19.env");
 				aar.AssertContainsEntry (aarPath, "libs/A1AFA985571E728E.jar");
+				aar.AssertContainsEntry (aarPath, $"libs/{projectJarHash}.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
 				aar.AssertContainsEntry (aarPath, "jni/x86/libfoo.so");
 			}
@@ -183,6 +194,8 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (dexFile);
 			string className = "Lcom/xamarin/android/test/msbuildtest/JavaSourceJarTest;";
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			className = "Lcom/xamarin/android/test/msbuildtest/JavaSourceTestExtension;";
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 
 			// Check environment variable
 			var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86", required: true);
@@ -227,6 +240,16 @@ namespace Xamarin.Android.Build.Tests
 				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
+			new object[] {
+				"net7.0",
+				"android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+			new object[] {
+				"net7.0",
+				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
 		};
 
 		[Test]
@@ -241,7 +264,11 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo { }",
 					}
-				}
+				},
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 			if (IsPreviewFrameworkVersion (targetFramework)) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
@@ -260,6 +287,18 @@ namespace Xamarin.Android.Build.Tests
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTest.java") {
+						Encoding = Encoding.ASCII,
+						TextContent = () => @"package com.xamarin.android.test.msbuildtest;
+public class JavaSourceTest {
+	public String Say (String quote) {
+		return quote;
+	}
+}
+",
+						Metadata = { { "Bind", "True"} },
+					}
+			);
 
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Pack (), "`dotnet pack` should succeed");
@@ -404,6 +443,11 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javaclasses-sources.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
 			});
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
+				Encoding = Encoding.ASCII,
+				TextContent = () => ResourceData.JavaSourceTestExtension,
+				Metadata = { { "Bind", "True"} },
+			});
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 
@@ -412,6 +456,9 @@ namespace Xamarin.Android.Build.Tests
 			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 				var typeName = "MSBuildTest.JavaSourceJarTest";
 				var type = assembly.MainModule.GetType (typeName);
+				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
+				typeName = "MSBuildTest.JavaSourceTestExtension";
+				type = assembly.MainModule.GetType (typeName);
 				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
 			}
 		}
@@ -561,6 +608,11 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javaclasses-sources.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
 			});
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
+				Encoding = Encoding.ASCII,
+				TextContent = () => ResourceData.JavaSourceTestExtension,
+				Metadata = { { "Bind", "True"} },
+			});
 			if (!runtimeIdentifiers.Contains (";")) {
 				proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifiers);
 			} else {
@@ -616,6 +668,8 @@ namespace Xamarin.Android.Build.Tests
 				var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
 				Assert.IsNotNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should contain {typeName}");
 				typeName = "Com.Balysv.Material.Drawable.Menu.MaterialMenuView";
+				Assert.IsNotNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should contain {typeName}");
+				typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceTestExtension";
 				Assert.IsNotNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should contain {typeName}");
 			}
 
@@ -702,18 +756,24 @@ namespace Xamarin.Android.Build.Tests
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 			new object[] {
-				"net6.0",
+				"net7.0",
+				"android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+
+			new object[] {
+				"net7.0",
 				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 
 			new object[] {
-				"net6.0",
+				"net7.0",
 				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}.0",
 				XABuildConfig.AndroidLatestStableApiLevel,
 			},
 			new object[] {
-				"net6.0",
+				"net7.0",
 				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}.0",
 				XABuildConfig.AndroidLatestUnstableApiLevel,
 			},
@@ -739,7 +799,11 @@ namespace Xamarin.Android.Build.Tests
 			const string runtimeIdentifier = "android-arm";
 			var proj = new XASdkProject {
 				TargetFramework = targetFramework,
-				IsRelease = isRelease
+				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
@@ -755,14 +819,16 @@ namespace Xamarin.Android.Build.Tests
 				dotnet.AssertHasNoWarnings ();
 			}
 
-			var refDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
-			var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
-			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
+			if (dotnetVersion != "net6.0") {
+				var refDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
+				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
+				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
 
-			var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
-			var runtimeDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Runtime.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
-			var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", dotnetVersion, "Mono.Android.dll");
-			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
+				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
+				var runtimeDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Runtime.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
+				var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", dotnetVersion, "Mono.Android.dll");
+				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
+			}
 
 			var publishDirectory = Path.Combine (FullProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
 			var apk = Path.Combine (publishDirectory, $"{proj.PackageName}.apk");
@@ -819,7 +885,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void XamarinLegacySdk ([Values ("net6.0")] string dotnetVersion)
+		public void XamarinLegacySdk ([Values ("net6.0", "net7.0")] string dotnetVersion)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha4",
@@ -827,7 +893,11 @@ namespace Xamarin.Android.Build.Tests
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 					}
-				}
+				},
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 
 			using var b = new Builder ();
@@ -857,6 +927,10 @@ namespace Xamarin.Android.Build.Tests
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
+				ExtraNuGetConfigSources = {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);

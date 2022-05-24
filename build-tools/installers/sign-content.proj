@@ -34,11 +34,11 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;%(_MSBuildFilesUnixSignAndHarden.EntitlementsPath)&quot; &quot;%(_MSBuildFilesUnixSignAndHarden.Identity)&quot;" />
     <ItemGroup>
       <FilesToSign Include="@(_MSBuildFilesUnixSign)">
-        <Authenticode>MacDeveloper</Authenticode>
+        <Authenticode>MacDeveloperVNext</Authenticode>
         <Zip>true</Zip>
       </FilesToSign>
       <FilesToSign Include="@(_MSBuildFilesUnixSignAndHarden)">
-        <Authenticode>MacDeveloperHarden</Authenticode>
+        <Authenticode>MacDeveloperVNextHarden</Authenticode>
         <Zip>true</Zip>
       </FilesToSign>
     </ItemGroup>
@@ -93,7 +93,7 @@ ourself (using an empty signing identity) before passing these files to ESRP.
   <Target Name="SignPkg" >
     <ItemGroup>
       <FilesToSign Include="$(OutDir)\xamarin.android-*.pkg">
-        <Authenticode>MacDeveloper</Authenticode>
+        <Authenticode>MacDeveloperVNext</Authenticode>
         <Zip>true</Zip>
       </FilesToSign>
     </ItemGroup>

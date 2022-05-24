@@ -15,6 +15,11 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 using System.Diagnostics.CodeAnalysis;
 
+#if NET
+using ReplacementTypesDict      = System.Collections.Generic.Dictionary<string, string>;
+using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<string, string>;
+#endif  // NET
+
 namespace Android.Runtime {
 #pragma warning disable 0649
 	struct JnienvInitializeArgs {
@@ -35,6 +40,8 @@ namespace Android.Runtime {
 		public int             packageNamingPolicy;
 		public byte            ioExceptionType;
 		public int             jniAddNativeMethodRegistrationAttributePresent;
+		public IntPtr          mappingXml;
+		public int             mappingXmlLen;
 	}
 #pragma warning restore 0649
 
@@ -60,6 +67,11 @@ namespace Android.Runtime {
 
 		static AndroidRuntime? androidRuntime;
 		static BoundExceptionType BoundExceptionType;
+
+#if NET
+		internal static ReplacementTypesDict?    ReplacementTypes;
+		internal static ReplacementMethodsDict?  ReplacementMethods;
+#endif  // NET
 
 		[ThreadStatic]
 		static byte[]? mvid_bytes;
@@ -148,13 +160,8 @@ namespace Android.Runtime {
 #endif
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			bool logTiming = (args->logCategories & (uint)LogCategories.Timing) != 0;
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
-			if (logTiming) {
-				total_timing_sequence = monodroid_timing_start ("JNIEnv.Initialize start");
-				partial_timing_sequence = monodroid_timing_start (null);
-			}
 
 			LogAssemblyCategory = (args->logCategories & (uint)LogCategories.Assembly) != 0;
 
@@ -170,6 +177,13 @@ namespace Android.Runtime {
 			load_class_id     = args->Loader_loadClass;
 			gref_class        = args->grefClass;
 			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
+
+#if NET
+			if (args->mappingXml != IntPtr.Zero) {
+				var xml = Encoding.UTF8.GetString ((byte*) args->mappingXml, args->mappingXmlLen);
+				(ReplacementTypes, ReplacementMethods) = MamXmlParser.ParseStrings (xml);
+			}
+#endif  // NET
 
 			if (args->localRefsAreIndirect == 1)
 				IdentityHash = v => _monodroid_get_identity_hash_code (Handle, v);
@@ -202,10 +216,6 @@ namespace Android.Runtime {
 #if !MONOANDROID1_0
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
 #endif
-
-			if (logTiming) {
-				monodroid_timing_stop (total_timing_sequence, "JNIEnv.Initialize end");
-			}
 		}
 
 		internal static void Exit ()

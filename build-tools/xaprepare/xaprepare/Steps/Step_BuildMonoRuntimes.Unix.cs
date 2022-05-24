@@ -428,10 +428,10 @@ namespace Xamarin.Android.Prepare
 				 "IGNORE_PROVISION_ANDROID=true",
 				$"ANDROID_CMAKE_VERSION={GetProperty (KnownProperties.AndroidCmakeVersionPath)}",
 				 $"ANDROID_NDK_VERSION=r{BuildAndroidPlatforms.AndroidNdkVersion}",
-				$"ANDROID_SDK_VERSION_armeabi-v7a={GetMinimumApi (AbiNames.TargetJit.AndroidArmV7a)}",
-				$"ANDROID_SDK_VERSION_arm64-v8a={GetMinimumApi (AbiNames.TargetJit.AndroidArmV8a)}",
-				$"ANDROID_SDK_VERSION_x86={GetMinimumApi (AbiNames.TargetJit.AndroidX86)}",
-				$"ANDROID_SDK_VERSION_x86_64={GetMinimumApi (AbiNames.TargetJit.AndroidX86_64)}",
+				$"ANDROID_SDK_VERSION_armeabi-v7a={BuildAndroidPlatforms.NdkMinimumAPILegacy32}",
+				$"ANDROID_SDK_VERSION_arm64-v8a={BuildAndroidPlatforms.NdkMinimumAPI}",
+				$"ANDROID_SDK_VERSION_x86={BuildAndroidPlatforms.NdkMinimumAPILegacy32}",
+				$"ANDROID_SDK_VERSION_x86_64={BuildAndroidPlatforms.NdkMinimumAPI}",
 				$"ANDROID_TOOLCHAIN_DIR={GetProperty (KnownProperties.AndroidToolchainDirectory)}",
 				$"ANDROID_TOOLCHAIN_CACHE_DIR={GetProperty (KnownProperties.AndroidToolchainCacheDirectory)}",
 				$"ANDROID_TOOLCHAIN_PREFIX={toolchainsPrefix}",
@@ -479,11 +479,6 @@ namespace Xamarin.Android.Prepare
 			string GetProperty (string name)
 			{
 				return context.Properties.GetRequiredValue (name);
-			}
-
-			string GetMinimumApi (string name)
-			{
-				return BuildAndroidPlatforms.NdkMinimumAPI [name].ToString ();
 			}
 		}
 

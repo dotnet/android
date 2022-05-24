@@ -18,10 +18,10 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_init
 /*
  * Class:     mono_android_Runtime
  * Method:    initInternal
- * Signature: (Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/ClassLoader;[Ljava/lang/String;IZ)V
+ * Signature: (Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/ClassLoader;[Ljava/lang/String;[BIIZZ)V
  */
 JNIEXPORT void JNICALL Java_mono_android_Runtime_initInternal
-(JNIEnv *, jclass, jstring, jobjectArray, jstring, jobjectArray, jobject, jobjectArray, jint, jboolean, jboolean);
+  (JNIEnv *, jclass, jstring, jobjectArray, jstring, jobjectArray, jobject, jobjectArray, jbyteArray, jint, jint, jboolean, jboolean);
 
 /*
  * Class:     mono_android_Runtime
@@ -39,7 +39,6 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_register
 JNIEXPORT void JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged
   (JNIEnv *, jclass);
 
-#if !defined (ANDROID)
 /*
  * Class:     mono_android_Runtime
  * Method:    createNewContext
@@ -51,7 +50,7 @@ JNIEXPORT jint JNICALL Java_mono_android_Runtime_createNewContext
 /*
  * Class:     mono_android_Runtime
  * Method:    createNewContextWithData
- * Signature: ([Ljava/lang/String;[Ljava/lang/String;[[BL[Ljava/lang/String;java/lang/ClassLoader;Z)I
+ * Signature: ([Ljava/lang/String;[Ljava/lang/String;[[B[Ljava/lang/String;Ljava/lang/ClassLoader;Z)I
  */
 JNIEXPORT jint JNICALL Java_mono_android_Runtime_createNewContextWithData
   (JNIEnv *, jclass, jobjectArray, jobjectArray, jobjectArray, jobjectArray, jobject, jboolean);
@@ -71,7 +70,6 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_switchToContext
  */
 JNIEXPORT void JNICALL Java_mono_android_Runtime_destroyContexts
   (JNIEnv *, jclass, jintArray);
-#endif // ndef ANDROID
 
 /*
  * Class:     mono_android_Runtime
@@ -80,6 +78,14 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_destroyContexts
  */
 JNIEXPORT void JNICALL Java_mono_android_Runtime_propagateUncaughtException
   (JNIEnv *, jclass, jobject, jthrowable);
+
+/*
+ * Class:     mono_android_Runtime
+ * Method:    dumpTimingData
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTimingData
+  (JNIEnv *, jclass);
 
 #ifdef __cplusplus
 }

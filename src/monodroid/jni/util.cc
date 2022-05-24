@@ -21,6 +21,7 @@
 
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/class.h>
 
 #include "java-interop-util.h"
 
@@ -29,58 +30,19 @@
 #include "globals.hh"
 #include "monodroid-glue.hh"
 #include "cpp-util.hh"
+#include "timing-internal.hh"
 
 using namespace xamarin::android;
-
-#if defined (ANDROID) || defined (__linux__) || defined (__linux)
-using timestruct = timespec;
-#else
-using timestruct = timeval;
-#endif
+using namespace xamarin::android::internal;
 
 void timing_point::mark ()
 {
-	int ret;
-	uint64_t tail;
-	timestruct tv_ctm;
-
-#if defined (ANDROID) || defined (__linux__) || defined (__linux)
-	ret = clock_gettime (CLOCK_MONOTONIC, &tv_ctm);
-	tail = static_cast<uint64_t>(tv_ctm.tv_nsec);
-#else
-	ret = gettimeofday (&tv_ctm, static_cast<timestruct*> (nullptr));
-	tail = tv_ctm.tv_usec * 1000LL;
-#endif
-	if (ret != 0) {
-		sec = 0ULL;
-		ns = 0ULL;
-		return;
-	}
-
-	sec = tv_ctm.tv_sec;
-	ns = tail;
+	FastTiming::get_time (sec, ns);
 }
 
 timing_diff::timing_diff (const timing_period &period)
 {
-	uint64_t nsec;
-	if (period.end.ns < period.start.ns) {
-		sec = period.end.sec - period.start.sec - 1;
-		if (sec < 0)
-			sec = 0;
-		nsec = 1000000000ULL + period.end.ns - period.start.ns;
-	} else {
-		sec = period.end.sec - period.start.sec;
-		nsec = period.end.ns - period.start.ns;
-	}
-
-	ms = static_cast<uint32_t>(nsec / ms_in_nsec);
-	if (ms >= 1000) {
-		sec += ms / 1000;
-		ms = ms % 1000;
-	}
-
-	ns = static_cast<uint32_t>(nsec % ms_in_nsec);
+	FastTiming::calculate_interval (period.start, period.end, *this);
 }
 
 Util::Util ()
@@ -184,7 +146,7 @@ Util::monodroid_store_package_name (const char *name)
 	log_info (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
 }
 
-#if defined (NET6)
+#if defined (NET)
 MonoAssembly*
 Util::monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const char *basename)
 {
@@ -200,7 +162,7 @@ Util::monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const
 	}
 	return assm;
 }
-#endif // def NET6
+#endif // def NET
 
 MonoAssembly *
 Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
@@ -229,7 +191,7 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 	return assm;
 }
 
-#if !defined (NET6)
+#if !defined (NET)
 MonoObject *
 Util::monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc)
 {
@@ -283,17 +245,17 @@ Util::monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendl
 
 	return mono_domain_from_appdomain (appdomain);
 }
-#endif // ndef NET6
+#endif // ndef NET
 
 MonoClass*
 Util::monodroid_get_class_from_name ([[maybe_unused]] MonoDomain *domain, const char* assembly, const char *_namespace, const char *type)
 {
-#if !defined (NET6)
+#if !defined (NET)
 	MonoDomain *current = get_current_domain ();
 
 	if (domain != current)
 		mono_domain_set (domain, FALSE);
-#endif // ndef NET6
+#endif // ndef NET
 
 	MonoClass *result;
 	MonoAssemblyName *aname = mono_assembly_name_new (assembly);
@@ -304,17 +266,17 @@ Util::monodroid_get_class_from_name ([[maybe_unused]] MonoDomain *domain, const 
 	} else
 		result = nullptr;
 
-#if !defined (NET6)
+#if !defined (NET)
 	if (domain != current)
 		mono_domain_set (current, FALSE);
-#endif // ndef NET6
+#endif // ndef NET
 
 	mono_assembly_name_free (aname);
 
 	return result;
 }
 
-#if !defined (NET6)
+#if !defined (NET)
 MonoClass*
 Util::monodroid_get_class_from_image (MonoDomain *domain, MonoImage *image, const char *_namespace, const char *type)
 {
@@ -330,7 +292,7 @@ Util::monodroid_get_class_from_image (MonoDomain *domain, MonoImage *image, cons
 
 	return result;
 }
-#endif // ndef NET6
+#endif // ndef NET
 
 jclass
 Util::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref)

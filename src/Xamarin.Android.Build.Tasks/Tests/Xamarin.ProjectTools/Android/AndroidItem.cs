@@ -59,6 +59,17 @@ namespace Xamarin.ProjectTools
 			{
 			}
 		}
+		public class _AndroidRemapMembers : BuildItem
+		{
+			public _AndroidRemapMembers (string include)
+				: this (() => include)
+			{
+			}
+			public _AndroidRemapMembers (Func<string> include)
+				: base (AndroidBuildActions._AndroidRemapMembers, include)
+			{
+			}
+		}
 		public class EmbeddedJar : BuildItem
 		{
 			public EmbeddedJar (string include)

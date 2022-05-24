@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <DotNetTargetFrameworkVersion>6.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFrameworkVersion>7.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
     <!-- Used for bootstrap, command-line tooling, and desktop NUnit projects -->
@@ -28,11 +28,9 @@
     <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
          Rules:
          * Major/Minor match Android stable API level, such as 30.0 for API 30.
-         * Reset patch version (third number) to 100 every time either major or minor version is bumped.
-         * Bump last two digits of the patch version for service releases.
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
-    <AndroidPackVersion>33.0.100</AndroidPackVersion>
+    <AndroidPackVersion>33.0.0</AndroidPackVersion>
     <AndroidPackVersionSuffix>preview.4</AndroidPackVersionSuffix>
   </PropertyGroup>
 

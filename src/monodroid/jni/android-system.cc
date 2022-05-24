@@ -655,12 +655,12 @@ AndroidSystem::setup_environment ()
 				break;
 
 			case 'i':
-#if !defined (NET6)
+#if !defined (NET)
 				aotMode = MonoAotMode::MONO_AOT_MODE_LAST;
 				aot_mode_last_is_interpreter = true;
-#else   // defined (NET6)
+#else   // defined (NET)
 				aotMode = MonoAotMode::MONO_AOT_MODE_INTERP_ONLY;
-#endif  // !defined (NET6)
+#endif  // !defined (NET)
 				break;
 
 			default:

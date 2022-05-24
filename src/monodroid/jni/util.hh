@@ -40,14 +40,14 @@ constexpr int FALSE = 0;
 #include "basic-utilities.hh"
 #endif
 
-#if defined (NET6)
+#if defined (NET)
 #include <mono/metadata/mono-private-unstable.h>
-#endif // def NET6
+#endif // def NET
 
 #include "java-interop-util.h"
 #include "logger.hh"
 
-#if !defined (NET6)
+#if !defined (NET)
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -66,7 +66,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-#endif // NET6
+#endif // NET
 
 #ifdef __cplusplus
 namespace xamarin::android
@@ -92,13 +92,13 @@ namespace xamarin::android
 
 		void             monodroid_store_package_name (const char *name);
 		MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
-#if defined (NET6)
+#if defined (NET)
 		MonoAssembly    *monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const char *basename);
-#else // def NET6
+#else // def NET
 		MonoObject      *monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);
-#endif // ndef NET6
+#endif // ndef NET
 		MonoClass       *monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type);
-#if !defined (NET6)
+#if !defined (NET)
 		MonoDomain      *monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendly_name, int shadow_copy, const char *shadow_directories);
 		MonoClass       *monodroid_get_class_from_image (MonoDomain *domain, MonoImage* image, const char *_namespace, const char *type);
 #endif
@@ -131,9 +131,9 @@ namespace xamarin::android
 
 	private:
 		//char *monodroid_strdup_printf (const char *format, va_list vargs);
-#if !defined (NET6)
+#if !defined (NET)
 		void  monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc);
-#endif // ndef NET6
+#endif // ndef NET
 
 		template<typename IdxType>
 		void package_hash_to_hex (IdxType idx);

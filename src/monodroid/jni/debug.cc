@@ -43,11 +43,13 @@
 #include "util.hh"
 #include "globals.hh"
 #include "cpp-util.hh"
+#include "timing-internal.hh"
 
 #include "java-interop-dlfcn.h"
 
 using namespace microsoft::java_interop;
 using namespace xamarin::android;
+using namespace xamarin::android::internal;
 
 //
 // The communication between xs and the app works as follows:
@@ -236,9 +238,10 @@ Debug::start_connection (char *options)
 void
 Debug::start_debugging_and_profiling ()
 {
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
-		total_time.mark_start ();
+	size_t total_time_index;
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		total_time_index = internal_timing->start_event (TimingEventKind::DebugStart);
+	}
 
 	char *connect_args = nullptr;
 	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args) > 0) {
@@ -257,9 +260,8 @@ Debug::start_debugging_and_profiling ()
 	}
 	delete[] connect_args;
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
-		Timing::info (total_time, "Debug::start_debugging_and_profiling: end");
+	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		internal_timing->end_event (total_time_index);
 	}
 }
 

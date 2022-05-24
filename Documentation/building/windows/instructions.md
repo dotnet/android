@@ -20,7 +20,7 @@ MSBuild version 15 or later is required.
 
  5. In a [Developer Command Prompt][developer-prompt], prepare the project:
 
-        msbuild Xamarin.Android.sln /t:Prepare
+        dotnet msbuild Xamarin.Android.sln -t:Prepare
 
     This will ensure that the build dependencies are installed, perform
     `git submodule update`, download NuGet dependencies, and other
@@ -28,7 +28,7 @@ MSBuild version 15 or later is required.
 
  6. Build the project:
 
-        msbuild Xamarin.Android.sln
+        dotnet-local.cmd build Xamarin.Android.sln -m:1
 
  7. In order to use the in-tree Xamarin.Android, build xabuild:
 
@@ -38,7 +38,7 @@ MSBuild version 15 or later is required.
     Prompt][developer-prompt], build external proprietary git
     dependencies:
 
-        msbuild Xamarin.Android.sln /t:BuildExternal
+        dotnet-local.cmd build Xamarin.Android.sln -t:BuildExternal
 
     This will clone and build external proprietary components such as `monodroid`.
 
@@ -99,7 +99,7 @@ of .NET 6 to `bin\$(Configuration)\dotnet`.
 Once `msbuild Xamarin.Android.sln /t:Build` is complete, you can build
 the .NET 6 packages with:
 
-    msbuild Xamarin.Android.sln /t:PackDotNet
+    dotnet-local.cmd build Xamarin.Android.sln -t:PackDotNet -m:1
 
 Several `.nupkg` files will be output in `.\bin\BuildDebug\nuget-unsigned`,
 but this is only part of the story. Your local
@@ -107,7 +107,7 @@ but this is only part of the story. Your local
 populated with a local Android "workload" in
 `Microsoft.Android.Sdk.$(HostOS)` matching your operating system.
 
-Create a new project with `dotnet new android`:
+Create a new project with `dotnet-local.cmd new android`:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">

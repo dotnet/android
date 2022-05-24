@@ -1,0 +1,22 @@
+<Project DefaultTargets="Record">
+  <Import Project="Directory.Build.props" />
+  <PropertyGroup>
+    <!-- The template name -->
+    <App Condition=" '$(App)' == '' ">android</App>
+    <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == '' ">android-arm64</RuntimeIdentifier>
+    <Intermediate>obj/$(App)/</Intermediate>
+    <CSProj>$(Intermediate)$(App).csproj</CSProj>
+  </PropertyGroup>
+  <Target Name="Record">
+    <RemoveDir Directories="$(Intermediate)" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; new $(App) -o $(Intermediate)" EnvironmentVariables="DOTNET_MULTILEVEL_LOOKUP=0" />
+    <!-- Copy replacement files-->
+    <ItemGroup>
+      <_FilesToCopy Include="$(App)/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_FilesToCopy)" DestinationFolder="$(Intermediate)" />
+    <!-- Restore as a separate step due to: https://github.com/dotnet/sdk/issues/21877 -->
+    <MSBuild Projects="$(CSProj)" Targets="Restore" />
+    <MSBuild Projects="$(CSProj)" Targets="Record" Properties="App=$(App);RuntimeIdentifier=$(RuntimeIdentifier)" />
+  </Target>
+</Project>

@@ -445,7 +445,7 @@ $@"<Project>
 
 		/// <summary>
 		/// Updates a NuGet.config based on sources in ExtraNuGetConfigSources
-		/// Removes the dotnet6 source, which should not be needed by tests
+		/// The dotnet7 source is required while in preview, but eventually it should not be needed by tests
 		/// </summary>
 		protected void AddNuGetConfigSources (XDocument doc)
 		{
@@ -455,14 +455,14 @@ $@"<Project>
 				doc.Root.Add (pkgSourcesElement= new XElement (elementName));
 			}
 
-			// Remove dotnet6 feed
+			/* NET7TODO: Remove dotnet7 feed
 			foreach (XElement element in pkgSourcesElement.Elements ()) {
 				XAttribute value = element.Attribute ("value");
-				if (value != null && value.Value == "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json") {
+				if (value != null && value.Value == "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json") {
 					element.Remove ();
 					break;
 				}
-			}
+			} */
 
 			// Add extra sources
 			if (ExtraNuGetConfigSources == null)

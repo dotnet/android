@@ -157,7 +157,15 @@ namespace Xamarin.Android.Net
 
 		public bool CheckCertificateRevocationList { get; set; } = false;
 
-		public Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> ServerCertificateCustomValidationCallback { get; set; }
+		X509TrustManagerWithValidationCallback.Helper? _callbackTrustManagerHelper = null;
+
+		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? ServerCertificateCustomValidationCallback
+		{
+			get => _callbackTrustManagerHelper?.Callback;
+			set {
+				_callbackTrustManagerHelper = value != null ? new X509TrustManagerWithValidationCallback.Helper (value) : null;
+			}
+		}
 
 		// See: https://developer.android.com/reference/javax/net/ssl/SSLSocket#protocols
 		public SslProtocols SslProtocols { get; set; } =
@@ -199,7 +207,7 @@ namespace Xamarin.Android.Net
 		/// If the website requires authentication, this property will contain data about each scheme supported
 		/// by the server after the response. Note that unauthorized request will return a valid response - you
 		/// need to check the status code and and (re)configure AndroidMessageHandler instance accordingly by providing
-		/// both the credentials and the authentication scheme by setting the <see cref="PreAuthenticationData"/> 
+		/// both the credentials and the authentication scheme by setting the <see cref="PreAuthenticationData"/>
 		/// property. If AndroidMessageHandler is not able to detect the kind of authentication scheme it will store an
 		/// instance of <see cref="AuthenticationData"/> with its <see cref="AuthenticationData.Scheme"/> property
 		/// set to <c>AuthenticationScheme.Unsupported</c> and the application will be responsible for providing an
@@ -574,12 +582,12 @@ namespace Xamarin.Android.Net
 					}
 				}
 
+				CopyHeaders (httpConnection, ret);
+				ParseCookies (ret, connectionUri);
+
 				if (disposeRet) {
 					ret.Dispose ();
 					ret = null!;
-				} else {
-					CopyHeaders (httpConnection, ret);
-					ParseCookies (ret, connectionUri);
 				}
 
 				// We don't want to pass the authorization header onto the next location
@@ -939,7 +947,7 @@ namespace Xamarin.Android.Net
 
 			// SSL context must be set up as soon as possible, before adding any content or
 			// headers. Otherwise Java won't use the socket factory
-			SetupSSL (httpConnection as HttpsURLConnection);
+			SetupSSL (httpConnection as HttpsURLConnection, request);
 			if (request.Content != null)
 				AddHeaders (httpConnection, request.Content.Headers);
 			AddHeaders (httpConnection, request.Headers);
@@ -997,7 +1005,7 @@ namespace Xamarin.Android.Net
 		internal SSLSocketFactory? ConfigureCustomSSLSocketFactoryInternal (HttpsURLConnection connection)
 			=> ConfigureCustomSSLSocketFactoryInternal (connection);
 
-		void SetupSSL (HttpsURLConnection? httpsConnection)
+		void SetupSSL (HttpsURLConnection? httpsConnection, HttpRequestMessage requestMessage)
 		{
 			if (httpsConnection == null)
 				return;
@@ -1017,35 +1025,48 @@ namespace Xamarin.Android.Net
 			}
 #endif
 
-			var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
-			keyStore?.Load (null, null);
-			bool gotCerts = TrustedCerts?.Count > 0;
-			if (gotCerts) {
-				for (int i = 0; i < TrustedCerts!.Count; i++) {
-					Certificate cert = TrustedCerts [i];
-					if (cert == null)
-						continue;
-					keyStore?.SetCertificateEntry ($"ca{i}", cert);
-				}
-			}
+			var keyStore = InitializeKeyStore (out bool gotCerts);
 			keyStore = ConfigureKeyStore (keyStore);
 			var kmf = ConfigureKeyManagerFactory (keyStore);
 			var tmf = ConfigureTrustManagerFactory (keyStore);
 
 			if (tmf == null) {
-				// If there are no certs and no trust manager factory, we can't use a custom manager
-				// because it will cause all the HTTPS requests to fail because of unverified trust
-				// chain
-				if (!gotCerts)
+				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
+				// there is no point in changing the behavior of the default SSL socket factory
+				if (!gotCerts && _callbackTrustManagerHelper == null)
 					return;
 				
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
-				tmf?.Init (keyStore);
+				tmf?.Init (gotCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
+			}
+
+			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
+
+			if (_callbackTrustManagerHelper != null) {
+				trustManagers = _callbackTrustManagerHelper.Inject (trustManagers, requestMessage);
 			}
 
 			var context = SSLContext.GetInstance ("TLS");
-			context?.Init (kmf?.GetKeyManagers (), tmf?.GetTrustManagers (), null);
+			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
 			httpsConnection.SSLSocketFactory = context?.SocketFactory;
+
+			KeyStore? InitializeKeyStore (out bool gotCerts)
+			{
+				var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
+				keyStore?.Load (null, null);
+				gotCerts = TrustedCerts?.Count > 0;
+
+				if (gotCerts) {
+					for (int i = 0; i < TrustedCerts!.Count; i++) {
+						Certificate cert = TrustedCerts [i];
+						if (cert == null)
+							continue;
+						keyStore?.SetCertificateEntry ($"ca{i}", cert);
+					}
+				}
+
+				return keyStore;
+			}
 		}
 		
 		void HandlePreAuthentication (HttpURLConnection httpConnection)
