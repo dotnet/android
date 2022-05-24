@@ -7,6 +7,8 @@ using Android.Runtime;
 namespace Android.App {
 
 	partial class Application {
+		// NOTE: an explicit .cctor solves startup ordering with JNIEnv.Initialize()
+		static Application () { }
 
 		static Context? _context;
 		public static Context Context {
