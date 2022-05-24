@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -28,11 +29,15 @@ namespace Xamarin.Android.Prepare
 			Utilities.CopyFileToDir (Path.Combine (javaInteropDir, "product.snk"), monoSourceDir);
 
 			LogStep (context, "Configuring Java.Interop property overrides");
-			Utilities.CopyFileToDir (
-				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, "Configuration.Java.Interop.Override.props"),
-				javaInteropDir,
-				"Configuration.Override.props"
+			var jiOverrideProps = new GeneratedPlaceholdersFile (
+				new Dictionary<string, string> (StringComparer.Ordinal) {
+					{ "@MonoCecilVersion@",    Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoCecilVersion) },
+					{ "@NetCoreBinDirectory@", Configurables.Paths.NetCoreBinDir }
+				},
+				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, "Configuration.Java.Interop.Override.in.props"),
+				Path.Combine (javaInteropDir, "Configuration.Override.props")
 			);
+			jiOverrideProps.Generate (context);
 
 			return true;
 		}

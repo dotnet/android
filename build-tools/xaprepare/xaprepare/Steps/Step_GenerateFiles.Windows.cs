@@ -15,8 +15,6 @@ namespace Xamarin.Android.Prepare
 			string jdkJvmPath = Path.Combine (javaSdkDirectory, "jre", "bin", "server", "jvm.dll");
 			string jdkIncludePathShared = Path.Combine (javaSdkDirectory, "include");
 			string jdkIncludePathOS = Path.Combine (jdkIncludePathShared, "win32");
-			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
-			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
 
 			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
 				{ "@JdkJvmPath@",           jdkJvmPath },
@@ -26,7 +24,7 @@ namespace Xamarin.Android.Prepare
 				{ "@java@",                 context.OS.JavaPath },
 				{ "@jar@",                  context.OS.JarPath },
 				{ "@javahome@",             context.OS.JavaHome },
-				{ "@dotnet@",               dotnetTool },
+				{ "@dotnet@",               Configurables.Paths.DotNetPreviewTool },
 			};
 
 			var step = new GeneratedPlaceholdersFile (

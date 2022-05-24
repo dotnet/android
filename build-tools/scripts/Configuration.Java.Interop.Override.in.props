@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <!-- TODO: can we somehow grab the $(MonoCecilVersion) value in Directory.Build.props? -->
-    <_XamarinAndroidCecilVersion>0.11.4</_XamarinAndroidCecilVersion>
+    <_XamarinAndroidCecilVersion>@MonoCecilVersion@</_XamarinAndroidCecilVersion>
     <CecilSourceDirectory>$(MSBuildThisFileDirectory)..\..\external\mono\external\cecil</CecilSourceDirectory>
     <UtilityOutputFullPath>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\</UtilityOutputFullPath>
-    <UtilityOutputFullPathCoreApps>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)-net6.0\</UtilityOutputFullPathCoreApps>
+    <UtilityOutputFullPathCoreApps>@NetCoreBinDirectory@</UtilityOutputFullPathCoreApps>
     <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)..\..\external\xamarin-android-tools</XamarinAndroidToolsDirectory>
   </PropertyGroup>
 </Project>
