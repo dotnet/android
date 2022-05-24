@@ -78,7 +78,7 @@ namespace Xamarin.Android.Prepare
 					message = $"Failed to obtain dotnet-install size. HTTP status code: {status} ({(int)status})";
 				}
 
-				ReportAndCheckCached (message, quietOnError: true); // size check isn't critical, just warn
+				return ReportAndCheckCached (message, quietOnError: true);
 			}
 
 			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
@@ -116,10 +116,13 @@ namespace Xamarin.Android.Prepare
 			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (archiveUrl);
 			if (!success) {
 				if (status == HttpStatusCode.NotFound) {
-					Log.WarningLine ($"dotnet archive URL {archiveUrl} not found");
+					Log.ErrorLine ($"dotnet archive URL {archiveUrl} not found");
+					return false;
 				} else {
 					Log.WarningLine ($"Failed to obtain dotnet archive size. HTTP status code: {status} ({(int)status})");
 				}
+
+				return false;
 			}
 
 			string tempArchiveDestinationPath = archiveDestinationPath + "-tmp";
