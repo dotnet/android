@@ -93,7 +93,7 @@ but this is only part of the story. Your local
 local Android "workload" in `Microsoft.Android.Sdk.$(HostOS)` matching
 your operating system.
 
-Create a new project with `dotnet new android`:
+Create a new project with `./dotnet-local.sh new android`:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">

@@ -181,12 +181,12 @@ include build-tools/scripts/runtime-helpers.mk
 
 .PHONY: prepare
 prepare:
-	$(call DOTNET_BINLOG,prepare-run,run) $(PREPARE_MSBUILD_FLAGS) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- $(_PREPARE_ARGS)
-	$(call DOTNET_BINLOG,prepare-bootstrap) Xamarin.Android.BootstrapTasks.sln
+	$(call SYSTEM_DOTNET_BINLOG,prepare-run,run) $(PREPARE_MSBUILD_FLAGS) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- $(_PREPARE_ARGS)
+	$(call SYSTEM_DOTNET_BINLOG,prepare-bootstrap) Xamarin.Android.BootstrapTasks.sln
 
 .PHONY: prepare-help
 prepare-help:
-	$(call DOTNET_BINLOG,prepare-help,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- -h
+	$(call SYSTEM_DOTNET_BINLOG,prepare-help,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- -h
 
 .PHONY: shutdown-compiler-server
 shutdown-compiler-server:
@@ -208,11 +208,11 @@ shutdown-compiler-server:
 
 .PHONY: prepare-update-mono
 prepare-update-mono: shutdown-compiler-server
-	$(call DOTNET_BINLOG,prepare-update-mono,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \
+	$(call SYSTEM_DOTNET_BINLOG,prepare-update-mono,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \
 		-- -s:UpdateMono $(_PREPARE_ARGS)
 
 prepare-external-git-dependencies:
-	$(call DOTNET_BINLOG,prepare-external-git-dependencies,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \
+	$(call SYSTEM_DOTNET_BINLOG,prepare-external-git-dependencies,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \
 		-- -s:PrepareExternalGitDependencies $(_PREPARE_ARGS)
 
 APK_SIZES_REFERENCE_DIR=tests/apk-sizes-reference

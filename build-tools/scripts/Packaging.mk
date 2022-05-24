@@ -10,10 +10,10 @@ create-installers: create-nupkgs create-pkg create-vsix
 create-nupkgs:
 	@echo Disk usage before create-nupkgs
 	-df -h
-	$(call DOTNET_BINLOG,create-all-packs) -t:CreateAllPacks $(topdir)/build-tools/create-packs/Microsoft.Android.Sdk.proj
+	$(call SYSTEM_DOTNET_BINLOG,create-all-packs) -t:CreateAllPacks $(topdir)/build-tools/create-packs/Microsoft.Android.Sdk.proj
 
 create-pkg:
-	$(call DOTNET_BINLOG,create-pkg) /t:CreatePkg \
+	$(call SYSTEM_DOTNET_BINLOG,create-pkg) /t:CreatePkg \
 		build-tools/create-pkg/create-pkg.csproj \
 		$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
 		$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
