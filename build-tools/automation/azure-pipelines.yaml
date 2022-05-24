@@ -201,7 +201,7 @@ stages:
       displayName: Prepare Solution
       inputs:
         projects: Xamarin.Android.sln
-        arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -m:1 -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
+        arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
     # Build, pack .nupkgs, and extract workload packs to dotnet preview test directory
     - template: yaml-templates\run-dotnet-preview.yaml
