@@ -68,8 +68,8 @@ namespace Xamarin.Android.Tasks
 				} else {
 					assembly.SetMetadata ("AotArguments", $"asmwriter,temp-path={temp}{aotProfiles}");
 				}
-				// NOTE: JIT doesn't support simd, Profiled AOT would be mixed JIT & AOT
-				if (EnableLLVM && Profiles != null && Profiles.Length > 0) {
+				// NOTE: always disable simd when using LLVM
+				if (EnableLLVM) {
 					assembly.SetMetadata ("ProcessArguments", "-O=-simd");
 				}
 			}
