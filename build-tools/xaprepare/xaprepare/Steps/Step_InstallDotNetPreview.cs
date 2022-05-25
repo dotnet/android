@@ -22,9 +22,6 @@ namespace Xamarin.Android.Prepare
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
 			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
 
-			// Always delete the bin/$(Configuration)/dotnet/ directory
-			Utilities.DeleteDirectory (dotnetPath);
-
 			if (!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion)) {
 				Log.ErrorLine ($"Installation of dotnet SDK {BuildToolVersion} failed.");
 				return false;
@@ -65,68 +62,189 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version, bool runtimeOnly = false)
+		async Task<bool> DownloadDotNetInstallScript (Context context, string dotnetScriptPath, Uri dotnetScriptUrl)
 		{
-			if (Directory.Exists (Path.Combine (dotnetPath, "sdk", version)) && !runtimeOnly) {
-				Log.Status ($"dotnet SDK version ");
-				Log.Status (version, ConsoleColor.Yellow);
-				Log.StatusLine (" already installed in: ", Path.Combine (dotnetPath, "sdk", version), tailColor: ConsoleColor.Cyan);
-				return true;
-			}
-
-			if (Directory.Exists (Path.Combine (dotnetPath, "shared", "Microsoft.NETCore.App", version)) && runtimeOnly) {
-				Log.Status ($"dotnet runtime version ");
-				Log.Status (version, ConsoleColor.Yellow);
-				Log.StatusLine (" already installed in: ", Path.Combine (dotnetPath, "shared", "Microsoft.NETCore.App", version), tailColor: ConsoleColor.Cyan);
-				return true;
-			}
-
-			Uri dotnetScriptUrl = Configurables.Urls.DotNetInstallScript;
-			string dotnetScriptPath = Path.Combine (dotnetPath, Path.GetFileName (dotnetScriptUrl.LocalPath));
-			if (File.Exists (dotnetScriptPath))
-				Utilities.DeleteFile (dotnetScriptPath);
+			string tempDotnetScriptPath = dotnetScriptPath + "-tmp";
+			Utilities.DeleteFile (tempDotnetScriptPath);
 
 			Log.StatusLine ("Downloading dotnet-install...");
 
 			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (dotnetScriptUrl);
 			if (!success) {
-				if (status == HttpStatusCode.NotFound)
-					Log.ErrorLine ("dotnet-install URL not found");
-				else
-					Log.ErrorLine ("Failed to obtain dotnet-install size. HTTP status code: {status} ({(int)status})");
-				return false;
+				string message;
+				if (status == HttpStatusCode.NotFound) {
+					message = "dotnet-install URL not found";
+				} else {
+					message = $"Failed to obtain dotnet-install size. HTTP status code: {status} ({(int)status})";
+				}
+
+				return ReportAndCheckCached (message, quietOnError: true);
 			}
 
 			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
 			Log.StatusLine ($"  {context.Characters.Link} {dotnetScriptUrl}", ConsoleColor.White);
-			await Download (context, dotnetScriptUrl, dotnetScriptPath, "dotnet-install", Path.GetFileName (dotnetScriptUrl.LocalPath), downloadStatus);
+			await Download (context, dotnetScriptUrl, tempDotnetScriptPath, "dotnet-install", Path.GetFileName (dotnetScriptUrl.LocalPath), downloadStatus);
 
-			if (!File.Exists (dotnetScriptPath)) {
-				Log.ErrorLine ($"Download of dotnet-install from {dotnetScriptUrl} failed");
+			if (!File.Exists (tempDotnetScriptPath)) {
+				return ReportAndCheckCached ($"Download of dotnet-install from {dotnetScriptUrl} failed");
+			}
+
+			Utilities.CopyFile (tempDotnetScriptPath, dotnetScriptPath);
+			Utilities.DeleteFile (tempDotnetScriptPath);
+			return true;
+
+			bool ReportAndCheckCached (string message, bool quietOnError = false)
+			{
+				if (File.Exists (dotnetScriptPath)) {
+					Log.WarningLine (message);
+					Log.WarningLine ($"Using cached installation script found in {dotnetScriptPath}");
+					return true;
+				}
+
+				if (!quietOnError) {
+					Log.ErrorLine (message);
+					Log.ErrorLine ($"Cached installation script not found in {dotnetScriptPath}");
+				}
+				return false;
+			}
+		}
+
+		async Task<bool> DownloadDotNetArchive (Context context, string archiveDestinationPath, Uri archiveUrl)
+		{
+			Log.StatusLine ("Downloading dotnet archive...");
+
+			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (archiveUrl);
+			if (!success) {
+				if (status == HttpStatusCode.NotFound) {
+					Log.ErrorLine ($"dotnet archive URL {archiveUrl} not found");
+					return false;
+				} else {
+					Log.WarningLine ($"Failed to obtain dotnet archive size. HTTP status code: {status} ({(int)status})");
+				}
+
 				return false;
 			}
 
-			var type = runtimeOnly ? "runtime" : "SDK";
-			Log.StatusLine ($"Installing dotnet {type} '{version}'...");
+			string tempArchiveDestinationPath = archiveDestinationPath + "-tmp";
+			Utilities.DeleteFile (tempArchiveDestinationPath);
 
+			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
+			Log.StatusLine ($"  {context.Characters.Link} {archiveUrl}", ConsoleColor.White);
+			await Download (context, archiveUrl, tempArchiveDestinationPath, "dotnet archive", Path.GetFileName (archiveUrl.LocalPath), downloadStatus);
+
+			if (!File.Exists (tempArchiveDestinationPath)) {
+				return false;
+			}
+
+			Utilities.CopyFile (tempArchiveDestinationPath, archiveDestinationPath);
+			Utilities.DeleteFile (tempArchiveDestinationPath);
+
+			return true;
+		}
+
+		string[] GetInstallationScriptArgs (string version, string dotnetPath, string dotnetScriptPath, bool onlyGetUrls, bool runtimeOnly)
+		{
+			List<string> args;
 			if (Context.IsWindows) {
-				var args = new List<string> {
+				args = new List<string> {
 					"-NoProfile", "-ExecutionPolicy", "unrestricted", "-file", dotnetScriptPath,
 					"-Version", version, "-InstallDir", dotnetPath, "-Verbose"
 				};
-				if (runtimeOnly)
+				if (runtimeOnly) {
 					args.AddRange (new string [] { "-Runtime", "dotnet" });
+				}
+				if (onlyGetUrls) {
+					args.Add ("-DryRun");
+				}
 
-				return Utilities.RunCommand ("powershell.exe", args.ToArray ());
-			} else {
-				var args = new List<string> {
-					dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose"
-				};
-				if (runtimeOnly)
-					args.AddRange (new string [] { "-Runtime", "dotnet" });
-
-				return Utilities.RunCommand ("bash", args.ToArray ());
+				return args.ToArray ();
 			}
+
+			args = new List<string> {
+				dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose"
+			};
+
+			if (runtimeOnly) {
+				args.AddRange (new string [] { "-Runtime", "dotnet" });
+			}
+			if (onlyGetUrls) {
+				args.Add ("--dry-run");
+			}
+
+			return args.ToArray ();
+		}
+
+		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version, bool runtimeOnly = false)
+		{
+			string cacheDir = context.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory);
+
+			// Always delete the bin/$(Configuration)/dotnet/ directory
+			Utilities.DeleteDirectory (dotnetPath);
+
+			Uri dotnetScriptUrl = Configurables.Urls.DotNetInstallScript;
+			string scriptFileName = Path.GetFileName (dotnetScriptUrl.LocalPath);
+			string cachedDotnetScriptPath = Path.Combine (cacheDir, scriptFileName);
+			if (!await DownloadDotNetInstallScript (context, cachedDotnetScriptPath, dotnetScriptUrl)) {
+				return false;
+			}
+
+			string dotnetScriptPath = Path.Combine (dotnetPath, scriptFileName);
+			Utilities.CopyFile (cachedDotnetScriptPath, dotnetScriptPath);
+
+			var type = runtimeOnly ? "runtime" : "SDK";
+
+			Log.StatusLine ($"Discovering download URLs for dotnet {type} '{version}'...");
+			string scriptCommand = Context.IsWindows ? "powershell.exe" : "bash";
+			string[] scriptArgs = GetInstallationScriptArgs (version, dotnetPath, dotnetScriptPath, onlyGetUrls: true, runtimeOnly: runtimeOnly);
+			string scriptReply = Utilities.GetStringFromStdout (scriptCommand, scriptArgs);
+			var archiveUrls = new List<string> ();
+
+			char[] fieldSplitChars = new char[] { ':' };
+			foreach (string l in scriptReply.Split (new char[] { '\n' })) {
+				string line = l.Trim ();
+
+				if (!line.StartsWith ("dotnet-install: URL #", StringComparison.OrdinalIgnoreCase)) {
+					continue;
+				}
+
+				string[] parts = line.Split (fieldSplitChars, 3);
+				if (parts.Length < 3) {
+					Log.WarningLine ($"dotnet-install URL line has unexpected number of parts. Expected 3, got {parts.Length}");
+					Log.WarningLine ($"Line: {line}");
+					continue;
+				}
+
+				archiveUrls.Add (parts[2].Trim ());
+			}
+
+			if (archiveUrls.Count == 0) {
+				Log.WarningLine ("No dotnet archive URLs discovered, attempting to run the installation script");
+				scriptArgs = GetInstallationScriptArgs (version, dotnetPath, dotnetScriptPath, onlyGetUrls: false, runtimeOnly: runtimeOnly);
+				return Utilities.RunCommand (scriptCommand, scriptArgs);
+			}
+
+			string? archivePath = null;
+			foreach (string url in archiveUrls) {
+				var archiveUrl = new Uri (url);
+				string archiveDestinationPath = Path.Combine (cacheDir, Path.GetFileName (archiveUrl.LocalPath));
+
+				if (File.Exists (archiveDestinationPath)) {
+					archivePath = archiveDestinationPath;
+					break;
+				}
+
+				if (await DownloadDotNetArchive (context, archiveDestinationPath, archiveUrl)) {
+					archivePath = archiveDestinationPath;
+					break;
+				}
+			}
+
+			if (String.IsNullOrEmpty (archivePath)) {
+				return false;
+			}
+
+			Log.StatusLine ($"Installing dotnet {type} '{version}'...");
+			return await Utilities.Unpack (archivePath, dotnetPath);
 		}
 
 		bool TestDotNetSdk (string dotnetTool)
