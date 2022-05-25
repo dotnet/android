@@ -357,9 +357,12 @@ stages:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
 
-    - script: make prepare CONFIGURATION=$(ApkTestConfiguration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
-      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
-      displayName: prepare java.interop
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
+        displayName: prepare java.interop $(XA.Build.Configuration)
+        continueOnError: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -616,13 +619,19 @@ stages:
         projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
 
-    - script: make prepare CONFIGURATION=Debug JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
-      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
-      displayName: prepare java.interop
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: -t:PrepareJavaInterop -c Debug -m:1 -v:n
+        displayName: prepare java.interop Debug
+        continueOnError: false
 
-    - script: make prepare CONFIGURATION=$(XA.Build.Configuration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
-      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
-      displayName: prepare java.interop
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
+        displayName: prepare java.interop $(XA.Build.Configuration)
+        continueOnError: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
