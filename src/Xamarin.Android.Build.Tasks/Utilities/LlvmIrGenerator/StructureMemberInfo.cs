@@ -11,10 +11,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		/// <summary>
 		/// Size of a variable with this IR type. May differ from <see cref="BaseTypeSize"/> because the field
-		/// can be a pointer to type
+		/// can be a pointer to type or a struct
 		/// </summary>
 		public ulong Size           { get; }
-
+		public ulong Alignment      { get; }
 		public ulong ArrayElements  { get; }
 
 		/// <summary>
@@ -57,6 +57,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			ArrayElements = 0;
 			IsInlineArray = false;
 			NeedsPadding = false;
+			Alignment = 0;
 
 			if (IsNativePointer) {
 				size = (ulong)generator.PointerSize;
@@ -75,6 +76,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				IRType = $"[{arrayElements} x {IRType}]";
 				ArrayElements = (ulong)arrayElements;
+			} else if (this.IsIRStruct ()) {
+				IStructureInfo si = generator.GetStructureInfo (MemberType);
+				size = si.Size;
+				Alignment = (ulong)si.MaxFieldAlignment;
 			}
 
 			if (MemberType.IsArray && !IsInlineArray) {
@@ -82,6 +87,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			Size = size;
+			if (Alignment == 0) {
+				Alignment = size;
+			}
 		}
 
 		public object? GetValue (T instance)

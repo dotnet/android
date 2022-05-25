@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\src\Mono.Android\Android.Runtime\MamXmlParser.cs" />
+    <Compile Include="MamXmlParser.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MamJsonParser.cs" />
   </ItemGroup>
 

@@ -8,6 +8,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	// TODO: add cache for members and data provider info
 	sealed class StructureInfo<T> : IStructureInfo
 	{
+		Type type;
+
+		public Type Type => type;
 		public string Name { get; } = String.Empty;
 		public ulong Size { get; }
 		public List<StructureMemberInfo<T>> Members { get; } = new List<StructureMemberInfo<T>> ();
@@ -20,10 +23,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public StructureInfo (LlvmIrGenerator generator)
 		{
-			Type t = typeof(T);
-			Name = t.GetShortName ();
-			Size = GatherMembers (t, generator);
-			DataProvider = t.GetDataProvider ();
+			type = typeof(T);
+			Name = type.GetShortName ();
+			Size = GatherMembers (type, generator);
+			DataProvider = type.GetDataProvider ();
 		}
 
 		public void RenderDeclaration (LlvmIrGenerator generator)
@@ -80,7 +83,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return DataProvider.GetBufferSize (instance.Obj, smi.Info.Name);
 		}
 
-		ulong GatherMembers (Type type, LlvmIrGenerator generator)
+		ulong GatherMembers (Type type, LlvmIrGenerator generator, bool storeMembers = true)
 		{
 			ulong size = 0;
 			foreach (MemberInfo mi in type.GetMembers ()) {
@@ -89,10 +92,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				var info = new StructureMemberInfo<T> (mi, generator);
-				Members.Add (info);
-				size += info.Size;
-				if ((int)info.Size > MaxFieldAlignment) {
-					MaxFieldAlignment = (int)info.Size;
+				if (storeMembers) {
+					Members.Add (info);
+					size += info.Size;
+
+					if ((int)info.Alignment > MaxFieldAlignment) {
+						MaxFieldAlignment = (int)info.Alignment;
+					}
 				}
 
 				if (!HasStrings && info.MemberType == typeof (string)) {
@@ -101,6 +107,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				if (!HasPreAllocatedBuffers && info.Info.IsNativePointerToPreallocatedBuffer (out ulong _)) {
 					HasPreAllocatedBuffers = true;
+				}
+
+				// If we encounter an embedded struct (as opposed to a pointer), we need to descend and check if that struct contains any strings or buffers, but we
+				// do NOT want to store any members while doing that, as the struct should have been mapped by the composer previously.
+				// The presence of strings/buffers is important at the generation time as it is used to decide whether we need separate stream writers for them and
+				// if the owning structure does **not** have any of those, the generated code would be invalid
+				if (info.IsIRStruct ()) {
+					GatherMembers (info.MemberType, generator, storeMembers: false);
 				}
 			}
 

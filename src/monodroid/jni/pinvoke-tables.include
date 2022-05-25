@@ -41,6 +41,7 @@ static PinvokeEntry internal_pinvokes[] = {
 	{0x184ec8d982c82b43, "java_interop_jnienv_call_static_int_method", reinterpret_cast<void*>(&java_interop_jnienv_call_static_int_method)},
 	{0x18ba7c75142ec560, "java_interop_jnienv_new_object_a", reinterpret_cast<void*>(&java_interop_jnienv_new_object_a)},
 	{0x18bee2a981e26b92, "java_interop_jnienv_call_int_method_a", reinterpret_cast<void*>(&java_interop_jnienv_call_int_method_a)},
+	{0x19a8d36d0622ca80, "_monodroid_lookup_replacement_type", reinterpret_cast<void*>(&_monodroid_lookup_replacement_type)},
 	{0x1c898e245c5afc3e, "java_interop_jnienv_get_object_array_element", reinterpret_cast<void*>(&java_interop_jnienv_get_object_array_element)},
 	{0x1ce27f511eeb8a31, "java_interop_jnienv_get_string_chars", reinterpret_cast<void*>(&java_interop_jnienv_get_string_chars)},
 	{0x1d2e846740037290, "java_interop_jnienv_to_reflected_field", reinterpret_cast<void*>(&java_interop_jnienv_to_reflected_field)},
@@ -197,6 +198,7 @@ static PinvokeEntry internal_pinvokes[] = {
 	{0xc7729a6119b35f76, "java_interop_jnienv_get_direct_buffer_address", reinterpret_cast<void*>(&java_interop_jnienv_get_direct_buffer_address)},
 	{0xc95f2642de10d725, "java_interop_jnienv_call_nonvirtual_void_method_a", reinterpret_cast<void*>(&java_interop_jnienv_call_nonvirtual_void_method_a)},
 	{0xcbfbe869fa8e306c, "java_interop_jnienv_call_nonvirtual_boolean_method_a", reinterpret_cast<void*>(&java_interop_jnienv_call_nonvirtual_boolean_method_a)},
+	{0xcc53b65d0162870e, "_monodroid_lookup_replacement_method_info", reinterpret_cast<void*>(&_monodroid_lookup_replacement_method_info)},
 	{0xcd339dc2d2132ef0, "set_world_accessable", reinterpret_cast<void*>(&set_world_accessable)},
 	{0xcda6124c10309733, "java_interop_jnienv_set_boolean_array_region", reinterpret_cast<void*>(&java_interop_jnienv_set_boolean_array_region)},
 	{0xcf6056a561f69fb0, "java_interop_jnienv_new_local_ref", reinterpret_cast<void*>(&java_interop_jnienv_new_local_ref)},
@@ -710,6 +712,7 @@ static PinvokeEntry internal_pinvokes[] = {
 	{0x3049c929, "java_interop_jnienv_call_static_void_method_a", reinterpret_cast<void*>(&java_interop_jnienv_call_static_void_method_a)},
 	{0x30b9487b, "_monodroid_get_dns_servers", reinterpret_cast<void*>(&_monodroid_get_dns_servers)},
 	{0x3227d81a, "monodroid_timing_start", reinterpret_cast<void*>(&monodroid_timing_start)},
+	{0x333d4835, "_monodroid_lookup_replacement_method_info", reinterpret_cast<void*>(&_monodroid_lookup_replacement_method_info)},
 	{0x36871cbc, "java_interop_jnienv_set_static_object_field", reinterpret_cast<void*>(&java_interop_jnienv_set_static_object_field)},
 	{0x369fbea2, "java_interop_jnienv_new_direct_byte_buffer", reinterpret_cast<void*>(&java_interop_jnienv_new_direct_byte_buffer)},
 	{0x36b25efd, "java_interop_jnienv_get_object_class", reinterpret_cast<void*>(&java_interop_jnienv_get_object_class)},
@@ -849,6 +852,7 @@ static PinvokeEntry internal_pinvokes[] = {
 	{0xc30e7353, "java_interop_jnienv_release_int_array_elements", reinterpret_cast<void*>(&java_interop_jnienv_release_int_array_elements)},
 	{0xc40138c3, "java_interop_jnienv_get_primitive_array_critical", reinterpret_cast<void*>(&java_interop_jnienv_get_primitive_array_critical)},
 	{0xc4053527, "java_interop_jnienv_call_nonvirtual_boolean_method_a", reinterpret_cast<void*>(&java_interop_jnienv_call_nonvirtual_boolean_method_a)},
+	{0xc439b5d7, "_monodroid_lookup_replacement_type", reinterpret_cast<void*>(&_monodroid_lookup_replacement_type)},
 	{0xc5146c54, "_monodroid_gref_log_delete", reinterpret_cast<void*>(&_monodroid_gref_log_delete)},
 	{0xc58eafa5, "java_interop_free", reinterpret_cast<void*>(&java_interop_free)},
 	{0xc6c99d41, "monodroid_store_package_name", reinterpret_cast<void*>(&monodroid_store_package_name)},
@@ -1325,5 +1329,5 @@ constexpr hash_t system_io_compression_native_library_hash = 0xafe3142c;
 constexpr hash_t system_security_cryptography_native_android_library_hash = 0x93625cd;
 #endif
 
-constexpr size_t internal_pinvokes_count = 235;
+constexpr size_t internal_pinvokes_count = 237;
 constexpr size_t dotnet_pinvokes_count = 410;

@@ -15,11 +15,6 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 using System.Diagnostics.CodeAnalysis;
 
-#if NET
-using ReplacementTypesDict      = System.Collections.Generic.Dictionary<string, string>;
-using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<string, string>;
-#endif  // NET
-
 namespace Android.Runtime {
 #pragma warning disable 0649
 	struct JnienvInitializeArgs {
@@ -40,8 +35,7 @@ namespace Android.Runtime {
 		public int             packageNamingPolicy;
 		public byte            ioExceptionType;
 		public int             jniAddNativeMethodRegistrationAttributePresent;
-		public IntPtr          mappingXml;
-		public int             mappingXmlLen;
+		public bool            jniRemappingInUse;
 	}
 #pragma warning restore 0649
 
@@ -55,6 +49,7 @@ namespace Android.Runtime {
 		static int androidSdkVersion;
 
 		static bool AllocObjectSupported;
+		internal static bool jniRemappingInUse;
 
 		static IntPtr grefIGCUserPeer_class;
 
@@ -67,11 +62,6 @@ namespace Android.Runtime {
 
 		static AndroidRuntime? androidRuntime;
 		static BoundExceptionType BoundExceptionType;
-
-#if NET
-		internal static ReplacementTypesDict?    ReplacementTypes;
-		internal static ReplacementMethodsDict?  ReplacementMethods;
-#endif  // NET
 
 		[ThreadStatic]
 		static byte[]? mvid_bytes;
@@ -167,6 +157,7 @@ namespace Android.Runtime {
 
 			gref_gc_threshold = args->grefGcThreshold;
 
+			jniRemappingInUse = args->jniRemappingInUse;
 			java_vm = args->javaVm;
 
 			version = args->version;
@@ -177,13 +168,6 @@ namespace Android.Runtime {
 			load_class_id     = args->Loader_loadClass;
 			gref_class        = args->grefClass;
 			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
-
-#if NET
-			if (args->mappingXml != IntPtr.Zero) {
-				var xml = Encoding.UTF8.GetString ((byte*) args->mappingXml, args->mappingXmlLen);
-				(ReplacementTypes, ReplacementMethods) = MamXmlParser.ParseStrings (xml);
-			}
-#endif  // NET
 
 			if (args->localRefsAreIndirect == 1)
 				IdentityHash = v => _monodroid_get_identity_hash_code (Handle, v);

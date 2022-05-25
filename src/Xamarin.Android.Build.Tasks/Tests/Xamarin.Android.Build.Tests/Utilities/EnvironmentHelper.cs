@@ -60,10 +60,13 @@ namespace Xamarin.Android.Build.Tests
 			public uint   android_runtime_jnienv_class_token;
 			public uint   jnienv_initialize_method_token;
 			public uint   jnienv_registerjninatives_method_token;
+			public uint   jni_remapping_replacement_type_count;
+			public uint   jni_remapping_replacement_method_index_entry_count;
 			public uint   mono_components_mask;
-			public string android_package_name;
-		};
-		const uint ApplicationConfigFieldCount = 23;
+			public string android_package_name = String.Empty;
+		}
+
+		const uint ApplicationConfigFieldCount = 25;
 
 		const string ApplicationConfigSymbolName = "application_config";
 		const string AppEnvironmentVariablesSymbolName = "app_environment_variables";
@@ -307,12 +310,22 @@ namespace Xamarin.Android.Build.Tests
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("jnienv_registerjninatives_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 21: // mono_components_mask: uint32_t / .word | .long
+					case 21: // jni_remapping_replacement_type_count: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.jni_remapping_replacement_type_count = ConvertFieldToUInt32 ("jni_remapping_replacement_type_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 22: // jni_remapping_replacement_method_index_entry_count: uint32_t / .word | .long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.jni_remapping_replacement_method_index_entry_count = ConvertFieldToUInt32 ("jni_remapping_replacement_method_index_entry_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 23: // mono_components_mask: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.mono_components_mask = ConvertFieldToUInt32 ("mono_components_mask", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 22: // android_package_name: string / [pointer type]
+					case 24: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;

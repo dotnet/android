@@ -492,6 +492,7 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/embedded-assemblies-zip.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/logger.cc
+  ${SOURCES_DIR}/jni-remapping.cc
   ${SOURCES_DIR}/monodroid-glue.cc
   ${SOURCES_DIR}/mono-image-loader.cc
   ${SOURCES_DIR}/osbridge.cc
