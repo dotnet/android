@@ -233,25 +233,6 @@ stages:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
         arguments: Xamarin.Android-Tests.sln /restore /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\dotnet-build-tests.binlog
 
-    - task: MSBuild@1
-      displayName: nunit Java.Interop Tests
-      inputs:
-        solution: Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:RunJavaInteropTests
-          /p:SkipJSUTests=true
-          /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
-          /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\dotnet-run-ji-tests.binlog
-      continueOnError: True
-
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-*.xml
-        testRunTitle: Java Interop Tests - Windows Build
-
     - template: yaml-templates\install-apkdiff.yaml
 
     - template: yaml-templates\run-nunit-tests.yaml
