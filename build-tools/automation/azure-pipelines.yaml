@@ -695,7 +695,7 @@ stages:
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)AotLlvm.xml
-        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLlvm=true -p:AndroidEnableProfiledAot=false
+        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLlvm=true
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
         useDotNet: true
