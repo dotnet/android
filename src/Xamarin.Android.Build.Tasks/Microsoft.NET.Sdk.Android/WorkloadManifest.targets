@@ -1,8 +1,0 @@
-<Project>
-  <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk"
-      Condition=" '$(TargetPlatformIdentifier)' == 'android' " />
-
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '6.0')) ">
-    <SdkSupportedTargetPlatformIdentifier Include="android" DisplayName="Android" />
-  </ItemGroup>
-</Project>

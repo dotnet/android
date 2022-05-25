@@ -108,8 +108,24 @@ namespace Xamarin.ProjectTools
 					IsWindows ? "Microsoft.Android.Sdk.Windows" :
 					"Microsoft.Android.Sdk.Linux";
 
-				return _dotNetAndroidSdkDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", sdkName)).LastOrDefault ();
+				var directories = from d in Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", sdkName))
+								  let version = ParseVersion (d)
+								  orderby version descending
+								  select d;
+				return _dotNetAndroidSdkDirectory = directories.FirstOrDefault ();
 			}
+		}
+
+		static Version ParseVersion (string path)
+		{
+			var folderName = Path.GetFileName (path);
+			var index = folderName.IndexOf ('-');
+			if (index != -1) {
+				folderName = folderName.Substring (0, index);
+			}
+			if (Version.TryParse (folderName, out var v))
+				return v;
+			return new Version (0, 0);
 		}
 
 		public static string DotNetAndroidSdkToolsDirectory {

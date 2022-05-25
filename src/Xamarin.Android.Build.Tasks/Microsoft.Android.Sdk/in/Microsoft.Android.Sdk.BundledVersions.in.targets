@@ -18,18 +18,6 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidRuntimePackId>
   </PropertyGroup>
   <ItemGroup>
-    <!-- TODO: NET7TODO: Is this the right way to support building net6.0 projects? Need to bump versions as packages are release to NuGet.org as well -->
-    <KnownFrameworkReference
-        Include="Microsoft.Android"
-        TargetFramework="net6.0"
-        RuntimeFrameworkName="Microsoft.Android"
-        LatestRuntimeFrameworkVersion="32.0.300-rc.1.4"
-        TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"
-        TargetingPackVersion="32.0.300-rc.1.4"
-        RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidRuntimePackId).**RID**"
-        RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
-        Profile="Android"
-    />
     <KnownFrameworkReference
         Include="Microsoft.Android"
         TargetFramework="@DOTNET_TARGET_FRAMEWORK@"
