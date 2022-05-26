@@ -8,7 +8,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)lib</OutputPath>
   </PropertyGroup>
   
   <Import Project="sqlite-xamarin.targets" />

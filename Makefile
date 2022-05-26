@@ -94,6 +94,7 @@ MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(wo
 endif
 
 all-tests::
+	$(call MSBUILD_BINLOG,build-xabuild) /restore tools/xabuild/xabuild.csproj /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)
 	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) /restore $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 pack-dotnet::

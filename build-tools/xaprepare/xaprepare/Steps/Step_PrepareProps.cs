@@ -32,7 +32,7 @@ namespace Xamarin.Android.Prepare
 			var jiOverrideProps = new GeneratedPlaceholdersFile (
 				new Dictionary<string, string> (StringComparer.Ordinal) {
 					{ "@MonoCecilVersion@",    Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoCecilVersion) },
-					{ "@NetCoreBinDirectory@", Configurables.Paths.NetCoreBinDir }
+					{ "@MicrosoftAndroidSdkOutDir@", Configurables.Paths.InstallMSBuildDir }
 				},
 				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, "Configuration.Java.Interop.Override.in.props"),
 				Path.Combine (javaInteropDir, "Configuration.Override.props")

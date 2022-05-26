@@ -9,7 +9,7 @@
   <Import Project="..\..\build-tools\scripts\Jar.targets" />
 
   <PropertyGroup>
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

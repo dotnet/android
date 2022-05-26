@@ -37,6 +37,9 @@
       <MSBuild Include="@(MSBuildItemsWin)" >
         <VSIXSubPath>Xamarin/Android/$([System.IO.Path]::GetDirectoryName(%(RelativePath)))</VSIXSubPath>
       </MSBuild>
+      <MSBuild Include="@(LegacyMSBuildItemsWin)" >
+        <VSIXSubPath>Xamarin/Android/$([System.IO.Path]::GetDirectoryName(%(RelativePath)))</VSIXSubPath>
+      </MSBuild>
       <MSBuild Include="@(XATargetsSrcFiles)" >
         <VSIXSubPath>Xamarin/</VSIXSubPath>
       </MSBuild>

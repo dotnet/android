@@ -39,6 +39,10 @@
         DestinationFiles="@(MSBuildItemsUnix->'$(MSBuildTargetsDir)\%(RelativePath)')"
     />
     <Copy
+        SourceFiles="@(LegacyMSBuildItemsUnix)"
+        DestinationFiles="@(LegacyMSBuildItemsUnix->'$(MSBuildTargetsDir)\%(RelativePath)')"
+    />
+    <Copy
         SourceFiles="@(XATargetsSrcFiles)"
         DestinationFolder="$(XAFrameworkDir)\lib\xamarin.android\xbuild\Xamarin"
     />

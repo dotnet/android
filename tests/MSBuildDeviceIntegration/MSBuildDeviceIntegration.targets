@@ -13,7 +13,7 @@
         <To>$(OutputPath)Xamarin.Android.Cecil.dll</To>
       </_Source>
     </ItemGroup>
-    <Copy SourceFiles="..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll"
+    <Copy SourceFiles="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll"
         DestinationFolder="$(OutputPath)" />
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; %(_Source.From) &quot;%(_Source.To)&quot;"

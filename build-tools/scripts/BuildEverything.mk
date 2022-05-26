@@ -20,7 +20,7 @@ else
 endif
 ifneq ("$(wildcard $(topdir)/external/monodroid/Makefile)","")
 	cd $(topdir)/external/monodroid && ./configure --with-xamarin-android='$(topdir)'
-	cd $(topdir)/external/monodroid && $(MAKE) build-monodroid CONFIGURATION=$(CONFIGURATION) XAMARIN_ANDROID_PATH=$(topdir)
+	$(call SYSTEM_DOTNET_BINLOG,build-commercial) $(SOLUTION) -t:BuildExternal --no-restore
 endif
 	$(MAKE) leeroy
 

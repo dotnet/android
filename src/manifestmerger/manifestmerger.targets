@@ -1,6 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_Destination>$(XAInstallPrefix)xbuild\Xamarin\Android\manifestmerger.jar</_Destination>
+    <_Destination>$(MicrosoftAndroidSdkOutDir)manifestmerger.jar</_Destination>
   </PropertyGroup>
 
   <Target Name="_BuildManifestMerger"

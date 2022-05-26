@@ -6,9 +6,6 @@
   <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
 
-  <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems')" />
-  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')" />
-  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
     <_GeneratedProfileClass>$(MSBuildThisFileDirectory)$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
@@ -18,11 +15,11 @@
     </ResolveReferencesDependsOn>
     <BuildDependsOn>
       _GenerateXACommonProps;
-      _AssignRelativeParentLinkMetadata;
       $(BuildDependsOn);
       _CopyExtractedMultiDexJar;
       _BuildMonoScripts;
       _CopyExtraPackageContent;
+      _CopyVSExtensionTargets;
     </BuildDependsOn>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidSdkDirectory)</_AndroidSdkLocation>
     <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
@@ -30,32 +27,6 @@
     <_SupportLicense Condition="Exists('$(_AndroidSdkLocation)\extras\android\m2repository\m2repository\NOTICE.txt')">$(_AndroidSdkLocation)\extras\android\m2repository\m2repository\NOTICE.txt</_SupportLicense>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="MSBuild\Novell\Novell.MonoDroid.Common.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <!-- Work around Visual Studio for Mac `Invalid value for Link property`
-           project load error by using custom `%(_RelativeParentLink)` metadata
-           that gets copied into `%(Link)` at build time by
-           `_AssignRelativeParentLinkMetadata`. -->
-      <_RelativeParentLink>..\..\Novell\Novell.MonoDroid.Common.targets</_RelativeParentLink>
-    </None>
-    <None Include="MSBuild\Novell\Novell.MonoDroid.CSharp.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <_RelativeParentLink>..\..\Novell\Novell.MonoDroid.CSharp.targets</_RelativeParentLink>
-    </None>
-    <None Include="MSBuild\Novell\MonoDroid.FSharp.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <_RelativeParentLink>..\..\Novell\MonoDroid.FSharp.targets</_RelativeParentLink>
-    </None>
-    <None
-        Include="MSBuild\Xamarin\Xamarin.Android.Sdk.props">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <_RelativeParentLink>..\Xamarin.Android.Sdk.props</_RelativeParentLink>
-    </None>
-    <None
-        Include="MSBuild\Xamarin\Xamarin.Android.Sdk.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <_RelativeParentLink>..\Xamarin.Android.Sdk.targets</_RelativeParentLink>
-    </None>
     <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Before.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -250,13 +221,6 @@
       <FileWrites Include="$(_GeneratedProfileClass)" />
     </ItemGroup>
   </Target>
-  <Target Name="_AssignRelativeParentLinkMetadata">
-    <ItemGroup>
-      <None Condition=" '%(None._RelativeParentLink)' != '' ">
-        <Link>%(None._RelativeParentLink)</Link>
-      </None>
-    </ItemGroup>
-  </Target>
 
   <Target Name="_CopyExtractedMultiDexJar"
     Inputs="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk);$(_SupportLicense)"
@@ -391,5 +355,42 @@
     <PropertyGroup>
       <Version>$(ProductVersion).$(PackVersionCommitCount)</Version>
     </PropertyGroup>
+  </Target>
+
+  <ItemGroup>
+    <_VSExtensionTargets Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Xamarin.Android.Sdk.props" />
+    <_VSExtensionTargets Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Xamarin.Android.Sdk.targets" />
+  </ItemGroup>
+  <Target Name="_CopyVSExtensionTargets"
+      Inputs="@(_VSExtensionTargets)"
+      Outputs="@(_VSExtensionTargets->'$(XAInstallPrefix)xbuild\Xamarin\%(FileName)%(Extension)')"
+      DependsOnTargets="_MakeMonoUnixFatBinariesOSX">
+    <Copy
+        SourceFiles="@(_VSExtensionTargets)"
+        DestinationFiles="@(_VSExtensionTargets->'$(XAInstallPrefix)xbuild\Xamarin\%(FileName)%(Extension)')"
+        SkipUnchangedFiles="True"
+    />
+  </Target>
+
+  <!-- XABuild will call this to copy required output to the legacy SDK location -->
+  <Target Name="CopyToLegacySdkOutDir"
+      DependsOnTargets="ConstructInstallerItems;_CopyVSExtensionTargets" >
+    <Copy
+        SourceFiles="@(MSBuildItemsWin)"
+        DestinationFiles="@(MSBuildItemsWin->'$(XAInstallPrefix)xbuild\Xamarin\Android\%(RelativePath)')"
+        SkipUnchangedFiles="true"
+        Condition=" '$(HostOS)' == 'Windows' "
+    />
+    <Copy
+        SourceFiles="@(MSBuildItemsUnix)"
+        DestinationFiles="@(MSBuildItemsUnix->'$(XAInstallPrefix)xbuild\Xamarin\Android\%(RelativePath)')"
+        SkipUnchangedFiles="true"
+        Condition=" '$(HostOS)' != 'Windows' "
+    />
+    <Copy
+        SourceFiles="@(VersionFiles)"
+        DestinationFolder="$(XAInstallPrefix)xbuild\Xamarin\Android"
+        SkipUnchangedFiles="true"
+    />
   </Target>
 </Project>

@@ -130,9 +130,9 @@ namespace Xamarin.Android.Prepare
 				Log.ErrorLine ("Failed to re-sign Xamarin.Android.Cecil.dll");
 				return false;
 			}
-
-			Utilities.CreateDirectory (Configurables.Paths.NetCoreBinDir);
-			Utilities.CopyFile (assemblyPath, Path.Combine (Configurables.Paths.NetCoreBinDir, "Xamarin.Android.Cecil.dll"));
+			var classicInstallMSBuildDir =  Path.Combine (Configurables.Paths.XAInstallPrefix, "xbuild", "Xamarin", "Android");
+			Utilities.CreateDirectory (classicInstallMSBuildDir);
+			Utilities.CopyFile (assemblyPath, Path.Combine (classicInstallMSBuildDir, "Xamarin.Android.Cecil.dll"));
 
 			StatusStep (context, "Re-signing Xamarin.Android.Cecil.Mdb.dll");
 			assemblyPath = Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.Mdb.dll");
@@ -142,7 +142,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			Utilities.CopyFile (assemblyPath, Path.Combine (Configurables.Paths.NetCoreBinDir, "Xamarin.Android.Cecil.Mdb.dll"));
+			Utilities.CopyFile (assemblyPath, Path.Combine (classicInstallMSBuildDir, "Xamarin.Android.Cecil.Mdb.dll"));
 
 			return true;
 		}

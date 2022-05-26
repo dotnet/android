@@ -8,6 +8,5 @@
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <Import Project="xa-prep-tasks.targets" />
 
 </Project>

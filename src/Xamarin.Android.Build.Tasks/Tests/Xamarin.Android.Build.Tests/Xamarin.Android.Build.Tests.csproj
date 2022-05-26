@@ -16,10 +16,10 @@
 
   <ItemGroup>
     <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
+      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
     </Reference>
-    <Reference Include="Xamarin.Android.Build.Debugging.Tasks" Condition="Exists('$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.Build.Debugging.Tasks.dll')">
-      <HintPath>$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.Build.Debugging.Tasks.dll</HintPath>
+    <Reference Include="Xamarin.Android.Build.Debugging.Tasks" Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll')">
+      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="DebuggingTasksTests.cs" Condition="!Exists('$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.Build.Debugging.Tasks.dll')" />
+    <Compile Remove="DebuggingTasksTests.cs" Condition="!Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll')" />
     <Compile Remove="Resources\ApacheHttpClient.cs" />
     <Compile Remove="Expected\**" />
     <Compile Include="..\..\..\..\tools\xabuild\SymbolicLink.cs" />

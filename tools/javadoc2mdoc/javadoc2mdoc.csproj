@@ -1,17 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net472;$(DotNetStableTargetFramework)</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputType>Exe</OutputType>
     <RootNamespace>Xamarin.Android.Tools.JavadocToMDoc</RootNamespace>
     <AssemblyName>javadoc-to-mdoc</AssemblyName>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
-    <OutputPath>$(XamarinAndroidSourcePath)bin\$(Configuration)-$(TargetFramework)\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' != 'net472'">
-    <OutputPath>$(NetCoreBinDirectory)</OutputPath>
+  <PropertyGroup>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.JavadocImporter\Xamarin.Android.Tools.JavadocImporter.csproj" />
