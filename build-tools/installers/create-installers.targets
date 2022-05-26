@@ -316,10 +316,10 @@
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.DefaultOutputPaths.targets" />
   </ItemGroup>
   <ItemGroup>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libZipSharpNative.dll" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libZipSharpNative.pdb" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libZipSharpNative.dll" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libZipSharpNative.pdb" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x86\libZipSharpNative.dll" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x86\libZipSharpNative.pdb" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x64\libZipSharpNative.dll" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x64\libZipSharpNative.pdb" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\binutils\aarch64-linux-android-as.exe" />
