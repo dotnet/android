@@ -4,11 +4,14 @@
 // int.Parse(), int.ToString()
 // Culture-aware string comparisons
 // ResourceManager
+// System.Reflection
 // System.Threading.Tasks.Task
 // System.Net.Http.HttpClient
 
 // Opt out of this warning, because we actually *want* culture-aware string behavior in the AOT profile
 #pragma warning disable CA1310
+
+using System.Reflection;
 
 static class CommonMethods
 {
@@ -26,6 +29,10 @@ static class CommonMethods
 
         string someString = AndroidProfiledAot.Resources.Strings.SomeString;
 
+        var type = typeof (CommonMethods);
+        var method = type.GetMethod (nameof (FromReflection), BindingFlags.NonPublic | BindingFlags.Static);
+        method.Invoke (null, null);
+
         using var client = new HttpClient();
         var send = client.SendAsync (new HttpRequestMessage (HttpMethod.Get, url));
         var getstring = client.GetStringAsync (url);
@@ -34,6 +41,8 @@ static class CommonMethods
 
         return text;
     }
+
+    static void FromReflection () { }
 }
 
 #pragma warning restore CA1310
