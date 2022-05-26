@@ -622,7 +622,9 @@ stages:
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
-        arguments: -t:PrepareJavaInterop -c Debug -m:1 -v:n
+        arguments: >-
+          -t:PrepareJavaInterop -c Debug -m:1 -v:n
+          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
         displayName: prepare java.interop Debug
         continueOnError: false
 
