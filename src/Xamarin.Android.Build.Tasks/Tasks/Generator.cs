@@ -241,8 +241,6 @@ namespace Xamarin.Android.Tasks
 			return cmd.ToString ();
 		}
 
-		protected override string BaseToolName => "generator";
-
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
 			base.LogEventsFromTextOutput (singleLine, messageImportance);

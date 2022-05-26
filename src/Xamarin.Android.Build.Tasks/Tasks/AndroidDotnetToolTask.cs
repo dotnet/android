@@ -14,6 +14,11 @@ namespace Xamarin.Android.Tasks
 	public abstract class AndroidDotnetToolTask : AndroidToolTask
 	{
 		/// <summary>
+		/// Path to the folder that contains dotnet / dotnet.exe.
+		/// </summary>
+		public string NetCoreRoot { get; set; }
+
+		/// <summary>
 		/// If `true`, this task should run `dotnet foo.dll` and `foo.exe` otherwise.
 		/// </summary>
 		protected bool NeedsDotnet { get; private set; }
@@ -31,40 +36,30 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			if (string.IsNullOrEmpty (ToolExe)) {
-				ToolExe = $"{BaseToolName}.exe";
-			}
-
-			var assemblyPath = Path.Combine (ToolPath, $"{BaseToolName}.dll");
-			if (File.Exists (assemblyPath)) {
+			if (Path.GetExtension (ToolExe) == ".dll") {
 				NeedsDotnet = true;
-				AssemblyPath = assemblyPath;
+				AssemblyPath = Path.Combine (ToolPath, ToolExe);
 				ToolPath = null;
+				ToolExe = null;
 
-				Log.LogDebugMessage ($"Using: dotnet {AssemblyPath}");
+				Log.LogDebugMessage ($"Using: {FindDotnet ()} {AssemblyPath}");
 			} else {
 				if (!RuntimeInformation.IsOSPlatform (OSPlatform.Windows) &&
 						!RuntimeInformation.FrameworkDescription.StartsWith ("Mono", StringComparison.OrdinalIgnoreCase)) {
 					// If not Windows and not running under Mono
 					NeedsMono = true;
-					AssemblyPath = Path.Combine (ToolPath, $"{BaseToolName}.exe");
+					AssemblyPath = Path.Combine (ToolPath, ToolExe);
 					ToolPath = null;
+					ToolExe = null;
 
-					Log.LogDebugMessage ($"Using: mono {AssemblyPath}");
+					Log.LogDebugMessage ($"Using: {FindMono ()} {AssemblyPath}");
 				} else {
 					// Otherwise running the .exe directly should work
-					Log.LogDebugMessage ($"Using: {GenerateFullPathToTool ()}");
+					Log.LogDebugMessage ($"Using: {Path.Combine (ToolPath, ToolExe)}");
 				}
 			}
 
 			return base.Execute ();
-		}
-
-		/// <summary>
-		/// The base tool name, such as "generator" for `generator.exe` and `dotnet generator.dll`
-		/// </summary>
-		protected abstract string BaseToolName {
-			get;
 		}
 
 		protected override string ToolName {
@@ -73,19 +68,33 @@ namespace Xamarin.Android.Tasks
 					return "dotnet";
 				if (NeedsMono)
 					return "mono";
-				return $"{BaseToolName}.exe";
+				return ToolExe;
 			}
 		}
 
 		protected override string GenerateFullPathToTool ()
 		{
 			if (NeedsDotnet)
-				return "dotnet";
+				return FindDotnet ();
 			if (NeedsMono)
 				return FindMono ();
 			return Path.Combine (ToolPath, ToolExe);
 		}
 
+		string FindDotnet ()
+		{
+			if (Directory.Exists (NetCoreRoot)) {
+				var dotnetPath = Path.Combine (NetCoreRoot, (RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "dotnet.exe" : "dotnet"));
+				if (File.Exists (dotnetPath))
+					return dotnetPath;
+			}
+
+			var dotnetHostPath = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH");
+			if (File.Exists (dotnetHostPath))
+				return dotnetHostPath;
+
+			return "dotnet";
+		}
 
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.Build;
 		const string MonoKey = nameof (AndroidDotnetToolTask) + "_Mono";

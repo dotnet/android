@@ -24,8 +24,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputDocDirectory { get; set; }
 
-		protected override string BaseToolName => "javadoc-to-mdoc";
-
 		protected override string GenerateCommandLineCommands ()
 		{
 			if (!Directory.Exists (OutputDocDirectory))
