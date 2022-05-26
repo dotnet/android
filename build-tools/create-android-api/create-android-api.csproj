@@ -1,13 +1,30 @@
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
+<Project Sdk="Microsoft.Build.NoTargets">
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
-  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')" />
 
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
+
+  <PropertyGroup>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="False" />
+  </ItemGroup>
+  
   <PropertyGroup>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_OutputPath>$(_TopDir)\bin\Build$(Configuration)\</_OutputPath>
   </PropertyGroup>
 
+  <!-- First we need to figure out all the needed API levels.
+       This is done by looking at which levels are included in 'Mono.Android.Apis.projitems'
+       and looking for matching 'api-X.params.txt' files. -->
   <Target Name="_DefineApiFiles">
     <ItemGroup>
       <_Api
@@ -21,12 +38,18 @@
     </CreateItem>
   </Target>
 
-  <Target Name="_ClassParsePrepare"
-      DependsOnTargets="_DefineApiFiles">
+  <!-- Next we need to run class-parse on each platform's 'android.jar' in order
+       to produce the 'api-X.xml.class-parse' files. -->
+  <Target Name="_ClassParse"
+      BeforeTargets="_AdjustApiXml"
+      DependsOnTargets="_DefineApiFiles"
+      Inputs="@(ApiFileDefinition->'%(ParameterDescription)')"
+      Outputs="@(ApiFileDefinition->'%(ClassParseXml)')">
+      
     <PropertyGroup>
       <ClassParse>$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
     </PropertyGroup>
-    <MakeDir Directories="$(_OutputPath)api" />
+    
     <ItemGroup>
       <_ClassParseCommands
           Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
@@ -35,23 +58,28 @@
         <Arguments>$(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;</Arguments>
       </_ClassParseCommands>
     </ItemGroup>
-  </Target>
-  <Target Name="_ClassParse"
-      BeforeTargets="_AdjustApiXml"
-      DependsOnTargets="_ClassParsePrepare"
-      Inputs="@(ApiFileDefinition->'%(ParameterDescription)')"
-      Outputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')">
+    
+    <MakeDir Directories="$(_OutputPath)api" />
+    
     <RunParallelCmds
         Commands="@(_ClassParseCommands)"
         ManagedRuntime="$(ManagedRuntime)"
         ManagedRuntimeArguments="$(ManagedRuntimeArgs)"
       />
   </Target>
-  <Target Name="_AdjustApiXmlPrepare"
-      DependsOnTargets="_DefineApiFiles">
+  
+  <!-- Run api-xml-adjuster on each 'api-X.xml.class-parse' file, which runs some fixups
+       on the Java API and marks overrides, producing 'api-X.xml.in' files. -->
+  <Target Name="_AdjustApiXml"
+      BeforeTargets="Build"
+      DependsOnTargets="_DefineApiFiles"
+      Inputs="@(ApiFileDefinition->'%(ClassParseXml)')"
+      Outputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')">
+
     <PropertyGroup>
       <ApiXmlAdjuster>$(_TopDir)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
     </PropertyGroup>
+    
     <ItemGroup>
       <_AdjustApiXmlPrepareCommands
           Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
@@ -60,12 +88,7 @@
         <Arguments>%(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)</Arguments>
       </_AdjustApiXmlPrepareCommands>
     </ItemGroup>
-  </Target>
-  <Target Name="_AdjustApiXml"
-      AfterTargets="Build"
-      DependsOnTargets="_AdjustApiXmlPrepare"
-      Inputs="@(ApiFileDefinition->'%(ClassParseXml)')"
-      Outputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')">
+
     <RunParallelCmds
         Commands="@(_AdjustApiXmlPrepareCommands)"
         ManagedRuntime="$(ManagedRuntime)"
@@ -73,12 +96,13 @@
       />
   </Target>
 
+  <!-- Clean up generated API files -->
   <Target Name="_CleanApiXml"
-      BeforeTargets="Clean">
+      BeforeTargets="Clean"
+      DependsOnTargets="_DefineApiFiles">
 
     <Delete Files="%(ApiFileDefinition.ApiAdjustedXml)" />
     <Delete Files="%(ApiFileDefinition.ClassParseXml)" />
-
   </Target>
-
+  
 </Project>

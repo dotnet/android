@@ -2,6 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckApiCompatibility" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
   <ItemGroup>
@@ -15,6 +16,8 @@
         SkipGetTargetFrameworkProperties="True"
     />
   </ItemGroup>
+  
+  <!-- Builds the 'monoandroid1.0' version of 'Java.Interop.dll' -->
   <Target Name="_BuildJavaInterop"
       BeforeTargets="BeforeResolveReferences"
       Condition=" '$(TargetFramework)' == 'monoandroid10' "
@@ -42,6 +45,8 @@
         DestinationFolder="$(OutputPath)\..\v1.0"
     />
   </Target>
+  
+  <!-- Creates 'AssemblyInfo.cs' with appropriate version information -->
   <Target Name="_BuildAssemblyInfo_cs"
       DependsOnTargets="GetXAVersionInfo"
       BeforeTargets="CoreCompile"
@@ -62,11 +67,14 @@
         Replacements="@PACKAGE_VERSION@=$(_PackageVersion);@PACKAGE_VERSION_BUILD@=$(_PackageVersionBuild);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch);@API_LEVEL@=$(AndroidApiLevel);@MIN_API_LEVEL@=$(AndroidMinimumDotNetApiLevel)">
     </ReplaceFileContents>
   </Target>
+  
+  <!-- Pulls documentation from JavaDoc -->
   <PropertyGroup>
     <_JavaSourceUtilsJar>$(XAInstallPrefix)xbuild\Xamarin\Android\java-source-utils.jar</_JavaSourceUtilsJar>
     <_AndroidStableSrcDir>$(AndroidSdkDirectory)\platforms\android-$(AndroidLatestStableApiLevel)\src</_AndroidStableSrcDir>
     <_AndroidJavadocXml>..\..\bin\Build$(Configuration)\android-javadoc.xml</_AndroidJavadocXml>
   </PropertyGroup>
+  
   <Target Name="_BuildAndroidJavadocXml"
       Condition=" '$(IncludeAndroidJavadoc)' == 'True' "
       BeforeTargets="CoreCompile"
@@ -108,6 +116,8 @@
     />
     <Touch Files="$(_AndroidJavadocXml)" />
   </Target>
+  
+  <!-- Generates 'JNIEnv.g.cs' file -->
   <Target Name="_BuildJNIEnv"
       BeforeTargets="CoreCompile"
       Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.exe"
@@ -117,6 +127,8 @@
     />
     <Touch Files="Android.Runtime\JNIEnv.g.cs" />
   </Target>
+  
+  <!-- Merges various 'api-*.xml.in' files into single 'api.xml' file -->
   <Target Name="_GenerateApiDescription"
       BeforeTargets="_GenerateBinding"
       DependsOnTargets="ResolveReferences"
@@ -136,6 +148,8 @@
         Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)"
     />
   </Target>
+  
+  <!-- Runs 'generator' -->
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
       Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api.xml"
@@ -201,6 +215,8 @@
   <ItemGroup>
     <JavaCallableWrapperSource Include="java\**\*.java" />
   </ItemGroup>
+  
+  <!-- Generates 'FrameworkList.xml' file -->
   <Target Name="_GenerateFrameworkList"
       BeforeTargets="GetTargetFrameworkProperties;GetReferenceAssemblyPaths;ResolveReferences"
       Condition=" '$(TargetFramework)' == 'monoandroid10' "
@@ -217,6 +233,8 @@
        Overwrite="True"
    />
   </Target>
+  
+  <!-- Generates 'AndroidApiInfo.xml' file -->
   <Target Name="_GenerateAndroidApiInfo"
       BeforeTargets="_GenerateFrameworkList"
       Inputs="$(MSBuildProjectFullPath);..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems"
@@ -241,10 +259,14 @@
        Overwrite="True"
    />
   </Target>
+  
+  <!-- Removes entire 'obj' directory on Clean -->
   <Target Name="_CleanBinding"
       AfterTargets="Clean">
     <RemoveDir Directories="$(IntermediateOutputPath)" />
   </Target>
+  
+  <!-- Runs ApiCompat to prevent API breakage -->
   <PropertyGroup>
     <ApiCompatibilityDir>../../tests/api-compatibility</ApiCompatibilityDir>
   </PropertyGroup>
@@ -277,6 +299,7 @@
     </ItemGroup>
   </Target>
 
+  <!-- Generate documentation using MDoc -->
   <Target Name="UpdateExternalDocumentation">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
         Properties="TargetFramework=monoandroid10"
@@ -343,5 +366,5 @@
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>
-
+  
 </Project>
