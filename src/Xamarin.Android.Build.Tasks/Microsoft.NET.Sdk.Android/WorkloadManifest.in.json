@@ -38,6 +38,7 @@
         "osx-arm64": "Microsoft.Android.Sdk.Darwin",
         "win-x86": "Microsoft.Android.Sdk.Windows",
         "win-x64": "Microsoft.Android.Sdk.Windows",
+        "win-arm64": "Microsoft.Android.Sdk.Windows",
         "linux-x64": "Microsoft.Android.Sdk.Linux"
       }
     },
