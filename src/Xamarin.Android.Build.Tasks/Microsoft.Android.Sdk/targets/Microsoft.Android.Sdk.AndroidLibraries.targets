@@ -91,14 +91,16 @@ projects.
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_IncludeAarInNuGetPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
   <Target Name="_IncludeAarInNuGetPackage"
-      Condition=" '$(IncludeBuildOutput)' != 'false' and '$(AndroidApplication)' != 'true' and Exists('$(_AarOutputPath)') ">
+      Condition=" '$(IncludeBuildOutput)' != 'false' and '$(AndroidApplication)' != 'true' "
+      DependsOnTargets="_CategorizeAndroidLibraries">
     <GetNuGetShortFolderName
         TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
         TargetPlatformMoniker="$(TargetPlatformMoniker)">
       <Output TaskParameter="NuGetShortFolderName" PropertyName="_NuGetShortFolderName" />
     </GetNuGetShortFolderName>
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(_AarOutputPath)" PackagePath="lib\$(_NuGetShortFolderName)" />
+      <TfmSpecificPackageFile Condition="Exists('$(_AarOutputPath)')" Include="$(_AarOutputPath)" PackagePath="lib\$(_NuGetShortFolderName)" />
+      <TfmSpecificPackageFileWithRecursiveDir Include="@(None->WithMetadataValue ('TfmSpecificPackageFile', 'true'))" PackagePath="lib\$(_NuGetShortFolderName)" NuGetRecursiveDir="" />
     </ItemGroup>
   </Target>
 
