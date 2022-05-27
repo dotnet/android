@@ -42,7 +42,6 @@ steps:
     remove_dotnet: ${{ parameters.remove_dotnet }}
 
 - template: use-dot-net.yaml
-  parameters:
 
 - task: DotNetCoreCLI@2
   displayName: shut down existing build daemons
