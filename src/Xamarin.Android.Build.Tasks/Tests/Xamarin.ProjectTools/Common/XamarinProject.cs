@@ -455,14 +455,13 @@ $@"<Project>
 				doc.Root.Add (pkgSourcesElement= new XElement (elementName));
 			}
 
-			/* NET7TODO: Remove dotnet7 feed
 			foreach (XElement element in pkgSourcesElement.Elements ()) {
 				XAttribute value = element.Attribute ("value");
 				if (value != null && value.Value == "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json") {
 					element.Remove ();
 					break;
 				}
-			} */
+			}
 
 			// Add extra sources
 			if (ExtraNuGetConfigSources == null)
