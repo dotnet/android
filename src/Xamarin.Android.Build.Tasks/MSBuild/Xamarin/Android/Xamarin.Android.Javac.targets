@@ -19,6 +19,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <_AndroidIntermediateBindingJavaClassDirectory>$(IntermediateOutputPath)binding\bin\classes\</_AndroidIntermediateBindingJavaClassDirectory>
     <_AndroidIntermediateBindingJavaSourceDirectory>$(IntermediateOutputPath)binding\src</_AndroidIntermediateBindingJavaSourceDirectory>
     <_AndroidIntermediateBindingClassesZip>$(IntermediateOutputPath)binding\bin\$(MSBuildProjectName).jar</_AndroidIntermediateBindingClassesZip>
+    <_AndroidIntermediateBindingClassesDocs>$(IntermediateOutputPath)binding\bin\$(MSBuildProjectName)-docs.xml</_AndroidIntermediateBindingClassesDocs>
     <_AndroidCompileJavaStampFile>$(_AndroidStampDirectory)_CompileJava.stamp</_AndroidCompileJavaStampFile>
     <_AndroidCompileBindingJavaStampFile>$(_AndroidStampDirectory)_CompileBindingJava.stamp</_AndroidCompileBindingJavaStampFile>
   </PropertyGroup>
@@ -105,11 +106,27 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JavacTargetVersion="$(JavacTargetVersion)"
         JavacSourceVersion="$(JavacSourceVersion)"
     />
+    <JavaSourceUtils
+        Condition=" '@(_JavaBindingSource->Count())' != '0' "
+        JavaSourceUtilsJar="$(AndroidJavaSourceUtilsJar)"
+        InputFiles="@(_JavaBindingSource)"
+        JavadocCopyrightFile="%(_JavaBindingSource.CopyrightFile)"
+        JavadocUrlPrefix="%(_JavaBindingSource.UrlPrefix)"
+        JavadocUrlStyle="%(_JavaBindingSource.UrlStyle)"
+        JavadocDocRootUrl="%(_JavaBindingSource.DocRootUrl)"
+        JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+        JavaOptions="$(JavaOptions)"
+        JavaSdkDirectory="$(_JavaSdkDirectory)"
+        OutputJavadocXml="$(_AndroidIntermediateBindingClassesDocs)"
+        References="@(JavaSourceJar)"
+    />
     <Touch Files="$(_AndroidCompileBindingJavaStampFile)" AlwaysCreate="true" />
     <ItemGroup>
       <EmbeddedJar Include="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
       <AndroidJavaLibrary Include="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
+      <_JavaSourceJavadocXml Include="$(_AndroidIntermediateBindingClassesDocs)" Condition=" Exists('$(_AndroidIntermediateBindingClassesDocs)') " />
       <FileWrites Include="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
+      <FileWrites Include="$(_AndroidIntermediateBindingClassesDocs)" Condition=" Exists('$(_AndroidIntermediateBindingClassesDocs)') " />
     </ItemGroup>
   </Target>
 
