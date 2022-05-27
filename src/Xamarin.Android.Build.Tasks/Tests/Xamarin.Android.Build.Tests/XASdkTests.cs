@@ -304,6 +304,11 @@ public class JavaSourceTest {
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (default (Func<string>)) {
+				Update = () => "nopack.aar",
+				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+				MetadataValues = "Pack=false;Bind=false",
+			});
 
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Pack (), "`dotnet pack` should succeed");
@@ -320,6 +325,9 @@ public class JavaSourceTest {
 				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
 				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
 				nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/sub/directory/bar.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
 			}
 		}
 
