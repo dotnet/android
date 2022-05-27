@@ -55,3 +55,4 @@ steps:
 
   - script: dotnet --info
     displayName: display dotnet --info
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
