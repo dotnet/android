@@ -139,11 +139,33 @@ namespace Xamarin.Android.Net
 
 		public bool UseProxy { get; set; } = true;
 
-		private bool CouldHaveNTCredentials => Proxy != null || Credentials != null;
+#if !MONOANDROID1_0
+		IWebProxy? _proxy;
+		ICredentials? _credentials;
+		NTAuthenticationHandler.Helper? _ntAuthHelper;
 
+		public IWebProxy? Proxy
+		{
+			get => _proxy;
+			set {
+				_proxy = value;
+				_ntAuthHelper ??= new NTAuthenticationHandler.Helper (this);
+			}
+		}
+
+		public ICredentials? Credentials
+		{
+			get => _credentials;
+			set {
+				_credentials = value;
+				_ntAuthHelper ??= new NTAuthenticationHandler.Helper (this);
+			}
+		}
+#else
 		public IWebProxy? Proxy { get; set; }
 
 		public ICredentials? Credentials { get; set; }
+#endif
 
 		public bool AllowAutoRedirect { get; set; } = true;
 
@@ -338,8 +360,10 @@ namespace Xamarin.Android.Net
 			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
 
 #if !MONOANDROID1_0
-			if (CouldHaveNTCredentials && RequestNeedsAuthorization && NTAuthenticationHelper.TryGetSupportedAuthMethod (this, request, out var auth, out var credentials)) {
-				response = await NTAuthenticationHelper.SendAsync (this, request, response, auth, credentials, cancellationToken).ConfigureAwait (false);
+			if (RequestNeedsAuthorization && _ntAuthHelper != null && _ntAuthHelper.RequestNeedsNTAuthentication (request, out var ntAuth)) {
+				var authenticatedResponse = await ntAuth.ResendRequestWithAuthAsync (cancellationToken).ConfigureAwait (false);
+				if (authenticatedResponse != null)
+					return authenticatedResponse;
 			}
 #endif
 
