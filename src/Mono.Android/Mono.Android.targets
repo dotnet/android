@@ -17,6 +17,10 @@
     />
   </ItemGroup>
   
+  <PropertyGroup>
+    <_ApiXmlLocation>..\..\bin\Build$(Configuration)\api\</_ApiXmlLocation>
+  </PropertyGroup>
+  
   <!-- Builds the 'monoandroid1.0' version of 'Java.Interop.dll' -->
   <Target Name="_BuildJavaInterop"
       BeforeTargets="BeforeResolveReferences"
@@ -128,31 +132,10 @@
     <Touch Files="Android.Runtime\JNIEnv.g.cs" />
   </Target>
   
-  <!-- Merges various 'api-*.xml.in' files into single 'api.xml' file -->
-  <Target Name="_GenerateApiDescription"
-      BeforeTargets="_GenerateBinding"
-      DependsOnTargets="ResolveReferences"
-      Inputs="..\..\bin\Build$(Configuration)\api\api-$(AndroidPlatformId).xml.in"
-      Outputs="$(IntermediateOutputPath)mcw\api.xml">
-    <MakeDir Directories="$(IntermediateOutputPath)mcw" />
-    <ItemGroup>
-      <_AndroidProfile Include="..\..\bin\Build$(Configuration)\api\api-*.xml.in" />
-    </ItemGroup>
-    <PropertyGroup>
-      <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
-      <_ConfigurationFile>..\..\bin\Build$(Configuration)\merge-configuration.xml</_ConfigurationFile>
-      <_ConfigurationInputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationInputBaseDirectory>
-      <_ConfigurationOutputBaseDirectory>$(IntermediateOutputPath)\..\</_ConfigurationOutputBaseDirectory>
-    </PropertyGroup>
-    <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)"
-    />
-  </Target>
-  
   <!-- Runs 'generator' -->
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
-      Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api.xml"
+      Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(_ApiXmlLocation)api-$(AndroidPlatformId).xml"
       Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems">
     <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
@@ -184,7 +167,7 @@
       <_Annotations Condition=" '$(_AnnotationsZip)' != '' ">"--annotations=$(_AnnotationsZip)"</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
-      <_Api>$(IntermediateOutputPath)mcw\api.xml</_Api>
+      <_Api>$(_ApiXmlLocation)api-$(AndroidPlatformId).xml</_Api>
       <_Dirs>--enumdir=$(IntermediateOutputPath)mcw</_Dirs>
       <_WithJavadocXml Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">"--doc-comment-verbosity=$(AndroidJavadocVerbosity)" "--with-javadoc-xml=$(_AndroidJavadocXml)"</_WithJavadocXml>
       <_FullIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_FullIntermediateOutputPath>

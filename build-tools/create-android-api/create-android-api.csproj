@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\api-merge\api-merge.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
   
   <PropertyGroup>
@@ -32,10 +33,18 @@
           Include="@(AndroidApiInfo)">
       </_Api>
     </ItemGroup>
+    
     <CreateItem Include="@(_Api)"
-        AdditionalMetadata="ParameterDescription=$(_TopDir)\src\Mono.Android\Profiles\api-%(_Api.Id).params.txt;ClassParseXml=$(_OutputPath)api\api-%(_Api.Id).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(_Api.Id).xml.in">
+        AdditionalMetadata="ParameterDescription=$(_TopDir)\src\Mono.Android\Profiles\api-%(_Api.Id).params.txt;ClassParseXml=$(_OutputPath)api\api-%(_Api.Id).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(_Api.Id).xml.in;MergedXml=$(_OutputPath)api\api-%(_Api.Id).xml">
       <Output TaskParameter="Include" ItemName="ApiFileDefinition"/>
     </CreateItem>
+    
+    <!-- We don't generate 'api.xml' files for older API levels we no longer ship -->
+    <ItemGroup>
+      <_MergedXmlFiles
+          Condition=" %(ApiFileDefinition.Level) >= 19  "
+          Include="@(ApiFileDefinition)" />
+    </ItemGroup>
   </Target>
 
   <!-- Next we need to run class-parse on each platform's 'android.jar' in order
@@ -71,7 +80,6 @@
   <!-- Run api-xml-adjuster on each 'api-X.xml.class-parse' file, which runs some fixups
        on the Java API and marks overrides, producing 'api-X.xml.in' files. -->
   <Target Name="_AdjustApiXml"
-      BeforeTargets="Build"
       DependsOnTargets="_DefineApiFiles"
       Inputs="@(ApiFileDefinition->'%(ClassParseXml)')"
       Outputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')">
@@ -95,6 +103,25 @@
         ManagedRuntimeArguments="$(ManagedRuntimeArgs)"
       />
   </Target>
+  
+  <!-- Merges various 'api-X.xml.in' files into single 'api.xml' file -->
+  <Target Name="_GenerateApiDescription"
+      BeforeTargets="Build"
+      DependsOnTargets="_AdjustApiXml"
+      Inputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')"
+      Outputs="@(_MergedXmlFiles->'%(MergedXml)')">
+    
+    <PropertyGroup>
+      <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
+      <_ConfigurationFile>..\..\bin\Build$(Configuration)\merge-configuration.xml</_ConfigurationFile>
+      <_ConfigurationInputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationInputBaseDirectory>
+      <_ConfigurationOutputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationOutputBaseDirectory>
+    </PropertyGroup>
+    
+    <Exec
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)" />
+        
+  </Target>
 
   <!-- Clean up generated API files -->
   <Target Name="_CleanApiXml"
@@ -103,6 +130,7 @@
 
     <Delete Files="%(ApiFileDefinition.ApiAdjustedXml)" />
     <Delete Files="%(ApiFileDefinition.ClassParseXml)" />
+    <Delete Files="%(_MergedXmlFiles.MergedXml)" />
   </Target>
   
 </Project>
