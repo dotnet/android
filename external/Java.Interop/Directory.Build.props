@@ -8,7 +8,8 @@
     <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
-    
+    <DotNetTargetFrameworkVersion>7.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <!-- 
       Workaround for https://github.com/NuGet/Home/issues/6461 (VSWin Only)
       Even though we don't build NuGet packages, it still attempts to build the NuGet package name, which includes 
@@ -118,9 +119,11 @@
     meaning we can't build on VS2019.
 
     Ignore CS8032 so that we can build on VS2019.
+    
+    JniEnvironment.g.cs(34,8): error CS8981: The type name 'jobject' only contains lower-cased ascii characters. Such names may become reserved for the language.
     -->
   <PropertyGroup>
-    <NoWarn>$(NoWarn);CS8032</NoWarn>
+    <NoWarn>$(NoWarn);CS8032;CS8981</NoWarn>
   </PropertyGroup>
 
   <!-- The net6.0 versions of these are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->

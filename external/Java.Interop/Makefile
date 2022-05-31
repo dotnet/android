@@ -33,7 +33,7 @@ TESTS = \
 	bin/Test$(CONFIGURATION)/Xamarin.SourceWriter-Tests.dll
 
 NET_TESTS = \
-	bin/Test$(CONFIGURATION)-net6.0/Java.Base-Tests.dll
+	bin/Test$(CONFIGURATION)-net7.0/Java.Base-Tests.dll
 
 PTESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll
@@ -127,7 +127,7 @@ run-tests: $(TESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	$(foreach t,$(TESTS), $(call RUN_TEST,$(t),1)) \
 	exit $$r;
 
-run-net-tests: $(NET_TESTS) bin/Test$(CONFIGURATION)-net6.0/$(JAVA_INTEROP_LIB)
+run-net-tests: $(NET_TESTS) bin/Test$(CONFIGURATION)-net7.0/$(JAVA_INTEROP_LIB)
 	r=0; \
 	$(foreach t,$(NET_TESTS), dotnet test $(t) || r=1) \
 	exit $$r;

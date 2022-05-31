@@ -90,7 +90,7 @@ steps:
   condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
   inputs:
     command: test
-    testRunTitle: Java.Interop (net6.0 - ${{ parameters.platformName }})
+    testRunTitle: Java.Interop ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-Tests.dll
   continueOnError: true
 
@@ -122,11 +122,11 @@ steps:
   continueOnError: true
 
 - task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop-Performance-net6.0'
+  displayName: 'Tests: Java.Interop-Performance-$(DotNetTargetFramework)'
   condition: eq('${{ parameters.runNativeTests }}', 'true')
   inputs:
     command: test
-    testRunTitle: Java.Interop-Performance (net6.0 - ${{ parameters.platformName }})
+    testRunTitle: Java.Interop-Performance ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-PerformanceTests.dll
   continueOnError: true
 
@@ -135,7 +135,7 @@ steps:
   condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
   inputs:
     command: test
-    testRunTitle: Java.Base (net6.0 - ${{ parameters.platformName }})
+    testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Base-Tests.dll
   continueOnError: true
 

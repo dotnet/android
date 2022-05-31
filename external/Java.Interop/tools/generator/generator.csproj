@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;$(DotNetTargetFramework)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
     <LangVersion>8.0</LangVersion>
@@ -43,7 +43,7 @@
 
   <ItemGroup>
     <None Condition=" '$(TargetFramework)' == 'net472' " Include="$(PkgMono_Options)\lib\net40\Mono.Options.pdb" CopyToOutputDirectory="PreserveNewest" />
-    <None Condition=" '$(TargetFramework)' == 'net6.0' " Include="$(PkgMono_Options)\lib\netstandard2.0\Mono.Options.pdb" CopyToOutputDirectory="PreserveNewest" />
+    <None Condition=" '$(TargetFramework)' != 'net472' " Include="$(PkgMono_Options)\lib\netstandard2.0\Mono.Options.pdb" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
