@@ -1376,6 +1376,7 @@ stages:
       propsArtifactName: $(NuGetArtifactName)
       signType: $(MicroBuildSignType)
       runInParallel: false
+      useDateTimeVersion: true
       postConvertSteps:
       - task: DownloadPipelineArtifact@2
         inputs:

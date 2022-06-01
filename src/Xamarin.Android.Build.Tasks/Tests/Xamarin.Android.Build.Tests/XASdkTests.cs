@@ -91,26 +91,33 @@ namespace Xamarin.Android.Build.Tests
 						TextContent = () => {
 							return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ImageView xmlns:android=\"http://schemas.android.com/apk/res/android\" android:src=\"@drawable/IMALLCAPS\" />";
 						}
-					}
+					},
+					new AndroidItem.AndroidAsset ("Assets\\foo\\foo.txt") {
+						BinaryContent = () => Array.Empty<byte> (),
+					},
+					new AndroidItem.AndroidResource ("Resources\\layout\\MyLayout.axml") {
+						TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" />"
+					},
+					new AndroidItem.AndroidResource ("Resources\\raw\\bar.txt") {
+						BinaryContent = () => Array.Empty<byte> (),
+					},
+					new AndroidItem.AndroidLibrary ("sub\\directory\\foo.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					},
+					new AndroidItem.AndroidLibrary ("sub\\directory\\bar.aar") {
+						WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+					},
+					new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
+						Encoding = Encoding.ASCII,
+						TextContent = () => ResourceData.JavaSourceTestExtension,
+					},
 				}
 			};
-			libB.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\foo\\foo.txt") {
-				BinaryContent = () => Array.Empty<byte> (),
-			});
-			libB.OtherBuildItems.Add (new AndroidItem.AndroidResource ("Resources\\layout\\MyLayout.axml") {
-				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" />"
-			});
-			libB.OtherBuildItems.Add (new AndroidItem.AndroidResource ("Resources\\raw\\bar.txt") {
-				BinaryContent = () => Array.Empty<byte> (),
-			});
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("env.txt") {
 				TextContent = () => $"{env_var}={env_val}",
 			});
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("sub\\directory\\env.txt") {
 				TextContent = () => $"{env_var}={env_val}",
-			});
-			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\foo.jar") {
-				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
 				BinaryContent = () => Array.Empty<byte> (),
@@ -119,11 +126,6 @@ namespace Xamarin.Android.Build.Tests
 				Update = () => "libfoo.so",
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
-			});
-			libB.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
-				Encoding = Encoding.ASCII,
-				TextContent = () => ResourceData.JavaSourceTestExtension,
-				Metadata = { { "Bind", "True"} },
 			});
 			libB.AddReference (libC);
 
@@ -137,8 +139,10 @@ namespace Xamarin.Android.Build.Tests
 					"binding", "bin", $"{libB.ProjectName}.jar").Replace ("\\", "/"));
 
 			// Check .aar file for class library
-			var aarPath = Path.Combine (FullProjectDirectory, libB.OutputPath, $"{libB.ProjectName}.aar");
+			var libBOutputPath = Path.Combine (FullProjectDirectory, libB.OutputPath);
+			var aarPath = Path.Combine (libBOutputPath, $"{libB.ProjectName}.aar");
 			FileAssert.Exists (aarPath);
+			FileAssert.Exists (Path.Combine (libBOutputPath, "bar.aar"));
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
 				aar.AssertContainsEntry (aarPath, "assets/foo/foo.txt");
 				aar.AssertContainsEntry (aarPath, "res/layout/mylayout.xml");
@@ -233,12 +237,12 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				"net6.0",
 				"android",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				31,
 			},
 			new object[] {
 				"net6.0",
-				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				"android31",
+				31,
 			},
 			new object[] {
 				"net7.0",
@@ -263,7 +267,26 @@ namespace Xamarin.Android.Build.Tests
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo { }",
-					}
+					},
+					new AndroidItem.AndroidResource ("Resources\\raw\\bar.txt") {
+						BinaryContent = () => Array.Empty<byte> (),
+					},
+					new AndroidItem.AndroidLibrary ("sub\\directory\\foo.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					},
+					new AndroidItem.AndroidLibrary ("sub\\directory\\bar.aar") {
+						WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+					},
+					new AndroidItem.AndroidJavaSource ("JavaSourceTest.java") {
+						Encoding = Encoding.ASCII,
+						TextContent = () =>
+@"package com.xamarin.android.test.msbuildtest;
+public class JavaSourceTest {
+	public String Say (String quote) {
+		return quote;
+	}
+}",
+					},
 				},
 				ExtraNuGetConfigSources = {
 					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
@@ -273,12 +296,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IsPreviewFrameworkVersion (targetFramework)) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidResource ("Resources\\raw\\bar.txt") {
-				BinaryContent = () => Array.Empty<byte> (),
-			});
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\foo.jar") {
-				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
-			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
@@ -287,27 +304,30 @@ namespace Xamarin.Android.Build.Tests
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTest.java") {
-						Encoding = Encoding.ASCII,
-						TextContent = () => @"package com.xamarin.android.test.msbuildtest;
-public class JavaSourceTest {
-	public String Say (String quote) {
-		return quote;
-	}
-}
-",
-						Metadata = { { "Bind", "True"} },
-					}
-			);
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (default (Func<string>)) {
+				Update = () => "nopack.aar",
+				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+				MetadataValues = "Pack=false;Bind=false",
+			});
 
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Pack (), "`dotnet pack` should succeed");
 
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
-			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar");
+			using var nupkg = ZipHelper.OpenZip (nupkgPath);
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar");
+
+			if (dotnetVersion != "net6.0") {
+				//TODO: this issue is not fixed in net6.0-android MSBuild targets
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/bar.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/sub/directory/bar.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
 			}
 		}
 

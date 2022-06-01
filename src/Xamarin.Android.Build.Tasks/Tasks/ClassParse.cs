@@ -10,8 +10,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "CLP";
 
-		protected override string BaseToolName => "class-parse";
-
 		[Required]
 		public string OutputFile { get; set; }
 

@@ -64,7 +64,9 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
     />
     <ImportJavaDoc
         ContinueOnError="true"
+        NetCoreRoot="$(NetCoreRoot)"
         ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolExe="$(JavadocToMdocToolExe)"
         JavaDocs="@(JavaDocIndex)"
         References="@(ReferencePath);@(ReferenceDependencyPaths)"
         Transforms="@(TransformFile)"
