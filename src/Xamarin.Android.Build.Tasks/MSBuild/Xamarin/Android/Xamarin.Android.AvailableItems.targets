@@ -97,7 +97,7 @@ This item group populates the Build Action drop-down in IDEs.
       <AndroidJavaLibrary Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
       <EmbeddedJar        Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
       <!-- .aar files should be copied to $(OutputPath) in .NET 6-->
-      <None Include="@(LibraryProjectZip)" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
+      <None Include="@(LibraryProjectZip)" TfmSpecificPackageFile="%(LibraryProjectZip.Pack)" Pack="false" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
     </ItemGroup>
     <!-- Legacy binding projects -->
     <ItemGroup Condition=" '$(_AndroidIsBindingProject)' == 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
