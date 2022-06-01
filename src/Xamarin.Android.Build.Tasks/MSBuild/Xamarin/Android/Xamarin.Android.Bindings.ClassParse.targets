@@ -31,7 +31,9 @@ This file is only used by binding projects.
         OutputFile="$(ApiOutputFile).class-parse"
         SourceJars="@(EmbeddedJar);@(InputJar)"
         DocumentationPaths="@(_AndroidDocumentationPath)"
+        NetCoreRoot="$(NetCoreRoot)"
         ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolExe="$(ClassParseToolExe)"
     />
     <BindingsGenerator
         OnlyRunXmlAdjuster="true"
@@ -41,6 +43,7 @@ This file is only used by binding projects.
         ApiXmlInput="$(ApiOutputFile).class-parse"
         ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"
+        NetCoreRoot="$(NetCoreRoot)"
         ToolPath="$(MonoAndroidToolsDirectory)"
         ToolExe="$(BindingsGeneratorToolExe)"
         Nullable="$(Nullable)"
