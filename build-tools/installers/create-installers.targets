@@ -214,10 +214,8 @@
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\libZipSharp.resources.dll')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Unix.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Unix.dll.config" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Unix.dll.config" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Unix.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\libMono.Unix.so" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\libMono.Unix.dylib" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.exe"      ExcludeFromAndroidNETSdk="true" />
@@ -380,9 +378,7 @@
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxamarin-app.$(LibExtension)"           ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxa-internal-api.$(LibExtension)"       ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libZipSharpNative.$(LibExtension)" />
-    <!-- A second libMono.Unix.{dylib,so} is needed for libZipSharp.dll to load -->
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libMono.Unix.so" />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libMono.Unix.dylib" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libMono.Unix.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\proguard\bin\proguard.sh"  ExcludeFromAndroidNETSdk="true" />
   </ItemGroup>
   <!-- Allow us to exclude mono bundle files for PR builds -->
