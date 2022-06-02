@@ -2,7 +2,6 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckApiCompatibility" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
   <ItemGroup>
@@ -132,12 +131,26 @@
     <Touch Files="Android.Runtime\JNIEnv.g.cs" />
   </Target>
   
+  <!-- Copies common 'api-X.xml' to the 'obj' directory.
+       This is needed because 'generator' writes intermediate files like 'api-X.xml.fixed' next to the source
+       'api-X.xml' and multiple profiles are using the source, so these files will clobber each other. -->
+  <Target Name="_CopyXmlLocal"     
+      Inputs="$(_ApiXmlLocation)api-$(AndroidPlatformId).xml"
+      Outputs="$(IntermediateOutputPath)mcw\api-$(AndroidPlatformId).xml">
+      
+    <Copy
+        SourceFiles="$(_ApiXmlLocation)api-$(AndroidPlatformId).xml"
+        DestinationFolder="$(IntermediateOutputPath)mcw\"
+    />
+
+  </Target>
+  
   <!-- Runs 'generator' -->
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
-      Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(_ApiXmlLocation)api-$(AndroidPlatformId).xml"
+      DependsOnTargets="_CopyXmlLocal"
+      Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api-$(AndroidPlatformId).xml"
       Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems">
-    <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
       <_PlatformIdVersions>$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\data\api-versions.xml</_PlatformIdVersions>
       <_AndroidPlatformAnnotations>$(AndroidSdkDirectory)/platforms/android-$(AndroidPlatformId)/data/annotations.zip</_AndroidPlatformAnnotations>
@@ -167,7 +180,7 @@
       <_Annotations Condition=" '$(_AnnotationsZip)' != '' ">"--annotations=$(_AnnotationsZip)"</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
-      <_Api>$(_ApiXmlLocation)api-$(AndroidPlatformId).xml</_Api>
+      <_Api>$(IntermediateOutputPath)mcw\api-$(AndroidPlatformId).xml</_Api>
       <_Dirs>--enumdir=$(IntermediateOutputPath)mcw</_Dirs>
       <_WithJavadocXml Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">"--doc-comment-verbosity=$(AndroidJavadocVerbosity)" "--with-javadoc-xml=$(_AndroidJavadocXml)"</_WithJavadocXml>
       <_FullIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_FullIntermediateOutputPath>

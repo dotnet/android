@@ -8,10 +8,6 @@
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
 
-  <PropertyGroup>
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="False" />
@@ -19,8 +15,7 @@
   </ItemGroup>
   
   <PropertyGroup>
-    <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
-    <_OutputPath>$(_TopDir)\bin\Build$(Configuration)\</_OutputPath>
+    <_OutputPath>$(XamarinAndroidSourcePath)\bin\Build$(Configuration)\</_OutputPath>
   </PropertyGroup>
 
   <!-- First we need to figure out all the needed API levels.
@@ -29,13 +24,13 @@
   <Target Name="_DefineApiFiles">
     <ItemGroup>
       <_Api
-          Condition=" Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(AndroidApiInfo.Id).params.txt') "
+          Condition=" Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(AndroidApiInfo.Id).params.txt') "
           Include="@(AndroidApiInfo)">
       </_Api>
     </ItemGroup>
     
     <CreateItem Include="@(_Api)"
-        AdditionalMetadata="ParameterDescription=$(_TopDir)\src\Mono.Android\Profiles\api-%(_Api.Id).params.txt;ClassParseXml=$(_OutputPath)api\api-%(_Api.Id).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(_Api.Id).xml.in;MergedXml=$(_OutputPath)api\api-%(_Api.Id).xml">
+        AdditionalMetadata="ParameterDescription=$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(_Api.Id).params.txt;ClassParseXml=$(_OutputPath)api\api-%(_Api.Id).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(_Api.Id).xml.in;MergedXml=$(_OutputPath)api\api-%(_Api.Id).xml">
       <Output TaskParameter="Include" ItemName="ApiFileDefinition"/>
     </CreateItem>
     
@@ -56,12 +51,12 @@
       Outputs="@(ApiFileDefinition->'%(ClassParseXml)')">
       
     <PropertyGroup>
-      <ClassParse>$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
+      <ClassParse>$(XamarinAndroidSourcePath)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
     </PropertyGroup>
     
     <ItemGroup>
       <_ClassParseCommands
-          Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
+          Condition="Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
           Include="@(ApiFileDefinition)">
         <Command>$(ClassParse)</Command>
         <Arguments>$(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;</Arguments>
@@ -85,12 +80,12 @@
       Outputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')">
 
     <PropertyGroup>
-      <ApiXmlAdjuster>$(_TopDir)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
+      <ApiXmlAdjuster>$(XamarinAndroidSourcePath)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
     </PropertyGroup>
     
     <ItemGroup>
       <_AdjustApiXmlPrepareCommands
-          Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
+          Condition="Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
           Include="@(ApiFileDefinition)">
         <Command>$(ApiXmlAdjuster)</Command>
         <Arguments>%(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)</Arguments>
