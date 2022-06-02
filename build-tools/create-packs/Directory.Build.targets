@@ -85,7 +85,7 @@
     <ReplaceFileContents
         SourceFile="vs-workload.in.props"
         DestinationFile="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\vs-workload.props"
-        Replacements="@PACK_VERSION_LONG@=$(AndroidPackVersionLong);@PACK_VERSION_SHORT@=$(AndroidMSIVersion);@WORKLOAD_VERSION@=$(AndroidMSIVersion)"
+        Replacements="@PACK_VERSION_LONG@=$(AndroidPackVersionLong);@PACK_VERSION_SHORT@=$(AndroidMSIVersion);@WORKLOAD_VERSION@=$(AndroidMSIVersion);@VSMAN_VERSION@=$(DotNetTargetFrameworkVersion)"
     />
   </Target>
 
