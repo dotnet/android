@@ -84,10 +84,12 @@
       <Replacement Include="@MingwZlibLibraryName@=$(MingwZlibLibraryName)" />
       <Replacement Include="@MingwZlibRootDirectory32@=$(MingwZlibRootDirectory32)" />
       <Replacement Include="@MingwZlibRootDirectory64@=$(MingwZlibRootDirectory64)" />
+      <Replacement Include="@MonoCecilVersion@=$(MonoCecilVersion)" />
       <Replacement Include="@MonoDarwinPackageUrl@=$(MonoDarwinPackageUrl)" />
       <Replacement Include="@MonoRequiredMinimumVersion@=$(MonoRequiredMinimumVersion)" />
       <Replacement Include="@MonoRequiredMaximumVersion@=$(MonoRequiredMaximumVersion)" />
       <Replacement Include="@MonoSourceFullPath@=$(MonoSourceFullPath)" />
+      <Replacement Include="@NetCoreBinDirectory@=$(NetCoreBinDirectory)" />
       <Replacement Include="@NinjaPath@=$(NinjaPath)" />
       <Replacement Include="@Pkg7-Zip_CommandLine@=$(Pkg7-Zip_CommandLine)" />
       <Replacement Include="@PkgXamarin_LibZipSharp@=$(PkgXamarin_LibZipSharp)" />

@@ -29,7 +29,6 @@ core workload SDK packs imported by WorkloadManifest.targets.
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions;_GetLicense">
     <PropertyGroup>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
-      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-$(DotNetStableTargetFramework)\</NetCoreAppToolsSourceDir>
     </PropertyGroup>
 
     <ItemGroup>
@@ -70,16 +69,17 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\%(_LocalizationLanguages.Identity)\Microsoft.Android.Sdk.ILLink.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
-      <_PackageFiles Include="@(JIUtilityFile->'$(NetCoreAppToolsSourceDir)%(Identity)')"   PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)class-parse.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)class-parse.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)class-parse.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.runtimeconfig.json" PackagePath="tools" />
+      <_PackageFiles Include="@(JIUtilityFile->'$(NetCoreBinDirectory)%(Identity)')"   PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)class-parse.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)class-parse.pdb" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)class-parse.runtimeconfig.json" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)generator.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)generator.pdb" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)generator.runtimeconfig.json" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)javadoc-to-mdoc.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)javadoc-to-mdoc.pdb" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)javadoc-to-mdoc.runtimeconfig.json" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreBinDirectory)%(_LocalizationLanguages.Identity)\Java.Interop.Localization.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
       <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)Version*" PackagePath="tools" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />

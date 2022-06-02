@@ -18,9 +18,8 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
+			var dotnetPath = Configurables.Paths.DotNetPreviewPath;
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
-			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
 
 			if (!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion)) {
 				Log.ErrorLine ($"Installation of dotnet SDK {BuildToolVersion} failed.");
@@ -42,7 +41,7 @@ namespace Xamarin.Android.Prepare
 			// Install runtime packs associated with the SDK previously installed.
 			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
 			var logPath = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs.binlog");
-			if (!Utilities.RunCommand (dotnetTool, new string [] { "restore", ProcessRunner.QuoteArgument (packageDownloadProj), ProcessRunner.QuoteArgument ($"-bl:{logPath}") })) {
+			if (!Utilities.RunCommand (Configurables.Paths.DotNetPreviewTool, new string [] { "restore", ProcessRunner.QuoteArgument (packageDownloadProj), ProcessRunner.QuoteArgument ($"-bl:{logPath}") })) {
 				Log.ErrorLine ($"dotnet restore {packageDownloadProj} failed.");
 				return false;
 			}

@@ -277,7 +277,7 @@ namespace Xamarin.Android.Prepare
 
 			public static string TestBinDir                          => GetCachedPath (ref testBinDir, ()                          => Path.Combine (Configurables.Paths.BinDirRoot, $"Test{ctx.Configuration}"));
 			public static string BinDir                              => GetCachedPath (ref binDir, ()                              => Path.Combine (Configurables.Paths.BinDirRoot, ctx.Configuration));
-			public static string NetCoreBinDir                       => GetCachedPath (ref netCoreBinDir, ()                       => Path.Combine (Configurables.Paths.BinDirRoot, $"{ctx.Configuration}-net6.0"));
+			public static string NetCoreBinDir                       => GetCachedPath (ref netCoreBinDir, ()                       => ctx.Properties.GetRequiredValue (KnownProperties.NetCoreBinDirectory));
 			public static string BuildBinDir                         => GetCachedPath (ref buildBinDir, ()                         => Path.Combine (Configurables.Paths.BinDirRoot, $"Build{ctx.Configuration}"));
 			public static string MingwBinDir                         => GetCachedPath (ref mingwBinDir, ()                         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidMxeFullPath), "bin"));
 			public static string ProfileAssembliesProjitemsPath      => GetCachedPath (ref profileAssembliesProjitemsPath, ()      => Path.Combine (BuildBinDir, "ProfileAssemblies.projitems"));
@@ -347,6 +347,10 @@ namespace Xamarin.Android.Prepare
 			);
 
 			public static string MicrosoftNETWorkloadEmscriptenDir => Path.Combine (MicrosoftNETWorkloadEmscriptenPackageDir, "data");
+
+			public static string DotNetPreviewPath => ctx.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
+
+			public static string DotNetPreviewTool => Path.Combine (DotNetPreviewPath, "dotnet");
 
 			// CMake
 			public static string CmakeMSBuildPropsName               = "cmake-config.props";

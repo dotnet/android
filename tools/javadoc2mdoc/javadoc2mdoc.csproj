@@ -7,8 +7,11 @@
     <AssemblyName>javadoc-to-mdoc</AssemblyName>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
     <OutputPath>$(XamarinAndroidSourcePath)bin\$(Configuration)-$(TargetFramework)\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' != 'net472'">
+    <OutputPath>$(NetCoreBinDirectory)</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.JavadocImporter\Xamarin.Android.Tools.JavadocImporter.csproj" />

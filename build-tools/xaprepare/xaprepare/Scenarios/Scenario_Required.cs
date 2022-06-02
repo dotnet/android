@@ -22,7 +22,6 @@ namespace Xamarin.Android.Prepare
 			context.SetCondition (KnownConditions.EnsureEssential, true);
 
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true, onlyRequired: true));
-			Steps.Add (new Step_PrepareExternalJavaInterop ());
 		}
 	}
 }

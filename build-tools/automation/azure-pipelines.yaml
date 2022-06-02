@@ -233,25 +233,6 @@ stages:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
         arguments: Xamarin.Android-Tests.sln /restore /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\dotnet-build-tests.binlog
 
-    - task: MSBuild@1
-      displayName: nunit Java.Interop Tests
-      inputs:
-        solution: Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:RunJavaInteropTests
-          /p:SkipJSUTests=true
-          /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
-          /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\dotnet-run-ji-tests.binlog
-      continueOnError: True
-
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-*.xml
-        testRunTitle: Java Interop Tests - Windows Build
-
     - template: yaml-templates\install-apkdiff.yaml
 
     - template: yaml-templates\run-nunit-tests.yaml
@@ -376,9 +357,12 @@ stages:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
 
-    - script: make prepare CONFIGURATION=$(ApkTestConfiguration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
-      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
-      displayName: prepare java.interop
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
+        displayName: prepare java.interop $(XA.Build.Configuration)
+        continueOnError: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -635,13 +619,21 @@ stages:
         projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
 
-    - script: make prepare CONFIGURATION=Debug JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
-      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
-      displayName: prepare java.interop
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: >-
+          -t:PrepareJavaInterop -c Debug -m:1 -v:n
+          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
+        displayName: prepare java.interop Debug
+        continueOnError: false
 
-    - script: make prepare CONFIGURATION=$(XA.Build.Configuration) JI_JAVA_HOME=$(JI_JAVA_HOME) JAVA_HOME=$(JI_JAVA_HOME)
-      workingDirectory: $(System.DefaultWorkingDirectory)/external/Java.Interop
-      displayName: prepare java.interop
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
+        displayName: prepare java.interop $(XA.Build.Configuration)
+        continueOnError: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:

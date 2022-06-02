@@ -38,7 +38,6 @@ steps:
           }
       }
       & .\dotnet-install.ps1 -Version ${{ parameters.version }} -InstallDir $DotNetRoot -Verbose
-      & dotnet --list-sdks
     displayName: install .NET Core ${{ parameters.version }}
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
 
@@ -49,8 +48,10 @@ steps:
       chmod +x dotnet-install.sh &&
       ./dotnet-install.sh --version ${{ parameters.version }} --install-dir $DOTNET_ROOT --verbose &&
       PATH="$DOTNET_ROOT:$PATH" &&
-      dotnet --list-sdks &&
       echo "##vso[task.setvariable variable=DOTNET_ROOT]$DOTNET_ROOT" &&
       echo "##vso[task.setvariable variable=PATH]$PATH"
     displayName: install .NET Core ${{ parameters.version }}
     condition: and(succeeded(), ne(variables['agent.os'], 'Windows_NT'))
+
+  - script: dotnet --info
+    displayName: display dotnet --info

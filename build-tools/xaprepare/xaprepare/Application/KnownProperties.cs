@@ -47,10 +47,12 @@ namespace Xamarin.Android.Prepare
 		public const string MingwZlibLibraryName                = "MingwZlibLibraryName";
 		public const string MingwZlibRootDirectory32            = "MingwZlibRootDirectory32";
 		public const string MingwZlibRootDirectory64            = "MingwZlibRootDirectory64";
+		public const string MonoCecilVersion                    = "MonoCecilVersion";
 		public const string MonoDarwinPackageUrl                = "MonoDarwinPackageUrl";
 		public const string MonoRequiredMinimumVersion          = "MonoRequiredMinimumVersion";
 		public const string MonoRequiredMaximumVersion          = "MonoRequiredMaximumVersion";
 		public const string MonoSourceFullPath                  = "MonoSourceFullPath";
+		public const string NetCoreBinDirectory                 = "NetCoreBinDirectory";
 		public const string NinjaPath                           = "NinjaPath";
 		public const string Pkg7Zip_CommandLine                 = "Pkg7-Zip_CommandLine";
 		public const string PkgXamarin_LibZipSharp              = "PkgXamarin_LibZipSharp";
