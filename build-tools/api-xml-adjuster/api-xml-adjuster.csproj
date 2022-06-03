@@ -16,6 +16,5 @@
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="api-xml-adjuster.targets" />
 
 </Project>
