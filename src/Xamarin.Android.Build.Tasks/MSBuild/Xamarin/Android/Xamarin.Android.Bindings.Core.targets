@@ -68,7 +68,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         AnnotationsZipFiles="@(AnnotationsZip)"
         AssemblyName="$(AssemblyName)"
         JavadocVerbosity="$(AndroidJavadocVerbosity)"
-        JavadocXml="@(_JavaSourceJavadocXml)"
+        JavadocXml="@(_JavaSourceJavadocXml);$(_AndroidIntermediateBindingClassesDocs)"
         TransformFiles="@(TransformFile)"
         ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"

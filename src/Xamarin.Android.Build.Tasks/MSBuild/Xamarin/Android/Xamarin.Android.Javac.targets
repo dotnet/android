@@ -124,7 +124,6 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <ItemGroup>
       <EmbeddedJar Include="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
       <AndroidJavaLibrary Include="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
-      <_JavaSourceJavadocXml Include="$(_AndroidIntermediateBindingClassesDocs)" Condition=" Exists('$(_AndroidIntermediateBindingClassesDocs)') " />
       <FileWrites Include="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
       <FileWrites Include="$(_AndroidIntermediateBindingClassesDocs)" Condition=" Exists('$(_AndroidIntermediateBindingClassesDocs)') " />
     </ItemGroup>
