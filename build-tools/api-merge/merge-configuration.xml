@@ -24,20 +24,20 @@
     <File Path="api-Tiramisu.xml.in" Level="33" />
   </Inputs>
   <Outputs>
-    <File Path="android-19\mcw\api.xml" LastLevel="19" />
-    <File Path="android-20\mcw\api.xml" LastLevel="20" />
-    <File Path="android-21\mcw\api.xml" LastLevel="21" />
-    <File Path="android-22\mcw\api.xml" LastLevel="22" />
-    <File Path="android-23\mcw\api.xml" LastLevel="23" />
-    <File Path="android-24\mcw\api.xml" LastLevel="24" />
-    <File Path="android-25\mcw\api.xml" LastLevel="25" />
-    <File Path="android-26\mcw\api.xml" LastLevel="26" />
-    <File Path="android-27\mcw\api.xml" LastLevel="27" />
-    <File Path="android-28\mcw\api.xml" LastLevel="28" />
-    <File Path="android-29\mcw\api.xml" LastLevel="29" />
-    <File Path="android-30\mcw\api.xml" LastLevel="30" />
-    <File Path="android-31\mcw\api.xml" LastLevel="31" />
-    <File Path="android-32\mcw\api.xml" LastLevel="32" />
-    <File Path="android-Tiramisu\mcw\api.xml" LastLevel="33" />
+    <File Path="api-19.xml" LastLevel="19" />
+    <File Path="api-20.xml" LastLevel="20" />
+    <File Path="api-21.xml" LastLevel="21" />
+    <File Path="api-22.xml" LastLevel="22" />
+    <File Path="api-23.xml" LastLevel="23" />
+    <File Path="api-24.xml" LastLevel="24" />
+    <File Path="api-25.xml" LastLevel="25" />
+    <File Path="api-26.xml" LastLevel="26" />
+    <File Path="api-27.xml" LastLevel="27" />
+    <File Path="api-28.xml" LastLevel="28" />
+    <File Path="api-29.xml" LastLevel="29" />
+    <File Path="api-30.xml" LastLevel="30" />
+    <File Path="api-31.xml" LastLevel="31" />
+    <File Path="api-32.xml" LastLevel="32" />
+    <File Path="api-Tiramisu.xml" LastLevel="33" />
   </Outputs>
 </Configuration>
