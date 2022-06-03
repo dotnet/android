@@ -151,11 +151,8 @@ namespace Xamarin.Android.Tasks
 				AppendArg (response, JavadocDocRootUrl);
 			}
 
-			var inputs  = InputFiles.Select (p => Path.GetFullPath (p.ItemSpec))
-				.Distinct (StringComparer.OrdinalIgnoreCase);
-
-			foreach (var path in inputs) {
-				AppendArg (response, path);
+			foreach (var path in InputFiles) {
+				AppendArg (response, Path.GetFullPath (path.ItemSpec));
 			}
 
 			return responseFile;
