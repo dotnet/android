@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Xamarin.Android.Tools.JavadocToMDoc</RootNamespace>
     <AssemblyName>javadoc-to-mdoc</AssemblyName>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>

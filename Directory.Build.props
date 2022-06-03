@@ -21,6 +21,8 @@
     <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
     <!-- Ensure command-line apps can use a newer .NET -->
     <RollForward>Major</RollForward>
+    <!-- We don't need to be warned that we are using a preview .NET -->
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(MSBuildRuntimeType)' == 'Core' ">
