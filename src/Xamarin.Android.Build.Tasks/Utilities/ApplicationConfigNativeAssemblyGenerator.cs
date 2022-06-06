@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 using Java.Interop.Tools.TypeNameMappings;
-using K4os.Hash.xxHash;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -342,21 +340,11 @@ namespace Xamarin.Android.Tasks
 
 			// We need to hash here, because the hash is architecture-specific
 			foreach (StructureInstance<DSOCacheEntry> entry in dsoCache) {
-				entry.Obj.hash = HashName (entry.Obj.HashedName);
+				entry.Obj.hash = HashName (entry.Obj.HashedName, is64Bit);
 			}
 			dsoCache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Obj.hash.CompareTo (b.Obj.hash));
 
 			generator.WriteStructureArray (dsoCacheEntryStructureInfo, dsoCache, "dso_cache");
-
-			ulong HashName (string name)
-			{
-				byte[] nameBytes = Encoding.UTF8.GetBytes (name);
-				if (is64Bit) {
-					return XXH64.DigestOf (nameBytes, 0, nameBytes.Length);
-				}
-
-				return (ulong)XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
-			}
 		}
 	}
 }

@@ -144,3 +144,48 @@ DSOCacheEntry dso_cache[] = {
 		.handle = nullptr,
 	},
 };
+
+//
+// Support for marshal methods
+//
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
+MonoImage* assembly_image_cache[] = {
+	nullptr,
+	nullptr,
+
+};
+
+// Each element contains an index into `assembly_image_cache`
+const uint32_t assembly_image_cache_indices[] = {
+	0,
+	1,
+	1,
+	1,
+};
+
+// hashes point to indices in `assembly_image_cache_indices`
+const xamarin::android::hash_t assembly_image_cache_hashes[] = {
+	0,
+	1,
+	2,
+	3,
+};
+
+uint32_t marshal_methods_number_of_classes = 2;
+MarshalMethodsManagedClass marshal_methods_class_cache[] = {
+	{
+		.token = 0,
+		.klass = nullptr,
+	},
+
+	{
+		.token = 0,
+		.klass = nullptr,
+	},
+};
+
+void xamarin_app_init ([[maybe_unused]] get_function_pointer_fn fn)
+{
+	// Dummy
+}
+#endif // def RELEASE && def ANDROID && def NET

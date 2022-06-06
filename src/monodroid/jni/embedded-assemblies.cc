@@ -32,10 +32,12 @@
 #include "embedded-assemblies.hh"
 #include "globals.hh"
 #include "monodroid-glue.hh"
+#include "mono-image-loader.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
 #include "startup-aware-lock.hh"
 #include "timing-internal.hh"
+#include "search.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -151,42 +153,6 @@ EmbeddedAssemblies::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	get_assembly_data (e.image_data, e.descriptor->data_size, "<assembly_store>", assembly_data, assembly_data_size);
 }
 
-#if defined (NET)
-MonoAssembly*
-EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, [[maybe_unused]] MonoError *error)
-{
-	auto loader = [&] (uint8_t *assembly_data, uint32_t assembly_data_size, const char *name) -> MonoImage* {
-		return mono_image_open_from_data_alc (
-			alc_gchandle,
-			reinterpret_cast<char*>(assembly_data),
-			assembly_data_size,
-			0 /* need_copy */,
-			nullptr /* status */,
-			name
-		);
-	};
-
-	return open_from_bundles (aname, loader, false /* ref_only */);
-}
-#endif // def NET
-
-MonoAssembly*
-EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
-{
-	auto loader = [&] (uint8_t *assembly_data, uint32_t assembly_data_size, const char *name) -> MonoImage* {
-		return mono_image_open_from_data_with_name (
-			reinterpret_cast<char*>(assembly_data),
-			assembly_data_size,
-			0,
-			nullptr,
-			ref_only,
-			name
-		);
-	};
-
-	return open_from_bundles (aname, loader, ref_only);
-}
-
 template<bool LogMapping>
 force_inline void
 EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
@@ -239,12 +205,13 @@ EmbeddedAssemblies::map_debug_data (XamarinAndroidBundledAssembly& file) noexcep
 	map_runtime_file<false> (file);
 }
 
+template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::load_bundled_assembly (
 	XamarinAndroidBundledAssembly& assembly,
 	dynamic_local_string<SENSIBLE_PATH_MAX> const& name,
 	dynamic_local_string<SENSIBLE_PATH_MAX> const& abi_name,
-	std::function<MonoImage*(uint8_t*, uint32_t, const char*)> loader,
+	TLoaderData loader_data,
 	bool ref_only) noexcept
 {
 	if (assembly.name == nullptr || assembly.name[0] == '\0') {
@@ -267,7 +234,7 @@ EmbeddedAssemblies::load_bundled_assembly (
 	uint32_t assembly_data_size;
 
 	get_assembly_data (assembly, assembly_data, assembly_data_size);
-	MonoImage *image = loader (assembly_data, assembly_data_size, name.get ());
+	MonoImage *image = MonoImageLoader::load (name, loader_data, assembly_data, assembly_data_size);
 	if (image == nullptr) {
 		return nullptr;
 	}
@@ -300,7 +267,8 @@ EmbeddedAssemblies::load_bundled_assembly (
 
 	MonoImageOpenStatus status;
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
-	if (a == nullptr) {
+	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
 		return nullptr;
 	}
 
@@ -311,8 +279,9 @@ EmbeddedAssemblies::load_bundled_assembly (
 	return a;
 }
 
+template<LoaderData TLoaderData>
 force_inline MonoAssembly*
-EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
+EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
 	if (!utils.ends_with (name, SharedConstants::DLL_EXTENSION)) {
 		name.append (SharedConstants::DLL_EXTENSION);
@@ -329,7 +298,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 	MonoAssembly *a = nullptr;
 
 	for (size_t i = 0; i < application_config.number_of_assemblies_in_apk; i++) {
-		a = load_bundled_assembly (bundled_assemblies [i], name, abi_name, loader, ref_only);
+		a = load_bundled_assembly (bundled_assemblies [i], name, abi_name, loader_data, ref_only);
 		if (a != nullptr) {
 			return a;
 		}
@@ -337,7 +306,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 
 	if (extra_bundled_assemblies != nullptr) {
 		for (XamarinAndroidBundledAssembly& assembly : *extra_bundled_assemblies) {
-			a = load_bundled_assembly (assembly, name, abi_name, loader, ref_only);
+			a = load_bundled_assembly (assembly, name, abi_name, loader_data, ref_only);
 			if (a != nullptr) {
 				return a;
 			}
@@ -377,8 +346,9 @@ EmbeddedAssemblies::find_assembly_store_entry ([[maybe_unused]] hash_t hash, [[m
 	return nullptr;
 }
 
+template<LoaderData TLoaderData>
 force_inline MonoAssembly*
-EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only) noexcept
+EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
 	size_t len = name.length ();
 	bool have_dll_ext = utils.ends_with (name, SharedConstants::DLL_EXTENSION);
@@ -411,6 +381,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 		AssemblyStoreRuntimeData &rd = assembly_stores[hash_entry->store_id];
 		if (hash_entry->local_store_index >= rd.assembly_count) {
 			log_fatal (LOG_ASSEMBLY, "Invalid index %u into local store assembly descriptor array", hash_entry->local_store_index);
+			abort ();
 		}
 
 		AssemblyStoreAssemblyDescriptor *bba = &rd.assemblies[hash_entry->local_store_index];
@@ -459,7 +430,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	}
 
 	get_assembly_data (assembly_runtime_info, assembly_data, assembly_data_size);
-	MonoImage *image = loader (assembly_data, assembly_data_size, name.get ());
+	MonoImage *image = MonoImageLoader::load (name, loader_data, name_hash, assembly_data, assembly_data_size);
 	if (image == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Failed to load MonoImage of '%s'", name.get ());
 		return nullptr;
@@ -472,7 +443,8 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 
 	MonoImageOpenStatus status;
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
-	if (a == nullptr) {
+	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
 		return nullptr;
 	}
 
@@ -482,8 +454,12 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	return a;
 }
 
-MonoAssembly*
-EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<MonoImage*(uint8_t*, size_t, const char*)> loader, bool ref_only)
+// TODO: need to forbid loading assemblies into non-default ALC if they contain marshal method callbacks.
+//       The best way is probably to store the information in the assembly `MonoImage*` cache. We should
+//       abort() if the assembly contains marshal callbacks.
+template<LoaderData TLoaderData>
+force_inline MonoAssembly*
+EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, bool ref_only) noexcept
 {
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
@@ -497,9 +473,9 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 
 	MonoAssembly *a;
 	if (application_config.have_assembly_store) {
-		a = assembly_store_open_from_bundles (name, loader, ref_only);
+		a = assembly_store_open_from_bundles (name, loader_data, ref_only);
 	} else {
-		a = individual_assemblies_open_from_bundles (name, loader, ref_only);
+		a = individual_assemblies_open_from_bundles (name, loader_data, ref_only);
 	}
 
 	if (a == nullptr) {
@@ -513,20 +489,29 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, std::function<Mo
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data, MonoError *error)
 {
-	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error);
+	constexpr bool ref_only = false;
+	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error, ref_only);
 }
 #else // def NET
+
+// The duplicated `ref_only` parameters in the two functions below look weird, but the first one of them is used to
+// call the right instance of the templateed MonoImageLoader::load method (just as`alc_gchandle` above) which loads a
+// `MonoImage`, while the other is used when loading a `MonoAssembly`
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
-	return embeddedAssemblies.open_from_bundles (aname, true);
+	constexpr bool ref_only = false;
+
+	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
 #endif // ndef NET
 
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
-	return embeddedAssemblies.open_from_bundles (aname, false);
+	constexpr bool ref_only = false;
+
+	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
 
 void
@@ -600,41 +585,6 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 	}
 
 	return nullptr;
-}
-
-force_inline ssize_t
-EmbeddedAssemblies::binary_search (hash_t key, const hash_t *arr, size_t n) noexcept
-{
-	ssize_t left = -1;
-	ssize_t right = static_cast<ssize_t>(n);
-
-	while (right - left > 1) {
-		ssize_t middle = (left + right) >> 1;
-		if (arr[middle] < key) {
-			left = middle;
-		} else {
-			right = middle;
-		}
-	}
-
-	return arr[right] == key ? right : -1;
-}
-
-force_inline ptrdiff_t
-EmbeddedAssemblies::binary_search_branchless (hash_t x, const hash_t *arr, uint32_t len) noexcept
-{
-	const hash_t *base = arr;
-	while (len > 1) {
-		uint32_t half = len >> 1;
-		// __builtin_prefetch(&base[(len - half) / 2]);
-		// __builtin_prefetch(&base[half + (len - half) / 2]);
-		base = (base[half] < x ? &base[half] : base);
-		len -= half;
-	}
-
-	//return *(base + (*base < x));
-	ptrdiff_t ret = (base + (*base < x)) - arr;
-	return arr[ret] == x ? ret : -1;
 }
 
 #if defined (RELEASE) && defined (ANDROID)
@@ -719,7 +669,7 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 	// In microbrenchmarks, `binary_search_branchless` is faster than `binary_search` but in "real" application tests,
 	// the simple version appears to yield faster startup... Leaving both for now, for further investigation and
 	// potential optimizations
-	ssize_t idx = binary_search (hash, map_java_hashes, java_type_count);
+	ssize_t idx = Search::binary_search (hash, map_java_hashes, java_type_count);
 	//ptrdiff_t idx = binary_search_branchless (hash, map_java_hashes, java_type_count);
 
 	TypeMapJava const* java_entry = idx >= 0 ? &map_java[idx] : nullptr;

@@ -67,7 +67,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		// This is here only to generate strongly-typed IR
-		sealed class MonoImage
+		internal sealed class MonoImage
 		{}
 
 		// Order of fields and their type must correspond *exactly* to that in

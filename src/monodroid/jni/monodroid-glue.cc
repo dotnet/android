@@ -873,6 +873,10 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 #ifndef RELEASE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
+
+#if defined (RELEASE) && defined (ANDROID) && defined (NET) && ENABLE_MARSHAL_METHODS
+	xamarin_app_init (get_function_pointer);
+#endif // def RELEASE && def ANDROID && def NET
 }
 
 #if defined (NET)
@@ -1344,11 +1348,9 @@ MonodroidRuntime::find_dso_cache_entry ([[maybe_unused]] hash_t hash) noexcept
 	size_t entry_count = application_config.number_of_dso_cache_entries;
 	DSOCacheEntry *entries = dso_cache;
 
-	log_debug (LOG_ASSEMBLY, "dso_cache: looking for hash 0x%zx", hash);
 	while (entry_count > 0) {
 		ret = entries + (entry_count / 2);
 		entry_hash = static_cast<hash_t> (ret->hash);
-		log_debug (LOG_ASSEMBLY, "dso_cache: entry_hash == 0x%zx", entry_hash);
 		auto result = hash <=> entry_hash;
 
 		if (result < 0) {
@@ -2500,6 +2502,18 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		total_time_index = internal_timing->start_event (TimingEventKind::RuntimeRegister);
 	}
+
+#if defined (ENABLE_MARSHAL_METHODS)
+	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
+	log_info (LOG_DEFAULT, "[TESTING] Registering managed type: '%s'", mt_ptr);
+	bool ignore = strcmp (mt_ptr, "HelloAndroid.MainActivity, HelloAndroid") == 0;
+	env->ReleaseStringUTFChars (managedType, mt_ptr);
+
+	if (ignore) {
+		log_info (LOG_DEFAULT, "[TESTING] This type's registration is ignored");
+		return;
+	}
+#endif
 
 	jsize managedType_len = env->GetStringLength (managedType);
 	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
