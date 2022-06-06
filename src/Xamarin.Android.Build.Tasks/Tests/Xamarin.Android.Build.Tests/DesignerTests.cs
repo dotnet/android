@@ -230,6 +230,7 @@ namespace UnnamedProject
 			// Each NuGet package and AAR file are in libraryprojectimports.cache, AndroidJavaSource is not
 			int libraryProjectImportsJars = 14;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Detailed;
 				// GetExtraLibraryLocationsForDesigner on new project
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 1");
 

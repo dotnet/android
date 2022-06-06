@@ -586,6 +586,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string temporaryProjectDir = PrepareProject (testName);
 			LocalBuilder builder = GetBuilder ($"{ProjectName}.{testName}");
+			builder.Verbosity = LoggerVerbosity.Detailed;
 			builder.BuildingInsideVisualStudio = dtb;
 			var testInfo = new TestProjectInfo (ProjectName, testName, temporaryProjectDir, TestOutputDir);
 

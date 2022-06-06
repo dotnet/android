@@ -36,7 +36,7 @@ namespace Xamarin.ProjectTools
 		/// Passes /m:N to MSBuild, defaults to null to omit the /m parameter completely.
 		/// </summary>
 		public int? MaxCpuCount { get; set; }
-		public LoggerVerbosity Verbosity { get; set; } = LoggerVerbosity.Diagnostic;
+		public LoggerVerbosity Verbosity { get; set; } = LoggerVerbosity.Normal;
 		public IEnumerable<string> LastBuildOutput {
 			get {
 				if (!string.IsNullOrEmpty (buildLogFullPath) && File.Exists (buildLogFullPath)) {

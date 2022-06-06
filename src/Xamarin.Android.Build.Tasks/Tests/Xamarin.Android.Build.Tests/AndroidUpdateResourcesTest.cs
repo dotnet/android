@@ -905,6 +905,7 @@ namespace Lib1 {
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName))) {
+				appBuilder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "DesignTime Application Build should have succeeded.");
 				Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
@@ -979,10 +980,12 @@ namespace Lib1 {
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
+				libBuilder.Verbosity = LoggerVerbosity.Detailed;
 				libBuilder.AutomaticNuGetRestore = false;
 				Assert.IsTrue (libBuilder.RunTarget (libProj, "Restore"), "Library project should have restored.");
 				libBuilder.ThrowOnBuildFailure = false;
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
+					appBuilder.Verbosity = LoggerVerbosity.Detailed;
 					appBuilder.AutomaticNuGetRestore = false;
 					Assert.IsTrue (appBuilder.RunTarget (appProj, "Restore"), "App project should have restored.");
 					appBuilder.ThrowOnBuildFailure = false;
@@ -1217,6 +1220,7 @@ namespace UnnamedProject
 			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
 			proj.PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
 				//Add a new android:id
@@ -1248,6 +1252,7 @@ namespace UnnamedProject
 			var proj = new XamarinFormsAndroidApplicationProject ();
 			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				string aaptCommand = useAapt2 ? "Executing link" : "Executing package";

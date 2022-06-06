@@ -471,6 +471,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			mainAxml.MetadataValues = "CustomData=ResourceMetaDataOK";
 
 			using (var builder = CreateApkBuilder (string.Format ("temp/CheckItemMetadata_{0}", isRelease))) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.Build (proj);
 				StringAssertEx.Contains ("AssetMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidAsset");
 				StringAssertEx.Contains ("ResourceMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidResource");
@@ -636,6 +637,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			};
 			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
 			using (var builder = CreateApkBuilder ()) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion, out string[] _);
 				AssertTargetFrameworkVersionSupported (firstFrameworkVersion);
 				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
@@ -986,6 +988,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				//[TearDown] will still delete if test outcome successful, I need logs if assertions fail but build passes
 				b.CleanupAfterSuccessfulBuild =
 					b.CleanupOnDispose = false;
@@ -1039,6 +1042,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				b.ThrowOnBuildFailure = false;
 				var projectDir = Path.Combine (Root, b.ProjectDirectory);
 				if (Directory.Exists (projectDir))
@@ -1420,6 +1424,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				{ "XBUILD_FRAMEWORK_FOLDERS_PATH", referencesPath },
 			};
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "_SetLatestTargetFrameworkVersion";
 				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
@@ -2035,6 +2040,7 @@ public class ApplicationRegistration { }");
 			const string target = "_GetPrimaryCpuAbi";
 			var proj = new XamarinAndroidLibraryProject ();
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 			}

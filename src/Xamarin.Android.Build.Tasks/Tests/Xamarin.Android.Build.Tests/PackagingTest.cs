@@ -797,6 +797,7 @@ namespace App1
 			xa.SetProperty ("RestorePackagesPath", "$(MSBuildThisFileDirectory)packages");
 			using (var nsb = CreateDllBuilder (Path.Combine (path, ns.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false))
 			using (var xab = CreateApkBuilder (Path.Combine (path, xa.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				xab.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Detailed;
 				nsb.ThrowOnBuildFailure = xab.ThrowOnBuildFailure = false;
 				Assert.IsTrue (nsb.Build (ns), "Build of NetStandard Library should have succeeded.");
 				Assert.IsFalse (xab.Build (xa, doNotCleanupOnUpdate: true), "Build of App Library should have failed.");
@@ -932,11 +933,13 @@ public class Test
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+				builder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Detailed;
 				Assert.IsTrue (builder.Build (lib), "Build of jar should have succeeded.");
 				using (var zip = ZipHelper.OpenZip (Path.Combine (path, "java", "test.jar"))) {
 					Assert.IsTrue (zip.ContainsEntry ($"AndroidManifest.xml"), "Jar should contain AndroidManifest.xml");
 				}
 				using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+					b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Detailed;
 					Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
 					var jar = Builder.UseDotNet ? "2965D0C9A2D5DB1E.jar" : "test.jar";
 					string expected = $"Ignoring jar entry AndroidManifest.xml from {jar}: the same file already exists in the apk";

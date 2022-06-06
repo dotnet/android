@@ -21,6 +21,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				appBuilder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Detailed;
 				Assert.IsTrue (appBuilder.DesignTimeBuild (app, parameters: new string[]{
 					"BuildingInsideVisualStudio=true",
 					"DeferredBuildSupported=true",

@@ -833,6 +833,7 @@ public class JavaSourceTest {
 			}
 
 			var dotnet = CreateDotNetBuilder (proj);
+			dotnet.Verbosity = "d";
 			Assert.IsTrue (dotnet.Publish (), "first `dotnet publish` should succeed");
 			// NOTE: Preview API levels emit XA4211
 			if (!preview) {
@@ -1012,6 +1013,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			};
 			appA.AddReference (libB);
 			var appBuilder = CreateDotNetBuilder (appA, Path.Combine (path, appA.ProjectName));
+			appBuilder.Verbosity = "d";
 			Assert.IsTrue (appBuilder.Build (runtimeIdentifier: runtimeIdentifier), $"{appA.ProjectName} should succeed");
 			appBuilder.AssertTargetIsNotSkipped ("CoreCompile");
 			if (isRelease) {

@@ -200,6 +200,7 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			using (var b = CreateDllBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (lib), "first build should have succeeded.");
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, lib.OutputPath, $"{lib.ProjectName}.aar");
 				if (Builder.UseDotNet) {
@@ -750,6 +751,7 @@ namespace Lib2
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				appBuilder.Verbosity = LoggerVerbosity.Detailed;
 				libBuilder.BuildLogFile = "build.log";
 				Assert.IsTrue (libBuilder.Build (lib), "first library build should have succeeded.");
 				appBuilder.BuildLogFile = "build.log";
