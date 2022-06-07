@@ -12,6 +12,9 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <!-- Ignore "unused member" warnings from code that originates from Mono.CodeGeneration -->
+    <NoWarn>$(NoWarn);CS0169;CS0414;CS0649</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
