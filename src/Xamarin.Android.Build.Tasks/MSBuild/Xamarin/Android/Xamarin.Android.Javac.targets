@@ -104,6 +104,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         Jars="@(_BindingJavaLibrariesToCompile);@(_ReferenceJavaLibs)"
         JavacTargetVersion="$(JavacTargetVersion)"
         JavacSourceVersion="$(JavacSourceVersion)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />
     <Touch Files="$(_AndroidCompileBindingJavaStampFile)" AlwaysCreate="true" />
     <ItemGroup>
@@ -134,6 +136,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         Jars="@(_JavaLibrariesToCompile);@(_InstantRunJavaReference);@(_ReferenceJavaLibs)"
         JavacTargetVersion="$(JavacTargetVersion)"
         JavacSourceVersion="$(JavacSourceVersion)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />
 
     <Touch Files="$(_AndroidCompileJavaStampFile)" AlwaysCreate="true" />

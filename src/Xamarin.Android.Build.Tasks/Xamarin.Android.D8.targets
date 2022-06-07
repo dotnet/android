@@ -75,6 +75,8 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         CustomMainDexListFiles="@(MultiDexMainDexList)"
         IgnoreWarnings="$(AndroidR8IgnoreWarnings)"
         ExtraArguments="$(AndroidR8ExtraArguments)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />
     <D8
         Condition=" '$(_UseR8)' != 'True' "
@@ -92,6 +94,8 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
         EnableDesugar="$(AndroidEnableDesugar)"
         ExtraArguments="$(AndroidD8ExtraArguments)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />
 
     <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />

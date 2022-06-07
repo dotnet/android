@@ -66,11 +66,14 @@ namespace Xamarin.Android.Tasks
 			at com.android.dx.command.Main.main(Main.java:106)
 		*/
 		const string ExceptionRegExString = @"(?<exception>java.lang.+):(?<error>.+)";
+		const string LPDirectoryRegExString = @"(lp)([/\\]+)(?<identifier>[0-9]+)([/\\]+)";
 		static readonly Regex codeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
 		static readonly Regex exceptionRegEx = new Regex (ExceptionRegExString, RegexOptions.Compiled);
+		static readonly Regex lpRegex = new Regex (LPDirectoryRegExString, RegexOptions.Compiled);
 		bool foundError = false;
 		List<string> errorLines = new List<string> ();
 		StringBuilder errorText = new StringBuilder ();
+		HashSet<string> mappingText = new HashSet<string> ();
 		string file;
 		int line, column;
 
@@ -78,9 +81,13 @@ namespace Xamarin.Android.Tasks
 
 		public string JavaMaximumHeapSize { get; set; }
 
-		public virtual string DefaultErrorCode => null;
+		public virtual string DefaultErrorCode => "JAVA0000";
 
 		public string WorkingDirectory { get; set; }
+
+		public string AssemblyIdentityMapFile { get; set; }
+
+		public string IntermediateOutputPath { get; set; }
 
 		protected override string ToolName {
 			get { return OS.IsWindows ? "java.exe" : "java"; }
@@ -93,13 +100,16 @@ namespace Xamarin.Android.Tasks
 		protected override bool HandleTaskExecutionErrors ()
 		{
 			if (foundError) {
+				AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
+				assemblyMap.Load (AssemblyIdentityMapFile);
 				errorText.Clear ();
+				mappingText.Clear ();
 				foreach (var line in errorLines) {
-					if (!ProcessOutput (line))
+					if (!ProcessOutput (line, assemblyMap))
 						break;
 				}
 				if (foundError && errorText.Length > 0) {
-					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
+					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString () + String.Join (Environment.NewLine, mappingText));
 				}
 				return !Log.HasLoggedErrors;
 			}
@@ -118,26 +128,35 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (ToolPath, ToolExe);
 		}
 
-		void LogFromException (string exception, string error) {
+		bool LogFromException (string exception, string error) {
 			switch (exception) {
 				case "java.lang.OutOfMemoryError":
 					Log.LogCodedError ("XA5213", Properties.Resources.XA5213, ToolName, GenerateCommandLineCommands ());
-					break;
+					return false;
 				default:
-					Log.LogCodedError (DefaultErrorCode, "{0} : {1}", exception, error);
-					break;
+					return true;
 			}
 		}
 
-		bool ProcessOutput (string singleLine)
+		bool ProcessOutput (string singleLine, AssemblyIdentityMap assemblyMap)
 		{
 			var match = CodeErrorRegEx.Match (singleLine);
 			var exceptionMatch = ExceptionRegEx.Match (singleLine);
+			var lp = lpRegex.Match (singleLine);
+			if (lp.Success) {
+				var id = lp.Groups["identifier"].Value;
+				var asmName = assemblyMap.GetAssemblyNameForImportDirectory (id);
+				if (!string.IsNullOrEmpty (asmName)) {
+					var path = Path.Combine(IntermediateOutputPath ?? string.Empty, "lp", id);
+					mappingText.Add (string.Format (Properties.Resources.XA_Directory_Is_From, path, asmName));
+				}
+			}
 
 			if (match.Success) {
 				if (!string.IsNullOrEmpty (file)) {
-					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
+					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString () + String.Join (Environment.NewLine, mappingText));
 					errorText.Clear ();
+					mappingText.Clear ();
 				}
 				file = match.Groups ["file"].Value;
 				var error = match.Groups ["error"].Value;
@@ -150,8 +169,9 @@ namespace Xamarin.Android.Tasks
 				line = 1;
 				file = "";
 				column = 0;
-				LogFromException (exception, error);
-				return false;
+				errorText.AppendLine (exception);
+				errorText.AppendLine (error);
+				return LogFromException (exception, error);
 			} else if (foundError) {
 				if (singleLine.Trim () == "^") {
 					column = singleLine.IndexOf ("^", StringComparison.Ordinal);
@@ -160,8 +180,9 @@ namespace Xamarin.Android.Tasks
 
 				if (singleLine.StartsWith ("Note:", StringComparison.Ordinal) || singleLine.Trim ().EndsWith ("errors", StringComparison.Ordinal)) {
 					// See if we have one last error to print out
-					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
+					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString () + String.Join (Environment.NewLine, mappingText));
 					errorText.Clear ();
+					mappingText.Clear ();
 					foundError = false;
 					return true;
 				}
@@ -178,20 +199,15 @@ namespace Xamarin.Android.Tasks
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
-			var match = CodeErrorRegEx.Match (singleLine);
-			var exceptionMatch = ExceptionRegEx.Match (singleLine);
+			errorLines.Add (singleLine);
+			base.LogEventsFromTextOutput (singleLine, messageImportance);  // not sure why/when we would skip this?
 
-			if (match.Success || exceptionMatch.Success) {
-				Log.LogMessage (MessageImportance.High, singleLine);
-				foundError = true;
-				errorLines.Add (singleLine);
-				return;
-			} else if (foundError) {
-				Log.LogMessage (MessageImportance.High, singleLine);
-				errorLines.Add (singleLine);
+			if (foundError) {
 				return;
 			}
-			base.LogEventsFromTextOutput (singleLine, messageImportance);
+			var match = CodeErrorRegEx.Match (singleLine);
+			var exceptionMatch = ExceptionRegEx.Match (singleLine);
+			foundError = foundError || match.Success || exceptionMatch.Success;
 		}
 	}
 }
