@@ -18,7 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="protobuf-net" />
+    <!-- Always reference the netstandard2.0 version of protobuf-net as it is a shared dependency. -->
+    <PackageReference Include="protobuf-net" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="protobuf-net">
+      <HintPath>$(PkgProtobuf-net)\lib\netstandard2.0\protobuf-net.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
