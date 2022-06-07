@@ -667,6 +667,13 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 							{ "Bind", "True" },
 						},
 					},
+					new AndroidItem.AndroidJavaSource ("JavaSourceTestInterface.java") {
+						Encoding = Encoding.ASCII,
+						TextContent = () => ResourceData.JavaSourceTestInterface,
+						Metadata = {
+							{ "Bind", "True" },
+						},
+					},
 				},
 
 			};
@@ -681,6 +688,9 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					"generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceTestExtension.cs");
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have been generated.");
 				StringAssertEx.ContainsText (File.ReadAllLines (generatedCode), "public virtual unsafe string GreetWithQuestion (string name, global::Java.Util.Date date, string question)");
+				var generatedIface = Path.Combine (Root, libBuilder.ProjectDirectory, lib.IntermediateOutputPath,
+					"generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.IJavaSourceTestInterface.cs");
+				StringAssertEx.ContainsText (File.ReadAllLines (generatedIface), "string GreetWithQuestion (string name, global::Java.Util.Date date, string question);");
 				Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
 				Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CompileBindingJava"), $"`_CompileBindingJava` should be skipped on second build!");
 				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
