@@ -5,67 +5,34 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 60736
+      "Size": 59377
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 152344
+      "Size": 89098
     },
     "assemblies/rc.bin": {
       "Size": 1083
     },
-    "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 8757
-    },
-    "assemblies/System.Collections.dll": {
-      "Size": 4196
-    },
-    "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 6232
-    },
     "assemblies/System.Console.dll": {
-      "Size": 6502
-    },
-    "assemblies/System.IO.Compression.dll": {
-      "Size": 16259
+      "Size": 6475
     },
     "assemblies/System.Linq.dll": {
-      "Size": 10183
-    },
-    "assemblies/System.Net.Http.dll": {
-      "Size": 65104
-    },
-    "assemblies/System.Net.Primitives.dll": {
-      "Size": 21115
-    },
-    "assemblies/System.Net.Requests.dll": {
-      "Size": 3515
+      "Size": 9971
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 613751
-    },
-    "assemblies/System.Private.Uri.dll": {
-      "Size": 37595
-    },
-    "assemblies/System.Private.Xml.dll": {
-      "Size": 140804
+      "Size": 524631
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2405
-    },
-    "assemblies/System.Security.Cryptography.dll": {
-      "Size": 7391
-    },
-    "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 9591
+      "Size": 2410
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3555
+      "Size": 3553
     },
     "classes.dex": {
-      "Size": 348440
+      "Size": 347544
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 510920
+      "Size": 512552
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 4667768
@@ -80,16 +47,16 @@
       "Size": 146816
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 15904
+      "Size": 9488
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 3773
+      "Size": 2570
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 3646
+      "Size": 2443
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 4791
@@ -116,5 +83,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3500916
+  "PackageSize": 3020767
 }

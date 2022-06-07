@@ -40,8 +40,22 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return type.IsValueType &&
 				!type.IsEnum &&
 				!type.IsPrimitive &&
+				!type.IsArray &&
 				type != typeof (decimal) &&
-				type != typeof (DateTime);
+				type != typeof (DateTime) &&
+				type != typeof (object);
+		}
+
+		public static bool IsIRStruct<T> (this StructureMemberInfo<T> smi)
+		{
+			Type type = smi.MemberType;
+
+			// type.IsStructure() handles checks for primitive types, enums etc
+			return
+				type != typeof(string) &&
+				!smi.Info.IsInlineArray () &&
+				!smi.Info.IsNativePointer () &&
+				(type.IsStructure () || type.IsClass);
 		}
 
 		public static NativeAssemblerStructContextDataProvider? GetDataProvider (this Type t)

@@ -410,6 +410,7 @@ namespace Xamarin.Android.Tasks
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
+			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey, RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 				IsBundledApp = IsBundledApplication,
 				UsesMonoAOT = usesMonoAOT,
@@ -436,6 +437,8 @@ namespace Xamarin.Android.Tasks
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 				JNIEnvInitializeToken = jnienv_initialize_method_token,
 				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
+				JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
+				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 			};
 			appConfigAsmGen.Init ();
 #if ENABLE_MARSHAL_METHODS

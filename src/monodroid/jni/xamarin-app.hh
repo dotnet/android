@@ -221,6 +221,8 @@ struct ApplicationConfig
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;
 	uint32_t jnienv_registerjninatives_method_token;
+	uint32_t jni_remapping_replacement_type_count;
+	uint32_t jni_remapping_replacement_method_index_entry_count;
 	MonoComponent mono_components_mask;
 	const char *android_package_name;
 };
@@ -232,6 +234,44 @@ struct DSOCacheEntry
 	const char    *name;
 	void          *handle;
 };
+
+struct JniRemappingString
+{
+	const uint32_t  length;
+	const char     *str;
+};
+
+struct JniRemappingReplacementMethod
+{
+	const char    *target_type;
+	const char    *target_name;
+	// const char    *target_signature;
+	// const int32_t  param_count;
+	const bool     is_static;
+};
+
+struct JniRemappingIndexMethodEntry
+{
+	const JniRemappingString            name;
+	const JniRemappingString            signature;
+	const JniRemappingReplacementMethod replacement;
+};
+
+struct JniRemappingIndexTypeEntry
+{
+	const JniRemappingString            name;
+	const uint32_t             method_count;
+	const JniRemappingIndexMethodEntry *methods;
+};
+
+struct JniRemappingTypeReplacementEntry
+{
+	const JniRemappingString  name;
+	const char      *replacement;
+};
+
+MONO_API MONO_API_EXPORT const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[];
+MONO_API MONO_API_EXPORT const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[];
 
 MONO_API MONO_API_EXPORT const uint64_t format_tag;
 
