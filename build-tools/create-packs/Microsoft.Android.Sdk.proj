@@ -16,6 +16,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
     <Description Condition=" '$(HostOS)' == 'Linux' ">$(Description) Please note that this package is not officially supported, and has not received extensive testing.</Description>
     <!-- Exclude mono bundle components declared in `create-installers.targets`. -->
     <IncludeMonoBundleComponents>false</IncludeMonoBundleComponents>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -27,32 +28,12 @@ core workload SDK packs imported by WorkloadManifest.targets.
 
   <Target Name="_GenerateXASdkContent"
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions;_GetLicense">
-    <PropertyGroup>
-      <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
-    </PropertyGroup>
-
     <ItemGroup>
-      <AndroidSdkBuildTools Include="@(_MSBuildFiles)" >
-        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
-      </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
-        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
-      </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="@(_MSBuildFilesWin)" Condition=" '$(HostOS)' == 'Windows' ">
-        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
-      </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' ">
-        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
-      </AndroidSdkBuildTools>
-      <!-- Remove items with '%(ExcludeFromAndroidNETSdk)' == 'true' metadata -->
-      <AndroidSdkBuildTools Remove="@(AndroidSdkBuildTools)" Condition=" '%(AndroidSdkBuildTools.ExcludeFromAndroidNETSdk)' == 'true' " />
+      <AndroidSdkBuildTools Include="@(MSBuildItemsWin)"  PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsWin.RelativePath)'))"  Condition=" '%(MSBuildItemsWin.ExcludeFromAndroidNETSdk)' != 'true' and '$(HostOS)' == 'Windows' " />
+      <AndroidSdkBuildTools Include="@(MSBuildItemsUnix)" PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsUnix.RelativePath)'))" Condition=" '%(MSBuildItemsUnix.ExcludeFromAndroidNETSdk)' != 'true' and ('$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin') " />
+      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" />
+      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml" Condition="Exists('$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml')" />
     </ItemGroup>
-
-    <RemoveDir Directories="$(ToolsSourceDir)" />
-    <Copy
-        SourceFiles="@(AndroidSdkBuildTools)"
-        DestinationFiles="@(AndroidSdkBuildTools->'$(ToolsSourceDir)%(RelativePath)')"
-    />
 
     <GenerateUnixFilePermissions
         Condition=" '$(HostOS)' != 'Windows' "
@@ -62,25 +43,19 @@ core workload SDK packs imported by WorkloadManifest.targets.
     />
 
     <ItemGroup>
-      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" />
-      <_AndroidApiInfo Include="$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml" Condition="Exists('$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml')" />
-      <!-- Microsoft.Android.Sdk.ILLink output -->
-      <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\%(_LocalizationLanguages.Identity)\Microsoft.Android.Sdk.ILLink.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
-      <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
-      <_PackageFiles Include="@(JIUtilityFile->'$(NetCoreBinDirectory)%(Identity)')"   PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)class-parse.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)class-parse.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)class-parse.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)generator.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)generator.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)generator.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)javadoc-to-mdoc.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)javadoc-to-mdoc.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)javadoc-to-mdoc.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="$(NetCoreBinDirectory)%(_LocalizationLanguages.Identity)\Java.Interop.Localization.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
-      <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)Version*" PackagePath="tools" />
+      <_PackageFiles Include="@(AndroidSdkBuildTools)" PackagePath="%(AndroidSdkBuildTools.PackagePath)" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Microsoft.Android.Sdk.ILLink.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Java.Interop.Localization.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
+      <_PackageFiles Include="@(JIUtilityFile->'$(MicrosoftAndroidSdkOutDir)%(Identity)')"   PackagePath="tools" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)class-parse.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)class-parse.pdb" PackagePath="tools" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)class-parse.runtimeconfig.json" PackagePath="tools" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)generator.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)generator.pdb" PackagePath="tools" />
+      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)generator.runtimeconfig.json" PackagePath="tools" />
+      <_PackageFiles Include="@(VersionFiles)" PackagePath="tools" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" PackagePath="targets" />

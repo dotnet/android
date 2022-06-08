@@ -17,15 +17,6 @@
           DependsOnTargets="_BuildXAPrepare">
     <Exec Command="$(ManagedToolInvocationRuntime)$(_XAPrepareExe) -s:PrepareExternalGitDependencies $(_XAPrepareStandardArgs)" />
   </Target>
-  <Target Name="BuildExternal"
-          DependsOnTargets="PrepareExternal">
-    <ItemGroup>
-      <_MonodroidBuildProps Include="-p:Configuration=$(Configuration)" />
-      <_MonodroidBuildProps Include="-p:DebuggingToolsOutputDirectory=$(XAInstallPrefix)xbuild\Xamarin\Android" />
-      <_MonodroidBuildProps Include="-p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild\Novell" />
-    </ItemGroup>
-    <Exec Command="dotnet build &quot;$(XamarinAndroidSourcePath)\external\monodroid\monodroid.proj&quot; @(_MonodroidBuildProps, ' ')" />
-  </Target>
   <Target Name="Prepare"
           DependsOnTargets="_BuildXAPrepare">
     <Error

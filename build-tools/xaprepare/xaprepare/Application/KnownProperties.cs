@@ -41,6 +41,7 @@ namespace Xamarin.Android.Prepare
 		public const string JdkIncludePath                      = "JdkIncludePath";
 		public const string LibZipSourceFullPath                = "LibZipSourceFullPath";
 		public const string ManagedRuntime                      = "ManagedRuntime";
+		public const string MicrosoftAndroidSdkOutDir           = "MicrosoftAndroidSdkOutDir";
 		public const string MingwCommandPrefix32                = "MingwCommandPrefix32";
 		public const string MingwCommandPrefix64                = "MingwCommandPrefix64";
 		public const string MingwDependenciesRootDirectory      = "MingwDependenciesRootDirectory";
@@ -52,7 +53,6 @@ namespace Xamarin.Android.Prepare
 		public const string MonoRequiredMinimumVersion          = "MonoRequiredMinimumVersion";
 		public const string MonoRequiredMaximumVersion          = "MonoRequiredMaximumVersion";
 		public const string MonoSourceFullPath                  = "MonoSourceFullPath";
-		public const string NetCoreBinDirectory                 = "NetCoreBinDirectory";
 		public const string NinjaPath                           = "NinjaPath";
 		public const string Pkg7Zip_CommandLine                 = "Pkg7-Zip_CommandLine";
 		public const string PkgXamarin_LibZipSharp              = "PkgXamarin_LibZipSharp";

@@ -5,7 +5,7 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <DefineConstants>ILLINK</DefineConstants>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <GenerateResxSource>true</GenerateResxSource>
   </PropertyGroup>
   <ItemGroup>

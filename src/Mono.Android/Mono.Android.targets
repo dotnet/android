@@ -73,7 +73,7 @@
   
   <!-- Pulls documentation from JavaDoc -->
   <PropertyGroup>
-    <_JavaSourceUtilsJar>$(XAInstallPrefix)xbuild\Xamarin\Android\java-source-utils.jar</_JavaSourceUtilsJar>
+    <_JavaSourceUtilsJar>$(MicrosoftAndroidSdkOutDir)java-source-utils.jar</_JavaSourceUtilsJar>
     <_AndroidStableSrcDir>$(AndroidSdkDirectory)\platforms\android-$(AndroidLatestStableApiLevel)\src</_AndroidStableSrcDir>
     <_AndroidJavadocXml>..\..\bin\Build$(Configuration)\android-javadoc.xml</_AndroidJavadocXml>
   </PropertyGroup>
