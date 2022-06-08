@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup Condition=" '$(XAInstallPrefix)' != '' ">
+    <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
+    <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
+  </PropertyGroup>
+  
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -113,5 +120,10 @@
     <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
     <None Include="Documentation\Java.Interop\JniManagedPeerStates.xml" />
     <None Include="Documentation\Java.Interop\JniEnvironment.References.xml" />
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
+        ReferenceOutputAssembly="false"
+        SkipGetTargetFrameworkProperties="True"
+        AdditionalProperties="TargetFramework=net472"
+    />
   </ItemGroup>
 </Project>
