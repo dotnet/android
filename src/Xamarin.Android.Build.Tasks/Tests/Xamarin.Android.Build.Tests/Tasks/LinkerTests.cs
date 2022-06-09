@@ -468,5 +468,27 @@ namespace UnnamedProject {
 				}
 			}
 		}
+
+		[Test]
+		public void UseNTAuthentication ([Values (true, false)] bool enabled)
+		{
+			if (!Builder.UseDotNet)
+				Assert.Ignore ("Test only valid on .NET 6");
+
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			proj.SetProperty (proj.ActiveConfigurationProperties, "UseNTAuthentication", enabled.ToString ());
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var assemblyFile = "Mono.Android.dll";
+				var assemblyPath = BuildTest.GetLinkedPath (b, true, assemblyFile);
+				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+					Assert.IsTrue (assembly != null);
+
+					var td = assembly.MainModule.GetType ("Xamarin.Android.Net.NTAuthenticationHandler");
+					Assert.IsTrue ((td != null) == enabled);
+				}
+			}
+		}
 	}
 }

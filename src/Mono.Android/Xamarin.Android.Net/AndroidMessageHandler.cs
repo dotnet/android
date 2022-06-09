@@ -139,33 +139,9 @@ namespace Xamarin.Android.Net
 
 		public bool UseProxy { get; set; } = true;
 
-#if !MONOANDROID1_0
-		IWebProxy? _proxy;
-		ICredentials? _credentials;
-		NTAuthenticationHandler.Helper? _ntAuthHelper;
-
-		public IWebProxy? Proxy
-		{
-			get => _proxy;
-			set {
-				_proxy = value;
-				_ntAuthHelper ??= new NTAuthenticationHandler.Helper (this);
-			}
-		}
-
-		public ICredentials? Credentials
-		{
-			get => _credentials;
-			set {
-				_credentials = value;
-				_ntAuthHelper ??= new NTAuthenticationHandler.Helper (this);
-			}
-		}
-#else
 		public IWebProxy? Proxy { get; set; }
 
 		public ICredentials? Credentials { get; set; }
-#endif
 
 		public bool AllowAutoRedirect { get; set; } = true;
 
@@ -288,6 +264,11 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromHours (24);
 
+#if !MONOANDROID1_0
+		static bool NTAuthenticationIsEnabled =>
+			AppContext.TryGetSwitch ("Xamarin.Android.Net.UseNTAuthentication", out bool isEnabled) && isEnabled;
+#endif
+
 		/// <summary>
 		/// <para>
 		/// Specifies the connect timeout
@@ -360,7 +341,7 @@ namespace Xamarin.Android.Net
 			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
 
 #if !MONOANDROID1_0
-			if (RequestNeedsAuthorization && _ntAuthHelper != null && _ntAuthHelper.RequestNeedsNTAuthentication (request, out var ntAuth)) {
+			if (NTAuthenticationIsEnabled && RequestNeedsAuthorization && NTAuthenticationHandler.RequestNeedsNTAuthentication (this, request, out var ntAuth)) {
 				var authenticatedResponse = await ntAuth.ResendRequestWithAuthAsync (cancellationToken).ConfigureAwait (false);
 				if (authenticatedResponse != null)
 					return authenticatedResponse;

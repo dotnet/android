@@ -17,42 +17,35 @@ namespace Xamarin.Android.Net
 	{
 		const int MaxRequests = 10;
 
-		internal sealed class Helper
+		internal static bool RequestNeedsNTAuthentication (
+			AndroidMessageHandler handler,
+			HttpRequestMessage request,
+			[NotNullWhen (true)] out NTAuthenticationHandler? ntAuthHandler)
 		{
-			readonly AndroidMessageHandler _handler;
+			IEnumerable<AuthenticationData> requestedAuthentication = handler.RequestedAuthentication ?? Enumerable.Empty<AuthenticationData> ();
+			foreach (var auth in requestedAuthentication) {
+				if (TryGetSupportedAuthType (auth.Challenge, out var authType)) {
+					var credentials = auth.UseProxyAuthentication ? handler.Proxy?.Credentials : handler.Credentials;
+					var correspondingCredentials = credentials?.GetCredential (request.RequestUri, authType);
 
-			internal Helper (AndroidMessageHandler handler)
-			{
-				_handler = handler;
-			}
-
-			internal bool RequestNeedsNTAuthentication (HttpRequestMessage request, [NotNullWhen (true)] out NTAuthenticationHandler? ntAuthHandler)
-			{
-				IEnumerable<AuthenticationData> requestedAuthentication = _handler.RequestedAuthentication ?? Enumerable.Empty<AuthenticationData> ();
-				foreach (var auth in requestedAuthentication) {
-					if (TryGetSupportedAuthType (auth.Challenge, out var authType)) {
-						var credentials = auth.UseProxyAuthentication ? _handler.Proxy?.Credentials : _handler.Credentials;
-						var correspondingCredentials = credentials?.GetCredential (request.RequestUri, authType);
-
-						if (correspondingCredentials != null) {
-							ntAuthHandler = new NTAuthenticationHandler (_handler, request, authType, auth.UseProxyAuthentication, correspondingCredentials);
-							return true;
-						}
+					if (correspondingCredentials != null) {
+						ntAuthHandler = new NTAuthenticationHandler (handler, request, authType, auth.UseProxyAuthentication, correspondingCredentials);
+						return true;
 					}
 				}
-
-				ntAuthHandler = null;
-				return false;
 			}
 
-			static bool TryGetSupportedAuthType (string challenge, out string authType)
-			{
-				var spaceIndex = challenge.IndexOf (' ');
-				authType = spaceIndex == -1 ? challenge : challenge.Substring (0, spaceIndex);
+			ntAuthHandler = null;
+			return false;
+		}
 
-				return authType.Equals ("NTLM", StringComparison.OrdinalIgnoreCase) ||
-					authType.Equals ("Negotiate", StringComparison.OrdinalIgnoreCase);
-			}
+		static bool TryGetSupportedAuthType (string challenge, out string authType)
+		{
+			var spaceIndex = challenge.IndexOf (' ');
+			authType = spaceIndex == -1 ? challenge : challenge.Substring (0, spaceIndex);
+
+			return authType.Equals ("NTLM", StringComparison.OrdinalIgnoreCase) ||
+				authType.Equals ("Negotiate", StringComparison.OrdinalIgnoreCase);
 		}
 
 		readonly AndroidMessageHandler _handler;
