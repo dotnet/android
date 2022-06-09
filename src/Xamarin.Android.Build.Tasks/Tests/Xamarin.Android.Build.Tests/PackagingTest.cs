@@ -135,7 +135,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
-				if (Builder.UseDotNet && dexTool == "dx") {
+				if (dexTool == "dx") {
 					Assert.IsFalse (b.Build (proj), "build failed");
 					StringAssertEx.Contains ("XA1023", b.LastBuildOutput, "Output should contain XA1023 errors");
 					return;
