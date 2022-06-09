@@ -33,6 +33,10 @@
       </_GlobalProperties>
     </PropertyGroup>
     <MSBuild
+        Projects="$(JavaInteropFullPath)\build-tools\jnienv-gen\jnienv-gen.csproj"
+        Properties="TargetFramework=net472;"
+    />
+    <MSBuild
         Projects="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop-MonoAndroid.csproj"
         Properties="$(_GlobalProperties)"
     />
