@@ -45,10 +45,20 @@ Either install it in the Android SDK Manager (Tools > Android > Android SDK Mana
 or change the Xamarin.Android project to target an API version that is installed.
 ```
 
-Open the `Android SDK Manager` as described, click the gear icon in the
-bottom right, and select `Repository > Full List`.
+On Windows, if your Android SDK is located in `C:\Program Files
+(x86)\Android\android-sdk`, you will need a terminal running as
+administrator to run:
 
-Check `Android API 32 > Android SDK Platform 32` and click `Apply Changes`.
+```dotnetcli
+> dotnet build -t:InstallAndroidDependencies -p:AndroidManifestType=GoogleV2 -p:AcceptAndroidSDKLicenses=true
+```
+
+*On macOS, you might not even need `sudo` for this command.*
+
+Alternatively, you can open the `Android SDK Manager` as described,
+click the gear icon in the bottom right, and select **Repository** >
+**Full List**. Check **Android API 32** > **Android SDK Platform 32**
+and click `Apply Changes`.
 
 ## Using Visual Studio
 
