@@ -22,6 +22,8 @@ namespace Xamarin.Android.Build.Tests
 			// We need to grab the latest API level *before* changing env vars
 			var apiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var old = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+			var _configPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "xbuild", "monodroid-config.xml");
+			bool haveConfigPath = File.Exists (_configPath);
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
 				Environment.SetEnvironmentVariable ("ANDROID_SDK_PATH", sdkPath);
@@ -47,6 +49,7 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				Environment.SetEnvironmentVariable ("ANDROID_SDK_PATH", old);
 			}
+			throw new Exception ($"# jonp: deliberate test failure! File.Exist(\"{_configPath}\")? {haveConfigPath}");
 		}
 
 		[Test]
