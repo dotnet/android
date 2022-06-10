@@ -88,16 +88,16 @@ stages:
       displayName: make prepare-update-mono
 
     - script: >
-        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
-        make prepare CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+        echo "./build.sh Prepare CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
+        ./build.sh Prepare CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
-      displayName: make prepare
+      displayName: ./build.sh Prepare
 
     - script: >
-        echo "make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1" &&
-        make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+        echo "./build.sh Build CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1" &&
+        ./build.sh Build CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
-      displayName: make jenkins
+      displayName: ./build.sh Build
 
     - script: >
         echo "make create-installers CONFIGURATION=$(XA.Build.Configuration)" &&
@@ -142,6 +142,27 @@ stages:
         includeBuildResults: true
         artifactName: OSS Build Results - macOS
 
+- stage: windows_stage
+  displayName: Windows
+  condition: eq(variables['EnableWindowsStage'], 'true')    # The variable is defined on the pipeline definition
+  dependsOn: []
+  jobs:
+  - jobs: windows_build
+    displayName: Windows Build
+    pool:
+      vmImage: $(HostedWinImage)
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+     steps:
+    - checkout: self
+      submodules: recursive
+    - script: build.cmd Prepare PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+      displayName: build.cmd Prepare
+    - script: build.cmd Build PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+      displayName: build.cmd Build
+
 - stage: linux_stage
   displayName: Linux
   condition: eq(variables['EnableLinuxStage'], 'true')    # The variable is defined on the pipeline definition
@@ -163,11 +184,11 @@ stages:
 
     - template: yaml-templates/setup-ubuntu.yaml
 
-    - script: make prepare PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-      displayName: make prepare
+    - script: ./build.sh Prepare PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+      displayName: build.sh Prepare
 
-    - script: make jenkins PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-      displayName: make jenkins
+    - script: ./build.sh Build PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+      displayName: build.sh Build
 
     - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-nupkgs
