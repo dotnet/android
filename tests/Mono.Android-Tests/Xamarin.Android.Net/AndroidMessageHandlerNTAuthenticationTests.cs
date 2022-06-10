@@ -10,6 +10,12 @@ namespace Xamarin.Android.NetTests {
 	[TestFixture]
 	public sealed class AndroidMessageHandlerNTAuthenticationTests
 	{
+		[SetUp]
+		public void SetUp ()
+		{
+			AppContext.SetSwitch ("Xamarin.Android.Net.UseNTAuthentication", true);
+		}
+
 		[Test]
 		public async Task RequestWithoutCredentialsFails ()
 		{
