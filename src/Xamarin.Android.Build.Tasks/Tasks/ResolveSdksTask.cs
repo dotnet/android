@@ -96,6 +96,13 @@ namespace Xamarin.Android.Tasks
 
 			JavaSdkPath         = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion)?.HomePath;
 
+			if (Directory.Exists (AndroidSdkPath)) {
+				Log.LogDebugMessage ($"# jonp: AndroidSdkPath={AndroidSdkPath}; contents");
+				foreach (var p in Directory.EnumerateFileSystemEntries (AndroidSdkPath, "*", SearchOption.AllDirectories)) {
+					Log.LogDebugMessage ("#   jonp: {p}");
+				}
+			}
+
 			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
 
 			try {

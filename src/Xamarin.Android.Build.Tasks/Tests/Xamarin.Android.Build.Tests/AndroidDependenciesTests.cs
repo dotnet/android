@@ -30,17 +30,20 @@ namespace Xamarin.Android.Build.Tests
 				if (Directory.Exists (sdkPath))
 					Directory.Delete (sdkPath, true);
 				Directory.CreateDirectory (sdkPath);
+				TestContext.Out.WriteLine ($"[TESTLOG] InstallAndroidDependenciesTest: empty sdkPath size? {string.Join (", ", Directory.EnumerateFileSystemEntries (sdkPath, "*", SearchOption.AllDirectories))}");
 				var proj = new XamarinAndroidApplicationProject {
 					TargetSdkVersion = apiLevel.ToString (),
 				};
 				using (var b = CreateApkBuilder ()) {
 					b.CleanupAfterSuccessfulBuild = false;
 					string defaultTarget = b.Target;
+					TestContext.Out.WriteLine ($"[TESTLOG] InstallAndroidDependenciesTest: before build sdkPath size? {string.Join (", ", Directory.EnumerateFileSystemEntries (sdkPath, "*", SearchOption.AllDirectories))}");
 					b.Target = "InstallAndroidDependencies";
 					Assert.IsTrue (b.Build (proj, parameters: new string [] {
 						"AcceptAndroidSDKLicenses=true",
 						"AndroidManifestType=GoogleV2",     // Need GoogleV2 so we can install API-32
 					}), "InstallAndroidDependencies should have succeeded.");
+					TestContext.Out.WriteLine ($"[TESTLOG] InstallAndroidDependenciesTest: after build sdkPath size? {string.Join (", ", Directory.EnumerateFileSystemEntries (sdkPath, "*", SearchOption.AllDirectories))}");
 					b.Target = defaultTarget;
 					Assert.IsTrue (b.Build (proj, true), "build should have succeeded.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}"), "_AndroidSdkDirectory was not set to new SDK path.");
