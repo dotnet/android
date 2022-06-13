@@ -28,4 +28,5 @@ leeroy: leeroy-all framework-assemblies
 
 leeroy-all:
 	$(call DOTNET_BINLOG,leeroy-all) $(SOLUTION) -m:1 $(_MSBUILD_ARGS)
+	$(call DOTNET_BINLOG,setup-workload) -t:ConfigureLocalWorkload build-tools/create-packs/Microsoft.Android.Sdk.proj
 	$(call MSBUILD_BINLOG,leeroy-all,$(_SLN_BUILD)) /restore tools/xabuild/xabuild.csproj /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)

@@ -19,6 +19,8 @@
       _CopyExtractedMultiDexJar;
       _BuildMonoScripts;
       _CopyExtraPackageContent;
+      _GenerateBundledVersions;
+      _CopyNetSdkTargets;
       _CopyVSExtensionTargets;
     </BuildDependsOn>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidSdkDirectory)</_AndroidSdkLocation>
@@ -357,9 +359,39 @@
     </PropertyGroup>
   </Target>
 
+  <!-- Generate and include this file in our SDK for now, but we may eventually want to migrate to:
+       https://github.com/dotnet/installer/blob/d98f5f18bce44014aeacd2f99923b4779d89459d/src/redist/targets/GenerateBundledVersions.targets
+       -->
+  <Target Name="_GenerateBundledVersions"
+      DependsOnTargets="GetXAVersionInfo">
+    <ReplaceFileContents
+        SourceFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets"
+        DestinationFile="$(MSBuildThisFileDirectory)\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.BundledVersions.targets"
+        Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel);@DOTNET_TARGET_FRAMEWORK@=$(DotNetTargetFramework)" >
+    </ReplaceFileContents>
+  </Target>
+
+  <Target Name="_CopyNetSdkTargets">
+    <ItemGroup>
+      <_SdkDirFiles Include="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\**" />
+      <_SdkTargetsDirFiles Include="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\targets\**" />
+      <_SdkTargetsDirFiles Include="$(XamarinAndroidSourcePath)src\profiled-aot\dotnet.aotprofile" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_SdkDirFiles)"
+        DestinationFolder="$(MicrosoftAndroidSdkPackDir)Sdk"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="@(_SdkTargetsDirFiles)"
+        DestinationFolder="$(MicrosoftAndroidSdkPackDir)targets"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
+
   <ItemGroup>
-    <_VSExtensionTargets Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Xamarin.Android.Sdk.props" />
-    <_VSExtensionTargets Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Xamarin.Android.Sdk.targets" />
+    <_VSExtensionTargets Include="$(MSBuildThisFileDirectory)MSBuild\Xamarin\Xamarin.Android.Sdk.props" />
+    <_VSExtensionTargets Include="$(MSBuildThisFileDirectory)MSBuild\Xamarin\Xamarin.Android.Sdk.targets" />
   </ItemGroup>
   <Target Name="_CopyVSExtensionTargets"
       Inputs="@(_VSExtensionTargets)"

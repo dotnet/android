@@ -65,7 +65,13 @@
     <_XABinRelativeInstallPrefix>lib\xamarin.android</_XABinRelativeInstallPrefix>
     <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\$(_XABinRelativeInstallPrefix)\</XAInstallPrefix>
     <_MonoAndroidNETOutputRoot>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</_MonoAndroidNETOutputRoot>
-    <MicrosoftAndroidSdkPackDir>$(BuildOutputDirectory)packs\$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
+    <_MonoAndroidNETDefaultOutDir>$(_MonoAndroidNETOutputRoot)$(AndroidApiLevel)\</_MonoAndroidNETDefaultOutDir>
+    <MicrosoftAndroidRefPackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidApiLevel)\$(AndroidPackVersion)\ref\$(DotNetTargetFramework)\</MicrosoftAndroidRefPackDir>
+    <MicrosoftAndroidArmPackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android-arm\$(AndroidPackVersion)\runtimes\android-arm\</MicrosoftAndroidArmPackDir>
+    <MicrosoftAndroidArm64PackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android-arm64\$(AndroidPackVersion)\runtimes\android-arm64\</MicrosoftAndroidArm64PackDir>
+    <MicrosoftAndroidx86PackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android-x86\$(AndroidPackVersion)\runtimes\android-x86\</MicrosoftAndroidx86PackDir>
+    <MicrosoftAndroidx64PackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android-x64\$(AndroidPackVersion)\runtimes\android-x64\</MicrosoftAndroidx64PackDir>
+    <MicrosoftAndroidSdkPackDir>$(BuildOutputDirectory)lib\packs\$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
     <MicrosoftAndroidSdkOutDir>$(MicrosoftAndroidSdkPackDir)\tools\</MicrosoftAndroidSdkOutDir>
     <MingwDependenciesRootDirectory Condition=" '$(MingwDependenciesRootDirectory)' == '' ">$(MSBuildThisFileDirectory)\bin\Build$(Configuration)\mingw-deps</MingwDependenciesRootDirectory>
     <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>

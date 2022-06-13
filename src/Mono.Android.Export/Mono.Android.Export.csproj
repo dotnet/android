@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
-    <OutputPath>$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\</OutputPath>
+    <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -57,9 +57,46 @@
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
   <!-- Only build the .NET 6+ version of 'Mono.Android.Export.dll' for the latest stable Android version. -->
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' != '$(AndroidLatestStableApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
+
+  <!-- Copy .NET ref/runtime assemblies to bin/$(Configuration)/dotnet/packs folder -->
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' == '$(AndroidLatestStableApiLevel)' ">
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      _CopyToPackDirs;
+    </BuildDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_CopyToPackDirs" >
+    <Copy
+        SourceFiles="$(OutputPath)ref\Mono.Android.Export.dll"
+        DestinationFolder="$(MicrosoftAndroidRefPackDir)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)Mono.Android.Export.dll"
+        DestinationFolder="$(MicrosoftAndroidArmPackDir)lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)Mono.Android.Export.dll"
+        DestinationFolder="$(MicrosoftAndroidArm64PackDir)lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)Mono.Android.Export.dll"
+        DestinationFolder="$(MicrosoftAndroidx86PackDir)lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)Mono.Android.Export.dll"
+        DestinationFolder="$(MicrosoftAndroidx64PackDir)lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
 
 </Project>

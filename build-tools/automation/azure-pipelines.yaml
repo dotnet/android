@@ -115,7 +115,7 @@ stages:
 
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
-        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/bin/*.pdb
+        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/bin/*.pdb
         $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy Windows toolchain pdb files
@@ -208,7 +208,7 @@ stages:
       parameters:
         project: Xamarin.Android.sln
         arguments: >-
-          -t:PackDotNet -c $(XA.Build.Configuration) -m:1 -v:n
+          -t:BuildDotNet,PackDotNet -c $(XA.Build.Configuration) -m:1 -v:n
           -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
         displayName: Build Solution
         continueOnError: false
