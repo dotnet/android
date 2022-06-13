@@ -51,7 +51,7 @@ namespace Xamarin.Android.Tools
 				if (androidEl != null) {
 					var path = (string?)androidEl.Attribute ("path");
 
-					if (ValidateAndroidSdkLocation (path))
+					if (ValidateAndroidSdkLocation ("preferred path", path))
 						return path;
 				}
 				return null;
@@ -66,7 +66,7 @@ namespace Xamarin.Android.Tools
 				if (androidEl != null) {
 					var path = (string?)androidEl.Attribute ("path");
 
-					if (ValidateAndroidNdkLocation (path))
+					if (ValidateAndroidNdkLocation ("preferred path", path))
 						return path;
 				}
 				return null;
@@ -81,7 +81,7 @@ namespace Xamarin.Android.Tools
 				if (javaEl != null) {
 					var path = (string?)javaEl.Attribute ("path");
 
-					if (ValidateJavaSdkLocation (path))
+					if (ValidateJavaSdkLocation ("preferred path", path))
 						return path;
 				}
 				return null;

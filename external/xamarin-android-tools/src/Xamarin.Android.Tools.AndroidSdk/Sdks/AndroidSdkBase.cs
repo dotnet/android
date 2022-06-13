@@ -26,7 +26,7 @@ namespace Xamarin.Android.Tools
 					var dirs = new List<string?> ();
 					dirs.Add (AndroidSdkPath);
 					dirs.AddRange (GetAllAvailableAndroidSdks ());
-					allAndroidSdks = dirs.Where (d => ValidateAndroidSdkLocation (d))
+					allAndroidSdks = dirs.Where (d => ValidateAndroidSdkLocation ("AllAndroidSdks", d))
 						.Select (d => d!)
 						.Distinct ()
 						.ToArray ();
@@ -102,15 +102,15 @@ namespace Xamarin.Android.Tools
 			NdkStack = GetExecutablePath (AndroidNdkPath, NdkStack);
 		}
 
-		static string? GetValidPath (Func<string?, bool> pathValidator, string? ctorParam, Func<string?> getPreferredPath, Func<IEnumerable<string>> getAllPaths)
+		static string? GetValidPath (Func<string, string?, bool> pathValidator, string? ctorParam, Func<string?> getPreferredPath, Func<IEnumerable<string>> getAllPaths)
 		{
-			if (pathValidator (ctorParam))
+			if (pathValidator ("constructor param", ctorParam))
 				return ctorParam;
 			ctorParam = getPreferredPath ();
-			if (pathValidator (ctorParam))
+			if (pathValidator ("preferred path", ctorParam))
 				return ctorParam;
 			foreach (var path in getAllPaths ()) {
-				if (pathValidator (path)) {
+				if (pathValidator ("all paths", path)) {
 					return path;
 				}
 			}
@@ -119,18 +119,18 @@ namespace Xamarin.Android.Tools
 
 		string? GetValidNdkPath (string? ctorParam)
 		{
-			if (ValidateAndroidNdkLocation (ctorParam))
+			if (ValidateAndroidNdkLocation ("constructor param", ctorParam))
 				return ctorParam;
 			if (AndroidSdkPath != null) {
 				string bundle = FindBestNDK (AndroidSdkPath);
-				if (Directory.Exists (bundle) && ValidateAndroidNdkLocation (bundle))
+				if (Directory.Exists (bundle) && ValidateAndroidNdkLocation ("within Android SDK", bundle))
 					return bundle;
 			}
 			ctorParam = PreferedAndroidNdkPath;
-			if (ValidateAndroidNdkLocation (ctorParam))
+			if (ValidateAndroidNdkLocation ("preferred path", ctorParam))
 				return ctorParam;
 			foreach (var path in GetAllAvailableAndroidNdks ()) {
-				if (ValidateAndroidNdkLocation (path))
+				if (ValidateAndroidNdkLocation ("all paths", path))
 					return path;
 			}
 			return null;
@@ -255,31 +255,47 @@ namespace Xamarin.Android.Tools
 		/// <summary>
 		/// Checks that a value is the location of an Android SDK.
 		/// </summary>
-		public bool ValidateAndroidSdkLocation ([NotNullWhen (true)] string? loc)
+		public bool ValidateAndroidSdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
-			bool result = !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "platform-tools"), Adb).Any ();
-			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidSdkLocation)}: `{loc}`, result={result}");
+			bool result = !string.IsNullOrEmpty (loc);
+			if (result) {
+				bool foundAdb = false;
+				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "platform-tools"), Adb)) {
+					Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidSdkLocation)}: for locator={locator}, path=`{loc}`, found adb `{p}`");
+					foundAdb = true;
+				}
+				result = foundAdb;
+			}
+			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidSdkLocation)}: for locator={locator}, path=`{loc}`, result={result}");
 			return result;
 		}
 
 		/// <summary>
 		/// Checks that a value is the location of a Java SDK.
 		/// </summary>
-		public virtual bool ValidateJavaSdkLocation ([NotNullWhen (true)] string? loc)
+		public virtual bool ValidateJavaSdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
-			bool result = !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "bin"), JarSigner).Any ();
-			Logger (TraceLevel.Verbose, $"{nameof (ValidateJavaSdkLocation)}: `{loc}`, result={result}");
+			bool result = !string.IsNullOrEmpty (loc);
+			if (result) {
+				bool foundSigner = false;
+				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "bin"), JarSigner)) {
+					Logger (TraceLevel.Verbose, $"{nameof (ValidateJavaSdkLocation)}: for locator={locator}, path=`{loc}`, found jarsigner `{p}`");
+					foundSigner = true;
+				}
+				result = foundSigner;
+			}
+			Logger (TraceLevel.Verbose, $"{nameof (ValidateJavaSdkLocation)}: locator={locator}, path=`{loc}`, result={result}");
 			return result;
 		}
 
 		/// <summary>
 		/// Checks that a value is the location of an Android SDK.
 		/// </summary>
-		public bool ValidateAndroidNdkLocation ([NotNullWhen (true)] string? loc)
+		public bool ValidateAndroidNdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
 			bool result = !string.IsNullOrEmpty (loc) &&
 				ProcessUtils.FindExecutablesInDirectory (loc!, NdkStack).Any ();
-			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidNdkLocation)}: `{loc}`, result={result}");
+			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidNdkLocation)}: for locator={locator}, path=`{loc}`, result={result}");
 			return result;
 		}
 

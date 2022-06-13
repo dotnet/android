@@ -145,7 +145,7 @@ namespace Xamarin.Android.Tools
 			foreach (var basePath in new string [] {xamarin_private, android_default, vs_default, vs_default32bit, vs_2017_default, cdrive_default})
 				if (Directory.Exists (basePath))
 					foreach (var dir in Directory.GetDirectories (basePath, "android-ndk-r*"))
-						if (ValidateAndroidNdkLocation (dir))
+						if (ValidateAndroidNdkLocation ("Windows known NDK path", dir))
 							yield return dir;
 
 			foreach (var dir in base.GetAllAvailableAndroidNdks ()) {
