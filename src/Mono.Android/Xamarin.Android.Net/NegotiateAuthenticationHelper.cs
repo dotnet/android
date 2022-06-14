@@ -13,14 +13,14 @@ using System.Threading.Tasks;
 namespace Xamarin.Android.Net
 {
 	// This code is heavily inspired by System.Net.Http.AuthenticationHelper
-	internal sealed class NTAuthenticationHandler
+	internal sealed class NegotiateAuthenticationHelper
 	{
 		const int MaxRequests = 10;
 
-		internal static bool RequestNeedsNTAuthentication (
+		internal static bool RequestNeedsNegotiateAuthentication (
 			AndroidMessageHandler handler,
 			HttpRequestMessage request,
-			[NotNullWhen (true)] out NTAuthenticationHandler? ntAuthHandler)
+			[NotNullWhen (true)] out NegotiateAuthenticationHelper? negotiateAuthentication)
 		{
 			IEnumerable<AuthenticationData> requestedAuthentication = handler.RequestedAuthentication ?? Enumerable.Empty<AuthenticationData> ();
 			foreach (var auth in requestedAuthentication) {
@@ -29,13 +29,13 @@ namespace Xamarin.Android.Net
 					var correspondingCredentials = credentials?.GetCredential (request.RequestUri, authType);
 
 					if (correspondingCredentials != null) {
-						ntAuthHandler = new NTAuthenticationHandler (handler, request, authType, auth.UseProxyAuthentication, correspondingCredentials);
+						negotiateAuthentication = new NegotiateAuthenticationHelper (handler, authType, auth.UseProxyAuthentication, correspondingCredentials);
 						return true;
 					}
 				}
 			}
 
-			ntAuthHandler = null;
+			negotiateAuthentication = null;
 			return false;
 		}
 
@@ -49,32 +49,30 @@ namespace Xamarin.Android.Net
 		}
 
 		readonly AndroidMessageHandler _handler;
-		readonly HttpRequestMessage _request;
 		readonly string _authType;
 		readonly bool _isProxyAuth;
 		readonly NetworkCredential _credentials;
 
-		private NTAuthenticationHandler (
+		private NegotiateAuthenticationHelper (
 			AndroidMessageHandler handler,
-			HttpRequestMessage request,
 			string authType,
 			bool isProxyAuth,
 			NetworkCredential credentials)
 		{
 			_handler = handler;
-			_request = request;
 			_authType = authType;
 			_isProxyAuth = isProxyAuth;
 			_credentials = credentials;
 		}
 
-		internal async Task <HttpResponseMessage?> ResendRequestWithAuthAsync (CancellationToken cancellationToken)
+		internal async Task <HttpResponseMessage?> SendWithAuthAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
+			// TODO: replace with NegotiateAuthentication once it's available in dotnet/runtime
 			var authContext = new NTAuthentication (
 				isServer: false,
 				_authType,
 				_credentials,
-				spn: await GetSpn (cancellationToken).ConfigureAwait (false),
+				spn: await GetSpn (request, cancellationToken).ConfigureAwait (false),
 				requestedContextFlags: GetRequestedContextFlags (),
 				channelBinding: null);
 
@@ -84,14 +82,14 @@ namespace Xamarin.Android.Net
 			_handler.PreAuthenticate = false;
 
 			try {
-				return await DoResendRequestWithAuthAsync (authContext, cancellationToken);
+				return await DoSendWithAuthAsync (request, authContext, cancellationToken);
 			} finally {
 				_handler.PreAuthenticate = originalPreAuthenticate;
 				authContext.CloseContext ();
 			}
 		}
 
-		async Task <HttpResponseMessage?> DoResendRequestWithAuthAsync (NTAuthentication authContext, CancellationToken cancellationToken)
+		async Task <HttpResponseMessage?> DoSendWithAuthAsync (HttpRequestMessage request, NTAuthentication authContext, CancellationToken cancellationToken)
 		{
 			HttpResponseMessage? response = null;
 
@@ -108,12 +106,12 @@ namespace Xamarin.Android.Net
 
 				var headerValue = new AuthenticationHeaderValue (_authType, challengeResponse);
 				if (_isProxyAuth) {
-					_request.Headers.ProxyAuthorization = headerValue;
+					request.Headers.ProxyAuthorization = headerValue;
 				} else {
-					_request.Headers.Authorization = headerValue;
+					request.Headers.Authorization = headerValue;
 				}
 
-				response = await _handler.DoSendAsync (_request, cancellationToken).ConfigureAwait (false);
+				response = await _handler.DoSendAsync (request, cancellationToken).ConfigureAwait (false);
 
 				// we need to drain the content otherwise the next request
 				// won't reuse the same TCP socket and persistent auth won't work
@@ -134,24 +132,24 @@ namespace Xamarin.Android.Net
 			return response;
 		}
 
-		async Task<string> GetSpn (CancellationToken cancellationToken)
+		async Task<string> GetSpn (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-			var hostName = await GetHostName (cancellationToken);
+			var hostName = await GetHostName (request, cancellationToken);
 			return $"HTTP/{hostName}";
 		}
 
-		async Task<string> GetHostName (CancellationToken cancellationToken)
+		async Task<string> GetHostName (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
 			// Calculate SPN (Service Principal Name) using the host name of the request.
 			// Use the request's 'Host' header if available. Otherwise, use the request uri.
 			// Ignore the 'Host' header if this is proxy authentication since we need to use
 			// the host name of the proxy itself for SPN calculation.
-			if (!_isProxyAuth && _request.Headers.Host != null) {
+			if (!_isProxyAuth && request.Headers.Host != null) {
 				// Use the host name without any normalization.
-				return _request.Headers.Host;
+				return request.Headers.Host;
 			}
 
-			var requestUri = _request.RequestUri!;
+			var requestUri = request.RequestUri!;
 			var authUri = _isProxyAuth ? _handler.Proxy?.GetProxy (requestUri) ?? requestUri : requestUri;
 
 			// Need to use FQDN normalized host so that CNAME's are traversed.
@@ -194,6 +192,7 @@ namespace Xamarin.Android.Net
 				? response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
 				: response.StatusCode == HttpStatusCode.Unauthorized;
 
+		// This class will be removed once the new NegotiateAuthentication class is available in dotnet/runtime
 		private sealed class NTAuthentication
 		{
 			const string AssemblyName = "System.Net.Http";

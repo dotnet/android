@@ -470,14 +470,14 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void UseNTAuthentication ([Values (true, false, null)] bool? enabled)
+		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? enabled)
 		{
 			if (!Builder.UseDotNet)
 				Assert.Ignore ("Test only valid on .NET 6");
 
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			if (enabled.HasValue)
-				proj.SetProperty ("UseNTAuthentication", enabled.ToString ());
+				proj.SetProperty ("AndroidUseNegotiateAuthentication", enabled.ToString ());
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

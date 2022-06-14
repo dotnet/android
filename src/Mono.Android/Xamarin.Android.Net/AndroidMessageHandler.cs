@@ -265,8 +265,8 @@ namespace Xamarin.Android.Net
 		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromHours (24);
 
 #if !MONOANDROID1_0
-		static bool NTAuthenticationIsEnabled =>
-			AppContext.TryGetSwitch ("Xamarin.Android.Net.UseNTAuthentication", out bool isEnabled) && isEnabled;
+		static bool NegotiateAuthenticationIsEnabled =>
+			AppContext.TryGetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", out bool isEnabled) && isEnabled;
 #endif
 
 		/// <summary>
@@ -341,8 +341,8 @@ namespace Xamarin.Android.Net
 			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
 
 #if !MONOANDROID1_0
-			if (NTAuthenticationIsEnabled && RequestNeedsAuthorization && NTAuthenticationHandler.RequestNeedsNTAuthentication (this, request, out var ntAuth)) {
-				var authenticatedResponse = await ntAuth.ResendRequestWithAuthAsync (cancellationToken).ConfigureAwait (false);
+			if (NegotiateAuthenticationIsEnabled && RequestNeedsAuthorization && NegotiateAuthenticationHelper.RequestNeedsNegotiateAuthentication (this, request, out var negotiateAuthentication)) {
+				var authenticatedResponse = await negotiateAuthentication.SendWithAuthAsync (request, cancellationToken).ConfigureAwait (false);
 				if (authenticatedResponse != null)
 					return authenticatedResponse;
 			}

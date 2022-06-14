@@ -104,7 +104,7 @@
 
     <!-- XA feature switches defaults -->
     <VSAndroidDesigner Condition="'$(VSAndroidDesigner)' == ''">false</VSAndroidDesigner>
-    <UseNTAuthentication Condition="'$(UseNTAuthentication)' == ''">false</UseNTAuthentication>
+    <AndroidUseNegotiateAuthentication Condition="'$(AndroidUseNegotiateAuthentication)' == ''">false</AndroidUseNegotiateAuthentication>
 
     <!-- profiler won't work without internet permission, we must thus force it -->
     <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>

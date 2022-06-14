@@ -9,8 +9,8 @@
       <method signature="System.Void RegisterPackages(System.String[],System.Converter`2&lt;System.String,System.Type&gt;[])" body="stub" />
     </type>
     <type fullname="Xamarin.Android.Net.AndroidMessageHandler">
-      <method signature="System.Boolean get_NTAuthenticationIsEnabled()" body="stub" value="false" feature="Xamarin.Android.Net.UseNTAuthentication" featurevalue="false" />
-      <method signature="System.Boolean get_NTAuthenticationIsEnabled()" body="stub" value="true" feature="Xamarin.Android.Net.UseNTAuthentication" featurevalue="true" />
+      <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="false" value="false" />
+      <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="true" value="true" />
     </type>
   </assembly>
 </linker>

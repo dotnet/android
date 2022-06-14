@@ -8,12 +8,12 @@ using NUnit.Framework;
 
 namespace Xamarin.Android.NetTests {
 	[TestFixture]
-	public sealed class AndroidMessageHandlerNTAuthenticationTests
+	public sealed class AndroidMessageHandlerNegotiateAuthenticationTests
 	{
 		[SetUp]
 		public void SetUp ()
 		{
-			AppContext.SetSwitch ("Xamarin.Android.Net.UseNTAuthentication", true);
+			AppContext.SetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", true);
 		}
 
 		[Test]
