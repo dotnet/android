@@ -30,11 +30,12 @@
       <_GlobalProperties>
         JavaInteropProfile=Net45;
         XAInstallPrefix=$(XAInstallPrefix);
-        TargetFrameworkIdentifier=MonoAndroid;
-        TargetFrameworkVersion=v1.0;
-        TargetFrameworkRootPath=$(XAInstallPrefix)xbuild-frameworks;
       </_GlobalProperties>
     </PropertyGroup>
+    <MSBuild
+        Projects="$(JavaInteropFullPath)\build-tools\jnienv-gen\jnienv-gen.csproj"
+        Properties="TargetFramework=net472;"
+    />
     <MSBuild
         Projects="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop-MonoAndroid.csproj"
         Properties="$(_GlobalProperties)"
@@ -118,17 +119,6 @@
         Command="&quot;$(JavaPath)&quot; -jar &quot;$(_JavaSourceUtilsJar)&quot; @(_JSIArg, ' ')"
     />
     <Touch Files="$(_AndroidJavadocXml)" />
-  </Target>
-  
-  <!-- Generates 'JNIEnv.g.cs' file -->
-  <Target Name="_BuildJNIEnv"
-      BeforeTargets="CoreCompile"
-      Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.exe"
-      Outputs="Android.Runtime\JNIEnv.g.cs">
-    <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;../../bin/Build$(Configuration)/jnienv-gen.exe&quot; -o Android.Runtime/JNIEnv.g.cs --use-java-interop"
-    />
-    <Touch Files="Android.Runtime\JNIEnv.g.cs" />
   </Target>
   
   <!-- Copies common 'api-X.xml' to the 'obj' directory.
