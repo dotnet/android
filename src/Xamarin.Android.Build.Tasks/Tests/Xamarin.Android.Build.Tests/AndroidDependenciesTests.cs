@@ -21,10 +21,10 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			// We need to grab the latest API level *before* changing env vars
 			var apiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			var old = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+			var old = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
-				Environment.SetEnvironmentVariable ("ANDROID_SDK_PATH", sdkPath);
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", sdkPath);
 				if (Directory.Exists (sdkPath))
 					Directory.Delete (sdkPath, true);
 				Directory.CreateDirectory (sdkPath);
@@ -47,7 +47,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"JavaPlatformJarPath={sdkPath}"), "JavaPlatformJarPath did not contain new SDK path.");
 				}
 			} finally {
-				Environment.SetEnvironmentVariable ("ANDROID_SDK_PATH", old);
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", old);
 			}
 		}
 
