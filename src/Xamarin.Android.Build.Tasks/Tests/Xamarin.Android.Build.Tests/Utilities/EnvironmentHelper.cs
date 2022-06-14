@@ -122,7 +122,7 @@ namespace Xamarin.Android.Build.Tests
 				"--filetype=asm " +
 				"--relocation-model=pic";
 
-			string llc = Path.Combine (BaseTest.SetUp.OSBinDirectory, "binutils", "bin", $"llc{executableExtension}");
+			string llc = Path.Combine (TestEnvironment.OSBinDirectory, "binutils", "bin", $"llc{executableExtension}");
 			string outputFilePath = Path.ChangeExtension (llvmIrFilePath, ".s");
 			RunCommand (llc, $"{assemblerOptions} -o \"{outputFilePath}\" \"{llvmIrFilePath}\"");
 

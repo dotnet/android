@@ -32,17 +32,17 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ShouldUseFullToolPath ()
 		{
-			var dotnetDir = AndroidSdkResolver.GetDotNetPreviewPath ();
+			var dotnetDir = TestEnvironment.DotNetPreviewDirectory;
 			var dotnetPath = Path.Combine (dotnetDir, (TestEnvironment.IsWindows ? "dotnet.exe" : "dotnet"));
 			var classParseTask = new ClassParseTestTask {
 				BuildEngine = engine,
 				NetCoreRoot = dotnetDir,
-				ToolPath = Builder.UseDotNet ? TestEnvironment.DotNetAndroidSdkToolsDirectory : AndroidMSBuildDirectory,
+				ToolPath = TestEnvironment.AndroidMSBuildDirectory,
 				ToolExe = Builder.UseDotNet ? "class-parse.dll" : "class-parse.exe",
 			};
 
 			Assert.True (classParseTask.Execute (), "Task should have succeeded.");
-			var expectedTool = Builder.UseDotNet ? dotnetPath : Path.Combine (AndroidMSBuildDirectory, "class-parse.exe");
+			var expectedTool = Builder.UseDotNet ? dotnetPath : Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "class-parse.exe");
 			Assert.IsTrue (messages.Any (m => m.Message.StartsWith (expectedTool)), "Task did not use expected tool path.");
 		}
 	}

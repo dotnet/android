@@ -1072,8 +1072,6 @@ namespace Lib2
 			if (!string.IsNullOrEmpty (androidAotMode))
 			    proj.SetProperty ("AndroidAotMode", androidAotMode);
 			using (var b = CreateApkBuilder (path)) {
-				if (!b.CrossCompilerAvailable (supportedAbis))
-					Assert.Ignore ($"Cross compiler for {supportedAbis} was not available");
 				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
 					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
 

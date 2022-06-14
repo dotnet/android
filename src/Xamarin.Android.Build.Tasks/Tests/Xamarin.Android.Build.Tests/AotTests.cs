@@ -189,8 +189,6 @@ namespace Xamarin.Android.Build.Tests
 </manifest>";
 			}
 			using (var b = CreateApkBuilder (path)) {
-				if (!b.CrossCompilerAvailable (supportedAbis))
-					Assert.Ignore ($"Cross compiler for {supportedAbis} was not available");
 				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
 					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
 				b.ThrowOnBuildFailure = false;
@@ -259,8 +257,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder (path)) {
-				if (!b.CrossCompilerAvailable (supportedAbis))
-					Assert.Ignore ("Cross compiler was not available");
 				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
 					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
 				b.ThrowOnBuildFailure = false;
