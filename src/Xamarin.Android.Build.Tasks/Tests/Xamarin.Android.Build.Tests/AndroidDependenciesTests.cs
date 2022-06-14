@@ -35,11 +35,13 @@ namespace Xamarin.Android.Build.Tests
 					b.CleanupAfterSuccessfulBuild = false;
 					string defaultTarget = b.Target;
 					b.Target = "InstallAndroidDependencies";
+					b.BuildLogFile = "install-deps.log";
 					Assert.IsTrue (b.Build (proj, parameters: new string [] {
 						"AcceptAndroidSDKLicenses=true",
 						"AndroidManifestType=GoogleV2",     // Need GoogleV2 so we can install API-32
 					}), "InstallAndroidDependencies should have succeeded.");
 					b.Target = defaultTarget;
+					b.BuildLogFile = "build.log";
 					Assert.IsTrue (b.Build (proj, true), "build should have succeeded.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}"), "_AndroidSdkDirectory was not set to new SDK path.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"JavaPlatformJarPath={sdkPath}"), "JavaPlatformJarPath did not contain new SDK path.");
