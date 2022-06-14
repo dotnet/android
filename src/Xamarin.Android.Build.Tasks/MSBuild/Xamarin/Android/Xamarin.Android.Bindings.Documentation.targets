@@ -4,7 +4,7 @@ Xamarin.Android.Bindings.Documentation.targets
 
 This file contains MSBuild targets related to documentation generation/extraction for bindings.
 
-This file is only used by binding projects. .NET 5 can eventually use it, once `mdoc.exe` is available.
+This file is only used by "legacy" Xamarin Android binding projects.
 
 ***********************************************************************************************
 -->

@@ -24,7 +24,6 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <ClassParseToolExe          Condition=" '$(ClassParseToolExe)' == '' ">class-parse.exe</ClassParseToolExe>
     <BindingsGeneratorToolExe   Condition=" '$(UsingAndroidNETSdk)' == 'true' ">generator.dll</BindingsGeneratorToolExe>
     <BindingsGeneratorToolExe   Condition=" '$(BindingsGeneratorToolExe)' == '' ">generator.exe</BindingsGeneratorToolExe>
-    <JavadocToMdocToolExe       Condition=" '$(UsingAndroidNETSdk)' == 'true' ">javadoc-to-mdoc.dll</JavadocToMdocToolExe>
     <JavadocToMdocToolExe       Condition=" '$(JavadocToMdocToolExe)' == '' ">javadoc-to-mdoc.exe</JavadocToMdocToolExe>
     <_GeneratorStampFile>$(_AndroidStampDirectory)generator.stamp</_GeneratorStampFile>
   </PropertyGroup>

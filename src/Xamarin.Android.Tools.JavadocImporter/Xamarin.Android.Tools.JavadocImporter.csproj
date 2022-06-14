@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
+      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
     </Reference>
   </ItemGroup>
 

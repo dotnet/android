@@ -274,7 +274,7 @@ macro(xa_macos_prepare_arm64)
     unset(XA_OSX_ARCHITECTURES)
     if(SDK_SUPPORTS_ARM64)
       message(STATUS "SDK at ${XCODE_DEVELOPER_PATH} supports creation of ARM64 binaries")
-      set(MONOSGEN_DYLIB "${XA_LIB_TOP_DIR}/host-Darwin/libmonosgen-2.0.dylib")
+      set(MONOSGEN_DYLIB "${XA_LIB_TOP_DIR}/lib/host-Darwin/libmonosgen-2.0.dylib")
       execute_process(
         COMMAND lipo -archs ${MONOSGEN_DYLIB}
         RESULT_VARIABLE LIPO_RESULT

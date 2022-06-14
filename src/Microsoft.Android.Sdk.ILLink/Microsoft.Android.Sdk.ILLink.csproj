@@ -5,13 +5,14 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <DefineConstants>ILLINK</DefineConstants>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <GenerateResxSource>true</GenerateResxSource>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.ILLink" Version="$(MicrosoftNETILLinkTasksPackageVersion)" />
     <PackageReference Include="XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj" />
+    <ProjectReference Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" ReferenceOutputAssembly="False" />
 
     <Compile Include="..\Xamarin.Android.Build.Tasks\obj\$(Configuration)\Profile.g.cs" Link="Profile.g.cs" />
 

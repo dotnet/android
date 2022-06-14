@@ -78,6 +78,7 @@
       <Replacement Include="@JdkIncludePath@=$(JavaIncludePath)" />
       <Replacement Include="@LibZipSourceFullPath@=$(LibZipSourceFullPath)" />
       <Replacement Include="@ManagedRuntime@=$(ManagedRuntime)" />
+      <Replacement Include="@MicrosoftAndroidSdkOutDir@=$(MicrosoftAndroidSdkOutDir)" />
       <Replacement Include="@MingwCommandPrefix32@=$(MingwCommandPrefix32)" />
       <Replacement Include="@MingwCommandPrefix64@=$(MingwCommandPrefix64)" />
       <Replacement Include="@MingwDependenciesRootDirectory@=$(MingwDependenciesRootDirectory)" />
@@ -89,7 +90,6 @@
       <Replacement Include="@MonoRequiredMinimumVersion@=$(MonoRequiredMinimumVersion)" />
       <Replacement Include="@MonoRequiredMaximumVersion@=$(MonoRequiredMaximumVersion)" />
       <Replacement Include="@MonoSourceFullPath@=$(MonoSourceFullPath)" />
-      <Replacement Include="@NetCoreBinDirectory@=$(NetCoreBinDirectory)" />
       <Replacement Include="@NinjaPath@=$(NinjaPath)" />
       <Replacement Include="@Pkg7-Zip_CommandLine@=$(Pkg7-Zip_CommandLine)" />
       <Replacement Include="@PkgXamarin_LibZipSharp@=$(PkgXamarin_LibZipSharp)" />

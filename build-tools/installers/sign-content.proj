@@ -19,7 +19,7 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     <GenerateDependencyFile>false</GenerateDependencyFile>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <!-- NOTE: Any file you want to sign must be under either $(OutDir) or $(IntermediateOutputPath). -->
-    <OutDir Condition=" '$(OutDir)' == '' ">$(MSBuildSrcDir)</OutDir>
+    <OutDir Condition=" '$(OutDir)' == '' ">$(MicrosoftAndroidSdkOutDir)</OutDir>
     <UnzippedVsixDir>$(OutDir)vsix-unzip\</UnzippedVsixDir>
   </PropertyGroup>
 

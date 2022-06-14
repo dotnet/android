@@ -109,13 +109,15 @@ stages:
 
     - template: yaml-templates/run-xaprepare.yaml
       parameters:
-        displayName: install required brew tools and prepare java.interop
-        arguments: --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
+
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
+        displayName: prepare java.interop $(XA.Build.Configuration)
+        continueOnError: false
 
     - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
       displayName: set Java8SdkDirectory

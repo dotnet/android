@@ -277,7 +277,6 @@ namespace Xamarin.Android.Prepare
 
 			public static string TestBinDir                          => GetCachedPath (ref testBinDir, ()                          => Path.Combine (Configurables.Paths.BinDirRoot, $"Test{ctx.Configuration}"));
 			public static string BinDir                              => GetCachedPath (ref binDir, ()                              => Path.Combine (Configurables.Paths.BinDirRoot, ctx.Configuration));
-			public static string NetCoreBinDir                       => GetCachedPath (ref netCoreBinDir, ()                       => ctx.Properties.GetRequiredValue (KnownProperties.NetCoreBinDirectory));
 			public static string BuildBinDir                         => GetCachedPath (ref buildBinDir, ()                         => Path.Combine (Configurables.Paths.BinDirRoot, $"Build{ctx.Configuration}"));
 			public static string MingwBinDir                         => GetCachedPath (ref mingwBinDir, ()                         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidMxeFullPath), "bin"));
 			public static string ProfileAssembliesProjitemsPath      => GetCachedPath (ref profileAssembliesProjitemsPath, ()      => Path.Combine (BuildBinDir, "ProfileAssemblies.projitems"));
@@ -296,7 +295,7 @@ namespace Xamarin.Android.Prepare
 			public static string InstallWindowsBCLDir                => GetCachedPath (ref installWindowsBCLDir, ()                => Path.Combine (InstallBCLDesignerDir, "bcl"));
 			public static string InstallWindowsBCLFacadesDir         => GetCachedPath (ref installWindowsBCLFacadesDir, ()         => Path.Combine (InstallBCLDesignerDir, "bcl", "Facades"));
 
-			public static string InstallMSBuildDir                   => GetCachedPath (ref installMSBuildDir, ()                   => Path.Combine (XAInstallPrefix, "xbuild", "Xamarin", "Android"));
+			public static string InstallMSBuildDir                   => GetCachedPath (ref installMSBuildDir, ()                   => ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir));
 			public static string OutputIncludeDir                    => GetCachedPath (ref outputIncludeDir, ()                    => Path.Combine (BinDirRoot, ctx.Configuration, "include"));
 			public static string MonoRuntimesEnabledAbisCachePath    => GetCachedPath (ref monoRuntimesEnabledAbisCachePath, ()    => Path.Combine (BuildBinDir, "mono-runtimes-abi.cache"));
 			public static string FrameworkListInstallPath            => GetCachedPath (ref frameworkListInstallPath, ()            => Path.Combine (InstallBCLFrameworkRedistListDir, "FrameworkList.xml"));
@@ -423,7 +422,6 @@ namespace Xamarin.Android.Prepare
 			static string? buildBinDir;
 			static string? mingwBinDir;
 			static string? binDir;
-			static string? netCoreBinDir;
 			static string? monoSDKsOutputDir;
 			static string? androidToolchainRootDirectory;
 			static string? androidToolchainBinDirectory;

@@ -35,7 +35,7 @@
       <_D>-d "$(IntermediateOutputPath)jcw/bin"</_D>
       <_AndroidJar>"$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\android.jar"</_AndroidJar>
       <_MonoAndroidJar>$(OutputPath)mono.android.jar</_MonoAndroidJar>
-      <_MonoAndroidRuntimeJar>$(OutputPath)..\..\..\xbuild\Xamarin\Android\java_runtime.jar</_MonoAndroidRuntimeJar>
+      <_MonoAndroidRuntimeJar>$(MicrosoftAndroidSdkOutDir)java_runtime.jar</_MonoAndroidRuntimeJar>
     </PropertyGroup>
     <Exec
         Command="&quot;$(JavaCPath)&quot; $(_Target) $(_D) -bootclasspath $(_AndroidJar)$(PathSeparator)&quot;$(_MonoAndroidJar)&quot;$(PathSeparator)&quot;$(_MonoAndroidRuntimeJar)&quot; @$(IntermediateOutputPath)jcw/classes.txt"
@@ -54,7 +54,7 @@
       Inputs="$(OutputPath)mono.android.jar"
       Outputs="$(OutputPath)mono.android.dex">
     <PropertyGroup>
-      <R8JarPath>$(XAInstallPrefix)xbuild\Xamarin\Android\r8.jar</R8JarPath>
+      <R8JarPath>$(MicrosoftAndroidSdkOutDir)r8.jar</R8JarPath>
     </PropertyGroup>
     <Exec
         Command="&quot;$(JavaPath)&quot; -classpath &quot;$(R8JarPath)&quot; com.android.tools.r8.D8 --release --no-desugaring --output &quot;$(IntermediateOutputPath.TrimEnd('\'))&quot; &quot;$(OutputPath)mono.android.jar&quot;"

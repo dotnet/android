@@ -4,7 +4,7 @@
 -->
 <Project>
   <PropertyGroup>
-    <LanguageTargets Condition="Exists('$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets')">$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets</LanguageTargets>
+    <LanguageTargets Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.CSharp.targets')">$(MicrosoftAndroidSdkOutDir)Xamarin.Android.CSharp.targets</LanguageTargets>
   </PropertyGroup>
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
 

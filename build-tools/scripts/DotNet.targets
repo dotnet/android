@@ -3,16 +3,26 @@
     <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
     <_BinlogDateTime>$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogDateTime>
   </PropertyGroup>
+  <Target Name="BuildExternal">
+    <MSBuild
+        Projects="$(_Root)\external\monodroid\monodroid.proj"
+        Properties="DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir);CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild\Novell"
+    />
+  </Target>
   <Target Name="PrepareJavaInterop">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_Root)bin\Build$(Configuration)\msbuild-$(_BinlogDateTime)-java-interop-prepare.binlog"
+        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_Root)bin/Build$(Configuration)/msbuild-$(_BinlogDateTime)-prepare-java-interop.binlog"
         WorkingDirectory="$(_Root)external\Java.Interop"
     />
   </Target>
-  <Target Name="PackDotNet"
+  <Target Name="BuildDotNet"
       DependsOnTargets="PrepareJavaInterop">
     <MSBuild Projects="$(_Root)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
     <MSBuild Projects="$(_Root)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
+    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ConfigureLocalWorkload" />
+  </Target>
+  <Target Name="PackDotNet">
+    <!-- Build extra versions of Mono.Android.dll if necessary -->
     <MSBuild
          Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"

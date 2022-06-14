@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\proguard\</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)proguard\</OutputPath>
   </PropertyGroup>
 
   <Import Project="proguard.targets" />

@@ -10,7 +10,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\lib\</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)lib\</OutputPath>
   </PropertyGroup>
 
   <Import Project="monodroid.targets" />

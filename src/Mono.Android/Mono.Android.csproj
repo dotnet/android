@@ -34,7 +34,7 @@
 
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
     <DefineConstants Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
-    <OutputPath>$(_MonoAndroidNETOutputRoot)$(DotNetAndroidTargetFramework)$(AndroidApiLevel)\</OutputPath>
+    <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
@@ -375,9 +375,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\create-android-api\create-android-api.csproj" ReferenceOutputAssembly="false" />
     <!-- Explicitly pass the target framework of the project so we don't have conflicts with the multiple targets in this file. -->
-    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472"/>
-    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=$(DotNetTargetFramework)" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
@@ -387,9 +386,58 @@
   <Target Name="GetTargetPath" />
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
   <!-- Only build the .NET 6+ version of 'Mono.Android.dll' for the default API level that is supported or higher. -->
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &lt; '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      _CopyToPackDirs;
+    </BuildDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_CopyToPackDirs" >
+    <ItemGroup>
+      <_RefExtras Include="$(OutputPath)*.*" Exclude="$(OutputPath)*.dll" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_RefExtras)"
+        DestinationFolder="$(MicrosoftAndroidRefPackDir)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)ref\Mono.Android.dll;$(JavaInteropSourceDirectory)\bin\$(Configuration)-net7.0\ref\Java.Interop.dll"
+        DestinationFolder="$(MicrosoftAndroidRefPackDir)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)Mono.Android.dll;$(OutputPath)Java.Interop.dll"
+        DestinationFolder="$(MicrosoftAndroidArmPackDir)lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)Mono.Android.dll;$(OutputPath)Java.Interop.dll"
+        DestinationFolder="$(MicrosoftAndroidArm64PackDir)lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)Mono.Android.dll;$(OutputPath)Java.Interop.dll"
+        DestinationFolder="$(MicrosoftAndroidx86PackDir)lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)Mono.Android.dll;$(OutputPath)Java.Interop.dll"
+        DestinationFolder="$(MicrosoftAndroidx64PackDir)lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)AndroidApiInfo.xml"
+        DestinationFolder="$(MicrosoftAndroidSdkPackDir)data\$(DotNetAndroidTargetFramework)$(AndroidApiLevel)"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
 
 </Project>
