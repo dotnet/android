@@ -500,7 +500,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchan
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
-	constexpr bool ref_only = false;
+	constexpr bool ref_only = true;
 
 	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
