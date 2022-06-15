@@ -14,7 +14,7 @@ is used within many of the output directories which are created.
       * `$(Configuration)`: These are the redistributable artifacts you're looking for.
           * `bin`: Programs that are intended to be installed into `$(prefix)/bin`,
 	    for Unix-style installable files.
-          * `lib\xamarin.android\xbuild\Xamarin\Android`: MSBuild project integrations.
+          * `packs\Microsoft.Android.Sdk.$(HostOS)\$(AndroidPackVersion)\tools`: MSBuild project integrations.
             This is where `Xamarin.Android.CSharp.targets` lives.
           * `lib\xamarin.android\xbuild-frameworks\MonoAndroid\v1.0`:
             Xamarin.Android BCL assemblies

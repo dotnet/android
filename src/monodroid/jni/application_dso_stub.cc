@@ -63,6 +63,8 @@ const ApplicationConfig application_config = {
 	.android_runtime_jnienv_class_token = 1,
 	.jnienv_initialize_method_token = 2,
 	.jnienv_registerjninatives_method_token = 3,
+	.jni_remapping_replacement_type_count = 2,
+	.jni_remapping_replacement_method_index_entry_count = 2,
 	.mono_components_mask = MonoComponent::None,
 	.android_package_name = android_package_name,
 };
@@ -142,5 +144,128 @@ DSOCacheEntry dso_cache[] = {
 		.ignore = true,
 		.name = fake_dso_name2,
 		.handle = nullptr,
+	},
+};
+
+//
+// Support for marshal methods
+//
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
+MonoImage* assembly_image_cache[] = {
+	nullptr,
+	nullptr,
+
+};
+
+// Each element contains an index into `assembly_image_cache`
+const uint32_t assembly_image_cache_indices[] = {
+	0,
+	1,
+	1,
+	1,
+};
+
+// hashes point to indices in `assembly_image_cache_indices`
+const xamarin::android::hash_t assembly_image_cache_hashes[] = {
+	0,
+	1,
+	2,
+	3,
+};
+
+uint32_t marshal_methods_number_of_classes = 2;
+MarshalMethodsManagedClass marshal_methods_class_cache[] = {
+	{
+		.token = 0,
+		.klass = nullptr,
+	},
+
+	{
+		.token = 0,
+		.klass = nullptr,
+	},
+};
+
+void xamarin_app_init ([[maybe_unused]] get_function_pointer_fn fn)
+{
+	// Dummy
+}
+#endif // def RELEASE && def ANDROID && def NET
+
+static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
+	{
+		.name = {
+			.length = 15,
+			.str = "old_method_name",
+		},
+
+		.signature = {
+			.length = 0,
+			.str = nullptr,
+		},
+
+		.replacement = {
+			.target_type = "some/java/target_type_one",
+			.target_name = "new_method_name",
+			.is_static = false,
+		}
+	},
+};
+
+static const JniRemappingIndexMethodEntry some_java_type_two_methods[] = {
+	{
+		.name = {
+			.length = 15,
+			.str = "old_method_name",
+		},
+
+		.signature = {
+			.length = 28,
+			.str = "(IILandroid/content/Intent;)",
+		},
+
+		.replacement = {
+			.target_type = "some/java/target_type_two",
+			.target_name = "new_method_name",
+			.is_static = true,
+		}
+	},
+};
+
+const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[] = {
+	{
+		.name = {
+			.length = 18,
+			.str = "some/java/type_one",
+		},
+		.method_count = 1,
+		.methods = some_java_type_one_methods,
+	},
+
+	{
+		.name = {
+			.length = 18,
+			.str = "some/java/type_two",
+		},
+		.method_count = 1,
+		.methods = some_java_type_two_methods,
+	},
+};
+
+const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
+	{
+		.name = {
+			.length = 14,
+			.str = "some/java/type",
+		},
+		.replacement = "another/java/type",
+	},
+
+	{
+		.name = {
+			.length = 20,
+			.str = "some/other/java/type",
+		},
+		.replacement = "another/replacement/java/type",
 	},
 };

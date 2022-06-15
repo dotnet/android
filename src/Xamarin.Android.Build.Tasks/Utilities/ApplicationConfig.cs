@@ -45,6 +45,8 @@ namespace Xamarin.Android.Tasks
 		public uint   android_runtime_jnienv_class_token;
 		public uint   jnienv_initialize_method_token;
 		public uint   jnienv_registerjninatives_method_token;
+		public uint   jni_remapping_replacement_type_count;
+		public uint   jni_remapping_replacement_method_index_entry_count;
 		public uint   mono_components_mask;
 		public string android_package_name = String.Empty;
 	}

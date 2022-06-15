@@ -71,6 +71,8 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         CustomMainDexListFiles="@(MultiDexMainDexList)"
         ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
         ExtraArgs="$(AndroidMultiDexClassListExtraArgs)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />
 
     <!-- remove existing dex files that may be previous multidex outputs. -->
@@ -95,6 +97,8 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
         JavaLibrariesToCompile="@(_JavaLibrariesToCompileForApp);@(_InstantRunJavaReference)"
         AlternativeJarFiles="@(_AlternativeJarForAppDx)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />
     <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
     <ItemGroup>

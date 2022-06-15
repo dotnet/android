@@ -243,6 +243,13 @@ namespace Android.Runtime {
 	}
 
 	class AndroidTypeManager : JniRuntime.JniTypeManager {
+		struct JniRemappingReplacementMethod
+		{
+			public string target_type;
+			public string target_name;
+			public bool     is_static;
+		};
+
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
 		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
@@ -317,52 +324,43 @@ namespace Android.Runtime {
 			};
 		}
 
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr _monodroid_lookup_replacement_type (string jniSimpleReference);
+
 		protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		{
-			if (JNIEnv.ReplacementTypes == null) {
+			if (!JNIEnv.jniRemappingInUse) {
 				return null;
 			}
-			if (JNIEnv.ReplacementTypes.TryGetValue (jniSimpleReference, out var v)) {
-				return v;
+
+			IntPtr ret = _monodroid_lookup_replacement_type (jniSimpleReference);
+			if (ret == IntPtr.Zero) {
+				return null;
 			}
-			return null;
+
+			return Marshal.PtrToStringAnsi (ret);
 		}
+
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr _monodroid_lookup_replacement_method_info (string jniSourceType, string jniMethodName, string jniMethodSignature);
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		{
-			if (JNIEnv.ReplacementMethods == null) {
+			if (!JNIEnv.jniRemappingInUse) {
 				return null;
 			}
-#if !STRUCTURED
-			if (!JNIEnv.ReplacementMethods.TryGetValue (CreateReplacementMethodsKey (jniSourceType, jniMethodName, jniMethodSignature), out var r) &&
-					!JNIEnv.ReplacementMethods.TryGetValue (CreateReplacementMethodsKey (jniSourceType, jniMethodName, GetMethodSignatureWithoutReturnType ()), out r) &&
-					!JNIEnv.ReplacementMethods.TryGetValue (CreateReplacementMethodsKey (jniSourceType, jniMethodName, null), out r)) {
+
+			IntPtr retInfo = _monodroid_lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
+			if (retInfo == IntPtr.Zero) {
 				return null;
 			}
-			ReadOnlySpan<char> replacementInfo  = r;
 
-			var targetType      = GetNextString (ref replacementInfo);
-			var targetName      = GetNextString (ref replacementInfo);
-			var targetSig       = GetNextString (ref replacementInfo);
-			var paramCountStr   = GetNextString (ref replacementInfo);
-			var isStaticStr     = GetNextString (ref replacementInfo);
+			var method = new JniRemappingReplacementMethod ();
+			method = Marshal.PtrToStructure<JniRemappingReplacementMethod>(retInfo);
 
-			int? paramCount     = null;
-			if (!paramCountStr.IsEmpty) {
-				if (!int.TryParse (paramCountStr, 0, System.Globalization.CultureInfo.InvariantCulture, out var count)) {
-					return null;
-				}
-				paramCount      = count;
-			}
-
-			bool isStatic       = false;
-			if (isStaticStr.Equals ("true", StringComparison.Ordinal)) {
-				isStatic        = true;
-			}
-
-			if (targetSig.IsEmpty && isStatic) {
-				paramCount          = paramCount ?? JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature);
-				paramCount++;
+			int? paramCount = null;
+			if (method.is_static) {
+				paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature) + 1;
 				jniMethodSignature  = $"(L{jniSourceType};" + jniMethodSignature.Substring ("(".Length);
 			}
 
@@ -370,70 +368,13 @@ namespace Android.Runtime {
 					SourceJniType                   = jniSourceType,
 					SourceJniMethodName             = jniMethodName,
 					SourceJniMethodSignature        = jniMethodSignature,
-					TargetJniType                   = targetType.IsEmpty ? jniSourceType : new string (targetType),
-					TargetJniMethodName             = targetName.IsEmpty ? jniMethodName : new string (targetName),
-					TargetJniMethodSignature        = targetSig.IsEmpty ? jniMethodSignature : new string (targetSig),
+					TargetJniType                   = method.target_type,
+					TargetJniMethodName             = method.target_name,
+					TargetJniMethodSignature        = jniMethodSignature,
 					TargetJniMethodParameterCount   = paramCount,
-					TargetJniMethodInstanceToStatic = isStatic,
+					TargetJniMethodInstanceToStatic = method.is_static,
 			};
-#else
-			if (!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, jniMethodSignature), out var r) &&
-					!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, GetMethodSignatureWithoutReturnType ()), out r) &&
-					!JNIEnv.ReplacementMethods.TryGetValue ((jniSourceType, jniMethodName, null), out r)) {
-				return null;
-			}
-			var targetSig   = r.TargetSignature;
-			var paramCount  = r.ParamCount;
-			if (targetSig == null && r.TurnStatic) {
-				targetSig   = $"(L{jniSourceType};" + jniMethodSignature.Substring ("(".Length);
-				paramCount  = paramCount ?? JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature);
-				paramCount++;
-			}
-			return new JniRuntime.ReplacementMethodInfo {
-					SourceJniType                   = jniSourceType,
-					SourceJniMethodName             = jniMethodName,
-					SourceJniMethodSignature        = jniMethodSignature,
-					TargetJniType                   = r.TargetType ?? jniSourceType,
-					TargetJniMethodName             = r.TargetName ?? jniMethodName,
-					TargetJniMethodSignature        = targetSig    ?? jniMethodSignature,
-					TargetJniMethodParameterCount   = paramCount,
-					TargetJniMethodInstanceToStatic = r.TurnStatic,
-			};
-#endif  // !STRUCTURED
-
-			string GetMethodSignatureWithoutReturnType ()
-			{
-				int i = jniMethodSignature.IndexOf (')');
-				return jniMethodSignature.Substring (0, i+1);
-			}
-
-			string GetValue (string? value)
-			{
-				return value == null ? "null" : $"\"{value}\"";
-			}
-
-			ReadOnlySpan<char> GetNextString (ref ReadOnlySpan<char> info)
-			{
-				int index = info.IndexOf ('\t');
-				var r     = info;
-				if (index >= 0) {
-					r       = info.Slice (0, index);
-					info    = info.Slice (index+1);
-					return r;
-				}
-				info = default;
-				return r;
-			}
 		}
-
-		static string CreateReplacementMethodsKey (string? sourceType, string? methodName, string? methodSignature) =>
-			new StringBuilder ()
-			.Append (sourceType)
-			.Append ('\t')
-			.Append (methodName)
-			.Append ('\t')
-			.Append (methodSignature)
-			.ToString ();
 #endif  // NET
 
 		delegate Delegate GetCallbackHandler ();

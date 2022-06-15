@@ -106,6 +106,7 @@ namespace Xamarin.Android.Prepare
 				if (file.Contains ("src/monodroid")) {
 					testAreas.Add ("MSBuildDevice");
 					testAreas.Add ("Designer");
+					testAreas.Add ("BCL");
 				}
 
 				if (file.Contains ("src/proguard")) {

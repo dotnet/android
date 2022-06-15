@@ -26,6 +26,8 @@ namespace Xamarin.Android.Tasks
 
 	public class GenerateJavaStubs : AndroidTask
 	{
+		public const string MarshalMethodsRegisterTaskKey = ".:!MarshalMethods!:.";
+
 		public override string TaskPrefix => "GJS";
 
 		[Required]
@@ -338,6 +340,9 @@ namespace Xamarin.Android.Tasks
 			string monoInit = GetMonoInitSource (AndroidSdkPlatform);
 			bool hasExportReference = ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll");
 			bool generateOnCreateOverrides = int.Parse (AndroidSdkPlatform) <= 10;
+#if ENABLE_MARSHAL_METHODS
+			var overriddenMethodDescriptors = new List<OverriddenMethodDescriptor> ();
+#endif
 
 			bool ok = true;
 			foreach (var t in javaTypes) {
@@ -355,6 +360,9 @@ namespace Xamarin.Android.Tasks
 						};
 
 						jti.Generate (writer);
+#if ENABLE_MARSHAL_METHODS
+						overriddenMethodDescriptors.AddRange (jti.OverriddenMethodDescriptors);
+#endif
 						writer.Flush ();
 
 						var path = jti.GetDestinationPath (outputPath);
@@ -388,6 +396,9 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 			}
+#if ENABLE_MARSHAL_METHODS
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (MarshalMethodsRegisterTaskKey, overriddenMethodDescriptors, RegisteredTaskObjectLifetime.Build);
+#endif
 			return ok;
 		}
 

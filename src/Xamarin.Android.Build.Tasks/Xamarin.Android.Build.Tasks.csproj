@@ -3,7 +3,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\tools\BuildTasks.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\build-tools\scripts\LocalizationLanguages.projitems" />
+  <Import Project="$(XamarinAndroidSourcePath)build-tools\installers\create-installers.targets" />
   <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
 
@@ -12,7 +12,7 @@
     <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\monoandroid10\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
@@ -24,18 +24,22 @@
     <NoWarn>$(NoWarn);CA1310</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(_EnableMarshalMethods)' == 'YesPlease' ">
+    <DefineConstants>$(DefineConstants);ENABLE_MARSHAL_METHODS</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="pdb2mdb.exe">
-      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\pdb2mdb.exe</HintPath>
+      <HintPath>$(MicrosoftAndroidSdkOutDir)pdb2mdb.exe</HintPath>
     </Reference>
     <Reference Include="Mono.CompilerServices.SymbolWriter.dll">
-      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Mono.CompilerServices.SymbolWriter.dll</HintPath>
+      <HintPath>$(MicrosoftAndroidSdkOutDir)Mono.CompilerServices.SymbolWriter.dll</HintPath>
     </Reference>
     <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
+      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="Xamarin.Android.Cecil.Mdb">
-      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.Mdb.dll</HintPath>
+      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.Mdb.dll</HintPath>
     </Reference>
   </ItemGroup>
 

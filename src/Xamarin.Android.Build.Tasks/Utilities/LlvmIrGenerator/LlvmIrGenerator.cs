@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	/// </summary>
 	abstract class LlvmIrGenerator
 	{
-		ref struct StructureBodyWriterOptions
+		internal sealed class StructureBodyWriterOptions
 		{
 			public readonly bool WriteFieldComment;
 			public readonly string FieldIndent;
@@ -319,6 +319,26 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return ret;
 		}
 
+		internal IStructureInfo GetStructureInfo (Type type)
+		{
+			IStructureInfo? ret = null;
+
+			foreach (IStructureInfo si in structures) {
+				if (si.Type != type) {
+					continue;
+				}
+
+				ret = si;
+				break;
+			}
+
+			if (ret == null) {
+				throw new InvalidOperationException ($"Unmapped structure {type}");
+			}
+
+			return ret;
+		}
+
 		TextWriter EnsureOutput (TextWriter? output)
 		{
 			return output ?? Output;
@@ -423,11 +443,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return named;
 		}
 
-		void WriteStructureArrayEnd<T> (StructureInfo<T> info, string? symbolName, ulong count, bool named, bool skipFinalComment = false, TextWriter? output = null)
+		void WriteStructureArrayEnd<T> (StructureInfo<T> info, string? symbolName, ulong count, bool named, bool skipFinalComment = false, TextWriter? output = null, bool isArrayOfPointers = false)
 		{
 			output = EnsureOutput (output);
 
-			output.Write ($", align {GetAggregateAlignment (info.MaxFieldAlignment, info.Size * count)}");
+			int alignment = isArrayOfPointers ? PointerSize : GetAggregateAlignment (info.MaxFieldAlignment, info.Size * count);
+			output.Write ($", align {alignment}");
 			if (named && !skipFinalComment) {
 				WriteEOL ($"end of '{symbolName!}' array", output);
 			} else {
@@ -438,28 +459,30 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// <summary>
 		/// Writes an array of <paramref name="count"/> zero-initialized entries.  <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
 		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
+		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null, bool isArrayOfPointers = false)
 		{
 			bool named = WriteStructureArrayStart<T> (info, null, options, symbolName, initialComment);
+			string pointerAsterisk = isArrayOfPointers ? "*" : String.Empty;
+			Output.Write ($"[{count} x %struct.{info.Name}{pointerAsterisk}] zeroinitializer");
 
-			Output.Write ($"[{count} x %struct.{info.Name}] zeroinitializer");
-
-			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: true);
+			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: true, isArrayOfPointers: isArrayOfPointers);
 		}
 
 		/// <summary>
 		/// Writes an array of <paramref name="count"/> zero-initialized entries. The array will be generated as a local, writable symbol.
 		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
+		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null, bool isArrayOfPointers = false)
 		{
-			WriteStructureArray<T> (info, count, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
+			WriteStructureArray<T> (info, count, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment, isArrayOfPointers);
 		}
 
 		/// <summary>
 		/// Writes an array of managed type <typeparamref name="T"/>, with data optionally specified in <paramref name="instances"/> (if it's <c>null</c>, the array
 		/// will be zero-initialized).  <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
 		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
+		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options,
+		                                    string? symbolName = null, bool writeFieldComment = true, string? initialComment = null,
+		                                    Action<LlvmIrGenerator, StructureBodyWriterOptions, Type, object>? nestedStructureWriter = null)
 		{
 			var arrayOutput = new StringWriter ();
 			bool named = WriteStructureArrayStart<T> (info, instances, options, symbolName, initialComment, arrayOutput);
@@ -481,7 +504,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					StructureInstance<T> instance = instances[i];
 
 					arrayOutput.WriteLine ($"{Indent}; {i}");
-					WriteStructureBody (info, instance, bodyWriterOptions);
+					WriteStructureBody (info, instance, bodyWriterOptions, nestedStructureWriter);
 					if (i < count - 1) {
 						arrayOutput.Write (", ");
 					}
@@ -605,19 +628,26 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		void WriteStructureField<T> (StructureInfo<T> info, StructureInstance<T> instance, StructureMemberInfo<T> smi, int fieldIndex, StructureBodyWriterOptions options, TextWriter output, object? valueOverride = null, ulong? expectedArraySize = null)
+		void WriteStructureField<T> (StructureInfo<T> info, StructureInstance<T> instance, StructureMemberInfo<T> smi, int fieldIndex,
+		                             StructureBodyWriterOptions options, TextWriter output, object? valueOverride = null, ulong? expectedArraySize = null,
+		                             Action<LlvmIrGenerator, StructureBodyWriterOptions, Type, object>? nestedStructureWriter = null)
 		{
-			output.Write (options.FieldIndent);
-
 			object? value = null;
-			if (smi.IsNativePointer) {
+
+			if (smi.IsIRStruct ()) {
+				if (nestedStructureWriter == null) {
+					throw new InvalidOperationException ($"Nested structure found in type {typeof(T)}, field {smi.Info.Name} but no nested structure writer provided");
+				}
+				nestedStructureWriter (this, options, smi.MemberType, valueOverride ?? GetTypedMemberValue (info, smi, instance, smi.MemberType));
+			} else if (smi.IsNativePointer) {
+				output.Write (options.FieldIndent);
 				WritePointer (info, smi, instance, output);
 			} else if (smi.IsNativeArray) {
 				if (!smi.IsInlineArray) {
 					throw new InvalidOperationException ($"Out of line arrays aren't supported at this time (structure '{info.Name}', field '{smi.Info.Name}')");
 				}
 
-				output.Write ($"{smi.IRType} ");
+				output.Write ($"{options.FieldIndent}{smi.IRType} ");
 				value = valueOverride ?? GetTypedMemberValue (info, smi, instance, smi.MemberType);
 
 				if (smi.MemberType == typeof(byte[])) {
@@ -627,13 +657,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 			} else {
 				value = valueOverride;
+				output.Write (options.FieldIndent);
 				WritePrimitiveField (info, smi, instance, output);
 			}
 
 			FinishStructureField (info, smi, instance, options, fieldIndex, value, output);
 		}
 
-		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions options)
+		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions options, Action<LlvmIrGenerator, StructureBodyWriterOptions, Type, object>? nestedStructureWriter = null)
 		{
 			TextWriter structureOutput = EnsureOutput (options.StructureOutput);
 			structureOutput.Write ($"{options.StructIndent}%struct.{info.Name} ");
@@ -644,7 +675,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					StructureMemberInfo<T> smi = info.Members[i];
 
 					MaybeWriteStructureStringsAndBuffers (info, smi, instance, options);
-					WriteStructureField (info, instance, smi, i, options, structureOutput);
+					WriteStructureField (info, instance, smi, i, options, structureOutput, nestedStructureWriter: nestedStructureWriter);
 				}
 
 				structureOutput.Write ($"{options.StructIndent}}}");
@@ -736,7 +767,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 			}
 
-			throw new InvalidOperationException ($"Non-null pointers to objects of managed type '{smi.Info.MemberType}' (IR type '{smi.IRType}') currently not supported (value: {value})");
+			throw new InvalidOperationException ($"While processing field '{smi.Info.Name}' of type '{info.Name}': non-null pointers to objects of managed type '{smi.MemberType}' (IR type '{smi.IRType}') currently not supported (value: {value})");
 		}
 
 		void WriteNullPointer<T> (StructureMemberInfo<T> smi, TextWriter output)
@@ -912,6 +943,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteBufferToOutput (bodyWriterOptions.StructureOutput);
 		}
 
+		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions bodyWriterOptions, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true)
+		{
+			WriteStructureBody (info, instance, bodyWriterOptions);
+			FinishStructureWrite (info, bodyWriterOptions);
+		}
+
+		public void WriteNestedStructure<T> (StructureInfo<T> info, StructureInstance<T> instance, StructureBodyWriterOptions bodyWriterOptions)
+		{
+			var options = new StructureBodyWriterOptions (
+				bodyWriterOptions.WriteFieldComment,
+				bodyWriterOptions.FieldIndent + Indent,
+				bodyWriterOptions.FieldIndent, // structure indent should start at the original struct's field column
+				bodyWriterOptions.StructureOutput,
+				bodyWriterOptions.StringsOutput,
+				bodyWriterOptions.BuffersOutput
+			);
+			WriteStructureBody (info, instance, options);
+		}
+
 		/// <summary>
 		/// Write a structure represented by managed type <typeparamref name="T"/>, with optional data passed in <paramref name="instance"/> (if <c>null</c>, the structure
 		/// is zero-initialized). <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
@@ -919,10 +969,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true)
 		{
 			StructureBodyWriterOptions bodyWriterOptions = InitStructureWrite (info, options, symbolName, writeFieldComment);
-
-			WriteStructureBody (info, instance, bodyWriterOptions);
-
-			FinishStructureWrite (info, bodyWriterOptions);
+			WriteStructure (info, instance, bodyWriterOptions, options, symbolName, writeFieldComment);
 		}
 
 		/// <summary>

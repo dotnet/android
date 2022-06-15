@@ -11,7 +11,6 @@
     <BuildOutputDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\</BuildOutputDirectory>
     <BootstrapOutputDirectory>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BootstrapOutputDirectory>
     <TestOutputDirectory>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputDirectory>
-    <NetCoreBinDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)-net\</NetCoreBinDirectory>
     <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
     <PrepTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\xa-prep-tasks.dll</PrepTasksAssembly>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(BuildOutputDirectory)dotnet\</DotNetPreviewPath>
@@ -22,6 +21,12 @@
     <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
     <!-- Ensure command-line apps can use a newer .NET -->
     <RollForward>Major</RollForward>
+    <!-- We don't need to be warned that we are using a preview .NET -->
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(MSBuildRuntimeType)' == 'Core' ">
+    <_EnableMarshalMethods>NoThanks</_EnableMarshalMethods> <!-- set to YesPlease to enable -->
   </PropertyGroup>
 
   <PropertyGroup>
@@ -32,7 +37,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>33.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.4</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>preview.6</AndroidPackVersionSuffix>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->

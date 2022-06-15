@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 using Java.Interop.Tools.TypeNameMappings;
-using K4os.Hash.xxHash;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -170,6 +168,8 @@ namespace Xamarin.Android.Tasks
 		public int AndroidRuntimeJNIEnvToken { get; set; }
 		public int JNIEnvInitializeToken { get; set; }
 		public int JNIEnvRegisterJniNativesToken { get; set; }
+		public int JniRemappingReplacementTypeCount { get; set; }
+		public int JniRemappingReplacementMethodIndexEntryCount { get; set; }
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; }
@@ -212,6 +212,8 @@ namespace Xamarin.Android.Tasks
 				android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
 				jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
 				jnienv_registerjninatives_method_token = (uint)JNIEnvRegisterJniNativesToken,
+				jni_remapping_replacement_type_count = (uint)JniRemappingReplacementTypeCount,
+				jni_remapping_replacement_method_index_entry_count = (uint)JniRemappingReplacementMethodIndexEntryCount,
 				mono_components_mask = (uint)MonoComponents,
 				android_package_name = AndroidPackageName,
 			};
@@ -342,21 +344,11 @@ namespace Xamarin.Android.Tasks
 
 			// We need to hash here, because the hash is architecture-specific
 			foreach (StructureInstance<DSOCacheEntry> entry in dsoCache) {
-				entry.Obj.hash = HashName (entry.Obj.HashedName);
+				entry.Obj.hash = HashName (entry.Obj.HashedName, is64Bit);
 			}
 			dsoCache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Obj.hash.CompareTo (b.Obj.hash));
 
 			generator.WriteStructureArray (dsoCacheEntryStructureInfo, dsoCache, "dso_cache");
-
-			ulong HashName (string name)
-			{
-				byte[] nameBytes = Encoding.UTF8.GetBytes (name);
-				if (is64Bit) {
-					return XXH64.DigestOf (nameBytes, 0, nameBytes.Length);
-				}
-
-				return (ulong)XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
-			}
 		}
 	}
 }

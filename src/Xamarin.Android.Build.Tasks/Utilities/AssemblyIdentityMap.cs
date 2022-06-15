@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks
 		public void Load (string mapFile)
 		{
 			map.Clear ();
-			if (!File.Exists (mapFile))
+			if (string.IsNullOrWhiteSpace (mapFile) || !File.Exists (mapFile))
 				return;
 			foreach (var s in File.ReadLines (mapFile)) {
 				if (!map.Contains (s))
@@ -32,6 +32,19 @@ namespace Xamarin.Android.Tasks
 			}
 			map.Add (assemblyIdentity);
 			return map.IndexOf (assemblyIdentity).ToString ();
+		}
+
+		/// <summary>
+		/// Returns the name of the assembly for the provided `lp` directory.
+		/// </summary>
+		/// <param name="dir">The directory in the `lp` directory which we want to resolve.</param>
+		public string GetAssemblyNameForImportDirectory (string dir)
+		{
+			if (!int.TryParse (dir, out int index))
+				return string.Empty;
+			if (index < 0 || index > map.Count)
+				return string.Empty;
+			return map [index];
 		}
 
 		public void Save (string mapFile)

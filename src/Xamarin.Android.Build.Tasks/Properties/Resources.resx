@@ -875,4 +875,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: &lt;AndroidNamespaceReplacement&gt;
 {0} - The AndroidNamespaceReplacement MSBuild value.</comment>
   </data>
+  <data name="XA_Directory_Is_From" xml:space="preserve">
+    <value>Directory '{0}' is from '{1}'.</value>
+    <comment>
+{0} - A Directory Path.
+{1} - A Filename.
+    </comment>
+  </data>
 </root>

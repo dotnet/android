@@ -8,118 +8,118 @@
       "Size": 7114
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66806
+      "Size": 66738
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 447633
+      "Size": 444811
     },
     "assemblies/mscorlib.dll": {
-      "Size": 3888
+      "Size": 3891
     },
     "assemblies/netstandard.dll": {
-      "Size": 5601
+      "Size": 5602
     },
     "assemblies/rc.bin": {
       "Size": 1083
     },
     "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 10772
+      "Size": 10777
     },
     "assemblies/System.Collections.dll": {
-      "Size": 16149
+      "Size": 16153
     },
     "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 7926
+      "Size": 7932
     },
     "assemblies/System.ComponentModel.dll": {
-      "Size": 2010
+      "Size": 2014
     },
     "assemblies/System.ComponentModel.Primitives.dll": {
-      "Size": 2623
+      "Size": 2627
     },
     "assemblies/System.ComponentModel.TypeConverter.dll": {
-      "Size": 6101
+      "Size": 6106
     },
     "assemblies/System.Console.dll": {
-      "Size": 6673
+      "Size": 6677
     },
     "assemblies/System.Core.dll": {
-      "Size": 2052
+      "Size": 2055
     },
     "assemblies/System.Diagnostics.TraceSource.dll": {
-      "Size": 6569
+      "Size": 6573
     },
     "assemblies/System.dll": {
-      "Size": 2407
+      "Size": 2409
     },
     "assemblies/System.Drawing.dll": {
-      "Size": 2088
+      "Size": 2093
     },
     "assemblies/System.Drawing.Primitives.dll": {
-      "Size": 12120
+      "Size": 12123
     },
     "assemblies/System.IO.Compression.dll": {
-      "Size": 16734
+      "Size": 16741
     },
     "assemblies/System.IO.IsolatedStorage.dll": {
-      "Size": 10043
+      "Size": 10045
     },
     "assemblies/System.Linq.dll": {
-      "Size": 19792
+      "Size": 19801
     },
     "assemblies/System.Linq.Expressions.dll": {
-      "Size": 177468
+      "Size": 177473
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 65646
+      "Size": 65645
     },
     "assemblies/System.Net.Primitives.dll": {
-      "Size": 22062
+      "Size": 22070
     },
     "assemblies/System.Net.Requests.dll": {
-      "Size": 3657
+      "Size": 3660
     },
     "assemblies/System.ObjectModel.dll": {
-      "Size": 8537
+      "Size": 8540
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 800853
+      "Size": 800901
     },
     "assemblies/System.Private.DataContractSerialization.dll": {
-      "Size": 185392
+      "Size": 185328
     },
     "assemblies/System.Private.Uri.dll": {
-      "Size": 42654
+      "Size": 42655
     },
     "assemblies/System.Private.Xml.dll": {
-      "Size": 221849
+      "Size": 216473
     },
     "assemblies/System.Private.Xml.Linq.dll": {
-      "Size": 16692
+      "Size": 16698
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2598
+      "Size": 2603
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 2016
+      "Size": 2020
     },
     "assemblies/System.Runtime.Serialization.Formatters.dll": {
-      "Size": 2546
+      "Size": 2551
     },
     "assemblies/System.Runtime.Serialization.Primitives.dll": {
-      "Size": 3829
+      "Size": 3834
     },
     "assemblies/System.Security.Cryptography.dll": {
-      "Size": 7748
+      "Size": 7751
     },
     "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 159574
+      "Size": 159573
     },
     "assemblies/System.Xml.dll": {
-      "Size": 1906
+      "Size": 1910
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 117250
+      "Size": 117243
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5941
@@ -188,10 +188,10 @@
       "Size": 40004
     },
     "classes.dex": {
-      "Size": 3460820
+      "Size": 3460156
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 484512
+      "Size": 512552
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 4667768
@@ -206,7 +206,7 @@
       "Size": 146816
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 98480
+      "Size": 98592
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -773,7 +773,7 @@
       "Size": 470
     },
     "res/drawable-hdpi-v4/icon.png": {
-      "Size": 4762
+      "Size": 4791
     },
     "res/drawable-hdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 212

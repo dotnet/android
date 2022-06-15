@@ -57,6 +57,7 @@ namespace Xamarin.Android.Prepare
 				{ "@BUILD_TYPE@", "${__BUILD_TYPE}" },
 				{ "@CONFIGURATION@", "${__CONFIGURATION}" },
 				{ "@XA_BUILD_CONFIGURATION@", "${XA_BUILD_CONFIGURATION}" },
+				{ "@XA_LIB_TOP_DIR@", Configurables.Paths.InstallMSBuildDir.Replace (Path.DirectorySeparatorChar, '/') },
 				{ "@JdkIncludePath@", "${JDK_INCLUDE_PATH}" },
 				{ "@MonoSourceFullPath@", "${MONO_SOURCE_PATH}" },
 				{ "@NinjaPath@", "${NINJA}" },
@@ -440,6 +441,7 @@ namespace Xamarin.Android.Prepare
 			var MSBuildReplacements = new Dictionary<string, string> (StringComparer.Ordinal) {
 				{ "@NinjaPath@", "$(NinjaPath)" },
 				{ "@XA_BUILD_CONFIGURATION@", "$(Configuration)" },
+				{ "@XA_LIB_TOP_DIR@", "$(MicrosoftAndroidSdkOutDir)" },
 				{ "@AndroidNdkDirectory@", "$(AndroidNdkDirectory)" },
 				{ "@MonoSourceFullPath@", "$(MonoSourceFullPath)" },
 				{ "@AndroidToolchainPath@", GetRelativeToolchainDefinitionPath () },

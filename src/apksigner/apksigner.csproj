@@ -7,7 +7,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

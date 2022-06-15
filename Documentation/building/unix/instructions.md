@@ -62,34 +62,13 @@ on Windows, many of the concepts should still apply:
 
 [xamdevsummit]: https://youtu.be/8qaQleb6Tbk
 
-# Creating installers
+# Creating a local .NET android Workload
 
-Once `make all` or `make jenkins` have completed, macOS (.pkg)
-and Windows (.vsix) installer files can be built with:
-
-    make create-installers
-
-Commercial installers will be created by this command if the
-`make prepare-external-git-dependencies` command was ran before building.
-
-A .NET 6 Workload installer is also created at
-`Microsoft.NET.Workload.Android-*.pkg`, you can run `make
-create-workload-installers` if you only want to create the .NET 6
-installer.
-
-# Creating a local .NET 6 Workload
-
-`make prepare` provisions a specific build of .NET 6 to
+`make prepare` provisions a specific build of .NET to
 `bin/$(Configuration)/dotnet`.
 
-Once `make all` or `make jenkins` have completed, you can build the .NET 6
-packages with:
-
-    make pack-dotnet
-
-Several `.nupkg` files will be output in `./bin/BuildDebug/nuget-unsigned`,
-but this is only part of the story. Your local
-`bin/$(Configuration)/dotnet/packs` directory will be populated with a
+Once `make all` or `make jenkins` have completed, your local
+`bin/$(Configuration)/lib/packs` directory will be populated with a
 local Android "workload" in `Microsoft.Android.Sdk.$(HostOS)` matching
 your operating system.
 
@@ -112,6 +91,25 @@ Using the `dotnet-local` script will execute the `dotnet` provisioned in
 `bin/$(Configuration)/dotnet` and will use the locally built binaries.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
+
+# Creating installers
+
+Once `make all` or `make jenkins` have completed, macOS (.pkg),
+Windows (.vsix), and .NET android workload .nupkg files
+can be built with:
+
+    make create-installers
+
+Alternatively, .NET android workload packs can be built with:
+
+    make create-nupkgs
+    # -or-
+    make pack-dotnet
+
+Several `.nupkg` files will be output in `./bin/Build$(Configuration)/nuget-unsigned`.
+
+Commercial installers will be created by this command if the
+`make prepare-external-git-dependencies` command was ran before building.
 
 # Building Unit Tests
 

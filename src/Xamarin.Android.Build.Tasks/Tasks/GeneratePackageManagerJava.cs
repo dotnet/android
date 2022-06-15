@@ -299,8 +299,16 @@ namespace Xamarin.Android.Tasks
 
 			int assemblyCount = 0;
 			HashSet<string> archAssemblyNames = null;
-
+#if ENABLE_MARSHAL_METHODS
+			var uniqueAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+#endif
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
+				string assemblyName = Path.GetFileName (assembly.ItemSpec);
+#if ENABLE_MARSHAL_METHODS
+				if (!uniqueAssemblyNames.Contains (assemblyName)) {
+					uniqueAssemblyNames.Add (assemblyName);
+				}
+#endif
 				if (!UseAssemblyStore) {
 					assemblyCount++;
 					return;
@@ -316,7 +324,6 @@ namespace Xamarin.Android.Tasks
 				} else {
 					archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
-					string assemblyName = Path.GetFileName (assembly.ItemSpec);
 					if (!archAssemblyNames.Contains (assemblyName)) {
 						assemblyCount++;
 						archAssemblyNames.Add (assemblyName);
@@ -403,6 +410,7 @@ namespace Xamarin.Android.Tasks
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
+			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey, RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 				IsBundledApp = IsBundledApplication,
 				UsesMonoAOT = usesMonoAOT,
@@ -429,18 +437,38 @@ namespace Xamarin.Android.Tasks
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 				JNIEnvInitializeToken = jnienv_initialize_method_token,
 				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
+				JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
+				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 			};
 			appConfigAsmGen.Init ();
-
+#if ENABLE_MARSHAL_METHODS
+			var marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator () {
+				NumberOfAssembliesInApk = assemblyCount,
+				UniqueAssemblyNames = uniqueAssemblyNames,
+				OverriddenMethodDescriptors = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<List<Java.Interop.Tools.JavaCallableWrappers.OverriddenMethodDescriptor>> (GenerateJavaStubs.MarshalMethodsRegisterTaskKey, RegisteredTaskObjectLifetime.Build)
+			};
+			marshalMethodsAsmGen.Init ();
+#endif
 			foreach (string abi in SupportedAbis) {
-				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
-				string llFilePath  = $"{baseAsmFilePath}.ll";
+				string targetAbi = abi.ToLowerInvariant ();
+				string environmentBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{targetAbi}");
+				string marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
+				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
+				string marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
 
+				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					appConfigAsmGen.Write (GetAndroidTargetArchForAbi (abi), sw, llFilePath);
+					appConfigAsmGen.Write (targetArch, sw, environmentLlFilePath);
 					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, llFilePath);
+					Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
 				}
+#if ENABLE_MARSHAL_METHODS
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+					marshalMethodsAsmGen.Write (targetArch, sw, marshalMethodsLlFilePath);
+					sw.Flush ();
+					Files.CopyIfStreamChanged (sw.BaseStream, marshalMethodsLlFilePath);
+				}
+#endif
 			}
 
 			void AddEnvironmentVariable (string name, string value)

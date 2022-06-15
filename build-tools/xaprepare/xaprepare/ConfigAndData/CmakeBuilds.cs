@@ -35,6 +35,7 @@ namespace Xamarin.Android.Prepare
 			"-GNinja",
 			"-DCMAKE_MAKE_PROGRAM=\"@NinjaPath@\"",
 			"-DXA_BUILD_CONFIGURATION=@XA_BUILD_CONFIGURATION@",
+			"-DXA_LIB_TOP_DIR=@XA_LIB_TOP_DIR@",
 		};
 
 		public static readonly List<string> AndroidFlags = new List<string> {

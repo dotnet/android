@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Text;
+
+using K4os.Hash.xxHash;
 
 using Xamarin.Android.Tools;
 
@@ -35,6 +38,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				AndroidTargetArch.X86_64 => "x86_64",
 				_ => throw new InvalidOperationException ($"Unsupported Android architecture: {arch}"),
 			};
+		}
+
+		protected ulong HashName (string name, bool is64Bit)
+		{
+			byte[] nameBytes = Encoding.UTF8.GetBytes (name);
+			if (is64Bit) {
+				return XXH64.DigestOf (nameBytes, 0, nameBytes.Length);
+			}
+
+			return (ulong)XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
 		}
 
 		/// <summary>

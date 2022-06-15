@@ -14,6 +14,11 @@ namespace Xamarin.Android.Tasks
 		const string TypeMapBase = "typemaps";
 		const string EnvBase = "environment";
 		const string CompressedAssembliesBase = "compressed_assemblies";
+		const string JniRemappingBase = "jni_remap";
+
+#if ENABLE_MARSHAL_METHODS
+		const string MarshalMethodsBase = "marshal_methods";
+#endif
 
 		public override string TaskPrefix => "PAI";
 
@@ -50,6 +55,12 @@ namespace Xamarin.Android.Tasks
 				baseName = EnvBase;
 			} else if (String.Compare ("compressed", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
 				baseName = CompressedAssembliesBase;
+			} else if (String.Compare ("jniremap", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+				baseName = JniRemappingBase;
+#if ENABLE_MARSHAL_METHODS
+			} else if (String.Compare ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+				baseName = MarshalMethodsBase;
+#endif
 			} else {
 				Log.LogError ($"Unknown mode: {Mode}");
 				return false;

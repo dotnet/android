@@ -16,6 +16,7 @@ extern "C" {
 #include "cpu-arch.hh"
 #include "xxhash.hh"
 #include "startup-aware-lock.hh"
+#include "jni-remapping.hh"
 
 extern "C" {
 	int _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap);
@@ -352,6 +353,18 @@ static void*
 monodroid_get_dylib (void)
 {
 	return nullptr;
+}
+
+static const char*
+_monodroid_lookup_replacement_type (const char *jniSimpleReference)
+{
+	return JniRemapping::lookup_replacement_type (jniSimpleReference);
+}
+
+static const JniRemappingReplacementMethod*
+_monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature)
+{
+	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
 }
 
 #include "pinvoke-tables.include"

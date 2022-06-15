@@ -221,6 +221,8 @@ struct ApplicationConfig
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;
 	uint32_t jnienv_registerjninatives_method_token;
+	uint32_t jni_remapping_replacement_type_count;
+	uint32_t jni_remapping_replacement_method_index_entry_count;
 	MonoComponent mono_components_mask;
 	const char *android_package_name;
 };
@@ -232,6 +234,44 @@ struct DSOCacheEntry
 	const char    *name;
 	void          *handle;
 };
+
+struct JniRemappingString
+{
+	const uint32_t  length;
+	const char     *str;
+};
+
+struct JniRemappingReplacementMethod
+{
+	const char    *target_type;
+	const char    *target_name;
+	// const char    *target_signature;
+	// const int32_t  param_count;
+	const bool     is_static;
+};
+
+struct JniRemappingIndexMethodEntry
+{
+	const JniRemappingString            name;
+	const JniRemappingString            signature;
+	const JniRemappingReplacementMethod replacement;
+};
+
+struct JniRemappingIndexTypeEntry
+{
+	const JniRemappingString            name;
+	const uint32_t             method_count;
+	const JniRemappingIndexMethodEntry *methods;
+};
+
+struct JniRemappingTypeReplacementEntry
+{
+	const JniRemappingString  name;
+	const char      *replacement;
+};
+
+MONO_API MONO_API_EXPORT const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[];
+MONO_API MONO_API_EXPORT const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[];
 
 MONO_API MONO_API_EXPORT const uint64_t format_tag;
 
@@ -258,4 +298,41 @@ MONO_API MONO_API_EXPORT AssemblyStoreSingleAssemblyRuntimeData assembly_store_b
 MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_stores[];
 
 MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
+
+//
+// Support for marshal methods
+//
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
+struct MarshalMethodsManagedClass
+{
+	const uint32_t   token;
+	MonoClass       *klass;
+};
+
+// Number of assembly name forms for which we generate hashes (essentially file name mutations. For instance
+// `HelloWorld.dll`, `HelloWorld`, `en-US/HelloWorld` etc). This is multiplied by the number of assemblies in the apk to
+// obtain number of entries in the `assembly_image_cache_hashes` and `assembly_image_cache_indices` entries
+constexpr uint32_t number_of_assembly_name_forms_in_image_cache = 2;
+
+// These 3 arrays constitute the cache used to store pointers to loaded managed assemblies.
+// Three arrays are used so that we can have multiple hashes pointing to the same MonoImage*.
+//
+// This is done by the `assembly_image_cache_hashes` containing hases for all mutations of some
+// assembly's name (e.g. with culture prefix, without extension etc) and position of that hash in
+// `assembly_image_cache_hashes` is an index into `assembly_image_cache_indices` which, in turn,
+// stores final index into the `assembly_image_cache` array.
+//
+MONO_API MONO_API_EXPORT MonoImage* assembly_image_cache[];
+MONO_API MONO_API_EXPORT const uint32_t assembly_image_cache_indices[];
+MONO_API MONO_API_EXPORT const xamarin::android::hash_t assembly_image_cache_hashes[];
+
+// Number of unique classes which contain native callbacks we bind
+MONO_API MONO_API_EXPORT uint32_t marshal_methods_number_of_classes;
+MONO_API MONO_API_EXPORT MarshalMethodsManagedClass marshal_methods_class_cache[];
+
+using get_function_pointer_fn = void*(*)(uint32_t mono_image_index, uint32_t class_token, uint32_t method_token);
+
+MONO_API_EXPORT void xamarin_app_init (get_function_pointer_fn fn);
+#endif // def RELEASE && def ANDROID && def NET
+
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

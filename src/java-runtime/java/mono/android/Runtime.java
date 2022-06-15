@@ -22,8 +22,6 @@ public class Runtime {
 		String[] appDirs,
 		ClassLoader loader,
 		String[] assemblies,
-		byte[] mappingXml,
-		int mappingXmlLen,
 		int apiLevel,
 		boolean isEmulator,
 		boolean haveSplitApks

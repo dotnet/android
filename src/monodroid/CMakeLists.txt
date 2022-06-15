@@ -19,6 +19,8 @@ project(
   LANGUAGES CXX C
   )
 
+option(COMPILER_DIAG_COLOR "Show compiler diagnostics/errors in color" ON)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -47,6 +49,8 @@ option(ENABLE_TIMING "Build with timing support" OFF)
 option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFAULT})
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 option(USE_CCACHE "Use ccache, if found, to speed up recompilation" ${CCACHE_OPTION_DEFAULT})
+
+set(ENABLE_MARSHAL_METHODS False)
 
 if((MINGW OR NOT WIN32) AND USE_CCACHE)
   if(CMAKE_CXX_COMPILER MATCHES "/ccache/")
@@ -93,6 +97,10 @@ endif()
 
 if(NOT DEFINED XA_BUILD_CONFIGURATION)
   message(FATAL_ERROR "Please set the XA_BUILD_CONFIGURATION variable on command line (-DXA_BUILD_CONFIGURATION=name)")
+endif()
+
+if(NOT DEFINED XA_LIB_TOP_DIR)
+  message(FATAL_ERROR "Please set the XA_LIB_TOP_DIR variable on command line (-DXA_LIB_TOP_DIR=path)")
 endif()
 
 if(NOT ANDROID)
@@ -154,7 +162,6 @@ set(LZ4_SRC_DIR "${EXTERNAL_DIR}/lz4/lib")
 set(LZ4_INCLUDE_DIR ${LZ4_SRC_DIR})
 set(XA_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${XA_BUILD_CONFIGURATION}")
 set(XA_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/Build${XA_BUILD_CONFIGURATION}")
-set(XA_LIB_TOP_DIR "${XA_BIN_DIR}/lib/xamarin.android/xbuild/Xamarin/Android/lib")
 set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
 
 if(NOT ANDROID)
@@ -167,11 +174,11 @@ if(NOT ANDROID)
       set(ANDROID_ABI "host-mxe-Win64")
     endif()
 
-    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
+    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_ABI}")
   endif()
 
   if(DEFINED HOST_BUILD_NAME)
-    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${HOST_BUILD_NAME}")
+    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${HOST_BUILD_NAME}")
   endif()
 endif()
 
@@ -269,6 +276,9 @@ add_compile_definitions(HAVE_CONFIG_H)
 add_compile_definitions(_REENTRANT)
 add_compile_definitions(JI_DLL_EXPORT)
 add_compile_definitions(MONO_DLL_EXPORT)
+if(ENABLE_MARSHAL_METHODS)
+  add_compile_definitions(ENABLE_MARSHAL_METHODS)
+endif()
 
 if(ENABLE_NET)
   add_compile_definitions(NET)
@@ -345,6 +355,12 @@ set(LOCAL_COMMON_COMPILER_ARGS
   -Wuninitialized
   )
 
+if(COMPILER_DIAG_COLOR)
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS
+    -fdiagnostics-color=always
+    )
+endif()
+
 set(LOCAL_COMMON_LINKER_ARGS "")
 if(ANDROID)
   if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
@@ -415,10 +431,10 @@ endif()
 # Library directories
 if(ANDROID)
   if(ENABLE_NET)
-    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_RID}")
+    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
     link_directories("${NET_RUNTIME_DIR}/native")
   else()
-    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
+    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_ABI}")
     link_directories("${XA_LIBRARY_OUTPUT_DIRECTORY}")
   endif()
 endif()
@@ -436,7 +452,7 @@ if(WIN32 OR MINGW)
 endif()
 
 if(NOT ANDROID AND DEFINED HOST_BUILD_NAME)
-  link_directories("${XA_LIB_TOP_DIR}/${HOST_BUILD_NAME}")
+  link_directories("${XA_LIB_TOP_DIR}/lib/${HOST_BUILD_NAME}")
 endif()
 
 # Header checks
@@ -460,6 +476,9 @@ endif()
 set(XAMARIN_INTERNAL_API_LIB xa-internal-api${CHECKED_BUILD_INFIX})
 set(XAMARIN_DEBUG_APP_HELPER_LIB xamarin-debug-app-helper${CHECKED_BUILD_INFIX})
 set(XAMARIN_APP_STUB_LIB xamarin-app)
+if(ENABLE_MARSHAL_METHODS)
+  set(XAMARIN_APP_MARSHALING_LIB xamarin-app-marshaling)
+endif()
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
@@ -476,7 +495,9 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/embedded-assemblies-zip.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/logger.cc
+  ${SOURCES_DIR}/jni-remapping.cc
   ${SOURCES_DIR}/monodroid-glue.cc
+  ${SOURCES_DIR}/mono-image-loader.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
@@ -493,6 +514,12 @@ if(ANDROID)
     ${SOURCES_DIR}/mono-log-adapter.cc
     ${LZ4_SOURCES}
     )
+
+  if(NOT DEBUG_BUILD AND ENABLE_NET AND ENABLE_MARSHAL_METHODS)
+    list(APPEND XAMARIN_MONODROID_SOURCES
+      ${SOURCES_DIR}/xamarin-android-app-context.cc
+      )
+  endif()
 
   if(NOT USES_LIBSTDCPP)
     list(APPEND XAMARIN_MONODROID_SOURCES
@@ -550,8 +577,20 @@ set(XAMARIN_DEBUG_APP_HELPER_SOURCES
   ${SOURCES_DIR}/shared-constants.cc
   )
 
+if(ENABLE_MARSHAL_METHODS)
+  set(XAMARIN_APP_MARSHALING_LIB_SOURCES
+    ${SOURCES_DIR}/xamarin-app-marshaling.cc
+  )
+endif()
+
 # Build
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
+
+if(MINGW OR WIN32)
+  list(APPEND MONOSGEN_LIB_LINK -lmonosgen-2.0.dll)
+else()
+  list(APPEND MONOSGEN_LIB_LINK -lmonosgen-2.0)
+endif()
 
 if(NOT (ANDROID AND ENABLE_NET))
   add_library(
@@ -583,6 +622,20 @@ target_link_options(
   )
 
 if(ANDROID)
+  if(NOT DEBUG_BUILD AND ENABLE_NET AND ENABLE_MARSHAL_METHODS)
+    # The marshaling lib is used only when building for devices
+    add_library(
+      ${XAMARIN_APP_MARSHALING_LIB}
+      SHARED
+      ${XAMARIN_APP_MARSHALING_LIB_SOURCES}
+      )
+
+    target_link_libraries(
+      ${XAMARIN_APP_MARSHALING_LIB}
+      ${MONOSGEN_LIB_LINK}
+      )
+  endif()
+
   # Only Android builds need to go in separate directories, desktop builds have the same ABI
   set_target_properties(
     ${XAMARIN_APP_STUB_LIB}
@@ -669,11 +722,7 @@ if(APPLE)
     )
 endif()
 
-if(MINGW OR WIN32)
-  list(APPEND LINK_LIBS -lmonosgen-2.0.dll)
-else()
-  list(APPEND LINK_LIBS -lmonosgen-2.0)
-endif()
+list(APPEND LINK_LIBS ${MONOSGEN_LIB_LINK})
 
 if(NOT MINGW AND NOT WIN32)
   set(DEBUG_HELPER_LINK_LIBS "-ldl")
@@ -694,3 +743,10 @@ target_link_libraries(
   ${XAMARIN_MONO_ANDROID_LIB}
   ${LINK_LIBS} xamarin-app
   )
+
+if((NOT DEBUG_BUILD) AND ANDROID AND ENABLE_NET AND ENABLE_MARSHAL_METHODS)
+  target_link_libraries(
+    ${XAMARIN_MONO_ANDROID_LIB}
+    ${XAMARIN_APP_MARSHALING_LIB}
+  )
+endif()

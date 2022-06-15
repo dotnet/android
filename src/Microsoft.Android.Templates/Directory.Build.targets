@@ -9,7 +9,8 @@
   <Target Name="_GetDefaultPackageVersion"
       DependsOnTargets="GetXAVersionInfo" >
     <PropertyGroup>
-      <PackageVersion>$(AndroidPackVersionLong)+sha.$(XAVersionHash)</PackageVersion>
+      <TemplatePackVersion Condition="'$(TemplatePackVersion)' == ''">$(AndroidPackVersionLong)+sha.$(XAVersionHash)</TemplatePackVersion>
+      <PackageVersion>$(TemplatePackVersion)</PackageVersion>
     </PropertyGroup>
   </Target>
 </Project>

@@ -101,8 +101,6 @@ public class MonoPackageManager {
 
 				System.loadLibrary("monodroid");
 
-				byte[] mappingXml = getMappingXml (context);
-
 				Runtime.initInternal (
 						language,
 						apks,
@@ -110,8 +108,6 @@ public class MonoPackageManager {
 						appDirs,
 						loader,
 						MonoPackageManager_Resources.Assemblies,
-						mappingXml,
-						mappingXml == null ? 0 : mappingXml.length,
 						Build.VERSION.SDK_INT,
 						isEmulator (),
 						haveSplitApks
@@ -165,32 +161,5 @@ public class MonoPackageManager {
 	public static String[] getDependencies ()
 	{
 		return MonoPackageManager_Resources.Dependencies;
-	}
-
-	static byte[] getMappingXml (Context context)
-	{
-		try {
-			AssetManager manager = context.getAssets();
-			String[] assets = manager.list ("xa-internal");
-			if (assets == null) {
-				return null;
-			}
-			for (String asset: assets) {
-				if (!asset.equals ("xa-remap-members.xml")) {
-					continue;
-				}
-				try (InputStream s = manager.open ("xa-internal/xa-remap-members.xml")) {
-					byte[] contents = new byte[s.available ()];
-					int r = s.read (contents);
-					if (r != -1 && r != contents.length) {
-						Log.w ("monodroid", "Only read " + r + " bytes, not the expected " + contents.length + " bytes!");
-					}
-					return contents;
-				}
-			}
-		} catch (IOException e) {
-			Log.wtf ("monodroid", "Error reading `xa-internal/xa-remap-members.xml`", e);
-		}
-		return null;
 	}
 }
