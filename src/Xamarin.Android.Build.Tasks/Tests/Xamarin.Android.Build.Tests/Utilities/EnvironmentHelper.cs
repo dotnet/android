@@ -486,7 +486,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (File.Exists (envSharedLibrary), $"Application environment SharedLibrary '{envSharedLibrary}' must exist");
 
 				// API level doesn't matter in this case
-				AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, ndk.GetToolPath ("readelf", arch, 0));
+				var readelf = ndk.GetToolPath ("readelf", arch, 0);
+				if (!File.Exists (readelf)) {
+					readelf = ndk.GetToolPath ("llvm-readelf", arch, 0);
+				}
+				AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, readelf);
 			}
 		}
 
