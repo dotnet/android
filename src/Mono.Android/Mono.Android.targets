@@ -75,14 +75,14 @@
   <!-- Pulls documentation from JavaDoc -->
   <PropertyGroup>
     <_JavaSourceUtilsJar>$(MicrosoftAndroidSdkOutDir)java-source-utils.jar</_JavaSourceUtilsJar>
-    <_AndroidStableSrcDir>$(AndroidSdkDirectory)\platforms\android-$(AndroidLatestStableApiLevel)\src</_AndroidStableSrcDir>
+    <_AndroidSrcDir>$(AndroidSdkDirectory)\platforms\android-$(AndroidApiLevel)\src</_AndroidSrcDir>
     <_AndroidJavadocXml>..\..\bin\Build$(Configuration)\android-javadoc.xml</_AndroidJavadocXml>
   </PropertyGroup>
   
   <Target Name="_BuildAndroidJavadocXml"
       Condition=" '$(IncludeAndroidJavadoc)' == 'True' "
       BeforeTargets="CoreCompile"
-      Inputs="$(MSBuildThisFile);$(_AndroidStableSrcDir)\source.properties;$(_JavaSourceUtilsJar)"
+      Inputs="$(MSBuildThisFile);$(_AndroidSrcDir)\source.properties;$(_JavaSourceUtilsJar)"
       Outputs="$(_AndroidJavadocXml)">
     <ItemGroup>
       <_Doclink Include="--doc-copyright" />
@@ -95,11 +95,11 @@
       <_Doclink Include="https://developer.android.com/" />
     </ItemGroup>
     <ItemGroup>
-      <_AndroidSources Include="$(_AndroidStableSrcDir)\android\**\*.java" />
-      <_AndroidSources Include="$(_AndroidStableSrcDir)\java\**\*.java" />
-      <_AndroidSources Include="$(_AndroidStableSrcDir)\javax\**\*.java" />
-      <_AndroidSources Include="$(_AndroidStableSrcDir)\org\**\*.java" />
-      <_AndroidSources Remove="$(_AndroidStableSrcDir)\**\*.annotated.java" />
+      <_AndroidSources Include="$(_AndroidSrcDir)\android\**\*.java" />
+      <_AndroidSources Include="$(_AndroidSrcDir)\java\**\*.java" />
+      <_AndroidSources Include="$(_AndroidSrcDir)\javax\**\*.java" />
+      <_AndroidSources Include="$(_AndroidSrcDir)\org\**\*.java" />
+      <_AndroidSources Remove="$(_AndroidSrcDir)\**\*.annotated.java" />
     </ItemGroup>
     <PropertyGroup>
       <_Filenames>$(IntermediateOutputPath)\java-sources.txt</_Filenames>
@@ -111,7 +111,7 @@
     />
     <ItemGroup>
       <_JSIArg Include="-v" />
-      <_JSIArg Include="--source &quot;$(_AndroidStableSrcDir)&quot;" />
+      <_JSIArg Include="--source &quot;$(_AndroidSrcDir)&quot;" />
       <_JSIArg Include="--output-javadoc &quot;$(_AndroidJavadocXml)&quot;" />
       <_JSIArg Include="@$(_Filenames)" />
     </ItemGroup>
@@ -289,16 +289,24 @@
   <Target Name="UpdateExternalDocumentation">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
         Properties="TargetFramework=monoandroid10"
-        Targets="_UpdateExternalDocumentation;_RunMdoc"
+        Targets="_UpdateExternalDocumentation;_RunMdoc;_GenerateApiDocsDiff"
     />
   </Target>
   <Target Name="_UpdateExternalDocumentation">
     <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
     <PropertyGroup>
-      <_Binlog>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateExternalDocumentation-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).binlog</_Binlog>
+      <_Binlog>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).binlog</_Binlog>
     </PropertyGroup>
+    <ItemGroup>
+      <_BuildProps Include="-p:IncludeAndroidJavadoc=True" />
+      <_BuildProps Include="-p:TargetFramework=monoandroid10" />
+      <!-- Override these properties to generate docs against a specific API level -->
+      <_BuildProps Include="-p:AndroidApiLevel=$(AndroidApiLevel)" />
+      <_BuildProps Include="-p:AndroidPlatformId=$(AndroidPlatformId)" />
+      <_BuildProps Include="-p:AndroidFrameworkVersion=$(AndroidFrameworkVersion)" />
+    </ItemGroup>
     <Exec
-        Command="dotnet build -v:n -c $(Configuration) -p:IncludeAndroidJavadoc=True -bl:$(_Binlog)"
+        Command="&quot;$(DotNetPreviewTool)&quot; build -v:n -c $(Configuration) -bl:$(_Binlog) @(_BuildProps, ' ')"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
@@ -352,5 +360,15 @@
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>
-  
+
+  <Target Name="_GenerateApiDocsDiff">
+    <PropertyGroup>
+      <_DiffFile>$(XamarinAndroidSourcePath)bin/Build$(Configuration)/UpdateApiDocs$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).diff</_DiffFile>
+    </PropertyGroup>
+    <Exec
+        Command="git diff --output=&quot;$(_DiffFile)&quot;"
+        WorkingDirectory="$(XamarinAndroidSourcePath)external/android-api-docs"
+    />
+  </Target>
+
 </Project>
