@@ -341,10 +341,12 @@ namespace Xamarin.Android.Net
 			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
 
 #if !MONOANDROID1_0
-			if (NegotiateAuthenticationIsEnabled && RequestNeedsAuthorization && NegotiateAuthenticationHelper.RequestNeedsNegotiateAuthentication (this, request, out var negotiateAuthentication)) {
-				var authenticatedResponse = await negotiateAuthentication.SendWithAuthAsync (request, cancellationToken).ConfigureAwait (false);
-				if (authenticatedResponse != null)
-					return authenticatedResponse;
+			if (NegotiateAuthenticationIsEnabled) {
+				if (RequestNeedsAuthorization && NegotiateAuthenticationHelper.RequestNeedsNegotiateAuthentication (this, request, out var authData, out var credentials)) {
+					var authenticatedResponse = await NegotiateAuthenticationHelper.SendWithAuthAsync (this, request, authData, credentials, cancellationToken).ConfigureAwait (false);
+					if (authenticatedResponse != null)
+						return authenticatedResponse;
+				}
 			}
 #endif
 
