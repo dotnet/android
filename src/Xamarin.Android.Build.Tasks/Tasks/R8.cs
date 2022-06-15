@@ -75,10 +75,7 @@ namespace Xamarin.Android.Tasks
 					File.WriteAllText (temp, string.Concat (content));
 
 					cmd.AppendSwitchIfNotNull ("--main-dex-list ", temp);
-					var mainDexClassesRules = Path.Combine (AndroidSdkBuildToolsPath, "mainDexClasses.rules");
-					if (File.Exists (mainDexClassesRules)) {
-						cmd.AppendSwitchIfNotNull ("--main-dex-rules ", mainDexClassesRules);
-					}
+					cmd.AppendSwitchIfNotNull ("--main-dex-rules ", Path.Combine (AndroidSdkBuildToolsPath, "mainDexClasses.rules"));
 					cmd.AppendSwitchIfNotNull ("--main-dex-list-output ", MultiDexMainDexListFile);
 				}
 			}
