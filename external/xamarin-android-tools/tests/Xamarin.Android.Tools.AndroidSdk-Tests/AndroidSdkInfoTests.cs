@@ -71,7 +71,7 @@ namespace Xamarin.Android.Tools.Tests
 		{
 			// Must match like-named constants in AndroidSdkBase
 			const int MinimumCompatibleNDKMajorVersion = 16;
-			const int MaximumCompatibleNDKMajorVersion = 23;
+			const int MaximumCompatibleNDKMajorVersion = 24;
 
 			CreateSdks(out string root, out string jdk, out string ndk, out string sdk);
 
@@ -93,8 +93,10 @@ namespace Xamarin.Android.Tools.Tests
 				"22.0.7026061",
 				"22.1.7171670",
 				"23.1.7779620",
+				"24.0.8215888",
+				"25.0.3735928559",  // 0xdeadbeef
 			};
-			string expectedVersion = "23.1.7779620";
+			string expectedVersion = "24.0.8215888";
 			string expectedNdkPath = Path.Combine (sdk, "ndk", expectedVersion);
 
 			try {
