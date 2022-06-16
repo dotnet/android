@@ -467,14 +467,9 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The file name of the library</note>
       </trans-unit>
       <trans-unit id="XA1023">
-        <source>Using the DX DEX Compiler is deprecated. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</source>
-        <target state="translated">Używanie kompilatora DX DEX jest przestarzałe. Ustaw kompilator DEX na „d8” na stronach właściwości projektu w programie Visual Studio lub edytuj plik projektu w edytorze tekstów i ustaw właściwość programu MSBuild o nazwie „AndroidDexTool” na wartość „d8”.</target>
+        <source>Using the DX DEX Compiler is not supported. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</source>
+        <target state="needs-review-translation">Używanie kompilatora DX DEX jest przestarzałe. Ustaw kompilator DEX na „d8” na stronach właściwości projektu w programie Visual Studio lub edytuj plik projektu w edytorze tekstów i ustaw właściwość programu MSBuild o nazwie „AndroidDexTool” na wartość „d8”.</target>
         <note>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</note>
-      </trans-unit>
-      <trans-unit id="XA1023_dotnet">
-        <source>Using the DX DEX Compiler is not supported in Xamarin.Android projects that target .NET 6 or higher. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</source>
-        <target state="needs-review-translation">Używanie kompilatora DX DEX nie jest obsługiwane w projektach Xamarin.Android, których elementem docelowym jest platforma .NET 5 lub nowsza. Ustaw kompilator DEX na „d8” na stronach właściwości projektu w programie Visual Studio lub edytuj plik projektu w edytorze tekstów i ustaw właściwość programu MSBuild o nazwie „AndroidDexTool” na wartość „d8”.</target>
-        <note>The following are literal names and should not be translated: DX, DEX, Xamarin.Android, .NET 6, d8, AndroidDexTool.</note>
       </trans-unit>
       <trans-unit id="XA1024">
         <source>Ignoring configuration file '{0}'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher.</source>

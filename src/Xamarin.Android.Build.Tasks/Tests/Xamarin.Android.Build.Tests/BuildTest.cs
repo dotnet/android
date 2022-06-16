@@ -2437,7 +2437,7 @@ namespace UnnamedProject
 			if (TestEnvironment.IsUsingJdk8)
 				Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
 
-			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver";
+			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel";
 
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
