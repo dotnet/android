@@ -56,7 +56,7 @@ steps:
 
 - template: run-xaprepare.yaml
   parameters:
-    arguments: --s=AndroidTestDependencies  --android-sdk-platforms="19,21,26,32,Tiramisu"
+    arguments: --s=AndroidTestDependencies  --android-sdk-platforms="19,21,26,32,33"
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - task: DotNetCoreCLI@2

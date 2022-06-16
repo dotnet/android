@@ -1707,7 +1707,10 @@
   <!-- Base method is 'protected', overriding method cannot change it to 'public' -->
   <attr api-since ="33" path="/api/package[@name='android.media.tv.interactive']/class[@name='TvInteractiveAppView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
 
-    <!--
+  <!-- Changed to an enum, which makes the existing constant the enum type instead of int, remove to fix manually. -->
+  <remove-node api-since="26" path="/api/package[@name='android.content']/class[@name='Context']/field[@name='RECEIVER_VISIBLE_TO_INSTANT_APPS']" />
+
+  <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
     
