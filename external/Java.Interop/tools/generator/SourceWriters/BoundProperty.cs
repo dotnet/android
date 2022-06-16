@@ -179,6 +179,7 @@ namespace generator.SourceWriters
 
 				MergeSummary (memberDocs, setterDocs);
 				MergeRemarks (memberDocs, setterDocs);
+				MergeReturns (memberDocs, setterDocs);
 
 				memberDocs.Add (setterDocs.Nodes ());
 			}
@@ -221,6 +222,21 @@ namespace generator.SourceWriters
 				toContent.AddFirst (new XElement ("para", "Property getter documentation:"));
 				toContent.Add (new XElement ("para", "Property setter documentation:"));
 				toContent.Add (fromContent.Nodes ());
+			}
+		}
+
+		static void MergeReturns (XElement mergeInto, XElement mergeFrom)
+		{
+			var toContent = mergeInto.Element ("returns");
+			var fromContent = mergeFrom.Element ("returns");
+
+			if (toContent != null && fromContent != null) {
+				if (toContent.Value == fromContent.Value) {
+					fromContent.Remove ();
+				} else {
+					toContent.Add (" ");
+					toContent.Add (fromContent.Nodes ());
+				}
 			}
 		}
 	}
