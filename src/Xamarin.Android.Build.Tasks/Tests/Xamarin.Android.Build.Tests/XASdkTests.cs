@@ -908,7 +908,7 @@ public class JavaSourceTest {
 		public void XamarinLegacySdk ([Values ("net6.0", "net7.0")] string dotnetVersion)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
-				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha4",
+				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha1",
 				Sources = {
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
