@@ -18,7 +18,7 @@ _ResolveAssemblies MSBuild target.
   <Target Name="_RemoveLinuxFrameworkReferences"
       AfterTargets="ProcessFrameworkReferences">
     <ItemGroup>
-      <_ProblematicRIDs Include="linux-arm;linux-arm64;linux-x86;linux-x64" />
+      <_ProblematicRIDs Include="linux-arm;linux-arm64;linux-x86;linux-x64;linux-bionic-arm;linux-bionic-arm64;linux-bionic-x86;linux-bionic-x64" />
       <PackageDownload Remove="Microsoft.NETCore.App.Host.%(_ProblematicRIDs.Identity)" />
     </ItemGroup>
   </Target>
