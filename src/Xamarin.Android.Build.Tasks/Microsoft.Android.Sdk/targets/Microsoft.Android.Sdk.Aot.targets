@@ -40,7 +40,20 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
 
   <Target Name="_AndroidAot"
       Condition=" '$(AotAssemblies)' == 'true' and '$(RuntimeIdentifier)' != '' "
-      DependsOnTargets="_CreatePropertiesCache;_AndroidAotInputs"
+      DependsOnTargets="_CreatePropertiesCache;_AndroidAotInputs;_AndroidAotCompilation">
+    <ReadLinesFromFile File="$(_AndroidStampDirectory)_AndroidAot.stamp">
+      <Output TaskParameter="Lines" ItemName="_AotCompiledAssemblies" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <FileWrites Include="@(_AotCompiledAssemblies)" />
+      <ResolvedFileToPublish
+          Include="@(_AotCompiledAssemblies)"
+          ArchiveFileName="libaot-$([System.IO.Path]::GetFileNameWithoutExtension('%(_AotCompiledAssemblies.Identity)')).so"
+      />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidAotCompilation"
       Inputs="@(_AndroidAotInputs)"
       Outputs="$(_AndroidStampDirectory)_AndroidAot.stamp">
     <ItemGroup>
@@ -94,15 +107,13 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         LdFlags="$(_LdFlags)"
         WorkingDirectory="$(MSBuildProjectDirectory)"
         AotArguments="$(AndroidAotAdditionalArguments)">
-      <Output TaskParameter="CompiledAssemblies" ItemName="_AotCompiledAssemblies" />
+      <Output TaskParameter="CompiledAssemblies" ItemName="_MonoAOTCompiledAssemblies" />
       <Output TaskParameter="FileWrites"         ItemName="FileWrites" />
     </MonoAOTCompiler>
-    <Touch Files="$(_AndroidStampDirectory)_AndroidAot.stamp" AlwaysCreate="true" />
-    <ItemGroup>
-      <ResolvedFileToPublish
-          Include="@(_AotCompiledAssemblies->'%(LibraryFile)')"
-          ArchiveFileName="libaot-$([System.IO.Path]::GetFileNameWithoutExtension('%(_AotCompiledAssemblies.LibraryFile)')).so"
-      />
-    </ItemGroup>
+    <WriteLinesToFile
+        File="$(_AndroidStampDirectory)_AndroidAot.stamp"
+        Lines="@(_MonoAOTCompiledAssemblies->'%(LibraryFile)')"
+        Overwrite="true"
+    />
   </Target>
 </Project>
