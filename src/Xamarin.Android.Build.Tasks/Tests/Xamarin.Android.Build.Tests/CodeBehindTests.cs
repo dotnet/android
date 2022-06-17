@@ -601,7 +601,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			} catch {
 				CopyLogs (testInfo, false);
-				foreach (var file in Directory.GetFiles (testInfo.OutputDirectory, "*.log", SearchOption.AllDirectories)) {
+				foreach (var file in Directory.GetFiles (testInfo.OutputDirectory, "*.*log", SearchOption.AllDirectories)) {
 					TestContext.AddTestAttachment (file);
 				}
 				throw;
