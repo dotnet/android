@@ -8,6 +8,22 @@
 trigger: none
 pr: none
 
+parameters:
+- name: apiLevel
+  displayName: AndroidApiLevel property value
+  type: string
+  default: 31
+
+- name: platformId
+  displayName: AndroidPlatformId property value
+  type: string
+  default: 31
+
+- name: frameworkVersion
+  displayName: AndroidFrameworkVersion property value
+  type: string
+  default: v12.0
+
 # Global variables
 variables:
 - template: yaml-templates/variables.yaml
@@ -20,7 +36,8 @@ stages:
   - job: mac_build_update_docs
     displayName: Update API Docs
     pool:
-      vmImage: macOS-11
+      name: VSEng-Xamarin-RedmondMac-Android-Untrusted
+      demands: macOS.Name -equals Monterey
     timeoutInMinutes: 120
     workspace:
       clean: all
@@ -47,28 +64,23 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare
 
-    - task: MSBuild@1
-      displayName: build jnienv-gen.csproj
-      inputs:
-        solution: $(Build.SourcesDirectory)/external/Java.Interop/build-tools/jnienv-gen/jnienv-gen.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /restore
-
-    - task: MSBuild@1
-      displayName: update android-api-docs
-      inputs:
-        solution: $(Build.SourcesDirectory)/src/Mono.Android/Mono.Android.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /restore /t:UpdateExternalDocumentation
+    - script: make update-api-docs CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='-p:AndroidApiLevel=${{ parameters.apiLevel }} -p:AndroidPlatformId=${{ parameters.platformId }} -p:AndroidFrameworkVersion=${{ parameters.frameworkVersion }}'
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: make update-api-docs
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: Build Results - API Docs Update
         includeBuildResults: true
+        condition: always()
+
+    - script: >
+        mkdir -p $(Build.StagingDirectory)/api-doc-diff &&
+        ln $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/UpdateApiDocs*.diff $(Build.StagingDirectory)/api-doc-diff/
+      displayName: copy api docs diff
 
     - task: PublishPipelineArtifact@1
-      displayName: upload Mono.Android docs
+      displayName: upload api docs diff
       inputs:
-        artifactName: Mono.Android Docs
-        targetPath: $(Build.SourcesDirectory)/external/android-api-docs/docs/Mono.Android/en/
+        artifactName: Api Docs Diff
+        targetPath: $(Build.StagingDirectory)/api-doc-diff
