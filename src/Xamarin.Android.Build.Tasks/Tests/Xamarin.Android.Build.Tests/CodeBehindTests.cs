@@ -601,7 +601,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			} catch {
 				CopyLogs (testInfo, false);
-				foreach (var file in Directory.GetFiles (testInfo.OutputDirectory, "*.log", SearchOption.AllDirectories)) {
+				foreach (var file in Directory.GetFiles (testInfo.OutputDirectory, "*.*log", SearchOption.AllDirectories)) {
 					TestContext.AddTestAttachment (file);
 				}
 				throw;
@@ -695,9 +695,7 @@ namespace Xamarin.Android.Build.Tests
 			CopyRecursively (TestProjectRootDirectory, temporaryProjectPath, ignore);
 			CopyRecursively (CommonSampleLibraryRootDirectory, Path.Combine (tempRoot, CommonSampleLibraryName), ignore);
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "Directory.Build.props"), Path.Combine (tempRoot, "Directory.Build.props" ));
-			if (Builder.UseDotNet) {
-				XASdkProject.SaveNuGetConfig (tempRoot);
-			}
+			XASdkProject.SaveNuGetConfig (tempRoot);
 			return temporaryProjectPath;
 		}
 
