@@ -20,6 +20,8 @@
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <PlotDataLabelSuffix>-$(TestsFlavor)NET6</PlotDataLabelSuffix>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
+    <!-- Necessary for AndroidMessageHandlerNegotiateAuthenticationTests -->
+    <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <!--
       TODO: Fix excluded tests
       For AOT, InetAccess excluded due to: https://github.com/dotnet/runtime/issues/56315
