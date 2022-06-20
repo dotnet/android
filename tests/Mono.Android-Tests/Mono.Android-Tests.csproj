@@ -22,7 +22,6 @@
     <MandroidI18n>All</MandroidI18n>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <AndroidIncludeWrapSh Condition=" '$(UseASAN)' != '' Or '$(UseUBSAN)' != '' ">true</AndroidIncludeWrapSh>
     <_AndroidCheckedBuild Condition=" '$(UseASAN)' != '' ">asan</_AndroidCheckedBuild>

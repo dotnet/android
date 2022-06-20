@@ -475,14 +475,9 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The file name of the library</note>
       </trans-unit>
       <trans-unit id="XA1023">
-        <source>Using the DX DEX Compiler is deprecated. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</source>
-        <target state="translated">DX DEX コンパイラは非推奨になりました。Visual Studio プロジェクトのプロパティ ページで DEX コンパイラを 'd8' に設定するか、テキスト エディターでプロジェクト ファイルを編集して 'AndroidDexTool' MSBuild プロパティを 'd8' に設定してください。</target>
+        <source>Using the DX DEX Compiler is not supported. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</source>
+        <target state="needs-review-translation">DX DEX コンパイラは非推奨になりました。Visual Studio プロジェクトのプロパティ ページで DEX コンパイラを 'd8' に設定するか、テキスト エディターでプロジェクト ファイルを編集して 'AndroidDexTool' MSBuild プロパティを 'd8' に設定してください。</target>
         <note>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</note>
-      </trans-unit>
-      <trans-unit id="XA1023_dotnet">
-        <source>Using the DX DEX Compiler is not supported in Xamarin.Android projects that target .NET 6 or higher. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</source>
-        <target state="needs-review-translation">.NET 5 以降を対象とする Xamarin.Android プロジェクトでは、DX DEX コンパイラの使用はサポートされていません。Visual Studio プロジェクトのプロパティ ページで DEX コンパイラを 'd8' に設定するか、テキスト エディターでプロジェクト ファイルを編集して 'AndroidDexTool' MSBuild プロパティを 'd8' に設定してください。</target>
-        <note>The following are literal names and should not be translated: DX, DEX, Xamarin.Android, .NET 6, d8, AndroidDexTool.</note>
       </trans-unit>
       <trans-unit id="XA1024">
         <source>Ignoring configuration file '{0}'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher.</source>

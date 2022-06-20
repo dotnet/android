@@ -18,7 +18,6 @@
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
     <MandroidI18n>All</MandroidI18n>
-    <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
     <AndroidPackageFormat>aab</AndroidPackageFormat>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>

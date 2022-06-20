@@ -1,7 +1,7 @@
 [submodule "external/android-api-docs"]
     path = external/android-api-docs
     url = https://github.com/xamarin/android-api-docs
-    branch = master
+    branch = main
 [submodule "external/apksig"]
     path = external/apksig
     url = https://android.googlesource.com/platform/tools/apksig

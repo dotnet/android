@@ -9,7 +9,6 @@
     <OutputType>Exe</OutputType>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(XamarinAndroidSourcePath)product.snk</AssemblyOriginatorKeyFile>
-    <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(XamarinAndroidSourcePath)bin\Test$(Configuration)</OutputPath>

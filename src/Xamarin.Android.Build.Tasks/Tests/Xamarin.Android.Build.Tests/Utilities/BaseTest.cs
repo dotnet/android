@@ -201,8 +201,8 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static void AssertDexToolSupported (string dexTool)
 		{
-			if (Builder.UseDotNet && dexTool == "dx") {
-				Assert.Ignore ("dx is not supported in .NET 5+");
+			if (dexTool == "dx") {
+				Assert.Ignore ("dx is not supported");
 			}
 		}
 

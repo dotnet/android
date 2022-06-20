@@ -223,3 +223,6 @@ APK_SIZES_REFERENCE_DIR=tests/apk-sizes-reference
 update-apk-sizes-reference:
 	-mkdir -p $(APK_SIZES_REFERENCE_DIR)
 	cp -v *values-$(CONFIGURATION).csv $(APK_SIZES_REFERENCE_DIR)/
+
+update-api-docs:
+		$(call DOTNET_BINLOG,update-api-docs) -t:UpdateExternalDocumentation src/Mono.Android/Mono.Android.csproj
