@@ -1024,7 +1024,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			appBuilder.AssertTargetIsSkipped ("CoreCompile");
 			if (isRelease) {
 				appBuilder.AssertTargetIsSkipped ("_RemoveRegisterAttribute");
-				appBuilder.AssertTargetIsSkipped ("_AndroidAot");
+				appBuilder.AssertTargetIsSkipped ("_AndroidAotCompilation");
 			}
 		}
 
