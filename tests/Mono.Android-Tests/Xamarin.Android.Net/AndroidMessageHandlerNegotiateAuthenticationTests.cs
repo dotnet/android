@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Android.Net;
@@ -13,12 +14,17 @@ namespace Xamarin.Android.NetTests {
 		[SetUp]
 		public void SetUp ()
 		{
+			// this only works in Debug mode because in Release the property is overridden by the linker
 			AppContext.SetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", true);
 		}
 
 		[Test]
 		public async Task RequestWithoutCredentialsFails ()
 		{
+			if (!NegotiateAuthenticationIsEnabled) {
+				Assert.Ignore ("Negotiate authentication is not enabled.");
+			}
+
 			using var server = new FakeNtlmServer (port: 47662);
 			var handler = new AndroidMessageHandler ();
 			var client = new HttpClient (handler);
@@ -32,6 +38,10 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public async Task RequestWithCredentialsSucceeds ()
 		{
+			if (!NegotiateAuthenticationIsEnabled) {
+				Assert.Ignore ("Negotiate authentication is not enabled.");
+			}
+
 			using var server = new FakeNtlmServer (port: 47663);
 			var cache = new CredentialCache ();
 			cache.Add (server.Uri, "NTLM", FakeNtlmServer.Credentials);
@@ -44,6 +54,9 @@ namespace Xamarin.Android.NetTests {
 			Assert.IsTrue (response.IsSuccessStatusCode);
 			Assert.AreEqual (FakeNtlmServer.SecretContent, content);
 		}
+
+		static bool NegotiateAuthenticationIsEnabled =>
+			typeof (AndroidMessageHandler).GetProperty ("NegotiateAuthenticationIsEnabled", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue (null) as bool? ?? false;
 
 		sealed class FakeNtlmServer : IDisposable
 		{

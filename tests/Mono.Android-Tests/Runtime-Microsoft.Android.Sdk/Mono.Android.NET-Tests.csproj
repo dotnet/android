@@ -19,8 +19,6 @@
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <PlotDataLabelSuffix>-$(TestsFlavor)NET6</PlotDataLabelSuffix>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
-    <!-- Necessary for AndroidMessageHandlerNegotiateAuthenticationTests -->
-    <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <!--
       TODO: Fix excluded tests
       For AOT, InetAccess excluded due to: https://github.com/dotnet/runtime/issues/56315
@@ -41,8 +39,9 @@
   <ItemGroup>
     <Compile Remove="..\Resources\Resource.designer.cs" />
     <Compile Include="System\AppContextTests.cs" />
-    <!-- NT authentication support in the AndroidMessageHandler is available only in .NET 7+ -->
-    <Compile Include="..\Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
+    <!-- Negotiate authentication support in the AndroidMessageHandler is available only in .NET 7+ -->
+    <!-- In the Release configuration the negotiate authentication code is trimmed -->
+    <Compile Condition=" '$(Configuration)' == 'Debug' " Include="..\Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
     <!-- Mono.Data.Sqlite is not supported in .NET 6 -->
     <Compile Remove="..\Mono.Data.Sqlite\SqliteTests.cs" />
   </ItemGroup>
