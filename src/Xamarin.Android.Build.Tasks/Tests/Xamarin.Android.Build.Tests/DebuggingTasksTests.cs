@@ -34,11 +34,7 @@ namespace Xamarin.Android.Build.Tests
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 
 			var engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
-
-			var outPath = TestEnvironment.IsRunningOnCI ? TestEnvironment.MonoAndroidToolsDirectory
-				: new Uri (Path.Combine (XABuildPaths.PrefixDirectory, "lib", "xamarin.android", "xbuild", "Xamarin", "Android")).LocalPath;
-			var frameworksPath = TestEnvironment.IsRunningOnCI ? Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, "v1.0")
-				: new Uri (Path.Combine (XABuildPaths.PrefixDirectory, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid", "v1.0")).LocalPath;
+			var frameworksPath = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, "v1.0");
 			var androidSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "Sdk"), "24.0.1", new[]
 			{
 				new ApiInfo { Id = "23", Level = 23, Name = "Marshmallow", FrameworkVersion = "v6.0", Stable = true },
@@ -53,7 +49,7 @@ namespace Xamarin.Android.Build.Tests
 				AndroidNdkPath = null,
 				AndroidSdkPath = androidSdk,
 				JavaSdkPath = javaSdk,
-				MonoAndroidToolsPath = outPath,
+				MonoAndroidToolsPath = TestEnvironment.AndroidMSBuildDirectory,
 				ReferenceAssemblyPaths = new string[] {
 					frameworksPath,
 				},

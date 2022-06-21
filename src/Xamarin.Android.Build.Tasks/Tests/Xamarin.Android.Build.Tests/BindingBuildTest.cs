@@ -288,7 +288,7 @@ namespace Com.Ipaulpro.Afilechooser {
 			binding.AndroidClassParser = "class-parse";
 
 			using (var bindingBuilder = CreateDllBuilder ("temp/BindingCustomJavaApplicationClass/MultiDexBinding")) {
-				string multidexJar = Path.Combine (bindingBuilder.AndroidMSBuildDirectory, "android-support-multidex.jar");
+				string multidexJar = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "android-support-multidex.jar");
 				binding.Jars.Add (new AndroidItem.EmbeddedJar (() => multidexJar));
 				bindingBuilder.Build (binding);
 				var proj = new XamarinAndroidApplicationProject ();

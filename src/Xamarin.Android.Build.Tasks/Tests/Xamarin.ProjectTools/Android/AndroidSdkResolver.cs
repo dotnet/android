@@ -84,11 +84,6 @@ namespace Xamarin.ProjectTools
 			return JavaSdkVersionString;
 		}
 
-		public static string GetDotNetPreviewPath ()
-		{
-			return Path.Combine (XABuildPaths.PrefixDirectory, "dotnet");
-		}
-
 		static string RunPathsTargets (string target)
 		{
 			var targets = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "scripts", "Paths.targets");

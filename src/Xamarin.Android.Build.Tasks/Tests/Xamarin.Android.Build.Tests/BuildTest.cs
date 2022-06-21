@@ -235,8 +235,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder ()) {
-				if (aotAssemblies && !b.CrossCompilerAvailable (string.Join (";", abis)))
-					Assert.Ignore ("Cross compiler was not available");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
@@ -421,7 +419,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 				AndroidClassParser = "class-parse",
 			};
 			using (var bbuilder = CreateDllBuilder (Path.Combine (path, "BuildWithExternalJavaLibraryBinding"))) {
-				string multidex_jar = Path.Combine (bbuilder.AndroidMSBuildDirectory, "android-support-multidex.jar");
+				string multidex_jar = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "android-support-multidex.jar");
 				binding.Jars.Add (new AndroidItem.InputJar (() => multidex_jar));
 
 				Assert.IsTrue (bbuilder.Build (binding), "Binding build should succeed.");
@@ -637,13 +635,11 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
 			using (var builder = CreateApkBuilder ()) {
 				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion, out string[] _);
-				AssertTargetFrameworkVersionSupported (firstFrameworkVersion);
 				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
-				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, firstFrameworkVersion)))
+				if (!Directory.Exists (Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, firstFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={firstFrameworkVersion}"), $"TargetFrameworkVerson should be {firstFrameworkVersion}");
-				AssertTargetFrameworkVersionSupported (lastFrameworkVersion);
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { $"TargetFrameworkVersion={lastFrameworkVersion}" }), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={lastFrameworkVersion}"), $"TargetFrameworkVersion should be {lastFrameworkVersion}");
 			}
@@ -1349,7 +1345,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				UseLatestPlatformSdk = false,
 			};
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, targetFrameworkVersion)))
+				if (!Directory.Exists (Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, targetFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "_SetLatestTargetFrameworkVersion";
@@ -1370,25 +1366,23 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void IfAndroidJarDoesNotExistThrowXA5207 ()
 		{
 			var path = Path.Combine ("temp", TestName);
-			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1");
+			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1", new ApiInfo [] { new ApiInfo { Id = "30" } });
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				TargetFrameworkVersion = "v8.1",
-				TargetSdkVersion = "27",
 				UseLatestPlatformSdk = false,
 			};
+
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "v8.1")))
-					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
+				if (!Builder.UseDotNet)
+					proj.TargetFrameworkVersion = builder.LatestTargetFrameworkVersion ();
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "AndroidPrepareForBuild";
 				Assert.IsFalse (builder.Build (proj, parameters: new string [] {
 					$"AndroidSdkBuildToolsVersion=24.0.1",
 					$"AndroidSdkDirectory={AndroidSdkDirectory}",
-					$"_AndroidApiLevel=27",
 				}), "Build should have failed");
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should have been raised.");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("Could not find android.jar for API level 27"), "XA5207 should have had a good error message.");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"Could not find android.jar for API level {proj.TargetSdkVersion}"), "XA5207 should have had a good error message.");
 			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);
 		}

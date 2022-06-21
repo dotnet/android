@@ -154,7 +154,7 @@ namespace Xamarin.ProjectTools
 		public RuntimeInfo [] GetSupportedRuntimes ()
 		{
 			var runtimeInfo = new List<RuntimeInfo> ();
-			foreach (var file in Directory.EnumerateFiles (Path.Combine (AndroidMSBuildDirectory, "lib"), "libmono-android.*.so", SearchOption.AllDirectories)) {
+			foreach (var file in Directory.EnumerateFiles (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "lib"), "libmono-android.*.so", SearchOption.AllDirectories)) {
 				string fullFilePath = Path.GetFullPath (file);
 				DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
 				if (parentDir == null)
