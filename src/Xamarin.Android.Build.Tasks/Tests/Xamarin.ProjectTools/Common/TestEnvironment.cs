@@ -165,6 +165,11 @@ namespace Xamarin.ProjectTools
 			return dirs.FirstOrDefault ();
 		}
 
+		/// <summary>
+		/// Tests will attempt to run against local build output directories by default,
+		///  and fall back to `dotnet/packs` or a legacy system install location if a local build does not exist.
+		/// This will always return false for our tests running in CI.
+		/// </summary>
 		public static bool UseLocalBuildOutput {
 			get {
 				var msbuildDir = Builder.UseDotNet ? Path.Combine (LocalDotNetAndroidSdkDirectory, "tools") : LocalMonoAndroidToolsDirectory;
