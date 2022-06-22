@@ -443,7 +443,6 @@ namespace Xamarin.Android.Build.Tests {
 			proj.TargetSdkVersion = "19";
 			using (var b = CreateApkBuilder ()) {
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
-				AssertTargetFrameworkVersionSupported (proj.TargetFrameworkVersion);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}

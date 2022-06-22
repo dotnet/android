@@ -130,7 +130,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		{
 			// 09-22 14:21:07.064 12786 12786 I MonoDroid:   at UnnamedProject.MainActivity.OnCreate (Android.OS.Bundle bundle) [0x00051] in <b3164619c4824e379aecfb7335bd4cce>:0
 			Assert.IsTrue (ObfuscatedStackRegex.IsMatch (File.ReadAllText (logcatFilePath)), "Original logcat output did not contain obfuscated crash info.");
-			var monoSymbolicate = IsWindows ? Path.Combine (TestEnvironment.MonoAndroidToolsDirectory, "mono-symbolicate.exe") : "mono-symbolicate";
+			var monoSymbolicate = IsWindows ? Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "mono-symbolicate.exe") : "mono-symbolicate";
 			var symbolicatedOutput = RunProcess (monoSymbolicate, $"\"{symbolArchivePath}\" \"{logcatFilePath}\"");
 			File.WriteAllText (Path.Combine (Path.GetDirectoryName (logcatFilePath), "mono-symbol.log"), symbolicatedOutput);
 			Assert.IsFalse (ObfuscatedStackRegex.IsMatch (symbolicatedOutput), "Symbolicated logcat output did contain obfuscated crash info.");
@@ -172,7 +172,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
 			SymbolicateAndAssert (archivePath, logcatPath, new string [] {
 				Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:32"),
-				Directory.Exists (builder.BuildOutputDirectory)
+				TestEnvironment.UseLocalBuildOutput
 					? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
 					: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
 			}) ;
@@ -269,7 +269,7 @@ namespace Library1 {
 				SymbolicateAndAssert (archivePath, logcatPath, new string [] {
 					Path.Combine (Root, lb.ProjectDirectory, "Class1.cs:12"),
 					Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:23"),
-					Directory.Exists (builder.BuildOutputDirectory)
+					TestEnvironment.UseLocalBuildOutput
 						? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
 						: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
 				});

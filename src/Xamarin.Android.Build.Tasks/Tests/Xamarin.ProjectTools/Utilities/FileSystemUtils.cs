@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -47,7 +47,7 @@ namespace Xamarin.ProjectTools
 
 			bool isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
 
-			string dotnet = Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), isWindows ? "dotnet.exe" : "dotnet");
+			string dotnet = Path.Combine (TestEnvironment.DotNetPreviewDirectory, isWindows ? "dotnet.exe" : "dotnet");
 
 			if (File.Exists (dotnet)) {
 				var psi = new ProcessStartInfo (dotnet) {

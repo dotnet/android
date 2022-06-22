@@ -56,85 +56,12 @@ namespace Xamarin.ProjectTools
 		public string BuildTool {
 			get {
 				if (UseDotNet)
-					return Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "dotnet");
+					return Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
 
-				string xabuild;
-				if (IsUnix) {
-					xabuild = XABuildPaths.XABuildScript;
-					if (File.Exists (xabuild))
-						return xabuild;
-					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out", "bin", "xabuild"));
-					if (File.Exists (xabuild))
-						return xabuild;
-					return "msbuild";
-				}
-
-				xabuild = XABuildPaths.XABuildExe;
-				if (File.Exists (xabuild))
+				string xabuild = IsUnix ? XABuildPaths.XABuildScript : XABuildPaths.XABuildExe;
+				if (File.Exists (xabuild) && TestEnvironment.UseLocalBuildOutput)
 					return xabuild;
 				return IsUnix ? "msbuild" : TestEnvironment.GetVisualStudioInstance ().MSBuildPath;
-			}
-		}
-
-		/// <summary>
-		/// The top directory of a local build tree if it can be found, e.g. xamarin-android/bin/Debug.
-		/// </summary>
-		public string BuildOutputDirectory {
-			get {
-				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
-				string configuration = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? XABuildPaths.Configuration;
-				var libmonodroidPath = Path.Combine ("lib", "xamarin.android", "xbuild", "Xamarin", "Android", "lib", Arm32AbiDir, "libmono-android.release.so");
-				if (String.IsNullOrEmpty(outdir))
-					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out"));
-				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
-					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", configuration);
-				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
-					outdir = XABuildPaths.PrefixDirectory;
-				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
-					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", "Debug");
-				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
-					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", "Release");
-
-				return outdir;
-			}
-		}
-
-		/// <summary>
-		/// The MonoAndroidTools directory within a local build tree, e.g. xamarin-android/bin/Debug/lib/xamarin.android/xbuild/Xamarin/Android.<br/>
-		/// If a local build tree can not be found, or if it is empty, this will return the system installation or .NET sandbox location instead:<br/>
-		///	Windows:  C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Xamarin\Android <br/>
-		///	macOS:    /Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android<br/>
-		///	Windows (dotnet):  bin\Debug\dotnet\packs\Microsoft.Android.Sdk.Windows\$(Latest)\tools<br/>
-		///	macOS (dotnet):    bin/Debug/dotnet/packs/Microsoft.Android.Sdk.Darwin/$(Latest)/tools
-		/// </summary>
-		public string AndroidMSBuildDirectory {
-			get {
-				var msbuildDir = Path.Combine (BuildOutputDirectory, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
-				if (Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "lib", Arm32AbiDir, "libmono-android.release.so")))
-					return msbuildDir;
-
-				if (UseDotNet) {
-					return TestEnvironment.DotNetAndroidSdkToolsDirectory;
-				} else {
-					return TestEnvironment.MonoAndroidToolsDirectory;
-				}
-			}
-		}
-
-		/// <summary>
-		/// The MonoAndroid framework (and other reference assemblies) directory within a local build tree. Contains v1.0, v9.0, etc,
-		/// e.g. xamarin-android/bin/Debug/lib/xamarin.android/xbuild-frameworks/MonoAndroid.<br/>
-		/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
-		///	Windows:  C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\MonoAndroid <br/>
-		///	macOS:    Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild-frameworks/MonoAndroid
-		/// </summary>
-		public string FrameworkLibDirectory {
-			get {
-				var frameworkLibDir = Path.Combine (BuildOutputDirectory, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid");
-				if (Directory.Exists (frameworkLibDir) && Directory.EnumerateDirectories (frameworkLibDir, "v*", SearchOption.TopDirectoryOnly).Any ())
-					return frameworkLibDir;
-
-				return TestEnvironment.MonoAndroidFrameworkDirectory;
 			}
 		}
 
@@ -149,13 +76,7 @@ namespace Xamarin.ProjectTools
 			bool result = true;
 			foreach (var abi in supportedAbis.Split (';')) {
 				var fileName = crossCompilerLookup [abi];
-				var path = AndroidMSBuildDirectory;
-				if (IsUnix) {
-					result &= (File.Exists (Path.Combine (path, "Darwin", fileName)) ||
-						File.Exists (Path.Combine (path, "Linux", fileName)));
-				} else {
-					result &= File.Exists (Path.Combine (path, fileName + ".exe"));
-				}
+				result &= File.Exists (Path.Combine (TestEnvironment.OSBinDirectory, fileName + (IsUnix ? "" : ".exe")));
 			}
 			return result;
 		}
@@ -196,7 +117,7 @@ namespace Xamarin.ProjectTools
 			Version lastVersion     = null;
 			List<string> allTFVs    = new List<string> ();
 
-			var searchDir = UseDotNet ? Path.Combine (TestEnvironment.DotNetAndroidSdkDirectory, "data") : FrameworkLibDirectory;
+			var searchDir = UseDotNet ? Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "data") : TestEnvironment.MonoAndroidFrameworkDirectory;
 			foreach (var apiInfoFile in Directory.EnumerateFiles (searchDir, "AndroidApiInfo.xml", SearchOption.AllDirectories)) {
 				string frameworkVersion = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Version");
 				string apiLevel         = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Level");
@@ -229,7 +150,7 @@ namespace Xamarin.ProjectTools
 
 		public bool TargetFrameworkExists (string targetFramework)
 		{
-			var path = Path.Combine (FrameworkLibDirectory, targetFramework);
+			var path = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, targetFramework);
 			if (!Directory.Exists (path)) {
 				return false;
 			}
@@ -283,8 +204,13 @@ namespace Xamarin.ProjectTools
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (BuildTool);
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
-			if (UseDotNet)
+			if (UseDotNet) {
 				args.Append ("build ");
+				if (TestEnvironment.UseLocalBuildOutput) {
+					psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
+					psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
+				}
+			}
 			args.AppendFormat ("{0} /t:{1} {2}",
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 			if (UseDotNet) {

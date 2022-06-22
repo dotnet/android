@@ -21,7 +21,8 @@ namespace Xamarin.Android.Build.Tests
 		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
 
 		[SetUpFixture]
-		public class SetUp {
+		public class SetUp
+		{
 			public static string DeviceAbi {
 				get;
 				private set;
@@ -32,42 +33,9 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
-			public static bool CommercialBuildAvailable {
-				get;
-				private set;
-			}
-
-			public static string AndroidMSBuildDirectory {
-				get;
-				private set;
-			}
-
-			public static string OSBinDirectory {
-				get;
-				private set;
-			}
-
 			public static string TestDirectoryRoot {
 				get;
 				private set;
-			}
-
-			static SetUp ()
-			{
-				using (var builder = new Builder ()) {
-					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
-					AndroidMSBuildDirectory = builder.AndroidMSBuildDirectory;
-				}
-
-				string osSubdirName;
-				if (TestEnvironment.IsLinux) {
-					osSubdirName = "Linux";
-				} else if (TestEnvironment.IsMacOS) {
-					osSubdirName = "Darwin";
-				} else {
-					osSubdirName = String.Empty;
-				}
-				OSBinDirectory = Path.Combine (AndroidMSBuildDirectory, osSubdirName);
 			}
 
 			[OneTimeSetUp]
@@ -133,6 +101,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 		}
+
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
 		protected bool IsMacOS => TestEnvironment.IsMacOS;
@@ -149,7 +118,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		public static bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
+		public static bool CommercialBuildAvailable => TestEnvironment.CommercialBuildAvailable;
 
 		/// <summary>
 		/// Checks if a commercial Xamarin.Android is available
@@ -166,8 +135,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 		}
-
-		public static string AndroidMSBuildDirectory => SetUp.AndroidMSBuildDirectory;
 
 		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
 
@@ -219,16 +186,6 @@ namespace Xamarin.Android.Build.Tests
 					!string.Equals (aotMode, "Normal", StringComparison.OrdinalIgnoreCase)) {
 				Assert.Ignore ($"AotMode={aotMode} is not yet supported in .NET 6+");
 			}
-		}
-
-		protected static void AssertTargetFrameworkVersionSupported (string targetFrameworkVersion)
-		{
-			if (Builder.UseDotNet)
-				return; // N/A in .NET 6
-			if (!Version.TryParse (targetFrameworkVersion.TrimStart ('v'), out var version) || version <= new Version (11, 0))
-				return; // TFV is 11.0 or less
-			if (!TestEnvironment.IsUsingJdk11)
-				Assert.Ignore ("Test is only supported when using JDK 11.");
 		}
 
 		protected static void WaitFor(int milliseconds)
@@ -590,9 +547,8 @@ namespace Xamarin.Android.Build.Tests
 		protected string GetPathToAapt2 ()
 		{
 			var exe = IsWindows ? "aapt2.exe" : "aapt2";
-			var path = Path.Combine (AndroidMSBuildDirectory, IsWindows ? "" : (IsMacOS ? "Darwin" : "Linux"));
-			if (File.Exists (Path.Combine (path, exe)))
-				return path;
+			if (File.Exists (Path.Combine (TestEnvironment.OSBinDirectory, exe)))
+				return TestEnvironment.OSBinDirectory;
 			return GetPathToLatestBuildTools (exe);
 		}
 

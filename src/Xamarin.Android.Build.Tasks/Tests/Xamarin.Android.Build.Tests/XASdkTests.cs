@@ -840,12 +840,12 @@ public class JavaSourceTest {
 			}
 
 			if (dotnetVersion != "net6.0") {
-				var refDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
+				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
 				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
 				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
 
 				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
-				var runtimeDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Runtime.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
+				var runtimeDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
 				var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", dotnetVersion, "Mono.Android.dll");
 				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
 			}
@@ -908,7 +908,7 @@ public class JavaSourceTest {
 		public void XamarinLegacySdk ([Values ("net6.0", "net7.0")] string dotnetVersion)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
-				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha4",
+				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha1",
 				Sources = {
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
@@ -1024,7 +1024,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			appBuilder.AssertTargetIsSkipped ("CoreCompile");
 			if (isRelease) {
 				appBuilder.AssertTargetIsSkipped ("_RemoveRegisterAttribute");
-				appBuilder.AssertTargetIsSkipped ("_AndroidAot");
+				appBuilder.AssertTargetIsSkipped ("_AndroidAotCompilation");
 			}
 		}
 

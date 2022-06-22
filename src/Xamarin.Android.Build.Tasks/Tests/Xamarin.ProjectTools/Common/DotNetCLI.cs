@@ -46,13 +46,18 @@ namespace Xamarin.ProjectTools
 			bool succeeded;
 
 			using (var p = new Process ()) {
-				p.StartInfo.FileName = Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "dotnet");
+				p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
 				p.StartInfo.Arguments = string.Join (" ", args);
 				p.StartInfo.CreateNoWindow = true;
 				p.StartInfo.UseShellExecute = false;
 				p.StartInfo.RedirectStandardOutput = true;
 				p.StartInfo.RedirectStandardError = true;
 				p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+				if (TestEnvironment.UseLocalBuildOutput) {
+					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
+					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
+				}
+
 				// Ensure any variable alteration from DotNetXamarinProject.Construct is cleared.
 				if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
 					p.StartInfo.SetEnvironmentVariable ("MSBUILD_EXE_PATH", null);
