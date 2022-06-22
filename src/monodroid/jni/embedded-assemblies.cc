@@ -242,7 +242,7 @@ EmbeddedAssemblies::load_bundled_assembly (
 	if (have_and_want_debug_symbols) {
 		uint32_t base_name_length = assembly.name_length - 3; // we need the trailing dot
 		for (XamarinAndroidBundledAssembly& debug_file : *bundled_debug_data) {
-			if (debug_file.name_length < base_name_length) {
+			if (debug_file.name_length != assembly.name_length) {
 				continue;
 			}
 
