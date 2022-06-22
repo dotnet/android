@@ -43,7 +43,7 @@
       }
     },
     "Microsoft.Android.Sdk.NET6": {
-      "kind": "framework",
+      "kind": "sdk",
       "version": "@NET6_VERSION@",
       "alias-to": {
         "osx-x64": "Microsoft.Android.Sdk.Darwin",
