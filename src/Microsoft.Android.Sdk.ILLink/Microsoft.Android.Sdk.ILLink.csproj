@@ -54,5 +54,11 @@
     <Folder Include="Java.Interop\" />
     <Folder Include="Utilities\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)PreserveLists\*.xml">
+      <Link>..\PreserveLists\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Import Project="..\tools\GenerateResxSource.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 </Project>
