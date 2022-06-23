@@ -185,6 +185,9 @@ namespace Xamarin.Android.Tools
 			new AndroidVersion (31, "12.0") {
 				AlternateIds = new[]{ "S" },
 			},
+			new AndroidVersion (32, "12.1") {
+				AlternateIds = new[]{ "Sv2" },
+			},
 		};
 	}
 }
