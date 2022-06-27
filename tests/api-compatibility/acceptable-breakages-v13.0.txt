@@ -1,5 +1,4 @@
 Compat issues with assembly Mono.Android:
-MembersMustExist : Member 'public void Android.App.Instrumentation.SendKeyDownUpSync(Android.Views.Keycode)' does not exist in the implementation but it does exist in the contract.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Locations.Location.RemoveAccuracy()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Locations.Location.RemoveAltitude()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Locations.Location.RemoveBearing()' in the contract but not the implementation.
