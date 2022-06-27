@@ -46,6 +46,9 @@ namespace Java.Interop.Tools.Generator.Transformation
 
 			foreach (var type in gens) {
 				AddJavadoc (type, typeJavadocs, options.XmldocStyle);
+				foreach (var nested in type.NestedTypes) {
+					AddJavadoc (nested, typeJavadocs, options.XmldocStyle);
+				}
 			}
 		}
 

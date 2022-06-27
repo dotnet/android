@@ -257,9 +257,10 @@ namespace MonoDroid.Generation
 			// Example: "https://developer.android.com/reference/android/app/Application#registerOnProvideAssistDataListener(android.app.Application.OnProvideAssistDataListener)"
 			// Example: "https://developer.android.com/reference/android/animation/ObjectAnimator#ofFloat(T,%20android.util.Property%3CT,%20java.lang.Float%3E,%20float...)"
 
+			declaringJniType = declaringJniType.Replace ("$", ".");
 			var java    = new StringBuilder (declaringJniType)
-				.Replace ("/", ".")
-				.Replace ("$", ".");
+				.Replace ("/", ".");
+
 			var url     = new StringBuilder (prefix);
 			if (!prefix.EndsWith ("/", StringComparison.Ordinal)) {
 				url.Append ("/");
