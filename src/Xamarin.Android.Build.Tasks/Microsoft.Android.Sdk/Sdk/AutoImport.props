@@ -16,17 +16,13 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
 -->
 <Project>
 
-  <PropertyGroup>
-    <_DefaultJavaSourceJarPattern>**\*-source.jar;**\*-sources.jar;**\*-src.jar</_DefaultJavaSourceJarPattern>
-  </PropertyGroup>
-
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and ('$(ImplicitUsings)' == 'true' or '$(ImplicitUsings)' == 'enable') ">
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) and ('$(ImplicitUsings)' == 'true' or '$(ImplicitUsings)' == 'enable') ">
     <Using Include="Android.App" Platform="Android" />
     <Using Include="Android.Widget" Platform="Android" />
     <Using Include="Android.OS.Bundle" Alias="Bundle" Platform="Android" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
+  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) ">
     <!-- Default Resource file inclusion -->
     <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.xml" />
@@ -44,10 +40,10 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
     <TransformFile Include="Transforms*.xml" />
     <TransformFile Include="Transforms\**\*.xml" />
     <!-- Default Java or native libraries -->
-    <AndroidLibrary       Include="**\*.jar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);$(_DefaultJavaSourceJarPattern)" />
+    <AndroidLibrary       Include="**\*.jar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);**\*-source.jar;**\*-sources.jar;**\*-src.jar" />
     <AndroidLibrary       Include="**\*.aar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
     <AndroidNativeLibrary Include="**\*.so"  Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
-    <JavaSourceJar        Include="$(_DefaultJavaSourceJarPattern)"   Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <JavaSourceJar        Include="**\*-source.jar;**\*-sources.jar;**\*-src.jar"   Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
     <AndroidJavaSource    Include="**\*.java" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
   </ItemGroup>
 

@@ -189,8 +189,6 @@ namespace Xamarin.Android.Build.Tests
 </manifest>";
 			}
 			using (var b = CreateApkBuilder (path)) {
-				if (!b.CrossCompilerAvailable (supportedAbis))
-					Assert.Ignore ($"Cross compiler for {supportedAbis} was not available");
 				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
 					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
 				b.ThrowOnBuildFailure = false;
@@ -259,8 +257,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder (path)) {
-				if (!b.CrossCompilerAvailable (supportedAbis))
-					Assert.Ignore ("Cross compiler was not available");
 				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
 					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
 				b.ThrowOnBuildFailure = false;
@@ -484,5 +480,32 @@ namespace "+ libName + @" {
 			}
 		}
 
+		[Test]
+		[Category ("AOT")]
+		public void AotAssembliesInIDE ()
+		{
+			string supportedAbis = "arm64-v8a";
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				AotAssemblies = true,
+			};
+			proj.SetAndroidSupportedAbis (supportedAbis);
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.RunTarget (proj, target: "Build"));
+
+			// .apk won't exist yet
+			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.DoesNotExist (apk);
+
+			Assert.IsTrue (b.RunTarget (proj, target: "SignAndroidPackage"));
+			FileAssert.Exists (apk);
+
+			using var zipFile = ZipHelper.OpenZip (apk);
+			foreach (var abi in supportedAbis.Split (';')) {
+				var path = $"lib/{abi}/libaot-Mono.Android.dll.so";
+				var entry = ZipHelper.ReadFileFromZip (zipFile, path);
+				Assert.IsNotNull (entry, $"{path} should be in {apk}", abi);
+			}
+		}
 	}
 }

@@ -49,8 +49,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease)
 		{
-			AssertTargetFrameworkVersionSupported (tfv);
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				TargetFrameworkVersion = tfv,
