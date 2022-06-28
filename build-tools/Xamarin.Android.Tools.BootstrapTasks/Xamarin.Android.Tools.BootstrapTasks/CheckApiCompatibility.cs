@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			{ "v11.0", "v10.0" },
 			{ "v12.0", "v11.0" },
 			{ "v12.1", "v12.0" },
-			{ "v12.1.99", "v12.1" },
+			{ "v13.0", "v12.1" },
 		};
 
 		static readonly string assemblyToValidate = "Mono.Android.dll";
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			var contractAssembly = new FileInfo (Path.Combine (contractPath, assemblyToValidate));
 			if (!contractAssembly.Exists) {
-				LogError ($"Contract assembly {assemblyToValidate} does not exists in the contract path.");
+				LogError ($"Contract assembly {assemblyToValidate} does not exists in the contract path. {contractPath} - {validateAgainstReference}");
 				return;
 			}
 

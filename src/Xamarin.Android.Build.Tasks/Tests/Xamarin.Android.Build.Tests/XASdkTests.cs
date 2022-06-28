@@ -830,7 +830,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void XamarinLegacySdk ()
+		public void XamarinLegacySdk ([Values ("net6.0-android32.0", "net6.0-android33.0")] string dotnetTargetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha1",
@@ -842,8 +842,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			using var b = new Builder ();
-			var dotnetTargetFramework = "net6.0-android32.0";
-			var legacyTargetFrameworkVersion = "12.1";
+			var legacyTargetFrameworkVersion = "13.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
 			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
