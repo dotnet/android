@@ -65,7 +65,7 @@
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
     <!-- For compat with user code not marked trimmable, only trim opt-in by default. -->
-    <TrimMode Condition=" '$(TrimMode)' == '' and '$(AndroidLinkMode)' == 'Full' ">link</TrimmerDefaultAction>
+    <TrimMode Condition=" '$(TrimMode)' == '' and '$(AndroidLinkMode)' == 'Full' ">link</TrimMode>
 		<TrimMode Condition="'$(TrimMode)' == ''">partial</TrimMode>
     <SuppressTrimAnalysisWarnings Condition=" '$(SuppressTrimAnalysisWarnings)' == '' ">true</SuppressTrimAnalysisWarnings>
     <!-- Prefer $(RuntimeIdentifiers) plural -->
