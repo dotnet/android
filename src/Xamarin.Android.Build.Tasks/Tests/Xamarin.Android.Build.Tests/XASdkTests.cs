@@ -921,8 +921,8 @@ public class JavaSourceTest {
 			};
 
 			using var b = new Builder ();
-			var dotnetTargetFramework = $"{dotnetVersion}-android32.0";
-			var legacyTargetFrameworkVersion = "12.1";
+			var dotnetTargetFramework = $"{dotnetVersion}-android33.0";
+			var legacyTargetFrameworkVersion = "13.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
 			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
