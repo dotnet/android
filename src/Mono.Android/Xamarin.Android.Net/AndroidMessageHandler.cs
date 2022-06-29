@@ -336,22 +336,31 @@ namespace Xamarin.Android.Net
 		/// <returns>Task in which the request is executed</returns>
 		/// <param name="request">Request provided by <see cref="System.Net.Http.HttpClient"/></param>
 		/// <param name="cancellationToken">Cancellation token.</param>
-		protected override async Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+		protected override Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
-
 #if !MONOANDROID1_0
 			if (NegotiateAuthenticationIsEnabled) {
-				if (RequestNeedsAuthorization && NegotiateAuthenticationHelper.RequestNeedsNegotiateAuthentication (this, request, out var authData, out var credentials)) {
-					var authenticatedResponse = await NegotiateAuthenticationHelper.SendWithAuthAsync (this, request, authData, credentials, cancellationToken).ConfigureAwait (false);
-					if (authenticatedResponse != null)
-						return authenticatedResponse;
-				}
+				return SendWithNegotiateAuthenticationAsync (request, cancellationToken);
 			}
 #endif
 
+			return DoSendAsync (request, cancellationToken);
+		}
+
+#if !MONOANDROID1_0
+		async Task <HttpResponseMessage?> SendWithNegotiateAuthenticationAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+		{
+			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
+
+			if (RequestNeedsAuthorization && NegotiateAuthenticationHelper.RequestNeedsNegotiateAuthentication (this, request, out var authData, out var credentials)) {
+				var authenticatedResponse = await NegotiateAuthenticationHelper.SendWithAuthAsync (this, request, authData, credentials, cancellationToken).ConfigureAwait (false);
+				if (authenticatedResponse != null)
+					return authenticatedResponse;
+			}
+
 			return response;
 		}
+#endif
 
 		internal async Task <HttpResponseMessage> DoSendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
