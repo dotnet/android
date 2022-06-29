@@ -779,10 +779,9 @@ public class Test
 		[Test]
 		[Category ("SmokeTests"), Category ("AOT")]
 		[NonParallelizable]
-		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
+		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool)
 		{
-			AssertDexToolSupported (dexTool);
-			var folderName = $"BuildReleaseApp AndÜmläüts({enableMultiDex}{dexTool}{linkTool})";
+			var folderName = $"BuildReleaseApp AndÜmläüts({enableMultiDex}{linkTool})";
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = true,
 				ProjectName = "Library1"
@@ -790,7 +789,6 @@ public class Test
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = true,
-				DexTool = dexTool,
 				LinkTool = linkTool,
 				References = { new BuildItem ("ProjectReference", $"..\\{folderName}Library1\\Library1.csproj") }
 			};
@@ -825,15 +823,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", $"{folderName}Library1")))
 			using (var b = CreateApkBuilder (Path.Combine ("temp", folderName))) {
 				libb.Build (lib);
-				if (dexTool == "d8" && linkTool == "proguard") {
-					b.ThrowOnBuildFailure = false;
-					Assert.IsFalse (b.Build (proj), "Build should have failed.");
-					string error = b.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-						.FirstOrDefault (x => x.Contains ("error XA1011:"));
-					Assert.IsNotNull (error, "Build should have failed with XA1011.");
-					return;
-				}
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 
@@ -1510,39 +1499,11 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void ProguardBOMError ()
+		public void Desugar ([Values (true, false)] bool isRelease, [Values ("", "r8")] string linkTool)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				DexTool = "dx",
-				LinkTool = "proguard",
-			};
-			AssertDexToolSupported (proj.DexTool);
-			var rules = new List<string> {
-				"-dontwarn com.google.devtools.build.android.desugar.**",
-				"-dontwarn javax.annotation.**",
-				"-dontwarn org.codehaus.mojo.animal_sniffer.*",
-			};
-			var encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: true);
-			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
-				TextContent = () => string.Join (Environment.NewLine, rules),
-				Encoding = encoding,
-			});
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				StringAssertEx.Contains ($"error XA4307", builder.LastBuildOutput, "Error should be XA4307");
-			}
-		}
-
-		[Test]
-		public void Desugar ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
-		{
-			AssertDexToolSupported (dexTool);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				EnableDesugar = true, //It is certain this test would fail without desugar
-				DexTool = dexTool,
+				// desugar is on by default with r8
 				LinkTool = linkTool,
 			};
 
@@ -1568,10 +1529,6 @@ public class MyReceiver : BroadcastReceiver
 					"-dontwarn javax.annotation.**",
 					"-dontwarn org.codehaus.mojo.animal_sniffer.*",
 				};
-				//NOTE: If using d8 + proguard, then proguard needs an additional rule because d8 is desugaring, which occurs *after* proguard
-				if (dexTool == "d8" && linkTool == "proguard") {
-					rules.Add ("-dontwarn java.lang.invoke.LambdaMetafactory");
-				}
 				//FIXME: We aren't de-BOM'ing proguard files?
 				var bytes = Files.UTF8withoutBOM.GetBytes (string.Join (Environment.NewLine, rules));
 				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "okhttp3.pro") {
@@ -1644,11 +1601,9 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
 		[Test]
-		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
+		public void MissingOrgApacheHttpClient ()
 		{
-			AssertDexToolSupported (dexTool);
 			var proj = new XamarinAndroidApplicationProject {
-				DexTool = dexTool,
 				Sources = {
 					new BuildItem.Source ("ApacheHttpClient.cs") {
 						BinaryContent = () => ResourceData.ApacheHttpClient_cs,
@@ -2385,8 +2340,6 @@ namespace UnnamedProject
 		public void XA1027XA1028 (string linkTool, string enableProguard, string androidEnableProguard, bool expectedBuildResult, string expectedWarning)
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				// Make sure the test covers the scenario where `$(AndroidDexTool)` is not explicitly configured
-				DexTool = null,
 				LinkTool = linkTool,
 				IsRelease = true
 			};

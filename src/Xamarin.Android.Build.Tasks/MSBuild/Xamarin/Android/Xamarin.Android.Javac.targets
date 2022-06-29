@@ -30,7 +30,6 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JdkVersion="$(_JdkVersion)"
         DefaultJdkVersion="$(_DefaultJdkVersion)"
         SkipJavacVersionCheck="$(AndroidSkipJavacVersionCheck)"
-        EnableProguard="$(AndroidEnableProguard)"
         EnableMultiDex="$(AndroidEnableMultiDex)">
       <Output TaskParameter="TargetVersion" PropertyName="JavacTargetVersion" />
       <Output TaskParameter="SourceVersion" PropertyName="JavacSourceVersion" />
