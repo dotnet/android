@@ -17,6 +17,7 @@ namespace jittimes {
 			Unsorted,
 			Self,
 			Total,
+			Method,
 		};
 
 		static SortKind sortKind = SortKind.Self;
@@ -38,13 +39,16 @@ namespace jittimes {
 				{ "m|method=",
 					"Process only methods whose names match {TYPE-REGEX}.",
 				  v => methodNameRegexes.Add (new Regex (v)) },
-				{ "s",
+				{ "s|sort-self-times",
 					"Sort by self times. (this is default ordering)",
 				  v => sortKind = SortKind.Self },
-				{ "t",
+				{ "t|sort-total-times",
 					"Sort by total times.",
 				  v => sortKind = SortKind.Total },
-				{ "u",
+				{ "n|sort-methods",
+					"Sort by method names.",
+				  v => sortKind = SortKind.Method },
+				{ "u|unsorted",
 					"Show unsorted results.",
 				  v => sortKind = SortKind.Unsorted },
 				{ "v|verbose",
@@ -210,6 +214,9 @@ namespace jittimes {
 				break;
 			case SortKind.Total:
 				enumerable = methods.OrderByDescending (p => p.Value.total);
+				break;
+			case SortKind.Method:
+				enumerable = methods.OrderByDescending (p => p.Value.method);
 				break;
 			default:
 				throw new InvalidOperationException ("unknown sort order");

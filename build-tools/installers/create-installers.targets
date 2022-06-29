@@ -38,7 +38,7 @@
   <Target Name="_FindFrameworkDirs">
     <ItemGroup>
       <_FrameworkDirs Include="@(AndroidApiInfo->'$(FrameworkSrcDir)%(Identity)\')" />
-      <_FrameworkDirsThatExist Condition="Exists('%(Identity)')" Include="@(_FrameworkDirs)" Exclude="$(FrameworkSrcDir)v12.1.99\" />
+      <_FrameworkDirsThatExist Condition="Exists('%(Identity)')" Include="@(_FrameworkDirs)" />
       <_EarlierFrameworkDir Include="@(_FrameworkDirsThatExist)" Exclude="$(_LatestStableFrameworkDir)" />
     </ItemGroup>
   </Target>
