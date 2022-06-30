@@ -433,7 +433,7 @@ int xml myxml 0x7f140000
 			CreateResourceDirectory (path);
 			var task = CreateTask (path);
 			task.RTxtFile = Path.Combine (Root, path, "R.txt");
-			File.WriteAllText (task.RTxtFile, string.Empty);
+			File.WriteAllText (task.RTxtFile, Environment.NewLine);
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
