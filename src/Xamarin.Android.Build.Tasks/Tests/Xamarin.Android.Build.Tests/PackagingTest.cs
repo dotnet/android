@@ -67,6 +67,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[NonParallelizable] // Commonly fails NuGet restore
 		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
 		{
 			var proj = new XamarinAndroidApplicationProject {
