@@ -153,7 +153,7 @@ namespace Java.Interop.Tools.Generator
 						var matched = false;
 
 						foreach (var node in nodes) {
-							node.RemoveAttributes ();
+							node.Attributes (name).Remove ();
 							matched = true;
 						}
 						

@@ -82,7 +82,19 @@ namespace generatortests
 
 			api.ApplyFixupFile (fixup);
 
-			Assert.AreEqual ("<api><package /><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
+			Assert.AreEqual ("<api><package jni-name='android' /><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
+		}
+
+		[Test]
+		public void RemoveNotFoundAttribute ()
+		{
+			// Attribute 'foo' doesn't exist on node
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument ("<remove-attr path=\"/api/package[@name='android']\" name='foo' />");
+
+			api.ApplyFixupFile (fixup);
+
+			Assert.AreEqual ("<api><package name='android' jni-name='android' /><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
 		[Test]
