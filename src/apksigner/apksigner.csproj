@@ -16,23 +16,11 @@
     <None Include="build\libs\apksigner.jar" CopyToOutputDirectory="PreserveNewest" Link="apksigner.jar" />
   </ItemGroup>
 
-  <Target Name="_BuildGradle"
-      BeforeTargets="GetCopyToOutputDirectoryItems"
-      Inputs="$(MSBuildThisFile);build.gradle"
-      Outputs="build\libs\apksigner.jar">
-    <Exec
-        Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-    />
-    <Touch Files="build\libs\apksigner.jar" />
-  </Target>
+  <ItemGroup>
+    <!-- There isn't an actual dependency here, but we can only build one 'gradlew' project
+         at a time, and adding <ProjectReference> between them ensures they run sequentially. -->
+    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="False" SkipGetTargetFrameworkProperties="True" AdditionalProperties="TargetFramework=$(DotNetTargetFramework)" />
+  </ItemGroup>
 
-  <Target Name="_CleanGradle" BeforeTargets="Clean">
-    <Exec
-        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-    />
-  </Target>
+  <Import Project="apksigner.targets" />
 </Project>
