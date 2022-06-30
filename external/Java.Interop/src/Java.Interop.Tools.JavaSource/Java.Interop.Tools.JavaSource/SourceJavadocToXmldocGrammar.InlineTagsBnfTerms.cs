@@ -26,6 +26,7 @@ namespace Java.Interop.Tools.JavaSource {
 					| LinkDeclaration
 					| LinkplainDeclaration
 					| LiteralDeclaration
+					| SeeDeclaration
 					| ValueDeclaration
 					;
 
@@ -75,6 +76,14 @@ namespace Java.Interop.Tools.JavaSource {
 					parseNode.AstNode = new XText (content);
 				};
 
+				SeeDeclaration.Rule = grammar.ToTerm ("{@see") + InlineValue + "}";
+				SeeDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
+					// TODO: @see supports multiple forms; see: https://docs.oracle.com/javase/7/docs/technotes/tools/windows/javadoc.html#see
+					// Also need to convert to appropriate CREF value, ignore for now
+					var target = parseNode.ChildNodes [1].AstNode;
+					parseNode.AstNode = new XElement ("c", target);
+				};
+
 				ValueDeclaration.Rule = grammar.ToTerm ("{@value}")
 					| grammar.ToTerm ("{@value") + InlineValue + "}";
 				ValueDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
@@ -114,10 +123,12 @@ namespace Java.Interop.Tools.JavaSource {
 			public  readonly    NonTerminal LinkplainDeclaration        = new NonTerminal (nameof (LinkplainDeclaration));
 
 			// https://docs.oracle.com/javase/7/docs/technotes/tools/windows/javadoc.html#literal
-			public  readonly    NonTerminal LiteralDeclaration         = new NonTerminal (nameof (LinkplainDeclaration));
+			public  readonly    NonTerminal LiteralDeclaration          = new NonTerminal (nameof (LiteralDeclaration));
+
+			public  readonly    NonTerminal SeeDeclaration              = new NonTerminal (nameof (SeeDeclaration));
 
 			// https://docs.oracle.com/javase/7/docs/technotes/tools/windows/javadoc.html#value
-			public  readonly    NonTerminal ValueDeclaration           = new NonTerminal (nameof (ValueDeclaration));
+			public  readonly    NonTerminal ValueDeclaration            = new NonTerminal (nameof (ValueDeclaration));
 		}
 	}
 }

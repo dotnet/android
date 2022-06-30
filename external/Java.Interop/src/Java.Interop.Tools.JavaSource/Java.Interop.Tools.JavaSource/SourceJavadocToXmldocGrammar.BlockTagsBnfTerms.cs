@@ -25,6 +25,8 @@ namespace Java.Interop.Tools.JavaSource {
 					| DeprecatedDeclaration
 					| DeprecatedSinceDeclaration
 					| ExceptionDeclaration
+					| InheritDocDeclaration
+					| HideDeclaration
 					| ParamDeclaration
 					| ReturnDeclaration
 					| SeeDeclaration
@@ -78,7 +80,7 @@ namespace Java.Interop.Tools.JavaSource {
 					parseNode.AstNode   = p;
 				};
 
-				var nonSpaceTerm = new RegexBasedTerminal ("[^ ]", "[^ ]+") {
+				var nonSpaceTerm = new RegexBasedTerminal ("[^ \n\r\t]", "[^ \n\r\t]+") {
 					AstConfig = new AstNodeConfig {
 						NodeCreator = (context, parseNode) => parseNode.AstNode = parseNode.Token.Value,
 					},
@@ -99,19 +101,42 @@ namespace Java.Interop.Tools.JavaSource {
 					FinishParse (context, parseNode);
 				};
 
-				ParamDeclaration.Rule = "@param" + nonSpaceTerm + BlockValues;
+				// Ignore @hide tags
+				HideDeclaration.Rule = "@hide";
+				HideDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
+					FinishParse (context, parseNode);
+				};
+
+				InheritDocDeclaration.Rule = "@inheritDoc";
+				InheritDocDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
+					if (!grammar.ShouldImport (ImportJavadoc.InheritDocTag)) {
+						return;
+					}
+					// TODO: Iterate through parents for corresponding javadoc element.
+					FinishParse (context, parseNode);
+				};
+
+				ParamDeclaration.Rule = "@param" + nonSpaceTerm
+					| "@param" + nonSpaceTerm + BlockValues
+					;
 				ParamDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					if (!grammar.ShouldImport (ImportJavadoc.ParamTag)) {
 						return;
 					}
-					var p = new XElement ("param",
-							new XAttribute ("name", string.Join ("", AstNodeToXmlContent (parseNode.ChildNodes [1]))),
-							AstNodeToXmlContent (parseNode.ChildNodes [2]));
+					var paramName = string.Join ("", AstNodeToXmlContent (parseNode.ChildNodes [1]));
+					var p = new XElement ("param", new XAttribute ("name", paramName));
+					if (parseNode.ChildNodes.Count >= 3) {
+						p.Add (AstNodeToXmlContent (parseNode.ChildNodes [2]));
+					} else {
+						p.Add (paramName);
+					}
 					FinishParse (context, parseNode).Parameters.Add (p);
 					parseNode.AstNode   = p;
 				};
 
-				ReturnDeclaration.Rule = "@return" + BlockValues;
+				ReturnDeclaration.Rule = "@return"
+					| "@return" + BlockValues
+					;
 				ReturnDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					if (!grammar.ShouldImport (ImportJavadoc.ReturnTag)) {
 						return;
@@ -158,7 +183,9 @@ namespace Java.Interop.Tools.JavaSource {
 					parseNode.AstNode   = p;
 				};
 
-				ThrowsDeclaration.Rule = "@throws" + nonSpaceTerm + BlockValues;
+				ThrowsDeclaration.Rule = "@throws" + nonSpaceTerm
+					| "@throws" + nonSpaceTerm + BlockValues
+					;
 				ThrowsDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					if (!grammar.ShouldImport (ImportJavadoc.ExceptionTag)) {
 						return;
@@ -205,7 +232,9 @@ namespace Java.Interop.Tools.JavaSource {
 					parseNode.AstNode = parseNode.Token.Value.ToString ();
 
 
-				UnknownTagDeclaration.Rule = unknownTagTerminal + BlockValues;
+				UnknownTagDeclaration.Rule = unknownTagTerminal
+					| unknownTagTerminal + BlockValues
+					;
 				UnknownTagDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					if (!grammar.ShouldImport (ImportJavadoc.Remarks)) {
 						return;
@@ -242,6 +271,8 @@ namespace Java.Interop.Tools.JavaSource {
 			public  readonly    NonTerminal DeprecatedDeclaration      = new NonTerminal (nameof (DeprecatedDeclaration));
 			public  readonly    NonTerminal DeprecatedSinceDeclaration = new NonTerminal (nameof (DeprecatedSinceDeclaration));
 			public  readonly    NonTerminal ExceptionDeclaration       = new NonTerminal (nameof (ExceptionDeclaration));
+			public  readonly    NonTerminal HideDeclaration            = new NonTerminal (nameof (HideDeclaration));
+			public  readonly    NonTerminal InheritDocDeclaration      = new NonTerminal (nameof (InheritDocDeclaration));
 			public  readonly    NonTerminal ParamDeclaration           = new NonTerminal (nameof (ParamDeclaration));
 			public  readonly    NonTerminal ReturnDeclaration          = new NonTerminal (nameof (ReturnDeclaration));
 			public  readonly    NonTerminal SeeDeclaration             = new NonTerminal (nameof (SeeDeclaration));

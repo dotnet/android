@@ -76,6 +76,16 @@ namespace Java.Interop.Tools.JavaSource.Tests
 		}
 
 		[Test]
+		public void SeeDeclaration ()
+		{
+			var p = CreateParser (g => g.InlineTagsTerms.SeeDeclaration);
+
+			var r = p.Parse ("{@see #cancelNotification(String, String, int)}");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("<c>#cancelNotification(String, String, int)</c>", r.Root.AstNode.ToString ());
+		}
+
+		[Test]
 		public void ValueDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.ValueDeclaration);

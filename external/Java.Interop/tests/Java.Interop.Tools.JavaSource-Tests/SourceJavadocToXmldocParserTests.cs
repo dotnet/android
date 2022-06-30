@@ -104,11 +104,15 @@ What about soft paragraphs?
 <p>What about <i>hard</i> paragraphs?
 
 @param a something
+@param b
+@param c
 @see #method()
 @apiSince 1
 ",
 				FullXml = @"<member>
   <param name=""a"">something</param>
+  <param name=""b"">b</param>
+  <param name=""c"">c</param>
   <summary>This is the summary sentence.</summary>
   <remarks>
     <para>This is the summary sentence.  Insert
@@ -120,6 +124,8 @@ more description here.</para>
 </member>",
 				IntelliSenseXml = @"<member>
   <param name=""a"">something</param>
+  <param name=""b"">b</param>
+  <param name=""c"">c</param>
   <summary>This is the summary sentence.</summary>
 </member>",
 			},
@@ -183,19 +189,25 @@ How about another link <a href=""http://man7.org/linux/man-pages/man2/accept.2.h
 @param manifest The value of the <a
 href=""{@docRoot}guide/topics/manifest/manifest-element.html#vcode"">{@code
 android:versionCode}</a> manifest attribute.
+@param empty
+@return the return value
 ",
 				FullXml = $@"<member>
   <param name=""manifest"">The value of the <see href=""{DocRootPrefixExpected}guide/topics/manifest/manifest-element.html#vcode""><c>android:versionCode</c></see> manifest attribute.</param>
+  <param name=""empty"">empty</param>
   <summary>See <see href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</see>.</summary>
   <remarks>
     <para>See <see href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</see>.  Insert
 more description here.
 How about another link <see href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</see></para>
   </remarks>
+  <returns>the return value</returns>
 </member>",
 				IntelliSenseXml = $@"<member>
   <param name=""manifest"">The value of the <see href=""{DocRootPrefixExpected}guide/topics/manifest/manifest-element.html#vcode""><c>android:versionCode</c></see> manifest attribute.</param>
+  <param name=""empty"">empty</param>
   <summary>See <see href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</see>.</summary>
+  <returns>the return value</returns>
 </member>",
 			},
 		};

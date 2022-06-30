@@ -26,6 +26,7 @@ namespace Java.Interop.Tools.JavaSource {
 		SinceTag            = 1 << 9,
 		VersionTag          = 1 << 10,
 		ExtraRemarks        = 1 << 11,
+		InheritDocTag       = 1 << 12,
 	}
 
 	[Flags]
@@ -43,6 +44,7 @@ namespace Java.Interop.Tools.JavaSource {
 			| ImportJavadoc.SinceTag
 			| ImportJavadoc.VersionTag
 			| ImportJavadoc.ExtraRemarks
+			| ImportJavadoc.InheritDocTag
 			,
 		IntelliSense = ImportJavadoc.Summary
 			| ImportJavadoc.ExceptionTag

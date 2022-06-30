@@ -57,13 +57,38 @@ namespace Java.Interop.Tools.JavaSource.Tests
 		}
 
 		[Test]
+		public void InheritDocDeclaration ()
+		{
+			var p = CreateParser (g => g.BlockTagsTerms.InheritDocDeclaration);
+
+			var r = p.Parse ("@inheritDoc");
+			Assert.IsFalse (r.HasErrors (), "@inheritDoc: " + DumpMessages (r, p));
+			// TODO: Enable after adding support for @inheritDoc
+			Assert.IsNull (r.Root.AstNode, "@inheritDoc should be ignored, but node was not null.");
+		}
+
+		[Test]
+		public void HideDeclaration ()
+		{
+			var p = CreateParser (g => g.BlockTagsTerms.HideDeclaration);
+
+			var r = p.Parse ("@hide");
+			Assert.IsFalse (r.HasErrors (), "@hide: " + DumpMessages (r, p));
+			Assert.IsNull (r.Root.AstNode, "@hide should be ignored, but node was not null.");
+		}
+
+		[Test]
 		public void ParamDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.ParamDeclaration);
 
-			var r = p.Parse ("@param a Insert description here\n");
+			var r = p.Parse ("@param a Insert description here\nand here.");
 			Assert.IsFalse (r.HasErrors (), "@param: " + DumpMessages (r, p));
-			Assert.AreEqual ("<param name=\"a\">Insert description here</param>", r.Root.AstNode.ToString ());
+			Assert.AreEqual ($"<param name=\"a\">Insert description here{Environment.NewLine}and here.</param>", r.Root.AstNode.ToString ());
+
+			r = p.Parse ("@param b");
+			Assert.IsFalse (r.HasErrors (), "name only @param: " + DumpMessages (r, p));
+			Assert.AreEqual ("<param name=\"b\">b</param>", r.Root.AstNode.ToString ());
 		}
 
 		[Test]
@@ -120,16 +145,21 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			var p = CreateParser (g => g.BlockTagsTerms.ThrowsDeclaration);
 
 			var r = p.Parse ("@throws Throwable the {@code Exception} raised by this method");
-			Assert.IsFalse (r.HasErrors (), "@throws: " + DumpMessages (r, p));
+			Assert.IsFalse (r.HasErrors (), "{@code} @throws: " + DumpMessages (r, p));
 			Assert.IsNull (r.Root.AstNode, "@throws should be ignored, but node with code block was not null.");
 			// TODO: Re-enable when we can generate valid crefs
 			//Assert.AreEqual ("<exception cref=\"Throwable\">the <c>Exception</c> raised by this method</exception>", r.Root.AstNode.ToString ());
 
 			r = p.Parse ("@throws Throwable something <i>or other</i>!");
-			Assert.IsFalse (r.HasErrors (), "@throws: " + DumpMessages (r, p));
-			Assert.IsNull (r.Root.AstNode, "@throws should be ignored, but node was not null.");
+			Assert.IsFalse (r.HasErrors (), "<i> @throws: " + DumpMessages (r, p));
+			Assert.IsNull (r.Root.AstNode, "@throws should be ignored, but node with <i> was not null.");
 			// TODO: Re-enable when we can generate valid crefs
 			//Assert.AreEqual ("<exception cref=\"Throwable\">something <i>or other</i>!</exception>", r.Root.AstNode.ToString ());
+
+			r = p.Parse ("@throws android.content.ActivityNotFoundException");
+			Assert.IsFalse (r.HasErrors (), "name only @throws: " + DumpMessages (r, p));
+			// TODO: Re-enable when we can generate valid crefs
+			Assert.IsNull (r.Root.AstNode, "@throws should be ignored, but name only node was not null.");
 		}
 
 		[Test]
@@ -139,6 +169,10 @@ namespace Java.Interop.Tools.JavaSource.Tests
 
 			var r = p.Parse ("@this-is-not-supported something {@code foo} else.");
 			Assert.IsFalse (r.HasErrors (), "@this-is-not-supported: " + DumpMessages (r, p));
+			Assert.AreEqual (null, r.Root.AstNode);
+
+			r = p.Parse ("@standalonetag");
+			Assert.IsFalse (r.HasErrors (), "@standalonetag: " + DumpMessages (r, p));
 			Assert.AreEqual (null, r.Root.AstNode);
 		}
 	}
