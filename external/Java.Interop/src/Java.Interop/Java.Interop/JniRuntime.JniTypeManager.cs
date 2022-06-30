@@ -115,14 +115,20 @@ namespace Java.Interop {
 
 			internal static void AssertSimpleReference (string jniSimpleReference, string argumentName = "jniSimpleReference")
 			{
-				if (jniSimpleReference == null)
+				if (string.IsNullOrEmpty (jniSimpleReference))
 					throw new ArgumentNullException (argumentName);
-				if (jniSimpleReference != null && jniSimpleReference.IndexOf (".", StringComparison.Ordinal) >= 0)
+				if (jniSimpleReference.IndexOf ('.') >= 0)
 					throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", argumentName);
-				if (jniSimpleReference != null && jniSimpleReference.StartsWith ("[", StringComparison.Ordinal))
-					throw new ArgumentException ("Arrays cannot be present in simplified type references.", argumentName);
-				if (jniSimpleReference != null && jniSimpleReference.StartsWith ("L", StringComparison.Ordinal) && jniSimpleReference.EndsWith (";", StringComparison.Ordinal))
-					throw new ArgumentException ("JNI type references are not supported.", argumentName);
+				switch (jniSimpleReference [0]) {
+					case '[':
+						throw new ArgumentException ("Arrays cannot be present in simplified type references.", argumentName);
+					case 'L':
+						if (jniSimpleReference [jniSimpleReference.Length - 1] == ';')
+							throw new ArgumentException ("JNI type references are not supported.", argumentName);
+						break;
+					default:
+						break;
+				}
 			}
 
 			// NOTE: This method needs to be kept in sync with GetTypeSignatures()
