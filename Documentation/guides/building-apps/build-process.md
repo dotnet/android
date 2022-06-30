@@ -228,3 +228,9 @@ importing *Xamarin.Android.CSharp.targets*:
 ```
 
 This file can easily be adapted for other languages.
+
+## Available Feature Switches
+
+| MSBuild Property Name | AppContext Setting | Description |
+|-|-|-|
+| AndroidUseNegotiateAuthentication | Xamarin.Android.Net.UseNegotiateAuthentication | Enables NTLM and Negotiate authentication in `AndroidMessageHandler` when set to true |
