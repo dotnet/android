@@ -14,7 +14,6 @@ namespace Xamarin.Android.NetTests {
 		[SetUp]
 		public void SetUp ()
 		{
-			// this only works in Debug mode because in Release the property is overridden by the linker
 			AppContext.SetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", true);
 		}
 
