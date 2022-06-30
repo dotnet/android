@@ -43,11 +43,13 @@ namespace Java.Interop
 		public JniTypeSignature (string? simpleReference, int arrayRank = 0, bool keyword = false)
 		{
 			if (simpleReference != null) {
-				if (simpleReference.IndexOf (".", StringComparison.Ordinal) >= 0)
+				if (simpleReference.Length < 1)
+					throw new ArgumentException ("The empty string is not a valid JNI simple reference.", nameof (simpleReference));
+				if (simpleReference.IndexOf ('.') >= 0)
 					throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", nameof (simpleReference));
-				if (simpleReference.StartsWith ("[", StringComparison.Ordinal))
+				if (simpleReference [0] == '[')
 					throw new ArgumentException ("To specify an array, use the ArrayRank property.", nameof (simpleReference));
-				if (simpleReference.StartsWith ("L", StringComparison.Ordinal) && simpleReference.EndsWith (";", StringComparison.Ordinal))
+				if (simpleReference [0] == 'L' && simpleReference [simpleReference.Length-1] == ';' )
 					throw new ArgumentException ("JNI type references are not supported.", nameof (simpleReference));
 			}
 
@@ -105,6 +107,8 @@ namespace Java.Interop
 
 			if (signature == null)
 				return new ArgumentNullException (nameof (signature));
+			if (signature.Length < 1)
+				return new ArgumentException ("The empty string is not a valid JNI simple reference.", nameof (signature));
 
 			int i = 0;
 			int r = 0;

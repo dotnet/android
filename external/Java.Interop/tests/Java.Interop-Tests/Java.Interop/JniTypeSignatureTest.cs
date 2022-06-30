@@ -15,6 +15,14 @@ namespace Java.InteropTests
 			Assert.Throws<ArgumentException> (() => new JniTypeSignature ("java.lang.Object"));
 			Assert.Throws<ArgumentException> (() => new JniTypeSignature ("[[I"));
 			Assert.Throws<ArgumentException> (() => new JniTypeSignature ("Ljava/lang/Object;"));
+			Assert.Throws<ArgumentException> (() => new JniTypeSignature (""));
+		}
+
+		[Test]
+		public void DefaultConstructor ()
+		{
+			var t = new JniTypeSignature ();
+			Assert.False (t.IsValid);
 		}
 
 		[Test]
@@ -55,6 +63,7 @@ namespace Java.InteropTests
 		public void Parse ()
 		{
 			Assert.Throws<ArgumentNullException> (() => JniTypeSignature.Parse ((string) null));
+			Assert.Throws<ArgumentException> (() => JniTypeSignature.Parse (""));
 			Assert.Throws<ArgumentException> (() => JniTypeSignature.Parse ("java.lang.String"));
 			Assert.Throws<ArgumentException> (() => JniTypeSignature.Parse ("Ljava/lang/String;I"));
 			Assert.Throws<ArgumentException> (() => JniTypeSignature.Parse ("ILjava/lang/String;"));
@@ -77,6 +86,12 @@ namespace Java.InteropTests
 			var sig    = JniTypeSignature.Parse (jniTypeReference);
 			Assert.AreEqual (jniTypeName,   sig.SimpleReference,    "JniTypeName for: " + jniTypeReference);
 			Assert.AreEqual (arrayRank,     sig.ArrayRank,          "ArrayRank for: " + jniTypeReference);
+		}
+
+		[Test]
+		public void TryParse ()
+		{
+			Assert.False (JniTypeSignature.TryParse ("", out var _));
 		}
 	}
 }
