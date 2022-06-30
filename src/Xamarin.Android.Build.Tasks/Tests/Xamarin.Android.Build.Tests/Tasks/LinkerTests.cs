@@ -468,5 +468,38 @@ namespace UnnamedProject {
 				}
 			}
 		}
+
+		[Test]
+		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication)
+		{
+			if (!Builder.UseDotNet)
+				Assert.Ignore ("Test only valid on .NET 6");
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.AddReferences ("System.Net.Http");
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"base.OnCreate (bundle);\n" +
+				"var client = new System.Net.Http.HttpClient (new Xamarin.Android.Net.AndroidMessageHandler ());\n" +
+				"client.GetAsync (\"https://microsoft.com\").GetAwaiter ().GetResult ();");
+
+			if (useNegotiateAuthentication.HasValue)
+				proj.SetProperty ("AndroidUseNegotiateAuthentication", useNegotiateAuthentication.ToString ());
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var assemblyPath = BuildTest.GetLinkedPath (b, true, "Mono.Android.dll");
+				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+					Assert.IsTrue (assembly != null);
+
+					var td = assembly.MainModule.GetType ("Xamarin.Android.Net.NegotiateAuthenticationHelper");
+					if (useNegotiateAuthentication.HasValue && useNegotiateAuthentication.Value) {
+						Assert.IsNotNull (td, "NegotiateAuthenticationHelper shouldn't have been linked out");
+					} else {
+						Assert.IsNull (td, "NegotiateAuthenticationHelper should have been linked out");
+					}
+				}
+			}
+		}
 	}
 }
