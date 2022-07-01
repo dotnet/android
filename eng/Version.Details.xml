@@ -1,20 +1,20 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="7.0.100-preview.6.22316.8">
+    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="7.0.100-preview.6.22330.5">
       <Uri>https://github.com/dotnet/installer</Uri>
-      <Sha>970be08e7ce46452911c8638ec7d4a3c0b6bd534</Sha>
+      <Sha>53fae5749bcf082734bd175340e529c6ec27bab5</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="7.0.100-1.22310.2" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="7.0.100-1.22323.1" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
       <Uri>https://github.com/dotnet/linker</Uri>
-      <Sha>618eb724e7320fd2e4a2b6e8f7e0a22195a9e633</Sha>
+      <Sha>5128bae8dfe81adca9ad212ed73e6cc97b33f280</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="7.0.0-preview.6.22312.1" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="7.0.0-preview.6.22324.4" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>5c5e66e6c067f8a82d514598575011cd21655ffb</Sha>
+      <Sha>d3fa592f6d5d678edb8aea7568812b167c72e622</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Manifest-7.0.100" Version="7.0.0-preview.6.22281.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Manifest-7.0.100" Version="7.0.0-preview.6.22320.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>ea10b4e5534de1806cc2e84ddd3b00eabcab962f</Sha>
+      <Sha>3fbbd97b47b5a71d7cf3ca2e197b0b93feaf975d</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
