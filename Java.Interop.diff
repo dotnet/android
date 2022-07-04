@@ -33,7 +33,7 @@ index ec1ea955..7f8e1a1b 100644
  			get { return connector; }
  			set { connector = value; }
 diff --git a/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs b/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs
-index d30bce4a..afde1e48 100644
+index d30bce4a..b07d6046 100644
 --- a/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs
 +++ b/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs
 @@ -25,40 +25,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
@@ -75,7 +75,7 @@ index d30bce4a..afde1e48 100644
 -				ManagedTypeName = fallbackManagedTypeName;
 -			}
 -		}
-+		public abstract bool ShouldBeDynamicallyRegistered (MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute);
++		public abstract bool ShouldBeDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute);
  	}
  
  	 public class JavaCallableWrapperGenerator {
@@ -176,7 +176,7 @@ index d30bce4a..afde1e48 100644
  						Diagnostic.Error (4217, LookupSource (implementedMethod), Localization.Resources.JavaCallableWrappers_XA4217, attr.Name);
  
 -					var msig = new Signature (implementedMethod, attr);
-+					bool shouldBeDynamicallyRegistered = methodClassifier?.ShouldBeDynamicallyRegistered (registeredMethod, implementedMethod, attr.OriginAttribute) ?? true;
++					bool shouldBeDynamicallyRegistered = methodClassifier?.ShouldBeDynamicallyRegistered (this.type, registeredMethod, implementedMethod, attr.OriginAttribute) ?? true;
 +					var msig = new Signature (implementedMethod, attr, shouldBeDynamicallyRegistered);
  					if (!registeredMethod.IsConstructor && !methods.Any (m => m.Name == msig.Name && m.Params == msig.Params))
  						methods.Add (msig);

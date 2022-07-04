@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers;
+using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -12,17 +13,29 @@ namespace Xamarin.Android.Tasks
 #if ENABLE_MARSHAL_METHODS
 	public sealed class MarshalMethodEntry
 	{
-		public MethodDefinition NativeCallback { get; }
-		public MethodDefinition Connector      { get; }
-		public MethodDefinition TargetMethod   { get; }
-		public FieldDefinition CallbackField   { get; }
+		public TypeDefinition TopType             { get; }
+		public MethodDefinition NativeCallback    { get; }
+		public MethodDefinition Connector         { get; }
+		public MethodDefinition RegisteredMethod  { get; }
+		public MethodDefinition ImplementedMethod { get; }
+		public FieldDefinition CallbackField      { get; }
+		public string JniTypeName                 { get; }
+		public string JniMethodName               { get; }
+		public string JniMethodSignature          { get; }
 
-		public MarshalMethodEntry (MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition targetMethod, FieldDefinition callbackField)
+		public MarshalMethodEntry (TypeDefinition topType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
+		                           registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
+		                           string jniName, string jniSignature)
 		{
+			TopType = topType ?? throw new ArgumentNullException (nameof (topType));
 			NativeCallback = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
 			Connector = connector ?? throw new ArgumentNullException (nameof (connector));
-			TargetMethod = targetMethod ?? throw new ArgumentNullException (nameof (targetMethod));
+			RegisteredMethod = registeredMethod ?? throw new ArgumentNullException (nameof (registeredMethod));
+			ImplementedMethod = implementedMethod ?? throw new ArgumentNullException (nameof (implementedMethod));
 			CallbackField = callbackField;
+			JniTypeName = jniTypeName;
+			JniMethodName = jniName;
+			JniMethodSignature = jniSignature;
 		}
 	}
 #endif
@@ -129,12 +142,12 @@ namespace Xamarin.Android.Tasks
 
 		TypeDefinitionCache tdCache;
 		DirectoryAssemblyResolver resolver;
-		Dictionary<string, MarshalMethodEntry> marshalMethods;
+		Dictionary<string, IList<MarshalMethodEntry>> marshalMethods;
 		HashSet<AssemblyDefinition> assemblies;
 		TaskLoggingHelper log;
 		bool haveDynamicMethods;
 
-		public IDictionary<string, MarshalMethodEntry> MarshalMethods => marshalMethods;
+		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods => marshalMethods;
 		public ICollection<AssemblyDefinition> Assemblies => assemblies;
 		public bool FoundDynamicallyRegisteredMethods => haveDynamicMethods;
 #endif
@@ -145,12 +158,12 @@ namespace Xamarin.Android.Tasks
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
 			resolver = res ?? throw new ArgumentNullException (nameof (tdCache));
-			marshalMethods = new Dictionary<string, MarshalMethodEntry> (StringComparer.Ordinal);
+			marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
 			assemblies = new HashSet<AssemblyDefinition> ();
 #endif
 		}
 
-		public override bool ShouldBeDynamicallyRegistered (MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
+		public override bool ShouldBeDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
 		{
 #if ENABLE_MARSHAL_METHODS
 			if (registeredMethod == null) {
@@ -165,7 +178,7 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentNullException (nameof (registerAttribute));
 			}
 
-			if (!IsDynamicallyRegistered (registeredMethod, implementedMethod, registerAttribute)) {
+			if (!IsDynamicallyRegistered (topType, registeredMethod, implementedMethod, registerAttribute)) {
 				return false;
 			}
 
@@ -175,10 +188,10 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if ENABLE_MARSHAL_METHODS
-		bool IsDynamicallyRegistered (MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
+		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
 		{
 			Console.WriteLine ($"Classifying:\n\tmethod: {implementedMethod.FullName}\n\tregistered method: {registeredMethod.FullName})\n\tAttr: {registerAttribute.AttributeType.FullName} (parameter count: {registerAttribute.ConstructorArguments.Count})");
-			Console.WriteLine ($"\tManaged type: {registeredMethod.DeclaringType.FullName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}");
+			Console.WriteLine ($"\tTop type: {topType.FullName}\n\tManaged type: {registeredMethod.DeclaringType.FullName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}");
 			if (registerAttribute.ConstructorArguments.Count != 3) {
 				log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically, not enough arguments to the [Register] attribute to generate marshal method.");
 				return true;
@@ -188,7 +201,7 @@ namespace Xamarin.Android.Tasks
 
 			Console.WriteLine ($"\tconnector: {connector.MethodName} (from spec: '{(string)registerAttribute.ConstructorArguments[2].Value}')");
 
-			if (IsStandardHandler (connector, registeredMethod)) {
+			if (IsStandardHandler (topType, connector, registeredMethod, implementedMethod, jniName: (string)registerAttribute.ConstructorArguments[0].Value, jniSignature: (string)registerAttribute.ConstructorArguments[1].Value)) {
 				return false;
 			}
 
@@ -197,7 +210,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		// TODO: Probably should check if all the methods and fields are private and static - only then it is safe(ish) to remove them
-		bool IsStandardHandler (ConnectorInfo connector, MethodDefinition registeredMethod)
+		bool IsStandardHandler (TypeDefinition topType, ConnectorInfo connector, MethodDefinition registeredMethod, MethodDefinition implementedMethod, string jniName, string jniSignature)
 		{
 			const string HandlerNameStart = "Get";
 			const string HandlerNameEnd = "Handler";
@@ -245,7 +258,24 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			StoreMethod (connectorName, registeredMethod, new MarshalMethodEntry (nativeCallbackMethod, connectorMethod, registeredMethod, delegateField));
+			Console.WriteLine ($"##G1: {implementedMethod.DeclaringType.FullName} -> {JavaNativeTypeManager.ToJniName (implementedMethod.DeclaringType, tdCache)}");
+			Console.WriteLine ($"##G1: top type: {topType.FullName} -> {JavaNativeTypeManager.ToJniName (topType, tdCache)}");
+
+			StoreMethod (
+				connectorName,
+				registeredMethod,
+				new MarshalMethodEntry (
+					topType,
+					nativeCallbackMethod,
+					connectorMethod,
+					registeredMethod,
+					implementedMethod,
+					delegateField,
+					JavaNativeTypeManager.ToJniName (topType, tdCache),
+					jniName,
+					jniSignature)
+			);
+
 			StoreAssembly (connectorMethod.Module.Assembly);
 			StoreAssembly (nativeCallbackMethod.Module.Assembly);
 			if (delegateField != null) {
@@ -338,7 +368,11 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			marshalMethods.Add (key, entry);
+			if (!marshalMethods.TryGetValue (key, out IList<MarshalMethodEntry> list) || list == null) {
+				list = new List<MarshalMethodEntry> ();
+				marshalMethods.Add (key, list);
+			}
+			list.Add (entry);
 		}
 
 		void StoreAssembly (AssemblyDefinition asm)
