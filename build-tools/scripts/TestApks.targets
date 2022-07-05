@@ -20,6 +20,7 @@
     <TestAvdApiLevel Condition=" '$(TestAvdApiLevel)' == '' ">29</TestAvdApiLevel>
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' ">x86_64</TestAvdAbi>
     <TestAvdType Condition=" '$(TestAvdType)' == '' ">default</TestAvdType>
+    <TestDeviceName Condition=" '$(TestDeviceName)' == '' ">pixel_4</TestDeviceName>
     <SdkManagerImageName Condition=" '$(SdkManagerImageName)' == '' ">system-images;android-$(TestAvdApiLevel);$(TestAvdType);$(TestAvdAbi)</SdkManagerImageName>
     <TestAvdName>XamarinAndroidTestRunner$(TestAvdApiLevel)-$(TestAvdAbi)</TestAvdName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
@@ -62,6 +63,7 @@
         TargetId="$(SdkManagerImageName)"
         ImageName="$(TestAvdName)"
         ImageType="$(TestAvdType)"
+        DeviceName="$(TestDeviceName)"
         ToolExe="$(AvdManagerToolExe)"
         ToolPath="$(CommandLineToolsBinPath)"
         RamSizeMB="3072"
