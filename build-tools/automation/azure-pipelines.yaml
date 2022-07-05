@@ -1103,6 +1103,81 @@ stages:
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
+- stage: wear_tests
+  displayName: WearOS Tests
+  dependsOn: mac_build
+  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
+  jobs:
+  - job: wear_tests
+    displayName: wear_tests
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 2
+    strategy:
+      matrix:
+        Android30-x86:
+          avdApiLevel: 30
+          avdAbi: x86
+          avdType: android-wear
+          deviceName: wear_square
+    pool:
+      vmImage: $(HostedMacImage)
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+
+    - template: yaml-templates/run-xaprepare.yaml
+      parameters:
+        displayName: install required brew tools and prepare java.interop
+        arguments: --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes
+
+    - template: yaml-templates/run-xaprepare.yaml
+      parameters:
+        displayName: install emulator
+        arguments: --s=EmulatorTestDependencies
+
+    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
+      displayName: set Java8SdkDirectory
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - task: MSBuild@1
+      displayName: install and launch emulator
+      inputs:
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:InstallAvdImage;AcquireAndroidTarget /p:TestDeviceName=$(deviceName) /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-$(avdApiLevel).binlog
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        useDotNet: true
+        testRunTitle: WearOS On Device - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+        dotNetTestExtraArgs: --filter "TestCategory = WearOS"
+        testResultsFile: TestResult-WearOS--$(XA.Build.Configuration).xml
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:AcquireAndroidTarget,ReleaseAndroidTarget /p:TestDeviceName=$(deviceName) /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+      condition: always()
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
+
+
+
 - stage: designer_tests
   displayName: Designer Tests
   dependsOn: mac_build

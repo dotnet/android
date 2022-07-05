@@ -285,6 +285,15 @@
     </ItemGroup>
   </Target>
 
+
+  <PropertyGroup>
+    <!-- Override these properties to generate docs against a specific API level -->
+    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">31</DocsApiLevel>
+    <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">31</DocsPlatformId>
+    <DocsFxVersion Condition=" '$(DocsFxVersion)' == '' ">v12.0</DocsFxVersion>
+    <_Binlog>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).binlog</_Binlog>
+  </PropertyGroup>
+
   <!-- Generate documentation using MDoc -->
   <Target Name="UpdateExternalDocumentation">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
@@ -294,16 +303,12 @@
   </Target>
   <Target Name="_UpdateExternalDocumentation">
     <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
-    <PropertyGroup>
-      <_Binlog>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).binlog</_Binlog>
-    </PropertyGroup>
     <ItemGroup>
       <_BuildProps Include="-p:IncludeAndroidJavadoc=True" />
       <_BuildProps Include="-p:TargetFramework=monoandroid10" />
-      <!-- Override these properties to generate docs against a specific API level -->
-      <_BuildProps Include="-p:AndroidApiLevel=$(AndroidApiLevel)" />
-      <_BuildProps Include="-p:AndroidPlatformId=$(AndroidPlatformId)" />
-      <_BuildProps Include="-p:AndroidFrameworkVersion=$(AndroidFrameworkVersion)" />
+      <_BuildProps Include="-p:AndroidApiLevel=$(DocsApiLevel)" />
+      <_BuildProps Include="-p:AndroidPlatformId=$(DocsPlatformId)" />
+      <_BuildProps Include="-p:AndroidFrameworkVersion=$(DocsFxVersion)" />
     </ItemGroup>
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build -v:n -c $(Configuration) -bl:$(_Binlog) @(_BuildProps, ' ')"
@@ -321,11 +326,11 @@
   <Target Name="_RunMdoc">
     <PropertyGroup>
       <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/mdoc.exe"</_Mdoc>
-      <_Libdir>-L "$(OutputPath)../v1.0"</_Libdir>
-      <_AssemblyBasename>$(OutputPath)Mono.Android</_AssemblyBasename>
+      <_Libdir>-L "$(XAInstallPrefix)xbuild-frameworks/MonoAndroid/v1.0"</_Libdir>
+      <_AssemblyBasename>$(XAInstallPrefix)xbuild-frameworks/MonoAndroid/$(DocsFxVersion)/Mono.Android</_AssemblyBasename>
       <_ImportXml>-i "$(_AssemblyBasename).xml"</_ImportXml>
       <_Assembly>$(_AssemblyBasename).dll</_Assembly>
-      <_JIAssembly>$(OutputPath)../v1.0/Java.Interop.dll</_JIAssembly>
+      <_JIAssembly>$(XAInstallPrefix)xbuild-frameworks/MonoAndroid/v1.0/Java.Interop.dll</_JIAssembly>
       <_Output>-o "$(MSBuildThisFileDirectory)../../external/android-api-docs/docs/Mono.Android/en"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
       <_FxMoniker>xamarin-android-sdk-12</_FxMoniker>
