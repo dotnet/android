@@ -304,6 +304,10 @@ public class JavaSourceTest {
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
+			proj.OtherBuildItems.Add (new AndroidItem.LibraryProjectZip ("..\\baz.aar") {
+				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+				MetadataValues = "Bind=false",
+			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (default (Func<string>)) {
 				Update = () => "nopack.aar",
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
@@ -318,16 +322,17 @@ public class JavaSourceTest {
 			using var nupkg = ZipHelper.OpenZip (nupkgPath);
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/sub/directory/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
 
+			//TODO: this issue is not fixed in net6.0-android MSBuild targets
 			if (dotnetVersion != "net6.0") {
-				//TODO: this issue is not fixed in net6.0-android MSBuild targets
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/bar.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/sub/directory/bar.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
 			}
 		}
 
