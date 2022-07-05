@@ -1,12 +1,11 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
-using System.Security.Authentication.ExtendedProtection;
+using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,51 +16,55 @@ namespace Xamarin.Android.Net
 	{
 		const int MaxRequests = 10;
 
+		internal class RequestedNegotiateAuthenticationData
+		{
+			public string AuthType { get; init; }
+			public bool IsProxyAuth { get; init; }
+			public NetworkCredential Credential { get; init; }
+		}
+
 		internal static bool RequestNeedsNegotiateAuthentication (
 			AndroidMessageHandler handler,
 			HttpRequestMessage request,
-			[NotNullWhen (true)] out AuthenticationData? requestedAuthentication,
-			[NotNullWhen (true)] out NetworkCredential? correspondingCredentials)
+			[NotNullWhen (true)] out RequestedNegotiateAuthenticationData? requestedAuth)
 		{
-			IEnumerable<AuthenticationData> authenticationData = handler.RequestedAuthentication ?? Enumerable.Empty<AuthenticationData> ();
+			requestedAuth = null;
+
+			IEnumerable<AuthenticationData> authenticationData = handler.RequestedAuthentication ?? Array.Empty<AuthenticationData> ();
 			foreach (var auth in authenticationData) {
 				if (TryGetSupportedAuthType (auth.Challenge, out var authType)) {
 					var credentials = auth.UseProxyAuthentication ? handler.Proxy?.Credentials : handler.Credentials;
-					correspondingCredentials = credentials?.GetCredential (request.RequestUri, authType);
+					var correspondingCredential = credentials?.GetCredential (request.RequestUri, authType);
 
-					if (correspondingCredentials != null) {
-						requestedAuthentication = auth;
+					if (correspondingCredential != null) {
+						requestedAuth = new RequestedNegotiateAuthenticationData {
+							IsProxyAuth = auth.UseProxyAuthentication,
+							AuthType = authType,
+							Credential = correspondingCredential
+						};
+
 						return true;
 					}
 				}
 			}
 
-			requestedAuthentication = null;
-			correspondingCredentials = null;
 			return false;
 		}
 
 		internal static async Task <HttpResponseMessage?> SendWithAuthAsync (
 			AndroidMessageHandler handler,
 			HttpRequestMessage request,
-			AuthenticationData requestedAuthentication,
-			NetworkCredential credentials,
+			RequestedNegotiateAuthenticationData requestedAuth,
 			CancellationToken cancellationToken)
 		{
-			if (!TryGetSupportedAuthType (requestedAuthentication.Challenge, out var authType)) {
-				return null;
-			}
-
-			var isProxyAuth = requestedAuthentication.UseProxyAuthentication;
-			var spn = await GetSpn (handler, request, isProxyAuth, cancellationToken).ConfigureAwait (false);
-			// TODO: replace with NegotiateAuthentication once it's available in dotnet/runtime
-			var authContext = new NTAuthentication (
-				isServer: false,
-				authType,
-				credentials,
-				spn: spn,
-				requestedContextFlags: GetRequestedContextFlags (isProxyAuth),
-				channelBinding: null);
+			using var authContext = new NegotiateAuthentication (
+				new NegotiateAuthenticationClientOptions {
+					Package = requestedAuth.AuthType,
+					Credential = requestedAuth.Credential,
+					TargetName = await GetTargetName (handler, request, requestedAuth.IsProxyAuth, cancellationToken).ConfigureAwait (false),
+					RequiredProtectionLevel = requestedAuth.IsProxyAuth ? ProtectionLevel.None : ProtectionLevel.Sign,
+				}
+			);
 
 			// we need to make sure that the handler doesn't override the authorization header
 			// with the user defined pre-authentication data
@@ -69,10 +72,9 @@ namespace Xamarin.Android.Net
 			handler.PreAuthenticate = false;
 
 			try {
-				return await DoSendWithAuthAsync (handler, request, authContext, authType, isProxyAuth, cancellationToken);
+				return await DoSendWithAuthAsync (handler, request, authContext, requestedAuth, cancellationToken);
 			} finally {
 				handler.PreAuthenticate = originalPreAuthenticate;
-				authContext.CloseContext ();
 			}
 		}
 
@@ -88,53 +90,51 @@ namespace Xamarin.Android.Net
 		static async Task <HttpResponseMessage?> DoSendWithAuthAsync (
 			AndroidMessageHandler handler,
 			HttpRequestMessage request,
-			NTAuthentication authContext,
-			string authType,
-			bool isProxyAuth,
+			NegotiateAuthentication authContext,
+			RequestedNegotiateAuthenticationData requestedAuth,
 			CancellationToken cancellationToken)
 		{
 			HttpResponseMessage? response = null;
 
-			string? challenge = null;
 			int requestCounter = 0;
+			bool needDrain = false; // TODO maybe we need to drain even the first response on Android?
+			string? challengeData = null;
 
 			while (requestCounter++ < MaxRequests) {
-				var challengeResponse = authContext.GetOutgoingBlob (challenge);
-				if (challengeResponse == null) {
-					// response indicated denial even after login, so stop processing
-					// and return current response
+				var challengeResponse = authContext.GetOutgoingBlob (challengeData, out var statusCode);
+
+				if (challengeResponse is null || statusCode > NegotiateAuthenticationStatusCode.ContinueNeeded) {
+					// Response indicated denial even after login, so stop processing and return current response.
 					break;
 				}
 
-				var headerValue = new AuthenticationHeaderValue (authType, challengeResponse);
-				if (isProxyAuth) {
-					request.Headers.ProxyAuthorization = headerValue;
-				} else {
-					request.Headers.Authorization = headerValue;
+				if (needDrain) {
+					// We need to drain the content otherwise the next request
+					// won't reuse the same TCP socket and persistent auth won't work.
+					await response.Content.LoadIntoBufferAsync ().ConfigureAwait (false);
 				}
 
+				SetAuthorizationHeader (request, requestedAuth, challengeResponse);
 				response = await handler.DoSendAsync (request, cancellationToken).ConfigureAwait (false);
 
-				// we need to drain the content otherwise the next request
-				// won't reuse the same TCP socket and persistent auth won't work
-				await response.Content.LoadIntoBufferAsync ().ConfigureAwait (false);
-
-				if (authContext.IsCompleted || !TryGetChallenge (response, authType, isProxyAuth, out challenge)) {
+				if (authContext.IsAuthenticated || !TryGetChallenge (response, requestedAuth, out challengeData)) {
 					break;
 				}
 
-				if (!IsAuthenticationChallenge (response, isProxyAuth)) {
-					// Tail response for Negotiate on successful authentication.
-					// Validate it before we proceed.
-					authContext.GetOutgoingBlob (challenge);
+				if (!IsAuthenticationChallenge (response, requestedAuth))
+				{
+					// Tail response for Negotiate on successful authentication. Validate it before we proceed.
+					authContext.GetOutgoingBlob(challengeData, out _);
 					break;
 				}
+
+				needDrain = true;
 			}
 
 			return response;
 		}
 
-		static async Task<string> GetSpn (
+		static async Task<string> GetTargetName (
 			AndroidMessageHandler handler,
 			HttpRequestMessage request,
 			bool isProxyAuth,
@@ -174,110 +174,36 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		static int GetRequestedContextFlags (bool isProxyAuth)
+		static void SetAuthorizationHeader (HttpRequestMessage request, RequestedNegotiateAuthenticationData requestedAuth, string challengeResponse)
 		{
-			// the ContextFlagsPal is internal type in dotnet/runtime and we can't
-			// use it directly here so we have to use ints directly
-			int contextFlags = 0x00000800; // ContextFlagsPal.Connection
+			var headerValue = new AuthenticationHeaderValue (requestedAuth.AuthType, challengeResponse);
+			if (requestedAuth.IsProxyAuth) {
+				request.Headers.ProxyAuthorization = headerValue;
+			} else {
+				request.Headers.Authorization = headerValue;
+			}
+		}
 
-			// When connecting to proxy server don't enforce the integrity to avoid
-			// compatibility issues. The assumption is that the proxy server comes
-			// from a trusted source.
-			if (!isProxyAuth) {
-				contextFlags |= 0x00010000; // ContextFlagsPal.InitIntegrity
+		static bool TryGetChallenge (HttpResponseMessage? response, RequestedNegotiateAuthenticationData requestedAuth, [NotNullWhen (true)] out string? challengeData)
+		{
+			challengeData = null;
+
+			var responseHeaderValues = requestedAuth.IsProxyAuth ? response?.Headers.ProxyAuthenticate : response?.Headers.WwwAuthenticate;
+			if (responseHeaderValues is not null) {
+				foreach (var headerValue in responseHeaderValues) {
+					if (headerValue.Scheme == requestedAuth.AuthType) {
+						challengeData = headerValue.Parameter;
+						break;
+					}
+				}
 			}
 
-			return contextFlags;
+			return !string.IsNullOrEmpty (challengeData);
 		}
 
-		static bool TryGetChallenge (HttpResponseMessage response, string authType, bool isProxyAuth, [NotNullWhen (true)] out string? challenge)
-		{
-			var responseHeaderValues = isProxyAuth ? response.Headers.ProxyAuthenticate : response.Headers.WwwAuthenticate;
-			challenge = responseHeaderValues?.FirstOrDefault (headerValue => headerValue.Scheme == authType)?.Parameter;
-			return !string.IsNullOrEmpty (challenge);
-		}
-
-		static bool IsAuthenticationChallenge (HttpResponseMessage response, bool isProxyAuth)
-			=> isProxyAuth
+		static bool IsAuthenticationChallenge (HttpResponseMessage response, RequestedNegotiateAuthenticationData requestedAuth)
+			=> requestedAuth.IsProxyAuth
 				? response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
 				: response.StatusCode == HttpStatusCode.Unauthorized;
-
-		// This class will be removed once the new NegotiateAuthentication class is available in dotnet/runtime
-		private sealed class NTAuthentication
-		{
-			const string AssemblyName = "System.Net.Http";
-			const string TypeName = "System.Net.NTAuthentication";
-			const string ContextFlagsPalTypeName = "System.Net.ContextFlagsPal";
-
-			const string ConstructorDescription = "#ctor(System.Boolean,System.String,System.Net.NetworkCredential,System.String,System.Net.ContextFlagsPal,System.Security.Authentication.ExtendedProtection.ChannelBinding)";
-			const string IsCompletedPropertyName = "IsCompleted";
-			const string GetOutgoingBlobMethodName = "GetOutgoingBlob";
-			const string CloseContextMethodName = "CloseContext";
-
-			const BindingFlags InstanceBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-
-			static Lazy<Type> s_NTAuthenticationType = new (() => FindType (TypeName, AssemblyName));
-			static Lazy<ConstructorInfo> s_NTAuthenticationConstructorInfo = new (() => GetNTAuthenticationConstructor ());
-			static Lazy<PropertyInfo> s_IsCompletedPropertyInfo = new (() => GetProperty (IsCompletedPropertyName));
-			static Lazy<MethodInfo> s_GetOutgoingBlobMethodInfo = new (() => GetMethod (GetOutgoingBlobMethodName));
-			static Lazy<MethodInfo> s_CloseContextMethodInfo = new (() => GetMethod (CloseContextMethodName));
-
-			static Type FindType (string typeName, string assemblyName)
-				=> Type.GetType ($"{typeName}, {assemblyName}", throwOnError: true)!;
-
-			static ConstructorInfo GetNTAuthenticationConstructor ()
-			{
-				var contextFlagsPalType = FindType (ContextFlagsPalTypeName, AssemblyName);
-				var paramTypes = new[] {
-					typeof (bool),
-					typeof (string),
-					typeof (NetworkCredential),
-					typeof (string),
-					contextFlagsPalType,
-					typeof (ChannelBinding)
-				};
-
-				return s_NTAuthenticationType.Value.GetConstructor (InstanceBindingFlags, paramTypes)
-					?? throw new MissingMemberException (TypeName, ConstructorInfo.ConstructorName);
-			}
-
-			static PropertyInfo GetProperty (string name)
-				=> s_NTAuthenticationType.Value.GetProperty (name, InstanceBindingFlags)
-					?? throw new MissingMemberException (TypeName, name);
-
-			static MethodInfo GetMethod (string name)
-				=> s_NTAuthenticationType.Value.GetMethod (name, InstanceBindingFlags)
-					?? throw new MissingMemberException (TypeName, name);
-
-			object _instance;
-
-			[DynamicDependency (ConstructorDescription, TypeName, AssemblyName)]
-			internal NTAuthentication (
-				bool isServer,
-				string package,
-				NetworkCredential credential,
-				string? spn,
-				int requestedContextFlags,
-				ChannelBinding? channelBinding)
-			{
-				var constructorParams = new object?[] { isServer, package, credential, spn, requestedContextFlags, channelBinding };
-				_instance = s_NTAuthenticationConstructorInfo.Value.Invoke (constructorParams);
-			}
-
-			public bool IsCompleted
-				=> GetIsCompleted ();
-
-			[DynamicDependency ($"get_{IsCompletedPropertyName}", TypeName, AssemblyName)]
-			bool GetIsCompleted ()
-				=> (bool)(s_IsCompletedPropertyInfo.Value.GetValue (_instance) ?? false);
-
-			[DynamicDependency (GetOutgoingBlobMethodName, TypeName, AssemblyName)]
-			public string? GetOutgoingBlob (string? incomingBlob)
-				=> (string?)s_GetOutgoingBlobMethodInfo.Value.Invoke (_instance, new object?[] { incomingBlob });
-
-			[DynamicDependency (CloseContextMethodName, TypeName, AssemblyName)]
-			public void CloseContext ()
-				=> s_CloseContextMethodInfo.Value.Invoke (_instance, null);
-		}
 	}
 }
