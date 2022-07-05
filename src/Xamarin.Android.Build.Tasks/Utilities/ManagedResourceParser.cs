@@ -297,8 +297,14 @@ namespace Xamarin.Android.Tasks
 		void ProcessRtxtFile (string file)
 		{
 			var lines = System.IO.File.ReadLines (file);
+			int lineNumber = 0;
 			foreach (var line in lines) {
+				lineNumber++;
 				var items = line.Split (new char [] { ' ' }, 4);
+				if (items.Length < 4) {
+					Log.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it does not have the correct number of elements.");
+					continue;
+				}
 				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3], 16) : -1;
 				string itemName = items [2];
 				switch (items [1]) {
