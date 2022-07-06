@@ -18,8 +18,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string DefaultJdkVersion { get; set; }
 
-		public bool EnableProguard { get; set; }
-
 		public bool EnableMultiDex { get; set; }
 
 		public bool SkipJavacVersionCheck { get; set; }
@@ -39,8 +37,8 @@ namespace Xamarin.Android.Tasks
 			if (SkipJavacVersionCheck)
 				return true;
 
-			// so far only proguard matters.
-			if (!EnableProguard && !EnableMultiDex)
+			// so far only multi-dex matters.
+			if (!EnableMultiDex)
 				return true;
 
 			if (JdkVersion.StartsWith ("1.8", StringComparison.OrdinalIgnoreCase)) {

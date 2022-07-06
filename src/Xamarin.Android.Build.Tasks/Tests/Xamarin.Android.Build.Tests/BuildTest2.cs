@@ -1068,37 +1068,16 @@ namespace UnamedProject
 		static readonly object [] BuildProguardEnabledProjectSource = new object [] {
 			new object [] {
 				/* isRelease */ false,
-				/* dexTool */   "dx",
-				/* linkTool */  "",
-				/* rid */       "",
-			},
-			new object [] {
-				/* isRelease */ false,
-				/* dexTool */   "d8",
 				/* linkTool */  "",
 				/* rid */       "",
 			},
 			new object [] {
 				/* isRelease */ true,
-				/* dexTool */   "dx",
-				/* linkTool */  "proguard",
-				/* rid */       "",
-			},
-			new object [] {
-				/* isRelease */ true,
-				/* dexTool */   "d8",
-				/* linkTool */  "proguard",
-				/* rid */       "",
-			},
-			new object [] {
-				/* isRelease */ true,
-				/* dexTool */   "d8",
 				/* linkTool */  "r8",
 				/* rid */       "",
 			},
 			new object [] {
 				/* isRelease */ true,
-				/* dexTool */   "d8",
 				/* linkTool */  "r8",
 				/* rid */       "android-arm64",
 			},
@@ -1107,12 +1086,10 @@ namespace UnamedProject
 		[Test]
 		[TestCaseSource (nameof (BuildProguardEnabledProjectSource))]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void BuildProguardEnabledProject (bool isRelease, string dexTool, string linkTool, string rid)
+		public void BuildProguardEnabledProject (bool isRelease, string linkTool, string rid)
 		{
-			AssertDexToolSupported (dexTool);
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
-				DexTool = dexTool,
 				LinkTool = linkTool,
 			};
 			if (!string.IsNullOrEmpty (rid)) {
@@ -1121,17 +1098,7 @@ namespace UnamedProject
 				}
 				proj.SetProperty ("RuntimeIdentifier", rid);
 			}
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){isRelease}{dexTool}{linkTool}{rid}"))) {
-				if (dexTool == "d8" && linkTool == "proguard") {
-					b.ThrowOnBuildFailure = false;
-					Assert.IsFalse (b.Build (proj), "Build should have failed.");
-					string error = b.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-						.FirstOrDefault (x => x.Contains ("error XA1011:"));
-					Assert.IsNotNull (error, "Build should have failed with XA1011.");
-					return;
-				}
-
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){isRelease}{linkTool}{rid}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// warning XA4304: ProGuard configuration file 'XYZ' was not found.
 				StringAssertEx.DoesNotContain ("XA4304", b.LastBuildOutput, "Output should *not* contain XA4304 warnings");
@@ -1190,11 +1157,9 @@ namespace UnamedProject
 
 		[Test]
 		[Category ("Minor")]
-		public void BuildApplicationOver65536Methods ([Values ("dx", "d8")] string dexTool)
+		public void BuildApplicationOver65536Methods ()
 		{
-			AssertDexToolSupported (dexTool);
 			var proj = CreateMultiDexRequiredApplication ();
-			proj.DexTool = dexTool;
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Without MultiDex option, build should fail");
@@ -1202,11 +1167,9 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void CreateMultiDexWithSpacesInConfig ([Values ("dx", "d8")] string dexTool)
+		public void CreateMultiDexWithSpacesInConfig ()
 		{
-			AssertDexToolSupported (dexTool);
 			var proj = CreateMultiDexRequiredApplication (releaseConfigurationName: "Test Config");
-			proj.DexTool = dexTool;
 			proj.IsRelease = true;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			using (var b = CreateApkBuilder ()) {
@@ -1215,12 +1178,10 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildMultiDexApplication ([Values ("dx", "d8")] string dexTool)
+		public void BuildMultiDexApplication ()
 		{
-			AssertDexToolSupported (dexTool);
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.UseLatestPlatformSdk = false;
-			proj.DexTool = dexTool;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			if (IsWindows && !Builder.UseDotNet) {
 				proj.SetProperty ("AppendTargetFrameworkToIntermediateOutputPath", "True");
@@ -1246,11 +1207,9 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildAfterMultiDexIsNotRequired ([Values ("dx", "d8")] string dexTool)
+		public void BuildAfterMultiDexIsNotRequired ()
 		{
-			AssertDexToolSupported (dexTool);
 			var proj = CreateMultiDexRequiredApplication ();
-			proj.DexTool = dexTool;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 
 			using (var b = CreateApkBuilder ()) {
@@ -1290,9 +1249,8 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool, [Values ("19", "21")] string minSdkVersion)
+		public void MultiDexCustomMainDexFileList ([Values ("19", "21")] string minSdkVersion)
 		{
-			AssertDexToolSupported (dexTool);
 			var expected = new [] {
 				"android/support/multidex/ZipUtil$CentralDirectory.class",
 				"android/support/multidex/MultiDexApplication.class",
@@ -1304,7 +1262,6 @@ namespace UnamedProject
 				"MyTest.class",
 			};
 			var proj = CreateMultiDexRequiredApplication ();
-			proj.DexTool = dexTool;
 			proj.MinSdkVersion = minSdkVersion;
 			proj.TargetSdkVersion = null;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
@@ -1316,7 +1273,7 @@ namespace UnamedProject
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
-				if (dexTool == "d8" && minSdkVersion == "21") {
+				if (minSdkVersion == "21") {
 					//NOTE: d8/r8 does not support custom dex list files in this case
 					return;
 				}
@@ -1364,16 +1321,12 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MultiDexAndCodeShrinker ([Values ("proguard", "r8")] string linkTool)
+		public void MultiDexAndCodeShrinker ()
 		{
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			proj.EnableProguard =
-				proj.IsRelease = true;
-			proj.LinkTool = linkTool;
-			if (linkTool == "proguard")
-				proj.DexTool = "dx";
-			AssertDexToolSupported (proj.DexTool);
+			proj.IsRelease = true;
+			proj.LinkTool = "r8";
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
@@ -1387,9 +1340,8 @@ namespace UnnamedProject {
 		[Test]
 		public void MultiDexR8ConfigWithNoCodeShrinking ()
 		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				DexTool = "d8",
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true
 			};
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			/* The source for the library is a single class:
