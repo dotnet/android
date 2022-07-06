@@ -1,0 +1,131 @@
+<Project Sdk="Microsoft.Build.NoTargets">
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\api-merge\api-merge.csproj" ReferenceOutputAssembly="False" />
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <_OutputPath>$(XamarinAndroidSourcePath)\bin\Build$(Configuration)\</_OutputPath>
+  </PropertyGroup>
+
+  <!-- First we need to figure out all the needed API levels.
+       This is done by looking at which levels are included in 'Mono.Android.Apis.projitems'
+       and looking for matching 'api-X.params.txt' files. -->
+  <Target Name="_DefineApiFiles">
+    <ItemGroup>
+      <_Api
+          Condition=" Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(AndroidApiInfo.Id).params.txt') "
+          Include="@(AndroidApiInfo)">
+      </_Api>
+    </ItemGroup>
+    
+    <CreateItem Include="@(_Api)"
+        AdditionalMetadata="ParameterDescription=$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(_Api.Id).params.txt;ClassParseXml=$(_OutputPath)api\api-%(_Api.Id).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(_Api.Id).xml.in;MergedXml=$(_OutputPath)api\api-%(_Api.Id).xml">
+      <Output TaskParameter="Include" ItemName="ApiFileDefinition"/>
+    </CreateItem>
+    
+    <!-- We don't generate 'api.xml' files for older API levels we no longer ship -->
+    <ItemGroup>
+      <_MergedXmlFiles
+          Condition=" %(ApiFileDefinition.Level) >= 19  "
+          Include="@(ApiFileDefinition)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Next we need to run class-parse on each platform's 'android.jar' in order
+       to produce the 'api-X.xml.class-parse' files. -->
+  <Target Name="_ClassParse"
+      BeforeTargets="_AdjustApiXml"
+      DependsOnTargets="_DefineApiFiles"
+      Inputs="@(ApiFileDefinition->'%(ParameterDescription)')"
+      Outputs="@(ApiFileDefinition->'%(ClassParseXml)')">
+      
+    <PropertyGroup>
+      <ClassParse>$(XamarinAndroidSourcePath)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <_ClassParseCommands
+          Condition="Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
+          Include="@(ApiFileDefinition)">
+        <Command>$(ClassParse)</Command>
+        <Arguments>$(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;</Arguments>
+      </_ClassParseCommands>
+    </ItemGroup>
+    
+    <MakeDir Directories="$(_OutputPath)api" />
+    
+    <RunParallelCmds
+        Commands="@(_ClassParseCommands)"
+        ManagedRuntime="$(ManagedRuntime)"
+        ManagedRuntimeArguments="$(ManagedRuntimeArgs)"
+      />
+  </Target>
+  
+  <!-- Run api-xml-adjuster on each 'api-X.xml.class-parse' file, which runs some fixups
+       on the Java API and marks overrides, producing 'api-X.xml.in' files. -->
+  <Target Name="_AdjustApiXml"
+      DependsOnTargets="_DefineApiFiles"
+      Inputs="@(ApiFileDefinition->'%(ClassParseXml)')"
+      Outputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')">
+
+    <PropertyGroup>
+      <ApiXmlAdjuster>$(XamarinAndroidSourcePath)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <_AdjustApiXmlPrepareCommands
+          Condition="Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
+          Include="@(ApiFileDefinition)">
+        <Command>$(ApiXmlAdjuster)</Command>
+        <Arguments>%(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)</Arguments>
+      </_AdjustApiXmlPrepareCommands>
+    </ItemGroup>
+
+    <RunParallelCmds
+        Commands="@(_AdjustApiXmlPrepareCommands)"
+        ManagedRuntime="$(ManagedRuntime)"
+        ManagedRuntimeArguments="$(ManagedRuntimeArgs)"
+      />
+  </Target>
+  
+  <!-- Merges various 'api-X.xml.in' files into single 'api.xml' file -->
+  <Target Name="_GenerateApiDescription"
+      BeforeTargets="Build"
+      DependsOnTargets="_AdjustApiXml"
+      Inputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')"
+      Outputs="@(_MergedXmlFiles->'%(MergedXml)')">
+    
+    <PropertyGroup>
+      <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
+      <_ConfigurationFile>..\..\bin\Build$(Configuration)\merge-configuration.xml</_ConfigurationFile>
+      <_ConfigurationInputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationInputBaseDirectory>
+      <_ConfigurationOutputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationOutputBaseDirectory>
+    </PropertyGroup>
+    
+    <Exec
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)" />
+        
+  </Target>
+
+  <!-- Clean up generated API files -->
+  <Target Name="_CleanApiXml"
+      BeforeTargets="Clean"
+      DependsOnTargets="_DefineApiFiles">
+
+    <Delete Files="%(ApiFileDefinition.ApiAdjustedXml)" />
+    <Delete Files="%(ApiFileDefinition.ClassParseXml)" />
+    <Delete Files="%(_MergedXmlFiles.MergedXml)" />
+  </Target>
+  
+</Project>

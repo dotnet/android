@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30907.101
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32530.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build-Tools", "Build-Tools", "{E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}"
 EndProject
@@ -134,7 +134,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "jnienv-gen", "external\Java
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "check-boot-times", "build-tools\check-boot-times\check-boot-times.csproj", "{D28957BF-5E66-4D60-B528-22820C60AC82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "java-interop", "external\Java.Interop\src\java-interop\java-interop.csproj", "{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "java-interop", "external\Java.Interop\src\java-interop\java-interop.csproj", "{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Generator", "external\Java.Interop\src\Java.Interop.Tools.Generator\Java.Interop.Tools.Generator.csproj", "{2CE4CD4B-B7B7-4EAE-A9BE-2699824D6096}"
 EndProject
@@ -154,19 +154,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaType
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "relnote-gen", "tools\relnote-gen\relnote-gen.csproj", "{D8E14B43-E929-4C18-9FA6-2C3DC47EFC17}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Runtime.Environment", "external\Java.Interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj", "{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Runtime.Environment", "external\Java.Interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj", "{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "create-android-api", "build-tools\create-android-api\create-android-api.csproj", "{BA4D889D-066B-4C2C-A973-09E319CBC396}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{3f1f2f50-af1a-4a5a-bedb-193372f068d7}*SharedItemsImports = 5
-		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{66cf299a-ce95-4131-bcd8-db66e30c4bf7}*SharedItemsImports = 5
-		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{74598f5c-b8cc-4ce6-8ee2-ab9ca1400076}*SharedItemsImports = 13
-		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{d1295a8f-4f42-461d-a046-564476c10002}*SharedItemsImports = 5
-		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{d18fcf91-8876-48a0-a693-2dc1e7d3d80a}*SharedItemsImports = 5
-		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{e0890301-f75f-40e7-b008-54c28b3ba542}*SharedItemsImports = 5
-		external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems*{e0890301-f75f-40e7-b008-54c28b3ba542}*SharedItemsImports = 5
-		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{fe789f04-5e95-42c5-aef1-e33f8df06b3f}*SharedItemsImports = 13
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
 		Release|AnyCPU = Release|AnyCPU
@@ -388,6 +380,10 @@ Global
 		{D28957BF-5E66-4D60-B528-22820C60AC82}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{D28957BF-5E66-4D60-B528-22820C60AC82}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{D28957BF-5E66-4D60-B528-22820C60AC82}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Release|AnyCPU.Build.0 = Release|Any CPU
 		{2CE4CD4B-B7B7-4EAE-A9BE-2699824D6096}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
 		{2CE4CD4B-B7B7-4EAE-A9BE-2699824D6096}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{2CE4CD4B-B7B7-4EAE-A9BE-2699824D6096}.Release|AnyCPU.ActiveCfg = Release|Any CPU
@@ -412,10 +408,6 @@ Global
 		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}.Debug|AnyCPU.Build.0 = Debug|anycpu
 		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}.Release|AnyCPU.ActiveCfg = Release|anycpu
 		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}.Release|AnyCPU.Build.0 = Release|anycpu
-		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
-		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Debug|AnyCPU.Build.0 = Debug|Any CPU
-		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Release|AnyCPU.ActiveCfg = Release|Any CPU
-		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B}.Release|AnyCPU.Build.0 = Release|Any CPU
 		{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}.Debug|AnyCPU.ActiveCfg = Debug|anycpu
 		{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}.Debug|AnyCPU.Build.0 = Debug|anycpu
 		{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51}.Release|AnyCPU.ActiveCfg = Release|anycpu
@@ -432,6 +424,10 @@ Global
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{BA4D889D-066B-4C2C-A973-09E319CBC396}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{BA4D889D-066B-4C2C-A973-09E319CBC396}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{BA4D889D-066B-4C2C-A973-09E319CBC396}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{BA4D889D-066B-4C2C-A973-09E319CBC396}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -492,6 +488,7 @@ Global
 		{DE40756E-57F6-4AF2-B155-55E3A88CCED8} = {05C3B1D6-A4CE-4534-A9E4-E9117591ADF7}
 		{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A} = {05C3B1D6-A4CE-4534-A9E4-E9117591ADF7}
 		{D28957BF-5E66-4D60-B528-22820C60AC82} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{2CE4CD4B-B7B7-4EAE-A9BE-2699824D6096} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{86A8DEFE-7ABB-4097-9389-C249581E243D} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{9A9EF774-6EA6-414F-9D2F-DCD66C56B92A} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
@@ -499,13 +496,23 @@ Global
 		{88B746FF-8D6E-464D-9D66-FF2ECCF148E0} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{DA50FC92-7FE7-48B5-BDB6-CDA57B37BB51} = {864062D3-A415-4A6F-9324-5820237BA058}
-		{1FED3F23-1175-42AA-BE87-EF1E8DB52F8B} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{4EFCED6E-9A6B-453A-94E4-CE4B736EC684} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{D8E14B43-E929-4C18-9FA6-2C3DC47EFC17} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
+		{BA4D889D-066B-4C2C-A973-09E319CBC396} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{3f1f2f50-af1a-4a5a-bedb-193372f068d7}*SharedItemsImports = 5
+		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{66cf299a-ce95-4131-bcd8-db66e30c4bf7}*SharedItemsImports = 5
+		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{74598f5c-b8cc-4ce6-8ee2-ab9ca1400076}*SharedItemsImports = 13
+		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{d1295a8f-4f42-461d-a046-564476c10002}*SharedItemsImports = 5
+		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{d18fcf91-8876-48a0-a693-2dc1e7d3d80a}*SharedItemsImports = 5
+		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{e0890301-f75f-40e7-b008-54c28b3ba542}*SharedItemsImports = 5
+		external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems*{e0890301-f75f-40e7-b008-54c28b3ba542}*SharedItemsImports = 5
+		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{fe789f04-5e95-42c5-aef1-e33f8df06b3f}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

@@ -17,7 +17,7 @@
       "extends" : [ "microsoft-net-runtime-android", "microsoft-net-runtime-android-aot" ]
     },
     "android-33": {
-      "description": "Preview support for Android API-33.",
+      "description": "Support for Android API-33.",
       "packs": [
         "Microsoft.Android.Ref.33",
         "Microsoft.Android.Runtime.33.android-arm",
