@@ -32,6 +32,18 @@ namespace Xamarin.Android.Build.Tests
 </manifest>";
 		}
 
+		int FindTextInFile (string file, string text) {
+			int lineNumber = 1;
+			foreach (var line in File.ReadAllLines (file)) {
+				if (line.Contains (text)) {
+					return lineNumber;
+				}
+				lineNumber++;
+			}
+			Console.WriteLine ($"Could not find '{text}' in '{file}'");
+			return -1;
+		}
+
 		[Test]
 		[Category ("Node-3")]
 		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs, [Values (false, true)] bool useEmbeddedDex)
@@ -210,10 +222,13 @@ namespace ${ROOT_NAMESPACE} {
 				var sw = new Stopwatch ();
 				// setup the debugger
 				var session = new SoftDebuggerSession ();
-				session.Breakpoints = new BreakpointStore {
-					{ Path.Combine (Root, b.ProjectDirectory, "MainActivity.cs"),  19 },
-					{ Path.Combine (Root, b.ProjectDirectory, "MyApplication.cs"),  17 },
-				};
+				session.Breakpoints = new BreakpointStore ();
+				string file =  Path.Combine (Root, b.ProjectDirectory, "MainActivity.cs");
+				int line = FindTextInFile (file, "base.OnCreate (bundle);");
+				session.Breakpoints.Add (file, line);
+				file =  Path.Combine (Root, b.ProjectDirectory, "MyApplication.cs");
+				line = FindTextInFile (file, "base.OnCreate ();");
+				session.Breakpoints.Add (file, line);
 				session.TargetHitBreakpoint += (sender, e) => {
 					TestContext.WriteLine ($"BREAK {e.Type}, {e.Backtrace.GetFrame (0)}");
 					breakcountHitCount++;
@@ -408,13 +423,29 @@ namespace ${ROOT_NAMESPACE} {
 				var sw = new Stopwatch ();
 				// setup the debugger
 				var session = new SoftDebuggerSession ();
-				session.Breakpoints = new BreakpointStore {
-					{ Path.Combine (Root, appBuilder.ProjectDirectory, "MainActivity.cs"),  20 },
-					{ Path.Combine (Root, appBuilder.ProjectDirectory, "MainPage.xaml.cs"), 14 },
-					{ Path.Combine (Root, appBuilder.ProjectDirectory, "MainPage.xaml.cs"), 19 },
-					{ Path.Combine (Root, appBuilder.ProjectDirectory, "App.xaml.cs"), 12 },
-					{ Path.Combine (Root, libBuilder.ProjectDirectory, "Foo.cs"), 4 },
-				};
+
+				session.Breakpoints = new BreakpointStore ();
+				string file =  Path.Combine (Root, appBuilder.ProjectDirectory, "MainActivity.cs");
+				int line = FindTextInFile (file, "base.OnCreate (savedInstanceState);");
+				session.Breakpoints.Add (file, line);
+
+				file =  Path.Combine (Root, appBuilder.ProjectDirectory, "MainPage.xaml.cs");
+				line = FindTextInFile (file, "InitializeComponent ();");
+				session.Breakpoints.Add (file, line);
+
+				file =  Path.Combine (Root, appBuilder.ProjectDirectory, "MainPage.xaml.cs");
+				line = FindTextInFile (file, "Console.WriteLine (");
+				session.Breakpoints.Add (file, line);
+
+				file =  Path.Combine (Root, appBuilder.ProjectDirectory, "App.xaml.cs");
+				line = FindTextInFile (file, "InitializeComponent ();");
+				session.Breakpoints.Add (file, line);
+
+				file =  Path.Combine (Root, libBuilder.ProjectDirectory, "Foo.cs");
+				line = FindTextInFile (file, "public Foo ()");
+				// Add one to the line so we get the '{' under the constructor
+				session.Breakpoints.Add (file, line++);
+
 				session.TargetHitBreakpoint += (sender, e) => {
 					TestContext.WriteLine ($"BREAK {e.Type}, {e.Backtrace.GetFrame (0)}");
 					breakcountHitCount++;
