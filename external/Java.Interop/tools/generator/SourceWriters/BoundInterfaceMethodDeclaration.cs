@@ -25,6 +25,10 @@ namespace generator.SourceWriters
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 			IsDeclaration = true;
 
+			// Allow user to force adding the 'abstract' keyword for "reabstraction"
+			if (method.ManagedOverride?.ToLowerInvariant () == "reabstract")
+				IsAbstract = true;
+
 			if (method.DeclaringType.IsGeneratable)
 				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
 			if (method.Deprecated != null)

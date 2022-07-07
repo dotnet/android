@@ -20,6 +20,10 @@ namespace generator.SourceWriters
 			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
 			IsAutoProperty = true;
 
+			// Allow user to force adding the 'abstract' keyword for "reabstraction"
+			if ((property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "reabstract")
+				IsAbstract = true;
+
 			if (property.Getter != null) {
 				HasGet = true;
 

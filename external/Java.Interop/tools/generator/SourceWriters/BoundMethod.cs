@@ -58,6 +58,9 @@ namespace generator.SourceWriters
 			} else if (method.ManagedOverride?.ToLowerInvariant () == "override") {
 				IsVirtual = false;
 				IsOverride = true;
+			} else if (method.ManagedOverride?.ToLowerInvariant () == "none") {
+				IsVirtual = false;
+				IsOverride = false;
 			}
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));

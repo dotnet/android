@@ -66,6 +66,9 @@ namespace generator.SourceWriters
 			} else if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "override") {
 				IsVirtual = false;
 				IsOverride = true;
+			} else if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "none") {
+				IsVirtual = false;
+				IsOverride = false;
 			}
 
 			// Unlike [Register], [Obsolete] cannot be put on property accessors, so we can apply them only under limited condition...
