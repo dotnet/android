@@ -124,7 +124,11 @@ namespace Xamarin.Android.Net
 				if (!IsAuthenticationChallenge (response, requestedAuth))
 				{
 					// Tail response for Negotiate on successful authentication. Validate it before we proceed.
-					authContext.GetOutgoingBlob(challengeData, out _);
+					authContext.GetOutgoingBlob(challengeData, out statusCode);
+					if (statusCode > NegotiateAuthenticationStatusCode.ContinueNeeded)
+					{
+						throw new HttpRequestException($"Authentication validation failed with error - {statusCode}.", null, HttpStatusCode.Unauthorized);
+					}
 					break;
 				}
 
