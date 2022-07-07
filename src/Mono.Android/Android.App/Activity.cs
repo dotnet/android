@@ -12,6 +12,18 @@ namespace Android.App {
 			return this.FindViewById (id)!.JavaCast<T> ();
 		}
 
+		// See: https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/view/View.java;l=25322
+		public T RequireViewById<T> (int id)
+			where T : Android.Views.View
+		{
+			var view = FindViewById<T> (id);
+			if (view == null)
+			{
+				throw new ArgumentException ($"ID 0x{id:X} does not reference a View of type '{typeof (T)}' inside this View");
+			}
+			return view;
+		}
+
 		public void StartActivityForResult (Type activityType, int requestCode)
 		{
 			var intent = new Android.Content.Intent (this, activityType);
