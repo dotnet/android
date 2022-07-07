@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			thisClass       = stream.ReadNetworkUInt16 ();
 			superClass      = stream.ReadNetworkUInt16 ();
 			Interfaces      = new Interfaces (ConstantPool, stream);
-			Fields          = new Fields (ConstantPool, stream);
+			Fields          = new Fields (ConstantPool, this, stream);
 			Methods         = new Methods (ConstantPool, this, stream);
 			Attributes      = new AttributeCollection (ConstantPool, stream);
 

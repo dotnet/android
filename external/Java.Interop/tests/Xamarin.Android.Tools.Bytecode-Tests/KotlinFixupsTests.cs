@@ -136,6 +136,22 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		}
 
 		[Test]
+		public void HideInternalField ()
+		{
+			var klass = LoadClassFile ("InternalField.class");
+			var field = klass.Fields.First (m => m.Name == "city");
+
+			Assert.True (field.AccessFlags.HasFlag (FieldAccessFlags.Public));
+
+			KotlinFixups.Fixup (new [] { klass });
+
+			Assert.False (field.AccessFlags.HasFlag (FieldAccessFlags.Public));
+
+			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
+			Assert.True (output.Contains ("visibility=\"kotlin-internal\""));
+		}
+
+		[Test]
 		public void ParameterName ()
 		{
 			var klass = LoadClassFile ("ParameterName.class");

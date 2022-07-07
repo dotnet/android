@@ -10,7 +10,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public  ConstantPool    ConstantPool        {get; private set;}
 
-		public Fields (ConstantPool constantPool, Stream stream)
+		public Fields (ConstantPool constantPool, ClassFile declaringClass, Stream stream)
 		{
 			if (constantPool == null)
 				throw new ArgumentNullException ("constantPool");
@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			ConstantPool    = constantPool;
 			var count       = stream.ReadNetworkUInt16 ();
 			for (int i = 0; i < count; ++i) {
-				Add (new FieldInfo (constantPool, stream));
+				Add (new FieldInfo (constantPool, declaringClass, stream));
 			}
 		}
 	}
@@ -31,13 +31,15 @@ namespace Xamarin.Android.Tools.Bytecode {
 		ushort              descriptorIndex;
 
 		public  ConstantPool        ConstantPool    {get; private set;}
-		public  FieldAccessFlags    AccessFlags     {get; private set;}
+		public  ClassFile           DeclaringType   {get; private set;}
+		public  FieldAccessFlags    AccessFlags     {get; set;}
 		public  AttributeCollection Attributes      {get; private set;}
 		public  string?             KotlinType      {get; set;}
 
-		public FieldInfo (ConstantPool constantPool, Stream stream)
+		public FieldInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
 		{
 			ConstantPool    = constantPool;
+			DeclaringType   = declaringType;
 			AccessFlags     = (FieldAccessFlags) stream.ReadNetworkUInt16 ();
 			nameIndex       = stream.ReadNetworkUInt16 ();
 			descriptorIndex = stream.ReadNetworkUInt16 ();
@@ -61,6 +63,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 			var signature   = Attributes.Get<SignatureAttribute> ();
 			return signature != null ? signature.Value : null;
 		}
+
+		public bool IsPubliclyVisible => AccessFlags.HasFlag (FieldAccessFlags.Public) || AccessFlags.HasFlag (FieldAccessFlags.Protected);
 	}
 
 	[Flags]
@@ -74,5 +78,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 		Transient   = 0x0080,
 		Synthetic   = 0x1000,
 		Enum        = 0x4000,
+
+		// This is not a real Java FieldAccessFlags, it is used to denote Kotlin "internal" access.
+		Internal    = 0x10000000,
 	}
 }

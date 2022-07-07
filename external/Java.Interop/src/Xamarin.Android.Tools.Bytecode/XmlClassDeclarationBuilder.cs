@@ -593,6 +593,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		static string GetVisibility (FieldAccessFlags accessFlags)
 		{
+			if (accessFlags.HasFlag (FieldAccessFlags.Internal))
+				return "kotlin-internal";
 			if ((accessFlags & FieldAccessFlags.Public) != 0)
 				return "public";
 			if ((accessFlags & FieldAccessFlags.Protected) != 0)

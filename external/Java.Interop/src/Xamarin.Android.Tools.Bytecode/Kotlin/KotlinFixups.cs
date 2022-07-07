@@ -129,6 +129,20 @@ namespace Xamarin.Android.Tools.Bytecode
 			return existing;
 		}
 
+		static FieldAccessFlags SetVisibility (FieldAccessFlags existing, FieldAccessFlags newVisibility)
+		{
+			// First we need to remove any existing visibility flags,
+			// without modifying other flags like Abstract
+			existing = (existing ^ FieldAccessFlags.Public) & existing;
+			existing = (existing ^ FieldAccessFlags.Protected) & existing;
+			existing = (existing ^ FieldAccessFlags.Private) & existing;
+			existing = (existing ^ FieldAccessFlags.Internal) & existing;
+
+			existing |= newVisibility;
+
+			return existing;
+		}
+
 		static void FixupJavaMethods (Methods methods)
 		{
 			// We do the following method level fixups here because we can operate on all methods,
@@ -293,6 +307,15 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			if (field is null)
 				return;
+
+			// Hide field if it isn't Public/Protected
+			if (!metadata.Flags.IsPubliclyVisible ()) {
+
+				if (field.IsPubliclyVisible) {
+					Log.Debug ($"Kotlin: Hiding internal field {field.DeclaringType?.ThisClass.Name.Value} - {field.Name}");
+					field.AccessFlags = SetVisibility (field.AccessFlags, FieldAccessFlags.Internal);
+				}
+			}
 
 			// Handle erasure of Kotlin unsigned types
 			field.KotlinType = GetKotlinType (field.Descriptor, metadata.ReturnType?.ClassName);
