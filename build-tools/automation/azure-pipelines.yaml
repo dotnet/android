@@ -54,7 +54,7 @@ variables:
 - name: RunAllTests
   value: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
 - name: DotNetNUnitCategories
-  value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger & TestCategory != SystemApplication'
+  value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != SystemApplication'
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - group: AzureDevOps-Artifact-Feeds-Pats
   - group: DotNet-MSRC-Storage
