@@ -435,14 +435,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_ConvertAndroidMamMappingFileToXml"
     Condition=" '@(_AndroidMamMappingFile->Count())' != '0' "
     Inputs="@(_AndroidMamMappingFile)"
-    Outputs="$($(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml)">
+    Outputs="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml">
   <MakeDir
       Condition=" '@(_AndroidMamMappingFile->Count())' != '0' "
       Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
   />
   <MamJsonToXml
       MappingFiles="@(_AndroidMamMappingFile)"
-      XmlMappingOutput="$($(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml)"
+      XmlMappingOutput="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml"
   />
   <Touch Files="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml" AlwaysCreate="true" />
   <ItemGroup>
