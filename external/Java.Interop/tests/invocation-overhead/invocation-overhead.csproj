@@ -9,6 +9,8 @@
     <DefineConstants Condition=" '$(TargetFramework)' != 'net472' ">$(DefineConstants);FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS</DefineConstants>
   </PropertyGroup>
 
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\java-interop\java-interop.csproj" ReferenceOutputAssembly="false" />

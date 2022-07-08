@@ -9,11 +9,13 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <Import Project="..\..\build-tools\scripts\cecil.projitems" />
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
 
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
   </PropertyGroup>
+
+  <Import Project="..\..\build-tools\scripts\cecil.projitems" />
 
   <ItemGroup>
     <Compile Include="..\utils\NullableAttributes.cs" />

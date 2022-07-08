@@ -6,6 +6,8 @@
     <RootNamespace>Java.Interop.Tools.JavaTypeSystem.Tests</RootNamespace>
   </PropertyGroup>
 
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>

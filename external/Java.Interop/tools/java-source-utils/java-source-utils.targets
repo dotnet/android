@@ -1,10 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="CoreCompile" DependsOnTargets="_BuildJava" />
-
   <Target Name="_BuildJava"
-      AfterTargets="Build"
       DependsOnTargets="_CompileTestResources"
+      BeforeTargets="GetCopyToOutputDirectoryItems"
       Inputs="$(MSBuildThisFile);build.gradle;@(CompileJava);@(CompileTestJava);@(CompileTestJavaResources)"
       Outputs="$(OutputPath)\java-source-utils.jar">
     <Exec

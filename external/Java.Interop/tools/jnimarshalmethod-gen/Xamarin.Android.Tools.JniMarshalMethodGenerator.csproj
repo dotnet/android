@@ -6,6 +6,7 @@
     <AssemblyName>jnimarshalmethod-gen</AssemblyName>
   </PropertyGroup>
 
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
   <Import Project="..\..\build-tools\scripts\cecil.projitems" />
   <Import Project="..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
 

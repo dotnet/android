@@ -6,6 +6,8 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>

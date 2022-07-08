@@ -3,6 +3,7 @@
     <TargetFrameworks>net472;$(DotNetTargetFramework)</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
   <PropertyGroup>
     <OutputPath>$(UtilityOutputFullPath)</OutputPath>
   </PropertyGroup>

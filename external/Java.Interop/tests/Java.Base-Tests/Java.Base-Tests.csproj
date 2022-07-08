@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <RootNamespace>Java.BaseTests</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
 
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>

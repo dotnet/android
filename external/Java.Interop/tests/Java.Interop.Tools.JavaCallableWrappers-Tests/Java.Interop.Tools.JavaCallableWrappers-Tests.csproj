@@ -6,6 +6,8 @@
     <DefineConstants>$(DefineConstants);HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
   </PropertyGroup>
 
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>

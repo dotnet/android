@@ -61,29 +61,7 @@
     <AppendTargetFrameworkToOutputPath Condition=" '$(AppendTargetFrameworkToOutputPath)' == '' ">False</AppendTargetFrameworkToOutputPath>
     <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' != '' And (!$(TargetFramework.StartsWith('nets')) And !$(TargetFramework.StartsWith('net4')) And !$(TargetFramework.StartsWith('monoandroid'))) ">
-    <JIBuildingForNetCoreApp>True</JIBuildingForNetCoreApp>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)-$(TargetFramework.ToLowerInvariant())</IntermediateOutputPath>
-    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)-$(TargetFramework.ToLowerInvariant())\</BuildToolOutputFullPath>
-    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)-$(TargetFramework.ToLowerInvariant())\</ToolOutputFullPath>
-    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)-$(TargetFramework.ToLowerInvariant())\</TestOutputFullPath>
-    <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">$(UtilityOutputFullPathCoreApps)</UtilityOutputFullPath>
-    <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
-    <RollForward>Major</RollForward>
-    <JIUtilityVersion>$(JINetToolVersion)</JIUtilityVersion>
-    <JICoreLibVersion>$(JINetCoreLibVersion)</JICoreLibVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)</IntermediateOutputPath>
-    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BuildToolOutputFullPath>
-    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</ToolOutputFullPath>
-    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputFullPath>
-    <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPath)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
-    <JIUtilityVersion>$(JIOldToolVersion)</JIUtilityVersion>
-    <JICoreLibVersion>$(JIOldCoreLibVersion)</JICoreLibVersion>
-  </PropertyGroup>
+
   <PropertyGroup>
     <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)external\xamarin-android-tools</XamarinAndroidToolsDirectory>
   </PropertyGroup>
@@ -102,13 +80,6 @@
     <_XamarinAndroidCecilPath Condition=" '$(CecilSourceDirectory)' != '' And Exists('$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll') ">$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll</_XamarinAndroidCecilPath>
     <XamarinAndroidToolsFullPath>$([System.IO.Path]::GetFullPath ('$(XamarinAndroidToolsDirectory)'))</XamarinAndroidToolsFullPath>
   </PropertyGroup>
-  <PropertyGroup>
-    <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
-    <_JNIEnvGenPath Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">$(BuildToolOutputFullPath)jnienv-gen.dll</_JNIEnvGenPath>
-    <_JNIEnvGenPath Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(BuildToolOutputFullPath)jnienv-gen.exe</_JNIEnvGenPath>
-    <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">$(DotnetToolPath) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
-    <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(Runtime) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
-  </PropertyGroup>
 
   <!--
     When building on a bot w/ VS2019:
@@ -124,19 +95,6 @@
     -->
   <PropertyGroup>
     <NoWarn>$(NoWarn);CS8032;CS8981</NoWarn>
-  </PropertyGroup>
-
-  <!-- The net6.0 versions of these are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
-  <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-    <WarningsAsErrors>$(WarningsAsErrors);CA1307;CA1309;CA1310</WarningsAsErrors>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">
-    <NoWarn>$(NoWarn);CA1307;CA1309;CA1310</NoWarn>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <Version>$(JIUtilityVersion)</Version>
   </PropertyGroup>
 
 </Project>

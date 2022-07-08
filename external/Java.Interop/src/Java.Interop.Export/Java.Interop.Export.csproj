@@ -8,10 +8,11 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AssemblyTitle>Java.Interop.Export</AssemblyTitle>
-    <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
+    <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Java.Interop\Java.Interop.csproj">

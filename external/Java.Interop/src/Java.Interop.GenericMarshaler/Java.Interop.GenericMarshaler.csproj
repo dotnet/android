@@ -8,6 +8,7 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AssemblyTitle>Java.Interop.GenericMarshaler</AssemblyTitle>
   </PropertyGroup>
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
     <Version>$(JICoreLibVersion)</Version>

@@ -3,6 +3,7 @@
     <TargetFrameworks>net472;$(DotNetTargetFramework)</TargetFrameworks>
     <IsPackable>False</IsPackable>
   </PropertyGroup>
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>

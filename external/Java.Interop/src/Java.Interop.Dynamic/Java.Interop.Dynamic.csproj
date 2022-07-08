@@ -11,6 +11,7 @@
     <AssemblyTitle>Java.Interop.Dynamic</AssemblyTitle>
     <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
   </PropertyGroup>

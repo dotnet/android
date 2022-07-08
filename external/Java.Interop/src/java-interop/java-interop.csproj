@@ -1,11 +1,16 @@
 <Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
     <TargetFrameworks>net472;$(DotNetTargetFramework)</TargetFrameworks>
-    <OutputPath>$(ToolOutputFullPath)</OutputPath>
-    <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
     <OutputName>java-interop</OutputName>
     <DefineSymbols>JI_DLL_EXPORT MONODEVELOP JAVA_INTEROP_DLL_EXPORT</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <OutputPath>$(ToolOutputFullPath)</OutputPath>
+    <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

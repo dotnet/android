@@ -26,6 +26,7 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
   <Import Project="..\..\Directory.Build.props" />
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
   <PropertyGroup>
     <Version>0.1.0.0</Version>
     <XAConfigPath>..\..\bin\Build$(Configuration)\XAConfig.props</XAConfigPath>

@@ -1,7 +1,12 @@
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
     <OutputPath>$(UtilityOutputFullPath)</OutputPath>
   </PropertyGroup>
 

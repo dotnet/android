@@ -10,6 +10,8 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
   <ItemGroup>
     <PackageReference Include="XliffTasks" />
   </ItemGroup>

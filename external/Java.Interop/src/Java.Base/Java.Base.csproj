@@ -1,11 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <!-- TODO: CS0108 is due to e.g. interfaces re-abstracting default interface methods -->
     <NoWarn>$(NoWarn);8764;CS0108</NoWarn>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
     <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
 

@@ -4,10 +4,12 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net472;$(DotNetTargetFramework)</TargetFrameworks>
     <IsPackable>false</IsPackable>
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
   </PropertyGroup>
 
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
   <PropertyGroup>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
     <OutputPath>$(BuildToolOutputFullPath)</OutputPath>
   </PropertyGroup>
 
