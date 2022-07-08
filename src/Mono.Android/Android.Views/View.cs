@@ -36,7 +36,7 @@ namespace Android.Views {
 		{
 			var view = FindViewById<T> (id);
 			if (view == null) {
-				throw new Java.Lang.IllegalArgumentException ($"ID 0x{id:X} does not reference a View of type '{typeof (T)}' inside this View");
+				throw new Java.Lang.IllegalArgumentException ($"Parameter 'id' of value 0x{id:X} does not reference a View of type '{typeof (T)}' inside this View");
 			}
 			return view;
 		}
