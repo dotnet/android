@@ -1441,7 +1441,7 @@ stages:
       usePipelineArtifactTasks: true
 
   # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-  - template: nuget-msi-convert/job/v2.yml@yaml
+  - template: nuget-msi-convert/job/v3.yml@yaml
     parameters:
       yamlResourceName: yaml
       dependsOn: sign_net_mac_win
@@ -1450,8 +1450,6 @@ stages:
         !*Darwin*
       propsArtifactName: $(NuGetArtifactName)
       signType: $(MicroBuildSignType)
-      runInParallel: false
-      useDateTimeVersion: true
       postConvertSteps:
       - task: DownloadPipelineArtifact@2
         inputs:
