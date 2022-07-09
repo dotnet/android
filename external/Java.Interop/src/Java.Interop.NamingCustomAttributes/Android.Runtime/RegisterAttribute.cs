@@ -1,5 +1,7 @@
 using System;
 
+using Mono.Cecil;
+
 namespace Android.Runtime {
 
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Property)]
@@ -23,6 +25,21 @@ namespace Android.Runtime {
 			this.connector = connector;
 			this.signature = signature;
 		}
+#if HAVE_CECIL
+		public RegisterAttribute (string name, CustomAttribute originAttribute)
+			: this (name)
+		{
+			OriginAttribute = originAttribute;
+		}
+
+		public RegisterAttribute (string name, string signature, string connector, CustomAttribute originAttribute)
+			: this (name, signature, connector)
+		{
+			OriginAttribute = originAttribute;
+		}
+
+		public CustomAttribute OriginAttribute { get; }
+#endif  // HAVE_CECIL
 
 		public string Connector {
 			get { return connector; }
