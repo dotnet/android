@@ -22,6 +22,8 @@ namespace generator.SourceWriters
 			this.opt = opt;
 
 			Name = method.AdjustedName;
+			ExplicitInterfaceImplementation = method.ExplicitInterface;
+
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 			IsDeclaration = true;
 

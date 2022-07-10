@@ -348,6 +348,7 @@ namespace MonoDroid.Generation
 				ArgsType = elem.Attribute ("argsType")?.Value,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
+				ExplicitInterface = elem.XGetAttribute ("explicitInterface"),
 				EventName = elem.Attribute ("eventName")?.Value,
 				GenerateAsyncWrapper = elem.Attribute ("generateAsyncWrapper") != null,
 				GenerateDispatchingSetter = elem.Attribute ("generateDispatchingSetter") != null,

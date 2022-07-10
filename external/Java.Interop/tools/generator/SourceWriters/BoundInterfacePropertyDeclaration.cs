@@ -16,6 +16,7 @@ namespace generator.SourceWriters
 		public BoundInterfacePropertyDeclaration (GenBase gen, Property property, string adapter, CodeGenerationOptions opt)
 		{
 			Name = property.AdjustedName;
+			ExplicitInterfaceImplementation = property.ExplicitInterface;
 
 			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
 			IsAutoProperty = true;

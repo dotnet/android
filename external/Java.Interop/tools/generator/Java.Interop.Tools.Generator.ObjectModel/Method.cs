@@ -33,6 +33,7 @@ namespace MonoDroid.Generation
 		public bool ReturnNotNull { get; set; }
 		public ReturnValue RetVal { get; set; }
 		public int SourceApiLevel { get; set; }
+		public string ExplicitInterface { get; set; }
 
 		// it used to be private though...
 		internal string AdjustedName => IsReturnCharSequence ? Name + "Formatted" : Name;

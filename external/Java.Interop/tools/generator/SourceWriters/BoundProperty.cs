@@ -19,6 +19,7 @@ namespace generator.SourceWriters
 		public BoundProperty (GenBase gen, Property property, CodeGenerationOptions opt, bool withCallbacks = true, bool forceOverride = false)
 		{
 			Name = property.AdjustedName;
+			ExplicitInterfaceImplementation = property.ExplicitInterface;
 			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property.Getter.RetVal));
 
 			SetVisibility (gen is InterfaceGen ? string.Empty : property.Getter.IsAbstract && property.Getter.RetVal.IsGeneric ? "protected" : (property.Setter ?? property.Getter).Visibility);

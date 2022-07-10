@@ -58,5 +58,7 @@ namespace MonoDroid.Generation
 				}
 			}
 		}
+
+		public string ExplicitInterface => Getter?.ExplicitInterface ?? Setter?.ExplicitInterface;
 	}
 }

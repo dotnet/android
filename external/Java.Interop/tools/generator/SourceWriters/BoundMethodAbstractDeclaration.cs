@@ -36,6 +36,7 @@ namespace generator.SourceWriters
 			}
 
 			Name = method.AdjustedName;
+			ExplicitInterfaceImplementation = method.ExplicitInterface;
 
 			IsAbstract = true;
 			IsShadow = impl.RequiresNew (method.Name, method);

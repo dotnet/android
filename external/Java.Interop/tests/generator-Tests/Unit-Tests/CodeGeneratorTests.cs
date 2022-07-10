@@ -352,6 +352,156 @@ namespace generatortests
 
 			Assert.Pass ("WriteType did not NRE");
 		}
+
+		[Test]
+		public void ExplicitInterfaceMetadata_InterfaceMethod ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyInterface' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyInterface;'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='countAffectedRows' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' explicitInterface='IRowCounter'></method>
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "IMyInterface");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// Ensure explicit interface was written
+			Assert.True (writer.ToString ().Contains ("int IRowCounter.CountAffectedRows ("), $"was: `{writer}`");
+		}
+
+		[Test]
+		public void ExplicitInterfaceMetadata_InterfaceProperty ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyInterface' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyInterface;'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='getAge' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' explicitInterface='IHasAge'></method>
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "IMyInterface");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// Ensure explicit interface was written
+			Assert.True (writer.ToString ().Contains ("int IHasAge.Age {"), $"was: `{writer}`");
+		}
+
+		[Test]
+		public void ExplicitInterfaceMetadata_ClassMethod ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='countAffectedRows' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' explicitInterface='IRowCounter'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// Ensure explicit interface was written
+			Assert.True (writer.ToString ().Contains ("int IRowCounter.CountAffectedRows ("), $"was: `{writer}`");
+		}
+
+		[Test]
+		public void ExplicitInterfaceMetadata_ClassProperty ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='getAge' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' explicitInterface='IHasAge'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// Ensure explicit interface was written
+			Assert.True (writer.ToString ().Contains ("int IHasAge.Age {"), $"was: `{writer}`");
+		}
+
+		[Test]
+		public void ExplicitInterfaceMetadata_AbstractClassMethod ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='countAffectedRows' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' explicitInterface='IRowCounter'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// Ensure explicit interface was written
+			Assert.True (writer.ToString ().Contains ("abstract int IRowCounter.CountAffectedRows ("), $"was: `{writer}`");
+		}
+
+		[Test]
+		public void ExplicitInterfaceMetadata_AbstractClassProperty ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='getAge' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' explicitInterface='IHasAge'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// Ensure explicit interface was written
+			Assert.True (writer.ToString ().Contains ("abstract int IHasAge.Age {"), $"was: `{writer}`");
+		}
 	}
 
 	[TestFixture]

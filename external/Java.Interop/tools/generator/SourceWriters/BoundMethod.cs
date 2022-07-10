@@ -48,6 +48,10 @@ namespace generator.SourceWriters
 			if (is_explicit)
 				ExplicitInterfaceImplementation = GetDeclaringTypeOfExplicitInterfaceMethod (method.OverriddenInterfaceMethod);
 
+			// Allow user to override our explicit interface logic
+			if (method.ExplicitInterface.HasValue ())
+				ExplicitInterfaceImplementation = method.ExplicitInterface;
+
 			if ((IsVirtual || !IsOverride) && type.RequiresNew (method.AdjustedName, method))
 				IsShadow = true;
 
