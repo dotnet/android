@@ -11,16 +11,14 @@ namespace Xamarin.Android.Build.Tests
 	public class InstantRunTest : DeviceTest
 	{
 		[Test]
-		public void InstantRunSimpleBuild ([Values ("dx", "d8")] string dexTool)
+		public void InstantRunSimpleBuild ()
 		{
-			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			var proj = new XamarinFormsAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
-				DexTool = dexTool,
 			};
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
@@ -124,16 +122,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SimpleInstallAndUninstall ([Values ("dx", "d8")] string dexTool)
+		public void SimpleInstallAndUninstall ()
 		{
-			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
-				DexTool = dexTool,
 			};
 			proj.SetDefaultTargetDevice ();
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
@@ -143,16 +139,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SkipFastDevAlreadyInstalledFile ([Values ("dx", "d8")] string dexTool)
+		public void SkipFastDevAlreadyInstalledFile ()
 		{
-			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
-				DexTool = dexTool,
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
@@ -216,16 +210,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstantRunResourceChange ([Values ("dx", "d8")] string dexTool)
+		public void InstantRunResourceChange ()
 		{
-			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
-				DexTool = dexTool,
 			};
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -251,16 +243,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstantRunFastDevTypemaps ([Values ("dx", "d8")] string dexTool)
+		public void InstantRunFastDevTypemaps ()
 		{
-			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
-				DexTool = dexTool,
 			};
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -279,9 +269,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstantRunNativeLibrary ([Values ("dx", "d8")] string dexTool)
+		public void InstantRunNativeLibrary ()
 		{
-			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
@@ -292,7 +281,6 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
-				DexTool = dexTool,
 				OtherBuildItems = {
 					nativeLib,
 				},
@@ -324,16 +312,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstantRunFastDevDexes ([Values ("dx", "d8")] string dexTool, [Values (false, true)] bool useEmbeddedDex)
+		public void InstantRunFastDevDexes ([Values (false, true)] bool useEmbeddedDex)
 		{
-			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
-				DexTool = dexTool,
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");

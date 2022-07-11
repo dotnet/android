@@ -166,13 +166,6 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		public const int MaxFileName = 255;
 
-		protected static void AssertDexToolSupported (string dexTool)
-		{
-			if (dexTool == "dx") {
-				Assert.Ignore ("dx is not supported");
-			}
-		}
-
 		protected static void AssertAaptSupported (bool useAapt2)
 		{
 			if (Builder.UseDotNet && !useAapt2) {

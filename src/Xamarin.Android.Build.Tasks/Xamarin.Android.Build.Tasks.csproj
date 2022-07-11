@@ -429,13 +429,6 @@
       Xamarin.Android.Build.Tasks.targets uses several tasks located in
       Xamarin.Android.Tools.BootstrapTasks, such as <GenerateProfile/>
       -->
-    <!--
-      *Logically* needs to be built first because executing the <Proguard/>
-      task will require the outputs of `proguard.csproj`.
-      -->
-    <ProjectReference Include="..\proguard\proguard.csproj">
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\r8\r8.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
