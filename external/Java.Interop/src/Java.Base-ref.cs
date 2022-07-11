@@ -81,7 +81,7 @@ namespace Java.IO
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
-        protected int Mark { get { throw null; } set { } }
+        protected int MarkedPosition { get { throw null; } set { } }
         protected int Pos { get { throw null; } set { } }
         [Java.Interop.JniMethodSignatureAttribute("read", "()I")]
         public override int Read() { throw null; }
@@ -511,7 +511,7 @@ namespace Java.IO
     public partial interface ICloseable : Java.Interop.IJavaPeerable, Java.Lang.IAutoCloseable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("close", "()V")]
-        new void Close();
+        void Java.Lang.IAutoCloseable.Close();
     }
     [Java.Interop.JniTypeSignatureAttribute("java/io/DataInput", GenerateJavaPeer=false)]
     public partial interface IDataInput : Java.Interop.IJavaPeerable, System.IDisposable
@@ -693,7 +693,7 @@ namespace Java.IO
         [Java.Interop.JniMethodSignatureAttribute("available", "()I")]
         int Available();
         [Java.Interop.JniMethodSignatureAttribute("close", "()V")]
-        new void Close();
+        void Java.Lang.IAutoCloseable.Close();
         [Java.Interop.JniMethodSignatureAttribute("read", "()I")]
         int Read();
         [Java.Interop.JniMethodSignatureAttribute("read", "([B)I")]
@@ -770,16 +770,16 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectOutput", GenerateJavaPeer=false)]
     public partial interface IObjectOutput : Java.Interop.IJavaPeerable, Java.IO.IDataOutput, Java.Lang.IAutoCloseable, System.IDisposable
     {
-        [Java.Interop.JniMethodSignatureAttribute("close", "()V")]
-        new void Close();
         [Java.Interop.JniMethodSignatureAttribute("flush", "()V")]
         void Flush();
         [Java.Interop.JniMethodSignatureAttribute("write", "([B)V")]
-        new void Write(Java.Interop.JavaSByteArray? p0);
+        void Java.IO.IDataOutput.Write(Java.Interop.JavaSByteArray? p0);
         [Java.Interop.JniMethodSignatureAttribute("write", "([BII)V")]
-        new void Write(Java.Interop.JavaSByteArray? p0, int p1, int p2);
+        void Java.IO.IDataOutput.Write(Java.Interop.JavaSByteArray? p0, int p1, int p2);
         [Java.Interop.JniMethodSignatureAttribute("write", "(I)V")]
-        new void Write(int p0);
+        void Java.IO.IDataOutput.Write(int p0);
+        [Java.Interop.JniMethodSignatureAttribute("close", "()V")]
+        void Java.Lang.IAutoCloseable.Close();
         [Java.Interop.JniMethodSignatureAttribute("writeObject", "(Ljava/lang/Object;)V")]
         void WriteObject(Java.Lang.Object? p0);
     }
@@ -6621,7 +6621,7 @@ namespace Java.Lang.Reflect
     public partial interface IAnnotatedArrayType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IAnnotatedType, System.IDisposable
     {
         Java.Lang.Reflect.IAnnotatedType? AnnotatedGenericComponentType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedGenericComponentType", "()Ljava/lang/reflect/AnnotatedType;")] get; }
-        new Java.Lang.Reflect.IAnnotatedType? AnnotatedOwnerType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedOwnerType", "()Ljava/lang/reflect/AnnotatedType;")] get; }
+        Java.Lang.Reflect.IAnnotatedType? Java.Lang.Reflect.IAnnotatedType.AnnotatedOwnerType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedOwnerType", "()Ljava/lang/reflect/AnnotatedType;")] get; }
     }
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedElement", GenerateJavaPeer=false)]
     public partial interface IAnnotatedElement : Java.Interop.IJavaPeerable, System.IDisposable
@@ -6648,7 +6648,7 @@ namespace Java.Lang.Reflect
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedParameterizedType", GenerateJavaPeer=false)]
     public partial interface IAnnotatedParameterizedType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IAnnotatedType, System.IDisposable
     {
-        new Java.Lang.Reflect.IAnnotatedType? AnnotatedOwnerType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedOwnerType", "()Ljava/lang/reflect/AnnotatedType;")] get; }
+        Java.Lang.Reflect.IAnnotatedType? Java.Lang.Reflect.IAnnotatedType.AnnotatedOwnerType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedOwnerType", "()Ljava/lang/reflect/AnnotatedType;")] get; }
         [Java.Interop.JniMethodSignatureAttribute("getAnnotatedActualTypeArguments", "()[Ljava/lang/reflect/AnnotatedType;")]
         Java.Interop.JavaObjectArray<Java.Lang.Reflect.IAnnotatedType>? GetAnnotatedActualTypeArguments();
     }
@@ -6661,14 +6661,14 @@ namespace Java.Lang.Reflect
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedTypeVariable", GenerateJavaPeer=false)]
     public partial interface IAnnotatedTypeVariable : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IAnnotatedType, System.IDisposable
     {
-        new Java.Lang.Reflect.IAnnotatedType? AnnotatedOwnerType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedOwnerType", "()Ljava/lang/reflect/AnnotatedType;")] get; }
+        Java.Lang.Reflect.IAnnotatedType? Java.Lang.Reflect.IAnnotatedType.AnnotatedOwnerType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedOwnerType", "()Ljava/lang/reflect/AnnotatedType;")] get; }
         [Java.Interop.JniMethodSignatureAttribute("getAnnotatedBounds", "()[Ljava/lang/reflect/AnnotatedType;")]
         Java.Interop.JavaObjectArray<Java.Lang.Reflect.IAnnotatedType>? GetAnnotatedBounds();
     }
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedWildcardType", GenerateJavaPeer=false)]
     public partial interface IAnnotatedWildcardType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IAnnotatedType, System.IDisposable
     {
-        new Java.Lang.Reflect.IAnnotatedType? AnnotatedOwnerType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedOwnerType", "()Ljava/lang/reflect/AnnotatedType;")] get; }
+        Java.Lang.Reflect.IAnnotatedType? Java.Lang.Reflect.IAnnotatedType.AnnotatedOwnerType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedOwnerType", "()Ljava/lang/reflect/AnnotatedType;")] get; }
         [Java.Interop.JniMethodSignatureAttribute("getAnnotatedLowerBounds", "()[Ljava/lang/reflect/AnnotatedType;")]
         Java.Interop.JavaObjectArray<Java.Lang.Reflect.IAnnotatedType>? GetAnnotatedLowerBounds();
         [Java.Interop.JniMethodSignatureAttribute("getAnnotatedUpperBounds", "()[Ljava/lang/reflect/AnnotatedType;")]

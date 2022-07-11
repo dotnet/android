@@ -12,6 +12,46 @@
   <!-- warning CS0672: Member 'Enum.JavaFinalize()' overrides obsolete member 'Object.JavaFinalize()'. Add the Obsolete attribute to 'Enum.JavaFinalize()'. -->
   <attr path="/api/package[@name='java.lang']/class[@name='Enum']/method[@name='finalize' and count(parameter)=0]" name="deprecated">deprecated</attr>
 
+  <!-- warning CS0108: 'MEMBER' hides inherited member 'MEMBER'. Use the new keyword if hiding was intended. -->
+  <attr path="/api/package[@name='java.io']/class[
+        @name='ByteArrayInputStream'
+      ]/field[@name='mark']"
+      name="managedName">MarkedPosition</attr>
+  <attr path="/api/package[@name='java.lang.reflect']/interface[
+        @name='AnnotatedArrayType'
+        or @name='AnnotatedParameterizedType'
+        or @name='AnnotatedTypeVariable'
+        or @name='AnnotatedWildcardType'
+      ]/method[@name='getAnnotatedOwnerType' and count(parameter)=0]"
+      name="managedOverride">reabstract</attr>
+  <attr path="/api/package[@name='java.lang.reflect']/interface[
+        @name='AnnotatedArrayType'
+        or @name='AnnotatedParameterizedType'
+        or @name='AnnotatedTypeVariable'
+        or @name='AnnotatedWildcardType'
+      ]/method[@name='getAnnotatedOwnerType' and count(parameter)=0]"
+      name="explicitInterface">IAnnotatedType</attr>
+  <attr path="/api/package[@name='java.io']/interface[
+        @name='Closeable'
+        or @name='ObjectInput'
+        or @name='ObjectOutput'
+      ]/method[@name='close' and count(parameter)=0]"
+      name="managedOverride">reabstract</attr>
+  <attr path="/api/package[@name='java.io']/interface[
+        @name='Closeable'
+        or @name='ObjectInput'
+        or @name='ObjectOutput'
+      ]/method[@name='close' and count(parameter)=0]"
+      name="explicitInterface">Java.Lang.IAutoCloseable</attr>
+  <attr path="/api/package[@name='java.io']/interface[
+        @name='ObjectOutput'
+      ]/method[@name='write']"
+      name="managedOverride">reabstract</attr>
+  <attr path="/api/package[@name='java.io']/interface[
+        @name='ObjectOutput'
+      ]/method[@name='write']"
+      name="explicitInterface">IDataOutput</attr>
+
   <!-- AbstractStringBuilder is package-private; fixity fix -->
   <remove-node path="//api/package[@name='java.lang']/class[@name='AbstractStringBuilder']" />
 
