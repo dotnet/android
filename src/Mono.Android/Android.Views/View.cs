@@ -29,6 +29,19 @@ namespace Android.Views {
 			return this.FindViewById (id).JavaCast<T> ();
 		}
 
+#if NET7_0_OR_GREATER || (NET6_0_OR_GREATER && ANDROID_33) || ANDROID_34
+		// See: https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/view/View.java;l=25322
+		public T RequireViewById<T> (int id)
+			where T : Android.Views.View
+		{
+			var view = FindViewById<T> (id);
+			if (view == null) {
+				throw new Java.Lang.IllegalArgumentException ($"Parameter 'id' of value 0x{id:X} does not reference a View of type '{typeof (T)}' inside this View");
+			}
+			return view;
+		}
+#endif //NET7_0_OR_GREATER || (NET6_0_OR_GREATER && ANDROID_33) || ANDROID_34
+
 		public bool Post (Action action)
 		{
 			return Post (new Java.Lang.Thread.RunnableImplementor (action, true));
