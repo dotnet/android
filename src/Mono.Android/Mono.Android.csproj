@@ -400,6 +400,7 @@
   <Target Name="_CopyToPackDirs" >
     <ItemGroup>
       <_RefExtras Include="$(OutputPath)*.*" Exclude="$(OutputPath)*.dll" />
+      <_SourceFiles Include="$(OutputPath)Mono.Android.*;$(OutputPath)Java.Interop.*" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_RefExtras)"
@@ -412,22 +413,22 @@
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="$(OutputPath)Mono.Android.dll;$(OutputPath)Java.Interop.dll"
+        SourceFiles="@(_SourceFiles)"
         DestinationFolder="$(MicrosoftAndroidArmPackDir)lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="$(OutputPath)Mono.Android.dll;$(OutputPath)Java.Interop.dll"
+        SourceFiles="@(_SourceFiles)"
         DestinationFolder="$(MicrosoftAndroidArm64PackDir)lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="$(OutputPath)Mono.Android.dll;$(OutputPath)Java.Interop.dll"
+        SourceFiles="@(_SourceFiles)"
         DestinationFolder="$(MicrosoftAndroidx86PackDir)lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="$(OutputPath)Mono.Android.dll;$(OutputPath)Java.Interop.dll"
+        SourceFiles="@(_SourceFiles)"
         DestinationFolder="$(MicrosoftAndroidx64PackDir)lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />
