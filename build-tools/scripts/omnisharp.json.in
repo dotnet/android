@@ -1,0 +1,20 @@
+{
+    "msbuild": {
+        "loadProjectsOnDemand": true,
+    },
+
+    "RenameOptions": {
+        "RenameInComments": false,
+        "RenameOverloads": true,
+        "RenameInStrings": false
+    },
+
+    "sdk": {
+        "IncludePreleases": true,
+        "Path": "@DOTNET_SDK_PATH@",
+    },
+
+	"msbuild": {
+        "Configuration": "@CONFIGURATION@"
+    }
+}
