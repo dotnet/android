@@ -1,6 +1,6 @@
 {
     "msbuild": {
-        "loadProjectsOnDemand": true,
+        "loadProjectsOnDemand": true
     },
 
     "RenameOptions": {
@@ -11,7 +11,7 @@
 
     "sdk": {
         "IncludePreleases": true,
-        "Path": "@DOTNET_SDK_PATH@",
+        "Path": "@DOTNET_SDK_PATH@"
     },
 
 	"msbuild": {
