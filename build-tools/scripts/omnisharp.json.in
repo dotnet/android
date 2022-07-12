@@ -1,7 +1,7 @@
 {
     "msbuild": {
         "loadProjectsOnDemand": true,
-		"Configuration": "@CONFIGURATION@"
+        "Configuration": "@CONFIGURATION@"
     },
 
     "RenameOptions": {
