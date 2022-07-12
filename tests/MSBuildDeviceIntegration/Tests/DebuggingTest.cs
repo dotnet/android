@@ -32,7 +32,8 @@ namespace Xamarin.Android.Build.Tests
 </manifest>";
 		}
 
-		int FindTextInFile (string file, string text) {
+		int FindTextInFile (string file, string text)
+		{
 			int lineNumber = 1;
 			foreach (var line in File.ReadAllLines (file)) {
 				if (line.Contains (text)) {
