@@ -2,7 +2,7 @@
   <!--Package versions-->
   <PropertyGroup>
     <MicrosoftDotnetSdkInternalPackageVersion>7.0.100-preview.6.22316.8</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>7.0.100-1.22310.2</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>7.0.100-1.22362.3</MicrosoftNETILLinkTasksPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>7.0.0-preview.6.22312.1</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetBuildTasksFeedPackageVersion>
