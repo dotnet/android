@@ -372,9 +372,7 @@ namespace Xamarin.Android.Tasks
 					marshalMethodsAssemblyPaths.Add (name, assemblyPaths);
 				}
 
-				if (!assemblyPaths.Contains (asm.ItemSpec)) {
-					assemblyPaths.Add (asm.ItemSpec);
-				}
+				assemblyPaths.Add (asm.ItemSpec);
 			}
 #endif
 		}
