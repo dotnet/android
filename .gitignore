@@ -28,3 +28,4 @@ tests/api-compatibility/reference/*.cs
 Novell
 *.patch
 *.keystore
+/omnisharp.json
