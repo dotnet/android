@@ -216,7 +216,7 @@
     <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidLatestStableApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
     <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidLatestUnstableApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
     <_TemplatesInputs Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\**" />
-    <_TemplatesOutputs Include="$(BuildOutputDirectory)lib\template-packs\Microsoft.Android.Templates.$(AndroidPackVersion).nupkg" />
+    <_TemplatesOutputs Include="$(BuildOutputDirectory)lib\template-packs\microsoft.android.templates.$(AndroidPackVersion).nupkg" />
   </ItemGroup>
 
   <Target Name="CreateLocalRuntimeLists"
@@ -247,6 +247,7 @@
       <_PackProps Include="-p:IncludeSymbols=False" />
       <_PackProps Include="-p:OutputPath=$(DotNetPreviewPath)template-packs" />
       <_PackProps Include="-p:TemplatePackVersion=$(AndroidPackVersion)" />
+      <_PackProps Include="-p:PackageId=microsoft.android.templates" />
     </ItemGroup>
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_PackProps, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
   </Target>
