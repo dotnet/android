@@ -109,11 +109,6 @@ namespace Xamarin.Android.Prepare
 					testAreas.Add ("BCL");
 				}
 
-				if (file.Contains ("src/proguard")) {
-					testAreas.Add ("MSBuild");
-					testAreas.Add ("MSBuildDevice");
-				}
-
 				if (file.Contains ("src/r8")) {
 					testAreas.Add ("MSBuild");
 					testAreas.Add ("MSBuildDevice");

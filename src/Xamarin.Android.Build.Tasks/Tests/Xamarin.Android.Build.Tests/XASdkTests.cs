@@ -62,6 +62,9 @@ namespace Xamarin.Android.Build.Tests
 					new AndroidItem.AndroidResource (() => "Resources\\drawable\\IMALLCAPS.png") {
 						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
 					},
+					new AndroidItem.ProguardConfiguration ("proguard.txt") {
+						TextContent = () => @"-ignorewarnings",
+					},
 				}
 			};
 			libC.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\bar\\bar.txt") {
@@ -72,6 +75,13 @@ namespace Xamarin.Android.Build.Tests
 				libC.Sources.Remove (activity);
 			var libCBuilder = CreateDotNetBuilder (libC, Path.Combine (path, libC.ProjectName));
 			Assert.IsTrue (libCBuilder.Build (), $"{libC.ProjectName} should succeed");
+
+			var aarPath = Path.Combine (FullProjectDirectory, libC.OutputPath, $"{libC.ProjectName}.aar");
+			FileAssert.Exists (aarPath);
+			using (var aar = ZipHelper.OpenZip (aarPath)) {
+				aar.AssertContainsEntry (aarPath, "assets/bar/bar.txt");
+				aar.AssertContainsEntry (aarPath, "proguard.txt");
+			}
 
 			var libB = new XASdkProject (outputType: "Library") {
 				ProjectName = "LibraryB",
@@ -111,6 +121,9 @@ namespace Xamarin.Android.Build.Tests
 						Encoding = Encoding.ASCII,
 						TextContent = () => ResourceData.JavaSourceTestExtension,
 					},
+					new AndroidItem.ProguardConfiguration ("proguard.txt") {
+						TextContent = () => @"-ignorewarnings",
+					},
 				}
 			};
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("env.txt") {
@@ -140,7 +153,7 @@ namespace Xamarin.Android.Build.Tests
 
 			// Check .aar file for class library
 			var libBOutputPath = Path.Combine (FullProjectDirectory, libB.OutputPath);
-			var aarPath = Path.Combine (libBOutputPath, $"{libB.ProjectName}.aar");
+			aarPath = Path.Combine (libBOutputPath, $"{libB.ProjectName}.aar");
 			FileAssert.Exists (aarPath);
 			FileAssert.Exists (Path.Combine (libBOutputPath, "bar.aar"));
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
@@ -196,6 +209,8 @@ namespace Xamarin.Android.Build.Tests
 			var intermediate = Path.Combine (FullProjectDirectory, appA.IntermediateOutputPath);
 			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 			FileAssert.Exists (dexFile);
+			var proguardFiles = Directory.GetFiles (Path.Combine (intermediate, "lp"), "proguard.txt", SearchOption.AllDirectories);
+			Assert.AreEqual (2, proguardFiles.Length, "There should be only two proguard.txt files.");
 			string className = "Lcom/xamarin/android/test/msbuildtest/JavaSourceJarTest;";
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			className = "Lcom/xamarin/android/test/msbuildtest/JavaSourceTestExtension;";
@@ -216,7 +231,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib")] string template)
+		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib", "androidwear")] string template)
 		{
 			var dotnet = CreateDotNetBuilder ();
 			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
@@ -304,6 +319,10 @@ public class JavaSourceTest {
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
+			proj.OtherBuildItems.Add (new AndroidItem.LibraryProjectZip ("..\\baz.aar") {
+				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+				MetadataValues = "Bind=false",
+			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (default (Func<string>)) {
 				Update = () => "nopack.aar",
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
@@ -318,16 +337,17 @@ public class JavaSourceTest {
 			using var nupkg = ZipHelper.OpenZip (nupkgPath);
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/sub/directory/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
 
+			//TODO: this issue is not fixed in net6.0-android MSBuild targets
 			if (dotnetVersion != "net6.0") {
-				//TODO: this issue is not fixed in net6.0-android MSBuild targets
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/bar.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/sub/directory/bar.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
-				nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
 			}
 		}
 
@@ -905,7 +925,7 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void XamarinLegacySdk ([Values ("net6.0", "net7.0")] string dotnetVersion)
+		public void XamarinLegacySdk ([Values ("net6.0-android32.0", "net7.0-android33.0")] string dotnetTargetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha1",
@@ -921,8 +941,7 @@ public class JavaSourceTest {
 			};
 
 			using var b = new Builder ();
-			var dotnetTargetFramework = $"{dotnetVersion}-android32.0";
-			var legacyTargetFrameworkVersion = "12.1";
+			var legacyTargetFrameworkVersion = "13.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
 			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");

@@ -118,11 +118,6 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.AndroidEnableProfiledAot, value.ToString ()); }
 		}
 
-		public bool EnableProguard {
-			get { return string.Equals (GetProperty (KnownProperties.EnableProguard), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.EnableProguard, value.ToString ()); }
-		}
-
 		public bool EnableDesugar {
 			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableDesugar), "True", StringComparison.OrdinalIgnoreCase); }
 			set { SetProperty (KnownProperties.AndroidEnableDesugar, value.ToString ()); }
@@ -136,11 +131,6 @@ namespace Xamarin.ProjectTools
 		public bool EmbedAssembliesIntoApk {
 			get { return string.Equals (GetProperty (KnownProperties.EmbedAssembliesIntoApk), "True", StringComparison.OrdinalIgnoreCase); }
 			set { SetProperty (KnownProperties.EmbedAssembliesIntoApk, value.ToString ()); }
-		}
-
-		public string DexTool {
-			get { return GetProperty (KnownProperties.AndroidDexTool); }
-			set { SetProperty (KnownProperties.AndroidDexTool, value); }
 		}
 
 		public string ManifestMerger {

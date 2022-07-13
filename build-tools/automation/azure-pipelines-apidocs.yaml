@@ -64,7 +64,7 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare
 
-    - script: make update-api-docs CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='-p:AndroidApiLevel=${{ parameters.apiLevel }} -p:AndroidPlatformId=${{ parameters.platformId }} -p:AndroidFrameworkVersion=${{ parameters.frameworkVersion }}'
+    - script: make update-api-docs CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='-p:DocsApiLevel=${{ parameters.apiLevel }} -p:DocsPlatformId=${{ parameters.platformId }} -p:DocsFxVersion=${{ parameters.frameworkVersion }}'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make update-api-docs
 

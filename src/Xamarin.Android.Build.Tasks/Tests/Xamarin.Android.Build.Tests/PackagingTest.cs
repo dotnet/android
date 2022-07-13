@@ -54,7 +54,6 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidDexTool, "d8");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
 			// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
 			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
@@ -67,6 +66,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[NonParallelizable] // Commonly fails NuGet restore
 		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -127,20 +127,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckClassesDexIsIncluded ([Values ("dx", "d8", "invalid")] string dexTool)
+		public void CheckClassesDexIsIncluded ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				DexTool = dexTool,
 			};
 			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				if (dexTool == "dx") {
-					Assert.IsFalse (b.Build (proj), "build failed");
-					StringAssertEx.Contains ("XA1023", b.LastBuildOutput, "Output should contain XA1023 errors");
-					return;
-				}
-
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
@@ -799,25 +791,6 @@ namespace App1
 				Assert.IsTrue (xab.Build (xa, doNotCleanupOnUpdate: true), "Build of App Library should have succeeded.");
 				string expected = Path.Combine ("dummy.package.foo", "1.0.0", "lib", monoandroidFramework, "Dummy.dll");
 				Assert.IsTrue (xab.LastBuildOutput.ContainsText (expected), $"Build should be using {expected}");
-			}
-		}
-
-		[Test]
-		public void MissingDexFile ()
-		{
-			//NOTE: The trailing / was breaking <CompileToDalvik /> in 16.5
-			var parameters = new [] { "_AndroidIntermediateJavaClassDirectory=obj/Debug/android/bin/classes/" };
-			var proj = new XamarinAndroidApplicationProject {
-				DexTool = "dx"
-			};
-			AssertDexToolSupported (proj.DexTool);
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ("classes.dex"), "Apk should contain classes.dex");
-				}
 			}
 		}
 

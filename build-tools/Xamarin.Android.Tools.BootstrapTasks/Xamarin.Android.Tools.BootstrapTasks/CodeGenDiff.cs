@@ -61,11 +61,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var objectStack = new Stack<ObjectDescription> ();
 			objectStack.Push (currentObject);
 
-			var codeGen = Path.Combine (codeGenPath, "Microsoft.DotNet.GenAPI.exe");
 			using (var genApiProcess = new Process ()) {
 
-				genApiProcess.StartInfo.FileName = codeGen;
-				genApiProcess.StartInfo.Arguments = $"\"{assembly}\"";
+				if (Environment.Version.Major >= 5) {
+					var apiCompat = new FileInfo (Path.Combine (codeGenPath, "..", "netcoreapp3.1", "Microsoft.DotNet.GenAPI.dll"));
+					genApiProcess.StartInfo.FileName = "dotnet";
+					genApiProcess.StartInfo.Arguments = $"\"{apiCompat}\" ";
+				} else {
+					var apiCompat = new FileInfo (Path.Combine (codeGenPath, "Microsoft.DotNet.GenAPI.exe"));
+					genApiProcess.StartInfo.FileName = apiCompat.FullName;
+				}
+
+				genApiProcess.StartInfo.Arguments += $"\"{assembly}\"";
 
 				genApiProcess.StartInfo.UseShellExecute = false;
 				genApiProcess.StartInfo.CreateNoWindow = true;

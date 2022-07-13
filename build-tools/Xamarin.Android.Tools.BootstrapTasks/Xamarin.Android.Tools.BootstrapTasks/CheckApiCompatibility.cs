@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			{ "v11.0", "v10.0" },
 			{ "v12.0", "v11.0" },
 			{ "v12.1", "v12.0" },
-			{ "v12.1.99", "v12.1" },
+			{ "v13.0", "v12.1" },
 		};
 
 		static readonly string assemblyToValidate = "Mono.Android.dll";
@@ -114,14 +114,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			if (ApiLevel == LastStableApiLevel) {
 
 				// Check xamarin-android-api-compatibility reference directory exists
-				var referenceContractPath = new DirectoryInfo (Path.Combine (ApiCompatibilityPath, "reference"));
-				if (!referenceContractPath.Exists) {
-					Log.LogWarning ($"CheckApiCompatibility Warning: Skipping reference contract check.\n{referenceContractPath.FullName} does not exist.");
+				var referenceContractPath = new DirectoryInfo (Path.Combine (ApiCompatibilityPath, "reference", TargetFramework));
+				if (!referenceContractPath.Parent.Exists) {
+					Log.LogWarning ($"CheckApiCompatibility Warning: Skipping reference contract check.\n{referenceContractPath.Parent.FullName} does not exist.");
 					return !Log.HasLoggedErrors;
 				}
 
 				// Before validate, check that zip files were decompressed.
-				var zipFiles = Directory.GetFiles (referenceContractPath.FullName, "*.zip");
+				referenceContractPath.Create ();
+				var zipFiles = Directory.GetFiles (referenceContractPath.Parent.FullName, "*.zip");
 				foreach (var zipFile in zipFiles) {
 					var zipDateTime = File.GetLastWriteTimeUtc (zipFile);
 					using (var zip = ZipArchive.Open (zipFile, FileMode.Open)) {
@@ -151,7 +152,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			var contractAssembly = new FileInfo (Path.Combine (contractPath, assemblyToValidate));
 			if (!contractAssembly.Exists) {
-				LogError ($"Contract assembly {assemblyToValidate} does not exists in the contract path.");
+				LogError ($"Contract assembly {assemblyToValidate} does not exists in the contract path. {contractPath} - {validateAgainstReference}");
 				return;
 			}
 

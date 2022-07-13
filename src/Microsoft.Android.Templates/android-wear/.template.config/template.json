@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Microsoft",
+  "classifications": [ "Android", "Mobile" ],
+  "identity": "Microsoft.Android.AndroidWearApp",
+  "name": "Android Wear Application",
+  "description": "A project for creating a .NET Android Wear application",
+  "shortName": "androidwear",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "AndroidApp1",
+  "sources": [
+      {
+        "source": "./",
+        "target": "./",
+        "copyOnly": "**/Resources/**/*.png"
+      }
+  ],
+  "preferNameDirectory": true,
+  "primaryOutputs": [
+    { "path": "AndroidApp1.csproj" }
+  ],
+  "symbols": {
+    "packageName": {
+      "type": "parameter",
+      "description": "Overrides the package name in the AndroidManifest.xml",
+      "datatype": "string",
+      "replaces": "com.companyname.AndroidApp1"
+    },
+    "supportedOSVersion": {
+      "type": "parameter",
+      "description": "Overrides $(SupportedOSPlatformVersion) in the project",
+      "datatype": "string",
+      "replaces": "SUPPORTED_OS_PLATFORM_VERSION",
+      "defaultValue": "23"
+    }
+  },
+  "defaultName": "AndroidApp1"
+}
