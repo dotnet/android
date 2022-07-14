@@ -62,6 +62,7 @@ namespace Xamarin.Android.Prepare
 						Get_mingw_32_cmake (context),
 						Get_mingw_64_cmake (context),
 						Get_MonoGitHash_props (context),
+						Get_Omnisharp_Json (context),
 					};
 				}
 			}
@@ -235,6 +236,22 @@ namespace Xamarin.Android.Prepare
 				replacements,
 				Path.Combine (Configurables.Paths.BootstrapResourcesDir, $"{OutputFileName}.in"),
 				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
+			);
+		}
+
+		public GeneratedFile Get_Omnisharp_Json (Context context)
+		{
+			const string OutputFileName = "omnisharp.json";
+
+			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
+				{ "@CONFIGURATION@", context.Configuration },
+				{ "@DOTNET_SDK_PATH@", Path.Combine (Configurables.Paths.DotNetPreviewPath, "sdk", context.Properties.GetRequiredValue (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion)) },
+			};
+
+			return new GeneratedPlaceholdersFile (
+				replacements,
+				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
+				Path.Combine (BuildPaths.XamarinAndroidSourceRoot, OutputFileName)
 			);
 		}
 	}

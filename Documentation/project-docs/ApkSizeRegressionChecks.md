@@ -41,7 +41,9 @@ are named like this:
 The new reference files can be obtained from the test results
 archive - artifact of the given CI build (preferred method).
 Or they can be obtained from local build using
-the `build-tools/scripts/UpdateApkSizeReference.ps1` script.
+the `build-tools/scripts/UpdateApkSizeReference.ps1` script
+or the `build-tools/scripts/UpdateApkSizeReference.sh` script
+if you are on MacOS or *nix.
 
 The thresholds for these checks are set
 in `src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/BuildTest.cs`
