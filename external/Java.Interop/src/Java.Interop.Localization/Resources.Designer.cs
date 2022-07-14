@@ -223,6 +223,15 @@ namespace Java.Interop.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has a type name which matches the enclosing namespace name. See https://aka.ms/BG8403 for more information..
+        /// </summary>
+        public static string Generator_BG8403 {
+            get {
+                return ResourceManager.GetString("Generator_BG8403", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected child element of &apos;&lt;interface&gt;&apos;: &apos;{0}&apos;..
         /// </summary>
         public static string Generator_BG8500 {

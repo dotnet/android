@@ -104,6 +104,11 @@ In this message, the term "constants" refers to class or interface members that 
 {1} - .NET field name.
 {2} - Java type.</note>
       </trans-unit>
+      <trans-unit id="Generator_BG8403">
+        <source>Type '{0}' has a type name which matches the enclosing namespace name. See https://aka.ms/BG8403 for more information.</source>
+        <target state="new">Type '{0}' has a type name which matches the enclosing namespace name. See https://aka.ms/BG8403 for more information.</target>
+        <note>{0} - Java type.</note>
+      </trans-unit>
       <trans-unit id="Generator_BG8500">
         <source>Unexpected child element of '&lt;interface&gt;': '{0}'.</source>
         <target state="new">Unexpected child element of '&lt;interface&gt;': '{0}'.</target>

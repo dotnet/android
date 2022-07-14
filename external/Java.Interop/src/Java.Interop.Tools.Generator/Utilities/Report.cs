@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -7,6 +8,7 @@ namespace Java.Interop.Tools.Generator
 	public class Report
 	{
 		public static int? Verbosity { get; set; }
+		public static Action<TraceLevel, string>? OutputDelegate { get; set; }
 
 		public class LocalizedMessage
 		{
@@ -43,6 +45,7 @@ namespace Java.Interop.Tools.Generator
 		public static LocalizedMessage WarningFieldNameCollision_Method => new LocalizedMessage (0x8401, Localization.Resources.Generator_BG8401_Method);
 		public static LocalizedMessage WarningFieldNameCollision_NestedType => new LocalizedMessage (0x8401, Localization.Resources.Generator_BG8401_NestedType);
 		public static LocalizedMessage WarningDuplicateField => new LocalizedMessage (0x8402, Localization.Resources.Generator_BG8402);
+		public static LocalizedMessage WarningTypeNameMatchesEnclosingNamespace => new LocalizedMessage (0x8403, Localization.Resources.Generator_BG8403);
 		public static LocalizedMessage WarningUnexpectedInterfaceChild => new LocalizedMessage (0x8500, Localization.Resources.Generator_BG8500);
 		public static LocalizedMessage WarningEmptyEventName => new LocalizedMessage (0x8501, Localization.Resources.Generator_BG8501);
 		public static LocalizedMessage WarningInvalidDueToInterfaces => new LocalizedMessage (0x8502, Localization.Resources.Generator_BG8502);
@@ -95,7 +98,7 @@ namespace Java.Interop.Tools.Generator
 
 		public static void LogCodedError (LocalizedMessage message, string? sourceFile, int line, int column, params string? [] args)
 		{
-			Console.Error.WriteLine (Format (true, message.Code, sourceFile, line, column, message.Value, args));
+			WriteOutput (TraceLevel.Error, Format (true, message.Code, sourceFile, line, column, message.Value, args));
 		}
 
 		public static void LogCodedWarning (int verbosity, LocalizedMessage message, params string? [] args)
@@ -120,17 +123,17 @@ namespace Java.Interop.Tools.Generator
 				return;
 
 			var supp = innerException != null ? "  For details, see verbose output." : null;
-			Console.Error.WriteLine (Format (false, message.Code, sourceFile, line, column, message.Value, args) + supp);
+			WriteOutput (TraceLevel.Warning, Format (false, message.Code, sourceFile, line, column, message.Value, args) + supp);
 
 			if (innerException != null)
-				Console.Error.WriteLine (innerException);
+				WriteOutput (TraceLevel.Warning, innerException.ToString ());
 		}
 		
 		public static void Verbose (int verbosity, string format, params object?[] args)
 		{
 			if (verbosity > (Verbosity ?? 0))
 				return;
-			Console.Error.WriteLine (format, args);
+			WriteOutput (TraceLevel.Verbose, format, args);
 		}
 
 		public static string FormatCodedMessage (bool error, LocalizedMessage message, params object? [] args)
@@ -168,6 +171,18 @@ namespace Java.Interop.Tools.Generator
 			var pos = (node as IXmlLineInfo)?.HasLineInfo () == true ? node as IXmlLineInfo : null;
 
 			return (file, pos?.LineNumber ?? -1, pos?.LinePosition ?? -1);
+		}
+
+		static void WriteOutput (TraceLevel traceLevel, string format, params object?[] args)
+		{
+			// Write to overridden output if requested
+			if (OutputDelegate != null) {
+				OutputDelegate (traceLevel, string.Format (format, args));
+				return;
+			}
+
+			// Write to Console.Error
+			Console.Error.WriteLine (format, args);
 		}
 	}
 

@@ -44,6 +44,10 @@ namespace MonoDroid.Generation
 			else
 				throw new InvalidOperationException ("Unknown GenBase type");
 
+			// We do this here because we only want to check for top-level types,
+			// we should not check types nested in other types.
+			SourceWriterExtensions.WarnIfTypeNameMatchesNamespace (type_writer, gen);
+
 			var cw = new CodeWriter (writer, indent);
 			type_writer.Write (cw);
 		}

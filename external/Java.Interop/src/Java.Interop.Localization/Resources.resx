@@ -201,6 +201,10 @@ In this message, the term "constants" refers to class or interface members that 
 {1} - .NET field name.
 {2} - Java type.</comment>
   </data>
+  <data name="Generator_BG8403" xml:space="preserve">
+    <value>Type '{0}' has a type name which matches the enclosing namespace name. See https://aka.ms/BG8403 for more information.</value>
+    <comment>{0} - Java type.</comment>
+  </data>
   <data name="Generator_BG8500" xml:space="preserve">
     <value>Unexpected child element of '&lt;interface&gt;': '{0}'.</value>
     <comment>{0} - XML element name.

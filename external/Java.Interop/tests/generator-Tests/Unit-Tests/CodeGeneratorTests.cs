@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using generator.SourceWriters;
+using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
 using NUnit.Framework;
 using Xamarin.Android.Binder;
@@ -526,6 +529,47 @@ namespace generatortests
 
 			// Ensure [Obsolete] was written
 			Assert.True (writer.ToString ().Contains ("[Obsolete (@\"This is so old!\")]"), writer.ToString ());
+		}
+
+		[Test]
+		[NonParallelizable]	// We are setting a static property on Report
+		public void WarnIfTypeNameMatchesNamespace ()
+		{
+			var @class = new TestClass ("Object", "java.myclass.MyClass");
+			var sb = new StringBuilder ();
+
+			var write_output = new Action<TraceLevel, string> ((t, s) => { sb.AppendLine (s); });
+			Report.OutputDelegate = write_output;
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Report.OutputDelegate = null;
+
+			// Ensure the warning was raised
+			Assert.True (sb.ToString ().Contains ("warning BG8403"));
+		}
+
+		[Test]
+		[NonParallelizable]     // We are setting a static property on Report
+		public void DontWarnIfNestedTypeNameMatchesNamespace ()
+		{
+			var @class = new TestClass ("Object", "java.myclass.MyParentClass");
+			@class.NestedTypes.Add (new TestClass ("Object", "java.myclass.MyParentClass.MyClass"));
+			var sb = new StringBuilder ();
+
+			var write_output = new Action<TraceLevel, string> ((t, s) => { sb.AppendLine (s); });
+			Report.OutputDelegate = write_output;
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Report.OutputDelegate = null;
+
+			// The warning should not be raised if the nested type matches enclosing namespace
+			Assert.False (sb.ToString ().Contains ("warning BG8403"));
 		}
 	}
 

@@ -397,5 +397,18 @@ namespace generator.SourceWriters
 
 			throw new InvalidOperationException ("Unknown GenBase type");
 		}
+
+		public static void WarnIfTypeNameMatchesNamespace (TypeWriter type, GenBase gen)
+		{
+			// We only care about the last part of a namespace
+			// eg: android.graphics.drawable -> drawable
+			var ns = gen.Namespace?.LastSubset ('.');
+
+			if (!ns.HasValue ())
+				return;
+
+			if (string.Equals (ns, type.Name, StringComparison.OrdinalIgnoreCase))
+				Report.LogCodedWarning (0, Report.WarningTypeNameMatchesEnclosingNamespace, $"{gen.Namespace}.{type.Name}");
+		}
 	}
 }
