@@ -211,7 +211,7 @@ namespace Xamarin.Android.Tasks
 			}
 #endif
 			// Step 2 - Generate Java stub code
-			var success = CreateJavaSources (javaTypes, cache, res, classifier);
+			var success = CreateJavaSources (javaTypes, cache, classifier);
 			if (!success)
 				return;
 
@@ -375,7 +375,7 @@ namespace Xamarin.Android.Tasks
 #endif
 		}
 
-		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes, TypeDefinitionCache cache, DirectoryAssemblyResolver resolver, MarshalMethodsClassifier classifier)
+		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier)
 		{
 			string outputPath = Path.Combine (OutputDirectory, "src");
 			string monoInit = GetMonoInitSource (AndroidSdkPlatform);
