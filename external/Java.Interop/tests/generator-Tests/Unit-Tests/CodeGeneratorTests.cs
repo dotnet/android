@@ -502,6 +502,31 @@ namespace generatortests
 			// Ensure explicit interface was written
 			Assert.True (writer.ToString ().Contains ("abstract int IHasAge.Age {"), $"was: `{writer}`");
 		}
+
+		[Test]
+		public void ObsoleteBoundMethodAbstractDeclaration ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='true' deprecated='This is so old!' final='false' name='countAffectedRows' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// Ensure [Obsolete] was written
+			Assert.True (writer.ToString ().Contains ("[Obsolete (@\"This is so old!\")]"), writer.ToString ());
+		}
 	}
 
 	[TestFixture]

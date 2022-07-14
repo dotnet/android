@@ -53,10 +53,8 @@ namespace generator.SourceWriters
 			if (method.DeclaringType.IsGeneratable)
 				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
 
-			// TODO: shouldn't `[Obsolete]` be added for *all* CodeGenerationTargets?
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1 && method.Deprecated.HasValue ()) {
+			if (method.Deprecated.HasValue ())
 				Attributes.Add (new ObsoleteAttr (method.Deprecated.Replace ("\"", "\"\"")));
-			}
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
