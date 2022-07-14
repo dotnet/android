@@ -374,5 +374,27 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (1, start);
 			Assert.AreEqual (2, end);
 		}
+
+		[Test]
+		public void MatchMetadataToMultipleMethodsWithSameMangledName ()
+		{
+			var klass = LoadClassFile ("UByteArray.class");
+			var meta = GetClassMetadataForClass (klass);
+
+			// There is only one Kotlin metadata for Java method "contains-7apg3OU"
+			var kotlin_function = meta.Functions.Single (m => m.Name == "contains");
+			
+			// However there are 2 Java methods named "contains-7apg3OU"
+			// - public boolean contains-7apg3OU (byte element)
+			// - public static boolean contains-7apg3OU (byte[] arg0, byte element)
+			var java_methods = klass.Methods.Where (m => m.Name == "contains-7apg3OU");
+			Assert.AreEqual (2, java_methods.Count ());
+
+			KotlinFixups.Fixup (new [] { klass });
+
+			// Ensure the fixup "fixed" the parameter "element" type to "ubyte"
+			Assert.AreEqual ("ubyte", java_methods.ElementAt (0).GetParameters ().Single (p => p.Name == "element").KotlinType);
+			Assert.AreEqual ("ubyte", java_methods.ElementAt (1).GetParameters ().Single (p => p.Name == "element").KotlinType);
+		}
 	}
 }

@@ -47,10 +47,12 @@ namespace Xamarin.Android.Tools.Bytecode
 					FixupJavaMethods (c.Methods);
 
 					if (metadata.Functions != null) {
-						foreach (var met in metadata.Functions)
-							FixupFunction (FindJavaMethod (metadata, met, c), met, class_metadata);
+						// We work from Java methods to Kotlin metadata because they aren't a 1:1 relation
+						// and we need to find the "best" match for each Java method.
+						foreach (var java_method in c.Methods)
+							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata)
+								FixupFunction (java_method, function_metadata, class_metadata);
 					}
-
 
 					if (metadata.Properties != null) {
 						foreach (var prop in metadata.Properties) {
@@ -334,39 +336,39 @@ namespace Xamarin.Android.Tools.Bytecode
 			return null;
 		}
 
-		static MethodInfo? FindJavaMethod (KotlinFile kotlinFile, KotlinFunction function, ClassFile klass)
+		static KotlinFunction? FindKotlinFunctionMetadata (KotlinFile? kotlinFile, MethodInfo javaMethod)
 		{
-			var possible_methods = klass.Methods.Where (method => method.Name == function.JvmName).ToArray ();
-			var signature = function.JvmSignature;
+			if (kotlinFile?.Functions is null)
+				return null;
 
-			// If the Descriptor/Signature match, that means all parameters and return type match
-			if (signature != null && possible_methods.SingleOrDefault (method => method.Descriptor == signature) is MethodInfo m)
-					return m;
+			var java_descriptor = javaMethod.Descriptor;
+
+			// The method name absolutely has to match
+			var possible_functions = kotlinFile.Functions.Where (f => f.JvmName == javaMethod.Name).ToArray ();
+
+			// If we have metadata with a Descriptor/JvmSignature match, that means all parameters and return type match
+			if (possible_functions.SingleOrDefault (f => f.JvmSignature != null && f.JvmSignature == java_descriptor) is KotlinFunction kf)
+				return kf;
 
 			// Sometimes JvmSignature is null (or unhelpful), so we're going to construct one ourselves and see if they match
-			signature = function.ConstructJvmSignature ();
+			if (possible_functions.SingleOrDefault (f => f.ConstructJvmSignature () == java_descriptor) is KotlinFunction kf2)
+				return kf2;
 
-			if (possible_methods.SingleOrDefault (method => method.Descriptor == signature) is MethodInfo m2)
-				return m2;
+			// If that didn't work, let's try it the hard way!
+			// This catches cases where Kotlin only wrote one metadata entry for multiple methods with the same mangled JvmName (ex: contains-WZ4Q5Ns)
+			var java_param_count = javaMethod.GetFilteredParameters ().Length;
 
-			// If that didn't work, let's do it the hard way!
-			// I don't know if this catches anything additional, but it was the original code we shipped, so
-			// we'll keep it just in case something in the wild requires it.
-			foreach (var method in possible_methods.Where (method => method.GetFilteredParameters ().Length == function.ValueParameters?.Count)) {
+			foreach (var function in possible_functions.Where (f => f.ValueParameters?.Count == java_param_count)) {
 				if (function.ReturnType == null)
 					continue;
-				if (!TypesMatch (method.ReturnType, function.ReturnType, kotlinFile))
+				if (!TypesMatch (javaMethod.ReturnType, function.ReturnType, kotlinFile))
 					continue;
 
-				if (!ParametersMatch (kotlinFile, method, function.ValueParameters!))
+				if (!ParametersMatch (kotlinFile, javaMethod, function.ValueParameters!))
 					continue;
 
-				return method;
+				return function;
 			}
-
-			// Theoretically this should never be hit, but who knows. At worst, it just means
-			// Kotlin niceties won't be applied to the method.
-			Log.Debug ($"Kotlin: Could not find Java method to match '{function.Name} ({function.ConstructJvmSignature ()})'");
 
 			return null;
 		}
