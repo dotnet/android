@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tasks
 
 		public ICollection<string> UniqueAssemblyNames                       { get; set; }
 		public int NumberOfAssembliesInApk                                   { get; set; }
-		public IDictionary<string, MarshalMethodEntry> MarshalMethods        { get; set; }
+		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods { get; set; }
 
 		StructureInfo<TypeMappingReleaseNativeAssemblyGenerator.MonoImage> monoImage;
 		StructureInfo<MonoClass> monoClass;

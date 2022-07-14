@@ -444,7 +444,7 @@ namespace Xamarin.Android.Tasks
 #if ENABLE_MARSHAL_METHODS
 			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (GenerateJavaStubs.MarshalMethodsRegisterTaskKey, RegisteredTaskObjectLifetime.Build);
 
-			var marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator () {
+			var marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator {
 				NumberOfAssembliesInApk = assemblyCount,
 				UniqueAssemblyNames = uniqueAssemblyNames,
 				MarshalMethods = marshalMethodsState?.MarshalMethods,

@@ -6,9 +6,9 @@ namespace Xamarin.Android.Tasks
 {
 	sealed class MarshalMethodsState
 	{
-		public IDictionary<string, MarshalMethodEntry> MarshalMethods        { get; }
+		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods { get; }
 
-		public MarshalMethodsState (IDictionary<string, MarshalMethodEntry> marshalMethods)
+		public MarshalMethodsState (IDictionary<string, IList<MarshalMethodEntry>> marshalMethods)
 		{
 			MarshalMethods = marshalMethods ?? throw new ArgumentNullException (nameof (marshalMethods));
 		}

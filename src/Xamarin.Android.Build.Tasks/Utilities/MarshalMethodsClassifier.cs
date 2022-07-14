@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tasks
 #if ENABLE_MARSHAL_METHODS
 	public sealed class MarshalMethodEntry
 	{
-		public TypeDefinition TopType             { get; }
+		public TypeDefinition DeclaringType       { get; }
 		public MethodDefinition NativeCallback    { get; }
 		public MethodDefinition Connector         { get; }
 		public MethodDefinition RegisteredMethod  { get; }
@@ -24,18 +24,27 @@ namespace Xamarin.Android.Tasks
 		public string JniMethodSignature          { get; }
 
 		public MarshalMethodEntry (TypeDefinition topType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
-		                           registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
-		                           string jniName, string jniSignature)
+				registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
+				string jniName, string jniSignature)
 		{
-			TopType = topType ?? throw new ArgumentNullException (nameof (topType));
+			DeclaringType = topType ?? throw new ArgumentNullException (nameof (topType));
 			NativeCallback = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
 			Connector = connector ?? throw new ArgumentNullException (nameof (connector));
 			RegisteredMethod = registeredMethod ?? throw new ArgumentNullException (nameof (registeredMethod));
 			ImplementedMethod = implementedMethod ?? throw new ArgumentNullException (nameof (implementedMethod));
-			CallbackField = callbackField;
-			JniTypeName = jniTypeName;
-			JniMethodName = jniName;
-			JniMethodSignature = jniSignature;
+			CallbackField = callbackField; // we don't require the callback field to exist
+			JniTypeName = EnsureNonEmpty (jniTypeName, nameof (jniTypeName));
+			JniMethodName = EnsureNonEmpty (jniName, nameof (jniName));
+			JniMethodSignature = EnsureNonEmpty (jniSignature, nameof (jniSignature));
+		}
+
+		string EnsureNonEmpty (string s, string argName)
+		{
+			if (String.IsNullOrEmpty (s)) {
+				throw new ArgumentException ("must not be null or empty", argName);
+			}
+
+			return s;
 		}
 	}
 #endif

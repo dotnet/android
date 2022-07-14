@@ -10,11 +10,11 @@ namespace Xamarin.Android.Tasks
 {
 	class MarshalMethodsAssemblyRewriter
 	{
-		IDictionary<string, MarshalMethodEntry> methods;
+		IDictionary<string, IList<MarshalMethodEntry>> methods;
 		ICollection<AssemblyDefinition> uniqueAssemblies;
 		IDictionary <string, HashSet<string>> assemblyPaths;
 
-		public MarshalMethodsAssemblyRewriter (IDictionary<string, MarshalMethodEntry> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary <string, HashSet<string>> assemblyPaths)
+		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary <string, HashSet<string>> assemblyPaths)
 		{
 			this.methods = methods ?? throw new ArgumentNullException (nameof (methods));
 			this.uniqueAssemblies = uniqueAssemblies ?? throw new ArgumentNullException (nameof (uniqueAssemblies));
@@ -23,17 +23,20 @@ namespace Xamarin.Android.Tasks
 
 		public void Rewrite (DirectoryAssemblyResolver resolver)
 		{
+			MethodDefinition unmanagedCallersOnlyAttributeCtor = GetUnmanagedCallersOnlyAttributeConstructor (resolver);
 			var unmanagedCallersOnlyAttributes = new Dictionary<AssemblyDefinition, CustomAttribute> ();
 			foreach (AssemblyDefinition asm in uniqueAssemblies) {
-				unmanagedCallersOnlyAttributes.Add (asm, GetUnmanagedCallersOnlyAttribute (asm, resolver));
+				unmanagedCallersOnlyAttributes.Add (asm, CreateImportedUnmanagedCallersOnlyAttribute (asm, unmanagedCallersOnlyAttributeCtor));
 			}
 
 			Console.WriteLine ("Adding the [UnmanagedCallersOnly] attribute to native callback methods and removing unneeded fields+methods");
-			foreach (MarshalMethodEntry method in methods.Values) {
-				Console.WriteLine ($"\t{method.NativeCallback.FullName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
-				method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
-				method.Connector.DeclaringType.Methods.Remove (method.Connector);
-				method.CallbackField?.DeclaringType.Fields.Remove (method.CallbackField);
+			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
+				foreach (MarshalMethodEntry method in methodList) {
+					Console.WriteLine ($"\t{method.NativeCallback.FullName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
+					method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
+					method.Connector.DeclaringType.Methods.Remove (method.Connector);
+					method.CallbackField?.DeclaringType.Fields.Remove (method.CallbackField);
+				}
 			}
 
 			Console.WriteLine ();
@@ -75,8 +78,10 @@ namespace Xamarin.Android.Tasks
 
 			Console.WriteLine ();
 			Console.WriteLine ("Method tokens:");
-			foreach (MarshalMethodEntry method in methods.Values) {
-				Console.WriteLine ($"\t{method.NativeCallback.FullName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
+			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
+				foreach (MarshalMethodEntry method in methodList) {
+					Console.WriteLine ($"\t{method.NativeCallback.FullName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
+				}
 			}
 
 			void MoveFile (string source, string target)
@@ -99,7 +104,7 @@ namespace Xamarin.Android.Tasks
 			return paths;
 		}
 
-		CustomAttribute GetUnmanagedCallersOnlyAttribute (AssemblyDefinition targetAssembly, DirectoryAssemblyResolver resolver)
+		MethodDefinition GetUnmanagedCallersOnlyAttributeConstructor (DirectoryAssemblyResolver resolver)
 		{
 			AssemblyDefinition asm = resolver.Resolve ("System.Runtime.InteropServices");
 			TypeDefinition unmanagedCallersOnlyAttribute = null;
@@ -118,16 +123,24 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			MethodDefinition attrConstructor = null;
+			if (unmanagedCallersOnlyAttribute == null) {
+				throw new InvalidOperationException ("Unable to find the System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute type");
+			}
+
 			foreach (MethodDefinition md in unmanagedCallersOnlyAttribute.Methods) {
 				if (!md.IsConstructor) {
 					continue;
 				}
 
-				attrConstructor = md;
+				return md;
 			}
 
-			return new CustomAttribute (targetAssembly.MainModule.ImportReference (attrConstructor));
+			throw new InvalidOperationException ("Unable to find the System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute type constructor");
+		}
+
+		CustomAttribute CreateImportedUnmanagedCallersOnlyAttribute (AssemblyDefinition targetAssembly, MethodDefinition unmanagedCallersOnlyAtributeCtor)
+		{
+			return new CustomAttribute (targetAssembly.MainModule.ImportReference (unmanagedCallersOnlyAtributeCtor));
 		}
 	}
 }

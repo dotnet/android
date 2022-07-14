@@ -183,9 +183,7 @@ namespace Xamarin.Android.Tasks
 				if (!userAssemblies.ContainsKey (name))
 					userAssemblies.Add (name, asm.ItemSpec);
 #if ENABLE_MARSHAL_METHODS
-				if (!Debug) {
-					StoreMarshalAssemblyPath (name, asm);
-				}
+				StoreMarshalAssemblyPath (name, asm);
 #endif
 			}
 
