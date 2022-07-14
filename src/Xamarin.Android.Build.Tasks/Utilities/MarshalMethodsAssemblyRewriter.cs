@@ -4,7 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 
 using Java.Interop.Tools.Cecil;
+using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -13,12 +16,14 @@ namespace Xamarin.Android.Tasks
 		IDictionary<string, IList<MarshalMethodEntry>> methods;
 		ICollection<AssemblyDefinition> uniqueAssemblies;
 		IDictionary <string, HashSet<string>> assemblyPaths;
+		TaskLoggingHelper log;
 
-		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary <string, HashSet<string>> assemblyPaths)
+		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary <string, HashSet<string>> assemblyPaths, TaskLoggingHelper log)
 		{
 			this.methods = methods ?? throw new ArgumentNullException (nameof (methods));
 			this.uniqueAssemblies = uniqueAssemblies ?? throw new ArgumentNullException (nameof (uniqueAssemblies));
 			this.assemblyPaths = assemblyPaths ?? throw new ArgumentNullException (nameof (assemblyPaths));
+			this.log = log ?? throw new ArgumentNullException (nameof (log));
 		}
 
 		public void Rewrite (DirectoryAssemblyResolver resolver)
@@ -87,11 +92,12 @@ namespace Xamarin.Android.Tasks
 			void MoveFile (string source, string target)
 			{
 				Console.WriteLine ($"Moving '{source}' => '{target}'");
-				if (File.Exists (target)) {
-					File.Delete (target);
+				Files.CopyIfChanged (source, target);
+				try {
+					File.Delete (source);
+				} catch (Exception ex) {
+					log.LogWarning ($"Unable to delete source file '{source}' when moving it to '{target}'");
 				}
-
-				File.Move (source, target);
 			}
 		}
 

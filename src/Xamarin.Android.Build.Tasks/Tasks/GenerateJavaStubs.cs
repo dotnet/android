@@ -217,7 +217,7 @@ namespace Xamarin.Android.Tasks
 
 #if ENABLE_MARSHAL_METHODS
 			if (!Debug) {
-				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths);
+				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths, Log);
 				rewriter.Rewrite (res);
 			}
 #endif
