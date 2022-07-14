@@ -7,10 +7,15 @@
         "Microsoft.Android.Sdk",
         "Microsoft.Android.Ref.31",
         "Microsoft.Android.Ref.32",
+        "Microsoft.Android.Ref.33",
         "Microsoft.Android.Runtime.32.android-arm",
         "Microsoft.Android.Runtime.32.android-arm64",
         "Microsoft.Android.Runtime.32.android-x86",
         "Microsoft.Android.Runtime.32.android-x64",
+        "Microsoft.Android.Runtime.33.android-arm",
+        "Microsoft.Android.Runtime.33.android-arm64",
+        "Microsoft.Android.Runtime.33.android-x86",
+        "Microsoft.Android.Runtime.33.android-x64",
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "osx-x64", "osx-arm64" ],
@@ -18,13 +23,6 @@
     },
     "android-33": {
       "description": "Support for Android API-33.",
-      "packs": [
-        "Microsoft.Android.Ref.33",
-        "Microsoft.Android.Runtime.33.android-arm",
-        "Microsoft.Android.Runtime.33.android-arm64",
-        "Microsoft.Android.Runtime.33.android-x86",
-        "Microsoft.Android.Runtime.33.android-x64"
-      ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "osx-x64", "osx-arm64" ],
       "extends" : [ "android" ]
     }
