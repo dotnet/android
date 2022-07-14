@@ -23,11 +23,11 @@ namespace Xamarin.Android.Tasks
 		public string JniMethodName               { get; }
 		public string JniMethodSignature          { get; }
 
-		public MarshalMethodEntry (TypeDefinition topType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
+		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
 				registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
 				string jniName, string jniSignature)
 		{
-			DeclaringType = topType ?? throw new ArgumentNullException (nameof (topType));
+			DeclaringType = declaringType ?? throw new ArgumentNullException (nameof (declaringType));
 			NativeCallback = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
 			Connector = connector ?? throw new ArgumentNullException (nameof (connector));
 			RegisteredMethod = registeredMethod ?? throw new ArgumentNullException (nameof (registeredMethod));
