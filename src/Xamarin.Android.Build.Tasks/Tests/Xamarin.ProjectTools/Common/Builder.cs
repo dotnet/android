@@ -275,7 +275,7 @@ namespace Xamarin.ProjectTools
 
 			var logger = buildLogFullPath == null
 				? string.Empty
-				: string.Format ("/noconsolelogger \"/flp1:LogFile={0}%3bEncoding=UTF-8%3bVerbosity={1}\"",
+				: string.Format ("/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
 					buildLogFullPath, Verbosity.ToString ().ToLower ());
 
 			var start = DateTime.UtcNow;
