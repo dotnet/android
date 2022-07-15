@@ -147,7 +147,7 @@ namespace Xamarin.ProjectTools
 				verb,
 				$"\"{projectOrSolution}\"",
 				"/noconsolelogger",
-				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
+				$"/flp1:LogFile=\"{BuildLogFile}\"%3bEncoding=UTF-8%3bVerbosity={Verbosity}",
 				$"/bl:\"{Path.Combine (testDir, $"{binlog}.binlog")}\""
 			};
 			if (!string.IsNullOrEmpty (target)) {
