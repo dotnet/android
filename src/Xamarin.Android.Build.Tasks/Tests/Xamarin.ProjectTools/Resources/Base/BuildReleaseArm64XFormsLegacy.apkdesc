@@ -8,10 +8,10 @@
       "Size": 7215
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 69921
+      "Size": 69945
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 570610
+      "Size": 570605
     },
     "assemblies/Mono.Security.dll": {
       "Size": 68433
@@ -32,7 +32,7 @@
       "Size": 110693
     },
     "assemblies/System.Numerics.dll": {
-      "Size": 15683
+      "Size": 15682
     },
     "assemblies/System.Runtime.Serialization.dll": {
       "Size": 186660
@@ -44,7 +44,7 @@
       "Size": 395656
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 116898
+      "Size": 116896
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 7697
@@ -86,7 +86,7 @@
       "Size": 13585
     },
     "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
-      "Size": 102326
+      "Size": 102327
     },
     "assemblies/Xamarin.AndroidX.SavedState.dll": {
       "Size": 6268
@@ -95,7 +95,7 @@
       "Size": 11272
     },
     "assemblies/Xamarin.AndroidX.ViewPager.dll": {
-      "Size": 19424
+      "Size": 19423
     },
     "assemblies/Xamarin.Forms.Core.dll": {
       "Size": 524736
@@ -122,13 +122,13 @@
       "Size": 750976
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 423048
+      "Size": 332128
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 4051864
     },
     "lib/arm64-v8a/libxa-internal-api.so": {
-      "Size": 65512
+      "Size": 66184
     },
     "lib/arm64-v8a/libxamarin-app.so": {
       "Size": 105288
@@ -1883,5 +1883,5 @@
       "Size": 341040
     }
   },
-  "PackageSize": 9582750
+  "PackageSize": 9545886
 }
