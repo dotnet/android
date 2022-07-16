@@ -1,7 +1,7 @@
 <Project>
 
   <ItemGroup>
-    <TestJarNoParameters Include="java/java/util/Collection.java" />
+    <TestJarNoParameters Include="java/**/Collection.java" />
     <TestJarNoParameters Include="java/**/*NoParameters.java" />
     <TestJar Include="java\**\*.java" Exclude="@(TestJarNoParameters);java\android\annotation\NonNull.java" />
     <TestKotlinJar Include="kotlin\**\*.kt" />
