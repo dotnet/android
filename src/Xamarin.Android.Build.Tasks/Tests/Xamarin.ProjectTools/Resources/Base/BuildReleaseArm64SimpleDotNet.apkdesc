@@ -5,28 +5,28 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 59419
+      "Size": 58642
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 89327
+      "Size": 87877
     },
     "assemblies/rc.bin": {
-      "Size": 1083
+      "Size": 1129
     },
     "assemblies/System.Console.dll": {
-      "Size": 6484
+      "Size": 6428
     },
     "assemblies/System.Linq.dll": {
-      "Size": 9980
+      "Size": 9103
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 532428
+      "Size": 472318
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2417
+      "Size": 2388
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3560
+      "Size": 3559
     },
     "classes.dex": {
       "Size": 360744
@@ -47,7 +47,7 @@
       "Size": 146128
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 9528
+      "Size": 9488
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
@@ -83,5 +83,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2738143
+  "PackageSize": 2676703
 }
