@@ -36,7 +36,11 @@ namespace Java.Interop.Tools.TypeNameMappings
 #endif
 	class JniTypeName
 	{
-		public string? Type { get; internal set; }
+		string? type;
+		public string Type {
+			get => type ?? throw new InvalidOperationException ("`Type` must be set before accessing it!");
+			internal set => type = value;
+		}
 		public bool IsKeyword { get; internal set; }
 	}
 
@@ -50,7 +54,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		public static string? ApplicationJavaClass { get; set; }
 
-		public static JniTypeName Parse (string jniType)
+		public static JniTypeName? Parse (string? jniType)
 		{
 			int _ = 0;
 			return ExtractType (jniType, ref _);
@@ -68,8 +72,12 @@ namespace Java.Interop.Tools.TypeNameMappings
 				yield return t;
 		}
 
-		public static JniTypeName ReturnTypeFromSignature (string signature)
+		[return: NotNullIfNotNull ("signature")]
+		public static JniTypeName? ReturnTypeFromSignature (string? signature)
 		{
+			if (signature == null) {
+				return null;
+			}
 			int idx = signature.LastIndexOf (')') + 1;
 			return ExtractType (signature, ref idx);
 		}

@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 using Mono.Cecil;
@@ -10,9 +12,9 @@ namespace Android.Runtime {
 #endif  // !JCW_ONLY_TYPE_NAMES
 	sealed class RegisterAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
 
-		string connector;
+		string? connector;
 		string name;
-		string signature;
+		string? signature;
 
 		public RegisterAttribute (string name)
 		{
@@ -26,22 +28,22 @@ namespace Android.Runtime {
 			this.signature = signature;
 		}
 #if HAVE_CECIL
-		public RegisterAttribute (string name, CustomAttribute originAttribute)
+		public RegisterAttribute (string name, CustomAttribute? originAttribute)
 			: this (name)
 		{
 			OriginAttribute = originAttribute;
 		}
 
-		public RegisterAttribute (string name, string signature, string connector, CustomAttribute originAttribute)
+		public RegisterAttribute (string name, string signature, string connector, CustomAttribute? originAttribute)
 			: this (name, signature, connector)
 		{
 			OriginAttribute = originAttribute;
 		}
 
-		public CustomAttribute OriginAttribute { get; }
+		public CustomAttribute? OriginAttribute { get; }
 #endif  // HAVE_CECIL
 
-		public string Connector {
+		public string? Connector {
 			get { return connector; }
 			set { connector = value; }
 		}
@@ -51,7 +53,7 @@ namespace Android.Runtime {
 			set { name = value; }
 		}
 
-		public string Signature {
+		public string? Signature {
 			get { return signature; }
 			set { signature = value; }
 		}

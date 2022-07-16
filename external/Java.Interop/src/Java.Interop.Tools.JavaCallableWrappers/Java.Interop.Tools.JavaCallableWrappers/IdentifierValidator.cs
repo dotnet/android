@@ -31,9 +31,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 		// We use [^ ...] to detect any character that is NOT a match.
 		static Regex validIdentifier = new Regex ($"[^{Identifier}]", RegexOptions.Compiled);
 
-		public static string CreateValidIdentifier (string identifier, bool useEncodedReplacements = false)
+		public static string CreateValidIdentifier (string? identifier, bool useEncodedReplacements = false)
 		{
-			if (string.IsNullOrWhiteSpace (identifier)) return string.Empty;
+			if (identifier == null || string.IsNullOrWhiteSpace (identifier)) return string.Empty;
 
 			var normalizedIdentifier = identifier.Normalize ();
 

@@ -148,7 +148,7 @@ namespace Java.Interop.Tools.Diagnostics {
 	//
 
 	public static class Diagnostic {
-		public static void Error (int code, SequencePoint location, string message, params object[] args)
+		public static void Error (int code, SequencePoint? location, string message, params object[] args)
 		{
 			throw new XamarinAndroidException (code, message, args) {
 				Location = location,

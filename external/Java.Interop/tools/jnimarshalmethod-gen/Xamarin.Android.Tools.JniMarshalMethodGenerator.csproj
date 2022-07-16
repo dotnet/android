@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <OutputType>Exe</OutputType>
+    <LangVersion>8.0</LangVersion>
     <AssemblyName>jnimarshalmethod-gen</AssemblyName>
   </PropertyGroup>
 

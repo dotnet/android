@@ -59,8 +59,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		Action<TraceLevel, string>      Log;
 		List<TypeDefinition>            Types;
-		DirectoryAssemblyResolver       Resolver;
-		JavaTypeScanner                 Scanner;
+		DirectoryAssemblyResolver?      Resolver;
 		readonly IMetadataResolver      Cache;
 
 		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<string>, Action<TraceLevel, string>, TypeDefinitionCache)")]
@@ -76,12 +75,12 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			: this (assemblies, logger, resolver: null)
 		{ }
 
-		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger, TypeDefinitionCache cache)
-			: this (assemblies, logger, (IMetadataResolver) cache)
+		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger, TypeDefinitionCache? cache)
+			: this (assemblies, logger, (IMetadataResolver?) cache)
 		{
 		}
 
-		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger, IMetadataResolver resolver)
+		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger, IMetadataResolver? resolver)
 		{
 			if (assemblies == null)
 				throw new ArgumentNullException ("assemblies");
@@ -105,10 +104,10 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Resolver.Load (Path.GetFullPath (assembly));
 			}
 
-			Scanner     = new JavaTypeScanner (Log, Cache) {
+			var scanner = new JavaTypeScanner (Log, Cache) {
 				ErrorOnCustomJavaObject     = false,
 			};
-			Types       = Scanner.GetJavaTypes (Assemblies, Resolver);
+			Types       = scanner.GetJavaTypes (Assemblies, Resolver);
 		}
 
 		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<TypeDefinition>, Action<TraceLevel, string>, TypeDefinitionCache)")]
@@ -124,12 +123,12 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			: this (types, logger, resolver: null)
 		{ }
 
-		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger, TypeDefinitionCache cache)
-			: this (types, logger, (IMetadataResolver) cache)
+		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger, TypeDefinitionCache? cache)
+			: this (types, logger, (IMetadataResolver?) cache)
 		{
 		}
 
-		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger, IMetadataResolver resolver)
+		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger, IMetadataResolver? resolver)
 		{
 			if (types == null)
 				throw new ArgumentNullException ("types");
