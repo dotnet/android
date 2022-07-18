@@ -233,6 +233,9 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
+			// TODO: if we can't native callback and/or delegate field using `callbackNameCore`, fall back to `jniName` (which is the first argument to the `[Register]`
+			// attribute). Or simply use `jniName` at once - needs testing.
+
 			string callbackNameCore = connectorName.Substring (HandlerNameStart.Length, connectorName.Length - HandlerNameStart.Length - HandlerNameEnd.Length);
 			string nativeCallbackName = $"n_{callbackNameCore}";
 			string delegateFieldName = $"cb_{Char.ToLowerInvariant (callbackNameCore[0])}{callbackNameCore.Substring (1)}";
@@ -268,8 +271,40 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			// TODO: check where DeclaringType is lost between here and rewriter, for:
+			//
+			// Classifying:
+			//         method: Java.Lang.Object Microsoft.Maui.Controls.Platform.Compatibility.ShellSearchViewAdapter::GetItem(System.Int32)
+			//         registered method: Java.Lang.Object Android.Widget.BaseAdapter::GetItem(System.Int32))
+			//         Attr: Android.Runtime.RegisterAttribute (parameter count: 3)
+			//         Top type: Microsoft.Maui.Controls.Platform.Compatibility.ShellSearchViewAdapter
+			//         Managed type: Android.Widget.BaseAdapter, Mono.Android
+			//         connector: GetGetItem_IHandler (from spec: 'GetGetItem_IHandler')
+			//         connector name: GetGetItem_IHandler
+			//         native callback name: n_GetItem_I
+			//         delegate field name: cb_getItem_I
+			// ##G1: Microsoft.Maui.Controls.Platform.Compatibility.ShellSearchViewAdapter -> crc640ec207abc449b2ca/ShellSearchViewAdapter
+			// ##G1: top type: Microsoft.Maui.Controls.Platform.Compatibility.ShellSearchViewAdapter -> crc640ec207abc449b2ca/ShellSearchViewAdapter
+			// ##G1: connectorMethod: System.Delegate Android.Widget.BaseAdapter::GetGetItem_IHandler()
+			// ##G1: delegateField: System.Delegate Android.Widget.BaseAdapter::cb_getItem_I
+			//
+			// And in the rewriter:
+			//
+			//         System.IntPtr Android.Widget.BaseAdapter::n_GetItem_I(System.IntPtr,System.IntPtr,System.Int32) (token: 0x5fe3)
+			// Top type == 'Microsoft.Maui.Controls.Platform.Compatibility.ShellSearchViewAdapter'
+			// 	NativeCallback == 'System.IntPtr Android.Widget.BaseAdapter::n_GetItem_I(System.IntPtr,System.IntPtr,System.Int32)'
+			// 	Connector == 'System.Delegate GetGetItem_IHandler()'
+			// 	method.NativeCallback.CustomAttributes == Mono.Collections.Generic.Collection`1[Mono.Cecil.CustomAttribute]
+			// 	method.Connector.DeclaringType == 'null'
+			// 	method.Connector.DeclaringType.Methods == 'null'
+			// 	method.CallbackField == System.Delegate cb_getItem_I
+			// 	method.CallbackField?.DeclaringType == 'null'
+			// 	method.CallbackField?.DeclaringType.Fields == 'null'
+
 			Console.WriteLine ($"##G1: {implementedMethod.DeclaringType.FullName} -> {JavaNativeTypeManager.ToJniName (implementedMethod.DeclaringType, tdCache)}");
 			Console.WriteLine ($"##G1: top type: {topType.FullName} -> {JavaNativeTypeManager.ToJniName (topType, tdCache)}");
+			Console.WriteLine ($"##G1: connectorMethod: {connectorMethod?.FullName}");
+			Console.WriteLine ($"##G1: delegateField: {delegateField?.FullName}");
 
 			StoreMethod (
 				connectorName,

@@ -38,7 +38,9 @@ namespace Xamarin.Android.Tasks
 			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
 				foreach (MarshalMethodEntry method in methodList) {
 					Console.WriteLine ($"\t{method.NativeCallback.FullName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
-					Console.WriteLine ($"\t  NativeCallback == '{method.NativeCallback}'; Connector == '{method.Connector}'");
+					Console.WriteLine ($"\t  Top type == '{method.DeclaringType}'");
+					Console.WriteLine ($"\t  NativeCallback == '{method.NativeCallback}'");
+					Console.WriteLine ($"\t  Connector == '{method.Connector}'");
 					Console.WriteLine ($"\t  method.NativeCallback.CustomAttributes == {ToStringOrNull (method.NativeCallback?.CustomAttributes)}");
 					Console.WriteLine ($"\t  method.Connector.DeclaringType == {ToStringOrNull (method.Connector?.DeclaringType)}");
 					Console.WriteLine ($"\t  method.Connector.DeclaringType.Methods == {ToStringOrNull (method.Connector.DeclaringType?.Methods)}");
