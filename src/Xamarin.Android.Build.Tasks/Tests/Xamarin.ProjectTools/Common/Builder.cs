@@ -311,11 +311,11 @@ namespace Xamarin.ProjectTools
 				}
 				string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
 				if (Directory.Exists (sdkPath)) {
-					sw.WriteLine ("/p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
+					sw.WriteLine ("/p:AndroidSdkDirectory=\"{0}\"", sdkPath);
 				}
 				string jdkPath = AndroidSdkResolver.GetJavaSdkPath ();
 				if (Directory.Exists (jdkPath)) {
-					sw.WriteLine ("/p:JavaSdkDirectory=\"{0}\" ", jdkPath);
+					sw.WriteLine ("/p:JavaSdkDirectory=\"{0}\"", jdkPath);
 				}
 				if (parameters != null) {
 					foreach (var param in parameters) {
