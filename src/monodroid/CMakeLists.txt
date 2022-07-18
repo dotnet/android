@@ -744,9 +744,9 @@ target_link_libraries(
   ${LINK_LIBS} xamarin-app
   )
 
-if((NOT DEBUG_BUILD) AND ANDROID AND ENABLE_NET AND ENABLE_MARSHAL_METHODS)
-  target_link_libraries(
-    ${XAMARIN_MONO_ANDROID_LIB}
-    ${XAMARIN_APP_MARSHALING_LIB}
-  )
-endif()
+# if((NOT DEBUG_BUILD) AND ANDROID AND ENABLE_NET AND ENABLE_MARSHAL_METHODS)
+#   target_link_libraries(
+#     ${XAMARIN_MONO_ANDROID_LIB}
+#     ${XAMARIN_APP_MARSHALING_LIB}
+#   )
+# endif()

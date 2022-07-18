@@ -85,7 +85,7 @@
       Runtime libraries feature switches defaults
       Available feature switches: https://github.com/dotnet/runtime/blob/master/docs/workflow/trimming/feature-switches.md
      -->
-    <DebuggerSupport Condition="'$(DebuggerSupport)' == ''">$(AndroidUseDebugRuntime)</DebuggerSupport>
+    <DebuggerSupport Condition="'$(DebuggerSupport)' == '' and '$(Optimize)' == 'true'">false</DebuggerSupport>
     <EnableUnsafeUTF7Encoding Condition="'$(EnableUnsafeUTF7Encoding)' == ''">false</EnableUnsafeUTF7Encoding>
     <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
@@ -100,9 +100,7 @@
     <!-- Verify DI trimmability at development-time, but turn the validation off for production/trimmed builds. -->
     <VerifyDependencyInjectionOpenGenericServiceTrimmability Condition="'$(VerifyDependencyInjectionOpenGenericServiceTrimmability)' == '' and '$(PublishTrimmed)' == 'true'">false</VerifyDependencyInjectionOpenGenericServiceTrimmability>
     <VerifyDependencyInjectionOpenGenericServiceTrimmability Condition="'$(VerifyDependencyInjectionOpenGenericServiceTrimmability)' == ''">true</VerifyDependencyInjectionOpenGenericServiceTrimmability>
-
-    <!-- TODO: default to true when https://github.com/dotnet/linker/issues/2563 is fixed -->
-    <EnableSingleFileAnalyzer Condition="'$(EnableSingleFileAnalyzer)' == ''">false</EnableSingleFileAnalyzer>
+    <EnableSingleFileAnalyzer Condition="'$(EnableSingleFileAnalyzer)' == ''">true</EnableSingleFileAnalyzer>
 
     <!-- XA feature switches defaults -->
     <VSAndroidDesigner Condition="'$(VSAndroidDesigner)' == ''">false</VSAndroidDesigner>

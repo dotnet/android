@@ -46,7 +46,7 @@
     <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' " />
     <PropertyGroup>
       <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
-      <MauiVersionBand>$([System.Text.RegularExpressions.Regex]::Match($(MauiVersion), `^\d+\.\d+\.\d`))00</MauiVersionBand>
+      <MauiVersionBand Condition=" '$(MauiVersionBand)' == '' ">$(DotNetSdkManifestsFolder)</MauiVersionBand>
     </PropertyGroup>
     <MakeDir Directories="$(_TempDirectory)" />
     <Exec
@@ -61,11 +61,19 @@
     </ItemGroup>
     <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.maui" />
 
+    <!-- Parse NuGet.config -->
+    <XmlPeek
+        XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config"
+        Query="/configuration/packageSources/add/@value">
+      <Output TaskParameter="Result" ItemName="_NuGetSources" />
+    </XmlPeek>
+
     <!-- dotnet workload install maui-android -->
     <ItemGroup>
+      <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
       <_InstallArguments Include="--skip-manifest-update" />
       <_InstallArguments Include="--verbosity diag" />
-      <_InstallArguments Include="--configfile &quot;$(XamarinAndroidSourcePath)NuGet.config&quot;" />
+      <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
     <Exec

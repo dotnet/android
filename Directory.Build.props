@@ -37,7 +37,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>33.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.7</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>rc.1</AndroidPackVersionSuffix>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->
@@ -52,6 +52,7 @@
     <SystemCollectionsImmutableVersion>1.7.1</SystemCollectionsImmutableVersion>
     <XliffTasksVersion>1.0.0-beta.20420.1</XliffTasksVersion>
     <ELFSharpVersion>2.13.1</ELFSharpVersion>
+    <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.8.9.2</MdocPackageVersion>
   </PropertyGroup>
 
   <!-- Properties to help us run managed assemblies on various runtimes.

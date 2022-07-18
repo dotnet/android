@@ -9,7 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mdoc"
-        Version="5.8.5"
+        Version="$(MdocPackageVersion)"
         GeneratePathProperty="True"
         ReferenceOutputAssembly="False"
         SkipGetTargetFrameworkProperties="True"

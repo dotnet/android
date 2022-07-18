@@ -124,7 +124,12 @@ namespace Xamarin.Android.Tasks
 				if (Directory.Exists (dir.ItemSpec))
 					res.SearchDirectories.Add (dir.ItemSpec);
 			}
-
+#if ENABLE_MARSHAL_METHODS
+			Dictionary<string, HashSet<string>> marshalMethodsAssemblyPaths = null;
+			if (!Debug) {
+				marshalMethodsAssemblyPaths = new Dictionary<string, HashSet<string>> (StringComparer.Ordinal);
+			}
+#endif
 			// Put every assembly we'll need in the resolver
 			bool hasExportReference = false;
 			bool haveMonoAndroid = false;
@@ -159,6 +164,11 @@ namespace Xamarin.Android.Tasks
 				}
 
 				res.Load (assembly.ItemSpec);
+#if ENABLE_MARSHAL_METHODS
+				if (!Debug) {
+					StoreMarshalAssemblyPath (Path.GetFileNameWithoutExtension (assembly.ItemSpec), assembly);
+				}
+#endif
 			}
 
 			// However we only want to look for JLO types in user code for Java stub code generation
@@ -172,6 +182,9 @@ namespace Xamarin.Android.Tasks
 				string name = Path.GetFileNameWithoutExtension (asm.ItemSpec);
 				if (!userAssemblies.ContainsKey (name))
 					userAssemblies.Add (name, asm.ItemSpec);
+#if ENABLE_MARSHAL_METHODS
+				StoreMarshalAssemblyPath (name, asm);
+#endif
 			}
 
 			// Step 1 - Find all the JLO types
@@ -182,10 +195,6 @@ namespace Xamarin.Android.Tasks
 
 			List<TypeDefinition> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies, res);
 
-			// Step 2 - Generate type maps
-			//   Type mappings need to use all the assemblies, always.
-			WriteTypeMappings (allJavaTypes, cache);
-
 			var javaTypes = new List<TypeDefinition> ();
 			foreach (TypeDefinition td in allJavaTypes) {
 				if (!userAssemblies.ContainsKey (td.Module.Assembly.Name.Name) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache)) {
@@ -195,10 +204,26 @@ namespace Xamarin.Android.Tasks
 				javaTypes.Add (td);
 			}
 
-			// Step 3 - Generate Java stub code
-			var success = CreateJavaSources (javaTypes, cache);
+			MarshalMethodsClassifier classifier = null;
+#if ENABLE_MARSHAL_METHODS
+			if (!Debug) {
+				classifier = new MarshalMethodsClassifier (cache, res, Log);
+			}
+#endif
+			// Step 2 - Generate Java stub code
+			var success = CreateJavaSources (javaTypes, cache, classifier);
 			if (!success)
 				return;
+
+#if ENABLE_MARSHAL_METHODS
+			if (!Debug) {
+				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths, Log);
+				rewriter.Rewrite (res);
+			}
+#endif
+			// Step 3 - Generate type maps
+			//   Type mappings need to use all the assemblies, always.
+			WriteTypeMappings (allJavaTypes, cache);
 
 			// We need to save a map of .NET type -> ACW type for resource file fixups
 			var managed = new Dictionary<string, TypeDefinition> (javaTypes.Count, StringComparer.Ordinal);
@@ -210,7 +235,7 @@ namespace Xamarin.Android.Tasks
 			using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				foreach (TypeDefinition type in javaTypes) {
 					string managedKey = type.FullName.Replace ('/', '.');
-					string javaKey = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
+					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 
 					acw_map.Write (type.GetPartialAssemblyQualifiedName (cache));
 					acw_map.Write (';');
@@ -332,17 +357,30 @@ namespace Xamarin.Android.Tasks
 			string applicationTemplateFile = "ApplicationRegistration.java";
 			SaveResource (applicationTemplateFile, applicationTemplateFile, real_app_dir,
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
+
+#if ENABLE_MARSHAL_METHODS
+			void StoreMarshalAssemblyPath (string name, ITaskItem asm)
+			{
+				if (Debug) {
+					return;
+				}
+
+				if (!marshalMethodsAssemblyPaths.TryGetValue (name, out HashSet<string> assemblyPaths)) {
+					assemblyPaths = new HashSet<string> ();
+					marshalMethodsAssemblyPaths.Add (name, assemblyPaths);
+				}
+
+				assemblyPaths.Add (asm.ItemSpec);
+			}
+#endif
 		}
 
-		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes, TypeDefinitionCache cache)
+		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier)
 		{
 			string outputPath = Path.Combine (OutputDirectory, "src");
 			string monoInit = GetMonoInitSource (AndroidSdkPlatform);
 			bool hasExportReference = ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll");
 			bool generateOnCreateOverrides = int.Parse (AndroidSdkPlatform) <= 10;
-#if ENABLE_MARSHAL_METHODS
-			var overriddenMethodDescriptors = new List<OverriddenMethodDescriptor> ();
-#endif
 
 			bool ok = true;
 			foreach (var t in javaTypes) {
@@ -353,7 +391,7 @@ namespace Xamarin.Android.Tasks
 
 				using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {
-						var jti = new JavaCallableWrapperGenerator (t, Log.LogWarning, cache) {
+						var jti = new JavaCallableWrapperGenerator (t, Log.LogWarning, cache, classifier) {
 							GenerateOnCreateOverrides = generateOnCreateOverrides,
 							ApplicationJavaClass = ApplicationJavaClass,
 							MonoRuntimeInitialization = monoInit,
@@ -361,7 +399,11 @@ namespace Xamarin.Android.Tasks
 
 						jti.Generate (writer);
 #if ENABLE_MARSHAL_METHODS
-						overriddenMethodDescriptors.AddRange (jti.OverriddenMethodDescriptors);
+						if (!Debug) {
+							if (classifier.FoundDynamicallyRegisteredMethods) {
+								Log.LogWarning ($"Type '{t.GetAssemblyQualifiedName ()}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
+							}
+						}
 #endif
 						writer.Flush ();
 
@@ -397,7 +439,9 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 #if ENABLE_MARSHAL_METHODS
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (MarshalMethodsRegisterTaskKey, overriddenMethodDescriptors, RegisteredTaskObjectLifetime.Build);
+			if (!Debug) {
+				BuildEngine4.RegisterTaskObjectAssemblyLocal (MarshalMethodsRegisterTaskKey, new MarshalMethodsState (classifier.MarshalMethods), RegisteredTaskObjectLifetime.Build);
+			}
 #endif
 			return ok;
 		}
