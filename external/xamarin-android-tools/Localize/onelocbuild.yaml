@@ -1,0 +1,46 @@
+# xamarin-android-tools - OneLocBuild
+
+name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+
+trigger:
+- main
+
+pr: none
+
+jobs:
+- job: OneLocBuild
+  displayName: OneLocBuild
+  condition: and(eq(variables['System.TeamProject'], 'DevDiv'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool: VSEngSS-MicroBuild2022-1ES
+  timeoutInMinutes: 30
+  variables:
+  - group: Xamarin-Secrets
+  workspace:
+    clean: all
+  steps:
+  - checkout: self
+    clean: true
+
+  - task: OneLocBuild@2
+    displayName: OneLocBuild
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    inputs:
+      locProj: Localize/LocProject.json
+      outDir: $(Build.StagingDirectory)
+      packageSourceAuth: patAuth
+      patVariable: $(OneLocBuild--PAT)
+      isCreatePrSelected: true
+      repoType: gitHub
+      gitHubPatVariable: $(github--pat--vs-mobiletools-engineering-service2)
+      prSourceBranchPrefix: locpr
+      isShouldReusePrSelected: true
+      isAutoCompletePrSelected: false
+      isUseLfLineEndingsSelected: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Localization Files
+    inputs:
+      PathtoPublish: $(Build.StagingDirectory)/loc
+      ArtifactName: Loc
+    condition: succeededOrFailed()

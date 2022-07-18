@@ -1,0 +1,19 @@
+{
+  "Projects": [
+    {
+      "LanguageSet": "VS_Main_Languages",
+      "LocItems": [
+        {
+          "CopyOption": "LangIDOnName",
+          "SourceFile": ".\\src\\Microsoft.Android.Build.BaseTasks\\Properties\\Resources.resx",
+          "OutputPath": ".\\src\\Microsoft.Android.Build.BaseTasks\\Properties"
+        },
+        {
+          "CopyOption": "LangIDOnName",
+          "SourceFile": ".\\src\\Xamarin.Android.Tools.AndroidSdk\\Properties\\Resources.resx",
+          "OutputPath": ".\\src\\Xamarin.Android.Tools.AndroidSdk\\Properties"
+        }
+      ]
+    }
+  ]
+}
