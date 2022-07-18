@@ -12,21 +12,35 @@ parameters:
 - name: apiLevel
   displayName: AndroidApiLevel property value
   type: string
-  default: 31
+  default: default
 
 - name: platformId
   displayName: AndroidPlatformId property value
   type: string
-  default: 31
+  default: default
 
 - name: frameworkVersion
   displayName: AndroidFrameworkVersion property value
   type: string
-  default: v12.0
+  default: default
+
+- name: mdocVersion
+  displayName: MdocPackageVersion property value
+  type: string
+  default: default
 
 # Global variables
 variables:
 - template: yaml-templates/variables.yaml
+- name: DocsApiLevelArg
+  value: ''
+- name: DocsPlatformIdArg
+  value: ''
+- name: DocsFxVersionArg
+  value: ''
+- name: MdocPackageVersionArg
+  value: ''
+
 
 stages:
 - stage: mac_build
@@ -48,6 +62,23 @@ stages:
     - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-11"
       displayName: set JI_JAVA_HOME
 
+    # Set MSBuild property overrides if parameters are set
+    - ${{ if ne(parameters.apiLevel, 'default') }}:
+      - script: echo "##vso[task.setvariable variable=DocsApiLevelArg]-p:DocsApiLevel=${{ parameters.apiLevel }}"
+        displayName: set DocsApiLevelArg
+
+    - ${{ if ne(parameters.platformId, 'default') }}:
+      - script: echo "##vso[task.setvariable variable=DocsPlatformIdArg]-p:DocsPlatformId=${{ parameters.platformId }}"
+        displayName: set DocsPlatformIdArg
+
+    - ${{ if ne(parameters.frameworkVersion, 'default') }}:
+      - script: echo "##vso[task.setvariable variable=DocsFxVersionArg]-p:DocsFxVersion=${{ parameters.frameworkVersion }}"
+        displayName: set DocsFxVersionArg
+
+    - ${{ if ne(parameters.mdocVersion, 'default') }}:
+      - script: echo "##vso[task.setvariable variable=MdocPackageVersionArg]-p:MdocPackageVersion=${{ parameters.mdocVersion }}"
+        displayName: set MdocPackageVersionArg
+
     - template: yaml-templates/use-dot-net.yaml
 
     - task: NuGetAuthenticate@0
@@ -64,7 +95,9 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare
 
-    - script: make update-api-docs CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='-p:DocsApiLevel=${{ parameters.apiLevel }} -p:DocsPlatformId=${{ parameters.platformId }} -p:DocsFxVersion=${{ parameters.frameworkVersion }}'
+    - script: >-
+        make update-api-docs CONFIGURATION=$(XA.Build.Configuration)
+        MSBUILD_ARGS='$(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make update-api-docs
 
