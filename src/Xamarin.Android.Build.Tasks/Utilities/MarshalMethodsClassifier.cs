@@ -172,7 +172,7 @@ namespace Xamarin.Android.Tasks
 #endif
 		}
 
-		public override bool ShouldBeDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
+		public override bool ShouldBeDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute? registerAttribute)
 		{
 #if ENABLE_MARSHAL_METHODS
 			if (registeredMethod == null) {
