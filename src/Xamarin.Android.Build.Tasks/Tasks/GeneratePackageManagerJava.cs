@@ -442,10 +442,12 @@ namespace Xamarin.Android.Tasks
 			};
 			appConfigAsmGen.Init ();
 #if ENABLE_MARSHAL_METHODS
-			var marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator () {
+			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (GenerateJavaStubs.MarshalMethodsRegisterTaskKey, RegisteredTaskObjectLifetime.Build);
+
+			var marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator {
 				NumberOfAssembliesInApk = assemblyCount,
 				UniqueAssemblyNames = uniqueAssemblyNames,
-				OverriddenMethodDescriptors = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<List<Java.Interop.Tools.JavaCallableWrappers.OverriddenMethodDescriptor>> (GenerateJavaStubs.MarshalMethodsRegisterTaskKey, RegisteredTaskObjectLifetime.Build)
+				MarshalMethods = marshalMethodsState?.MarshalMethods,
 			};
 			marshalMethodsAsmGen.Init ();
 #endif

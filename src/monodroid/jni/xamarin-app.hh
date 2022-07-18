@@ -317,7 +317,7 @@ constexpr uint32_t number_of_assembly_name_forms_in_image_cache = 2;
 // These 3 arrays constitute the cache used to store pointers to loaded managed assemblies.
 // Three arrays are used so that we can have multiple hashes pointing to the same MonoImage*.
 //
-// This is done by the `assembly_image_cache_hashes` containing hases for all mutations of some
+// This is done by the `assembly_image_cache_hashes` containing hashes for all mutations of some
 // assembly's name (e.g. with culture prefix, without extension etc) and position of that hash in
 // `assembly_image_cache_hashes` is an index into `assembly_image_cache_indices` which, in turn,
 // stores final index into the `assembly_image_cache` array.
