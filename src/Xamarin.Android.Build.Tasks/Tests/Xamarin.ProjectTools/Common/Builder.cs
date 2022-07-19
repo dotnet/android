@@ -305,21 +305,21 @@ namespace Xamarin.ProjectTools
 			}
 			args.Append ($" @\"{responseFile}\"");
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {
-				sw.WriteLine ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
+				sw.WriteLine ($"/p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
 				if (BuildingInsideVisualStudio) {
-					sw.WriteLine (" /p:BuildingOutOfProcess=true");
+					sw.WriteLine ("/p:BuildingOutOfProcess=true");
 				}
 				string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
 				if (Directory.Exists (sdkPath)) {
-					sw.WriteLine (" /p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
+					sw.WriteLine ("/p:AndroidSdkDirectory=\"{0}\"", sdkPath);
 				}
 				string jdkPath = AndroidSdkResolver.GetJavaSdkPath ();
 				if (Directory.Exists (jdkPath)) {
-					sw.WriteLine (" /p:JavaSdkDirectory=\"{0}\" ", jdkPath);
+					sw.WriteLine ("/p:JavaSdkDirectory=\"{0}\"", jdkPath);
 				}
 				if (parameters != null) {
 					foreach (var param in parameters) {
-						sw.WriteLine (" /p:{0}", param);
+						sw.WriteLine ("/p:{0}", param);
 					}
 				}
 				var msbuildArgs = Environment.GetEnvironmentVariable ("NUNIT_MSBUILD_ARGS");
@@ -328,7 +328,7 @@ namespace Xamarin.ProjectTools
 				}
 
 				psi.SetEnvironmentVariable ("MSBUILD", "msbuild");
-				sw.WriteLine ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
+				sw.WriteLine ($"/bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
 
 				if (environmentVariables != null) {
 					foreach (var kvp in environmentVariables) {
