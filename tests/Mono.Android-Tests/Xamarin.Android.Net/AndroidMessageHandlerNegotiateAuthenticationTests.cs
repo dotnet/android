@@ -11,17 +11,35 @@ namespace Xamarin.Android.NetTests {
 	[TestFixture]
 	public sealed class AndroidMessageHandlerNegotiateAuthenticationTests
 	{
+		// Negotiate authentication is available for Android since .NET 7
+		public static bool ShouldBeAvailable => Environment.Version.Major >= 7;
+
 		[SetUp]
-		public void SetUp ()
+		public void EnableNegotiateAuthentication ()
 		{
 			AppContext.SetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", true);
 		}
 
 		[Test]
+		public void NegotiateAuthenticationIsEnabled ()
+		{
+			const string propertyName = "NegotiateAuthenticationIsEnabled";
+			var property = typeof (AndroidMessageHandler).GetProperty (propertyName, BindingFlags.NonPublic | BindingFlags.Static);
+			if (!ShouldBeAvailable) {
+				Assert.IsNull (property, $"The {nameof (AndroidMessageHandler)}.{propertyName} property exists in the Monodroid build");
+			} else {
+				Assert.IsNotNull (property, $"The {nameof (AndroidMessageHandler)}.{propertyName} property is missing in the .NET build");
+
+				var isEnabled = property.GetValue (null) as bool? ?? false;
+				Assert.IsTrue (isEnabled, "Negotiate authentication is not enabled");
+			}
+		}
+
+		[Test]
 		public async Task RequestWithoutCredentialsFails ()
 		{
-			if (!NegotiateAuthenticationIsEnabled) {
-				Assert.Ignore ("Negotiate authentication is not enabled.");
+			if (!ShouldBeAvailable) {
+				Assert.Ignore ("Negotiate authentication is only available in .NET 7+");
 			}
 
 			using var server = new FakeNtlmServer (port: 47662);
@@ -37,8 +55,8 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public async Task RequestWithCredentialsSucceeds ()
 		{
-			if (!NegotiateAuthenticationIsEnabled) {
-				Assert.Ignore ("Negotiate authentication is not enabled.");
+			if (!ShouldBeAvailable) {
+				Assert.Ignore ("Negotiate authentication is only available in .NET 7+");
 			}
 
 			using var server = new FakeNtlmServer (port: 47663);
@@ -53,9 +71,6 @@ namespace Xamarin.Android.NetTests {
 			Assert.IsTrue (response.IsSuccessStatusCode);
 			Assert.AreEqual (FakeNtlmServer.SecretContent, content);
 		}
-
-		static bool NegotiateAuthenticationIsEnabled =>
-			typeof (AndroidMessageHandler).GetProperty ("NegotiateAuthenticationIsEnabled", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue (null) as bool? ?? false;
 
 		sealed class FakeNtlmServer : IDisposable
 		{

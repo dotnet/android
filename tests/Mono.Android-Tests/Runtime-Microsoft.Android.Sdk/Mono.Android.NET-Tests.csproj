@@ -39,8 +39,6 @@
   <ItemGroup>
     <Compile Remove="..\Resources\Resource.designer.cs" />
     <Compile Include="System\AppContextTests.cs" />
-    <!-- Negotiate authentication support in the AndroidMessageHandler is available only in .NET 7+ -->
-    <Compile Include="..\Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
     <!-- Mono.Data.Sqlite is not supported in .NET 6 -->
     <Compile Remove="..\Mono.Data.Sqlite\SqliteTests.cs" />
   </ItemGroup>
