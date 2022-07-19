@@ -265,6 +265,11 @@ namespace Xamarin.Android.Net
 		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromHours (24);
 
 #if !MONOANDROID1_0
+		/// <summary>
+		/// A feature switch that determines whether the message handler should attempt to authenticate the user
+		/// using the NTLM/Negotiate authentication method. Enable the feature by adding
+		/// <c><AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication></c> to your project file.
+		/// </summary>
 		static bool NegotiateAuthenticationIsEnabled =>
 			AppContext.TryGetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", out bool isEnabled) && isEnabled;
 #endif
