@@ -23,9 +23,9 @@ jobs:
   strategy:
     matrix:
       macOS:
-        vmImage: macOS-10.15
-      win2019:
-        vmImage: windows-2019
+        vmImage: macOS-12
+      windows:
+        vmImage: windows-2022
 
   pool:
     vmImage: $(vmImage)
