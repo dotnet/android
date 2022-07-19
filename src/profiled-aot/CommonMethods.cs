@@ -31,7 +31,7 @@ static class CommonMethods
 
         var type = typeof (CommonMethods);
         var method = type.GetMethod (nameof (FromReflection), BindingFlags.NonPublic | BindingFlags.Static);
-        method.Invoke (null, null);
+        method!.Invoke (null, null);
 
         using var client = new HttpClient();
         var send = client.SendAsync (new HttpRequestMessage (HttpMethod.Get, url));
