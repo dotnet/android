@@ -7,6 +7,7 @@ using Mono.Linker;
 using MonoDroid.Tuner;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using SR = System.Reflection;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -473,7 +474,7 @@ namespace UnnamedProject {
 		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication)
 		{
 			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test only valid on .NET 6");
+				Assert.Ignore ("Test only valid on .NET");
 
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
 			proj.AddReferences ("System.Net.Http");
@@ -486,19 +487,29 @@ namespace UnnamedProject {
 			if (useNegotiateAuthentication.HasValue)
 				proj.SetProperty ("AndroidUseNegotiateAuthentication", useNegotiateAuthentication.ToString ());
 
+			var shouldBeEnabled = useNegotiateAuthentication.HasValue && useNegotiateAuthentication.Value;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var assemblyPath = BuildTest.GetLinkedPath (b, true, "Mono.Android.dll");
+
 				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 					Assert.IsTrue (assembly != null);
 
 					var td = assembly.MainModule.GetType ("Xamarin.Android.Net.NegotiateAuthenticationHelper");
-					if (useNegotiateAuthentication.HasValue && useNegotiateAuthentication.Value) {
+					if (shouldBeEnabled) {
 						Assert.IsNotNull (td, "NegotiateAuthenticationHelper shouldn't have been linked out");
 					} else {
 						Assert.IsNull (td, "NegotiateAuthenticationHelper should have been linked out");
 					}
 				}
+
+#if NETCOREAPP
+				var androidMessageHandler = SR.Assembly.Load (assemblyPath).GetType ("Xamarin.Android.Net.AndroidMessageHandler");
+				var property = SR.IntrospectionExtensions.GetTypeInfo (androidMessageHandler)?.GetProperty ("NegotiateAuthenticationIsEnabled", SR.BindingFlags.NonPublic | SR.BindingFlags.Static);
+				var isEnabled = property?.GetValue (null) as bool? ?? false;
+
+				Assert.AreEqual (shouldBeEnabled, isEnabled);
+#endif
 			}
 		}
 	}
