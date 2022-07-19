@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Xamarin.Android.Tools.AndroidSdk\Properties\Resources.resx" PsrId="211" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="it-IT">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Item ItemId=";Resources.resx" ItemType="0" PsrId="211" Leaf="false">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
+    <Item ItemId=";Strings" ItemType="0" PsrId="211" Leaf="false">
+      <Disp Icon="Str" Disp="true" LocTbl="false" />
+      <Item ItemId=";InvalidJdkDirectory_path_locator_message" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[An exception occurred while validating the Java SDK installation in '{0}' that was found while searching the paths from '{1}'. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path. Exception: {2}]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+        <Cmts>
+          <Cmt Name="Dev"><![CDATA[]D;]A;{0} - The path of the invalid installation]D;]A;{1} - a "contextual" name for where {0} came from: `Preferred Registry` (Windows Registry), `OpenJDK`, `$JAVA_HOME` (environment variable), etc.]D;]A;{2} - The exception message of the associated exception.]]></Cmt>
+        </Cmts>
+      </Item>
+      <Item ItemId=";InvalidMonodroidConfigFile_path_message" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[An exception occurred while reading configuration file '{0}'. Exception: {1}]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+        <Cmts>
+          <Cmt Name="Dev"><![CDATA[]D;]A;{0} - The path of the file being read.]D;]A;{1} - The exception message of the associated exception.]]></Cmt>
+        </Cmts>
+      </Item>
+      <Item ItemId=";InvalidXmlLibExecJdk_path_args_message" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[An exception occurred while reading the output of '{0} {1}'. Exception: {2}]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+    </Item>
+  </Item>
+</LCX>
