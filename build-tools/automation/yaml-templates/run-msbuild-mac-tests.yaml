@@ -12,7 +12,7 @@ parameters:
 
 jobs:
   - job: ${{ parameters.job_name }}
-    displayName: macOS > Tests > MSBuild ${{ parameters.job_suffix }} \#${{ parameters.node_id }}
+    displayName: "macOS > Tests > MSBuild ${{ parameters.job_suffix }} #${{ parameters.node_id }}"
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 180

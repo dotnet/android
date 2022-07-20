@@ -13,7 +13,7 @@ parameters:
 
 jobs:
   - job: ${{ parameters.job_name }}
-    displayName: Windows > Tests > MSBuild ${{ parameters.job_suffix }} \#${{ parameters.node_id }}/${{ parameters.additional_node_id }}
+    displayName: "Windows > Tests > MSBuild ${{ parameters.job_suffix }} #${{ parameters.node_id }}/${{ parameters.additional_node_id }}"
     pool: $(1ESWindowsPool)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
