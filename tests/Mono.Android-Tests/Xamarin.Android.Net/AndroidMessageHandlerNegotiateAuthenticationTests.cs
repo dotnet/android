@@ -155,7 +155,7 @@ namespace Xamarin.Android.NetTests {
 				public void ConfigureAndClose (HttpListenerResponse res)
 				{
 					res.StatusCode = (int)_statusCode;
-					if (header != null) res.AddHeader ("WWW-Authenticate", _header);
+					if (_header != null) res.AddHeader ("WWW-Authenticate", _header);
 					res.Close (Encoding.UTF8.GetBytes (_body), false);
 				}
 			}
