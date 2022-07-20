@@ -501,18 +501,6 @@ namespace UnnamedProject {
 					} else {
 						Assert.IsNull (td, "NegotiateAuthenticationHelper should have been linked out");
 					}
-
-					var androidMessageHandlerType = assembly.MainModule.GetType ("Xamarin.Android.Net.AndroidMessageHandler");
-					var property = androidMessageHandlerType.Properties.FirstOrDefault (prop => prop.Name == "NegotiateAuthenticationIsEnabled");
-					Assert.NotNull (property, "The AndroidMessageHandler.NegotiateAuthenticationIsEnabled property is missing");
-
-					var instructions = property.GetMethod.Body.Instructions;
-					Assert.AreEqual (2, instructions.Count);
-
-					// check that the property getter was replaced with `return true` or `return false`
-					var expectedConstant = shouldBeEnabled ? Mono.Cecil.Cil.Code.Ldloc_1 : Mono.Cecil.Cil.Code.Ldloc_0;
-					Assert.AreEqual(expectedConstant, instructions[0].OpCode);
-					Assert.AreEqual(Mono.Cecil.Cil.Code.Ret, instructions[1].OpCode);
 				}
 			}
 		}
