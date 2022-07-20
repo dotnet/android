@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Net;
 using System.Net.Http;
@@ -134,13 +136,24 @@ namespace Xamarin.Android.NetTests {
 					_ => new (HttpStatusCode.Unauthorized, ntlm, string.Empty)
 				};
 
-			record FakeResponse (HttpStatusCode statusCode, string? header, string body)
+			class FakeResponse
 			{
+				private HttpStatusCode _statusCode;
+				private string? _header;
+				private string _body;
+
+				public FakeResponse (HttpStatusCode statusCode, string? header, string body)
+				{
+					_statusCode = statusCode;
+					_header = header;
+					_body = body;
+				}
+
 				public void ConfigureAndClose (HttpListenerResponse res)
 				{
-					res.StatusCode = (int)statusCode;
-					if (header != null) res.AddHeader ("WWW-Authenticate", header);
-					res.Close (Encoding.UTF8.GetBytes (body), false);
+					res.StatusCode = (int)_statusCode;
+					if (header != null) res.AddHeader ("WWW-Authenticate", _header);
+					res.Close (Encoding.UTF8.GetBytes (_body), false);
 				}
 			}
 		}
