@@ -16,15 +16,6 @@ namespace Xamarin.Android.NetTests {
 		// Negotiate authentication is available for Android since .NET 7
 		public static bool ShouldBeAvailable => Environment.Version.Major >= 7;
 
-		[SetUp]
-		public void EnableNegotiateAuthentication ()
-		{
-			// It wasn't possible to enable the feature flag using the msbuild $(AndroidUseNegotiateAuthentication) property
-			// so we're enabling the feature at runtime. This only works in Debug builds (the linker bakes in the boolean
-			// value in Release builds, see LinkerTests)
-			AppContext.SetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", true);
-		}
-
 		[Test]
 		public void NegotiateAuthenticationIsEnabled ()
 		{

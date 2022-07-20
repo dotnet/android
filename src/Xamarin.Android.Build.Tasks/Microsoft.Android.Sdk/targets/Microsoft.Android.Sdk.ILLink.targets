@@ -28,10 +28,6 @@ This file contains the .NET 5-specific targets to customize ILLink
           Condition="'$(VSAndroidDesigner)' != ''"
           Value="$(VSAndroidDesigner)"
           Trim="true" />
-      <RuntimeHostConfigurationOption Include="Xamarin.Android.Net.UseNegotiateAuthentication"
-          Condition="'$(AndroidUseNegotiateAuthentication)' != ''"
-          Value="$(AndroidUseNegotiateAuthentication)"
-          Trim="true" />
       <!-- Mark all assemblies to be linked for AndroidLinkMode=Full -->
       <ResolvedFileToPublish
           Update="@(ResolvedFileToPublish)"
