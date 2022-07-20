@@ -2,10 +2,16 @@
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
-trigger:
-- main
+trigger: none
 
 pr: none
+
+schedules:
+- cron: "0 6 * * *"
+  displayName: Run daily at 6:00 UTC
+  branches:
+    include:
+    - main
 
 jobs:
 - job: OneLocBuild
