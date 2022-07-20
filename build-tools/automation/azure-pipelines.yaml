@@ -1825,13 +1825,13 @@ stages:
       packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
       GitHub.Token: $(GitHub.Token)
 
-- stage: code_analysis
+- stage: tenets
   dependsOn: []
-  displayName: Code Analysis
+  displayName: Tenets
   jobs:
-  # Check - "Xamarin.Android (Code Analysis Security and Compliance)"
+  # Check - "Xamarin.Android (Tenets Code Analysis)"
   - job: run_static_analysis
-    displayName: Security and Compliance
+    displayName: Code Analysis
     pool:
       vmImage: $(HostedWinImage)
     timeoutInMinutes: 60
@@ -1875,4 +1875,42 @@ stages:
       inputs:
         CredScan: true
         PoliCheck: true
+      condition: succeededOrFailed()
+
+  # Check - "Xamarin.Android (Tenets OneLocBuild)"
+  - job: OneLocBuild
+    displayName: OneLocBuild
+    condition: eq(variables['MicroBuildSignType'], 'Real')
+    pool: VSEngSS-MicroBuild2022-1ES
+    timeoutInMinutes: 30
+    variables:
+    - group: Xamarin-Secrets
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      clean: true
+
+    - task: OneLocBuild@2
+      displayName: OneLocBuild
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      inputs:
+        locProj: Localize/LocProject.json
+        outDir: $(Build.StagingDirectory)
+        packageSourceAuth: patAuth
+        patVariable: $(OneLocBuild--PAT)
+        isCreatePrSelected: true
+        repoType: gitHub
+        gitHubPatVariable: $(github--pat--vs-mobiletools-engineering-service2)
+        prSourceBranchPrefix: locpr
+        isShouldReusePrSelected: true
+        isAutoCompletePrSelected: false
+        isUseLfLineEndingsSelected: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Localization Files
+      inputs:
+        PathtoPublish: $(Build.StagingDirectory)/loc
+        ArtifactName: Loc
       condition: succeededOrFailed()
