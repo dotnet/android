@@ -31,7 +31,7 @@ stages:
   condition: eq(variables['EnableMacStage'], 'true')  # The variable is defined on the pipeline definition
   jobs:
   - job: mac_build
-    displayName: Mac Build
+    displayName: macOS > Build
     pool:
       name: VSEng-Xamarin-RedmondMac-Android-OSS
       demands:
@@ -148,7 +148,7 @@ stages:
   dependsOn: []                 # Run stage in parallel
   jobs:
   - job: linux_build_package
-    displayName: Linux Build
+    displayName: Linux > Build
     pool: android-public-ubuntu-vmss
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5

@@ -81,12 +81,12 @@ variables:
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
 - stage: mac_build
-  displayName: Mac
+  displayName: macOS Build
   dependsOn: []
   jobs:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
-    displayName: Build
+    displayName: macOS > Build
     pool:
       name: $(MacBuildPoolName)
       vmImage: $(MacBuildPoolImage)
@@ -142,12 +142,12 @@ stages:
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 - stage: win_build_test
-  displayName: Windows
+  displayName: Windows Build & Smoke Test
   dependsOn: []
   jobs:
   # Check - "Xamarin.Android (Windows Build and Smoke Test)"
   - job: win_build_test
-    displayName: Build and Smoke Test
+    displayName: Windows > Build & Smoke Test
     pool: $(1ESWindowsPool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
@@ -259,11 +259,11 @@ stages:
 
 # Check - "Xamarin.Android (Linux Build)"
 - stage: linux_build
-  displayName: Linux
+  displayName: Linux Build
   dependsOn: []
   jobs:
   - job: linux_build_create_sdk_pack
-    displayName: Build
+    displayName: Linux > Build
     pool: android-devdiv-ubuntu-vmss
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
@@ -332,12 +332,12 @@ stages:
     - template: yaml-templates/fail-on-issue.yaml
 
 - stage: smoke_tests
-  displayName: Smoke Tests
+  displayName: macOS > Smoke Tests
   dependsOn: mac_build
   jobs:
   # Check - "Xamarin.Android (Smoke Tests APKs Legacy - macOS)"
   - job: mac_apk_tests_legacy
-    displayName: APKs Legacy - macOS
+    displayName: macOS > Tests > APKs Classic
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 240
@@ -596,7 +596,7 @@ stages:
 
  # Check - "Xamarin.Android (Smoke Tests APKs .NET - macOS)"
   - job: mac_apk_tests_net
-    displayName: APKs .NET - macOS
+    displayName: macOS > Tests > APKs .NET
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 180
@@ -760,7 +760,7 @@ stages:
 
   # Check - "Xamarin.Android (Smoke Tests MSBuild Emulator - macOS)"
   - job: mac_msbuilddevice_tests
-    displayName: MSBuild Emulator - macOS
+    displayName: macOS > Tests > MSBuild+Emulator
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 90
@@ -820,7 +820,7 @@ stages:
   jobs:
   # Check - "Xamarin.Android (Linux Tests MSBuild Smoke)"
   - job: linux_tests_smoke
-    displayName: MSBuild Smoke
+    displayName: Linux > Tests > MSBuild
     pool: android-devdiv-ubuntu-vmss
     timeoutInMinutes: 180
     workspace:
@@ -1109,7 +1109,7 @@ stages:
   condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
   jobs:
   - job: wear_tests
-    displayName: wear_tests
+    displayName: macOS > Tests > WearOS 
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
     strategy:
@@ -1179,14 +1179,14 @@ stages:
 
 
 - stage: designer_tests
-  displayName: Designer Tests
+  displayName: Designer Integration Tests
   dependsOn: mac_build
   condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'Designer')))
   jobs:
   # Check - "Xamarin.Android (Designer Tests macOS)"
   - job: designer_integration_mac
     condition: false #TODO: Enable once test issues are fixed.
-    displayName: macOS
+    displayName: macOS > Tests > Designer Integration
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 120
@@ -1265,7 +1265,7 @@ stages:
 
   # Check - "Xamarin.Android (Designer Tests Windows)"
   - job: designer_integration_win
-    displayName: Windows
+    displayName: Windows > Tests > Designer Integration
     pool:
       vmImage: $(HostedWinImage)
     timeoutInMinutes: 120
@@ -1352,7 +1352,7 @@ stages:
   jobs:
   # Check - "Xamarin.Android (BCL Emulator Tests macOS)"
   - job: mac_bcl_tests
-    displayName: macOS
+    displayName: macOS > Tests > BCL (Emulator)
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 180
