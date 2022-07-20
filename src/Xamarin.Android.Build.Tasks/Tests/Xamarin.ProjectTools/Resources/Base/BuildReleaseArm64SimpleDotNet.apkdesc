@@ -5,25 +5,25 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 59530
+      "Size": 59531
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 90693
+      "Size": 90696
     },
     "assemblies/rc.bin": {
       "Size": 1083
     },
     "assemblies/System.Console.dll": {
-      "Size": 6497
+      "Size": 6492
     },
     "assemblies/System.Linq.dll": {
-      "Size": 9978
+      "Size": 9973
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 533390
+      "Size": 533387
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2423
+      "Size": 2416
     },
     "assemblies/UnnamedProject.dll": {
       "Size": 3601
