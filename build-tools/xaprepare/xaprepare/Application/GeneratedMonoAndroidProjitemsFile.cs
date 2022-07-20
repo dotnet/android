@@ -25,23 +25,26 @@ namespace Xamarin.Android.Prepare
 		{
 			using (var fs = File.Open (OutputPath, FileMode.Create)) {
 				using (var sw = new StreamWriter (fs)) {
-					GenerateFile (sw);
+					GenerateFile (context, sw);
 				}
 			}
 		}
 
-		void GenerateFile (StreamWriter sw)
+		void GenerateFile (Context context, StreamWriter sw)
 		{
 			sw.Write (FileTop);
 
+			string apiLevelText = context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel);
+			uint.TryParse (apiLevelText, out var dotnetApiLevel);
+
 			sw.WriteLine ("  <ItemGroup>");
-			BuildAndroidPlatforms.AllPlatforms.ForEach (androidPlatform => WriteGroupApiInfo (sw, androidPlatform));
+			BuildAndroidPlatforms.AllPlatforms.ForEach (androidPlatform => WriteGroupApiInfo (sw, androidPlatform, dotnetApiLevel));
 			sw.WriteLine ("  </ItemGroup>");
 
 			sw.Write (FileBottom);
 		}
 
-		void WriteGroupApiInfo (StreamWriter sw, AndroidPlatform androidPlatform)
+		void WriteGroupApiInfo (StreamWriter sw, AndroidPlatform androidPlatform, uint dotnetApiLevel)
 		{
 			if (string.IsNullOrWhiteSpace (androidPlatform.ApiName)) {
 				return;
@@ -52,6 +55,7 @@ namespace Xamarin.Android.Prepare
 			sw.WriteLine ($"      <Level>{androidPlatform.ApiLevel}</Level>");
 			sw.WriteLine ($"      <Id>{androidPlatform.PlatformID}</Id>");
 			sw.WriteLine ($"      <Stable>{androidPlatform.Stable}</Stable>");
+			sw.WriteLine ($"      <DotNetSupported>{androidPlatform.ApiLevel >= dotnetApiLevel}</DotNetSupported>");
 			sw.WriteLine ($"    </AndroidApiInfo>");
 		}
 	}

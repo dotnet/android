@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Mono.Cecil;
 using NUnit.Framework;
@@ -1001,6 +1002,30 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
 			var builder = CreateDotNetBuilder (proj);
 			Assert.IsTrue (builder.Build (), $"{proj.ProjectName} should succeed");
+		}
+
+		[Test]
+		public void UseCorrectRuntimePacks([Values (31, 32, 33)] int apiLevel)
+		{
+			var proj = new XASdkProject {
+				TargetFramework = $"net6.0-android{apiLevel}",
+				Sources = {
+					new BuildItem.Source ("MyThread.cs") {
+						TextContent = () => "class MyThread : Java.Lang.Thread { }",
+					},
+				},
+			};
+			var builder = CreateDotNetBuilder (proj);
+			Assert.IsTrue (builder.Build (), $"{proj.ProjectName} should succeed");
+
+			// Assert we get the right runtime pack, find a path such as:
+			// dotnet\packs\Microsoft.Android.Runtime.31.android-arm\*\runtimes\android-arm\lib\net6.0\Mono.Android.dll
+			var regex = new Regex (@$"Microsoft\.Android\.Runtime\.{apiLevel}\.android-.+Mono\.Android\.dll", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+			foreach (var line in builder.LastBuildOutput) {
+				if (regex.IsMatch (line))
+					return;
+			}
+			Assert.Fail ($"Did not find a Mono.Android.dll from the Microsoft.Android.Runtime.{apiLevel} pack.");
 		}
 
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)

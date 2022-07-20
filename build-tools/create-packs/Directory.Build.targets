@@ -56,26 +56,28 @@
     <RemoveDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned" />
   </Target>
 
-  <Target Name="_CreateDefaultRefPack"
-      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android$(AndroidDefaultTargetDotnetApiLevel)\Mono.Android.dll') ">
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
-  </Target>
-
-  <Target Name="_CreateAPI32Packs">
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=32 -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=32 -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=32 -p:AndroidRID=android-x86 -p:AndroidABI=x86-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=32 -p:AndroidRID=android-x64 -p:AndroidABI=x86_64-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=32 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
-  </Target>
-
   <Target Name="CreateAllPacks"
-      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties;GetXAVersionInfo;_CleanNuGetDirectory;_CreateAPI32Packs;_CreateDefaultRefPack">
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-x86 -p:AndroidABI=x86-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidRID=android-x64 -p:AndroidABI=x86_64-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties;GetXAVersionInfo;_CleanNuGetDirectory">
+    <Exec
+        Condition=" '%(AndroidApiInfo.DotNetSupported)' == 'true' "
+        Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=%(AndroidApiInfo.Level) -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;"
+    />
+    <Exec
+        Condition=" '%(AndroidApiInfo.DotNetSupported)' == 'true' "
+        Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=%(AndroidApiInfo.Level) -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;"
+    />
+    <Exec
+        Condition=" '%(AndroidApiInfo.DotNetSupported)' == 'true' "
+        Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=%(AndroidApiInfo.Level) -p:AndroidRID=android-x86 -p:AndroidABI=x86-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;"
+    />
+    <Exec
+        Condition=" '%(AndroidApiInfo.DotNetSupported)' == 'true' "
+        Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=%(AndroidApiInfo.Level) -p:AndroidRID=android-x64 -p:AndroidABI=x86_64-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;"
+    />
+    <Exec
+        Condition=" '%(AndroidApiInfo.DotNetSupported)' == 'true' "
+        Command="dotnet pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=%(AndroidApiInfo.Level) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;"
+    />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:HostOS=Linux   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Linux' " />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:HostOS=Darwin  &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Darwin' " />
     <Exec Command="dotnet pack @(_GlobalProperties, ' ') -p:HostOS=Windows &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
@@ -123,7 +125,7 @@
     <ItemGroup>
       <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
       <_InstallArguments Include="android" />
-      <_InstallArguments Include="android-33" />
+      <_InstallArguments Include="android-%(AndroidApiInfo.Level)" Condition=" '%(AndroidApiInfo.DotNetSupported)' == 'true' and '%(AndroidApiInfo.Level)' != '$(AndroidDefaultTargetDotnetApiLevel)' " />
       <_InstallArguments Include="--skip-manifest-update" />
       <_InstallArguments Include="--verbosity diag" />
       <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />

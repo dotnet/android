@@ -1,24 +1,23 @@
 <Project>
   <PropertyGroup>
-    <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
   </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
+
   <Target Name="PackDotNet">
-    <MSBuild Projects="$(_Root)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
-    <MSBuild Projects="$(_Root)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
     <MSBuild
-         Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=net6.0;AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);DisableApiCompatibilityCheck=true"
+         Condition=" '%(AndroidApiInfo.DotNetSupported)' == 'true' and '%(AndroidApiInfo.Level)' != '$(AndroidLatestStableApiLevel)' "
+         Projects="$(XamarinAndroidSourcePath)src\Mono.Android\Mono.Android.csproj"
+         Properties="TargetFramework=net6.0;AndroidApiLevel=%(AndroidApiInfo.Level);AndroidPlatformId=%(AndroidApiInfo.Id);DisableApiCompatibilityCheck=true"
     />
-    <MSBuild
-         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=net6.0;AndroidApiLevel=32;AndroidPlatformId=32;DisableApiCompatibilityCheck=true"
-    />
-    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
-    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
     <!-- Clean up old, previously restored packages -->
     <ItemGroup>
-      <_OldPackages Include="$(_Root)packages\microsoft.android.*\**\*.nupkg" />
+      <_OldPackages Include="$(XamarinAndroidSourcePath)packages\microsoft.android.*\**\*.nupkg" />
       <_DirectoriesToRemove Include="%(_OldPackages.RootDir)%(_OldPackages.Directory)" />
     </ItemGroup>
     <RemoveDir Directories="@(_DirectoriesToRemove)" />
@@ -26,19 +25,19 @@
   <Target Name="CreateWorkloadInstallers">
     <MSBuild
         Targets="ExtractWorkloadPacks"
-        Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj"
+        Projects="$(XamarinAndroidSourcePath)build-tools\create-packs\Microsoft.Android.Sdk.proj"
         Properties="Configuration=$(Configuration)"
     />
     <MSBuild
         Condition=" $([MSBuild]::IsOSPlatform('windows')) "
         Targets="Restore;Build"
-        Projects="$(_Root)build-tools\create-dotnet-msi\create-dotnet-msi.csproj"
+        Projects="$(XamarinAndroidSourcePath)build-tools\create-dotnet-msi\create-dotnet-msi.csproj"
         Properties="Configuration=$(Configuration)"
     />
     <MSBuild
         Condition=" $([MSBuild]::IsOSPlatform('osx')) "
         Targets="Restore;Build"
-        Projects="$(_Root)build-tools\create-dotnet-pkg\create-dotnet-pkg.csproj"
+        Projects="$(XamarinAndroidSourcePath)build-tools\create-dotnet-pkg\create-dotnet-pkg.csproj"
         Properties="Configuration=$(Configuration)"
     />
   </Target>

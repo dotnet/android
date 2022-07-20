@@ -1,47 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
 {
-	partial class Step_GenerateFiles : Step
+	partial class Step_GenerateFiles : Step_BaseGenerateFiles
 	{
 		bool atBuildStart;
 		bool onlyRequired;
 
 		public Step_GenerateFiles (bool atBuildStart, bool onlyRequired = false)
-			: base ("Generating files required by the build")
 		{
 			this.atBuildStart = atBuildStart;
 			this.onlyRequired = onlyRequired;
 		}
 
-#pragma warning disable CS1998
-		protected override async Task<bool> Execute (Context context)
-		{
-			List<GeneratedFile>? filesToGenerate = GetFilesToGenerate (context);
-			if (filesToGenerate != null && filesToGenerate.Count > 0) {
-				foreach (GeneratedFile gf in filesToGenerate) {
-					if (gf == null)
-						continue;
-
-					Log.Status ("Generating ");
-					Log.Status (Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, gf.OutputPath), ConsoleColor.White);
-					if (!String.IsNullOrEmpty (gf.InputPath))
-						Log.StatusLine ($" {context.Characters.LeftArrow} ", Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, gf.InputPath), leadColor: ConsoleColor.Cyan, tailColor: ConsoleColor.White);
-					else
-						Log.StatusLine ();
-
-					gf.Generate (context);
-				}
-			}
-
-			return true;
-		}
-#pragma warning restore CS1998
-
-		List<GeneratedFile>? GetFilesToGenerate (Context context)
+		protected override List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
 			if (atBuildStart) {
 				if (onlyRequired) {
