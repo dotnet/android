@@ -31,7 +31,7 @@ stages:
   dependsOn: []
   jobs:
   - job: mac_build_create_installers
-    displayName: macOS
+    displayName: macOS > Create Installers
     pool:
       name: VSEng-Xamarin-RedmondMac-Android-Untrusted
       demands: macOS.Name -equals Monterey
@@ -65,7 +65,7 @@ stages:
     - group: xamops-azdev-secrets
   jobs:
   - job: emulator_tests
-    displayName: Emulator
+    displayName: macOS > Tests > APKs (Emulator)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
     strategy:

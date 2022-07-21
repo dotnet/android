@@ -84,9 +84,9 @@ stages:
   displayName: Mac
   dependsOn: []
   jobs:
-  # Check - "Xamarin.Android (Mac Build)"
+  # Check - "Xamarin.Android (macOS > Build)"
   - job: mac_build_create_installers
-    displayName: Build
+    displayName: macOS > Build
     pool:
       name: $(MacBuildPoolName)
       vmImage: $(MacBuildPoolImage)
@@ -145,9 +145,9 @@ stages:
   displayName: Windows
   dependsOn: []
   jobs:
-  # Check - "Xamarin.Android (Windows Build and Smoke Test)"
+  # Check - "Xamarin.Android (Windows > Build & Smoke Test)"
   - job: win_build_test
-    displayName: Build and Smoke Test
+    displayName: Windows > Build & Smoke Test
     pool: $(1ESWindowsPool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
@@ -257,13 +257,13 @@ stages:
 
     - template: yaml-templates\fail-on-issue.yaml
 
-# Check - "Xamarin.Android (Linux Build)"
+# Check - "Xamarin.Android (Linux > Build)"
 - stage: linux_build
   displayName: Linux
   dependsOn: []
   jobs:
   - job: linux_build_create_sdk_pack
-    displayName: Build
+    displayName: Linux > Build
     pool: android-devdiv-ubuntu-vmss
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
@@ -335,9 +335,9 @@ stages:
   displayName: Smoke Tests
   dependsOn: mac_build
   jobs:
-  # Check - "Xamarin.Android (Smoke Tests APKs Legacy - macOS)"
+  # Check - "Xamarin.Android (macOS > Tests > APKs Classic)"
   - job: mac_apk_tests_legacy
-    displayName: APKs Legacy - macOS
+    displayName: macOS > Tests > APKs Classic
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 240
@@ -594,9 +594,9 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
- # Check - "Xamarin.Android (Smoke Tests APKs .NET - macOS)"
+ # Check - "Xamarin.Android (macOS > Tests > APKs .NET)"
   - job: mac_apk_tests_net
-    displayName: APKs .NET - macOS
+    displayName: macOS > Tests > APKs .NET
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 180
@@ -758,9 +758,9 @@ stages:
       nunit_categories: '|| cat == SmokeTests'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
-  # Check - "Xamarin.Android (Smoke Tests MSBuild Emulator - macOS)"
+  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator)"
   - job: mac_msbuilddevice_tests
-    displayName: MSBuild Emulator - macOS
+    displayName: macOS > Tests > MSBuild+Emulator
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 90
@@ -818,9 +818,9 @@ stages:
   - mac_build
   - linux_build
   jobs:
-  # Check - "Xamarin.Android (Linux Tests MSBuild Smoke)"
+  # Check - "Xamarin.Android (Linux > Tests > MSBuild)"
   - job: linux_tests_smoke
-    displayName: MSBuild Smoke
+    displayName: Linux > Tests > MSBuild
     pool: android-devdiv-ubuntu-vmss
     timeoutInMinutes: 180
     workspace:
@@ -1032,7 +1032,7 @@ stages:
   dependsOn: mac_build
   condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
   jobs:
-  # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - Legacy)"
+  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator Legacy #N)"
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
       node_id: 1
@@ -1066,7 +1066,7 @@ stages:
       nunit_categories: '&& cat == Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
-  # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - One .NET)"
+  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator One .NET #N)"
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
       node_id: 1
@@ -1109,7 +1109,7 @@ stages:
   condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
   jobs:
   - job: wear_tests
-    displayName: wear_tests
+    displayName: macOS > Tests > WearOS 
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
     strategy:
@@ -1183,10 +1183,10 @@ stages:
   dependsOn: mac_build
   condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'Designer')))
   jobs:
-  # Check - "Xamarin.Android (Designer Tests macOS)"
+  # Check - "Xamarin.Android (macOS > Tests > Designer Integration)"
   - job: designer_integration_mac
     condition: false #TODO: Enable once test issues are fixed.
-    displayName: macOS
+    displayName: macOS > Tests > Designer Integration
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 120
@@ -1263,9 +1263,9 @@ stages:
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
         condition: ne(variables['Agent.JobStatus'], 'Succeeded')
 
-  # Check - "Xamarin.Android (Designer Tests Windows)"
+  # Check - "Xamarin.Android (Windows > Tests > Designer Integration)"
   - job: designer_integration_win
-    displayName: Windows
+    displayName: Windows > Tests > Designer Integration
     pool:
       vmImage: $(HostedWinImage)
     timeoutInMinutes: 120
@@ -1350,9 +1350,9 @@ stages:
   dependsOn: mac_build
   condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'BCL')))
   jobs:
-  # Check - "Xamarin.Android (BCL Emulator Tests macOS)"
+  # Check - "Xamarin.Android (macOS > Tests > BCL (Emulator))"
   - job: mac_bcl_tests
-    displayName: macOS
+    displayName: macOS > Tests > BCL (Emulator)
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 180
