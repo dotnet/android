@@ -8,10 +8,10 @@
       "Size": 7114
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66873
+      "Size": 66879
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 477047
+      "Size": 447679
     },
     "assemblies/mscorlib.dll": {
       "Size": 3888
@@ -1964,5 +1964,5 @@
       "Size": 341228
     }
   },
-  "PackageSize": 8114585
+  "PackageSize": 8085913
 }
