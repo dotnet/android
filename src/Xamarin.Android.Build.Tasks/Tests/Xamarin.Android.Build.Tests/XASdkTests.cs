@@ -771,8 +771,7 @@ namespace Xamarin.Android.Build.Tests
 			var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", "net6.0", "Mono.Android.dll");
 			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
 
-			var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
-			var runtimeDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Runtime.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
+			var runtimeDirectory = Directory.GetDirectories (Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "packs", $"Microsoft.Android.Runtime.{apiLevel}.{runtimeIdentifier}")).LastOrDefault ();
 			var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", "net6.0", "Mono.Android.dll");
 			Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
 
