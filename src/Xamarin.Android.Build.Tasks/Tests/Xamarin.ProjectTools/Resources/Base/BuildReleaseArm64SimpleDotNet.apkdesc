@@ -5,10 +5,10 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 58753
+      "Size": 58756
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 89243
+      "Size": 88005
     },
     "assemblies/rc.bin": {
       "Size": 1129
@@ -26,7 +26,7 @@
       "Size": 2379
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3603
+      "Size": 3602
     },
     "classes.dex": {
       "Size": 360744
