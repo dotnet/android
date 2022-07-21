@@ -1122,7 +1122,7 @@ stages:
       parameters:
         useDotNet: true
         testRunTitle: WearOS On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net6.0/MSBuildDeviceIntegration.dll
         dotNetTestExtraArgs: --filter "TestCategory = WearOS"
         testResultsFile: TestResult-WearOS--$(XA.Build.Configuration).xml
 
