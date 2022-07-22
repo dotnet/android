@@ -28,12 +28,6 @@ This file contains the .NET 5-specific targets to customize ILLink
           Condition="'$(VSAndroidDesigner)' != ''"
           Value="$(VSAndroidDesigner)"
           Trim="true" />
-      <!-- Mark all assemblies to be linked for AndroidLinkMode=Full -->
-      <ResolvedFileToPublish
-          Update="@(ResolvedFileToPublish)"
-          Condition=" '$(AndroidLinkMode)' == 'Full' and '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.AssetType)' != 'native' "
-          TrimMode="link"
-      />
       <!-- TODO: remove setting the trim mode here, once the support packages are updated to NET6 and compatability packages not needed -->
       <ResolvedFileToPublish
           Condition=" '$(AndroidLinkMode)' == 'SdkOnly' and ( $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.AndroidX.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Android.Support.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Google.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.GooglePlayServices.')) ) ">
