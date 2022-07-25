@@ -10,6 +10,8 @@ using Xamarin.Android.Net;
 using NUnit.Framework;
 
 namespace Xamarin.Android.NetTests {
+	// Important: We expect the Negotiate authentication feature to be enabled in all of these tests because we set $(AndroidUseNegotiateAuthentication)=true
+	// in the Mono.Android.NET-Tests.csproj file.
 	[TestFixture]
 	public sealed class AndroidMessageHandlerNegotiateAuthenticationTests
 	{
@@ -21,14 +23,14 @@ namespace Xamarin.Android.NetTests {
 		{
 			const string propertyName = "NegotiateAuthenticationIsEnabled";
 			var property = typeof (AndroidMessageHandler).GetProperty (propertyName, BindingFlags.NonPublic | BindingFlags.Static);
+
 			if (!ShouldBeAvailable) {
 				Assert.IsNull (property, $"The {nameof (AndroidMessageHandler)}.{propertyName} property exists in the Monodroid build");
-			} else {
-				Assert.IsNotNull (property, $"The {nameof (AndroidMessageHandler)}.{propertyName} property is missing in the .NET build");
-
-				var isEnabled = property.GetValue (null) as bool? ?? false;
-				Assert.IsTrue (isEnabled, "Negotiate authentication is not enabled");
+				return;
 			}
+
+			Assert.IsNotNull (property, $"The {nameof (AndroidMessageHandler)}.{propertyName} property is missing in the .NET build");
+			Assert.IsTrue (property!.GetValue (null) as bool? ?? false, "Negotiate authentication is not enabled");
 		}
 
 		[Test]

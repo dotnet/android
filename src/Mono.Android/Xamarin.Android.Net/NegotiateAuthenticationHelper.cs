@@ -97,7 +97,6 @@ namespace Xamarin.Android.Net
 			HttpResponseMessage? response = null;
 
 			int requestCounter = 0;
-			bool needDrain = false; // TODO maybe we need to drain even the first response on Android?
 			string? challengeData = null;
 
 			while (requestCounter++ < MaxRequests) {
@@ -108,7 +107,7 @@ namespace Xamarin.Android.Net
 					break;
 				}
 
-				if (needDrain) {
+				if (response is not null) {
 					// We need to drain the content otherwise the next request
 					// won't reuse the same TCP socket and persistent auth won't work.
 					await response.Content.LoadIntoBufferAsync ().ConfigureAwait (false);
@@ -131,8 +130,6 @@ namespace Xamarin.Android.Net
 					}
 					break;
 				}
-
-				needDrain = true;
 			}
 
 			return response;
