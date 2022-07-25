@@ -60,6 +60,9 @@ namespace MonoDroid.Tuner {
 			PreserveIntPtrConstructor (type);
 			PreserveAttributeSetConstructor (type);
 			PreserveInvoker (type);
+#if ILLINK
+			PreserveInterfaces (type);
+#endif // ILLINK
 		}
 
 		void PreserveAttributeSetConstructor (TypeDefinition type)
@@ -196,7 +199,38 @@ namespace MonoDroid.Tuner {
 			PreserveConstructors (type, invoker);
 			PreserveIntPtrConstructor (invoker);
 			PreserveInterfaceMethods (type, invoker);
+#if ILLINK
+			PreserveInterfaces (invoker);
+#endif // ILLINK
 		}
+
+#if ILLINK
+		void PreserveInterfaces (TypeDefinition type)
+		{
+			if (!type.HasInterfaces)
+				return;
+
+			// Return if [Register(DoNotGenerateAcw=true)] is on the type
+			if (type.HasCustomAttributes) {
+				foreach (var attr in type.CustomAttributes) {
+					if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute") {
+						foreach (var property in attr.Properties) {
+							if (property.Name == "DoNotGenerateAcw") {
+								if (property.Argument.Value is bool value && value)
+									return;
+								break;
+							}
+						}
+						break;
+					}
+				}
+			}
+
+			foreach (var iface in type.Interfaces) {
+				Annotations.Mark (iface.InterfaceType.Resolve ());
+			}
+		}
+#endif // ILLINK
 
 		TypeDefinition GetInvokerType (TypeDefinition type)
 		{
