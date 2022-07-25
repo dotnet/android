@@ -15,6 +15,7 @@ namespace Xamarin.Android.Prepare
 			Steps.Add (new Step_InstallAdoptOpenJDK8 ());
 			Steps.Add (new Step_InstallMicrosoftOpenJDK11 ());
 			Steps.Add (new Step_Android_SDK_NDK (AndroidToolchainComponentType.CoreDependency));
+			Steps.Add (new Step_GenerateMonoAndroidProfileItems ());
 
 			// disable installation of missing programs...
 			context.SetCondition (KnownConditions.AllowProgramInstallation, false);
