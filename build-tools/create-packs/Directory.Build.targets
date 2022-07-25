@@ -254,15 +254,19 @@
 
   <Target Name="InstallManifestAndDependencies">
     <PropertyGroup>
+      <_EmptyDepsWorkloadName>android.deps.workload</_EmptyDepsWorkloadName>
       <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetSdkManifestsFolder)\</_LocalSdkManifestsFolder>
       <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\</_LocalAndroidManifestFolder>
-      <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\</_EmptyWorkloadDir>
+      <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)$(_EmptyDepsWorkloadName)\</_EmptyWorkloadDir>
       <_EmptyWorkloadJsonContent>
 <![CDATA[
 {"version": "0.0.1", "workloads": { "android-deps": { "extends" : [ "microsoft-net-runtime-android", "microsoft-net-runtime-android-aot" ] } } }
 ]]>
       </_EmptyWorkloadJsonContent>
     </PropertyGroup>
+    <ItemGroup>
+      <_WorkloadManifestsTxt Include="$(DotNetPreviewPath)sdk\*\IncludedWorkloadManifests.txt" />
+    </ItemGroup>
     <MakeDir Directories="$(_LocalAndroidManifestFolder)" />
     <MSBuild
         Projects="$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj"
@@ -274,6 +278,15 @@
     <WriteLinesToFile
         File="$(_EmptyWorkloadDir)WorkloadManifest.json"
         Lines="$(_EmptyWorkloadJsonContent)"
+        Overwrite="true"
+    />
+    <!-- Add empty workload to list of known workload manifests -->
+    <ReadLinesFromFile File="@(_WorkloadManifestsTxt)" >
+      <Output TaskParameter="Lines" ItemName="_KnownWorkloadManifests"/>
+    </ReadLinesFromFile>
+    <WriteLinesToFile
+        File="@(_WorkloadManifestsTxt)"
+        Lines="@(_KnownWorkloadManifests);$(_EmptyDepsWorkloadName)"
         Overwrite="true"
     />
     <Exec
