@@ -1328,6 +1328,12 @@ than `aapt`.
 
 Added in Xamarin.Android 8.1.
 
+## AndroidUseNegotiateAuthentication
+
+A boolean property which enables support for NTLM/Negotiate authentication in `AndroidMessageHandler`. The feature is disabled by default.
+
+Support for this property was added in .NET 7 and has no effect in "legacy" Xamarin.Android.
+
 ## AndroidUseSharedRuntime
 
 A boolean property that
