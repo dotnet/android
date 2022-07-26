@@ -8,16 +8,16 @@
       "Size": 7199
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 68911
+      "Size": 69914
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 565815
+      "Size": 568806
     },
     "assemblies/Mono.Security.dll": {
       "Size": 68437
     },
     "assemblies/mscorlib.dll": {
-      "Size": 936222
+      "Size": 936223
     },
     "assemblies/Newtonsoft.Json.dll": {
       "Size": 319336
@@ -29,10 +29,10 @@
       "Size": 10201
     },
     "assemblies/System.Core.dll": {
-      "Size": 192216
+      "Size": 192217
     },
     "assemblies/System.Data.dll": {
-      "Size": 316112
+      "Size": 316113
     },
     "assemblies/System.dll": {
       "Size": 443206
@@ -41,7 +41,7 @@
       "Size": 16351
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 113294
+      "Size": 113322
     },
     "assemblies/System.Numerics.dll": {
       "Size": 23262
@@ -113,10 +113,10 @@
       "Size": 471887
     },
     "assemblies/Xamarin.Forms.Performance.Integration.dll": {
-      "Size": 22005
+      "Size": 22006
     },
     "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
-      "Size": 114916
+      "Size": 114914
     },
     "assemblies/Xamarin.Forms.Platform.Android.dll": {
       "Size": 367737
@@ -131,7 +131,7 @@
       "Size": 43506
     },
     "classes.dex": {
-      "Size": 2636860
+      "Size": 2649692
     },
     "lib/armeabi-v7a/libmono-btls-shared.so": {
       "Size": 1112688
@@ -140,16 +140,16 @@
       "Size": 785140
     },
     "lib/armeabi-v7a/libmonodroid.so": {
-      "Size": 312824
+      "Size": 269516
     },
     "lib/armeabi-v7a/libmonosgen-2.0.so": {
-      "Size": 4456612
+      "Size": 4456580
     },
     "lib/armeabi-v7a/libxa-internal-api.so": {
-      "Size": 48812
+      "Size": 49004
     },
     "lib/armeabi-v7a/libxamarin-app.so": {
-      "Size": 77908
+      "Size": 78204
     },
     "lib/x86/libmono-btls-shared.so": {
       "Size": 1459584
@@ -158,16 +158,16 @@
       "Size": 823560
     },
     "lib/x86/libmonodroid.so": {
-      "Size": 414704
+      "Size": 338556
     },
     "lib/x86/libmonosgen-2.0.so": {
       "Size": 4212360
     },
     "lib/x86/libxa-internal-api.so": {
-      "Size": 60848
+      "Size": 61056
     },
     "lib/x86/libxamarin-app.so": {
-      "Size": 77712
+      "Size": 78008
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -1991,5 +1991,5 @@
       "Size": 347268
     }
   },
-  "PackageSize": 13104480
+  "PackageSize": 13038944
 }
