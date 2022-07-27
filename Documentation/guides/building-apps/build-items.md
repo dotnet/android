@@ -6,7 +6,7 @@ ms.assetid: 5EBEE1A5-3879-45DD-B1DE-5CD4327C2656
 ms.technology: xamarin-android
 author: jonpryor
 ms.author: jopryo
-ms.date: 05/11/2022
+ms.date: 07/26/2022
 ---
 
 # Build Items
@@ -24,7 +24,7 @@ files that would be included in the `assets` folder in a Java Android project.
 The Build action of `AndroidAarLibrary` should be used to directly
 reference `.aar` files. This build action will be most commonly used
 by Xamarin Components. Namely to include references to `.aar` files
-which are required to get Google Play and other services working.
+that are required to get Google Play and other services working.
 
 Files with this Build action will be treated in a similar fashion to
 the embedded resources found in Library projects. The `.aar` will be
@@ -81,17 +81,17 @@ files).
 ## AndroidJavaLibrary
 
 Files with a Build action of `AndroidJavaLibrary` are Java
-Archives ( `.jar` files) which will be included in the final Android
+Archives ( `.jar` files) that will be included in the final Android
 package.
 
 ## AndroidJavaSource
 
-Files with a Build action of `AndroidJavaSource` are Java source code which
+Files with a Build action of `AndroidJavaSource` are Java source code that
 will be included in the final Android package.
 
 Starting with .NET 7, all `**\*.java` files within the project directory
 automatically have a Build action of `AndroidJavaSource`, *and* will be
-bound prior to the Assembly build.  This allows C# code to easily use
+bound prior to the Assembly build.  Allows C# code to easily use
 types and members present within the `**\*.java` files.
 
 Set `%(AndroidJavaSource.Bind)` to False to disable this behavior.
@@ -131,21 +131,21 @@ This build action was added in Xamarin.Android 11.2.
 The Build action 'AndroidLintConfig' should be used in conjunction with the
 [`$(AndroidLintEnabled)`](~/android/deploy-test/building-apps/build-properties.md#androidlintenabled)
 property. Files with this build action will be merged together and passed to the
-android `lint` tooling. They should be XML files which contain information on
-which tests to enable and disable.
+android `lint` tooling. They should be XML files containing information on
+tests to enable and disable.
 
 See the [lint documentation](https://developer.android.com/studio/write/lint)
 for more details.
 
 ## AndroidManifestOverlay
 
-The `AndroidManifestOverlay` build action can be used to provide additional
+The `AndroidManifestOverlay` build action can be used to provide
 `AndroidManifest.xml` files to the [Manifest Merger](https://developer.android.com/studio/build/manifest-merge) tool.
 Files with this build action will be passed to the Manifest Merger along with
-the main `AndroidManifest.xml` file and any additional manifest files from
+the main `AndroidManifest.xml` file and manifest files from
 references. These will then be merged into the final manifest.
 
-You can use this build action to provide additional changes and settings to
+You can use this build action to provide changes and settings to
 your app depending on your build configuration. For example, if you need to
 have a specific permission only while debugging, you can use the overlay to
 inject that permission when debugging. For example, given the following
@@ -157,7 +157,7 @@ overlay file contents:
 </manifest>
 ```
 
-You can use the following to add this for a debug build:
+You can use the following to add a manifest overlay for a debug build:
 
 ```
 <ItemGroup>
@@ -169,7 +169,7 @@ This build action was introduced in Xamarin.Android 11.2.
 
 ## AndroidInstallModules
 
-Specifies the modules which get installed by **bundletool** command when
+Specifies the modules that get installed by **bundletool** command when
 installing app bundles.
 
 This build action was introduced in Xamarin.Android 11.3.
@@ -181,11 +181,11 @@ are added to the build by setting their Build action to
 `AndroidNativeLibrary`.
 
 Note that since Android supports multiple Application Binary Interfaces
-(ABIs), the build system must know which ABI the native library is
-built for. There are two ways this can be done:
+(ABIs), the build system must know the ABI the native library is
+built for. There are two ways the ABI can be specified:
 
 1. Path "sniffing".
-2. Using the  `Abi` item attribute.
+2. Using the  `%(Abi)` item metadata.
 
 With path sniffing, the parent directory name of the native library is
 used to specify the ABI that the library targets. Thus, if you add
@@ -329,7 +329,7 @@ such as `<AndroidLibrary Include="..." Bind="false" />`:
 ## JavaDocJar
 
 In a Xamarin.Android binding project, the **JavaDocJar** build action
-is used on `.jar` files which contain *Javadoc HTML*.  The Javadoc HTML
+is used on `.jar` files that contain *Javadoc HTML*.  The Javadoc HTML
 is parsed in order to extract parameter names.
 
 Only certain "Javadoc HTML dialects" are supported, including:
@@ -345,7 +345,7 @@ The `@(JavaSourceJar)` build action is preferred.
 ## JavaSourceJar
 
 In a Xamarin.Android binding project, the **JavaSourceJar** build action
-is used on `.jar` files that contain *Java source code*, which contain
+is used on `.jar` files that contain *Java source code*, that contain
 [Javadoc documentation comments](https://www.oracle.com/technical-resources/articles/java/javadoc-tool.html).
 
 Prior to Xamarin.Android 11.3, the Javadoc would be converted into HTML
