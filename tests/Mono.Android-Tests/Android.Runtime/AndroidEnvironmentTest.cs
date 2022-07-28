@@ -1,5 +1,4 @@
 using System;
-using System.Net.Http;
 using System.Reflection;
 
 using Android.Runtime;
@@ -55,7 +54,6 @@ namespace Android.RuntimeTests {
 
 		[Test]
 		[TestCase ("Xamarin.Android.Net.AndroidMessageHandler")]
-		[TestCase ("Android.RuntimeTests.AndroidEnvironmentTest+DummyHandler, Mono.Android.NET-Tests")]
 #if !NET
 		[TestCase ("Xamarin.Android.Net.AndroidClientHandler")]
 #endif
@@ -64,12 +62,6 @@ namespace Android.RuntimeTests {
 			var handler = GetHttpMessageHandler (typeName);
 
 			Assert.IsNotNull (handler, "GetHttpMessageHandler returned null");
-
-			// strip the assembly name to match the input with the handler type's full name
-			var index = typeName.IndexOf(',');
-			if (index >= 0) {
-				typeName = typeName.Substring(0, index);
-			}
 
 			Assert.AreEqual (typeName, handler.GetType ().FullName);
 		}
@@ -82,7 +74,5 @@ namespace Android.RuntimeTests {
 				return method.Invoke (null, null);
 			}
 		}
-
-		private class DummyHandler : AndroidMessageHandler {}
 	}
 }
