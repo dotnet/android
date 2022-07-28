@@ -345,17 +345,56 @@ namespace Android.Runtime {
 #if !MONOANDROID1_0
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (Xamarin.Android.Net.AndroidMessageHandler))]
 #endif
-		static object? GetHttpMessageHandler ()
+		static object GetHttpMessageHandler ()
 		{
 			var envvar = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
 			Type? handlerType = null;
 			if (!String.IsNullOrEmpty (envvar))
 				handlerType = Type.GetType (envvar, false);
-			else
-				return null;
-			if (handlerType == null)
-				return null;
+
+#if !MONOANDROID1_0
+			if (handlerType?.FullName == "Xamarin.Android.Net.AndroidClientHandler") {
+				// It's not possible to construct AndroidClientHandler in this method because it would cause infinite recursion
+				// instead, we fall back to the default AndroidMessageHandler
+
+				// there are two cases:
+				// 1) The customer instantiates HttpClient or HttpClientHandler and this method is called from the constructor of
+				//    HttpClientHandler. The AndroidClientHandler would be a wrapper around AndroidMessageHandler anyway and
+				//    the user wouldn't be able to leverage the fact that AndroidClientHandler extends the HttpClientHandler
+				//
+				// 2) The customer instantiates Xamarin.Android.Net.AndroidClientHandler directly and this method is called from
+				//    the constructor of the base type - HttpClientHandler. It doesn't make sense to continue the recursion
+				//    and we can simply construct the default AndroidMessageHandler. The chain will be: Customer holds reference
+				//    to AndroidClientHandler which extends HttpClientHandler which has a reference to AndroidMessageHandler
+
+				handlerType = null;
+			}
+#endif
+
 			// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
+			var checkedType = handlerType;
+			var isHttpMessageHandler = false;
+			while (!isHttpMessageHandler && checkedType != null) {
+				if (checkedType.FullName == "System.Net.Http.HttpMessageHandler") {
+					isHttpMessageHandler = true;
+				}
+
+				checkedType = checkedType.BaseType;
+			}
+
+			if (!isHttpMessageHandler) {
+				Logger.Log (LogLevel.Warn, "MonoAndroid", "The type set as the default HTTP handler is invalid. Use a type that extends System.Net.Http.HttpMessageHandler.");
+				handlerType = null;
+			}
+
+			// if there's no valid handler type configured, fall back to the AndroidMessageHandler
+			handlerType ??= Type.GetType ("Xamarin.Android.Net.AndroidMessageHandler", false);
+
+			if (handlerType is null) {
+				// there's no valid configuration and the AndroidMessageHandler type is not available
+				throw new InvalidOperationException ("The default HTTP message handler type is invalid. Consider using Xamarin.Net.Http.AndroidMessageHandler.");
+			}
+
 			return Activator.CreateInstance (handlerType);
 		}
 
