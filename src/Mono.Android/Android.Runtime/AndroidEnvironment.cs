@@ -372,17 +372,7 @@ namespace Android.Runtime {
 #endif
 
 			// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
-			var checkedType = handlerType;
-			var isHttpMessageHandler = false;
-			while (!isHttpMessageHandler && checkedType != null) {
-				if (checkedType.FullName == "System.Net.Http.HttpMessageHandler") {
-					isHttpMessageHandler = true;
-				}
-
-				checkedType = checkedType.BaseType;
-			}
-
-			if (!isHttpMessageHandler) {
+			if (!ExtendsHttpMessageHandler (handlerType)) {
 				Logger.Log (LogLevel.Warn, "MonoAndroid", "The type set as the default HTTP handler is invalid. Use a type that extends System.Net.Http.HttpMessageHandler.");
 				handlerType = null;
 			}
@@ -396,6 +386,19 @@ namespace Android.Runtime {
 			}
 
 			return Activator.CreateInstance (handlerType);
+		}
+
+		static bool ExtendsHttpMessageHandler (Type handlerType)
+		{
+			while (handlerType != null) {
+				if (handlerType.FullName == "System.Net.Http.HttpMessageHandler") {
+					return true;
+				}
+
+				handlerType = handlerType.BaseType;
+			}
+
+			return false;
 		}
 
 		internal static bool VSAndroidDesignerIsEnabled { get; } = InitializeVSAndroidDesignerIsEnabled ();
