@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Java.Interop.Localization\Resources.resx" PsrId="211" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="ru-RU">
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Java.Interop.Localization\Resources.resx" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="ru-RU" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
@@ -12,560 +12,560 @@
       <Item ItemId=";CecilResolver_XA0009" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error while loading assembly: '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ошибка при загрузке сборки: "{0}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - File name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to remove old constants: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Сбой удаления старых констант: {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The list of constants that could not be removed.]D;]A;In this message, the term "constants" refers to class or interface members that have constant values.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4100" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to process enum mapping. Text line: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Сбой обработки сопоставления перечисления. Текстовая строка: {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The line that could not be processed.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4200" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error during processing metadata fixup: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ошибка при обработке исправления метаданных: {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The error encountered.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4300" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid XPath specification: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Недопустимая спецификация XPath: {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The invalid XPath line.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4307" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Target attribute name is not specified for path: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Имя целевого атрибута не указано для пути: {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The invalid XPath line.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4400" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected 'global::' specification. This error happens if 'global::' is specified in the Metadata.xml transform file, for example.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Неожиданная спецификация "global::". Эта ошибка происходит, если, например, "global::" указан в файле преобразования Metadata.xml.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following are literal names and should not be translated: global::, Metadata.xml.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4500" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['lang-features=default-interface-methods' is not compatible with 'codegen-target=xamarinandroid'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA["lang-features=default-interface-methods" не совместим с "codegen-target=xamarinandroid".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following are literal command line arguments and should not be translated: 'lang-features=default-interface-methods', 'codegen-target=xamarinandroid'.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected class child {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Непредвиденный дочерний класс {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The unexpected child class.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8102" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Class '{0}' has unknown base type '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Класс "{0}" имеет неизвестный базовый тип "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8103" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Class '{0}' has invalid base type '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Класс "{0}" имеет недопустимый базовый тип "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8200" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to parse assembly '{0}': {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось проанализировать сборку "{0}": {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Error .NET assembly.]D;]A;{1} - The error encountered.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8300" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[For constructor '{0}', could not find enclosing type '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Для конструктора "{0}" не удалось найти вложенный тип "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET constructor method.]D;]A;{1} - .NET type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8400" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected field type `{0}` ({1}).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Непредвиденный тип поля "{0}" ({1}).]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field signature.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8401_Method" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Skipping '{0}.{1}' due to a duplicate method name. (Java type: '{2}')]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Пропуск "{0}.{1}" из-за дублирования имени метода. (Тип Java: "{2}")]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field name.]D;]A;{2} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8401_NestedType" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Skipping '{0}.{1}' due to a duplicate nested type name. (Java type: '{2}')]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Пропуск "{0}.{1}" из-за дублирования имени вложенного типа. (Тип Java: "{2}")]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field name.]D;]A;{2} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8401_Property" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Skipping '{0}.{1}' due to a duplicate field or property name. (Java type: '{2}')]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Пропуск "{0}.{1}" из-за дублирования имени поля или свойства. (Тип Java: "{2}")]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field name.]D;]A;{2} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8402" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Skipping '{0}.{1}' due to a duplicate field. (Java type: '{2}')]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Пропуск "{0}.{1}" из-за дублирования поля. (Тип Java: "{2}")]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field name.]D;]A;{2} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8403" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Type '{0}' has a type name which matches the enclosing namespace name. See https://aka.ms/BG8403 for more information.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Тип "{0}" имеет имя типа, соответствующее имени вложенного пространства имен. Подробнее см. https://aka.ms/BG8403.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8500" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected child element of '<interface>': '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Непредвиденный элемент "<interface>": "{0}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML element name.]D;]A;<interface> should not be translated.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8501" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[No event name provided in '{0}.{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Имя события не указано в "{0}.{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8502" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalidating '{0}' and all its nested types because some of its interfaces were invalid.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Аннулирование "{0}" и всех его вложенных типов из-за недопустимости некоторых его интерфейсов.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8503" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalidating '{0}' and all its nested types because some of its methods were invalid.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Аннулирование "{0}" и всех его вложенных типов из-за недопустимых методов.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8504" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Event name for '{0}.{1}' is invalid. A valid 'eventName' or 'argsType' can be assigned by adding a rule to the Metadata.xml transforms file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Недопустимое имя события для "{0}.{1}". Допустимые "eventName" или "argsType" можно назначить, добавив правило в файл преобразований Metadata.xml.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name]D;]A;{1} - .NET member.]D;]A;The following terms should not be translated: eventName, argsType, Metadata.xml.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8506" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Event property name for '{0}.{1}' is invalid. A valid 'eventName' or 'argsType' can be assigned by adding a rule to the Metadata.xml transforms file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Недопустимое имя свойства события для "{0}.{1}". Допустимое значение "eventName" или "argsType" можно назначить, добавив правило в файл преобразований Metadata.xml.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name]D;]A;{1} - .NET member.]D;]A;The following terms should not be translated: eventName, argsType, Metadata.xml.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8600" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid XML file '{0}': {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Недопустимый XML-файл "{0}": {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - File name]D;]A;{1} - The error encountered.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8601" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[No '<package>' elements found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Элементы "<package>" не найдены.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: <package>.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8602" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected root child node: '<{0}>'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Непредвиденный корневой дочерний узел: "<{0}>".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML element name.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8603" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected '<package>' child node: '<{0}>'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Непредвиденный дочерний узел "<package>": "<{0}>".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML element name.]D;]A;The following terms should not be translated: <package>.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8604" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not find top ancestor type '{0}' for nested type '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось найти тип верхнего предка "{0}" для вложенного типа "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8605" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The Java type '{0}' could not be found (are you missing a Java reference jar/aar or a Java binding library NuGet?)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось найти тип Java "{0}" (может быть, вам не хватает справочного файла jar/aar Java или библиотеки привязки Java NuGet?)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8606" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Some types or members could not be bound because referenced Java types could not be found. See the 'java-resolution-report.log' file for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Некоторые типы или элементы не могут быть связаны, так как не удается найти ссылочные типы Java. Подробности в файле java-resolution-report.log.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: java-resolution-report.log]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8700" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown return type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Неизвестный тип возврата "{0}" для элемента "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8701" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid return type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Недопустимый тип возврата "{0}" для элемента "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8800" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown parameter type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Неизвестный тип параметра "{0}" для элемента "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8801" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid parameter type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Недопустимый тип параметра "{0}" для элемента "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8A00" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Metadata.xml element '{0}' matched no nodes.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Для элемента Metadata.xml "{0}" нет соответствующего узла.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML transform. (example: '<remove-node path="/api/package[@name='javax.sql']5D;"')]D;]A;The following terms should not be translated: Metadata.xml.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8A07" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid namespace transform '{0}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Недопустимое преобразование пространства имен "{0}"]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML transform. (example: '<ns-replace source="example" replacement="Example" />')]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8B00" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown generic argument constraint type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Неизвестный универсальный тип ограничения аргумента "{0}" для элемента "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8C00" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not find base interface '{1}' for type '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось найти базовый интерфейс "{1}" для типа "{0}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8C01" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[For type '{0}', base interface '{1}' is invalid.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Для типа "{0}" базовый интерфейс "{1}" является недопустимым.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4200" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot generate Java wrapper for type '{0}'. Only 'class' types are supported.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удается создать оболочку Java для типа "{0}". Поддерживаются только типы "class".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;The following terms should not be translated:]D;]A;class.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4201" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot determine JNI name for type '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удается определить имя JNI для типа "{0}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;The following terms should not be translated: JNI.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4203" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The 'Name' property must be a fully qualified type like 'com.example.MyClass' and no package was found for '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Свойство "Name" должно иметь полный тип, например "com.example.MyClass", и пакет для "{0}" не найден.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;The following terms should not be translated:]D;]A;Name, com.example.MyClass.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4204" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to resolve interface type '{0}'. Are you missing an assembly reference?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось разрешить тип интерфейса "{0}". Отсутствует ссылка на сборку?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java interface.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4205" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[ExportField]5D; can only be used on methods with 0 parameters.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[ExportField]5D; можно использовать только для методов с 0 параметрами.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: [ExportField]5D;.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4206" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[Export]5D; cannot be used on a generic type.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[Export]5D; нельзя использовать для универсального типа.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: [Export]5D;.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4207" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[ExportField]5D; cannot be used on a generic type.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[ExportField]5D; нельзя использовать для универсального типа.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: [ExportField]5D;.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4208" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[ExportField]5D; cannot be used on a method returning 'void'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[ExportField]5D; нельзя использовать для метода, возвращающего "void".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: [ExportField]5D;, void.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4217" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Невозможно переопределить сгенерированный Kotlin метод "{0}", так как это недопустимое имя метода Java. Этот метод можно переопределить только из Kotlin.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Kotlin method name.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to preload reference '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось предварительно загрузить ссылку "{0}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - assembly path]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4002" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please specify at least one ASSEMBLY to process.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Укажите по крайней мере одну СБОРКУ для обработки.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated or have any capitalization changes: ASSEMBLY. This is a special case for this particular message. In most messages, "assembly" would be translated.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4003" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to create Java VM{0}{1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось создать Java VM{0}{1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - newline, {1} - exception]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4004" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to read profile file '{0}'.{1}{2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось прочитать файл профиля "{0}".{1}{2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - path, {1} - newline, {2} - exception. In this message, the term "profile" refers to a customized list of types to process.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4005" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Path '{0}' does not exist.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Путь "{0}" не существует]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - path]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4006" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to process assembly '{0}'{1}{2}{1}{3}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось обработать сборку "{0}"{1}{2}{1}{3}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - assembly, {1} - newline, {2} - exception message, {3} exception]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Couln't find interface {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удается найти интерфейс {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - interface name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8003" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Caught an exception while loading types. The types that cannot be loaded will not be processed. Make sure that any additional assembly references required for those types are provided using the -r option. Exception:{0}{1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Перехвачено исключение при загрузке типов. Типы, которые невозможно загрузить, не будут обработаны. Убедитесь, что любые дополнительные ссылки на сборки, необходимые для этих типов, предоставляются с помощью параметра -r. Исключение:{0}{1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - newline, {1} - exception. The following terms should not be translated: -r]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8004" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find type '{0}'. The type will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось найти тип "{0}". Тип не будет обработан. Убедитесь, что каталоги для всех сборок, на которые есть ссылки, предоставляются с параметром -L.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - type]D;]A;The following terms should not be translated: -L]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8005" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Marshal methods type '{0}' already exists. Skipped generation of marshal methods in assembly '{1}'. Use -f to force regeneration when desired.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Тип методов маршалирования "{0}" уже существует. Пропущено поколение методов маршалирования в сборке "{1}". При желании используйте -f для принудительного повторного создания.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - type, {1} - assembly name. The following terms should not be translated: -f. In this message, the term "marshal methods" refers to methods that allow interaction between the managed methods and Java methods, similar to the methods of the .NET System.Runtime.InteropServices.Marshal class.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8006" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find definition of method '{0}' in assembly metadata. It will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось найти определение метода "{0}" в метаданных сборки. Он не будет обработан. Убедитесь, что каталоги для всех сборок, на которые есть ссылки, предоставляются с параметром -L.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - method]D;]A;The following terms should not be translated: -L]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8007" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find the System.Console.WriteLine() method. Disabling debug injection. To enable debug injection, ensure the directory containing mscorlib is provided with the -L option.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Не удалось найти метод System.Console.WriteLine(). Отключение внедрения отладки. Чтобы включить внедрение отладки, убедитесь, что каталог, содержащий mscorlib, указан с параметром -L.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: -L]]></Cmt>
-        </Cmts>
       </Item>
     </Item>
   </Item>

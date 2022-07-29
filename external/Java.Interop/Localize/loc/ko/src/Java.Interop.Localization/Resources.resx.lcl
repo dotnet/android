@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Java.Interop.Localization\Resources.resx" PsrId="211" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="ko-KR">
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Java.Interop.Localization\Resources.resx" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="ko-KR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
@@ -12,560 +12,560 @@
       <Item ItemId=";CecilResolver_XA0009" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error while loading assembly: '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[어셈블리 로드 중 오류: '{0}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - File name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to remove old constants: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[이전 상수를 제거하지 못했습니다: {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The list of constants that could not be removed.]D;]A;In this message, the term "constants" refers to class or interface members that have constant values.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4100" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to process enum mapping. Text line: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[열거 매핑을 처리하지 못했습니다. 텍스트 줄: {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The line that could not be processed.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4200" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error during processing metadata fixup: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[메타데이터 수정 처리 중 오류: {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The error encountered.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4300" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid XPath specification: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[잘못된 XPath 사양: {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The invalid XPath line.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4307" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Target attribute name is not specified for path: {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[대상 특성 이름이 경로 {0}에 지정되지 않았습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The invalid XPath line.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4400" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected 'global::' specification. This error happens if 'global::' is specified in the Metadata.xml transform file, for example.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[예기치 않은 'global::' 사양입니다. 이 오류는 예를 들어 Metadata.xml 변환 파일에 'global::'이 지정된 경우 발생합니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following are literal names and should not be translated: global::, Metadata.xml.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG4500" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['lang-features=default-interface-methods' is not compatible with 'codegen-target=xamarinandroid'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['lang-features=default-interface-methods'는 'codegen-target=xamarinandroid'와 호환되지 않습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following are literal command line arguments and should not be translated: 'lang-features=default-interface-methods', 'codegen-target=xamarinandroid'.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected class child {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[예기치 않은 클래스 하위 {0}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - The unexpected child class.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8102" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Class '{0}' has unknown base type '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[클래스 '{0}'에 알 수 없는 기본 형식 '{1}'이(가) 있습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8103" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Class '{0}' has invalid base type '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[클래스 '{0}'에 잘못된 기본 형식 '{1}'이(가) 있습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8200" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to parse assembly '{0}': {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[어셈블리 '{0}' 구문 분석 실패: {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Error .NET assembly.]D;]A;{1} - The error encountered.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8300" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[For constructor '{0}', could not find enclosing type '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[생성자 '{0}'의 경우 둘러싼 형식 '{1}'을(를) 찾을 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET constructor method.]D;]A;{1} - .NET type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8400" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected field type `{0}` ({1}).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[예기치 않은 필드 형식 `{0}`({1})입니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field signature.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8401_Method" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Skipping '{0}.{1}' due to a duplicate method name. (Java type: '{2}')]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[메소드 이름이 중복되어 '{0}.{1}'을(를) 건너뜁니다. (Java 형식: '{2}')]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field name.]D;]A;{2} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8401_NestedType" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Skipping '{0}.{1}' due to a duplicate nested type name. (Java type: '{2}')]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[중첩 형식 이름이 중복되어 '{0}.{1}'을(를) 건너뜁니다. (Java 형식: '{2}')]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field name.]D;]A;{2} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8401_Property" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Skipping '{0}.{1}' due to a duplicate field or property name. (Java type: '{2}')]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[중복 필드 또는 속성 이름으로 인해 '{0}.{1}'을(를) 건너뜁니다. (Java 형식: '{2}')]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field name.]D;]A;{2} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8402" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Skipping '{0}.{1}' due to a duplicate field. (Java type: '{2}')]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[중복 필드로 인해 '{0}.{1}'을(를) 건너뜁니다. (Java 형식: '{2}')]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type.]D;]A;{1} - .NET field name.]D;]A;{2} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8403" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Type '{0}' has a type name which matches the enclosing namespace name. See https://aka.ms/BG8403 for more information.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[형식 '{0}'에는 바깥쪽 네임스페이스 이름과 일치하는 형식 이름이 있습니다. 자세한 내용은 https://aka.ms/BG8403을 참조하세요.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8500" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected child element of '<interface>': '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['<interface>'의 예기치 않은 하위 요소: '{0}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML element name.]D;]A;<interface> should not be translated.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8501" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[No event name provided in '{0}.{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}.{1}'에 이벤트 이름이 제공되지 않았습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8502" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalidating '{0}' and all its nested types because some of its interfaces were invalid.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[일부 인터페이스가 잘못되어 '{0}' 및 모든 중첩 형식을 무효화합니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8503" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalidating '{0}' and all its nested types because some of its methods were invalid.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[일부 메서드가 잘못되어 '{0}' 및 모든 중첩 형식을 무효화합니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8504" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Event name for '{0}.{1}' is invalid. A valid 'eventName' or 'argsType' can be assigned by adding a rule to the Metadata.xml transforms file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}.{1}'의 이벤트 이름이 잘못되었습니다. Metadata.xml 변환 파일에 규칙을 추가하여 유효한 'eventName' 또는 'argsType'을 할당할 수 있습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name]D;]A;{1} - .NET member.]D;]A;The following terms should not be translated: eventName, argsType, Metadata.xml.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8506" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Event property name for '{0}.{1}' is invalid. A valid 'eventName' or 'argsType' can be assigned by adding a rule to the Metadata.xml transforms file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}.{1}'의 이벤트 속성 이름이 잘못되었습니다. Metadata.xml 변환 파일에 규칙을 추가하여 유효한 'eventName' 또는 'argsType'을 할당할 수 있습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name]D;]A;{1} - .NET member.]D;]A;The following terms should not be translated: eventName, argsType, Metadata.xml.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8600" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid XML file '{0}': {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[잘못된 XML 파일 '{0}': {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - File name]D;]A;{1} - The error encountered.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8601" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[No '<package>' elements found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['<package>' 요소를 찾을 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: <package>.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8602" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected root child node: '<{0}>'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[예기치 않은 루트 하위 노드: '<{0}>'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML element name.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8603" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected '<package>' child node: '<{0}>'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[예기치 않은 '<package>' 하위 노드: '<{0}>'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML element name.]D;]A;The following terms should not be translated: <package>.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8604" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not find top ancestor type '{0}' for nested type '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[중첩 형식 '{1}'에 대한 상위 상위 항목 형식 '{0}'을(를) 찾을 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8605" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The Java type '{0}' could not be found (are you missing a Java reference jar/aar or a Java binding library NuGet?)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Java 형식 '{0}'을(를) 찾을 수 없습니다(Java 참조 jar/aar 또는 Java 바인딩 라이브러리 NuGet이 누락되었습니까?)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8606" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Some types or members could not be bound because referenced Java types could not be found. See the 'java-resolution-report.log' file for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[참조된 Java 형식을 찾을 수 없기 때문에 일부 형식 또는 멤버를 바인딩할 수 없습니다. 자세한 내용은 'java-resolution-report.log' 파일을 참조하세요.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: java-resolution-report.log]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8700" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown return type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[멤버 '{1}'에 대한 알 수 없는 반환 형식 '{0}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8701" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid return type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[멤버 '{1}'에 대한 잘못된 반환 형식 '{0}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8800" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown parameter type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[멤버 '{1}'에 대한 알 수 없는 매개 변수 형식 '{0}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8801" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid parameter type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{1}' 멤버에 대한 매개 변수 형식 '{0}'이(가) 잘못되었습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8A00" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Metadata.xml element '{0}' matched no nodes.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Metadata.xml 요소 '{0}'이(가) 일치하는 노드가 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML transform. (example: '<remove-node path="/api/package[@name='javax.sql']5D;"')]D;]A;The following terms should not be translated: Metadata.xml.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8A07" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid namespace transform '{0}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[잘못된 네임스페이스 변환 '{0}']]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - XML transform. (example: '<ns-replace source="example" replacement="Example" />')]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8B00" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown generic argument constraint type '{0}' for member '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{1}' 멤버에 대한 알 수 없는 일반 인수 제약 형식 '{0}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - .NET type name]D;]A;{1} - .NET member.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8C00" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not find base interface '{1}' for type '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[형식 '{0}'에 대한 기본 인터페이스 '{1}'을(를) 찾을 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Generator_BG8C01" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[For type '{0}', base interface '{1}' is invalid.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[형식 '{0}'의 경우 기본 인터페이스 '{1}'이(가) 잘못되었습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0}, {1} - .NET types.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4200" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot generate Java wrapper for type '{0}'. Only 'class' types are supported.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[형식 '{0}'에 대한 Java 래퍼를 생성할 수 없습니다. '클래스' 형식만 지원됩니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;The following terms should not be translated:]D;]A;class.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4201" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot determine JNI name for type '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[형식 '{0}'에 대한 JNI 이름을 결정할 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;The following terms should not be translated: JNI.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4203" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The 'Name' property must be a fully qualified type like 'com.example.MyClass' and no package was found for '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['이름' 속성은 'com.example.MyClass'와 같은 정규화된 형식이어야 하며 '{0}'에 대한 패키지를 찾을 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java type.]D;]A;The following terms should not be translated:]D;]A;Name, com.example.MyClass.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4204" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to resolve interface type '{0}'. Are you missing an assembly reference?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[인터페이스 형식 '{0}'을(를) 확인할 수 없습니다. 어셈블리 참조가 누락되었습니까?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Java interface.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4205" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[ExportField]5D; can only be used on methods with 0 parameters.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[ExportField]5D;은(는) 매개 변수가 0인 메서드에만 사용할 수 있습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: [ExportField]5D;.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4206" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[Export]5D; cannot be used on a generic type.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[내보내기]5D;는 제네릭 형식에 사용할 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: [Export]5D;.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4207" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[ExportField]5D; cannot be used on a generic type.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[ExportField]5D;은(는) 제네릭 형식에 사용할 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: [ExportField]5D;.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4208" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[ExportField]5D; cannot be used on a method returning 'void'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[ExportField]5D;은(는) 'void'를 반환하는 메서드에 사용할 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: [ExportField]5D;, void.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JavaCallableWrappers_XA4217" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[유효한 Java 메소드 이름이 아니기 때문에 Kotlin 생성 메소드 '{0}'을(를) 재정의할 수 없습니다. 이 메서드는 Kotlin에서만 재정의할 수 있습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - Kotlin method name.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to preload reference '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[참조 '{0}'을(를) 미리 로드할 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - assembly path]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4002" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please specify at least one ASSEMBLY to process.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[처리할 ASSEMBLY를 하나 이상 지정하세요.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated or have any capitalization changes: ASSEMBLY. This is a special case for this particular message. In most messages, "assembly" would be translated.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4003" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to create Java VM{0}{1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Java VM을 생성할 수 없음{0}{1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - newline, {1} - exception]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4004" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to read profile file '{0}'.{1}{2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[프로필 파일 '{0}'을(를) 읽을 수 없습니다.{1}{2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - path, {1} - newline, {2} - exception. In this message, the term "profile" refers to a customized list of types to process.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4005" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Path '{0}' does not exist.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[경로 '{0}'이(가) 존재하지 않습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - path]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM4006" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to process assembly '{0}'{1}{2}{1}{3}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[어셈블리 '{0}'{1}{2}{1}{3}을(를) 처리할 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - assembly, {1} - newline, {2} - exception message, {3} exception]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Couln't find interface {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[인터페이스 {0}을(를) 찾을 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - interface name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8003" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Caught an exception while loading types. The types that cannot be loaded will not be processed. Make sure that any additional assembly references required for those types are provided using the -r option. Exception:{0}{1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[형식을 로드하는 동안 예외가 발생했습니다. 로드할 수 없는 형식은 처리되지 않습니다. 해당 형식에 필요한 추가 어셈블리 참조가 -r 옵션을 사용하여 제공되었는지 확인하세요. 예외:{0}{1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - newline, {1} - exception. The following terms should not be translated: -r]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8004" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find type '{0}'. The type will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[형식 '{0}'을(를) 찾을 수 없습니다. 형식이 처리되지 않습니다. 참조된 모든 어셈블리의 디렉터리에 -L 옵션이 제공되었는지 확인합니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - type]D;]A;The following terms should not be translated: -L]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8005" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Marshal methods type '{0}' already exists. Skipped generation of marshal methods in assembly '{1}'. Use -f to force regeneration when desired.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[마샬 메소드 형식 '{0}'이(가) 이미 존재합니다. 어셈블리 '{1}'에서 마샬 메서드 생성을 건너뛰었습니다. 원하는 경우 -f를 사용하여 재생성을 강제 실행합니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - type, {1} - assembly name. The following terms should not be translated: -f. In this message, the term "marshal methods" refers to methods that allow interaction between the managed methods and Java methods, similar to the methods of the .NET System.Runtime.InteropServices.Marshal class.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8006" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find definition of method '{0}' in assembly metadata. It will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[어셈블리 메타데이터에서 '{0}' 메서드의 정의를 찾을 수 없습니다. 처리되지 않습니다. 참조된 모든 어셈블리의 디렉터리에 -L 옵션이 제공되었는지 확인합니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[{0} - method]D;]A;The following terms should not be translated: -L]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";JniMarshalMethodGen_JM8007" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find the System.Console.WriteLine() method. Disabling debug injection. To enable debug injection, ensure the directory containing mscorlib is provided with the -L option.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[System.Console.WriteLine() 메서드를 찾을 수 없습니다. 디버그 주입을 비활성화합니다. 디버그 삽입을 활성화하려면 mscorlib가 포함된 디렉터리에 -L 옵션이 제공되었는지 확인합니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[The following terms should not be translated: -L]]></Cmt>
-        </Cmts>
       </Item>
     </Item>
   </Item>
