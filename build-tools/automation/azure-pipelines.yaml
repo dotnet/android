@@ -1294,7 +1294,7 @@ stages:
             $branchName = "main"
         }
         Set-Location -Path $(System.DefaultWorkingDirectory)\UITools
-        git checkout $branchName
+        git checkout dev/mcumming/disable-android-tests
         git submodule update -q --init --recursive
       displayName: Clone and update UITools
 
