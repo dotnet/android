@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Xamarin.Android.Tools.AndroidSdk\Properties\Resources.resx" PsrId="211" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="pt-BR">
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Xamarin.Android.Tools.AndroidSdk\Properties\Resources.resx" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="pt-BR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
@@ -12,24 +12,27 @@
       <Item ItemId=";InvalidJdkDirectory_path_locator_message" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An exception occurred while validating the Java SDK installation in '{0}' that was found while searching the paths from '{1}'. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path. Exception: {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ocorreu uma exceção ao validar a instalação do Java SDK em '{0}' que foi encontrada ao pesquisar os caminhos de '{1}'. Certifique-se de que a seção Android das opções do Visual Studio tenha um diretório Java SDK válido configurado. Para usar um caminho SDK personalizado para uma compilação de linha de comando, defina a propriedade MSBuild 'JavaSdkDirectory' para o caminho personalizado. Exceção: {2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[]D;]A;{0} - The path of the invalid installation]D;]A;{1} - a "contextual" name for where {0} came from: `Preferred Registry` (Windows Registry), `OpenJDK`, `$JAVA_HOME` (environment variable), etc.]D;]A;{2} - The exception message of the associated exception.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InvalidMonodroidConfigFile_path_message" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An exception occurred while reading configuration file '{0}'. Exception: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ocorreu uma exceção ao ler o arquivo de configuração '{0}'. Exceção: {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[]D;]A;{0} - The path of the file being read.]D;]A;{1} - The exception message of the associated exception.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InvalidXmlLibExecJdk_path_args_message" ItemType="0;.resx" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An exception occurred while reading the output of '{0} {1}'. Exception: {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ocorreu uma exceção ao ler a saída de '{0} {1}'. Exceção: {2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

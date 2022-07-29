@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Xamarin.Android.Tools.AndroidSdk\Properties\Resources.resx" PsrId="211" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="ko-KR">
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Xamarin.Android.Tools.AndroidSdk\Properties\Resources.resx" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="ko-KR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
@@ -12,24 +12,27 @@
       <Item ItemId=";InvalidJdkDirectory_path_locator_message" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An exception occurred while validating the Java SDK installation in '{0}' that was found while searching the paths from '{1}'. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path. Exception: {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{1}'에서 경로를 검색하는 동안 발견된 '{0}'의 Java SDK 설치의 유효성을 검사하는 동안 예외가 발생했습니다. Visual Studio 옵션의 Android 섹션에 유효한 Java SDK 디렉터리가 구성되어 있는지 확인하세요. 명령줄 빌드에 사용자 지정 SDK 경로를 사용하려면 'JavaSdkDirectory' MSBuild 속성을 사용자 지정 경로로 설정하세요. 예외: {2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[]D;]A;{0} - The path of the invalid installation]D;]A;{1} - a "contextual" name for where {0} came from: `Preferred Registry` (Windows Registry), `OpenJDK`, `$JAVA_HOME` (environment variable), etc.]D;]A;{2} - The exception message of the associated exception.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InvalidMonodroidConfigFile_path_message" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An exception occurred while reading configuration file '{0}'. Exception: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[구성 파일 '{0}'을(를) 읽는 동안 예외가 발생했습니다. 예외: {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[]D;]A;{0} - The path of the file being read.]D;]A;{1} - The exception message of the associated exception.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InvalidXmlLibExecJdk_path_args_message" ItemType="0;.resx" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An exception occurred while reading the output of '{0} {1}'. Exception: {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0} {1}'의 출력을 읽는 동안 예외가 발생했습니다. 예외: {2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
