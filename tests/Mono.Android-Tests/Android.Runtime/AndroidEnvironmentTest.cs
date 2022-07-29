@@ -1,9 +1,6 @@
 using System;
 using System.Reflection;
-
 using Android.Runtime;
-using Xamarin.Android.Net;
-
 using NUnit.Framework;
 
 namespace Android.RuntimeTests {
@@ -62,7 +59,6 @@ namespace Android.RuntimeTests {
 			var handler = GetHttpMessageHandler (typeName);
 
 			Assert.IsNotNull (handler, "GetHttpMessageHandler returned null");
-
 			Assert.AreEqual (typeName, handler.GetType ().FullName);
 		}
 
