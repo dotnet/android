@@ -137,7 +137,7 @@
     <comment>{0} - The regular expression that the file name must match</comment>
   </data>
   <data name="APT0004" xml:space="preserve">
-    <value>Invalid file name: It must start with A-z or a-z or an underscore.</value>
+    <value>잘못된 파일 이름: A-z 또는 a-z 또는 밑줄로 시작해야 합니다.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}'의 $(TargetFrameworkVersion)에 대한 API 레벨을 확인할 수 없습니다.</value>
@@ -150,7 +150,7 @@
 In this message, the phrase "should not be reached" means that this error message is not expected to appear in normal usage.</comment>
   </data>
   <data name="XA0000_Exception" xml:space="preserve">
-    <value>Unhandled exception: {0}</value>
+    <value>처리되지 않은 예외: {0}</value>
     <comment>{0} - The exception message of the associated exception</comment>
   </data>
   <data name="XA0000_TargetFrameworkVersion_for_API" xml:space="preserve">
@@ -181,15 +181,15 @@ In this message, the phrase "should not be reached" means that this error messag
     <comment>The abbreviation "JDK" should not be translated.</comment>
   </data>
   <data name="XA0031" xml:space="preserve">
-    <value>Java SDK {0} or above is required when using {1}.
-Download the latest JDK at: https://aka.ms/msopenjdk
-Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11</value>
+    <value>{1}을(를) 사용하는 경우 Java SDK {0} 이상이 필요합니다.
+최신 JDK 다운로드: https://aka.ms/msopenjdk
+참고: Android Designer는 Java SDK 11.0과 호환되지 않습니다. https://aka.ms/vs2019-and-jdk-11</value>
     <comment>
 {0} - The Java SDK version number
 {1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</comment>
   </data>
   <data name="XA0031_NET" xml:space="preserve">
-    <value>Java SDK {0} or above is required when using .NET 6 or higher. Download the latest JDK at: https://aka.ms/msopenjdk</value>
+    <value>.NET 6 이상을 사용하는 경우 Java SDK {0} 이상이 필요합니다. https://aka.ms/msopenjdk에서 최신 JDK를 다운로드하세요.</value>
     <comment>
 {0} - The Java SDK version number</comment>
   </data>
@@ -300,7 +300,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
   </data>
   <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>Disabling the interpreter; using the interpreter and AOT at the same time is not supported. Use the interpreter for hot reload support in Debug configurations and AOT for Release configurations.</value>
+    <value>인터프리터를 사용하지 않도록 설정하는 중입니다. 인터프리터와 AOT를 동시에 사용하는 것은 지원되지 않습니다. 디버그 구성에서 핫 다시 로드 지원에 인터프리터를 사용하고 릴리스 구성에 AOT를 사용합니다.</value>
     <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
@@ -434,7 +434,7 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The file name of the library</comment>
   </data>
   <data name="XA1023" xml:space="preserve">
-    <value>Using the DX DEX Compiler is not supported. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</value>
+    <value>DX DEX 컴파일러 사용은 지원되지 않습니다. Visual Studio 프로젝트 속성 페이지에서 DEX 컴파일러를 'd8'로 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하고 'AndroidDexTool' MSBuild 속성을 'd8'로 설정하세요.</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
   <data name="XA1024" xml:space="preserve">
@@ -463,12 +463,12 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
-    <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.</value>
+    <value>어셈블리에서 AppDomain.CreateDomain()의 사용이 검색되었습니다. {0}. .NET 6 이상에서는 단일 AppDomain만 지원하므로 .NET 6이 릴리스된 후에는 이 API를 Xamarin.Android에서 더 이상 사용할 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA2000_gcParams_bridgeImpl" xml:space="preserve">
-    <value>Support for the 'MONO_GC_PARAMS=bridge-implementation=old' value will be removed in .NET 7.</value>
+    <value>'MONO_GC_PARAMS=bridge-implementation=old' 값에 대한 지원은 .NET 7에서 제거됩니다.</value>
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>'{0}' 소스 파일을 찾을 수 없습니다.</value>
@@ -722,7 +722,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>The following are literal names and should not be translated: MultiDexMainDexList</comment>
   </data>
   <data name="XA4310" xml:space="preserve">
-    <value>`{0}` file `{1}` could not be found.</value>
+    <value>'{0}' 파일 '{1}'을(를) 찾을 수 없습니다.</value>
     <comment>{0} - The MSBuildProperty which contains the file name value.
 {1} - The value of the MSBuildProperty. Normally a filename.
 </comment>
@@ -738,8 +738,8 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - The referenced Android Wear project.</comment>
   </data>
   <data name="XA4313" xml:space="preserve">
-    <value>The built-in '{0}' reference has been deprecated.
-Remove the '{0}' reference from your project and add the '{1}' NuGet package instead.
+    <value>기본 제공 '{0}' 참조는 더 이상 사용되지 않습니다.
+ 프로젝트에서 '{0}' 참조를 제거하고 대신 '{1}' NuGet 패키지를 추가하세요.
 </value>
   <comment>The following are literal names and should not be translated:
 {0} - The Assembly name which is deprecated
@@ -747,7 +747,7 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
   </comment>
   </data>
   <data name="XA4314" xml:space="preserve">
-    <value>`{0}` is empty. A value for `{0}` should be provided.</value>
+    <value>'{0}'이(가) 비어 있습니다. '{0}'에 대한 값을 제공해야 합니다.</value>
     <comment>{0} - The MSBuildProperty which contains a value.
 </comment>
   </data>
@@ -867,12 +867,12 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>{0} - The path of the template file.</comment>
   </data>
   <data name="XA4233" xml:space="preserve">
-    <value>The &lt;AndroidNamespaceReplacement&gt; for '{0}' does not specify a 'Replacement' attribute.</value>
+    <value>'{0}'에 대한 &lt;AndroidNamespaceReplacement&gt;은(는) 'Replacement' 특성을 지정하지 않습니다.</value>
     <comment>The following are literal names and should not be translated: &lt;AndroidNamespaceReplacement&gt;
 {0} - The AndroidNamespaceReplacement MSBuild value.</comment>
   </data>
   <data name="XA_Directory_Is_From" xml:space="preserve">
-    <value>Directory '{0}' is from '{1}'.</value>
+    <value>디렉터리 '{0}'은(는) '{1}'에서 가져온 것입니다.</value>
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
