@@ -347,42 +347,31 @@ namespace Android.Runtime {
 #endif
 		static object GetHttpMessageHandler ()
 		{
-			// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
 			var handlerTypeName = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
 			Type? handlerType = null;
 			if (!String.IsNullOrEmpty (handlerTypeName))
 				handlerType = Type.GetType (handlerTypeName, throwOnError: false);
 
-			if (!IsAcceptableHttpMessageHandlerType (handlerType)) {
-				// fall back to AndroidMessageHandler
-				handlerTypeName = "Xamarin.Android.Net.AndroidMessageHandler";
-				handlerType = Type.GetType (handlerTypeName, throwOnError: true)!;
-				Logger.Log (LogLevel.Info, "MonoAndroid", $"Using {handlerTypeName} as the native HTTP message handler.");
+			// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
+			if (handlerType is null || !IsAcceptableHttpMessageHandlerType (handlerType)) {
+				handlerType = GetFallbackHttpMessageHandlerType ();
 			}
 
-			var handler = Activator.CreateInstance (handlerType);
-			if (handler is null) {
-				throw new InvalidOperationException($"Could not create an instance of HTTP message handler type {handlerType.AssemblyQualifiedName}");
-			}
-
-			return handler;
+			return Activator.CreateInstance (handlerType)
+				?? throw new InvalidOperationException ($"Could not create an instance of HTTP message handler type {handlerType.AssemblyQualifiedName}");
 		}
 
-		static bool IsAcceptableHttpMessageHandlerType (Type? handlerType)
+		static bool IsAcceptableHttpMessageHandlerType (Type handlerType)
 		{
-			if (handlerType is null)
-				return false;
-
 #if !MONOANDROID1_0
-			if (handlerType.FullName == "Xamarin.Android.Net.AndroidClientHandler") {
-				// It's not possible to construct AndroidClientHandler in this method because it would cause infinite recursion.
-				// The AndroidClientHandler class extends HttpClientHandler. HttpClientHandler's constructor instantiates it's inner
-				// handler using this method. AndroidClientHandler expects to find AndroidMessageHandler in the _nativeHandler field
-				// of HttpClientHandler. We must change the handler type to AndroidMessageHandler.
+			if (Extends (handlerType, "System.Net.Http.HttpClientHandler")) {
+				// It's not possible to construct HttpClientHandler in this method because it would cause infinite recursion
+				// as HttpClientHandler's constructor calls the GetHttpMessageHandler function
+				Logger.Log (LogLevel.Warn, "MonoAndroid", $"The type {handlerType.AssemblyQualifiedName} cannot be used as the native HTTP handler because it is derived from System.Net.Htt.HttpClientHandler. Use a type that extends System.Net.Http.HttpMessageHandler instead.");
 				return false;
 			}
 #endif
-			if (handlerType is not null && !ExtendsHttpMessageHandler (handlerType)) {
+			if (!Extends (handlerType, "System.Net.Http.HttpMessageHandler")) {
 				Logger.Log (LogLevel.Warn, "MonoAndroid", $"The type {handlerType.AssemblyQualifiedName} set as the default HTTP handler is invalid. Use a type that extends System.Net.Http.HttpMessageHandler.");
 				return false;
 			}
@@ -390,10 +379,10 @@ namespace Android.Runtime {
 			return true;
 		}
 
-		static bool ExtendsHttpMessageHandler (Type handlerType)
+		static bool Extends (Type handlerType, string typeName, string assemblyName = "System.Net.Http")
 		{
 			while (handlerType != null) {
-				if (handlerType.FullName == "System.Net.Http.HttpMessageHandler") {
+				if (handlerType.FullName == typeName && handlerType.Assembly.GetName ().Name == assemblyName) {
 					return true;
 				}
 
@@ -401,6 +390,15 @@ namespace Android.Runtime {
 			}
 
 			return false;
+		}
+
+		static Type GetFallbackHttpMessageHandlerType (string typeName = "Xamarin.Android.Net.AndroidMessageHandler")
+		{
+			var handlerType = Type.GetType (typeName, throwOnError: false)
+				?? throw new InvalidOperationException ($"The {typeName} was not found. The type was probably linked away.");
+
+			Logger.Log (LogLevel.Info, "MonoAndroid", $"Using {typeName} as the native HTTP message handler.");
+			return handlerType;
 		}
 
 		internal static bool VSAndroidDesignerIsEnabled { get; } = InitializeVSAndroidDesignerIsEnabled ();

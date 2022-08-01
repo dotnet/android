@@ -28,7 +28,10 @@ namespace Android.RuntimeTests {
 		[TestCase (null)]
 		[TestCase ("Xamarin.Android.Net.AndroidHttpResponseMessage")] // does not extend HttpMessageHandler
 #if NET
-		[TestCase ("Xamarin.Android.Net.AndroidClientHandler")] // instantiating AndroidClientHandler would cause infinite recursion
+		// instantiating AndroidClientHandler or HttpClientHandler (or any other type extending HttpClientHandler)
+		// would cause infinite recursion in the .NET build and so it is replaced with AndroidMessageHandler
+		[TestCase ("System.Net.Http.HttpClientHandler, System.Net.Http")]
+		[TestCase ("Xamarin.Android.Net.AndroidClientHandler")]
 #endif
 		public void GetHttpMessageHandler_FallbackToAndroidMessageHandler (string? typeName)
 		{
@@ -53,6 +56,7 @@ namespace Android.RuntimeTests {
 		[TestCase ("Xamarin.Android.Net.AndroidMessageHandler")]
 #if !NET
 		[TestCase ("Xamarin.Android.Net.AndroidClientHandler")]
+		[TestCase ("System.Net.Http.HttpClientHandler, System.Net.Http")]
 #endif
 		public void GetHttpMessageHandler_OverridesDefaultValue (string typeName)
 		{
