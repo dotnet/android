@@ -266,6 +266,10 @@ namespace Xamarin.Android.Build.Tests
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
+			proj.OtherBuildItems.Add (new AndroidItem.LibraryProjectZip ("..\\baz.aar") {
+				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+				MetadataValues = "Bind=false",
+			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (default (Func<string>)) {
 				Update = () => "nopack.aar",
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
@@ -281,7 +285,6 @@ namespace Xamarin.Android.Build.Tests
 			using var nupkg = ZipHelper.OpenZip (nupkgPath);
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar");
-
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/bar.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
@@ -289,6 +292,7 @@ namespace Xamarin.Android.Build.Tests
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
 		}
 
 		[Test]
