@@ -26,7 +26,7 @@ namespace Xamarin.Android.Tasks
 		sealed class _JNIEnv
 		{}
 
-		// TODO: figure out why opaque classes like these have one byte field in clang's output
+		// Empty class must have at least one member so that the class address can be obtained
 		[NativeClass]
 		class _jobject
 		{
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 		sealed class MarshalMethodInfo
 		{
 			public MarshalMethodEntry Method                { get; }
-			public string NativeSymbolName                  { get; }
+			public string NativeSymbolName                  { get; set; }
 			public List<LlvmIrFunctionParameter> Parameters { get; }
 			public Type ReturnType                          { get; }
 			public uint ClassCacheIndex                     { get; }
@@ -188,7 +188,7 @@ namespace Xamarin.Android.Tasks
 			methods = new List<MarshalMethodInfo> ();
 
 			// It's possible that several otherwise different methods (from different classes, but with the same
-			// names and signatures) will actually share the same **short** native symbol name. In this case we must
+			// names and similar signatures) will actually share the same **short** native symbol name. In this case we must
 			// ensure that they all use long symbol names.  This has to be done as a post-processing step, after we
 			// have already iterated over the entire method collection.
 			var overloadedNativeSymbolNames = new Dictionary<string, List<MarshalMethodInfo>> (StringComparer.Ordinal);
@@ -199,28 +199,22 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			// WIP: 🡇
 			foreach (List<MarshalMethodInfo> mmiList in overloadedNativeSymbolNames.Values) {
 				if (mmiList.Count <= 1) {
 					continue;
 				}
 
+				Console.WriteLine ($"Overloaded MM: {mmiList[0].NativeSymbolName}");
 				foreach (MarshalMethodInfo overloadedMethod in mmiList) {
+					Console.WriteLine ($"  implemented in: {overloadedMethod.Method.DeclaringType.FullName} ({overloadedMethod.Method.RegisteredMethod.FullName})");
+					overloadedMethod.NativeSymbolName = MakeNativeSymbolName (overloadedMethod.Method, useFullNativeSignature: true);
+					Console.WriteLine ($"     new native symbol name: {overloadedMethod.NativeSymbolName}");
 				}
 			}
 		}
 
-		void ProcessAndAddMethod (MarshalMethodEntry entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses, Dictionary<string, List<MarshalMethodInfo>> overloadedNativeSymbolNames)
+		string MakeNativeSymbolName (MarshalMethodEntry entry, bool useFullNativeSignature)
 		{
-			Console.WriteLine ("marshal method:");
-			Console.WriteLine ($"  top type: {entry.DeclaringType.FullName}");
-			Console.WriteLine ($"  registered method: [{entry.RegisteredMethod.DeclaringType.FullName}] {entry.RegisteredMethod.FullName}");
-			Console.WriteLine ($"  implemented method: [{entry.ImplementedMethod.DeclaringType.FullName}] {entry.ImplementedMethod.FullName}");
-			Console.WriteLine ($"  native callback: {entry.NativeCallback.FullName}");
-			Console.WriteLine ($"  connector: {entry.Connector.FullName}");
-			Console.WriteLine ($"  JNI name: {entry.JniMethodName}");
-			Console.WriteLine ($"  JNI signature: {entry.JniMethodSignature}");
-
 			var sb = new StringBuilder ("Java_");
 			sb.Append (MangleForJni (entry.JniTypeName));
 			sb.Append ('_');
@@ -249,6 +243,26 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			return sb.ToString ();
+
+			void ThrowInvalidSignature (string signature, string reason)
+			{
+				throw new InvalidOperationException ($"Invalid JNI signature '{signature}': {reason}");
+			}
+		}
+
+		void ProcessAndAddMethod (MarshalMethodEntry entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses, Dictionary<string, List<MarshalMethodInfo>> overloadedNativeSymbolNames)
+		{
+			Console.WriteLine ("marshal method:");
+			Console.WriteLine ($"  top type: {entry.DeclaringType.FullName}");
+			Console.WriteLine ($"  registered method: [{entry.RegisteredMethod.DeclaringType.FullName}] {entry.RegisteredMethod.FullName}");
+			Console.WriteLine ($"  implemented method: [{entry.ImplementedMethod.DeclaringType.FullName}] {entry.ImplementedMethod.FullName}");
+			Console.WriteLine ($"  native callback: {entry.NativeCallback.FullName}");
+			Console.WriteLine ($"  connector: {entry.Connector.FullName}");
+			Console.WriteLine ($"  JNI name: {entry.JniMethodName}");
+			Console.WriteLine ($"  JNI signature: {entry.JniMethodSignature}");
+
+			string nativeSymbolName = MakeNativeSymbolName (entry, useFullNativeSignature);
 			string klass = $"{entry.NativeCallback.DeclaringType.FullName}, {entry.NativeCallback.Module.Assembly.FullName}";
 			Console.WriteLine ($"  klass == {klass}");
 			if (!seenClasses.TryGetValue (klass, out int classIndex)) {
@@ -266,7 +280,7 @@ namespace Xamarin.Android.Tasks
 			(Type returnType, List<LlvmIrFunctionParameter>? parameters) = ParseJniSignature (entry.JniMethodSignature, entry.ImplementedMethod);
 			Console.WriteLine ("  parsed!");
 
-			var method = new MarshalMethodInfo (entry, returnType, nativeSymbolName: sb.ToString (), classIndex);
+			var method = new MarshalMethodInfo (entry, returnType, nativeSymbolName: nativeSymbolName, classIndex);
 			if (parameters != null && parameters.Count > 0) {
 				method.Parameters.AddRange (parameters);
 			}
@@ -288,11 +302,6 @@ namespace Xamarin.Android.Tasks
 			overloadedMethods.Add (method);
 
 			methods.Add (method);
-
-			void ThrowInvalidSignature (string signature, string reason)
-			{
-				throw new InvalidOperationException ($"Invalid JNI signature '{signature}': {reason}");
-			}
 		}
 
 		string MangleForJni (string name)
