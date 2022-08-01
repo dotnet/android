@@ -34,12 +34,12 @@ namespace Xamarin.Android.Prepare
 			"config.status",
 			"config.h",
 			"android-*.config.cache",
+			"*.g.cs",
 		};
 
 		string [] buildConfigFiles = {
 			"XABuildConfig.cs",
 			"*.binlog",
-			"*.g.cs",
 			"prepare*log",
 			"*.json",
 			"*.mk",
