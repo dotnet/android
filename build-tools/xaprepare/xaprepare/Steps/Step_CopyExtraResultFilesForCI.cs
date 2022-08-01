@@ -39,6 +39,7 @@ namespace Xamarin.Android.Prepare
 		string [] buildConfigFiles = {
 			"XABuildConfig.cs",
 			"*.binlog",
+			"*.g.cs",
 			"prepare*log",
 			"*.json",
 			"*.mk",
