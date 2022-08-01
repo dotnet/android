@@ -6,14 +6,14 @@ ms.assetid: FC0DBC08-EBCB-4D2D-AB3F-76B54E635C22
 ms.technology: xamarin-android
 author: jonpryor
 ms.author: jopryo
-ms.date: 03/29/2022
+ms.date: 07/27/2022
 ---
 
 # Build Properties
 
 MSBuild properties control the behavior of the
 [targets](~/android/deploy-test/building-apps/build-targets.md).
-They are specified within the project file, for example **MyApp.csproj**, within
+They're specified within the project file, for example **MyApp.csproj**, within
 an [MSBuild PropertyGroup](/visualstudio/msbuild/propertygroup-element-msbuild).
 
 ## AdbTarget
@@ -36,7 +36,7 @@ Added in Xamarin.Android 9.4.
 
 ## AndroidAapt2CompileExtraArgs
 
-Specifies additional
+Specifies
 command-line options to pass to the **aapt2 compile** command when
 processing Android assets and resources.
 
@@ -44,7 +44,7 @@ Added in Xamarin.Android 9.1.
 
 ## AndroidAapt2LinkExtraArgs
 
-Specifies additional
+Specifies
 command-line options to pass to the **aapt2 link** command when
 processing Android assets and resources.
 
@@ -56,9 +56,29 @@ A boolean property that controls whether the linker will insert
 `GC.KeepAlive()` invocations within binding projects to prevent premature
 object collection.
 
-Defaults to `True` for Release configuration builds.
+The default value is `True` for Release configuration builds.
 
 This property was added in Xamarin.Android 11.2.
+
+## AndroidAotAdditionalArguments
+
+A string property that allows
+passing options to the Mono compiler during the `Aot`
+task for projects that have either
+[`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) or
+[`$(AotAssemblies)`](#aotassemblies) set to `true`.
+The string value of the property is added to the response file when
+calling the Mono cross-compiler.
+
+In general, this property should be left blank, but in certain
+special scenarios it might provide useful flexibility.
+
+The `$(AndroidAotAdditionalArguments)` property is different from the related
+[`$(AndroidExtraAotOptions)`](#androidextraaotoptions) property;
+`$(AndroidAotAdditionalArguments)` passes full standalone space-separated options
+like `--verbose` or `--debug` to the AOT compiler, while
+`$(AndroidExtraAotOptions)` contains comma-separated arguments which are part of
+the `--aot` option of the AOT compiler.
 
 ## AndroidAotCustomProfilePath
 
@@ -67,7 +87,7 @@ The file that `aprofutil` should create to hold profiler data.
 ## AndroidAotProfiles
 
 A string property that allows the
-developer to add AOT profiles from the command line. It is a
+developer to add AOT profiles from the command line. It's a
 semicolon or comma-separated list of absolute paths.
 Added in Xamarin.Android 10.1.
 
@@ -78,14 +98,14 @@ The port that `aprofutil` should connect to when obtaining profiling data.
 ## AndroidAotEnableLazyLoad
 
 Enable lazy (delayed) loading of AOT-d assemblies, instead of
-preloading them at the startup.  Defaults to `True` for Release builds
+preloading them at the startup.  The default value is `True` for Release builds
 with any form of AOT enabled.
 
 Introduced in .NET 6.
 
 ## AndroidApkDigestAlgorithm
 
-A string value which specifies
+A string value that specifies
 the digest algorithm to use with `jarsigner -digestalg`.
 
 The default value is `SHA-256`. In Xamarin.Android 10.0 and earlier,
@@ -95,14 +115,14 @@ Added in Xamarin.Android 9.4.
 
 ## AndroidApkSignerAdditionalArguments
 
-A string property which allows
-the developer to provide additional arguments to the `apksigner` tool.
+A string property that allows
+the developer to provide arguments to the `apksigner` tool.
 
 Added in Xamarin.Android 8.2.
 
 ## AndroidApkSigningAlgorithm
 
-A string value which specifies
+A string value that specifies
 the signing algorithm to use with `jarsigner -sigalg`.
 
 The default value is `SHA256withRSA`. In Xamarin.Android 10.0 and
@@ -118,7 +138,7 @@ an Android Library Project (`False` or not present).
 
 Only one project with
 `<AndroidApplication>True</AndroidApplication>` may be present
-within an Android package. (Unfortunately this is not yet verified,
+within an Android package. (Unfortunately this requirement isn't verified,
 which can result in subtle and bizarre errors regarding Android
 resources.)
 
@@ -128,8 +148,8 @@ The full Java class name to
 use in place of `android.app.Application` when a class inherits
 from [Android.App.Application](xref:Android.App.Application).
 
-This property is generally set by *other* properties, such as the
-`$(AndroidEnableMultiDex)` MSBuild property.
+The `$(AndroidApplicationJavaClass)` property is generally set by
+*other* properties, such as the [`$(AndroidEnableMultiDex)`](#androidenablemultidex) MSBuild property.
 
 Added in Xamarin.Android 6.1.
 
@@ -156,24 +176,22 @@ implements a .NET type or interface in terms of Java types, for example
 
 - `Java`: The original Java exception type is propagated as-is.
 
-  This means that, for example, `InputStreamInvoker` does not properly implement
+  `Java` means that, for example, `InputStreamInvoker` doesn't properly implement
   the `System.IO.Stream` API because `Java.IO.IOException` may be thrown
   from `Stream.Read()` instead of `System.IO.IOException`.
 
-  This is the exception propagation behavior in all releases of
-  Xamarin.Android prior to 11.1.
-
-  This is the default value in Xamarin.Android 11.1.
+  `Java` is the exception propagation behavior in all releases of
+  Xamarin.Android, including Xamarin.Android 13.0.
 
 - `System`: The original Java exception type is caught and wrapped in an
   appropriate .NET exception type.
 
-  This means that, for example, `InputStreamInvoker` properly implements
+  `System` means that, for example, `InputStreamInvoker` properly implements
   `System.IO.Stream`, and `Stream.Read()` will *not* throw `Java.IO.IOException`
-  instances.  (It may instead throw a `System.IO.IOException` which has a
+  instances.  (It may instead throw a `System.IO.IOException` containing a
   `Java.IO.IOException` as the `Exception.InnerException` value.)
 
-  This will become the default value in .NET 6.0.
+  `System` is the default value in .NET 6.0.
 
 Added in Xamarin.Android 10.2.
 
@@ -184,7 +202,7 @@ determines whether binding constants on interfaces will be supported,
 or the workaround of creating an `IMyInterfaceConsts` class
 will be used.
 
-Defaults to `True` in .NET 6 and `False` for legacy.
+The default value is `True` in .NET 6 and `False` for legacy.
 
 ## AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods
 
@@ -193,7 +211,7 @@ whether default and static members on interfaces will be supported,
 or  old workaround of creating a sibling class containing static
 members like `abstract class MyInterface`.
 
-Defaults to `True` in .NET 6 and `False` for legacy.
+The default value is `True` in .NET 6 and `False` for legacy.
 
 ## AndroidBoundInterfacesContainTypes
 
@@ -201,7 +219,7 @@ A boolean property that
 whether types nested in interfaces will be supported, or the workaround
 of creating a non-nested type like `IMyInterfaceMyNestedClass`.
 
-Defaults to `True` in .NET 6 and `False` for legacy.
+The default value is `True` in .NET 6 and `False` for legacy.
 
 ## AndroidBuildApplicationPackage
 
@@ -221,7 +239,7 @@ Specifies a filename to use as a
 [configuration file][bundle-config-format] for `bundletool`
 when building an Android App Bundle. This file controls some aspects
 of how APKs are generated from the bundle, such as on what
-dimensions the bundle is split to produce APKs. Note that
+dimensions the bundle is split to produce APKs.
 Xamarin.Android configures some of these settings automatically,
 including the list of file extensions to leave uncompressed.
 
@@ -234,7 +252,7 @@ Added in Xamarin.Android 10.3.
 
 ## AndroidBundleToolExtraArgs
 
-Specifies additional
+Specifies
 command-line options to pass to the **bundletool** command when
 build app bundles.
 
@@ -242,7 +260,7 @@ This property was added in Xamarin.Android 11.3.
 
 ## AndroidClassParser
 
-A string property which controls how
+A string property that controls how
 `.jar` files are parsed. Possible values include:
 
 - **class-parse**: Uses `class-parse.exe` to parse Java bytecode
@@ -254,10 +272,10 @@ A string property which controls how
 The advantages of `class-parse` over `jar2xml` are:
 
 - `class-parse` can extract parameter names from Java
-  bytecode which contains *debug* symbols (bytecode compiled
+  bytecode containing *debug* symbols (bytecode compiled
   with `javac -g`).
 
-- `class-parse` doesn't "skip" classes which inherit from or
+- `class-parse` doesn't "skip" classes that inherit from or
   contain members of unresolvable types.
 
 Added in Xamarin.Android 6.0.
@@ -269,7 +287,7 @@ Support for `jar2xml` is obsolete, and `jar2xml` is removed in .NET 6.
 
 ## AndroidCodegenTarget
 
-A string property which controls the code generation target ABI.
+A string property that controls the code generation target ABI.
 Possible values include:
 
 - **XamarinAndroid**: Uses the JNI binding API present since
@@ -301,9 +319,9 @@ as part of .NET 6.
 
 ## AndroidCreatePackagePerAbi
 
-A boolean property that determines if a *set* of files -- on per ABI
-specified in [`$(AndroidSupportedAbis)`](#androidsupportedabis) --
-should be created instead of having support for all ABIs in a single `.apk`.
+A boolean property that determines if a *set* of files--one per ABI
+specified in [`$(AndroidSupportedAbis)`](#androidsupportedabis)--should
+be created instead of having support for all ABIs in a single `.apk`.
 
 See also the [Building ABI-Specific APKs](~/android/deploy-test/building-apps/abi-specific-apks.md)
 guide.
@@ -314,32 +332,33 @@ A boolean property that controls if a proguard mapping file is
 generated as part of the build process.
 
 Adding the following to your csproj will cause the file to be
-generated. This uses the [`AndroidProguardMappingFile`](#androidproguardmappingfile) property
+generated, and uses the [`AndroidProguardMappingFile`](#androidproguardmappingfile) property
 to control the location of the final mapping file.
 
-```
+```xml
 <AndroidCreateProguardMappingFile>True</AndroidCreateProguardMappingFile>
 ```
 
-Note that if you are using `.aab` files the mapping file with be
-automatically included in your package. So there is no need to upload
-it to the Google Play Store manually. If you are using `.apk` files
-you will need to manually upload the [`AndroidProguardMappingFile`](#androidproguardmappingfile).
+When producing `.aab` files, the mapping file is
+automatically included in your package. There is no need to upload
+it to the Google Play Store manually. When using `.apk` files, the
+[`AndroidProguardMappingFile`](#androidproguardmappingfile) will need to be
+manually uploaded.
 
-The default value is `True` when using `AndroidLinkTool=r8`.
+The default value is `True` when using [`$(AndroidLinkTool)`](#androidlinktool)=r8.
 
 Added in Xamarin.Android 12.3.
 
 ## AndroidDebugKeyAlgorithm
 
 Specifies the default
-algorithm to use for the `debug.keystore`. It defaults to
+algorithm to use for the `debug.keystore`. The default value is
 `RSA`.
 
 ## AndroidDebugKeyValidity
 
 Specifies the default
-validity to use for the `debug.keystore`. It defaults to
+validity to use for the `debug.keystore`. The default value is
 `10950` or `30 * 365` or `30 years`.
 
 ## AndroidDebugStoreType
@@ -361,7 +380,7 @@ from the following adb command:
 adb shell pm list users
 ```
 
-This will return the following data:
+The above command will return the following data:
 
 ```
 Users:
@@ -369,17 +388,17 @@ Users:
 	UserInfo{10:Guest:404}
 ```
 
-The `uid` is the first integer value. In the example they
-are `0` and `10`.
+The `uid` is the first integer value. In the above output,
+they're `0` and `10`.
 
-This property was added in Xamarin.Android 11.2.
+The `$(AndroidDeviceUserId)` property was added in Xamarin.Android 11.2.
 
 ## AndroidDexTool
 
 An enum-style property with valid
 values of `dx` or `d8`. Indicates which Android [dex][dex]
 compiler is used during the Xamarin.Android build process.
-Currently defaults to `dx`. For further information see our
+The default value is `dx`. See our
 documentation on [D8 and R8][d8-r8].
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
@@ -388,18 +407,18 @@ documentation on [D8 and R8][d8-r8].
 ## AndroidEnableDesugar
 
 A boolean property that
-determines if `desugar` is enabled. Android does not currently
+determines if `desugar` is enabled. Android doesn't currently
 support all Java 8 features, and the default toolchain implements
 the new language features by performing bytecode transformations,
-called `desugar`, on the output of the `javac` compiler. Defaults
-to `False` if using `AndroidDexTool=dx` and defaults to `True` if
+called `desugar`, on the output of the `javac` compiler. The default value is
+`False` if using `$(AndroidDexTool)=dx` and `True` if
 using [`$(AndroidDexTool)`](#androiddextool)=`d8`.
 
 ## AndroidEnableGooglePlayStoreChecks
 
 A bool property
-which allows developers to disable the following Google Play
-Store checks: XA1004, XA1005 and XA1006. This is useful for
+that allows developers to disable the following Google Play
+Store checks: XA1004, XA1005 and XA1006. Disabling these checks is useful for
 developers who are not targeting the Google Play Store and do
 not wish to run those checks.
 
@@ -417,27 +436,28 @@ This property is `False` by default.
 
 ## AndroidEnablePreloadAssemblies
 
-A boolean property which controls
+A boolean property that controls
 whether or not all managed assemblies bundled within the application package
 are loaded during process startup or not.
 
 When set to `True`, all assemblies bundled within the application package
 will be loaded during process startup, before any application code is invoked.
-This is consistent with what Xamarin.Android did in releases prior to
-Xamarin.Android 9.2.
+Preloading assemblies is what Xamarin.Android does.
 
 When set to `False`, assemblies will only be loaded on an as-needed basis.
-This allows applications to startup faster, and is also more consistent with
-desktop .NET semantics.  To see the time savings, set the `debug.mono.log`
+Loading assemblies on an as-needed basis allows applications to launch faster,
+and is also more consistent with desktop .NET semantics.
+To see the time savings, set the `debug.mono.log`
 System Property to include `timing`, and look for the
 `Finished loading assemblies: preloaded` message within `adb logcat`.
 
-Applications or libraries which use dependency injection may *require* that
+Applications or libraries, which use dependency injection may *require* that
 this property be `True` if they in turn require that
 `AppDomain.CurrentDomain.GetAssemblies()` return all assemblies within the
 application bundle, even if the assembly wouldn't otherwise have been needed.
 
-By default this value will be set to `True`.
+By default this value will be set to `True` for Xamarin.Android, and will be
+set to `False` for .NET 6+ builds.
 
 Added in Xamarin.Android 9.2.
 
@@ -499,7 +519,7 @@ No longer supported in Xamarin.Android 11.0.
 ## AndroidExtraAotOptions
 
 A string property that allows
-passing additional options to the Mono compiler during the `Aot`
+passing options to the Mono compiler during the `Aot`
 task for projects that have either
 [`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) or
 [`$(AotAssemblies)`](#aotassemblies) set to `true`.
@@ -509,8 +529,9 @@ calling the Mono cross-compiler.
 In general, this property should be left blank, but in certain
 special scenarios it might provide useful flexibility.
 
-Note that this property is different from the related
-`$(AndroidAotAdditionalArguments)` property. That property places
+The `$(AndroidExtraAotOptions)` property is different from the related
+[`$(AndroidAotAdditionalArguments)`](#androidaotadditionalarguments) property;
+`$(AndroidAotAdditionalArguments)` places
 comma-separated arguments into the `--aot` option of the Mono
 compiler. `$(AndroidExtraAotOptions)` instead passes full standalone
 space-separated options like `--verbose` or `--debug` to the
@@ -535,7 +556,7 @@ faster.) Valid values include:
 
 - `Assemblies`: Deploy application assemblies.
 - `Dexes`: Deploy `.dex` files, native libraries and typemaps.
-  **This value can *only* be used on devices running
+  **The `Dexes` value can *only* be used on devices running
   Android 4.4 or later (API-19).**
 
 The default value is `Assemblies`.
@@ -549,17 +570,17 @@ deprecated API's to work.
 ## AndroidFragmentType
 
 Specifies the default fully qualified type to be used for all `<fragment>` layout
-elements when generating the layout bindings code. The property defaults to the standard
+elements when generating the layout bindings code. The default value is the standard
 Android `Android.App.Fragment` type.
 
 ## AndroidGenerateJniMarshalMethods
 
-A bool property which
+A bool property that
 enables generating of JNI marshal methods as part of the build
 process. This greatly reduces the `System.Reflection` usage in the
 binding helper code.
 
-By default this will be set to False. If the developers wish to use
+The default value is `False`.  If developers wish to use
 the new JNI marshal methods feature, they can set
 
 ```xml
@@ -574,12 +595,12 @@ line via
 ```
 
 **Experimental**. Added in Xamarin.Android 9.2.
-The default value is False.
+The default value is `False`.
 
 ## AndroidGenerateJniMarshalMethodsAdditionalArguments
 
-A string property which can be used to add additional parameters to
-the `jnimarshalmethod-gen.exe` invocation.  This is useful for
+A string property that can be used to add parameters to
+the `jnimarshalmethod-gen.exe` invocation, and is useful for
 debugging, so that options such as `-v`, `-d`, or `--keeptemp` can
 be used.
 
@@ -606,7 +627,7 @@ default value is `false`.
 
 ## AndroidGenerateResourceDesigner
 
-Defaults to `true`. When set to `false`, disables the generation of `Resource.designer.cs`.
+The default value is `true`. When set to `false`, disables the generation of `Resource.designer.cs`.
 
 Added in .NET 6 RC 1. Not supported in Xamarin.Android.
 
@@ -621,11 +642,11 @@ for use with
 The most common values for this property are:
 
 - `Xamarin.Android.Net.AndroidClientHandler`: Use the Android Java APIs
-  to perform network requests. This allows accessing TLS 1.2 URLs when
+  to perform network requests. Using Java APIs allows accessing TLS 1.2 URLs when
   the underlying Android version supports TLS 1.2. Only Android 5.0 and
   later reliably provide TLS 1.2 support through Java.
 
-  This corresponds to the **Android** option in the Visual Studio
+  Corresponds to the **Android** option in the Visual Studio
   property pages and the **AndroidClientHandler** option in the Visual
   Studio for Mac property pages.
 
@@ -634,10 +655,10 @@ The most common values for this property are:
   (Lollipop)** or higher in Visual Studio or when **Target Platforms**
   is set to **Latest and Greatest** in Visual Studio for Mac.
 
-- Unset/the empty string: This is equivalent to
+- Unset/the empty string, which is equivalent to
   `System.Net.Http.HttpClientHandler, System.Net.Http`
 
-  This corresponds to the **Default** option in the Visual Studio
+  Corresponds to the **Default** option in the Visual Studio
   property pages.
 
   The new project wizard selects this option for new projects when the
@@ -648,7 +669,7 @@ The most common values for this property are:
 - `System.Net.Http.HttpClientHandler, System.Net.Http`: Use the managed
   `HttpMessageHandler`.
 
-  This corresponds to the **Managed** option in the Visual Studio
+  Corresponds to the **Managed** option in the Visual Studio
   property pages.
 
 > [!NOTE]
@@ -657,7 +678,7 @@ The most common values for this property are:
 > related APIs, then [`$(AndroidTlsProvider)`](#androidtlsprovider) should be used.
 
 > [!NOTE]
-> Support for this property works by setting the
+> Support for the `$(AndroidHttpClientHandlerType)` property works by setting the
 > [`XA_HTTP_CLIENT_HANDLER_TYPE` environment variable](~/android/deploy-test/environment.md).
 > A `$XA_HTTP_CLIENT_HANDLER_TYPE` value found in a file
 > with a Build action of
@@ -668,12 +689,12 @@ Added in Xamarin.Android 6.1.
 
 ## AndroidIncludeWrapSh
 
-A boolean value which indicates whether the Android wrapper script
+A boolean value that indicates whether the Android wrapper script
 ([`wrap.sh`](https://developer.android.com/ndk/guides/wrap-script))
-should be packaged into the APK. The property defaults to `false`
+should be packaged into the APK. The default value is `false`
 since the wrapper script may significantly influence the way the
 application starts up and works and the script should be included only
-when necessary e.g. for debugging or otherwise changing the
+when necessary, for example when debugging or otherwise changing the
 application startup/runtime behavior.
 
 The script is added to the project using the
@@ -720,7 +741,7 @@ Requires use of the
 [`@(JavaSourceJar)`](~/android/deploy-test/building-apps/build-items.md#javasourcejar)
 build action.
 
-This is an enum-style property, with possible values of `full` or
+The `$(AndroidJavadocVerbosity)` property is enum-like, with possible values of `full` or
 `intellisense`:
 
   * `intellisense`: Only emit the XML comments:
@@ -739,7 +760,7 @@ Support for this property was added in Xamarin.Android 11.3.
 
 ## AndroidKeyStore
 
-A boolean value which indicates whether
+A boolean value that indicates whether
 custom signing information should be used. The default value is
 `False`, meaning that the default debug-signing key will be used
 to sign packages.
@@ -775,18 +796,17 @@ used in Android Application projects. The default value is
 
 ## AndroidLinkResources
 
-When `true` this will make the build system link out the Nested Types
+When `true`, the build system will link out the Nested Types
 of the Resource.Designer.cs `Resource` class in all assemblies. The
 IL code that uses those types will be updated to use the values
 directly rather than accessing fields.
 
-This can have a small impact on reducing the apk size, it might also
-help slightly with startup performance. This will only effect "Release"
-based builds.
+Linking out the nested types can have a small impact on reducing the apk size,
+and can also help with startup performance. Only "Release" builds are linked.
 
 ***Experimental***.  Only designed to work with code such as
 
-```
+```csharp
 var view = FindViewById(Resources.Ids.foo);
 ```
 
@@ -809,15 +829,15 @@ projects.
 
 An enum-style property with valid
 values of `proguard` or `r8`. Indicates which code shrinker is
-used for Java code. Currently defaults to an empty string, or
-`proguard` if `$(AndroidEnableProguard)` is `True`. For further
-information see our documentation on [D8 and R8][d8-r8].
+used for Java code. The default value is an empty string, or
+`proguard` if `$(AndroidEnableProguard)` is `True`. See our documentation on
+[D8 and R8][d8-r8].
 
 [d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
 
 ## AndroidLintEnabled
 
-A bool property which allows the developer to
+A bool property that allows the developer to
 run the android `lint` tool as part of the packaging process.
 
 When `$(AndroidLintEnabled)`=True, the following properties are used:
@@ -835,21 +855,21 @@ the android `lint` tooling.
 
 ## AndroidLintEnabledIssues
 
-This property is only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
+A string property that is a comma-separated list of lint issues to enable.
 
-A comma-separated list of lint issues to enable.
+Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
 
 ## AndroidLintDisabledIssues
 
-This property is only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
+A string property that is a comma-separated list of lint issues to disable.
 
-A comma-separated list of lint issues to disable.
+Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
 
 ## AndroidLintCheckIssues
 
-This property is only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
+A string property that is a comma-separated list of lint issues to check.
 
-A comma-separated list of lint issues to check.
+Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
 
 Note: only these issues will be checked.
 
@@ -889,7 +909,7 @@ Introduced in Xamarin.Android 10.2
 
 ## AndroidManifestMergerExtraArgs
 
-A string property to provide additional arguments to the
+A string property to provide arguments to the
 [Android documentation][manifest-merger] tool.
 
 If you want detailed output from the tool you can add the following to the
@@ -910,15 +930,15 @@ target to determine which Android packages and package versions are
 available and can be installed.
 
 `Xamarin` is the **Approved List (Recommended)** repository within the
-[Visual Studio SDK Manager](xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
+[Visual Studio SDK Manager](~/android/get-started/installation/android-sdk.md?tabs=windows#repository-selection).
 
 `GoogleV2` is the **Full List (Unsupported)** repository within the
-[Visual Studio SDK Manager](xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
+[Visual Studio SDK Manager](~/android/get-started/installation/android-sdk.md?tabs=windows#repository-selection).
 
-Added in Xamarin.Android 12.4.  In Xamarin.Android 12.4, if `$(AndroidManifestType)`
+Added in Xamarin.Android 13.0.  In Xamarin.Android 13.0, if `$(AndroidManifestType)`
 is not set, then `Xamarin` is used.
 
-Prior to Xamarin.Android 12.4, setting `$(AndroidManifestType)` has no effect, and
+Prior to Xamarin.Android 13.0, setting `$(AndroidManifestType)` has no effect, and
 `GoogleV2` is used.
 
 ## AndroidManifestPlaceholders
@@ -941,7 +961,7 @@ the *AndroidManifest.xml* file.
 ## AndroidMultiDexClassListExtraArgs
 
 A string property
-which allows developers to pass additional arguments to the
+which allows developers to pass arguments to the
 `com.android.multidex.MainDexListBuilder` when generating the
 `multidex.keep` file.
 
@@ -960,18 +980,17 @@ If you are getting this error you can add the following to the
 <AndroidMultiDexClassListExtraArgs>--disable-annotation-resolution-workaround</AndroidMultiDexClassListExtraArgs>
 ```
 
-this should allow the `dx` step to succeed.
+which will allow the `dx` step to succeed.
 
 Added in Xamarin.Android 8.3.
 
 ## AndroidPackageFormat
 
 An enum-style property with valid
-values of `apk` or `aab`. This indicates if you want to package
+values of `apk` or `aab`. Indicates if you want to package
 the Android application as an [APK file][apk] or [Android App
 Bundle][bundle]. App Bundles are a new format for `Release` builds
-that are intended for submission on Google Play. This value
-currently defaults to `apk`.
+that are intended for submission on Google Play. The default value is `apk`.
 
 When `$(AndroidPackageFormat)` is set to `aab`, other MSBuild
 properties are set, which are required for Android App Bundles:
@@ -989,7 +1008,7 @@ the newer [`AndroidPackageFormats`](~/android/deploy-test/building-apps/build-pr
 ## AndroidPackageFormats
 
 A semi-colon delimited property with valid values of `apk` and `aab`.
-This indicates if you want to package the Android application as
+Indicates if you want to package the Android application as
 an [APK file][apk] or [Android App Bundle][bundle]. App Bundles
 are a new format for `Release` builds that are intended for
 submission on Google Play.
@@ -1005,13 +1024,13 @@ For .net 6 `AndroidPackageFormats` will be set to `aab;apk` for
 `Release` builds only. It is recommended that you continue to use
 just `apk` for debugging.
 
-For Legacy Xamarin.Android this value currently defaults to `""`.
+For Legacy Xamarin.Android The default value is `""`.
 As a result Legacy Xamarin.Android will NOT by default produce
 both as part of a release build. If a user wants to produce both
 outputs they will need to define the following in their `Release`
 configuration.
 
-```
+```xml
 <AndroidPackageFormats>aab;apk</AndroidPackageFormats>
 ```
 
@@ -1050,7 +1069,7 @@ If you do not want to generate this mapping file you can use the
 [`AndroidCreateProguardMappingFile`](#androidcreateproguardmappingfile) property to stop creating it .
 Add the following in your project
 
-```
+```xml
 <AndroidCreateProguardMappingFile>False</AndroidCreateProguardMappingFile>
 ```
 
@@ -1063,22 +1082,21 @@ This property was added in Xamarin.Android 11.2.
 Specifies
 the `-ignorewarnings` proguard rule for `r8`. This allows `r8`
 to continue with dex compilation even if certain warnings are
-encountered. Defaults to `True`, but can be set to `False` to
-enforce more strict behavior. See the [ProGuard manual](https://www.guardsquare.com/products/proguard/manual/usage)
-for details.
+encountered. The default value is `True`, but can be set to `False` to
+enforce more strict behavior. See the [ProGuard manual](https://www.guardsquare.com/manual/configuration/usage) for details.
 
 Added in Xamarin.Android 10.3.
 
 ## AndroidR8JarPath
 
 The path to `r8.jar` for use with the
-r8 dex-compiler and shrinker. Defaults to a path in the
+r8 dex-compiler and shrinker. The default value is a path in the
 Xamarin.Android installation. For further information see our
 documentation on [D8 and R8][d8-r8].
 
 ## AndroidResgenExtraArgs
 
-Specifies additional
+Specifies
 command-line options to pass to the **aapt** command when
 processing Android assets and resources.
 
@@ -1222,7 +1240,7 @@ Supported values include:
 
 ## AndroidTlsProvider
 
-A string value which specifies which
+A string value that specifies which
 TLS provider should be used in an application. Possible values are:
 
 - Unset/the empty string: In Xamarin.Android 7.3 and higher, this is
@@ -1244,7 +1262,7 @@ TLS provider should be used in an application. Possible values are:
   Visual Studio property pages.
 
 - `legacy`: In Xamarin.Android 10.1 and earlier, use the historical
-  managed SSL implementation for network interaction. This *does not* support TLS 1.2.
+  managed SSL implementation for network interaction. This *doesn't* support TLS 1.2.
 
   This corresponds to the **Managed TLS 1.0** setting in the
   Visual Studio property pages.
@@ -1266,7 +1284,7 @@ Added in Xamarin.Android 7.1.
 
 ## AndroidUseAapt2
 
-A boolean property which allows the developer to
+A boolean property that allows the developer to
 control the use of the `aapt2` tool for packaging.
 By default this will be False and Xamarin.Android will use `aapt`.
 If the developer wishes to use the new `aapt2` functionality, add:
@@ -1286,7 +1304,7 @@ deprecated in Xamarin.Android 11.2.
 
 ## AndroidUseApkSigner
 
-A bool property which allows the developer to
+A bool property that allows the developer to
 use the `apksigner` tool rather than `jarsigner`.
 
 Added in Xamarin.Android 8.2.
@@ -1302,7 +1320,7 @@ Added in Xamarin.Android 10.1.
 
 ## AndroidUseInterpreter
 
-A boolean property which causes the `.apk` to contain the mono
+A boolean property that causes the `.apk` to contain the mono
 *interpreter*, and not the normal JIT.
 
 ***Experimental***.
@@ -1311,7 +1329,7 @@ Support for this property was added in Xamarin.Android 11.3.
 
 ## AndroidUseLegacyVersionCode
 
-A boolean property which allows
+A boolean property that allows
 the developer to revert the versionCode calculation back to its old pre
 Xamarin.Android 8.2 behavior. This should ONLY be used for developers
 with existing applications in the Google Play Store. It is highly recommended
@@ -1322,11 +1340,18 @@ Added in Xamarin.Android 8.2.
 
 ## AndroidUseManagedDesignTimeResourceGenerator
 
-A boolean property which
+A boolean property that
 will switch over the design time builds to use the managed resource parser rather
 than `aapt`.
 
 Added in Xamarin.Android 8.1.
+
+## AndroidUseNegotiateAuthentication
+
+A boolean property that enables support for NTLMv2/Negotiate authentication in
+`AndroidMessageHandler`.  The default value is False.
+
+Added in .NET 7.  Unsupported in Classic Xamarin.Android.
 
 ## AndroidUseSharedRuntime
 
@@ -1363,7 +1388,7 @@ Support for this property was added in Xamarin.Android 11.3.
 
 ## AndroidVersionCodePattern
 
-A string property which allows
+A string property that allows
 the developer to customize the `versionCode` in the manifest.
 See [Creating the Version Code for the APK](~/android/deploy-test/building-apps/abi-specific-apks.md#creating-the-version-code-for-the-apk)
 for information on deciding a `versionCode`.
@@ -1412,7 +1437,7 @@ Added in Xamarin.Android 7.2.
 
 ## AndroidVersionCodeProperties
 
-A string property which
+A string property that
 allows the developer to define custom items to use with the
 [`$(AndroidVersionCodePattern)`](#androidversioncodepattern).
 They are in the form of a `key=value`
@@ -1511,7 +1536,7 @@ without installing any other packages or files.
 
 ## DebugSymbols
 
-A boolean value which determines whether
+A boolean value that determines whether
 the Android package is *debuggable*, in combination with the
 [`$(DebugType)`](#debugtype) property.
 A debuggable package contains debug symbols, sets the
@@ -1598,7 +1623,7 @@ in the final [`AndroidManifest.xml`](~/android/platform/android-manifest.md) fil
 - [`$(ApplicationTitle)`](#applicationtitle)
 - [`$(ApplicationVersion)`](#applicationversion)
 
-`$(GenerateApplicationManifest)` defaults to `true` in .NET 6 and
+The default value `$(GenerateApplicationManifest)` is `true` in .NET 6 and
 `false` in "legacy" Xamarin.Android.
 
 Support for this property was added in Xamarin.Android 11.3.
@@ -1612,7 +1637,7 @@ supplies **java** with a value of `1G`. This was found to be commonly
 required on Windows in comparison to other platforms.
 
 Specifying this property is necessary if the
-[`_CompileDex` target throws a `java.lang.OutOfMemoryError`](https://bugzilla.xamarin.com/show_bug.cgi?id=18327).
+[`_CompileDex` target throws a `java.lang.OutOfMemoryError`](https://bugzilla.xamarin.com/18/18327/bug.html).
 
 Customize the value by changing:
 
@@ -1622,7 +1647,7 @@ Customize the value by changing:
 
 ## JavaOptions
 
-Specifies additional command-line options
+Specifies command-line options
 to pass to **java** when building the `.dex` file.
 
 ## JarsignerTimestampAuthorityCertificateAlias
@@ -1654,7 +1679,7 @@ See the Java [Signature Timestamp Support](https://docs.oracle.com/javase/8/docs
 
 ## LinkerDumpDependencies
 
-A bool property which enables
+A bool property that enables
 generating of linker dependencies file. This file can be used as
 input for
 [illinkanalyzer](https://github.com/mono/linker/blob/master/src/analyzer/README.md)
@@ -1759,7 +1784,7 @@ Java project structure.
 
 ## MonoSymbolArchive
 
-A boolean property which controls
+A boolean property that controls
 whether `.mSYM` artifacts are created for later use with
 `mono-symbolicate`, to extract &ldquo;real&rdquo; filename and line
 number information from Release stack traces.

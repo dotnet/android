@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 
 namespace Android.Runtime {
@@ -108,7 +107,9 @@ namespace Android.Runtime {
 			if (c != null)
 				return JNIEnv.ToLocalJniHandle (c);
 
-			var a = value.ToArray ();
+			var a = new T [value.Count];
+			value.CopyTo (a, 0);
+
 			return  JNIEnv.NewArray (a, typeof (T));
 		}
 	}

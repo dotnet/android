@@ -202,7 +202,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <value>The pre authentication data.</value>
 		public AuthenticationData? PreAuthenticationData { get; set; }
-		
+
 		/// <summary>
 		/// If the website requires authentication, this property will contain data about each scheme supported
 		/// by the server after the response. Note that unauthorized request will return a valid response - you
@@ -234,12 +234,12 @@ namespace Xamarin.Android.Net
 		/// <summary>
 		/// <para>
 		/// If the request is to the server protected with a self-signed (or otherwise untrusted) SSL certificate, the request will
-		/// fail security chain verification unless the application provides either the CA certificate of the entity which issued the 
+		/// fail security chain verification unless the application provides either the CA certificate of the entity which issued the
 		/// server's certificate or, alternatively, provides the server public key. Whichever the case, the certificate(s) must be stored
 		/// in this property in order for AndroidMessageHandler to configure the request to accept the server certificate.</para>
-		/// <para>AndroidMessageHandler uses a custom <see cref="KeyStore"/> and <see cref="TrustManagerFactory"/> to configure the connection. 
+		/// <para>AndroidMessageHandler uses a custom <see cref="KeyStore"/> and <see cref="TrustManagerFactory"/> to configure the connection.
 		/// If, however, the application requires finer control over the SSL configuration (e.g. it implements its own TrustManager) then
-		/// it should leave this property empty and instead derive a custom class from AndroidMessageHandler and override, as needed, the 
+		/// it should leave this property empty and instead derive a custom class from AndroidMessageHandler and override, as needed, the
 		/// <see cref="ConfigureTrustManagerFactory"/>, <see cref="ConfigureKeyManagerFactory"/> and <see cref="ConfigureKeyStore"/> methods
 		/// instead</para>
 		/// </summary>
@@ -263,6 +263,16 @@ namespace Xamarin.Android.Net
 		/// </para>
 		/// </summary>
 		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromHours (24);
+
+#if !MONOANDROID1_0
+		/// <summary>
+		/// A feature switch that determines whether the message handler should attempt to authenticate the user
+		/// using the NTLM/Negotiate authentication method. Enable the feature by adding
+		/// <c><AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication></c> to your project file.
+		/// </summary>
+		static bool NegotiateAuthenticationIsEnabled =>
+			AppContext.TryGetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", out bool isEnabled) && isEnabled;
+#endif
 
 		/// <summary>
 		/// <para>
@@ -331,12 +341,38 @@ namespace Xamarin.Android.Net
 		/// <returns>Task in which the request is executed</returns>
 		/// <param name="request">Request provided by <see cref="System.Net.Http.HttpClient"/></param>
 		/// <param name="cancellationToken">Cancellation token.</param>
-		protected override async Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+		protected override Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+		{
+#if !MONOANDROID1_0
+			if (NegotiateAuthenticationIsEnabled) {
+				return SendWithNegotiateAuthenticationAsync (request, cancellationToken);
+			}
+#endif
+
+			return DoSendAsync (request, cancellationToken);
+		}
+
+#if !MONOANDROID1_0
+		async Task <HttpResponseMessage?> SendWithNegotiateAuthenticationAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+		{
+			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
+
+			if (RequestNeedsAuthorization && NegotiateAuthenticationHelper.RequestNeedsNegotiateAuthentication (this, request, out var requestedAuth)) {
+				var authenticatedResponse = await NegotiateAuthenticationHelper.SendWithAuthAsync (this, request, requestedAuth, cancellationToken).ConfigureAwait (false);
+				if (authenticatedResponse != null)
+					return authenticatedResponse;
+			}
+
+			return response;
+		}
+#endif
+
+		internal async Task <HttpResponseMessage> DoSendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
 			AssertSelf ();
 			if (request == null)
 				throw new ArgumentNullException (nameof (request));
-			
+
 			if (!request.RequestUri.IsAbsoluteUri)
 				throw new ArgumentException ("Must represent an absolute URI", "request");
 
@@ -633,7 +669,7 @@ namespace Xamarin.Android.Net
 			return ret;
 		}
 
-		HttpContent GetErrorContent (HttpURLConnection httpConnection, HttpContent fallbackContent) 
+		HttpContent GetErrorContent (HttpURLConnection httpConnection, HttpContent fallbackContent)
 		{
 			var contentStream = httpConnection.ErrorStream;
 
@@ -796,7 +832,7 @@ namespace Xamarin.Android.Net
 
 			RequestedAuthentication = authData.AsReadOnly ();
 		}
-		
+
 		AuthenticationScheme GetAuthScheme (string scheme)
 		{
 			if (String.Compare ("basic", scheme, StringComparison.OrdinalIgnoreCase) == 0)
@@ -851,7 +887,7 @@ namespace Xamarin.Android.Net
 		/// <summary>
 		/// Configure the <see cref="HttpURLConnection"/> before the request is sent. This method is meant to be overriden
 		/// by applications which need to perform some extra configuration steps on the connection. It is called with all
-		/// the request headers set, pre-authentication performed (if applicable) but before the request body is set 
+		/// the request headers set, pre-authentication performed (if applicable) but before the request body is set
 		/// (e.g. for POST requests). The default implementation in AndroidMessageHandler does nothing.
 		/// </summary>
 		/// <param name="request">Request data</param>
@@ -859,7 +895,7 @@ namespace Xamarin.Android.Net
 		protected virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
 			AssertSelf ();
-			
+
 			return Task.CompletedTask;
 		}
 
@@ -905,9 +941,9 @@ namespace Xamarin.Android.Net
 		/// <summary>
 		/// Create and configure an instance of <see cref="TrustManagerFactory"/>. The <paramref name="keyStore"/> parameter is set to the
 		/// return value of the <see cref="ConfigureKeyStore"/> method, so it might be null if the application overrode the method and provided
-		/// no key store. It will not be <c>null</c> when the default implementation is used. The application can return <c>null</c> from this 
+		/// no key store. It will not be <c>null</c> when the default implementation is used. The application can return <c>null</c> from this
 		/// method in which case AndroidMessageHandler will create its own instance of the trust manager factory provided that the <see cref="TrustCerts"/>
-		/// list contains at least one valid certificate. If there are no valid certificates and this method returns <c>null</c>, no custom 
+		/// list contains at least one valid certificate. If there are no valid certificates and this method returns <c>null</c>, no custom
 		/// trust manager will be created since that would make all the HTTPS requests fail.
 		/// </summary>
 		/// <returns>The trust manager factory.</returns>
@@ -930,7 +966,7 @@ namespace Xamarin.Android.Net
 				return;
 			list.Add (encoding);
 		}
-		
+
 		async Task <HttpURLConnection> SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
 		{
 			if (conn == null)
@@ -951,7 +987,7 @@ namespace Xamarin.Android.Net
 			if (request.Content != null)
 				AddHeaders (httpConnection, request.Content.Headers);
 			AddHeaders (httpConnection, request.Headers);
-			
+
 			List <string>? accept_encoding = null;
 
 			decompress_here = false;
@@ -959,7 +995,7 @@ namespace Xamarin.Android.Net
 				AppendEncoding (GZIP_ENCODING, ref accept_encoding);
 				decompress_here = true;
 			}
-			
+
 			if ((AutomaticDecompression & DecompressionMethods.Deflate) != 0) {
 				AppendEncoding (DEFLATE_ENCODING, ref accept_encoding);
 				decompress_here = true;
@@ -978,7 +1014,7 @@ namespace Xamarin.Android.Net
 				if (!String.IsNullOrEmpty (cookieHeaderValue))
 					httpConnection.SetRequestProperty ("Cookie", cookieHeaderValue);
 			}
-			
+
 			HandlePreAuthentication (httpConnection);
 			await SetupRequest (request, httpConnection).ConfigureAwait (continueOnCapturedContext: false);;
 			SetupRequestBody (httpConnection, request);
@@ -1035,7 +1071,7 @@ namespace Xamarin.Android.Net
 				// there is no point in changing the behavior of the default SSL socket factory
 				if (!gotCerts && _callbackTrustManagerHelper == null)
 					return;
-				
+
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
 				tmf?.Init (gotCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
 			}
@@ -1068,7 +1104,7 @@ namespace Xamarin.Android.Net
 				return keyStore;
 			}
 		}
-		
+
 		void HandlePreAuthentication (HttpURLConnection httpConnection)
 		{
 			var data = PreAuthenticationData;
@@ -1114,7 +1150,7 @@ namespace Xamarin.Android.Net
 				conn.SetRequestProperty (header.Key, header.Value != null ? String.Join (GetHeaderSeparator (header.Key), header.Value) : String.Empty);
 			}
 		}
-		
+
 		void SetupRequestBody (HttpURLConnection httpConnection, HttpRequestMessage request)
 		{
 			if (request.Content == null) {

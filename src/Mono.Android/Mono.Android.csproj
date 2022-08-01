@@ -370,6 +370,7 @@
     <Compile Include="Xamarin.Android.Net\AuthModuleDigest.cs" />
     <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
     <Compile Include="Xamarin.Android.Net\X509TrustManagerWithValidationCallback.cs" />
+    <Compile Condition=" '$(TargetFramework)' != 'monoandroid10' " Include="Xamarin.Android.Net\NegotiateAuthenticationHelper.cs" />
     <Compile Condition=" '$(TargetFramework)' == 'monoandroid10' " Include="Xamarin.Android.Net\OldAndroidSSLSocketFactory.cs" />
   </ItemGroup>
 
