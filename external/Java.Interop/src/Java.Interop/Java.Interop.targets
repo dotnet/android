@@ -14,13 +14,13 @@
   <Target Name="BuildJniEnvironment_g_cs"
       BeforeTargets="BeforeCompile"
       Inputs="$(_JNIEnvGenPath)"
-      Outputs="Java.Interop/JniEnvironment.g.cs;$(IntermediateOutputPath)jni.c">
+      Outputs="$(IntermediateOutputPath)JniEnvironment.g.cs;$(IntermediateOutputPath)jni.c">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <Exec
-        Command="$(_RunJNIEnvGen) Java.Interop/JniEnvironment.g.cs $(IntermediateOutputPath)jni.c"
+        Command="$(_RunJNIEnvGen) $(IntermediateOutputPath)JniEnvironment.g.cs $(IntermediateOutputPath)jni.c"
     />
     <ItemGroup>
-      <Compile Include="$([System.IO.Path]::Combine('Java.Interop','JniEnvironment.g.cs'))" KeepDuplicates="false" />
+      <Compile Include="$(IntermediateOutputPath)JniEnvironment.g.cs" KeepDuplicates="false" />
     </ItemGroup>
   </Target>
   <Target Name="BuildInteropJar"
