@@ -347,6 +347,11 @@ namespace Xamarin.Android.Tasks
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
 			foreach (var type in javaTypes) {
 				if (JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache)) {
+#if ENABLE_MARSHAL_METHODS
+					if (!classifier.FoundDynamicallyRegisteredMethods (type)) {
+						continue;
+					}
+#endif
 					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 					regCallsWriter.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
 						type.GetAssemblyQualifiedName (cache), javaKey);
@@ -402,7 +407,7 @@ namespace Xamarin.Android.Tasks
 						jti.Generate (writer);
 #if ENABLE_MARSHAL_METHODS
 						if (!Debug) {
-							if (classifier.FoundDynamicallyRegisteredMethods) {
+							if (classifier.FoundDynamicallyRegisteredMethods (t)) {
 								Log.LogWarning ($"Type '{t.GetAssemblyQualifiedName ()}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
 							}
 						}

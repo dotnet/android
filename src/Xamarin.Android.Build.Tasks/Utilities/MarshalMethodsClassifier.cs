@@ -106,21 +106,38 @@ namespace Xamarin.Android.Tasks
 			public NativeCallbackSignature (MethodDefinition target, TaskLoggingHelper log)
 			{
 				this.log = log;
-				returnType = MapType (target.ReturnType.FullName);
+				returnType = MapType (target.ReturnType);
 				paramTypes = new List<string> {
 					"System.IntPtr", // jnienv
 					"System.IntPtr", // native__this
 				};
 
 				foreach (ParameterDefinition pd in target.Parameters) {
-					paramTypes.Add (MapType (pd.ParameterType.FullName));
+					paramTypes.Add (MapType (pd.ParameterType));
 				}
 			}
 
-			string MapType (string type)
+			string MapType (TypeReference typeRef)
 			{
-				if (verbatimTypes.Contains (type)) {
-					return type;
+				string? typeName = null;
+				if (!typeRef.IsGenericParameter && !typeRef.IsArray) {
+					TypeDefinition typeDef = typeRef.Resolve ();
+					if (typeDef == null) {
+						throw new InvalidOperationException ($"Unable to resolve type '{typeRef.FullName}'");
+					}
+
+					if (typeDef.IsEnum) {
+						// TODO: get the underlying type
+						return "System.Int32";
+					}
+				}
+
+				if (String.IsNullOrEmpty (typeName)) {
+					typeName = typeRef.FullName;
+				}
+
+				if (verbatimTypes.Contains (typeName)) {
+					return typeName;
 				}
 
 				return "System.IntPtr";
@@ -129,19 +146,27 @@ namespace Xamarin.Android.Tasks
 			public bool Matches (MethodDefinition method)
 			{
 				if (method.Parameters.Count != paramTypes.Count || !method.IsStatic) {
-					log.LogDebugMessage ($"Method '{method.FullName}' doesn't match native callback signature (invalid parameter count or not static)");
+					log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature (invalid parameter count or not static)");
 					return false;
 				}
 
 				if (String.Compare (returnType, method.ReturnType.FullName, StringComparison.Ordinal) != 0) {
-					log.LogDebugMessage ($"Method '{method.FullName}' doesn't match native callback signature (invalid return type)");
+					log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature (invalid return type)");
 					return false;
 				}
 
 				for (int i = 0; i < method.Parameters.Count; i++) {
 					ParameterDefinition pd = method.Parameters[i];
-					if (String.Compare (pd.ParameterType.FullName, paramTypes[i], StringComparison.Ordinal) != 0) {
-						log.LogDebugMessage ($"Method '{method.FullName}' doesn't match native callback signature, expected parameter type '{paramTypes[i]}' at position {i}, found '{pd.ParameterType.FullName}'");
+					string parameterTypeName;
+
+					if (pd.ParameterType.IsArray) {
+						parameterTypeName = $"{pd.ParameterType.FullName}[]";
+					} else {
+						parameterTypeName = pd.ParameterType.FullName;
+					}
+
+					if (String.Compare (parameterTypeName, paramTypes[i], StringComparison.Ordinal) != 0) {
+						log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature, expected parameter type '{paramTypes[i]}' at position {i}, found '{parameterTypeName}'");
 						return false;
 					}
 				}
@@ -155,11 +180,10 @@ namespace Xamarin.Android.Tasks
 		Dictionary<string, IList<MarshalMethodEntry>> marshalMethods;
 		HashSet<AssemblyDefinition> assemblies;
 		TaskLoggingHelper log;
-		bool haveDynamicMethods;
+		HashSet<TypeDefinition> typesWithDynamicallyRegisteredMethods;
 
 		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods => marshalMethods;
 		public ICollection<AssemblyDefinition> Assemblies => assemblies;
-		public bool FoundDynamicallyRegisteredMethods => haveDynamicMethods;
 #endif
 
 		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, DirectoryAssemblyResolver res, TaskLoggingHelper log)
@@ -170,6 +194,7 @@ namespace Xamarin.Android.Tasks
 			resolver = res ?? throw new ArgumentNullException (nameof (tdCache));
 			marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
 			assemblies = new HashSet<AssemblyDefinition> ();
+			typesWithDynamicallyRegisteredMethods = new HashSet<TypeDefinition> ();
 #endif
 		}
 
@@ -192,12 +217,17 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			haveDynamicMethods = true;
+			typesWithDynamicallyRegisteredMethods.Add (topType);
 #endif // def ENABLE_MARSHAL_METHODS
 			return true;
 		}
 
 #if ENABLE_MARSHAL_METHODS
+		public bool FoundDynamicallyRegisteredMethods (TypeDefinition type)
+		{
+			return typesWithDynamicallyRegisteredMethods.Contains (type);
+		}
+
 		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
 		{
 			Console.WriteLine ($"Classifying:\n\tmethod: {implementedMethod.FullName}\n\tregistered method: {registeredMethod.FullName})\n\tAttr: {registerAttribute.AttributeType.FullName} (parameter count: {registerAttribute.ConstructorArguments.Count})");
@@ -257,7 +287,7 @@ namespace Xamarin.Android.Tasks
 			var ncbs = new NativeCallbackSignature (registeredMethod, log);
 			MethodDefinition nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
 			if (nativeCallbackMethod == null) {
-				log.LogWarning ($"\tUnable to find native callback method matching the '{registeredMethod.FullName}' signature");
+				log.LogWarning ($"\tUnable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}')");
 				return false;
 			}
 
@@ -415,8 +445,8 @@ namespace Xamarin.Android.Tasks
 				marshalMethods.Add (key, list);
 			}
 
-			string registeredName = registeredMethod.FullName;
-			if (list.Count == 0 || !list.Any (me => String.Compare (registeredName, me.RegisteredMethod.FullName, StringComparison.Ordinal) == 0)) {
+			string registeredName = entry.ImplementedMethod.FullName;
+			if (list.Count == 0 || !list.Any (me => String.Compare (registeredName, me.ImplementedMethod.FullName, StringComparison.Ordinal) == 0)) {
 				list.Add (entry);
 			}
 		}
