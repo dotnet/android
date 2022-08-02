@@ -1318,32 +1318,30 @@ stages:
         jdkTestFolder: $(JAVA_HOME_8_X64)
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
-    - template: designer\android-designer-build-win.yaml@yaml
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\Designer
-        uiToolsSourcePath: $(System.DefaultWorkingDirectory)\UITools
-        javaSdkDirectory: $(JAVA_HOME_8_X64)
-
-    - template: designer\android-designer-tests.yaml@yaml
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\Designer
-
-    - task: CopyFiles@2
-      displayName: 'Copy binlogs'
+    - task: VSBuild@1
+      displayName: Restore Xamarin.AndroidDesigner
       inputs:
-        sourceFolder: $(System.DefaultWorkingDirectory)\UITools\Designer\Xamarin.Designer.Android
-        contents: '**/*.binlog'
-        targetFolder: $(Build.ArtifactStagingDirectory)\designer-binlogs
-        overWrite: true
-        flattenFolders: true
-      condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+        solution: $(System.DefaultWorkingDirectory)\UITools\Designer\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
+        vsVersion: 17.0
+        msbuildArgs: >-
+          /t:Restore /p:RestoreDisableParallel=true
+          /p:RestoreConfigFile="$(System.DefaultWorkingDirectory)\UITools\NuGet.Config"
+          /p:JavaSdkDirectory="$(JAVA_HOME_8_X64)"
+        platform: Any CPU
+        configuration: DebugWin32
 
-    - template: yaml-templates/publish-artifact.yaml
+    - task: VSBuild@1
+      displayName: Build Xamarin.AndroidDesigner
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\UITools\Designer\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
+        vsVersion: 17.0
+        msbuildArgs: /t:Build
+        platform: Any CPU
+        configuration: DebugWin32
+
+    - template: yaml-templates/run-designer-tests.yml
       parameters:
-        displayName: upload designer binlogs
-        artifactName: Test Results - Designer - Windows
-        targetPath: $(Build.ArtifactStagingDirectory)\designer-binlogs
-        condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\Designer
 
 - stage: bcl_tests
   displayName: BCL Emulator Tests
