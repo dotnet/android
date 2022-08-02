@@ -12,12 +12,6 @@
         LatestRuntimeFrameworkVersion="@NET6_VERSION@"
         TargetingPackVersion="@NET6_VERSION@"
     />
-    <!--
-      HACK:
-      The .NET 7 SDK specifies 6.0.3 for .NET 6, but our .NET 6 libmonodroid.so depends on 6.0.5.
-      We should be able to remove this when we get a newer .NET 7 SDK.
-     -->
-    <KnownRuntimePack Update="Microsoft.NETCore.App" LatestRuntimeFrameworkVersion="6.0.5" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '6.0')) ">
