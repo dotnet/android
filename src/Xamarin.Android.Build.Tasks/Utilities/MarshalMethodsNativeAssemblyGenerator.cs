@@ -290,7 +290,8 @@ namespace Xamarin.Android.Tasks
 			string klass = $"{entry.NativeCallback.DeclaringType.FullName}, {entry.NativeCallback.Module.Assembly.FullName}";
 			Console.WriteLine ($"  klass == {klass}");
 			if (!seenClasses.TryGetValue (klass, out int classIndex)) {
-				seenClasses.Add (klass, classes.Count);
+				classIndex = classes.Count;
+				seenClasses.Add (klass, classIndex);
 
 				var mc = new MarshalMethodsManagedClass {
 					token = entry.NativeCallback.DeclaringType.MetadataToken.ToUInt32 (),
