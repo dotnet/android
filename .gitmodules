@@ -40,5 +40,5 @@
     branch = 3.35.2
 [submodule "external/xamarin-android-tools"]
     path = external/xamarin-android-tools
-    url = https://github.com/xamarin/xamarin-android-tools
-    branch = main
+    url = https://github.com/grendello/xamarin-android-tools
+    branch = update-mono.unix
