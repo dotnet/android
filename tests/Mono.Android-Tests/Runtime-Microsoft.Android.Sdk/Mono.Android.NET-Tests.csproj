@@ -21,10 +21,10 @@
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <!--
       TODO: Fix excluded tests
-      For AOT, InetAccess excluded due to: https://github.com/dotnet/runtime/issues/56315
+      For $(EnableLLVM), InetAccess excluded due to: https://github.com/dotnet/runtime/issues/56315
     -->
     <ExcludeCategories>DotNetIgnore</ExcludeCategories>
-    <ExcludeCategories Condition=" '$(RunAOTCompilation)' == 'true' ">$(ExcludeCategories):InetAccess</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess</ExcludeCategories>
     <ExcludeCategories Condition=" '$(UseInterpreter)' == 'true' ">$(ExcludeCategories):IgnoreInterpreter</ExcludeCategories>
   </PropertyGroup>
 

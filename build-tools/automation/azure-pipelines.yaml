@@ -379,7 +379,7 @@ stages:
         testName: Mono.Android_Tests-Aot
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=True /p:EnableLlvm=True
+        extraBuildArgs: /p:AotAssemblies=True /p:EnableLLVM=True
         artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
         artifactFolder: AotLlvm
 
@@ -691,13 +691,15 @@ stages:
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
-        # TODO: disable LLVM test, see: https://github.com/dotnet/runtime/issues/68914
+        # TODO: disable LLVM test, see:
+        # https://github.com/dotnet/runtime/issues/68914
+        # https://github.com/dotnet/runtime/issues/73304
         condition: false
         configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)AotLlvm.xml
-        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLlvm=true
+        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
         useDotNet: true
