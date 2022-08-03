@@ -185,7 +185,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var seenClasses = new Dictionary<string, int> (StringComparer.Ordinal);
-			methods = new List<MarshalMethodInfo> ();
+			var allMethods = new List<MarshalMethodInfo> ();
 
 			// It's possible that several otherwise different methods (from different classes, but with the same
 			// names and similar signatures) will actually share the same **short** native symbol name. In this case we must
@@ -195,7 +195,7 @@ namespace Xamarin.Android.Tasks
 			foreach (IList<MarshalMethodEntry> entryList in MarshalMethods.Values) {
 				bool useFullNativeSignature = entryList.Count > 1;
 				foreach (MarshalMethodEntry entry in entryList) {
-					ProcessAndAddMethod (entry, useFullNativeSignature, seenClasses, overloadedNativeSymbolNames);
+					ProcessAndAddMethod (allMethods, entry, useFullNativeSignature, seenClasses, overloadedNativeSymbolNames);
 				}
 			}
 
@@ -210,6 +210,30 @@ namespace Xamarin.Android.Tasks
 					overloadedMethod.NativeSymbolName = MakeNativeSymbolName (overloadedMethod.Method, useFullNativeSignature: true);
 					Console.WriteLine ($"     new native symbol name: {overloadedMethod.NativeSymbolName}");
 				}
+			}
+
+			// In some cases it's possible that a single type implements two different interfaces which have methods with the same native signature:
+			//
+			//   Microsoft.Maui.Controls.Handlers.TabbedPageManager/Listeners
+			//      System.Void AndroidX.ViewPager.Widget.ViewPager/IOnPageChangeListener::OnPageSelected(System.Int32)
+			//      System.Void AndroidX.ViewPager2.Widget.ViewPager2/OnPageChangeCallback::OnPageSelected(System.Int32)
+			//
+			// Both of the above methods will have the same native implementation and symbol name. e.g. (Java type name being `crc649ff77a65592e7d55/TabbedPageManager_Listeners`):
+			//     Java_crc649ff77a65592e7d55_TabbedPageManager_1Listeners_n_1onPageSelected__I
+			//
+			// We need to de-duplicate the entries or the generated native code will fail to build.
+			var seenNativeSymbols = new HashSet<string> (StringComparer.Ordinal);
+			methods = new List<MarshalMethodInfo> ();
+
+			foreach (MarshalMethodInfo method in allMethods) {
+				if (seenNativeSymbols.Contains (method.NativeSymbolName)) {
+					// TODO: log properly
+					Console.WriteLine ($"Removed MM duplicate '{method.NativeSymbolName}' (implemented: {method.Method.ImplementedMethod.FullName}; registered: {method.Method.RegisteredMethod.FullName}");
+					continue;
+				}
+
+				seenNativeSymbols.Add (method.NativeSymbolName);
+				methods.Add (method);
 			}
 		}
 
@@ -251,7 +275,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void ProcessAndAddMethod (MarshalMethodEntry entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses, Dictionary<string, List<MarshalMethodInfo>> overloadedNativeSymbolNames)
+		void ProcessAndAddMethod (List<MarshalMethodInfo> allMethods, MarshalMethodEntry entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses, Dictionary<string, List<MarshalMethodInfo>> overloadedNativeSymbolNames)
 		{
 			Console.WriteLine ("marshal method:");
 			Console.WriteLine ($"  top type: {entry.DeclaringType.FullName}");
@@ -301,7 +325,7 @@ namespace Xamarin.Android.Tasks
 			}
 			overloadedMethods.Add (method);
 
-			methods.Add (method);
+			allMethods.Add (method);
 		}
 
 		string MangleForJni (string name)

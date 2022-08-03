@@ -445,7 +445,7 @@ namespace Xamarin.Android.Tasks
 				marshalMethods.Add (key, list);
 			}
 
-			string registeredName = entry.ImplementedMethod.FullName;
+			string registeredName = $"{entry.DeclaringType.FullName}::{entry.ImplementedMethod.Name}";
 			if (list.Count == 0 || !list.Any (me => String.Compare (registeredName, me.ImplementedMethod.FullName, StringComparison.Ordinal) == 0)) {
 				list.Add (entry);
 			}
