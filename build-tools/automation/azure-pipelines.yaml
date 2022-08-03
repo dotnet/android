@@ -379,7 +379,7 @@ stages:
         testName: Mono.Android_Tests-Aot
         project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=True /p:EnableLlvm=True
+        extraBuildArgs: /p:AotAssemblies=True /p:EnableLLVM=True
         artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
         artifactFolder: AotLlvm
 
@@ -691,13 +691,15 @@ stages:
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
-        # TODO: disable LLVM test, see: https://github.com/dotnet/runtime/issues/68914
+        # TODO: disable LLVM test, see:
+        # https://github.com/dotnet/runtime/issues/68914
+        # https://github.com/dotnet/runtime/issues/73304
         condition: false
         configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)AotLlvm.xml
-        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLlvm=true
+        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
         useDotNet: true
@@ -1318,32 +1320,30 @@ stages:
         jdkTestFolder: $(JAVA_HOME_8_X64)
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
-    - template: designer\android-designer-build-win.yaml@yaml
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\Designer
-        uiToolsSourcePath: $(System.DefaultWorkingDirectory)\UITools
-        javaSdkDirectory: $(JAVA_HOME_8_X64)
-
-    - template: designer\android-designer-tests.yaml@yaml
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\Designer
-
-    - task: CopyFiles@2
-      displayName: 'Copy binlogs'
+    - task: VSBuild@1
+      displayName: Restore Xamarin.AndroidDesigner
       inputs:
-        sourceFolder: $(System.DefaultWorkingDirectory)\UITools\Designer\Xamarin.Designer.Android
-        contents: '**/*.binlog'
-        targetFolder: $(Build.ArtifactStagingDirectory)\designer-binlogs
-        overWrite: true
-        flattenFolders: true
-      condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+        solution: $(System.DefaultWorkingDirectory)\UITools\Designer\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
+        vsVersion: 17.0
+        msbuildArgs: >-
+          /t:Restore /p:RestoreDisableParallel=true
+          /p:RestoreConfigFile="$(System.DefaultWorkingDirectory)\UITools\NuGet.Config"
+          /p:JavaSdkDirectory="$(JAVA_HOME_8_X64)"
+        platform: Any CPU
+        configuration: DebugWin32
 
-    - template: yaml-templates/publish-artifact.yaml
+    - task: VSBuild@1
+      displayName: Build Xamarin.AndroidDesigner
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\UITools\Designer\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
+        vsVersion: 17.0
+        msbuildArgs: /t:Build
+        platform: Any CPU
+        configuration: DebugWin32
+
+    - template: yaml-templates/run-designer-tests.yml
       parameters:
-        displayName: upload designer binlogs
-        artifactName: Test Results - Designer - Windows
-        targetPath: $(Build.ArtifactStagingDirectory)\designer-binlogs
-        condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\Designer
 
 - stage: bcl_tests
   displayName: BCL Emulator Tests
