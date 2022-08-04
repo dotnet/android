@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tools
 	{
 		// When this changes, update the test: Xamarin.Android.Tools.Tests.AndroidSdkInfoTests.Ndk_MultipleNdkVersionsInSdk
 		const int MinimumCompatibleNDKMajorVersion = 16;
-		const int MaximumCompatibleNDKMajorVersion = 24;
+		const int MaximumCompatibleNDKMajorVersion = 25;
 
 		static readonly char[] SourcePropertiesKeyValueSplit = new char[] { '=' };
 
