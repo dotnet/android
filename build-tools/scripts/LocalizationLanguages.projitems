@@ -1,5 +1,5 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <_LocalizationLanguages Include="$(XlfLanguages)" />
+    <_LocalizationLanguages Include="cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant" />
   </ItemGroup>
 </Project>
