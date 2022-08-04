@@ -492,6 +492,8 @@ namespace Library1 {
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			// error SYSLIB0011: 'BinaryFormatter.Serialize(Stream, object)' is obsolete: 'BinaryFormatter serialization is obsolete and should not be used. See https://aka.ms/binaryformatter for more information.'
+			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
 			if (isRelease || !CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
