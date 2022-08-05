@@ -34,10 +34,16 @@ namespace Xamarin.Android.Tasks
 				unmanagedCallersOnlyAttributes.Add (asm, CreateImportedUnmanagedCallersOnlyAttribute (asm, unmanagedCallersOnlyAttributeCtor));
 			}
 
+			var processedMethods = new HashSet<string> (StringComparer.Ordinal);
 			Console.WriteLine ("Adding the [UnmanagedCallersOnly] attribute to native callback methods and removing unneeded fields+methods");
 			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
 				foreach (MarshalMethodEntry method in methodList) {
-					Console.WriteLine ($"\t{method.NativeCallback.FullName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
+					string fullNativeCallbackName = method.NativeCallback.FullName;
+					if (processedMethods.Contains (fullNativeCallbackName)) {
+						continue;
+					}
+
+					Console.WriteLine ($"\t{fullNativeCallbackName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
 					Console.WriteLine ($"\t  Top type == '{method.DeclaringType}'");
 					Console.WriteLine ($"\t  NativeCallback == '{method.NativeCallback}'");
 					Console.WriteLine ($"\t  Connector == '{method.Connector}'");
@@ -50,6 +56,8 @@ namespace Xamarin.Android.Tasks
 					method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
 					method.Connector?.DeclaringType?.Methods?.Remove (method.Connector);
 					method.CallbackField?.DeclaringType?.Fields?.Remove (method.CallbackField);
+
+					processedMethods.Add (fullNativeCallbackName);
 				}
 			}
 

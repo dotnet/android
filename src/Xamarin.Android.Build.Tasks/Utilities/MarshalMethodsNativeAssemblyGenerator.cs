@@ -278,10 +278,10 @@ namespace Xamarin.Android.Tasks
 		void ProcessAndAddMethod (List<MarshalMethodInfo> allMethods, MarshalMethodEntry entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses, Dictionary<string, List<MarshalMethodInfo>> overloadedNativeSymbolNames)
 		{
 			Console.WriteLine ("marshal method:");
-			Console.WriteLine ($"  top type: {entry.DeclaringType.FullName}");
+			Console.WriteLine ($"  top type: {entry.DeclaringType.FullName} (token: 0x{entry.DeclaringType.MetadataToken.ToUInt32 ():x})");
 			Console.WriteLine ($"  registered method: [{entry.RegisteredMethod.DeclaringType.FullName}] {entry.RegisteredMethod.FullName}");
 			Console.WriteLine ($"  implemented method: [{entry.ImplementedMethod.DeclaringType.FullName}] {entry.ImplementedMethod.FullName}");
-			Console.WriteLine ($"  native callback: {entry.NativeCallback.FullName}");
+			Console.WriteLine ($"  native callback: {entry.NativeCallback.FullName} (token: 0x{entry.NativeCallback.MetadataToken.ToUInt32 ():x})");
 			Console.WriteLine ($"  connector: {entry.Connector.FullName}");
 			Console.WriteLine ($"  JNI name: {entry.JniMethodName}");
 			Console.WriteLine ($"  JNI signature: {entry.JniMethodSignature}");
@@ -338,6 +338,8 @@ namespace Xamarin.Android.Tasks
 			sb.Replace ('/', '_');
 			sb.Replace (";", "_2");
 			sb.Replace ("[", "_3");
+			sb.Replace ("$", "_00024");
+
 			// TODO: process unicode chars
 
 			return sb.ToString ();
