@@ -1,0 +1,881 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AAPTManifestError" xml:space="preserve">
+    <value>{0}.
+
+Ten błąd jest prawdopodobnie spowodowany problemem dotyczącym pliku AndroidManifest.xml lub atrybutem generowania manifestu systemu Android w pliku kodu źródłowego.</value>
+    <comment>{0} - The error message returned by the AAPT or AAPT2 tool</comment>
+  </data>
+  <data name="APT0001" xml:space="preserve">
+    <value>Nieznana opcja „{0}”. Sprawdź zmienne „$(AndroidAapt2CompileExtraArgs)” i „$(AndroidAapt2LinkExtraArgs)” pod kątem tego, czy zawierają jakiekolwiek argumenty wiersza polecenia „aapt”, które nie są już prawidłowe dla elementu „aapt2”, oraz upewnij się, że wszystkie pozostałe argumenty są prawidłowe dla elementu „aapt2”.</value>
+    <comment>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2LinkExtraArgs)`
+{0} - The invalid option name</comment>
+  </data>
+  <data name="APT0002" xml:space="preserve">
+    <value>Nieprawidłowa nazwa pliku: może ona zawierać tylko: {0}.</value>
+    <comment>{0} - The regular expression that the file name must match</comment>
+  </data>
+  <data name="APT0003" xml:space="preserve">
+    <value>Nieprawidłowa nazwa pliku: może ona zawierać tylko: {0}.</value>
+    <comment>{0} - The regular expression that the file name must match</comment>
+  </data>
+  <data name="APT0004" xml:space="preserve">
+    <value>Nieprawidłowa nazwa pliku: musi zaczynać się od litery w zakresie od A-z lub a-z bądź od podkreślenia.</value>
+  </data>
+  <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
+    <value>Nie można określić poziomu interfejsu API dla parametru $(TargetFrameworkVersion) elementu „{0}”.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The current value of $(TargetFrameworkVersion)</comment>
+  </data>
+  <data name="XA0000_API_or_TargetFrameworkVersion_Fail" xml:space="preserve">
+    <value>Nie można określić parametru $(AndroidApiLevel) lub $(TargetFrameworkVersion); ten komunikat nie powinien być wyświetlany.</value>
+    <comment>The following are literal names and should not be translated: $(AndroidApiLevel), $(TargetFrameworkVersion)
+In this message, the phrase "should not be reached" means that this error message is not expected to appear in normal usage.</comment>
+  </data>
+  <data name="XA0000_Exception" xml:space="preserve">
+    <value>Nieobsłużony wyjątek: {0}</value>
+    <comment>{0} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA0000_TargetFrameworkVersion_for_API" xml:space="preserve">
+    <value>Nie można określić parametru $(TargetFrameworkVersion) dla poziomu „{0}” interfejsu API.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The API level number</comment>
+  </data>
+  <data name="XA0001" xml:space="preserve">
+    <value>Nieobsługiwana lub nieprawidłowa wartość parametru $(TargetFrameworkVersion) dla elementu „{0}”. Zaktualizuj opcje projektu.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
+  </data>
+  <data name="XA0002" xml:space="preserve">
+    <value>Nie można było znaleźć pliku mono.android.jar</value>
+    <comment>The following are literal names and should not be translated: mono.android.jar</comment>
+  </data>
+  <data name="XA0003" xml:space="preserve">
+    <value>Nieprawidłowa wartość „android:versionCode” „{0}” w pliku „AndroidManifest.xml”. Musi to być wartość całkowita.</value>
+    <comment>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`</comment>
+  </data>
+  <data name="XA0004" xml:space="preserve">
+    <value>Nieprawidłowa wartość „android:versionCode” „{0}” w pliku „AndroidManifest.xml”. Wartość musi mieścić się w zakresie od 0 do {1}.</value>
+    <comment>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`
+{0} - The current value
+{1} - The maximum allowed value</comment>
+  </data>
+  <data name="XA0030" xml:space="preserve">
+    <value>Kompilowanie przy użyciu wersji zestawu JDK „{0}” nie jest obsługiwane. Zainstaluj zestaw JDK w wersji „{1}”. Zobacz https://aka.ms/xamarin/jdk9-errors</value>
+    <comment>The abbreviation "JDK" should not be translated.</comment>
+  </data>
+  <data name="XA0031" xml:space="preserve">
+    <value>W przypadku korzystania z {1} wymagany jest zestaw Java SDK {0} lub nowszy.
+Pobierz najnowszy zestaw JDK w witrynie: https://aka.ms/msopenjdk
+Uwaga: Android Designer jest niezgodny z zestawem Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11</value>
+    <comment>
+{0} - The Java SDK version number
+{1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</comment>
+  </data>
+  <data name="XA0031_NET" xml:space="preserve">
+    <value>W przypadku korzystania z platformy .NET 6 lub nowszej wymagany jest zestaw Java SDK {0} lub nowszy. Pobierz najnowszy zestaw JDK w witrynie: https://aka.ms/msopenjdk</value>
+    <comment>
+{0} - The Java SDK version number</comment>
+  </data>
+  <data name="XA0032" xml:space="preserve">
+    <value>W przypadku używania narzędzi Android SDK Build-Tools {1} jest wymagany zestaw Java SDK {0} lub nowszy.</value>
+    <comment>The following are literal names and should not be translated: Android SDK Build-Tools
+{0} - The Java SDK version number
+{1} - The Android SDK Build-Tools version number</comment>
+  </data>
+  <data name="XA0033" xml:space="preserve">
+    <value>Nie udało się pobrać wersji zestawu Java SDK, ponieważ wygląda na to, że zwrócona wartość nie zawiera prawidłowego numeru wersji. Dane wyjściowe polecenia „{0} -version”: „{1}”</value>
+    <comment>The following are literal names and should not be translated: `{0} -version`, ```{1}```
+{0} - The name of the Java command
+{1} - The output of the command</comment>
+  </data>
+  <data name="XA0034" xml:space="preserve">
+    <value>Nie udało się pobrać wersji zestawu Java SDK. Upewnij się, że masz zainstalowany język Java {0} lub nowszy.</value>
+    <comment>{0} - The Java version number</comment>
+  </data>
+  <data name="XA0035" xml:space="preserve">
+    <value>Nie można określić interfejsu Android ABI na podstawie wartości „{0}”. Edytuj plik projektu w edytorze tekstu i ustaw właściwość „RuntimeIdentifiers” programu MSBuild tak, aby zawierała wyłącznie prawidłowe identyfikatory platformy Android.</value>
+    <comment>The following are literal names and should not be translated: Android, ABI, RuntimeIdentifiers, MSBuild
+{0} - The $(RuntimeIdentifier) supplied by the user.</comment>
+  </data>
+  <data name="XA0036" xml:space="preserve">
+    <value>Właściwość „AndroidSupportedAbis” programu MSBuild nie jest już obsługiwana. Edytuj plik projektu w edytorze tekstu, usuń wszystkie wystąpienia właściwości „AndroidSupportedAbis” i użyj zamiast niej właściwości „RuntimeIdentifiers” programu MSBuild.</value>
+    <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0100" xml:space="preserve">
+    <value>Biblioteka EmbeddedNativeLibrary „{0}” jest nieprawidłowa w projektach aplikacji systemu Android. Zamiast niej należy użyć biblioteki AndroidNativeLibrary.</value>
+    <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
+{0} - The library name.</comment>
+  </data>
+  <data name="XA0104" xml:space="preserve">
+    <value>Nieprawidłowa wartość parametru „$(AndroidSequencePointsMode)”: {0}</value>
+    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
+  </data>
+  <data name="XA0105" xml:space="preserve">
+    <value>Parametr $(TargetFrameworkVersion) dla elementu {0} ({1}) jest większy niż parametr $(TargetFrameworkVersion) dla projektu aplikacji ({2}). Zwiększ wartość parametru $(TargetFrameworkVersion) dla projektu aplikacji.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The file name of the library referenced by the application
+{1} - The target framework version number for the library
+{2} - The target framework version number for the application project</comment>
+  </data>
+  <data name="XA0107" xml:space="preserve">
+    <value>{0} to zestaw odwołania.</value>
+  </data>
+  <data name="XA0107_Ignoring" xml:space="preserve">
+    <value>Ignorowanie zestawu odwołania „{0}”.</value>
+    <comment>{0} - File name of the assembly.</comment>
+  </data>
+  <data name="XA0108" xml:space="preserve">
+    <value>Nie można pobrać wersji z elementu „{0}”. Zostanie użyta wartość domyślna 1.0.</value>
+    <comment>{0} - The tool name</comment>
+  </data>
+  <data name="XA0111" xml:space="preserve">
+    <value>W ścieżce „{0}” znaleziono nieobsługiwaną wersję narzędzia AAPT2. Otwórz plik projektu w edytorze tekstu i usuń właściwość narzędzia MSBuild „Aapt2ToolPath” lub upewnij się, że jest ona ustawiona na prawidłową lokalizację.</value>
+    <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
+  </data>
+  <data name="XA0112" xml:space="preserve">
+    <value>Nie znaleziono narzędzia AAPT2 w ścieżce „{0}”. Otwórz plik projektu w edytorze tekstu i usuń właściwość programu MSBuild o nazwie „Aapt2ToolPath” lub upewnij się, że jest ona ustawiona na prawidłową lokalizację.</value>
+    <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
+  </data>
+  <data name="XA0113" xml:space="preserve">
+    <value>Sklep Google Play wymaga, aby nowe aplikacje i aktualizacje używały elementu TargetFrameworkVersion o wartości {0} (poziom interfejsu API: {1}) lub wyższej. Obecna wersja docelowa to {2} (poziom interfejsu API: {3}).</value>
+    <comment>The following are literal names and should not be translated: TargetFrameworkVersion
+{0} - The required minimum TargetFrameworkVersion, such as 'v10.0'
+{1} - The required minimum API level number, such as '29'
+{2} - The specified TargetFrameworkVersion
+{3} - The specified API level number</comment>
+  </data>
+  <data name="XA0116" xml:space="preserve">
+    <value>Nie można odnaleźć elementu „EmbeddedResource” o nazwie „{0}”.</value>
+    <comment>The following are literal names and should not be translated: EmbeddedResource
+{0} - The name of the missing resource</comment>
+  </data>
+  <data name="XA0117" xml:space="preserve">
+    <value>Wartość {0} dla elementu TargetFrameworkVersion jest przestarzała. Zaktualizuj ją na wartość v5.0 lub wyższą.</value>
+    <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v5.0
+{0} - The current value of TargetFrameworkVersion</comment>
+  </data>
+  <data name="XA0118_Parse" xml:space="preserve">
+    <value>Nie można przeanalizować elementu „{0}”</value>
+    <comment>{0} - A NuGet target framework moniker string</comment>
+  </data>
+  <data name="XA0118_Target" xml:space="preserve">
+    <value>Nie można rozpoznać elementu „target” w pliku blokady dla elementu „{0}”</value>
+    <comment>The following are literal names and should not be translated: `target`
+
+The term "lock file" comes from NuGet. For example, search for "UnauthorizedLockFail" in https://github.com/NuGet/NuGet.Build.Localization to see some example localizations of "lock file."
+
+{0} - A NuGet target framework moniker string</comment>
+  </data>
+  <data name="XA0119_AAB" xml:space="preserve">
+    <value>Jednoczesne używanie opcji Fast Deployment i pakietów Android App Bundles nie jest obecnie obsługiwane. Używaj opcji Fast Deployment w przypadku konfiguracji debugowania, a pakietów Android App Bundles na potrzeby konfiguracji wydania.</value>
+    <comment>The following are literal names and should not be translated: Android App Bundles</comment>
+  </data>
+  <data name="XA0119_AOT" xml:space="preserve">
+    <value>W tym samym czasie nie zaleca się korzystania z funkcji szybkiego wdrażania i drzewa obiektów aplikacji (AOT). Użyj szybkiego wdrażania do konfiguracji debugowania, a drzewa AOT do konfiguracji wydania.</value>
+    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
+  </data>
+  <data name="XA0119_LinkMode" xml:space="preserve">
+    <value>W tym samym czasie nie zaleca się używania funkcji szybkiego wdrażania i konsolidatora. Użyj szybkiego wdrażania do konfiguracji debugowania, a konsolidatora do konfiguracji wydania.</value>
+    <comment>The following are literal names and should not be translated: Debug, Release.</comment>
+  </data>
+  <data name="XA0119_LinkTool" xml:space="preserve">
+    <value>W tym samym czasie nie zaleca się korzystania z funkcji szybkiego wdrażania i zmniejszania kodu. Użyj szybkiego wdrażania do konfiguracji debugowania, a zmniejszania kodu do konfiguracji wydania.</value>
+    <comment>The following are literal names and should not be translated: Debug, Release.</comment>
+  </data>
+  <data name="XA0119_Interpreter" xml:space="preserve">
+    <value>Wyłączanie interpretera; używanie jednocześnie interpretera i obiektu AOT nie jest obsługiwane. Użyj interpretera do obsługi przeładowywania na gorąco w konfiguracjach debugowania i AOT dla konfiguracji wydania.</value>
+    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
+  </data>
+  <data name="XA0121" xml:space="preserve">
+    <value>Zestaw „{0}” korzysta z atrybutu „[assembly: {1}]”, który nie jest już obsługiwany. Użyj nowszej wersji tego pakietu NuGet lub powiadom autora biblioteki.</value>
+    <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
+{0} - The assembly name
+{1} - The unsupported attribute</comment>
+  </data>
+  <data name="XA0122" xml:space="preserve">
+    <value>Zestaw „{0}” korzysta z przestarzałego atrybutu „[assembly: {1}]”. Użyj nowszej wersji tego pakietu NuGet lub powiadom autora biblioteki.</value>
+    <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet</comment>
+  </data>
+  <data name="XA0123" xml:space="preserve">
+    <value>Usuwanie kontroli {0} z właściwości {1}. Program Lint {2} nie obsługuje tej kontroli.</value>
+    <comment>The following are literal names and should not be translated: Lint
+When it appears in the middle of a sentence, "lint" is not capitalized.
+{0} - The literal name of a lint check, such as HardcodedDebugMode
+{1} - The literal name of the MSBuild property
+{2} - The lint version number</comment>
+  </data>
+  <data name="XA0125" xml:space="preserve">
+    <value>Plik „{0}” używa przestarzałego poziomu informacji debugowania.
+Dla informacji debugowania ustaw wartość Przenośne na stronach właściwości projektu w programie Visual Studio lub edytuj plik projektu w edytorze tekstów i ustaw właściwość „DebugType” programu MSBuild na wartość „portable”, aby używać nowszego, międzyplatformowego poziomu informacji debugowania.
+Jeśli ten plik pochodzi z pakietu NuGet, zaktualizuj do nowszej wersji pakietu NuGet lub powiadom autora biblioteki.</value>
+    <comment>The following are literal names and should not be translated: 'DebugType', 'portable'
+The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
+{0} - The file name of a deprecated symbol file</comment>
+  </data>
+  <data name="XA1000" xml:space="preserve">
+    <value>Wystąpił problem podczas analizowania pliku {0}. Prawdopodobnie jest to spowodowane niekompletnym lub nieprawidłowym kodem XML. Wyjątek: {1}</value>
+    <comment>{0} - The file name
+{1} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA1001" xml:space="preserve">
+    <value>AndroidResgen: ostrzeżenie podczas aktualizacji kodu XML zasobu „{0}”: {1}</value>
+    <comment>The following are literal names and should not be translated: AndroidResgen
+{0} - The name of the XML file
+{1} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA1002" xml:space="preserve">
+    <value>Najbliższy znaleziony odpowiednik dla typu „{0}” to „{1}”, ale nie zgadza się wielkość liter. Popraw wielkość liter.</value>
+    <comment>{0} - The user-provided type name
+{1} - The type name found</comment>
+  </data>
+  <data name="XA1005" xml:space="preserve">
+    <value>Podjęto próbę dopasowania nazwy typu podstawowego dla elementu o identyfikatorze „{0}” i typie „{1}”</value>
+    <comment>{0} - The Android resource ID name</comment>
+  </data>
+  <data name="XA1005_Instructions" xml:space="preserve">
+    <value>Jeśli dopasowanie nazwy typu podstawowego nie powiedzie się, dodaj atrybut „xamarin:managedType” do elementu, aby określić w pełni kwalifikowaną nazwę typu zarządzanego elementu.</value>
+    <comment>"xamarin:managedType" is a literal name and should not be translated.</comment>
+  </data>
+  <data name="XA1006" xml:space="preserve">
+    <value>Wartość atrybutu TargetFrameworkVersion (poziom interfejsu API systemu Android {0}) jest większa niż wartość atrybutu targetSdkVersion ({1}). Zwiększ wartość atrybutu „android:targetSdkVersion” w pliku „AndroidManifest.xml”, aby poziomy interfejsów API były zgodne.</value>
+    <comment>The following are literal names and should not be translated: targetSdkVersion, TargetFrameworkVersion, android:targetSdkVersion, AndroidManifest.xml
+{0} - The target framework version number
+{1} - The target SDK version number</comment>
+  </data>
+  <data name="XA1007" xml:space="preserve">
+    <value>Wartość atrybutu minSdkVersion ({0}) jest większa niż wartość atrybutu minSdkVersion. Zmień wartość atrybutu minSdkVersion w taki sposób, aby była mniejsza lub równa wartości atrybutu targetSdkVersion ({1}).</value>
+    <comment>The following are literal names and should not be translated: minSdkVersion, targetSdkVersion
+{0} - The minimum SDK version number
+{1} - The target SDK version number</comment>
+  </data>
+  <data name="XA1008" xml:space="preserve">
+    <value>Wartość atrybutu TargetFrameworkVersion (poziom interfejsu API systemu Android {0}) jest mniejsza niż wartość atrybutu targetSdkVersion ({1}). Zwiększ wartość atrybutu „$(TargetFrameworkVersion)” lub zmniejsz wartość atrybutu „android:targetSdkVersion” w pliku „AndroidManifest.xml”, aby poziomy interfejsów API były zgodne.</value>
+    <comment>The following are literal names and should not be translated: targetSdkVersion, TargetFrameworkVersion, android:targetSdkVersion, AndroidManifest.xml
+{0} - The target framework version number
+{1} - The target SDK version number</comment>
+  </data>
+  <data name="XA1010" xml:space="preserve">
+    <value>Nieprawidłowa wartość „$(AndroidManifestPlaceholders)” dla symboli zastępczych manifestu systemu Android. Użyj formatu „klucz1=wartość1; klucz2=wartość2”. Podana wartość: „{0}”</value>
+    <comment>The following are literal names and should not be translated: `$(AndroidManifestPlaceholders)`</comment>
+  </data>
+  <data name="XA1011" xml:space="preserve">
+    <value>Używanie narzędzia ProGuard z kompilatorem DEX D8 nie jest już obsługiwane. Ustaw narzędzie do zmniejszania objętości kodu na wartość „r8” na stronach właściwości projektu w programie Visual Studio lub edytuj plik projektu za pomocą edytora tekstów i ustaw właściwość programu MSBuild o nazwie „AndroidLinkTool” na wartość „r8”.</value>
+    <comment>The following are literal names and should not be translated: ProGuard, D8, DEX, 'r8', 'AndroidLinkTool'</comment>
+  </data>
+  <data name="XA1012" xml:space="preserve">
+    <value>Dołączony identyfikator przesłonięcia „{0}” elementu głównego układu jest nieprawidłowy.</value>
+    <comment>{0} - The Android resource ID name</comment>
+  </data>
+  <data name="XA1013" xml:space="preserve">
+    <value>Nie można przeanalizować identyfikatora węzła „{0}” w pliku układu „{1}”.</value>
+    <comment>{0} - The Android resource XML element name
+{1} - The path of the layout file</comment>
+  </data>
+  <data name="XA1014" xml:space="preserve">
+    <value>Znaleziono odwołania do bibliotek JAR z identycznymi nazwami plików, ale różną zawartością: {0}. Usuń wszystkie biblioteki powodujące konflikt z elementów EmbeddedJar, InputJar i AndroidJavaLibrary.</value>
+    <comment>The following are literal names and should not be translated: JAR, EmbeddedJar, InputJar and AndroidJavaLibrary
+{0} - Comma-separated list of the conflicting JAR library file names</comment>
+  </data>
+  <data name="XA1015" xml:space="preserve">
+    <value>Jako projekt sparowany określono więcej niż jeden projekt systemu Android Wear. Może być najwyżej jeden taki projekt.</value>
+    <comment>The following are literal names and should not be translated: Android Wear</comment>
+  </data>
+  <data name="XA1016" xml:space="preserve">
+    <value>Projekt aplikacji docelowej systemu Wear „{0}” nie określa wymaganej właściwości projektu „AndroidManifest”.</value>
+    <comment>The following are literal names and should not be translated: Wear, AndroidManifest
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.
+{0} - The project file name</comment>
+  </data>
+  <data name="XA1017" xml:space="preserve">
+    <value>Plik AndroidManifest.xml aplikacji docelowej systemu Wear nie określa wymaganego atrybutu „package”.</value>
+    <comment>The following are literal names and should not be translated: Wear, AndroidManifest.xml, 'package'
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
+  </data>
+  <data name="XA1018" xml:space="preserve">
+    <value>Określony plik AndroidManifest nie istnieje: {0}.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest
+{0} - The path of the specified AndroidManifest file</comment>
+  </data>
+  <data name="XA1019" xml:space="preserve">
+    <value>Plik „LibraryProjectProperties” „{0}” znajduje się w katalogu nadrzędnym pośredniego katalogu wyjściowego projektu powiązań. Dostosuj ścieżkę tak, aby użyć oryginalnego pliku „project.properties” bezpośrednio z katalogu projektu biblioteki systemu Android.</value>
+    <comment>The following are literal names and should not be translated: LibraryProjectProperties, project.properties, Android
+In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a Xamarin.Android project written in C# or F#.
+{0} - The path of the LibraryProjectProperties file</comment>
+  </data>
+  <data name="XA1020" xml:space="preserve">
+    <value>Do powiązania wymagana jest co najmniej jedna biblioteka języka Java. Sprawdź, czy biblioteka języka Java jest dołączona do projektu i czy ma odpowiednią akcję kompilacji: „LibraryProjectZip” (w przypadku pliku AAR lub ZIP), „EmbeddedJar”, „InputJar” (w przypadku pliku JAR) lub „LibraryProjectProperties” (w przypadku pliku project.properties).</value>
+    <comment>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</comment>
+  </data>
+  <data name="XA1021" xml:space="preserve">
+    <value>Nie odnaleziono określonej źródłowej biblioteki języka Java: {0}</value>
+    <comment>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
+{0} - The file name of the library</comment>
+  </data>
+  <data name="XA1022" xml:space="preserve">
+    <value>Nie odnaleziono biblioteki języka Java określonej przez odwołanie: {0}</value>
+    <comment>In this message, the term "reference Java library" refers to a library that is included as a reference so that types from the library can be resolved during the build process.
+{0} - The file name of the library</comment>
+  </data>
+  <data name="XA1023" xml:space="preserve">
+    <value>Używanie kompilatora DX DEX nie jest obsługiwane. Ustaw kompilator DEX na „d8” na stronach właściwości projektu w programie Visual Studio lub edytuj plik projektu w edytorze tekstów i ustaw właściwość „AndroidDexTool” MSBuild na wartość „d8”.</value>
+    <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
+  </data>
+  <data name="XA1024" xml:space="preserve">
+    <value>Plik konfiguracji „{0}” zostanie zignorowany. Pliki konfiguracji platformy .NET nie są obsługiwane w projektach Xamarin.Android, których miejscem docelowym jest platforma .NET 6 lub nowsza.</value>
+    <comment>The following are literal names and should not be translated: .NET, Xamarin.Android.
+{0} - The file name such as 'Foo.dll.config'</comment>
+  </data>
+  <data name="XA1025" xml:space="preserve">
+    <value>Eksperymentalna wartość „Hybrid” dla właściwości programu MSBuild „AndroidAotMode” jest obecnie niezgodna z docelowym interfejsem ABI armeabi-v7a. Aby nadal używać eksperymentalnej wartości „Hybrid” dla właściwości „AndroidAotMode”, usuń zaznaczenie docelowego interfejsu ABI armeabi-v7a na stronach właściwości projektu w programie Visual Studio albo zmodyfikuj plik projektu w edytorze tekstów, usuwając wartość „armeabi-v7a” z właściwości programu MSBuild „AndroidSupportedAbis”.</value>
+    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
+  </data>
+  <data name="XA1026" xml:space="preserve">
+    <value>Narzędzie AAPT zostało wycofane na rzecz narzędzia AAPT2. Włącz opcję „Użyj systemu przyrostowego tworzenia pakietów systemu Android (aapt2)” na stronach właściwości projektu programu Visual Studio lub edytuj plik projektu w edytorze tekstu i ustaw właściwość programu MSBuild o nazwie „AndroidUseAapt2” na wartość „true”.</value>
+    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
+  </data>
+  <data name="XA1026_dotnet" xml:space="preserve">
+    <value>Używanie narzędzia AAPT nie jest obsługiwane w projektach Xamarin.Android, których miejscem docelowym jest platforma .NET 6 lub nowsza. Włącz opcję „Użyj systemu przyrostowego tworzenia pakietów systemu Android (aapt2)” na stronach właściwości projektu w programie Visual Studio lub zmodyfikuj plik projektu w edytorze tekstów, ustawiając właściwość programu MSBuild o nazwie „AndroidUseAapt2” na wartość „true”.</value>
+    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
+  </data>
+  <data name="XA1027" xml:space="preserve">
+    <value>Właściwość programu MSBuild „EnableProguard” ma wartość „true”, a właściwość programu MSBuild „AndroidLinkTool” jest pusta, dlatego właściwość „AndroidLinkTool” zostanie ustawiona na wartość domyślną „proguard”.</value>
+    <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
+  </data>
+  <data name="XA1028" xml:space="preserve">
+    <value>Właściwość programu MSBuild „AndroidEnableProguard” ma wartość „true”, a właściwość programu MSBuild „AndroidLinkTool” jest pusta, dlatego właściwość „AndroidLinkTool” zostanie ustawiona na wartość domyślną „proguard”.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
+  </data>
+  <data name="XA2000" xml:space="preserve">
+    <value>Wykryto użycie metody AppDomain.CreateDomain() w zestawie: {0}. Platforma .NET 6 lub nowsza wersja obsługuje tylko jedną domenę aplikacji, dlatego ten interfejs API nie będzie już dostępny w rozszerzeniu Xamarin.Android po wydaniu platformy .NET 6.</value>
+    <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
+{0} - The name of the assembly</comment>
+  </data>
+  <data name="XA2000_gcParams_bridgeImpl" xml:space="preserve">
+    <value>Obsługa wartości „MONO_GC_PARAMS=bridge-implementation=old” zostanie usunięta na platformie .NET 7.</value>
+  </data>
+  <data name="XA2001" xml:space="preserve">
+    <value>Nie można znaleźć pliku źródłowego „{0}”.</value>
+  </data>
+  <data name="XA2002_Framework" xml:space="preserve">
+    <value>Nie można rozpoznać odwołania „{0}” przywoływanego przez element {1}. Być może nie istnieje ono w profilu platformy Mono dla systemu Android?</value>
+    <comment>{0} - The name of the missing assembly
+{1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
+  </data>
+  <data name="XA2002_NuGet" xml:space="preserve">
+    <value>Nie można rozpoznać odwołania „{0}” przywoływanego przez element {1}. Dodaj odwołanie do pakietu lub zestawu NuGet dla elementu „{0}” lub usuń odwołanie do elementu „{2}”.</value>
+    <comment>{0} - The name of the missing assembly
+{1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
+{2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
+  </data>
+  <data name="XA2006" xml:space="preserve">
+    <value>Nie można rozpoznać odwołania do elementu „{0}” (zdefiniowanego w zestawie „{1}”) z zakresem „{2}”. Jeśli zakres różni się od zestawu definiującego, zazwyczaj oznacza to, że typ jest przekazywany.</value>
+    <comment>{0} - The member name, such as a class name
+{1} - The assembly name
+{2} - The scope of the member, such as the name of a different assembly</comment>
+  </data>
+  <data name="XA2007" xml:space="preserve">
+    <value>Wyjątek podczas ładowania zestawów: {0}</value>
+    <comment>{0} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA2008" xml:space="preserve">
+    <value>W przywoływanym zestawie {0} element Java.Interop.DoNotPackageAttribute wymaga nazwy pliku o wartości innej niż null.</value>
+    <comment>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
+{0} - The assembly name</comment>
+  </data>
+  <data name="XA3001" xml:space="preserve">
+    <value>Nie można utworzyć widoku AOT zestawu: {0}</value>
+    <comment>The abbreviation "AOT" should not be translated.</comment>
+  </data>
+  <data name="XA3002" xml:space="preserve">
+    <value>Nieprawidłowy tryb AOT: {0}</value>
+    <comment>The abbreviation "AOT" should not be translated.</comment>
+  </data>
+  <data name="XA3003" xml:space="preserve">
+    <value>Nie można usunąć kodu IL zestawu: {0}</value>
+    <comment>The abbreviation "IL" should not be translated.</comment>
+  </data>
+  <data name="XA3004" xml:space="preserve">
+    <value>Zestaw Android NDK r10d zawiera wiele usterek i dostarcza niezgodną bibliotekę libm.so dla architektury x86_64. Zobacz https://code.google.com/p/android/issues/detail?id=161422.</value>
+    <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
+"r10d" is the problematic version of the NDK. "x86_64" is the architecture of the libm.so file.</comment>
+  </data>
+  <data name="XA3005" xml:space="preserve">
+    <value>Wykryta wersja zestawu Android NDK jest niezgodna z docelową konfiguracją programu LLVM. Uaktualnij do zestawu NDK r10d lub nowszego.</value>
+    <comment>The following are literal names and should not be translated: NDK, LLVM, r10d
+"r10d" is the version of the NDK.</comment>
+  </data>
+  <data name="XA3006" xml:space="preserve">
+    <value>Nie można skompilować natywnego pliku zestawu: {0}</value>
+    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)</comment>
+  </data>
+  <data name="XA3007" xml:space="preserve">
+    <value>Nie można połączyć natywnej biblioteki współużytkowanej: {0}</value>
+  </data>
+  <data name="XA4209" xml:space="preserve">
+    <value>Nie można wygenerować typu języka Java dla klasy {0} z powodu wyjątku {1}</value>
+    <comment>{0} - The managed type name
+{1} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA4210" xml:space="preserve">
+    <value>Dodaj odwołanie do pliku Mono.Android.Export.dll w przypadku używania atrybutu ExportAttribute lub ExportFieldAttribute.</value>
+    <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
+  </data>
+  <data name="XA4211" xml:space="preserve">
+    <value>Wersja //uses-sdk/@android:targetSdkVersion w pliku AndroidManifest.xml „{0}” jest niższa niż $(TargetFrameworkVersion) „{1}”. Używanie wersji API-{2} na potrzeby kompilacji ACW.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetFrameworkVersion), API-{2}, ACW
+{0} - The target SDK version number
+{1} - The target framework version number
+{2} - The API version number</comment>
+  </data>
+  <data name="XA4213" xml:space="preserve">
+    <value>Typ „{0}” musi dostarczać publiczny konstruktor domyślny</value>
+  </data>
+  <data name="XA4214" xml:space="preserve">
+    <value>Typ zarządzany „{0}” istnieje w wielu zestawach: {1}. Wykonaj refaktoryzację nazw typów zarządzanych w tych zestawach, aby nie były identyczne.</value>
+    <comment>{0} - The managed type name
+{1} - Comma-separated list of all the assemblies where the managed type exists</comment>
+  </data>
+  <data name="XA4214_Result" xml:space="preserve">
+    <value>Odwołania do typu „{0}” będą odwoływać się do typu „{0}, {1}”.</value>
+    <comment>The phrase "`{0}, {1}`" does not need to be translated.
+{0} - The managed type name
+{1} - The name of the library that contains the type</comment>
+  </data>
+  <data name="XA4215" xml:space="preserve">
+    <value>Typ języka Java „{0}” jest generowany przez więcej niż jeden typ zarządzany. Zmień atrybut [Register], aby ten sam typ języka Java nie był emitowany.</value>
+    <comment>The following are literal names and should not be translated: Java, [Register]</comment>
+  </data>
+  <data name="XA4215_Details" xml:space="preserve">
+    <value>  Element „{0}” wygenerowany przez zarządzany element „{1}”</value>
+    <comment>The two spaces indentation at the beginning of this message should be preserved in the translations where possible.
+{0} - The generated Java type name
+{1} - The managed type name</comment>
+  </data>
+  <data name="XA4216_MinSdkVersion" xml:space="preserve">
+    <value>Wersja //uses-sdk/@android:minSdkVersion w pliku AndroidManifest.xml „{0}” jest niższa niż API-{1}. Taka konfiguracja nie jest obsługiwana.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
+{0} - The minimum SDK version number
+{1} - The API version number</comment>
+  </data>
+  <data name="XA4216_TargetSdkVersion" xml:space="preserve">
+    <value>Wersja //uses-sdk/@android:targetSdkVersion w pliku AndroidManifest.xml „{0}” jest niższa niż API-{1}. Taka konfiguracja nie jest obsługiwana.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , API-{1}
+{0} - The target SDK version number
+{1} - The API version number</comment>
+  </data>
+  <data name="XA4218" xml:space="preserve">
+    <value>Nie można znaleźć elementu //manifest/application/uses-library w ścieżce: {0}</value>
+    <comment>The following are literal names and should not be translated: //manifest/application/uses-library</comment>
+  </data>
+  <data name="XA4219" xml:space="preserve">
+    <value>Nie można odnaleźć generatora powiązań dla języka {0} ani {1}.</value>
+    <comment>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
+{0} - The target programming language name, which is usually C#
+{1} - The default programming language name, which is also usually C#</comment>
+  </data>
+  <data name="XA4220" xml:space="preserve">
+    <value>Element klasy częściowej „{0}” nie ma skojarzonego powiązania dla układu „{1}”.</value>
+    <comment>In this message, the term "partial class item" means a .NET partial class.
+In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
+In this mesage, the term "layout" means an Android UI layout.
+{1} - The path of the partial class file
+{0} - The name of the layout</comment>
+  </data>
+  <data name="XA4221" xml:space="preserve">
+    <value>Nie wygenerowano żadnych plików źródłowych powiązania układu.</value>
+    <comment>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
+In this mesage, the term "layout" means an Android UI layout.
+In this message, the term "source files" means files that can be compiled, usually containing C# source code.</comment>
+  </data>
+  <data name="XA4222" xml:space="preserve">
+    <value>Nie odnaleziono żadnych widżetów dla układu ({0}).</value>
+    <comment>In this message, the term "widgets" means Android UI elements.
+In this mesage, the term "layout" means an Android UI layout.
+{0} - Semicolon-separated list of paths for the files that define the layout</comment>
+  </data>
+  <data name="XA4223" xml:space="preserve">
+    <value>Źle sformułowana pełna nazwa klasy „{0}”. Brak przestrzeni nazw.</value>
+    <comment>{0} - The class name</comment>
+  </data>
+  <data name="XA4224" xml:space="preserve">
+    <value>Źle sformułowana pełna nazwa klasy „{0}”. Brak nazwy klasy.</value>
+    <comment>{0} - The class name</comment>
+  </data>
+  <data name="XA4225" xml:space="preserve">
+    <value>Widżet „{0}” w układzie „{1}” ma wiele wystąpień o różnych typach. Typ właściwości zostanie skonfigurowany na następującą wartość: {2}</value>
+    <comment>In this message, the term "widgets" means Android UI elements.
+In this mesage, the term "layout" means an Android UI layout.
+{0} - The name of the widget
+{1} - The name of the layout
+{2} - The type name that will be used, such as "object"</comment>
+  </data>
+  <data name="XA4226" xml:space="preserve">
+    <value>Element zasobu „{0}” nie ma wymaganego elementu metadanych „{1}”.</value>
+    <comment>{0} - The name of the Android layout resource file
+{1} - The name of the metadata item</comment>
+  </data>
+  <data name="XA4228" xml:space="preserve">
+    <value>Nie można znaleźć określonego elementu //activity-alias/@android:targetActivity: „{0}”</value>
+    <comment>The following are literal names and should not be translated: //activity-alias/@android:targetActivity
+{0} - The specified targetActivity name</comment>
+  </data>
+  <data name="XA4229" xml:space="preserve">
+    <value>Nierozpoznany element główny „TransformFile”: {0}.</value>
+    <comment>The following are literal names and should not be translated: TransformFile
+In this message, "root element" refers to the root element of an XML file.
+{0} - The name of the root element</comment>
+  </data>
+  <data name="XA4230" xml:space="preserve">
+    <value>Błąd podczas analizowania kodu XML: {0}</value>
+    <comment>{0} - The exception message and stack trace of the associated exception</comment>
+  </data>
+  <data name="XA4231" xml:space="preserve">
+    <value>Wartość analizatora klas systemu Android „{0}” jest przestarzała i zostanie usunięta w przyszłej wersji rozszerzenia Xamarin.Android. Zaktualizuj właściwości projektu, aby używać literału „class-parse”.</value>
+    <comment>The following are literal names and should not be translated: class-parse
+{0} - The name of the current class parser value</comment>
+  </data>
+  <data name="XA4232" xml:space="preserve">
+    <value>Element docelowy generowania kodu systemu Android „{0}” jest przestarzały i zostanie usunięty w przyszłej wersji rozszerzenia Xamarin.Android. Zaktualizuj właściwości projektu, aby używać literału „XAJavaInterop1”.</value>
+    <comment>The following are literal names and should not be translated: XAJavaInterop1
+{0} - The name of the current code generation target</comment>
+  </data>
+  <data name="XA4300" xml:space="preserve">
+    <value>Biblioteka natywna „{0}” nie zostanie uwzględniona w pakiecie, ponieważ ma nieobsługiwany interfejs ABI. Przenieś ten plik do katalogu o prawidłowej nazwie interfejsu ABI systemu Android, np. „libs/armeabi-v7a/”.</value>
+    <comment>In this message, the term "bundled" is a short way of saying "included into the final application package."
+The following are literal names and should not be translated: ABI, 'libs/armeabi-v7a/'
+{0} - The file path</comment>
+  </data>
+  <data name="XA4301" xml:space="preserve">
+    <value>Zestaw APK zawiera już element {0}; jest ignorowany.</value>
+    <comment>The abbreviation "APK" should not be translated.
+{0} - The file name.</comment>
+  </data>
+  <data name="XA4301_ABI" xml:space="preserve">
+    <value>Nie można określić interfejsu ABI biblioteki natywnej „{0}”. Przenieś ten plik do katalogu o prawidłowej nazwie systemu Android, np. „libs/armeabi-v7a/”.</value>
+    <comment>The following are literal names and should not be translated: ABI, 'libs/armeabi-v7a/'
+{0} - The file path</comment>
+  </data>
+  <data name="XA4301_ABI_NuGet" xml:space="preserve">
+    <value>Nie można określić instrukcji ABI natywnej biblioteki „{0}”. Usuń pakiet NuGet „{1}” lub powiadom autora biblioteki.</value>
+    <comment>The following are literal names and should not be translated: ABI, NuGet
+{0} - The native library file path
+{1} - Either the name of the NuGet package or a path to the native library</comment>
+  </data>
+  <data name="XA4301_ABI_Ignoring" xml:space="preserve">
+    <value>Nie można było określić interfejsu ABI niektórych bibliotek natywnych. Następujące są ignorowane: {0}</value>
+    <comment>The abbreviation "ABI" should not be translated.
+{0} - Comma-separated list of the ignored library file names.</comment>
+  </data>
+  <data name="XA4302" xml:space="preserve">
+    <value>Nieobsługiwany wyjątek podczas scalania pliku „AndroidManifest.xml”: {0}</value>
+    <comment>The following are literal names and should not be translated: `AndroidManifest.xml`
+{0} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA4303" xml:space="preserve">
+    <value>Błąd podczas wyodrębniania zasobów z pliku „{0}”: {1}</value>
+    <comment>{0} - The file name
+{1} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA4304" xml:space="preserve">
+    <value>Nie znaleziono pliku konfiguracji programu ProGuard „{0}”.</value>
+    <comment>The following are literal names and should not be translated: ProGuard</comment>
+  </data>
+  <data name="XA4305" xml:space="preserve">
+    <value>Biblioteka Multidex jest włączona, ale plik „$(_AndroidMainDexListFile)” jest pusty.</value>
+    <comment>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</comment>
+  </data>
+  <data name="XA4305_File_Missing" xml:space="preserve">
+    <value>Biblioteka Multidex jest włączona, ale plik „$(_AndroidMainDexListFile)” „{0}” nie istnieje.</value>
+    <comment>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</comment>
+  </data>
+  <data name="XA4306" xml:space="preserve">
+    <value>Element R8 nie obsługuje plików „@(MultiDexMainDexList)”, jeśli wartość właściwości android:minSdkVersion jest większa lub równa 21</value>
+    <comment>The following are literal names and should not be translated: R8, @(MultiDexMainDexList),  android:minSdkVersion</comment>
+  </data>
+  <data name="XA4307" xml:space="preserve">
+    <value>Nieprawidłowy plik konfiguracji programu ProGuard. {0}</value>
+    <comment>The following are literal names and should not be translated: ProGuard
+{0} - The error message returned by the ProGuard tool.</comment>
+  </data>
+  <data name="XA4308" xml:space="preserve">
+    <value>Nie można wygenerować map typów</value>
+  </data>
+  <data name="XA4309" xml:space="preserve">
+    <value>Plik „MultiDexMainDexList” „{0}” nie istnieje.</value>
+    <comment>The following are literal names and should not be translated: MultiDexMainDexList</comment>
+  </data>
+  <data name="XA4310" xml:space="preserve">
+    <value>Nie znaleziono pliku „{0}” „{1}”.</value>
+    <comment>{0} - The MSBuildProperty which contains the file name value.
+{1} - The value of the MSBuildProperty. Normally a filename.
+</comment>
+  </data>
+  <data name="XA4311" xml:space="preserve">
+    <value>Aplikacja nie będzie zawierać sparowanego pakietu systemu Wear, ponieważ plik APK pakietu aplikacji systemu Wear nie został jeszcze utworzony. W przypadku kompilowania z poziomu wiersza polecenia pamiętaj, aby skompilować element docelowy „SignAndroidPackage”.</value>
+    <comment>The following are literal names and should not be translated: Wear, APK, SignAndroidPackage
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
+  </data>
+  <data name="XA4312" xml:space="preserve">
+    <value>Odwoływanie się do projektu aplikacji dla systemu Android Wear „{0}” z projektu aplikacji dla systemu Android jest przestarzałe i nie będzie już obsługiwane w przyszłej wersji programu Xamarin.Android. Usuń odwołanie do projektu aplikacji dla systemu Android Wear z projektu aplikacji dla systemu Android i dystrybuuj aplikację dla systemu Wear jako autonomiczną aplikację.</value>
+    <comment>The following are literal names and should not be translated: Android Wear, Android, Wear.
+{0} - The referenced Android Wear project.</comment>
+  </data>
+  <data name="XA4313" xml:space="preserve">
+    <value>Wbudowane odwołanie „{0}” jest przestarzałe.
+Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}”.
+</value>
+  <comment>The following are literal names and should not be translated:
+{0} - The Assembly name which is deprecated
+{1} - A Nuget package name.
+  </comment>
+  </data>
+  <data name="XA4314" xml:space="preserve">
+    <value>Właściwość „{0}” jest pusta. Należy podać wartość w przypadku właściwości „{0}”.</value>
+    <comment>{0} - The MSBuildProperty which contains a value.
+</comment>
+  </data>
+  <data name="XA5101" xml:space="preserve">
+    <value>Brak katalogu łańcuchów narzędzi zestawu Android NDK „{0}”. Zainstaluj zestaw Android NDK.</value>
+    <comment>{0} - The path of the missing directory</comment>
+  </data>
+  <data name="XA5101_C_Compiler" xml:space="preserve">
+    <value>Nie znaleziono kompilatora języka C dla docelowej architektury {0}. Sprawdzone ścieżki: „{1}”</value>
+    <comment>The following are literal names and should not be translated: C
+{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - Semicolon-separated list of the paths searched</comment>
+  </data>
+  <data name="XA5101_Toolchain" xml:space="preserve">
+    <value>Nie znaleziono katalogu łańcucha narzędzi dla docelowej architektury {0}.</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
+  </data>
+  <data name="XA5102" xml:space="preserve">
+    <value>Konwersja z zestawu do kodu natywnego nie powiodła się. Kod zakończenia {0}</value>
+    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
+{0} - The exit code number</comment>
+  </data>
+  <data name="XA5103" xml:space="preserve">
+    <value>Kompilator języka C zestawu NDK zakończył pracę z błędem. Kod zakończenia {0}</value>
+    <comment>The following are literal names and should not be translated: NDK, C
+{0} - The exit code number</comment>
+  </data>
+  <data name="XA5104" xml:space="preserve">
+    <value>Nie można było zlokalizować zestawu Android NDK. Upewnij się, że zestaw Android NDK jest zainstalowany w Menedżerze zestawów Android SDK, a jeśli używana jest niestandardowa ścieżka zestawu NDK, upewnij się, że właściwość $(AndroidNdkDirectory) narzędzia MSBuild jest ustawiona na ścieżkę niestandardową.</value>
+    <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
+  </data>
+  <data name="XA5105" xml:space="preserve">
+    <value>Nie znaleziono programu łańcucha narzędzi „{0}” dla docelowej architektury {1}. Sprawdzone ścieżki: „{2}”</value>
+    <comment>{0} - The missing utility name, such as gcc or clang
+{1} - The target architecture, such as Arm, Arm64, or X86_64
+{2} - The path of the directory that was searched</comment>
+  </data>
+  <data name="XA5201" xml:space="preserve">
+    <value>Konsolidator zestawu NDK zakończył pracę z błędem. Kod zakończenia {0}</value>
+    <comment>The following are literal names and should not be translated: NDK
+{0} - The exit code number</comment>
+  </data>
+  <data name="XA5205" xml:space="preserve">
+    <value>Nie można znaleźć narzędzia „{0}”. Zainstaluj pakiet Android SDK Build-Tools za pomocą programu „{1}{2}tools{2}{3}”.</value>
+    <comment>The following are literal names and should not be translated: Android SDK Build-Tools, {1}{2}tools{2}{3}
+{0} - The missing tool name
+{1} - The parent directory
+{2} - The directory separator character
+{3} - The installer program name</comment>
+  </data>
+  <data name="XA5205_Lint" xml:space="preserve">
+    <value>W zestawie Android SDK nie można znaleźć narzędzia „{0}”. Określ jego ścieżkę za pomocą opcji /p:LintToolPath.</value>
+    <comment>The following are literal names and should not be translated: /p:LintToolPath
+{0} - The missing tool name</comment>
+  </data>
+  <data name="XA5207" xml:space="preserve">
+    <value>Nie można było znaleźć pliku android.jar dla poziomu interfejsu API {0}. Oznacza to, że platforma Android SDK dla poziomu interfejsu API {0} nie jest zainstalowana. Zainstaluj ją w Menedżerze zestawów Android SDK ({2}) lub zmień projekt Xamarin.Android tak, aby był przeznaczony dla zainstalowanej wersji interfejsu API. (Brak pliku {1}).</value>
+    <comment>The following are literal names and should not be translated: android.jar
+{0} - The API level name
+{1} - The expected path of the android.jar file
+{2} - The menu location in Visual Studio that can be used to launch the Android SDK Manager</comment>
+  </data>
+  <data name="XA5207_SDK_Manager_macOS" xml:space="preserve">
+    <value>Narzędzia &gt; Otwórz Menedżer zestawów SDK dla systemu Android...</value>
+    <comment>This string is the location of a menu command in Visual Studio for Mac.</comment>
+  </data>
+  <data name="XA5207_SDK_Manager_Windows" xml:space="preserve">
+    <value>Narzędzia &gt; Android &gt; Menedżer zestawów Android SDK...</value>
+    <comment>This string is the location of a menu command in Visual Studio.</comment>
+  </data>
+  <data name="XA5211" xml:space="preserve">
+    <value>Nazwa pakietu osadzonej aplikacji systemu Wear jest inna niż nazwa pakietu aplikacji dla urządzenia podręcznego ({0} != {1}).</value>
+    <comment>The following are literal names and should not be translated: Wear
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.
+In this message, the term "handheld app" means "app for handheld devices."
+{0} - The Wear app package name
+{1} - The handheld app package name</comment>
+  </data>
+  <data name="XA5213" xml:space="preserve">
+    <value>java.lang.OutOfMemoryError. Rozważ zwiększenie wartości parametru $(JavaMaximumHeapSize). Zabrakło pamięci dla środowiska Java podczas wykonywania elementu „{0} {1}”.</value>
+    <comment>The following are literal names and should not be translated: java.lang.OutOfMemoryError, $(JavaMaximumHeapSize)
+{0} - The tool name
+{1} - The command line arguments used for the tool</comment>
+  </data>
+  <data name="XA5300_Android_Platforms" xml:space="preserve">
+    <value>Brak platform systemu Android zainstalowanych w: „{0}”. Zainstaluj platformę zestawu SDK za pomocą programu „{1}{2}tools{2}{3}”.</value>
+    <comment>The following are literal names and should not be translated: SDK Platform, {1}{2}tools{2}{3}
+{0} - Android SDK platforms directory path
+{1} - Android SDK directory path
+{2} - The directory separator character
+{3} - The Android SDK installer program name</comment>
+  </data>
+  <data name="XA5300_Android_SDK" xml:space="preserve">
+    <value>Nie odnaleziono katalogu zestawu SDK systemu Android. Sprawdź, czy jest wyświetlana prawidłowa instalacja w menedżerze zestawu SDK systemu Android w programie Visual Studio. Aby użyć niestandardowej ścieżki zestawu SDK dla kompilacji w wierszu polecenia, ustaw tę ścieżkę we właściwości programu MSBuild „AndroidSdkDirectory”.</value>
+    <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
+  </data>
+  <data name="XA5300_Java_SDK" xml:space="preserve">
+    <value>Nie odnaleziono katalogu zestawu SDK języka Java. Sprawdź, czy jest skonfigurowany prawidłowy katalog zestawu SDK języka Java w sekcji systemu Android w opcjach programu Visual Studio. Aby użyć niestandardowej ścieżki zestawu SDK dla kompilacji w wierszu polecenia, ustaw tę ścieżkę we właściwości programu MSBuild „JavaSdkDirectory”.</value>
+    <comment>The following terms should not be translated: JavaSdkDirectory</comment>
+  </data>
+  <data name="XA5301" xml:space="preserve">
+    <value>Nie można wygenerować typu języka Java dla klasy {0} z powodu elementu MAX_PATH: {1}</value>
+    <comment>The following are literal names and should not be translated: MAX_PATH.
+{0} - The managed type name
+{1} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA5302" xml:space="preserve">
+    <value>Ten projekt może być kompilowany jednocześnie przez dwa procesy. Plik blokady istnieje w ścieżce: {0}</value>
+  </data>
+  <data name="XA_Manifest_AutoGenerated_Header" xml:space="preserve">
+    <value>
+    Ten kod został wygenerowany przez narzędzie.
+    Został on wygenerowany na podstawie pliku {0}
+    Zmiany w tym pliku mogą powodować niepoprawne zachowanie i zostaną utracone
+    w przypadku ponownego wygenerowania zawartości.
+    </value>
+    <comment>{0} - The path of the template file.</comment>
+  </data>
+  <data name="XA4233" xml:space="preserve">
+    <value>Właściwość &lt;AndroidNamespaceReplacement&gt; w przypadku „{0}” nie określa atrybutu „Replacement”.</value>
+    <comment>The following are literal names and should not be translated: &lt;AndroidNamespaceReplacement&gt;
+{0} - The AndroidNamespaceReplacement MSBuild value.</comment>
+  </data>
+  <data name="XA_Directory_Is_From" xml:space="preserve">
+    <value>Katalog „{0}” pochodzi z „{1}”.</value>
+    <comment>
+{0} - A Directory Path.
+{1} - A Filename.
+    </comment>
+  </data>
+</root>

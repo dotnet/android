@@ -33,12 +33,11 @@ so when adding a new message, follow these steps:
     ```
 
  4. After adding the new message, build `Xamarin.Android.Build.Tasks.csproj`
-    locally.  This will run the targets from [dotnet/xliff-tasks][xliff-tasks]
-    to update the `.xlf` [XLIFF][xliff] localization files with the latest
-    changes from the `.resx` file.
+    locally.
 
- 5. Include the changes to the`.resx` file as well as the generated changes to
-    the `.xlf` files in the commit.
+ 5. Include the changes to the`.resx` file in the commit.
+
+ 6. The [OneLocBuild][oneloc] task will manage handoff and handback for string translations.
 
 ## Guidelines
 
@@ -79,5 +78,4 @@ so when adding a new message, follow these steps:
     https://github.com/dotnet/sdk/blob/master/src/Tasks/Common/Resources/Strings.resx
 
 [resources-editor]: ../images/resources-editor-xa0000.png
-[xliff-tasks]: https://github.com/dotnet/xliff-tasks
-[xliff]: http://docs.oasis-open.org/xliff/v1.2/os/xliff-core.html
+[oneloc]: https://aka.ms/onelocbuild

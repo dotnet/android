@@ -1,7 +1,6 @@
 <Project>
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-  <Import Project="..\tools\BuildTasks.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <Import Project="..\..\Configuration.props" />
   <Import Project="$(XamarinAndroidSourcePath)build-tools\installers\create-installers.targets" />
   <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
@@ -17,7 +16,6 @@
     <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\monoandroid10\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
     <NoWarn>8632</NoWarn>
-    <GenerateResxSource>true</GenerateResxSource>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <!-- Causes issues with linker files imported from Mono -->
@@ -61,7 +59,6 @@
     <PackageReference Include="System.Reflection.Metadata" Version="1.8.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
-    <PackageReference Include="XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all" />
     <PackageReference Include="K4os.Hash.xxHash" Version="1.0.6" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
   </ItemGroup>
@@ -411,7 +408,21 @@
     <EmbeddedResource Include="Resources\ApplicationRegistration.java">
       <LogicalName>ApplicationRegistration.java</LogicalName>
     </EmbeddedResource>
-    <None Include="@(_LocalizationLanguages->'Properties\xlf\Resources.%(Identity).xlf')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -448,7 +459,6 @@
   <!-- Import Microsoft.NET.Sdk targets before our targets so we can override behavior -->
   <!-- See https://github.com/microsoft/msbuild/pull/4922 -->
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <Import Project="..\tools\GenerateResxSource.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <Import Project="Xamarin.Android.Build.Tasks.targets" />
 
 </Project>
