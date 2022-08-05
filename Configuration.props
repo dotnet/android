@@ -237,11 +237,6 @@
     <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(RemapAssemblyRefToolExecutable)&quot;</RemapAssemblyRefTool>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <XlfLanguages>cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant</XlfLanguages>
-    <UpdateXlfOnBuild Condition="'$(RunningOnCI)' != 'true'">true</UpdateXlfOnBuild>
-  </PropertyGroup>
-
   <!-- Unit Test Properties -->
   <PropertyGroup>
     <!-- When changing the version below, please also update the 'build-tools/scripts/nunit3-console*' scripts -->
