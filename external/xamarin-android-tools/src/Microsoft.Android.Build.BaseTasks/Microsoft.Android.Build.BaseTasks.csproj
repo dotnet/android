@@ -1,23 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="MSBuildReferences.projitems" />
-  <Import Project="..\tools\BuildTasks.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
     <RootNamespace>Microsoft.Android.Build.Tasks</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GenerateResxSource>true</GenerateResxSource>
-    <UpdateXlfOnBuild Condition=" '$(RunningOnCI)' != 'true' ">true</UpdateXlfOnBuild>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AssemblyName>$(VendorPrefix)Microsoft.Android.Build.BaseTasks$(VendorSuffix)</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="XliffTasks" Version="1.0.0-beta.20615.1" PrivateAssets="all" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
-
-  <Import Project="..\tools\GenerateResxSource.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
 </Project>

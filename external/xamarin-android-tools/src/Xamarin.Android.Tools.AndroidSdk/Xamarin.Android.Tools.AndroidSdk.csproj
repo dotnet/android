@@ -17,11 +17,6 @@
     <AssemblyName>$(VendorPrefix)Xamarin.Android.Tools.AndroidSdk$(VendorSuffix)</AssemblyName>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <XlfLanguages>cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant</XlfLanguages>
-    <UpdateXlfOnBuild Condition="'$(RunningOnCI)' != 'true'">true</UpdateXlfOnBuild>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Condition=" '$(TargetFramework)' != 'netstandard2.0' " Remove="NullableAttributes.cs" />
   </ItemGroup>
@@ -35,7 +30,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="XliffTasks" Version="1.0.0-beta.20420.1" PrivateAssets="all" />
   </ItemGroup>
 
   <Target Name="GetFilesToSign" BeforeTargets="SignFiles" Condition=" '$(Configuration)' == 'Release' Or '$(Configuration)' == 'ReleaseWindows'">
