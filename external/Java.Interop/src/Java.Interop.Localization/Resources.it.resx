@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CecilResolver_XA0009" xml:space="preserve">
+    <value>Errore durante il caricamento dell'assembly: '{0}'.</value>
+    <comment>{0} - File name</comment>
+  </data>
+  <data name="Generator_BG4000" xml:space="preserve">
+    <value>Impossibile rimuovere le costanti precedenti: {0}.</value>
+    <comment>{0} - The list of constants that could not be removed.
+In this message, the term "constants" refers to class or interface members that have constant values.</comment>
+  </data>
+  <data name="Generator_BG4100" xml:space="preserve">
+    <value>Impossibile elaborare il mapping dell'enumerazione. Riga di testo: {0}.</value>
+    <comment>{0} - The line that could not be processed.</comment>
+  </data>
+  <data name="Generator_BG4200" xml:space="preserve">
+    <value>Errore durante l'elaborazione della correzione dei metadati: {0}.</value>
+    <comment>{0} - The error encountered.</comment>
+  </data>
+  <data name="Generator_BG4300" xml:space="preserve">
+    <value>Specifica XPath non valida: {0}.</value>
+    <comment>{0} - The invalid XPath line.</comment>
+  </data>
+  <data name="Generator_BG4307" xml:space="preserve">
+    <value>Il nome dell'attributo di destinazione non è specificato per il percorso: {0}.</value>
+    <comment>{0} - The invalid XPath line.</comment>
+  </data>
+  <data name="Generator_BG4400" xml:space="preserve">
+    <value>Specifica 'global::' imprevista. Questo errore si verifica, ad esempio, se 'global::' è specificato nel file di trasformazione Metadata.xml.</value>
+    <comment>The following are literal names and should not be translated: global::, Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG4500" xml:space="preserve">
+    <value>'lang-features=default-interface-methods' non è compatibile con 'codegen-target=xamarinandroid'.</value>
+    <comment>The following are literal command line arguments and should not be translated: 'lang-features=default-interface-methods', 'codegen-target=xamarinandroid'.</comment>
+  </data>
+  <data name="Generator_BG8101" xml:space="preserve">
+    <value>Elemento figlio classe imprevisto {0}.</value>
+    <comment>{0} - The unexpected child class.</comment>
+  </data>
+  <data name="Generator_BG8102" xml:space="preserve">
+    <value>La classe '{0}' contiene il tipo di base sconosciuto '{1}'.</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8103" xml:space="preserve">
+    <value>La classe '{0}' ha un tipo di base non valido '{1}'.</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8200" xml:space="preserve">
+    <value>Impossibile analizzare l'assembly '{0}': {1}.</value>
+    <comment>{0} - Error .NET assembly.
+{1} - The error encountered.</comment>
+  </data>
+  <data name="Generator_BG8300" xml:space="preserve">
+    <value>Per il costruttore '{0}' non è stato possibile trovare il tipo di inclusione '{1}'.</value>
+    <comment>{0} - .NET constructor method.
+{1} - .NET type.</comment>
+  </data>
+  <data name="Generator_BG8400" xml:space="preserve">
+    <value>Tipo di campo '{0}' ({1}) imprevisto.</value>
+    <comment>{0} - .NET type.
+{1} - .NET field signature.</comment>
+  </data>
+  <data name="Generator_BG8401_Method" xml:space="preserve">
+    <value>'{0}.{1}' verrà ignorato a causa di un nome di metodo duplicato. (Tipo Java: '{2}')</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8401_NestedType" xml:space="preserve">
+    <value>'{0}.{1}' verrà ignorato a causa di un nome di tipo nidificato duplicato. (Tipo Java: '{2}')</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8401_Property" xml:space="preserve">
+    <value>'{0}.{1}' verrà ignorato a causa di un nome di proprietà o campo duplicato. (tipo Java: '{2}')</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8402" xml:space="preserve">
+    <value>'{0}.{1}' verrà ignorato a causa di un campo duplicato. (Tipo Java: '{2}')</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8403" xml:space="preserve">
+    <value>Il tipo '{0}' presenta un nome di tipo che corrisponde al nome dello spazio dei nomi contenitore. Per altre informazioni, vedere https://aka.ms/BG8403.</value>
+    <comment>{0} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8500" xml:space="preserve">
+    <value>Elemento figlio imprevisto di '&lt;interface&gt;': '{0}'.</value>
+    <comment>{0} - XML element name.
+&lt;interface&gt; should not be translated.</comment>
+  </data>
+  <data name="Generator_BG8501" xml:space="preserve">
+    <value>Nessun nome di evento specificato in '{0}.{1}'.</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8502" xml:space="preserve">
+    <value>Convalida di '{0}' e di tutti i relativi tipi nidificati perché alcune interfacce non sono valide.</value>
+    <comment>{0} - .NET type name.</comment>
+  </data>
+  <data name="Generator_BG8503" xml:space="preserve">
+    <value>Impossibile convalidare '{0}' e tutti i relativi tipi annidati perché alcuni dei relativi metodi non sono validi.</value>
+    <comment>{0} - .NET type name.</comment>
+  </data>
+  <data name="Generator_BG8504" xml:space="preserve">
+    <value>Il nome dell'evento per '{0}.{1}' non è valido. È possibile assegnare un valore 'eventName' o 'argsType' valido aggiungendo una regola al file di trasformazioni Metadata.xml.</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.
+The following terms should not be translated: eventName, argsType, Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG8506" xml:space="preserve">
+    <value>Il nome della proprietà dell'evento per '{0}.{1}' non è valido. È possibile assegnare un valore 'eventName' o 'argsType' valido aggiungendo una regola al file di trasformazioni Metadata.xml.</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.
+The following terms should not be translated: eventName, argsType, Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG8600" xml:space="preserve">
+    <value>Il file XML '{0}' non è valido: {1}.</value>
+    <comment>{0} - File name
+{1} - The error encountered.</comment>
+  </data>
+  <data name="Generator_BG8601" xml:space="preserve">
+    <value>Non sono stati trovati elementi '&lt;package&gt;'.</value>
+    <comment>The following terms should not be translated: &lt;package&gt;.</comment>
+  </data>
+  <data name="Generator_BG8602" xml:space="preserve">
+    <value>Nodo figlio radice imprevisto: '&lt;{0}&gt;'.</value>
+    <comment>{0} - XML element name.</comment>
+  </data>
+  <data name="Generator_BG8603" xml:space="preserve">
+    <value>Nodo figlio '&lt;package&gt;' imprevisto: '&lt;{0}&gt;'.</value>
+    <comment>{0} - XML element name.
+The following terms should not be translated: &lt;package&gt;.</comment>
+  </data>
+  <data name="Generator_BG8604" xml:space="preserve">
+    <value>Non è stato possibile trovare il tipo predecessore principale '{0}' per il tipo nidificato '{1}'.</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8605" xml:space="preserve">
+    <value>Non è stato possibile trovare il tipo Java '{0}' (manca un file jar/aar di riferimento Java o una libreria di binding Java NuGet?)</value>
+    <comment>{0} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8606" xml:space="preserve">
+    <value>Non è stato possibile associare alcuni tipi o membri perché non è stato possibile trovare i tipi Java a cui viene fatto riferimento. Per informazioni dettagliate, vedere il file 'java-resolution-report.log'.</value>
+    <comment>The following terms should not be translated: java-resolution-report.log</comment>
+  </data>
+  <data name="Generator_BG8700" xml:space="preserve">
+    <value>Tipo restituito sconosciuto '{0}' per il membro '{1}'.</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8701" xml:space="preserve">
+    <value>Tipo restituito non valido '{0}' per il membro '{1}'.</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8800" xml:space="preserve">
+    <value>Tipo di parametro sconosciuto '{0}' per il membro '{1}'.</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8801" xml:space="preserve">
+    <value>Tipo di parametro '{0}' non valido per il membro '{1}'.</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8A00" xml:space="preserve">
+    <value>L'elemento Metadata.xml '{0}' non corrisponde ad alcun nodo.</value>
+    <comment>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
+The following terms should not be translated: Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG8A07" xml:space="preserve">
+    <value>Trasformazione dello spazio dei nomi '{0}' non valida</value>
+    <comment>{0} - XML transform. (example: '&lt;ns-replace source="example" replacement="Example" /&gt;')</comment>
+  </data>
+  <data name="Generator_BG8B00" xml:space="preserve">
+    <value>Tipo di vincolo di argomento generico sconosciuto '{0}' per il membro '{1}'.</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8C00" xml:space="preserve">
+    <value>Impossibile trovare l'interfaccia di base '{1}' per il tipo '{0}'.</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8C01" xml:space="preserve">
+    <value>Per il tipo '{0}', l'interfaccia di base '{1}' non è valida.</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4200" xml:space="preserve">
+    <value>Non è possibile generare il wrapper Java per il tipo '{0}'. Sono supportati solo i tipi 'class'.</value>
+    <comment>{0} - Java type.
+The following terms should not be translated:
+class.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4201" xml:space="preserve">
+    <value>Non è possibile determinare il nome JNI per il tipo '{0}'.</value>
+    <comment>{0} - Java type.
+The following terms should not be translated: JNI.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4203" xml:space="preserve">
+    <value>La proprietà 'Name' deve essere un tipo completo come 'com.example.MyClass' e non è stato trovato alcun pacchetto per '{0}'.</value>
+    <comment>{0} - Java type.
+The following terms should not be translated:
+Name, com.example.MyClass.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4204" xml:space="preserve">
+    <value>Impossibile risolvere il tipo di interfaccia '{0}'. Manca un riferimento all'assembly?</value>
+    <comment>{0} - Java interface.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4205" xml:space="preserve">
+    <value>[ExportField] può essere utilizzato solo su metodi con 0 parametri.</value>
+    <comment>The following terms should not be translated: [ExportField].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4206" xml:space="preserve">
+    <value>[Export] non può essere utilizzato in un tipo generico.</value>
+    <comment>The following terms should not be translated: [Export].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4207" xml:space="preserve">
+    <value>[ExportField] non può essere utilizzato in un tipo generico.</value>
+    <comment>The following terms should not be translated: [ExportField].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4208" xml:space="preserve">
+    <value>impossibile utilizzare [ExportField] su un metodo che restituisce 'void'.</value>
+    <comment>The following terms should not be translated: [ExportField], void.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4217" xml:space="preserve">
+    <value>Non è possibile eseguire l'override del metodo generato da Kotlin '{0}' perché non è un nome di metodo Java valido. Questo metodo può essere sostituito solo da Kotlin.</value>
+    <comment>{0} - Kotlin method name.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4001" xml:space="preserve">
+    <value>Non è possibile precaricare il riferimento '{0}'.</value>
+    <comment>{0} - assembly path</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4002" xml:space="preserve">
+    <value>Specificare almeno un ASSEMBLY da elaborare.</value>
+    <comment>The following terms should not be translated or have any capitalization changes: ASSEMBLY. This is a special case for this particular message. In most messages, "assembly" would be translated.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4003" xml:space="preserve">
+    <value>Non è possibile creare la macchina virtuale Java{0}{1}</value>
+    <comment>{0} - newline, {1} - exception</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4004" xml:space="preserve">
+    <value>Impossibile leggere il file del profilo '{0}'.{1}{2}</value>
+    <comment>{0} - path, {1} - newline, {2} - exception. In this message, the term "profile" refers to a customized list of types to process.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4005" xml:space="preserve">
+    <value>Il percorso '{0}' non esiste.</value>
+    <comment>{0} - path</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4006" xml:space="preserve">
+    <value>Impossibile elaborare l'assembly '{0}'{1}{2}{1}{3}</value>
+    <comment>{0} - assembly, {1} - newline, {2} - exception message, {3} exception</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8001" xml:space="preserve">
+    <value>Non è stato possibile trovare l'interfaccia {0}</value>
+    <comment>{0} - interface name</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8003" xml:space="preserve">
+    <value>È stata rilevata un'eccezione durante il caricamento dei tipi. I tipi che non possono essere caricati non verranno elaborati. Assicurarsi che tutti i riferimenti ad assembly aggiuntivi necessari per questi tipi vengano forniti usando l'opzione -r. Eccezione:{0}{1}</value>
+    <comment>{0} - newline, {1} - exception. The following terms should not be translated: -r</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8004" xml:space="preserve">
+    <value>Impossibile trovare il tipo '{0}'. Il tipo non verrà elaborato. Assicurarsi che le directory per tutti gli assembly a cui si fa riferimento siano fornite con l'opzione -L.</value>
+    <comment>{0} - type
+The following terms should not be translated: -L</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8005" xml:space="preserve">
+    <value>Il tipo di metodi di marshalling '{0}' esiste già. La generazione dei metodi di marshalling nell'assembly '{1}' è stata ignorata. Usare -f per forzare la rigenerazione quando si desidera.</value>
+    <comment>{0} - type, {1} - assembly name. The following terms should not be translated: -f. In this message, the term "marshal methods" refers to methods that allow interaction between the managed methods and Java methods, similar to the methods of the .NET System.Runtime.InteropServices.Marshal class.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8006" xml:space="preserve">
+    <value>Impossibile trovare la definizione del metodo '{0}' nei metadati dell'assembly. Non verrà elaborato. Verificare che le directory per tutti gli assembly di riferimento siano fornite con l'opzione -L.</value>
+    <comment>{0} - method
+The following terms should not be translated: -L</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8007" xml:space="preserve">
+    <value>Impossibile trovare il metodo System.Console.WriteLine(). Disabilitazione dell'inserimento del debug. Per abilitare l'inserimento del debug, assicurarsi che la directory contenente mscorlib sia fornita con l'opzione -L.</value>
+    <comment>The following terms should not be translated: -L</comment>
+  </data>
+</root>

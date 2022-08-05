@@ -13,10 +13,6 @@
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
 
   <ItemGroup>
-    <PackageReference Include="XliffTasks" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CecilResolver_XA0009" xml:space="preserve">
+    <value>Ошибка при загрузке сборки: "{0}".</value>
+    <comment>{0} - File name</comment>
+  </data>
+  <data name="Generator_BG4000" xml:space="preserve">
+    <value>Сбой удаления старых констант: {0}.</value>
+    <comment>{0} - The list of constants that could not be removed.
+In this message, the term "constants" refers to class or interface members that have constant values.</comment>
+  </data>
+  <data name="Generator_BG4100" xml:space="preserve">
+    <value>Сбой обработки сопоставления перечисления. Текстовая строка: {0}.</value>
+    <comment>{0} - The line that could not be processed.</comment>
+  </data>
+  <data name="Generator_BG4200" xml:space="preserve">
+    <value>Ошибка при обработке исправления метаданных: {0}.</value>
+    <comment>{0} - The error encountered.</comment>
+  </data>
+  <data name="Generator_BG4300" xml:space="preserve">
+    <value>Недопустимая спецификация XPath: {0}.</value>
+    <comment>{0} - The invalid XPath line.</comment>
+  </data>
+  <data name="Generator_BG4307" xml:space="preserve">
+    <value>Имя целевого атрибута не указано для пути: {0}.</value>
+    <comment>{0} - The invalid XPath line.</comment>
+  </data>
+  <data name="Generator_BG4400" xml:space="preserve">
+    <value>Неожиданная спецификация "global::". Эта ошибка происходит, если, например, "global::" указан в файле преобразования Metadata.xml.</value>
+    <comment>The following are literal names and should not be translated: global::, Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG4500" xml:space="preserve">
+    <value>"lang-features=default-interface-methods" не совместим с "codegen-target=xamarinandroid".</value>
+    <comment>The following are literal command line arguments and should not be translated: 'lang-features=default-interface-methods', 'codegen-target=xamarinandroid'.</comment>
+  </data>
+  <data name="Generator_BG8101" xml:space="preserve">
+    <value>Непредвиденный дочерний класс {0}.</value>
+    <comment>{0} - The unexpected child class.</comment>
+  </data>
+  <data name="Generator_BG8102" xml:space="preserve">
+    <value>Класс "{0}" имеет неизвестный базовый тип "{1}".</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8103" xml:space="preserve">
+    <value>Класс "{0}" имеет недопустимый базовый тип "{1}".</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8200" xml:space="preserve">
+    <value>Не удалось проанализировать сборку "{0}": {1}.</value>
+    <comment>{0} - Error .NET assembly.
+{1} - The error encountered.</comment>
+  </data>
+  <data name="Generator_BG8300" xml:space="preserve">
+    <value>Для конструктора "{0}" не удалось найти вложенный тип "{1}".</value>
+    <comment>{0} - .NET constructor method.
+{1} - .NET type.</comment>
+  </data>
+  <data name="Generator_BG8400" xml:space="preserve">
+    <value>Непредвиденный тип поля "{0}" ({1}).</value>
+    <comment>{0} - .NET type.
+{1} - .NET field signature.</comment>
+  </data>
+  <data name="Generator_BG8401_Method" xml:space="preserve">
+    <value>Пропуск "{0}.{1}" из-за дублирования имени метода. (Тип Java: "{2}")</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8401_NestedType" xml:space="preserve">
+    <value>Пропуск "{0}.{1}" из-за дублирования имени вложенного типа. (Тип Java: "{2}")</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8401_Property" xml:space="preserve">
+    <value>Пропуск "{0}.{1}" из-за дублирования имени поля или свойства. (Тип Java: "{2}")</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8402" xml:space="preserve">
+    <value>Пропуск "{0}.{1}" из-за дублирования поля. (Тип Java: "{2}")</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8403" xml:space="preserve">
+    <value>Тип "{0}" имеет имя типа, соответствующее имени вложенного пространства имен. Подробнее см. https://aka.ms/BG8403.</value>
+    <comment>{0} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8500" xml:space="preserve">
+    <value>Непредвиденный элемент "&lt;interface&gt;": "{0}".</value>
+    <comment>{0} - XML element name.
+&lt;interface&gt; should not be translated.</comment>
+  </data>
+  <data name="Generator_BG8501" xml:space="preserve">
+    <value>Имя события не указано в "{0}.{1}".</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8502" xml:space="preserve">
+    <value>Аннулирование "{0}" и всех его вложенных типов из-за недопустимости некоторых его интерфейсов.</value>
+    <comment>{0} - .NET type name.</comment>
+  </data>
+  <data name="Generator_BG8503" xml:space="preserve">
+    <value>Аннулирование "{0}" и всех его вложенных типов из-за недопустимых методов.</value>
+    <comment>{0} - .NET type name.</comment>
+  </data>
+  <data name="Generator_BG8504" xml:space="preserve">
+    <value>Недопустимое имя события для "{0}.{1}". Допустимые "eventName" или "argsType" можно назначить, добавив правило в файл преобразований Metadata.xml.</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.
+The following terms should not be translated: eventName, argsType, Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG8506" xml:space="preserve">
+    <value>Недопустимое имя свойства события для "{0}.{1}". Допустимое значение "eventName" или "argsType" можно назначить, добавив правило в файл преобразований Metadata.xml.</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.
+The following terms should not be translated: eventName, argsType, Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG8600" xml:space="preserve">
+    <value>Недопустимый XML-файл "{0}": {1}.</value>
+    <comment>{0} - File name
+{1} - The error encountered.</comment>
+  </data>
+  <data name="Generator_BG8601" xml:space="preserve">
+    <value>Элементы "&lt;package&gt;" не найдены.</value>
+    <comment>The following terms should not be translated: &lt;package&gt;.</comment>
+  </data>
+  <data name="Generator_BG8602" xml:space="preserve">
+    <value>Непредвиденный корневой дочерний узел: "&lt;{0}&gt;".</value>
+    <comment>{0} - XML element name.</comment>
+  </data>
+  <data name="Generator_BG8603" xml:space="preserve">
+    <value>Непредвиденный дочерний узел "&lt;package&gt;": "&lt;{0}&gt;".</value>
+    <comment>{0} - XML element name.
+The following terms should not be translated: &lt;package&gt;.</comment>
+  </data>
+  <data name="Generator_BG8604" xml:space="preserve">
+    <value>Не удалось найти тип верхнего предка "{0}" для вложенного типа "{1}".</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8605" xml:space="preserve">
+    <value>Не удалось найти тип Java "{0}" (может быть, вам не хватает справочного файла jar/aar Java или библиотеки привязки Java NuGet?)</value>
+    <comment>{0} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8606" xml:space="preserve">
+    <value>Некоторые типы или элементы не могут быть связаны, так как не удается найти ссылочные типы Java. Подробности в файле java-resolution-report.log.</value>
+    <comment>The following terms should not be translated: java-resolution-report.log</comment>
+  </data>
+  <data name="Generator_BG8700" xml:space="preserve">
+    <value>Неизвестный тип возврата "{0}" для элемента "{1}".</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8701" xml:space="preserve">
+    <value>Недопустимый тип возврата "{0}" для элемента "{1}".</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8800" xml:space="preserve">
+    <value>Неизвестный тип параметра "{0}" для элемента "{1}".</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8801" xml:space="preserve">
+    <value>Недопустимый тип параметра "{0}" для элемента "{1}".</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8A00" xml:space="preserve">
+    <value>Для элемента Metadata.xml "{0}" нет соответствующего узла.</value>
+    <comment>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
+The following terms should not be translated: Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG8A07" xml:space="preserve">
+    <value>Недопустимое преобразование пространства имен "{0}"</value>
+    <comment>{0} - XML transform. (example: '&lt;ns-replace source="example" replacement="Example" /&gt;')</comment>
+  </data>
+  <data name="Generator_BG8B00" xml:space="preserve">
+    <value>Неизвестный универсальный тип ограничения аргумента "{0}" для элемента "{1}".</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8C00" xml:space="preserve">
+    <value>Не удалось найти базовый интерфейс "{1}" для типа "{0}".</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8C01" xml:space="preserve">
+    <value>Для типа "{0}" базовый интерфейс "{1}" является недопустимым.</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4200" xml:space="preserve">
+    <value>Не удается создать оболочку Java для типа "{0}". Поддерживаются только типы "class".</value>
+    <comment>{0} - Java type.
+The following terms should not be translated:
+class.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4201" xml:space="preserve">
+    <value>Не удается определить имя JNI для типа "{0}".</value>
+    <comment>{0} - Java type.
+The following terms should not be translated: JNI.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4203" xml:space="preserve">
+    <value>Свойство "Name" должно иметь полный тип, например "com.example.MyClass", и пакет для "{0}" не найден.</value>
+    <comment>{0} - Java type.
+The following terms should not be translated:
+Name, com.example.MyClass.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4204" xml:space="preserve">
+    <value>Не удалось разрешить тип интерфейса "{0}". Отсутствует ссылка на сборку?</value>
+    <comment>{0} - Java interface.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4205" xml:space="preserve">
+    <value>[ExportField] можно использовать только для методов с 0 параметрами.</value>
+    <comment>The following terms should not be translated: [ExportField].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4206" xml:space="preserve">
+    <value>[Export] нельзя использовать для универсального типа.</value>
+    <comment>The following terms should not be translated: [Export].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4207" xml:space="preserve">
+    <value>[ExportField] нельзя использовать для универсального типа.</value>
+    <comment>The following terms should not be translated: [ExportField].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4208" xml:space="preserve">
+    <value>[ExportField] нельзя использовать для метода, возвращающего "void".</value>
+    <comment>The following terms should not be translated: [ExportField], void.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4217" xml:space="preserve">
+    <value>Невозможно переопределить сгенерированный Kotlin метод "{0}", так как это недопустимое имя метода Java. Этот метод можно переопределить только из Kotlin.</value>
+    <comment>{0} - Kotlin method name.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4001" xml:space="preserve">
+    <value>Не удалось предварительно загрузить ссылку "{0}".</value>
+    <comment>{0} - assembly path</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4002" xml:space="preserve">
+    <value>Укажите по крайней мере одну СБОРКУ для обработки.</value>
+    <comment>The following terms should not be translated or have any capitalization changes: ASSEMBLY. This is a special case for this particular message. In most messages, "assembly" would be translated.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4003" xml:space="preserve">
+    <value>Не удалось создать Java VM{0}{1}</value>
+    <comment>{0} - newline, {1} - exception</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4004" xml:space="preserve">
+    <value>Не удалось прочитать файл профиля "{0}".{1}{2}</value>
+    <comment>{0} - path, {1} - newline, {2} - exception. In this message, the term "profile" refers to a customized list of types to process.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4005" xml:space="preserve">
+    <value>Путь "{0}" не существует</value>
+    <comment>{0} - path</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4006" xml:space="preserve">
+    <value>Не удалось обработать сборку "{0}"{1}{2}{1}{3}</value>
+    <comment>{0} - assembly, {1} - newline, {2} - exception message, {3} exception</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8001" xml:space="preserve">
+    <value>Не удается найти интерфейс {0}</value>
+    <comment>{0} - interface name</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8003" xml:space="preserve">
+    <value>Перехвачено исключение при загрузке типов. Типы, которые невозможно загрузить, не будут обработаны. Убедитесь, что любые дополнительные ссылки на сборки, необходимые для этих типов, предоставляются с помощью параметра -r. Исключение:{0}{1}</value>
+    <comment>{0} - newline, {1} - exception. The following terms should not be translated: -r</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8004" xml:space="preserve">
+    <value>Не удалось найти тип "{0}". Тип не будет обработан. Убедитесь, что каталоги для всех сборок, на которые есть ссылки, предоставляются с параметром -L.</value>
+    <comment>{0} - type
+The following terms should not be translated: -L</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8005" xml:space="preserve">
+    <value>Тип методов маршалирования "{0}" уже существует. Пропущено поколение методов маршалирования в сборке "{1}". При желании используйте -f для принудительного повторного создания.</value>
+    <comment>{0} - type, {1} - assembly name. The following terms should not be translated: -f. In this message, the term "marshal methods" refers to methods that allow interaction between the managed methods and Java methods, similar to the methods of the .NET System.Runtime.InteropServices.Marshal class.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8006" xml:space="preserve">
+    <value>Не удалось найти определение метода "{0}" в метаданных сборки. Он не будет обработан. Убедитесь, что каталоги для всех сборок, на которые есть ссылки, предоставляются с параметром -L.</value>
+    <comment>{0} - method
+The following terms should not be translated: -L</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8007" xml:space="preserve">
+    <value>Не удалось найти метод System.Console.WriteLine(). Отключение внедрения отладки. Чтобы включить внедрение отладки, убедитесь, что каталог, содержащий mscorlib, указан с параметром -L.</value>
+    <comment>The following terms should not be translated: -L</comment>
+  </data>
+</root>

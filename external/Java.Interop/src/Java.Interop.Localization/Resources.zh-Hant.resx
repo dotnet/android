@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CecilResolver_XA0009" xml:space="preserve">
+    <value>載入組件: '{0}' 時發生錯誤。</value>
+    <comment>{0} - File name</comment>
+  </data>
+  <data name="Generator_BG4000" xml:space="preserve">
+    <value>無法移除舊的常數: {0}。</value>
+    <comment>{0} - The list of constants that could not be removed.
+In this message, the term "constants" refers to class or interface members that have constant values.</comment>
+  </data>
+  <data name="Generator_BG4100" xml:space="preserve">
+    <value>無法處理列舉對應。文字行: {0}。</value>
+    <comment>{0} - The line that could not be processed.</comment>
+  </data>
+  <data name="Generator_BG4200" xml:space="preserve">
+    <value>處理中繼資料修復期間發生錯誤: {0}。</value>
+    <comment>{0} - The error encountered.</comment>
+  </data>
+  <data name="Generator_BG4300" xml:space="preserve">
+    <value>無效的 XPath 規格: {0}。</value>
+    <comment>{0} - The invalid XPath line.</comment>
+  </data>
+  <data name="Generator_BG4307" xml:space="preserve">
+    <value>未指定路徑的目標屬性名稱: {0}。</value>
+    <comment>{0} - The invalid XPath line.</comment>
+  </data>
+  <data name="Generator_BG4400" xml:space="preserve">
+    <value>未預期的 'global::' 規格。例如，如果在 Metadata.xml 轉換檔案中指定了 'global::'，就會發生此錯誤。</value>
+    <comment>The following are literal names and should not be translated: global::, Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG4500" xml:space="preserve">
+    <value>'lang-features=default-interface-methods' 與 'codegen-target=xamarinandroid' 不相容。</value>
+    <comment>The following are literal command line arguments and should not be translated: 'lang-features=default-interface-methods', 'codegen-target=xamarinandroid'.</comment>
+  </data>
+  <data name="Generator_BG8101" xml:space="preserve">
+    <value>未預期的類別子系 {0}。</value>
+    <comment>{0} - The unexpected child class.</comment>
+  </data>
+  <data name="Generator_BG8102" xml:space="preserve">
+    <value>類別 '{0}' 具有未知的基底型別 '{1}'。</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8103" xml:space="preserve">
+    <value>類別 '{0}' 的基底型別 '{1}' 無效。</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8200" xml:space="preserve">
+    <value>無法剖析組件 '{0}': {1}。</value>
+    <comment>{0} - Error .NET assembly.
+{1} - The error encountered.</comment>
+  </data>
+  <data name="Generator_BG8300" xml:space="preserve">
+    <value>對於建構函式 '{0}'，找不到封閉型別 '{1}'。</value>
+    <comment>{0} - .NET constructor method.
+{1} - .NET type.</comment>
+  </data>
+  <data name="Generator_BG8400" xml:space="preserve">
+    <value>未預期的欄位型別 '{0}' ({1})。</value>
+    <comment>{0} - .NET type.
+{1} - .NET field signature.</comment>
+  </data>
+  <data name="Generator_BG8401_Method" xml:space="preserve">
+    <value>因為方法名稱重複，所以略過 '{0}.{1}'。(JAVA 型別: '{2}')</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8401_NestedType" xml:space="preserve">
+    <value>因為巢狀類型名稱重複，所以略過 '{0}.{1}'。(JAVA 型別: '{2}')</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8401_Property" xml:space="preserve">
+    <value>因為欄位或屬性名稱重複，所以略過 '{0}.{1}'。(JAVA 型別: '{2}')</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8402" xml:space="preserve">
+    <value>因為欄位重複，所以略過 '{0}.{1}'。(JAVA 型別: '{2}')</value>
+    <comment>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8403" xml:space="preserve">
+    <value>型別 '{0}' 具有符合封閉命名空間名稱的型別名稱。如需詳細資訊，請參閱 https://aka.ms/BG8403。</value>
+    <comment>{0} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8500" xml:space="preserve">
+    <value>未預期的 '&lt;interface&gt;' 子項目: '{0}'。</value>
+    <comment>{0} - XML element name.
+&lt;interface&gt; should not be translated.</comment>
+  </data>
+  <data name="Generator_BG8501" xml:space="preserve">
+    <value>'{0}.{1}' 中未提供事件名稱。</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8502" xml:space="preserve">
+    <value>正在使 '{0}' 及其所有巢狀型別失效，因為其某些介面無效。</value>
+    <comment>{0} - .NET type name.</comment>
+  </data>
+  <data name="Generator_BG8503" xml:space="preserve">
+    <value>正在使 '{0}' 及其所有巢狀型別失效，因為其某些方法無效。</value>
+    <comment>{0} - .NET type name.</comment>
+  </data>
+  <data name="Generator_BG8504" xml:space="preserve">
+    <value>'{0}.{1}' 的事件名稱無效。將規則新增至 Metadata.xml 轉換檔案，即可指派有效的 'eventName' 或 'argsType'。</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.
+The following terms should not be translated: eventName, argsType, Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG8506" xml:space="preserve">
+    <value>'{0}.{1}' 的事件屬性名稱無效。將規則新增至 Metadata.xml 轉換檔案，即可指派有效的 'eventName' 或 'argsType'。</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.
+The following terms should not be translated: eventName, argsType, Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG8600" xml:space="preserve">
+    <value>無效的 XML 檔案'{0}': {1}。</value>
+    <comment>{0} - File name
+{1} - The error encountered.</comment>
+  </data>
+  <data name="Generator_BG8601" xml:space="preserve">
+    <value>找不到 '&lt;package&gt;' 元素。</value>
+    <comment>The following terms should not be translated: &lt;package&gt;.</comment>
+  </data>
+  <data name="Generator_BG8602" xml:space="preserve">
+    <value>未預期的根子節點: '&lt;{0}&gt;'。</value>
+    <comment>{0} - XML element name.</comment>
+  </data>
+  <data name="Generator_BG8603" xml:space="preserve">
+    <value>未預期的 '&lt;package&gt;' 子節點: '&lt;{0}&gt;'。</value>
+    <comment>{0} - XML element name.
+The following terms should not be translated: &lt;package&gt;.</comment>
+  </data>
+  <data name="Generator_BG8604" xml:space="preserve">
+    <value>找不到巢狀型別 '{1}' 的上階型別 '{0}'。</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8605" xml:space="preserve">
+    <value>找不到 JAVA 型別 '{0}' (您是否遺漏 JAVA 參考 jar/aar 或 JAVA 繫結程式庫 NuGet?)</value>
+    <comment>{0} - Java type.</comment>
+  </data>
+  <data name="Generator_BG8606" xml:space="preserve">
+    <value>因為找不到參照的 JAVA 型別，所以無法繫結某些型別或成員。如需詳細資料，請參閱 'java-resolution-report.log' 檔案。</value>
+    <comment>The following terms should not be translated: java-resolution-report.log</comment>
+  </data>
+  <data name="Generator_BG8700" xml:space="preserve">
+    <value>成員 '{1}' 的傳回型別 '{0}' 未知。</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8701" xml:space="preserve">
+    <value>成員 '{1}' 的傳回型別 '{0}' 無效。</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8800" xml:space="preserve">
+    <value>成員 '{1}' 的參數型別 '{0}' 未知。</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8801" xml:space="preserve">
+    <value>成員 '{1}' 的參數型別 '{0}' 無效。</value>
+    <comment>{0} - Java type.
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8A00" xml:space="preserve">
+    <value>Metadata.xml 元素 '{0}' 與節點相符。</value>
+    <comment>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
+The following terms should not be translated: Metadata.xml.</comment>
+  </data>
+  <data name="Generator_BG8A07" xml:space="preserve">
+    <value>命名空間轉換 '{0}' 無效</value>
+    <comment>{0} - XML transform. (example: '&lt;ns-replace source="example" replacement="Example" /&gt;')</comment>
+  </data>
+  <data name="Generator_BG8B00" xml:space="preserve">
+    <value>成員 '{1}' 的未知泛型引數限制式型別 '{0}'。</value>
+    <comment>{0} - .NET type name
+{1} - .NET member.</comment>
+  </data>
+  <data name="Generator_BG8C00" xml:space="preserve">
+    <value>找不到型別 '{0}' 的基底介面 '{1}'。</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="Generator_BG8C01" xml:space="preserve">
+    <value>針對型別 '{0}'，基底介面 '{1}' 無效。</value>
+    <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4200" xml:space="preserve">
+    <value>無法產生型別 '{0}' 的 JAVA 包裝函式。只支援 'class' 型別。</value>
+    <comment>{0} - Java type.
+The following terms should not be translated:
+class.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4201" xml:space="preserve">
+    <value>無法判斷型別 '{0}' 的 JNI 名稱。</value>
+    <comment>{0} - Java type.
+The following terms should not be translated: JNI.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4203" xml:space="preserve">
+    <value>'Name' 屬性必須是如 'com.example.MyClass' 的完整型別，但找不到 '{0}' 的套件。</value>
+    <comment>{0} - Java type.
+The following terms should not be translated:
+Name, com.example.MyClass.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4204" xml:space="preserve">
+    <value>無法解析介面型別 '{0}'。您是否遺失組件參考?</value>
+    <comment>{0} - Java interface.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4205" xml:space="preserve">
+    <value>[ExportField] 只能在具有 0 個參數的方法上使用。</value>
+    <comment>The following terms should not be translated: [ExportField].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4206" xml:space="preserve">
+    <value>[Export] 無法用於泛型型別。</value>
+    <comment>The following terms should not be translated: [Export].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4207" xml:space="preserve">
+    <value>[Export] 無法用於泛型型別。</value>
+    <comment>The following terms should not be translated: [ExportField].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4208" xml:space="preserve">
+    <value>[ExportField] 無法用於傳回 'void' 的方法。</value>
+    <comment>The following terms should not be translated: [ExportField], void.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4217" xml:space="preserve">
+    <value>無法覆寫 Kotlin 產生的方法 '{0}'，因為它不是有效的 JAVA 方法名稱。此方法只能從 Kotlin 覆寫。</value>
+    <comment>{0} - Kotlin method name.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4001" xml:space="preserve">
+    <value>無法預先載入參考 '{0}'。</value>
+    <comment>{0} - assembly path</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4002" xml:space="preserve">
+    <value>請至少指定一個要處理的組件。</value>
+    <comment>The following terms should not be translated or have any capitalization changes: ASSEMBLY. This is a special case for this particular message. In most messages, "assembly" would be translated.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4003" xml:space="preserve">
+    <value>無法建立 JAVA VM{0}{1}</value>
+    <comment>{0} - newline, {1} - exception</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4004" xml:space="preserve">
+    <value>無法讀取設定檔檔案 '{0}'.{1}{2}</value>
+    <comment>{0} - path, {1} - newline, {2} - exception. In this message, the term "profile" refers to a customized list of types to process.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4005" xml:space="preserve">
+    <value>路徑 '{0}' 不存在。</value>
+    <comment>{0} - path</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4006" xml:space="preserve">
+    <value>無法處理組件 '{0}'{1}{2}{1}{3}</value>
+    <comment>{0} - assembly, {1} - newline, {2} - exception message, {3} exception</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8001" xml:space="preserve">
+    <value>找不到介面 {0}</value>
+    <comment>{0} - interface name</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8003" xml:space="preserve">
+    <value>載入型別時發生例外狀況。將不會處理無法載入的型別。請確定已使用 -r 選項提供這些型別所需的任何其他組件參考。例外狀況: {0}{1}</value>
+    <comment>{0} - newline, {1} - exception. The following terms should not be translated: -r</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8004" xml:space="preserve">
+    <value>找不到型別 '{0}'。型別將不會處理。請確定所有參考組件的目錄都是以 -L 選項提供。</value>
+    <comment>{0} - type
+The following terms should not be translated: -L</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8005" xml:space="preserve">
+    <value>封送處理方法型別 '{0}' 已存在。已略過在組件 '{1}' 中產生封送處理方法。使用 -f 在需要時強制重新產生。</value>
+    <comment>{0} - type, {1} - assembly name. The following terms should not be translated: -f. In this message, the term "marshal methods" refers to methods that allow interaction between the managed methods and Java methods, similar to the methods of the .NET System.Runtime.InteropServices.Marshal class.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8006" xml:space="preserve">
+    <value>在組件中繼資料中找不到方法 '{0}' 的定義。將不會處理。請確定所有參考組件的目錄都是以 -L 選項提供。</value>
+    <comment>{0} - method
+The following terms should not be translated: -L</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8007" xml:space="preserve">
+    <value>找不到 System.Console.WriteLine() 方法。正在停用偵錯插入。若要啟用偵錯插入，請確認已使用 -L 選項提供包含 mscorlib 的目錄。</value>
+    <comment>The following terms should not be translated: -L</comment>
+  </data>
+</root>
