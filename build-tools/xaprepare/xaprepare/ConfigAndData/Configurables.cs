@@ -17,14 +17,10 @@ namespace Xamarin.Android.Prepare
 	{
 		const string BinutilsVersion                = "L_14.0.1-4.1.0";
 
-		const string MicrosoftOpenJDK11Version      = "11.0.10";
-		const string MicrosoftOpenJDK11Release      = "9.1";
-		const string MicrosoftOpenJDK11RootDirName  = "jdk-11.0.10+9";
-		const string MicrosoftOpenJDK11DirVersion   = MicrosoftOpenJDK11RootDirName + ".1";
-		const string MicrosoftOpenJDK11FileVersion  = "11.0.10.9";
+		const string MicrosoftOpenJDK11Version      = "11.0.16";
+		const string MicrosoftOpenJDK11Release      = "8.1";
+		const string MicrosoftOpenJDK11RootDirName  = "jdk-11.0.16+8";
 
-		const string AdoptOpenJDKUpdate = "282";
-		const string AdoptOpenJDKBuild = "b08";
 		const string AdoptOpenJDKRelease = "8.0"; // build_number.0
 		static readonly string AdoptOpenJDKUrlVersion = $"8u{AdoptOpenJDKUpdate}{AdoptOpenJDKBuild}";
 		static readonly string AdoptOpenJDKTag = $"jdk8u{AdoptOpenJDKUpdate}-{AdoptOpenJDKBuild}";
@@ -34,15 +30,15 @@ namespace Xamarin.Android.Prepare
 
 		public static partial class Urls
 		{
-			// https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u282-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u282b08.tar.gz
-			// https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u282-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u282b08.tar.gz
-			// https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u282-b08/OpenJDK8U-jdk_x64_windows_hotspot_8u282b08.zip
-			public static readonly Uri AdoptOpenJDK8 = new Uri ($"https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/{AdoptOpenJDKTag}/OpenJDK8U-jdk_{AdoptOpenJDKOperatingSystem}_hotspot_{AdoptOpenJDKUrlVersion}.{AdoptOpenJDKArchiveExtension}");
+			// https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u345-b01/OpenJDK8U-jdk_x64_linux_hotspot_8u345b01.tar.gz
+			// https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u332-b09/OpenJDK8U-jdk_x64_mac_hotspot_8u332b09.tar.gz
+			// https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u345-b01/OpenJDK8U-jdk_x64_windows_hotspot_8u345b01.zip
+			public static readonly Uri AdoptOpenJDK8 = new Uri ($"https://github.com/adoptium/temurin8-binaries/releases/download/{AdoptOpenJDKTag}/OpenJDK8U-jdk_{AdoptOpenJDKOperatingSystem}_hotspot_{AdoptOpenJDKUrlVersion}.{AdoptOpenJDKArchiveExtension}");
 
-			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/linux/x64/microsoft-jdk-11.0.10.9-linux-x64.tar.gz
-			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/macOS/x64/microsoft-jdk-11.0.10.9-macOS-x64.tar.gz
-			// https://msopenjdk.azureedge.net/jdk11u/jdk-11.0.10+9.1/windows/x64/microsoft-jdk-11.0.10.9-windows-x64.zip
-			public static readonly Uri MicrosoftOpenJDK11 = new Uri ($"https://msopenjdk.azureedge.net/jdk11u/{MicrosoftOpenJDK11DirVersion}/{MicrosoftOpenJDKOperatingSystem}/microsoft-jdk-{MicrosoftOpenJDK11FileVersion}-{MicrosoftOpenJDKOperatingSystem.Replace ('/', '-')}.{MicrosoftOpenJDKFileExtension}");
+			// https://aka.ms/download-jdk/microsoft-jdk-11.0.16-linux-x64.tar.gz
+			// https://aka.ms/download-jdk/microsoft-jdk-11.0.16-macOS-x64.tar.gz
+			// https://aka.ms/download-jdk/microsoft-jdk-11.0.16-windows-x64.zip
+			public static readonly Uri MicrosoftOpenJDK11 = new Uri ($"https://aka.ms/download-jdk/microsoft-jdk-{MicrosoftOpenJDK11Version}-{MicrosoftOpenJDKOperatingSystem}.{MicrosoftOpenJDKFileExtension}");
 
 			/// <summary>
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>
