@@ -216,6 +216,10 @@ namespace Xamarin.Android.Tasks
 				return;
 
 #if ENABLE_MARSHAL_METHODS
+			if (classifier.RejectedMethodCount > 0) {
+				Log.LogWarning ($"Number of methods in the project that will be registered dynamically: {classifier.RejectedMethodCount}");
+			}
+
 			if (!Debug) {
 				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths, Log);
 				rewriter.Rewrite (res);

@@ -175,15 +175,33 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		// From: https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types
+		static readonly HashSet<string> blittablePrimitiveTypes = new HashSet<string> (StringComparer.Ordinal) {
+			"System.Byte",
+			"System.SByte",
+			"System.Int16",
+			"System.UInt16",
+			"System.Int32",
+			"System.UInt32",
+			"System.Int64",
+			"System.UInt64",
+			"System.IntPtr",
+			"System.UIntPtr",
+			"System.Single",
+			"System.Double",
+		};
+
 		TypeDefinitionCache tdCache;
 		DirectoryAssemblyResolver resolver;
 		Dictionary<string, IList<MarshalMethodEntry>> marshalMethods;
 		HashSet<AssemblyDefinition> assemblies;
 		TaskLoggingHelper log;
 		HashSet<TypeDefinition> typesWithDynamicallyRegisteredMethods;
+		ulong rejectedMethodCount;
 
 		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods => marshalMethods;
 		public ICollection<AssemblyDefinition> Assemblies => assemblies;
+		public ulong RejectedMethodCount => rejectedMethodCount;
 #endif
 
 		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, DirectoryAssemblyResolver res, TaskLoggingHelper log)
@@ -246,6 +264,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically");
+			rejectedMethodCount++;
 			return true;
 		}
 
@@ -288,6 +307,10 @@ namespace Xamarin.Android.Tasks
 			MethodDefinition nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
 			if (nativeCallbackMethod == null) {
 				log.LogWarning ($"\tUnable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}')");
+				return false;
+			}
+
+			if (!EnsureIsValidUnmanagedCallersOnlyTarget (nativeCallbackMethod)) {
 				return false;
 			}
 
@@ -358,6 +381,66 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return true;
+		}
+
+		bool EnsureIsValidUnmanagedCallersOnlyTarget (MethodDefinition method)
+		{
+			// Requirements: https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.unmanagedcallersonlyattribute?view=net-6.0#remarks
+			if (!method.IsStatic) {
+				return LogReasonWhyAndReturn ($"is not static");
+			}
+
+			if (method.HasGenericParameters) {
+				return LogReasonWhyAndReturn ($"has generic parameters");
+			}
+
+			TypeReference type;
+			if (String.Compare ("System.Void", method.ReturnType.FullName, StringComparison.Ordinal) != 0) {
+				type = GetRealType (method.ReturnType);
+				if (!IsBlittable (type)) {
+					return LogReasonWhyAndReturn ($"has a non-blittable return type '{type.FullName}'");
+				}
+			}
+
+			// TODO: check if this also applies to base types, or just the declaring type
+			if (method.DeclaringType.HasGenericParameters) {
+				return LogReasonWhyAndReturn ($"is declared in a type with generic parameters");
+			}
+
+			if (!method.HasParameters) {
+				return true;
+			}
+
+			foreach (ParameterDefinition pdef in method.Parameters) {
+				type = GetRealType (pdef.ParameterType);
+
+				if (!IsBlittable (type)) {
+					return LogReasonWhyAndReturn ($"has a parameter of non-blittable type '{type.FullName}'");
+				}
+			}
+
+			return true;
+
+			bool IsBlittable (TypeReference type)
+			{
+				return blittablePrimitiveTypes.Contains (type.FullName);
+			}
+
+			TypeReference GetRealType (TypeReference type)
+			{
+				if (type.IsArray) {
+					// TODO: check array dimension
+					return type.GetElementType ();
+				}
+
+				return type;
+			}
+
+			bool LogReasonWhyAndReturn (string why)
+			{
+				log.LogWarning ($"Method '{method.FullName}' {why}. It cannot be used with the `[UnmanagedCallersOnly]` attribute");
+				return false;
+			}
 		}
 
 		TypeDefinition FindType (AssemblyDefinition asm, string typeName)

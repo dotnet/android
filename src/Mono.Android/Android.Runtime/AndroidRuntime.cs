@@ -473,16 +473,33 @@ namespace Android.Runtime {
 		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
+#if ENABLE_MARSHAL_METHODS
+		// Temporary hack, see comments in RegisterNativeMembers below
+		static readonly Dictionary<string, List<string>> dynamicRegistrationMethods = new Dictionary<string, List<string>> (StringComparer.Ordinal) {
+			{"Android.Views.View+IOnLayoutChangeListenerImplementor",             new List<string> { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
+			{"Android.Views.View+IOnLayoutChangeListenerInvoker",                 new List<string> { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
+			{"Java.Interop.TypeManager+JavaTypeManager",                          new List<string> { "GetActivateHandler" }},
+			{"Microsoft.Maui.Controls.Platform.Compatibility.ShellPageContainer", new List<string> { "GetOnLayout_ZIIIIHandler" }},
+			{"Microsoft.Maui.Platform.ContentViewGroup",                          new List<string> { "GetOnLayout_ZIIIIHandler" }},
+			{"Microsoft.Maui.Platform.LayoutViewGroup",                           new List<string> { "GetOnLayout_ZIIIIHandler" }},
+			{"Microsoft.Maui.Platform.MauiMaterialButton",                        new List<string> { "GetOnLayout_ZIIIIHandler" }},
+			{"Microsoft.Maui.Platform.MauiScrollView",                            new List<string> { "GetOnLayout_ZIIIIHandler" }},
+			{"Microsoft.Maui.Platform.MauiTextView",                              new List<string> { "GetOnLayout_ZIIIIHandler" }},
+			{"Microsoft.Maui.Controls.Platform.Compatibility.ShellFlyoutRenderer", new List<string> { "GetDrawChild_Landroid_graphics_Canvas_Landroid_view_View_JHandler" }},
+		};
+#endif
+
 		public void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
-			Logger.Log (LogLevel.Info, "monodroid-mm", $"RegisterNativeMembers ('{nativeClass.Name}', '{type.FullName}', '{methods.ToString ()}')");
+			Logger.Log (LogLevel.Info, "monodroid-mm", $"RegisterNativeMembers ('{nativeClass?.Name}', '{type?.FullName}', '{methods.ToString ()}')");
 			Logger.Log (LogLevel.Info, "monodroid-mm", "RegisterNativeMembers called from:");
 			var st = new StackTrace (true);
 			foreach (string l in st.ToString ().Split ("\n")) {
-				Logger.Log (LogLevel.Info, "monodroid", l);
+				Logger.Log (LogLevel.Info, "monodroid-mm", l);
 			}
 #if ENABLE_MARSHAL_METHODS
-			if (methods.Length == 0) {
+			if (methods.IsEmpty) {
+				Logger.Log (LogLevel.Info, "monodroid-mm", "No methods to register, returning");
 				return;
 			}
 #endif
@@ -550,11 +567,25 @@ namespace Android.Runtime {
 #if ENABLE_MARSHAL_METHODS
 							// TODO: this is temporary hack, it needs a full fledged registration mechanism for methods like these (that is, ones which
 							// aren't registered with [Register] but are baked into Mono.Android's managed and Java code)
+							//
+							// It is also a temporary hack to register methods taking a `bool` parameter (as `bool` is not blittable, it cannot be used
+							// with `[UnmanagedCallersOnly]`)
 							bool createCallback = false;
+							string declaringTypeName = callbackDeclaringType.FullName;
+							string callbackName = callbackString.ToString ();
 
-							if (String.Compare ("Java.Interop.TypeManager+JavaTypeManager", callbackDeclaringType.FullName, StringComparison.Ordinal) == 0) {
-								if (String.Compare ("GetActivateHandler", callbackString.ToString (), StringComparison.Ordinal) == 0) {
-									createCallback = true;
+							foreach (var kvp in dynamicRegistrationMethods) {
+								string dynamicTypeName = kvp.Key;
+
+								foreach (string dynamicCallbackMethodName in kvp.Value) {
+									if (ShouldRegisterDynamically (declaringTypeName, callbackName, dynamicTypeName, dynamicCallbackMethodName)) {
+										createCallback = true;
+										break;
+									}
+								}
+
+								if (createCallback) {
+									break;
 								}
 							}
 
@@ -583,12 +614,31 @@ namespace Android.Runtime {
 				}
 
 #if ENABLE_MARSHAL_METHODS
-				if (needToRegisterNatives)
+				if (needToRegisterNatives) {
+					// We need to reallocate as JniEnvironment.Types.RegisterNatives uses a `foreach` loop and will NREX otherwise (since we aren't filling all
+					// the slots in the original array potentially)
+					var newNatives = new JniNativeMethodRegistration[nativesIndex];
+					Array.Copy (natives, newNatives, nativesIndex);
+					natives = newNatives;
 #endif
-				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, natives.Length);
+					JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
+#if ENABLE_MARSHAL_METHODS
+				}
+#endif
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);
 			}
+
+#if ENABLE_MARSHAL_METHODS
+			bool ShouldRegisterDynamically (string callbackTypeName, string callbackString, string typeName, string callbackName)
+			{
+				if (String.Compare (typeName, callbackTypeName, StringComparison.Ordinal) != 0) {
+					return false;
+				}
+
+				return String.Compare (callbackName, callbackString, StringComparison.Ordinal) == 0;
+			}
+#endif
 		}
 
 		static int CountMethods (ReadOnlySpan<char> methodsSpan)
