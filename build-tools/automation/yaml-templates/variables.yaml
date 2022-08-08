@@ -43,3 +43,6 @@ variables:
   value: 0
 - name: DotNetReleaseBranchPrefix
   value: refs/heads/release/
+# Workaround: https://github.com/dotnet/sdk/issues/26965
+- name: DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER
+  value: true
