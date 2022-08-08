@@ -397,12 +397,11 @@ namespace Xamarin.Android.Tasks
 			TypeReference type;
 			if (String.Compare ("System.Void", method.ReturnType.FullName, StringComparison.Ordinal) != 0) {
 				type = GetRealType (method.ReturnType);
-				if (!IsBlittable (type)) {
+				if (!IsAcceptable (type)) {
 					return LogReasonWhyAndReturn ($"has a non-blittable return type '{type.FullName}'");
 				}
 			}
 
-			// TODO: check if this also applies to base types, or just the declaring type
 			if (method.DeclaringType.HasGenericParameters) {
 				return LogReasonWhyAndReturn ($"is declared in a type with generic parameters");
 			}
@@ -414,22 +413,28 @@ namespace Xamarin.Android.Tasks
 			foreach (ParameterDefinition pdef in method.Parameters) {
 				type = GetRealType (pdef.ParameterType);
 
-				if (!IsBlittable (type)) {
+				if (!IsAcceptable (type)) {
 					return LogReasonWhyAndReturn ($"has a parameter of non-blittable type '{type.FullName}'");
 				}
 			}
 
 			return true;
 
-			bool IsBlittable (TypeReference type)
+			bool IsAcceptable (TypeReference type)
 			{
+				if (type.IsArray) {
+					var array = new ArrayType (type);
+					if (array.Rank > 1) {
+						return false;
+					}
+				}
+
 				return blittablePrimitiveTypes.Contains (type.FullName);
 			}
 
 			TypeReference GetRealType (TypeReference type)
 			{
 				if (type.IsArray) {
-					// TODO: check array dimension
 					return type.GetElementType ();
 				}
 
