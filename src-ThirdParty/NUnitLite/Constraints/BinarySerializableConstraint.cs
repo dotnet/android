@@ -43,6 +43,9 @@ namespace NUnit.Framework.Constraints
         /// <param name="actual">The value to be tested</param>
         /// <returns>True for success, false for failure</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage ("Security", "CA2302: Ensure BinaryFormatter.Binder is set before calling BinaryFormatter.Deserialize", Justification = "Data to be deserialized is trusted, as we create it in this same method.")]
+#if NET
+        [Obsolete("BinaryFormatter serialization is obsolete and should not be used. See https://aka.ms/binaryformatter for more information.", DiagnosticId = "SYSLIB0011", UrlFormat = "https://aka.ms/dotnet-warnings/{0}")]
+#endif
         public override bool Matches(object actual)
         {
             this.actual = actual;
