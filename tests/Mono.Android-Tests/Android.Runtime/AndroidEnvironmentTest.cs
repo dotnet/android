@@ -63,7 +63,11 @@ namespace Android.RuntimeTests {
 			var handler = GetHttpMessageHandler (typeName);
 
 			Assert.IsNotNull (handler, "GetHttpMessageHandler returned null");
-			Assert.AreEqual (typeName, handler.GetType ().FullName);
+
+			// type's FullName doesn't contain the assembly name
+			var indexOfComma = typeName.IndexOf(',');
+			var expectedTypeName = indexOfComma > 0 ? typeName.Substring(0, indexOfComma) : typeName;
+			Assert.AreEqual (expectedTypeName, handler.GetType ().FullName);
 		}
 
 		private static object? GetHttpMessageHandler (string? typeName)
