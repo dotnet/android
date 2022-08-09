@@ -329,6 +329,10 @@ namespace Xamarin.Android.Net
 		/// <param name="connection">HTTPS connection object.</param>
 		protected virtual IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
 		{
+			if (_serverCertificateCustomValidator != null) {
+				return _serverCertificateCustomValidator.HostnameVerifier;
+			}
+
 			return null;
 		}
 

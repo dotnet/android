@@ -13,6 +13,9 @@ namespace Xamarin.Android.Net
 {
 	internal sealed class ServerCertificateCustomValidator
 	{
+		private IHostnameVerifier? _dummyHostnameVerifier = null;
+		public IHostnameVerifier HostnameVerifier => _dummyHostnameVerifier ?? (_dummyHostnameVerifier = new DummyHostnameVerifier());
+
 		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> Callback { get; }
 
 		public ServerCertificateCustomValidator (Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
@@ -25,7 +28,7 @@ namespace Xamarin.Android.Net
 			HttpRequestMessage requestMessage)
 		{
 			var originalX509TrustManager = FindX509TrustManager(trustManagers);
-			var trustManagerWithCallback = new TrustManager (originalX509TrustManager, requestMessage, Callback);
+			var trustManagerWithCallback = new TrustManagerWithCallback (originalX509TrustManager, requestMessage, Callback);
 			return ModifyTrustManagersArray (trustManagers, original: originalX509TrustManager, withCallback: trustManagerWithCallback);
 		}
 
@@ -55,13 +58,13 @@ namespace Xamarin.Android.Net
 			return modifiedTrustManagersArray;
 		}
 
-		private sealed class TrustManager : Java.Lang.Object, IX509TrustManager
+		private sealed class TrustManagerWithCallback : Java.Lang.Object, IX509TrustManager
 		{
 			private readonly IX509TrustManager? _internalTrustManager;
 			private readonly HttpRequestMessage _request;
 			private readonly Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> _serverCertificateCustomValidationCallback;
 
-			public TrustManager (
+			public TrustManagerWithCallback (
 				IX509TrustManager? internalTrustManager,
 				HttpRequestMessage request,
 				Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
@@ -89,6 +92,10 @@ namespace Xamarin.Android.Net
 					sslPolicyErrors |= SslPolicyErrors.RemoteCertificateNotAvailable;
 				}
 
+				if (!VerifyHostname (javaChain)) {
+					sslPolicyErrors |= SslPolicyErrors.RemoteCertificateNameMismatch;
+				}
+
 				if (!_serverCertificateCustomValidationCallback (_request, certificate, chain, sslPolicyErrors)) {
 					throw new JavaCertificateException ("The remote certificate was rejected by the provided RemoteCertificateValidationCallback.");
 				}
@@ -99,6 +106,12 @@ namespace Xamarin.Android.Net
 
 			public JavaX509Certificate[] GetAcceptedIssuers ()
 				=> _internalTrustManager?.GetAcceptedIssuers () ?? Array.Empty<JavaX509Certificate> ();
+
+			private bool VerifyHostname (JavaX509Certificate[] javaChain)
+			{
+				var sslSession = new FakeSslSession (javaChain);
+				return HttpsURLConnection.DefaultHostnameVerifier.Verify(_request.RequestUri.Host, sslSession);
+			}
 
 			private static X509Chain CreateChain (X509Certificate2[] certificates)
 			{
@@ -121,6 +134,49 @@ namespace Xamarin.Android.Net
 
 				return convertedCertificates;
 			}
+			
+			// We rely on the fact that the OkHostnameVerifier class that implements the default hostname
+			// verifier on Android uses the SSLSession object only to get the peer certificates (as of Android 13).
+			// This could change in future Android versions.
+			private sealed class FakeSslSession : Java.Lang.Object, ISSLSession
+			{
+				private readonly JavaX509Certificate[] _certificates;
+
+				public FakeSslSession (JavaX509Certificate[] certificates)
+					=> _certificates = certificates;
+				
+				public Java.Security.Cert.Certificate[] GetPeerCertificates() => _certificates;
+
+				public int ApplicationBufferSize => throw new InvalidOperationException();
+				public string CipherSuite => throw new InvalidOperationException();
+				public long CreationTime => throw new InvalidOperationException();
+				public bool IsValid => throw new InvalidOperationException();
+				public long LastAccessedTime => throw new InvalidOperationException();
+				public Java.Security.IPrincipal LocalPrincipal => throw new InvalidOperationException();
+				public int PacketBufferSize => throw new InvalidOperationException();
+				public string PeerHost => throw new InvalidOperationException();
+				public int PeerPort => throw new InvalidOperationException();
+				public Java.Security.IPrincipal PeerPrincipal => throw new InvalidOperationException();
+				public string Protocol => throw new InvalidOperationException();
+				public ISSLSessionContext SessionContext => throw new InvalidOperationException();
+
+				public byte[] GetId() => throw new InvalidOperationException();
+				public Java.Security.Cert.Certificate[] GetLocalCertificates() => throw new InvalidOperationException();
+				public Javax.Security.Cert.X509Certificate[] GetPeerCertificateChain() => throw new InvalidOperationException();
+				public Java.Lang.Object GetValue(string name) => throw new InvalidOperationException();
+				public string[] GetValueNames() => throw new InvalidOperationException();
+				public void Invalidate() => throw new InvalidOperationException();
+				public void PutValue(string name, Java.Lang.Object value) => throw new InvalidOperationException();
+				public void RemoveValue(string name) => throw new InvalidOperationException();
+			}
+		}
+
+		private sealed class DummyHostnameVerifier : Java.Lang.Object, IHostnameVerifier
+		{
+			// When the hostname verifier is reached, the trust manager has already invoked the
+			// custom validation callback and approved the remote certificate (including hostname
+			// mismatch) so at this point there's nothing to validate anymore.
+			public bool Verify (string? hostname, ISSLSession? session) => true;
 		}
 	}
 }
