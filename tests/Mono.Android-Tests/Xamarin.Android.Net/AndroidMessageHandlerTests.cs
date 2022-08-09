@@ -95,5 +95,50 @@ namespace Xamarin.Android.NetTests
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 		}
+
+		[Test]
+		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
+		{
+			Exception? exception = null;
+
+			var handler = new AndroidMessageHandler ();
+			var client = new HttpClient (handler);
+
+			try {
+				await client.GetStringAsync ("https://wrong.host.badssl.com/");
+			} catch (Exception e) {
+				exception = e;
+			}
+
+			Assert.IsNotNull (exception, $"no exception was thrown");
+		}
+
+		[Test]
+		public async Task ServerCertificateCustomValidationCallback_IgnoresCertificateHostnameMismatch ()
+		{
+			bool callbackHasBeenCalled = false;
+			Exception? exception = null;
+			SslPolicyErrors reportedErrors = SslPolicyErrors.None;
+
+			var handler = new AndroidMessageHandler {
+				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
+					callbackHasBeenCalled = true;
+					reportedErrors = errors;
+					return true;
+				}
+			};
+
+			var client = new HttpClient (handler);
+
+			try {
+				await client.GetStringAsync ("https://wrong.host.badssl.com/");
+			} catch (Exception e) {
+				exception = e;
+			}
+
+			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
+			Assert.AreEqual (SslPolicyErrors.RemoteCertificateNameMismatch, reportedErrors & SslPolicyErrors.RemoteCertificateNameMismatch);
+			Assert.IsNull (exception, $"an exception was thrown: {exception}");
+		}
 	}
 }
