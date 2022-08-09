@@ -157,13 +157,13 @@ namespace Xamarin.Android.Net
 
 		public bool CheckCertificateRevocationList { get; set; } = false;
 
-		X509TrustManagerWithValidationCallback.Helper? _callbackTrustManagerHelper = null;
+		ServerCertificateCustomValidator? _serverCertificateCustomValidator = null;
 
 		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? ServerCertificateCustomValidationCallback
 		{
-			get => _callbackTrustManagerHelper?.Callback;
+			get => _serverCertificateCustomValidator?.Callback;
 			set {
-				_callbackTrustManagerHelper = value != null ? new X509TrustManagerWithValidationCallback.Helper (value) : null;
+				_serverCertificateCustomValidator = value != null ? new ServerCertificateCustomValidator (value) : null;
 			}
 		}
 
@@ -1069,7 +1069,7 @@ namespace Xamarin.Android.Net
 			if (tmf == null) {
 				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
 				// there is no point in changing the behavior of the default SSL socket factory
-				if (!gotCerts && _callbackTrustManagerHelper == null)
+				if (!gotCerts && _serverCertificateCustomValidator == null)
 					return;
 
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
@@ -1078,8 +1078,8 @@ namespace Xamarin.Android.Net
 
 			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
 
-			if (_callbackTrustManagerHelper != null) {
-				trustManagers = _callbackTrustManagerHelper.Inject (trustManagers, requestMessage);
+			if (_serverCertificateCustomValidator != null) {
+				trustManagers = _serverCertificateCustomValidator.InjectTrustManager (trustManagers, requestMessage);
 			}
 
 			var context = SSLContext.GetInstance ("TLS");
