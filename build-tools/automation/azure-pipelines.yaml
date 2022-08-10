@@ -92,7 +92,7 @@ stages:
       vmImage: $(MacBuildPoolImage)
       ${{ if eq(variables['MacBuildPoolName'], 'VSEng-Xamarin-RedmondMac-Android-Untrusted') }}:
         demands: macOS.Name -equals Monterey
-    timeoutInMinutes: 180
+    timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
