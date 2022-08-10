@@ -7,6 +7,7 @@ using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -34,6 +35,9 @@ namespace Xamarin.Android.Tasks
 				unmanagedCallersOnlyAttributes.Add (asm, CreateImportedUnmanagedCallersOnlyAttribute (asm, unmanagedCallersOnlyAttributeCtor));
 			}
 
+			Console.WriteLine ();
+			Console.WriteLine ("Modifying assemblies");
+
 			var processedMethods = new HashSet<string> (StringComparer.Ordinal);
 			Console.WriteLine ("Adding the [UnmanagedCallersOnly] attribute to native callback methods and removing unneeded fields+methods");
 			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
@@ -53,7 +57,13 @@ namespace Xamarin.Android.Tasks
 					Console.WriteLine ($"\t  method.CallbackField == {ToStringOrNull (method.CallbackField)}");
 					Console.WriteLine ($"\t  method.CallbackField?.DeclaringType == {ToStringOrNull (method.CallbackField?.DeclaringType)}");
 					Console.WriteLine ($"\t  method.CallbackField?.DeclaringType.Fields == {ToStringOrNull (method.CallbackField?.DeclaringType?.Fields)}");
-					method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
+
+					if (method.NeedsBlittableWorkaround) {
+						GenerateBlittableWrapper (method, unmanagedCallersOnlyAttributes);
+					} else {
+						method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
+					}
+
 					method.Connector?.DeclaringType?.Methods?.Remove (method.Connector);
 					method.CallbackField?.DeclaringType?.Fields?.Remove (method.CallbackField);
 
@@ -124,6 +134,87 @@ namespace Xamarin.Android.Tasks
 				}
 
 				return o.ToString ();
+			}
+		}
+
+		void GenerateBlittableWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, CustomAttribute> unmanagedCallersOnlyAttributes)
+		{
+			Console.WriteLine ($"\t  Generating blittable wrapper for: {method.NativeCallback.FullName}");
+			MethodDefinition callback = method.NativeCallback;
+			string wrapperName = $"{callback.Name}_mm_wrapper";
+			TypeReference retType = MapToBlittableTypeIfNecessary (callback.ReturnType);
+			var wrapperMethod = new MethodDefinition (wrapperName, callback.Attributes, retType);
+			callback.DeclaringType.Methods.Add (wrapperMethod);
+
+			wrapperMethod.CustomAttributes.Add (unmanagedCallersOnlyAttributes [callback.Module.Assembly]);
+			int nparam = 0;
+			foreach (ParameterDefinition pdef in callback.Parameters) {
+				TypeReference newType = MapToBlittableTypeIfNecessary (pdef.ParameterType);
+				wrapperMethod.Parameters.Add (new ParameterDefinition (pdef.Name, pdef.Attributes, newType));
+
+				OpCode ldargOp;
+				bool paramRef = false;
+				switch (nparam++) {
+					case 0:
+						ldargOp = OpCodes.Ldarg_0;
+						break;
+
+					case 1:
+						ldargOp = OpCodes.Ldarg_1;
+						break;
+
+					case 2:
+						ldargOp = OpCodes.Ldarg_2;
+						break;
+
+					case 3:
+						ldargOp = OpCodes.Ldarg_3;
+						break;
+
+					default:
+						ldargOp = OpCodes.Ldarg_S;
+						paramRef = true;
+						break;
+				}
+
+				Instruction ldarg;
+
+				if (!paramRef) {
+					ldarg = Instruction.Create (ldargOp);
+				} else {
+					ldarg = Instruction.Create (ldargOp, pdef);
+				}
+
+				// TODO: handle blittable type conversion here
+
+				wrapperMethod.Body.Instructions.Add (ldarg);
+			}
+
+			wrapperMethod.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+			Console.WriteLine ($"\t    New method: {wrapperMethod.FullName}");
+		}
+
+		TypeReference MapToBlittableTypeIfNecessary (TypeReference type)
+		{
+			if (type.IsBlittable () || String.Compare ("System.Void", type.FullName, StringComparison.Ordinal) == 0) {
+				return type;
+			}
+
+			if (String.Compare ("System.Boolean", type.FullName, StringComparison.Ordinal) == 0) {
+				// Maps to Java JNI's jboolean which is an unsigned 8-bit type
+				return ReturnValid (typeof(byte));
+			}
+
+			throw new NotSupportedException ($"Cannot map unsupported blittable type '{type.FullName}'");
+
+			TypeReference ReturnValid (Type typeToLookUp)
+			{
+				TypeReference? mappedType = type.Module.Assembly.MainModule.ImportReference (typeToLookUp);
+				if (mappedType == null) {
+					throw new InvalidOperationException ($"Unable to obtain reference to type '{typeToLookUp.FullName}'");
+				}
+
+				return mappedType;
 			}
 		}
 
