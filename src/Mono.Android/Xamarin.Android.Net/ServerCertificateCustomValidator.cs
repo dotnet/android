@@ -85,44 +85,66 @@ namespace Xamarin.Android.Net
 				var sslSession = new FakeSslSession (javaChain);
 				return HttpsURLConnection.DefaultHostnameVerifier.Verify(_request.RequestUri.Host, sslSession);
 			}
-		}
 
-		// We rely on the fact that the OkHostnameVerifier class that implements the default hostname
-		// verifier on Android uses the SSLSession object only to get the peer certificates (as of 2022).
-		// This could change in future Android versions and we would have to implement more methods
-		// and properties of this interface.
-		private sealed class FakeSslSession : Java.Lang.Object, ISSLSession
-		{
-			private readonly JavaX509Certificate[] _certificates;
-
-			public FakeSslSession (JavaX509Certificate[] certificates)
+			private static X509Chain CreateChain (X509Certificate2[] certificates)
 			{
-				_certificates = certificates;
+				// the chain initialization is based on dotnet/runtime implementation in System.Net.Security.SecureChannel
+				var chain = new X509Chain ();
+
+				chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
+				chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
+
+				chain.ChainPolicy.ExtraStore.AddRange (certificates);
+
+				return chain;
 			}
 
-			public Java.Security.Cert.Certificate[] GetPeerCertificates() => _certificates;
+			private static X509Certificate2[] Convert (JavaX509Certificate[] certificates)
+			{
+				var convertedCertificates = new X509Certificate2 [certificates.Length];
+				for (int i = 0; i < certificates.Length; i++)
+					convertedCertificates [i] = new X509Certificate2 (certificates [i].GetEncoded ()!);
 
-			public int ApplicationBufferSize => throw new InvalidOperationException();
-			public string CipherSuite => throw new InvalidOperationException();
-			public long CreationTime => throw new InvalidOperationException();
-			public bool IsValid => throw new InvalidOperationException();
-			public long LastAccessedTime => throw new InvalidOperationException();
-			public Java.Security.IPrincipal LocalPrincipal => throw new InvalidOperationException();
-			public int PacketBufferSize => throw new InvalidOperationException();
-			public string PeerHost => throw new InvalidOperationException();
-			public int PeerPort => throw new InvalidOperationException();
-			public Java.Security.IPrincipal PeerPrincipal => throw new InvalidOperationException();
-			public string Protocol => throw new InvalidOperationException();
-			public ISSLSessionContext SessionContext => throw new InvalidOperationException();
+				return convertedCertificates;
+			}
 
-			public byte[] GetId() => throw new InvalidOperationException();
-			public Java.Security.Cert.Certificate[] GetLocalCertificates() => throw new InvalidOperationException();
-			public Javax.Security.Cert.X509Certificate[] GetPeerCertificateChain() => throw new InvalidOperationException();
-			public Java.Lang.Object GetValue(string name) => throw new InvalidOperationException();
-			public string[] GetValueNames() => throw new InvalidOperationException();
-			public void Invalidate() => throw new InvalidOperationException();
-			public void PutValue(string name, Java.Lang.Object value) => throw new InvalidOperationException();
-			public void RemoveValue(string name) => throw new InvalidOperationException();
+			// We rely on the fact that the OkHostnameVerifier class that implements the default hostname
+			// verifier on Android uses the SSLSession object only to get the peer certificates (as of 2022).
+			// This could change in future Android versions and we would have to implement more methods
+			// and properties of this interface.
+			private sealed class FakeSslSession : Java.Lang.Object, ISSLSession
+			{
+				private readonly JavaX509Certificate[] _certificates;
+
+				public FakeSslSession (JavaX509Certificate[] certificates)
+				{
+					_certificates = certificates;
+				}
+
+				public Java.Security.Cert.Certificate[] GetPeerCertificates () => _certificates;
+
+				public int ApplicationBufferSize => throw new InvalidOperationException ();
+				public string CipherSuite => throw new InvalidOperationException ();
+				public long CreationTime => throw new InvalidOperationException ();
+				public bool IsValid => throw new InvalidOperationException ();
+				public long LastAccessedTime => throw new InvalidOperationException ();
+				public Java.Security.IPrincipal LocalPrincipal => throw new InvalidOperationException ();
+				public int PacketBufferSize => throw new InvalidOperationException ();
+				public string PeerHost => throw new InvalidOperationException ();
+				public int PeerPort => throw new InvalidOperationException ();
+				public Java.Security.IPrincipal PeerPrincipal => throw new InvalidOperationException ();
+				public string Protocol => throw new InvalidOperationException ();
+				public ISSLSessionContext SessionContext => throw new InvalidOperationException ();
+
+				public byte[] GetId () => throw new InvalidOperationException ();
+				public Java.Security.Cert.Certificate[] GetLocalCertificates () => throw new InvalidOperationException ();
+				public Javax.Security.Cert.X509Certificate[] GetPeerCertificateChain () => throw new InvalidOperationException ();
+				public Java.Lang.Object GetValue(string name) => throw new InvalidOperationException ();
+				public string[] GetValueNames () => throw new InvalidOperationException ();
+				public void Invalidate () => throw new InvalidOperationException ();
+				public void PutValue(string name, Java.Lang.Object value) => throw new InvalidOperationException ();
+				public void RemoveValue(string name) => throw new InvalidOperationException ();
+			}
 		}
 
 		// When the hostname verifier is reached, the trust manager has already invoked the
@@ -156,28 +178,6 @@ namespace Xamarin.Android.Net
 			}
 
 			return modifiedTrustManagersArray;
-		}
-
-		private static X509Chain CreateChain (X509Certificate2[] certificates)
-		{
-			// the chain initialization is based on dotnet/runtime implementation in System.Net.Security.SecureChannel
-			var chain = new X509Chain ();
-
-			chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
-			chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
-
-			chain.ChainPolicy.ExtraStore.AddRange (certificates);
-
-			return chain;
-		}
-
-		private static X509Certificate2[] Convert (JavaX509Certificate[] certificates)
-		{
-			var convertedCertificates = new X509Certificate2 [certificates.Length];
-			for (int i = 0; i < certificates.Length; i++)
-				convertedCertificates [i] = new X509Certificate2 (certificates [i].GetEncoded ()!);
-
-			return convertedCertificates;
 		}
 	}
 }
