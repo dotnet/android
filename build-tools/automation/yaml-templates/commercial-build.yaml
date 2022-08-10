@@ -49,28 +49,10 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
 
-- task: PublishPipelineArtifact@1
-  displayName: upload build tools inventory
-  inputs:
-    artifactName: BuildToolsInventory
-    targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
-
-# Build and package test assemblies
+# Build test assemblies
 - script: make all-tests CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make all-tests
-
-- script: >
-    cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests &&
-    cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: copy bcl-tests assemblies
-
-- task: PublishPipelineArtifact@1
-  displayName: upload test assemblies
-  inputs:
-    artifactName: $(TestAssembliesArtifactName)
-    targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
 # Restore needs to be executed first or MicroBuild targets won't be imported in time
 - task: MSBuild@1
@@ -119,3 +101,22 @@ steps:
   inputs:
     artifactName: $(InstallerArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+
+# Upload test assemblies
+- script: >
+    cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests &&
+    cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: copy bcl-tests assemblies
+
+- task: PublishPipelineArtifact@1
+  displayName: upload test assemblies
+  inputs:
+    artifactName: $(TestAssembliesArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+- task: PublishPipelineArtifact@1
+  displayName: upload build tools inventory
+  inputs:
+    artifactName: BuildToolsInventory
+    targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
