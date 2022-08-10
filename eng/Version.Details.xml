@@ -16,6 +16,10 @@
       <Uri>https://github.com/dotnet/emsdk</Uri>
       <Sha>7b2cd1ee7169143248a7da9fd749caf22affa624</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.TemplateEngine.Tasks" Version="7.0.100-rc.1.22409.14">
+      <Uri>https://github.com/dotnet/templating</Uri>
+      <Sha>efd5e59cbe2751b14f5331d122ccba27dd788cf4</Sha>
+    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.ApiCompat" Version="7.0.0-beta.22103.1">

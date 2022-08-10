@@ -1891,6 +1891,13 @@ stages:
     - checkout: self
       clean: true
 
+    - task: PowerShell@2
+      displayName: Update LocProject.json
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)\Localize\update-locproject.ps1
+        arguments: -SourcesDirectory "$(Build.SourcesDirectory)" -LocProjectPath "$(Build.SourcesDirectory)\Localize\LocProject.json"
+
     - task: OneLocBuild@2
       displayName: OneLocBuild
       env:
