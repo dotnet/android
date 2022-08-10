@@ -1880,7 +1880,7 @@ stages:
   # Check - "Xamarin.Android (Tenets OneLocBuild)"
   - job: OneLocBuild
     displayName: OneLocBuild
-    condition: eq(variables['MicroBuildSignType'], 'Real')
+    condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(variables['Build.SourceBranch'], 'refs/heads/loc-net7-templates'))
     pool: VSEngSS-MicroBuild2022-1ES
     timeoutInMinutes: 30
     variables:
