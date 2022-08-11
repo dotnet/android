@@ -61,8 +61,10 @@ namespace Xamarin.Android.NetTests
 
 			try {
 				await client.GetStringAsync ("https://microsoft.com/");
-			} catch {
+			} catch (System.Net.WebException) {
 				// System.Net.WebException is thrown in Debug mode
+				exceptionWasThrown = true;
+			} catch (Java.Security.Cert.CertificateException) {
 				// Java.Security.Cert.CertificateException is thrown in Release mode
 				exceptionWasThrown = true;
 			}
@@ -94,26 +96,30 @@ namespace Xamarin.Android.NetTests
 				exception = e;
 			}
 
+			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 			Assert.AreNotEqual (SslPolicyErrors.None, reportedErrors);
-			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 		}
 
 		[Test]
 		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
 		{
-			Exception? exception = null;
+			bool exceptionWasThrown = false;
 
 			var handler = new AndroidMessageHandler ();
 			var client = new HttpClient (handler);
 
 			try {
 				await client.GetStringAsync ("https://wrong.host.badssl.com/");
-			} catch (Exception e) {
-				exception = e;
+			} catch (System.Net.WebException) {
+				// System.Net.WebException is thrown in Debug mode
+				exceptionWasThrown = true;
+			} catch (Java.Security.Cert.CertificateException) {
+				// Java.Security.Cert.CertificateException is thrown in Release mode
+				exceptionWasThrown = true;
 			}
 
-			Assert.IsNotNull (exception, $"no exception was thrown");
+			Assert.IsTrue (exceptionWasThrown, $"no exception was thrown");
 		}
 
 		[Test]
@@ -139,9 +145,9 @@ namespace Xamarin.Android.NetTests
 				exception = e;
 			}
 
+			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 			Assert.AreEqual (SslPolicyErrors.RemoteCertificateNameMismatch, reportedErrors & SslPolicyErrors.RemoteCertificateNameMismatch);
-			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 		}
 	}
 }

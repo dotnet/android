@@ -80,7 +80,7 @@ namespace Xamarin.Android.Net
 
 			private bool VerifyHostname (JavaX509Certificate[] javaChain)
 			{
-				var sslSession = new FakeSslSession (javaChain);
+				var sslSession = new FakeSSLSession (javaChain);
 				return HttpsURLConnection.DefaultHostnameVerifier.Verify(_request.RequestUri.Host, sslSession);
 			}
 
@@ -110,11 +110,11 @@ namespace Xamarin.Android.Net
 			// verifier on Android uses the SSLSession object only to get the peer certificates (as of 2022).
 			// This could change in future Android versions and we would have to implement more methods
 			// and properties of this interface.
-			private sealed class FakeSslSession : Java.Lang.Object, ISSLSession
+			private sealed class FakeSSLSession : Java.Lang.Object, ISSLSession
 			{
 				private readonly JavaX509Certificate[] _certificates;
 
-				public FakeSslSession (JavaX509Certificate[] certificates)
+				public FakeSSLSession (JavaX509Certificate[] certificates)
 				{
 					_certificates = certificates;
 				}
