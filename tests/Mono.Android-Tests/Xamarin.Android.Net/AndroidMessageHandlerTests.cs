@@ -64,8 +64,8 @@ namespace Xamarin.Android.NetTests
 			} catch (System.Net.WebException) {
 				// System.Net.WebException is thrown in Debug mode
 				exceptionWasThrown = true;
-			} catch (Java.Security.Cert.CertificateException) {
-				// Java.Security.Cert.CertificateException is thrown in Release mode
+			} catch (Java.IO.IOException) {
+				// Java.IO.IOException is thrown in Release mode
 				exceptionWasThrown = true;
 			}
 
@@ -78,12 +78,10 @@ namespace Xamarin.Android.NetTests
 		{
 			bool callbackHasBeenCalled = false;
 			Exception? exception = null;
-			SslPolicyErrors reportedErrors = SslPolicyErrors.None;
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
 					callbackHasBeenCalled = true;
-					reportedErrors = errors;
 					return true;
 				}
 			};
@@ -98,7 +96,6 @@ namespace Xamarin.Android.NetTests
 
 			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
-			Assert.AreNotEqual (SslPolicyErrors.None, reportedErrors);
 		}
 
 		[Test]
@@ -114,8 +111,8 @@ namespace Xamarin.Android.NetTests
 			} catch (System.Net.WebException) {
 				// System.Net.WebException is thrown in Debug mode
 				exceptionWasThrown = true;
-			} catch (Java.Security.Cert.CertificateException) {
-				// Java.Security.Cert.CertificateException is thrown in Release mode
+			} catch (Java.IO.IOException) {
+				// Java.IO.IOException is thrown in Release mode
 				exceptionWasThrown = true;
 			}
 
