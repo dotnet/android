@@ -76,10 +76,12 @@ namespace Xamarin.Android.NetTests
 		{
 			bool callbackHasBeenCalled = false;
 			Exception? exception = null;
+			SslPolicyErrors reportedErrors = SslPolicyErrors.None;
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
 					callbackHasBeenCalled = true;
+					reportedErrors = errors;
 					return true;
 				}
 			};
@@ -93,6 +95,7 @@ namespace Xamarin.Android.NetTests
 			}
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
+			Assert.AreNotEqual (SslPolicyErrors.None, reportedErrors);
 			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 		}
 

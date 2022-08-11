@@ -21,7 +21,7 @@ namespace Xamarin.Android.Net
 			Callback = callback;
 		}
 
-		public ITrustManager[] ReplaceX509TrustManager (ITrustManager[] trustManagers, HttpRequestMessage requestMessage)
+		public ITrustManager[] ReplaceX509TrustManager (ITrustManager[]? trustManagers, HttpRequestMessage requestMessage)
 		{
 			var originalX509TrustManager = FindX509TrustManager(trustManagers);
 			var trustManagerWithCallback = new TrustManager (originalX509TrustManager, requestMessage, Callback);
@@ -30,12 +30,12 @@ namespace Xamarin.Android.Net
 
 		private sealed class TrustManager : Java.Lang.Object, IX509TrustManager
 		{
-			private readonly IX509TrustManager _internalTrustManager;
+			private readonly IX509TrustManager? _internalTrustManager;
 			private readonly HttpRequestMessage _request;
 			private readonly Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> _serverCertificateCustomValidationCallback;
 
 			public TrustManager (
-				IX509TrustManager internalTrustManager,
+				IX509TrustManager? internalTrustManager,
 				HttpRequestMessage request,
 				Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
 			{
@@ -49,7 +49,7 @@ namespace Xamarin.Android.Net
 				var sslPolicyErrors = SslPolicyErrors.None;
 
 				try {
-					_internalTrustManager.CheckServerTrusted (javaChain, authType);
+					_internalTrustManager?.CheckServerTrusted (javaChain, authType);
 				} catch (JavaCertificateException) {
 					sslPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
 				}
@@ -153,26 +153,30 @@ namespace Xamarin.Android.Net
 			public bool Verify (string? hostname, ISSLSession? session) => true;
 		}
 
-		private static IX509TrustManager FindX509TrustManager(ITrustManager[] trustManagers)
+		private static IX509TrustManager? FindX509TrustManager(ITrustManager[] trustManagers)
 		{
 			foreach (var trustManager in trustManagers) {
 				if (trustManager is IX509TrustManager tm)
 					return tm;
 			}
 
-			throw new InvalidOperationException ("There is no X509 trust manager.");
+			return null;
 		}
 
-		private static ITrustManager[] ModifyTrustManagersArray (ITrustManager[] trustManagers, IX509TrustManager original, IX509TrustManager replacement)
+		private static ITrustManager[] ModifyTrustManagersArray (ITrustManager[] trustManagers, IX509TrustManager? original, IX509TrustManager replacement)
 		{
-			var modifiedTrustManagersArray = new ITrustManager [trustManagers.Length];
+			var modifiedTrustManagersCount = original is null ? trustManagers.Length + 1 : trustManagers.Length;
+			var modifiedTrustManagersArray = new ITrustManager [modifiedTrustManagersCount];
+
+			modifiedTrustManagersArray [0] = replacement;
+			int nextIndex = 1;
 
 			for (int i = 0; i < trustManagers.Length; i++) {
 				if (trustManagers [i] == original) {
-					modifiedTrustManagersArray [i] = replacement;
-				} else {
-					modifiedTrustManagersArray [i] = trustManagers [i];
+					continue;
 				}
+
+				modifiedTrustManagersArray [nextIndex++] = trustManagers [i];
 			}
 
 			return modifiedTrustManagersArray;
