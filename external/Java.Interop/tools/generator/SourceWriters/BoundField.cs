@@ -30,8 +30,9 @@ namespace generator.SourceWriters
 
 			if (field.IsEnumified)
 				Attributes.Add (new GeneratedEnumAttr ());
-			if (field.IsDeprecated)
-				Attributes.Add (new ObsoleteAttr (field.DeprecatedComment, field.IsDeprecatedError) { NoAtSign = true, WriteEmptyString = true });
+
+			SourceWriterExtensions.AddObsolete (Attributes, field.DeprecatedComment, field.IsDeprecated, noAtSign: true, writeEmptyString: true, isError: field.IsDeprecatedError);
+
 			if (field.Annotation.HasValue ())
 				Attributes.Add (new CustomAttr (field.Annotation));
 

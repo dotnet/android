@@ -33,8 +33,9 @@ namespace generator.SourceWriters
 
 			if (method.DeclaringType.IsGeneratable)
 				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
-			if (method.Deprecated != null)
-				Attributes.Add (new ObsoleteAttr (method.Deprecated.Replace ("\"", "\"\"")));
+
+			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated);
+
 			if (method.IsReturnEnumified)
 				Attributes.Add (new GeneratedEnumAttr (true));
 			if (method.IsInterfaceDefaultMethod)

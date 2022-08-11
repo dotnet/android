@@ -47,8 +47,7 @@ namespace generator.SourceWriters
 				Attributes.Add (new RegisterAttr (field.JavaName, additionalProperties: field.AdditionalAttributeString ()));
 			}
 
-			if (field.IsDeprecated)
-				Attributes.Add (new ObsoleteAttr (field.DeprecatedComment, field.IsDeprecatedError) { NoAtSign = true });
+			SourceWriterExtensions.AddObsolete (Attributes, field.DeprecatedComment, field.IsDeprecated, noAtSign: true, isError: field.IsDeprecatedError);
 
 			SetVisibility (field.Visibility);
 			UseExplicitPrivateKeyword = true;

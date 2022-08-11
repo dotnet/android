@@ -33,8 +33,7 @@ namespace generator.SourceWriters
 				Attributes.Add (new RegisterAttr (".ctor", constructor.JniSignature, string.Empty, additionalProperties: constructor.AdditionalAttributeString ()));
 			}
 
-			if (constructor.Deprecated != null)
-				Attributes.Add (new ObsoleteAttr (constructor.Deprecated.Replace ("\"", "\"\"")));
+			SourceWriterExtensions.AddObsolete (Attributes, constructor.Deprecated);
 
 			if (constructor.CustomAttributes != null)
 				Attributes.Add (new CustomAttr (constructor.CustomAttributes));

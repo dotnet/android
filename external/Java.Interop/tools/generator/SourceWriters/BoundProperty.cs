@@ -73,8 +73,10 @@ namespace generator.SourceWriters
 			}
 
 			// Unlike [Register], [Obsolete] cannot be put on property accessors, so we can apply them only under limited condition...
-			if (property.Getter.Deprecated != null && (property.Setter == null || property.Setter.Deprecated != null))
-				Attributes.Add (new ObsoleteAttr (property.Getter.Deprecated.Replace ("\"", "\"\"").Trim () + (property.Setter != null && property.Setter.Deprecated != property.Getter.Deprecated ? " " + property.Setter.Deprecated.Replace ("\"", "\"\"").Trim () : null)));
+			if (property.Getter.Deprecated != null && (property.Setter == null || property.Setter.Deprecated != null)) {
+				var message = property.Getter.Deprecated.Trim () + (property.Setter != null && property.Setter.Deprecated != property.Getter.Deprecated ? " " + property.Setter.Deprecated.Trim () : null);
+				SourceWriterExtensions.AddObsolete (Attributes, message);
+			}
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
 
