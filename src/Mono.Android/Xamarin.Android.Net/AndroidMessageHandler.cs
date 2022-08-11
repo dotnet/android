@@ -1083,7 +1083,7 @@ namespace Xamarin.Android.Net
 			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
 
 			if (_serverCertificateCustomValidator is not null && trustManagers is not null) {
-				trustManagers = _serverCertificateCustomValidator.InjectTrustManager (trustManagers, requestMessage);
+				trustManagers = _serverCertificateCustomValidator.ReplaceX509TrustManager (trustManagers, requestMessage);
 			}
 
 			var context = SSLContext.GetInstance ("TLS");

@@ -13,9 +13,7 @@ namespace Xamarin.Android.Net
 {
 	internal sealed class ServerCertificateCustomValidator
 	{
-		private IHostnameVerifier? _dummyHostnameVerifier = null;
-		public IHostnameVerifier HostnameVerifier => _dummyHostnameVerifier ?? (_dummyHostnameVerifier = new DummyHostnameVerifier());
-
+		public IHostnameVerifier HostnameVerifier { get; } = new AlwaysAcceptingHostnameVerifier();
 		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> Callback { get; }
 
 		public ServerCertificateCustomValidator (Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
@@ -23,20 +21,20 @@ namespace Xamarin.Android.Net
 			Callback = callback;
 		}
 
-		public ITrustManager[] InjectTrustManager (ITrustManager[] trustManagers, HttpRequestMessage requestMessage)
+		public ITrustManager[] ReplaceX509TrustManager (ITrustManager[] trustManagers, HttpRequestMessage requestMessage)
 		{
 			var originalX509TrustManager = FindX509TrustManager(trustManagers);
-			var trustManagerWithCallback = new TrustManagerWithCallback (originalX509TrustManager, requestMessage, Callback);
+			var trustManagerWithCallback = new TrustManager (originalX509TrustManager, requestMessage, Callback);
 			return ModifyTrustManagersArray (trustManagers, original: originalX509TrustManager, replacement: trustManagerWithCallback);
 		}
 
-		private sealed class TrustManagerWithCallback : Java.Lang.Object, IX509TrustManager
+		private sealed class TrustManager : Java.Lang.Object, IX509TrustManager
 		{
 			private readonly IX509TrustManager _internalTrustManager;
 			private readonly HttpRequestMessage _request;
 			private readonly Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> _serverCertificateCustomValidationCallback;
 
-			public TrustManagerWithCallback (
+			public TrustManager (
 				IX509TrustManager internalTrustManager,
 				HttpRequestMessage request,
 				Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> serverCertificateCustomValidationCallback)
@@ -150,7 +148,7 @@ namespace Xamarin.Android.Net
 		// When the hostname verifier is reached, the trust manager has already invoked the
 		// custom validation callback and approved the remote certificate (including hostname
 		// mismatch) so at this point there's no verification left to.
-		private sealed class DummyHostnameVerifier : Java.Lang.Object, IHostnameVerifier
+		private sealed class AlwaysAcceptingHostnameVerifier : Java.Lang.Object, IHostnameVerifier
 		{
 			public bool Verify (string? hostname, ISSLSession? session) => true;
 		}
