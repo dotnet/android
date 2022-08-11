@@ -221,6 +221,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (!Debug) {
+				// TODO: we must rewrite assemblies for all SupportedAbis
 				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths, Log);
 				rewriter.Rewrite (res);
 			}

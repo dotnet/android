@@ -142,14 +142,24 @@ namespace Xamarin.Android.Tasks
 			Console.WriteLine ($"\t  Generating blittable wrapper for: {method.NativeCallback.FullName}");
 			MethodDefinition callback = method.NativeCallback;
 			string wrapperName = $"{callback.Name}_mm_wrapper";
-			TypeReference retType = MapToBlittableTypeIfNecessary (callback.ReturnType);
+			TypeReference retType = MapToBlittableTypeIfNecessary (callback.ReturnType, out bool returnTypeMapped);
+			bool hasReturnValue = String.Compare ("System.Void", retType.FullName, StringComparison.Ordinal) != 0;
 			var wrapperMethod = new MethodDefinition (wrapperName, callback.Attributes, retType);
 			callback.DeclaringType.Methods.Add (wrapperMethod);
-
 			wrapperMethod.CustomAttributes.Add (unmanagedCallersOnlyAttributes [callback.Module.Assembly]);
+
+			MethodBody body = wrapperMethod.Body;
+			VariableDefinition? retVar = null;
+			if (hasReturnValue) {
+				retVar = new VariableDefinition (retType);
+				body.InitLocals = true;
+				body.Variables.Add (retVar);
+			}
+
 			int nparam = 0;
+
 			foreach (ParameterDefinition pdef in callback.Parameters) {
-				TypeReference newType = MapToBlittableTypeIfNecessary (pdef.ParameterType);
+				TypeReference newType = MapToBlittableTypeIfNecessary (pdef.ParameterType, out _);
 				wrapperMethod.Parameters.Add (new ParameterDefinition (pdef.Name, pdef.Attributes, newType));
 
 				OpCode ldargOp;
@@ -185,23 +195,54 @@ namespace Xamarin.Android.Tasks
 					ldarg = Instruction.Create (ldargOp, pdef);
 				}
 
-				// TODO: handle blittable type conversion here
+				body.Instructions.Add (ldarg);
 
-				wrapperMethod.Body.Instructions.Add (ldarg);
+				if (!pdef.ParameterType.IsBlittable ()) {
+					GenerateNonBlittableConversion (pdef.ParameterType, newType);
+				}
 			}
 
-			wrapperMethod.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+			body.Instructions.Add (Instruction.Create (OpCodes.Call, callback));
+
+			if (hasReturnValue) {
+				if (returnTypeMapped) {
+					// TODO: implement conversion
+				}
+
+				body.Instructions.Add (Instruction.Create (OpCodes.Stloc_0));
+				body.Instructions.Add (Instruction.Create (OpCodes.Ldloc_0));
+			}
+
+			body.Instructions.Add (Instruction.Create (OpCodes.Ret));
 			Console.WriteLine ($"\t    New method: {wrapperMethod.FullName}");
+
+			void GenerateNonBlittableConversion (TypeReference sourceType, TypeReference targetType)
+			{
+				if (String.Compare ("System.Boolean", sourceType.FullName, StringComparison.Ordinal) == 0) {
+					if (String.Compare ("System.Byte", targetType.FullName, StringComparison.Ordinal) != 0) {
+						throw new InvalidOperationException ($"Unexpected conversion from '{sourceType.FullName}' to '{targetType.FullName}'");
+					}
+
+					// We output equivalent of the `param != 0` C# code
+					body.Instructions.Add (Instruction.Create (OpCodes.Ldc_I4_0));
+					body.Instructions.Add (Instruction.Create (OpCodes.Cgt_Un));
+					return;
+				}
+
+				throw new InvalidOperationException ($"Unsupported non-blittable type '{sourceType.FullName}'");
+			}
 		}
 
-		TypeReference MapToBlittableTypeIfNecessary (TypeReference type)
+		TypeReference MapToBlittableTypeIfNecessary (TypeReference type, out bool typeMapped)
 		{
 			if (type.IsBlittable () || String.Compare ("System.Void", type.FullName, StringComparison.Ordinal) == 0) {
+				typeMapped = false;
 				return type;
 			}
 
 			if (String.Compare ("System.Boolean", type.FullName, StringComparison.Ordinal) == 0) {
 				// Maps to Java JNI's jboolean which is an unsigned 8-bit type
+				typeMapped = true;
 				return ReturnValid (typeof(byte));
 			}
 
