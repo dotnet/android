@@ -62,10 +62,8 @@ namespace Xamarin.Android.NetTests
 			try {
 				await client.GetStringAsync ("https://microsoft.com/");
 			} catch (System.Net.WebException) {
-				// System.Net.WebException is thrown in Debug mode
 				exceptionWasThrown = true;
 			} catch (Java.IO.IOException) {
-				// Java.IO.IOException is thrown in Release mode
 				exceptionWasThrown = true;
 			}
 
@@ -109,10 +107,8 @@ namespace Xamarin.Android.NetTests
 			try {
 				await client.GetStringAsync ("https://wrong.host.badssl.com/");
 			} catch (System.Net.WebException) {
-				// System.Net.WebException is thrown in Debug mode
 				exceptionWasThrown = true;
 			} catch (Java.IO.IOException) {
-				// Java.IO.IOException is thrown in Release mode
 				exceptionWasThrown = true;
 			}
 
