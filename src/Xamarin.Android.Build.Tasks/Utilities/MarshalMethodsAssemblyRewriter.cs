@@ -149,13 +149,6 @@ namespace Xamarin.Android.Tasks
 			wrapperMethod.CustomAttributes.Add (unmanagedCallersOnlyAttributes [callback.Module.Assembly]);
 
 			MethodBody body = wrapperMethod.Body;
-			VariableDefinition? retVar = null;
-			if (hasReturnValue) {
-				retVar = new VariableDefinition (retType);
-				body.InitLocals = true;
-				body.Variables.Add (retVar);
-			}
-
 			int nparam = 0;
 
 			foreach (ParameterDefinition pdef in callback.Parameters) {
@@ -204,13 +197,8 @@ namespace Xamarin.Android.Tasks
 
 			body.Instructions.Add (Instruction.Create (OpCodes.Call, callback));
 
-			if (hasReturnValue) {
-				if (returnTypeMapped) {
-					// TODO: implement conversion
-				}
-
-				body.Instructions.Add (Instruction.Create (OpCodes.Stloc_0));
-				body.Instructions.Add (Instruction.Create (OpCodes.Ldloc_0));
+			if (hasReturnValue && returnTypeMapped) {
+				GenerateRetValCast (callback.ReturnType, retType);
 			}
 
 			body.Instructions.Add (Instruction.Create (OpCodes.Ret));
@@ -218,18 +206,49 @@ namespace Xamarin.Android.Tasks
 
 			void GenerateNonBlittableConversion (TypeReference sourceType, TypeReference targetType)
 			{
-				if (String.Compare ("System.Boolean", sourceType.FullName, StringComparison.Ordinal) == 0) {
-					if (String.Compare ("System.Byte", targetType.FullName, StringComparison.Ordinal) != 0) {
-						throw new InvalidOperationException ($"Unexpected conversion from '{sourceType.FullName}' to '{targetType.FullName}'");
-					}
-
+				if (IsBooleanConversion (sourceType, targetType)) {
 					// We output equivalent of the `param != 0` C# code
 					body.Instructions.Add (Instruction.Create (OpCodes.Ldc_I4_0));
 					body.Instructions.Add (Instruction.Create (OpCodes.Cgt_Un));
 					return;
 				}
 
-				throw new InvalidOperationException ($"Unsupported non-blittable type '{sourceType.FullName}'");
+				ThrowUnsupportedType (sourceType);
+			}
+
+			void GenerateRetValCast (TypeReference sourceType, TypeReference targetType)
+			{
+				if (IsBooleanConversion (sourceType, targetType)) {
+					var insLoadOne = Instruction.Create (OpCodes.Ldc_I4_1);
+					var insConvert = Instruction.Create (OpCodes.Conv_U1);
+
+					body.Instructions.Add (Instruction.Create (OpCodes.Brtrue_S, insLoadOne));
+					body.Instructions.Add (Instruction.Create (OpCodes.Ldc_I4_0));
+					body.Instructions.Add (Instruction.Create (OpCodes.Br_S, insConvert));
+					body.Instructions.Add (insLoadOne);
+					body.Instructions.Add (insConvert);
+					return;
+				}
+
+				ThrowUnsupportedType (sourceType);
+			}
+
+			bool IsBooleanConversion (TypeReference sourceType, TypeReference targetType)
+			{
+				if (String.Compare ("System.Boolean", sourceType.FullName, StringComparison.Ordinal) == 0) {
+					if (String.Compare ("System.Byte", targetType.FullName, StringComparison.Ordinal) != 0) {
+						throw new InvalidOperationException ($"Unexpected conversion from '{sourceType.FullName}' to '{targetType.FullName}'");
+					}
+
+					return true;
+				}
+
+				return false;
+			}
+
+			void ThrowUnsupportedType (TypeReference type)
+			{
+				throw new InvalidOperationException ($"Unsupported non-blittable type '{type.FullName}'");
 			}
 		}
 

@@ -190,11 +190,13 @@ namespace Xamarin.Android.Tasks
 		HashSet<AssemblyDefinition> assemblies;
 		TaskLoggingHelper log;
 		HashSet<TypeDefinition> typesWithDynamicallyRegisteredMethods;
-		ulong rejectedMethodCount;
+		ulong rejectedMethodCount = 0;
+		ulong wrappedMethodCount = 0;
 
 		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods => marshalMethods;
 		public ICollection<AssemblyDefinition> Assemblies => assemblies;
 		public ulong RejectedMethodCount => rejectedMethodCount;
+		public ulong WrappedMethodCount => wrappedMethodCount;
 #endif
 
 		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, DirectoryAssemblyResolver res, TaskLoggingHelper log)
@@ -392,11 +394,13 @@ namespace Xamarin.Android.Tasks
 			}
 
 			TypeReference type;
+			bool needsWrapper = false;
 			if (String.Compare ("System.Void", method.ReturnType.FullName, StringComparison.Ordinal) != 0) {
 				type = GetRealType (method.ReturnType);
 				if (!IsAcceptable (type)) {
 					needsBlittableWorkaround = true;
 					WarnWhy ($"has a non-blittable return type '{type.FullName}'");
+					needsWrapper = true;
 				}
 			}
 
@@ -405,7 +409,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (!method.HasParameters) {
-				return true;
+				return UpdateWrappedCountAndReturn (true);
 			}
 
 			foreach (ParameterDefinition pdef in method.Parameters) {
@@ -414,10 +418,20 @@ namespace Xamarin.Android.Tasks
 				if (!IsAcceptable (type)) {
 					needsBlittableWorkaround = true;
 					WarnWhy ($"has a parameter ({pdef.Name}) of non-blittable type '{type.FullName}'");
+					needsWrapper = true;
 				}
 			}
 
-			return true;
+			return UpdateWrappedCountAndReturn (true);
+
+			bool UpdateWrappedCountAndReturn (bool retval)
+			{
+				if (needsWrapper) {
+					wrappedMethodCount++;
+				}
+
+				return retval;
+			}
 
 			bool IsAcceptable (TypeReference type)
 			{

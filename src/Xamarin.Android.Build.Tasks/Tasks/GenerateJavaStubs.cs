@@ -220,8 +220,14 @@ namespace Xamarin.Android.Tasks
 				Log.LogWarning ($"Number of methods in the project that will be registered dynamically: {classifier.RejectedMethodCount}");
 			}
 
+			if (classifier.WrappedMethodCount > 0) {
+				Log.LogWarning ($"Number of methods in the project that need marshal method wrappers: {classifier.WrappedMethodCount}");
+			}
+
 			if (!Debug) {
-				// TODO: we must rewrite assemblies for all SupportedAbis
+				// TODO: we must rewrite assemblies for all SupportedAbis. Alternatively, we need to copy the ones that are identical
+				// Cecil does **not** guarantee that the same assembly modified twice in the same will yield the same result - tokens may differ, so can
+				// MVID.
 				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths, Log);
 				rewriter.Rewrite (res);
 			}
@@ -376,6 +382,7 @@ namespace Xamarin.Android.Tasks
 					return;
 				}
 
+				// TODO: we need to keep paths to ALL the assemblies, we need to rewrite them for all RIDs eventually. Right now we rewrite them just for one RID
 				if (!marshalMethodsAssemblyPaths.TryGetValue (name, out HashSet<string> assemblyPaths)) {
 					assemblyPaths = new HashSet<string> ();
 					marshalMethodsAssemblyPaths.Add (name, assemblyPaths);

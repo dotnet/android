@@ -14,6 +14,8 @@ using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tasks.LLVMIR;
 
+using CecilMethodDefinition = global::Mono.Cecil.MethodDefinition;
+
 namespace Xamarin.Android.Tasks
 {
 	class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
@@ -282,19 +284,21 @@ namespace Xamarin.Android.Tasks
 			Console.WriteLine ($"  registered method: [{entry.RegisteredMethod.DeclaringType.FullName}] {entry.RegisteredMethod.FullName}");
 			Console.WriteLine ($"  implemented method: [{entry.ImplementedMethod.DeclaringType.FullName}] {entry.ImplementedMethod.FullName}");
 			Console.WriteLine ($"  native callback: {entry.NativeCallback.FullName} (token: 0x{entry.NativeCallback.MetadataToken.ToUInt32 ():x})");
+			Console.WriteLine ($"  native callback wrapper: {entry.NativeCallbackWrapper}");
 			Console.WriteLine ($"  connector: {entry.Connector.FullName}");
 			Console.WriteLine ($"  JNI name: {entry.JniMethodName}");
 			Console.WriteLine ($"  JNI signature: {entry.JniMethodSignature}");
 
+			CecilMethodDefinition nativeCallback = entry.NativeCallbackWrapper ?? entry.NativeCallback;
 			string nativeSymbolName = MakeNativeSymbolName (entry, useFullNativeSignature);
-			string klass = $"{entry.NativeCallback.DeclaringType.FullName}, {entry.NativeCallback.Module.Assembly.FullName}";
+			string klass = $"{nativeCallback.DeclaringType.FullName}, {nativeCallback.Module.Assembly.FullName}";
 			Console.WriteLine ($"  klass == {klass}");
 			if (!seenClasses.TryGetValue (klass, out int classIndex)) {
 				classIndex = classes.Count;
 				seenClasses.Add (klass, classIndex);
 
 				var mc = new MarshalMethodsManagedClass {
-					token = entry.NativeCallback.DeclaringType.MetadataToken.ToUInt32 (),
+					token = nativeCallback.DeclaringType.MetadataToken.ToUInt32 (),
 					ClassName = klass,
 				};
 
@@ -521,7 +525,8 @@ namespace Xamarin.Android.Tasks
 
 			var usedBackingFields = new HashSet<string> (StringComparer.Ordinal);
 			foreach (MarshalMethodInfo mmi in methods) {
-				string asmName = mmi.Method.NativeCallback.DeclaringType.Module.Assembly.Name.Name;
+				CecilMethodDefinition nativeCallback = mmi.Method.NativeCallbackWrapper ?? mmi.Method.NativeCallback;
+				string asmName = nativeCallback.DeclaringType.Module.Assembly.Name.Name;
 				if (!asmNameToIndex.TryGetValue (asmName, out uint asmIndex)) {
 					throw new InvalidOperationException ($"Unable to translate assembly name '{asmName}' to its index");
 				}
@@ -539,7 +544,8 @@ namespace Xamarin.Android.Tasks
 				FieldValue = "null",
 			};
 
-			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{method.AssemblyCacheIndex}_{method.ClassCacheIndex}_{method.Method.NativeCallback.MetadataToken.ToUInt32():x}";
+			CecilMethodDefinition nativeCallback = method.Method.NativeCallbackWrapper ?? method.Method.NativeCallback;
+			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{method.AssemblyCacheIndex}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken.ToUInt32():x}";
 			var backingFieldRef = new LlvmIrVariableReference (backingFieldSignature, backingFieldName, isGlobal: true);
 
 			if (!usedBackingFields.Contains (backingFieldName)) {
@@ -578,7 +584,7 @@ namespace Xamarin.Android.Tasks
 				new List<LlvmIrFunctionArgument> {
 					new LlvmIrFunctionArgument (typeof(uint), method.AssemblyCacheIndex),
 					new LlvmIrFunctionArgument (typeof(uint), method.ClassCacheIndex),
-					new LlvmIrFunctionArgument (typeof(uint), method.Method.NativeCallback.MetadataToken.ToUInt32 ()),
+					new LlvmIrFunctionArgument (typeof(uint), nativeCallback.MetadataToken.ToUInt32 ()),
 					new LlvmIrFunctionArgument (typeof(LlvmIrVariableReference), backingFieldRef),
 				}
 			);
