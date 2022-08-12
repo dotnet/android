@@ -1,5 +1,5 @@
 [Register ("com/xamarin/android/Parent", DoNotGenerateAcw=true)]
-[global::System.Obsolete ("Use the 'Com.Xamarin.Android.IParent' type. This class will be removed in a future release.")]
+[global::System.Obsolete (@"Use the 'Com.Xamarin.Android.IParent' type. This class will be removed in a future release.")]
 public abstract class Parent : Java.Lang.Object {
 	internal Parent ()
 	{
@@ -7,18 +7,18 @@ public abstract class Parent : Java.Lang.Object {
 
 	// Metadata.xml XPath field reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/field[@name='ACCEPT_HANDOVER']"
 	[Register ("ACCEPT_HANDOVER")]
-	[Obsolete ("Use 'Com.Xamarin.Android.IParent.AcceptHandover'. This class will be removed in a future release.")]
+	[global::System.Obsolete (@"Use 'Com.Xamarin.Android.IParent.AcceptHandover'. This class will be removed in a future release.")]
 	public const string AcceptHandover = (string) "android.permission.ACCEPT_HANDOVER";
 
 	// Metadata.xml XPath field reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/field[@name='ALREADY_OBSOLETE']"
 	[Register ("ALREADY_OBSOLETE")]
-	[Obsolete ("deprecated")]
+	[global::System.Obsolete (@"deprecated")]
 	public const string AlreadyObsolete = (string) "android.permission.ACCEPT_HANDOVER";
 
 
 	// Metadata.xml XPath field reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/field[@name='API_NAME']"
 	[Register ("API_NAME")]
-	[Obsolete ("Use 'Com.Xamarin.Android.IParent.ApiName'. This class will be removed in a future release.")]
+	[global::System.Obsolete (@"Use 'Com.Xamarin.Android.IParent.ApiName'. This class will be removed in a future release.")]
 	public static string ApiName {
 		get {
 			const string __id = "API_NAME.Ljava/lang/String;";
@@ -29,7 +29,7 @@ public abstract class Parent : Java.Lang.Object {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparing' and count(parameter)=0]"
-	[Obsolete (@"Use 'Com.Xamarin.Android.IParent.Comparing'. This class will be removed in a future release.")]
+	[global::System.Obsolete (@"Use 'Com.Xamarin.Android.IParent.Comparing'. This class will be removed in a future release.")]
 	[Register ("comparing", "()I", "")]
 	public static unsafe int Comparing ()
 	{
@@ -42,7 +42,7 @@ public abstract class Parent : Java.Lang.Object {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparingOld' and count(parameter)=0]"
-	[Obsolete (@"deprecated")]
+	[global::System.Obsolete (@"deprecated")]
 	[Register ("comparingOld", "()I", "")]
 	public static unsafe int ComparingOld ()
 	{
@@ -69,7 +69,7 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 
 	// Metadata.xml XPath field reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/field[@name='ALREADY_OBSOLETE']"
 	[Register ("ALREADY_OBSOLETE")]
-	[Obsolete ("deprecated")]
+	[global::System.Obsolete (@"deprecated")]
 	public const string AlreadyObsolete = (string) "android.permission.ACCEPT_HANDOVER";
 
 
@@ -97,7 +97,7 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparingOld' and count(parameter)=0]"
-	[Obsolete (@"deprecated")]
+	[global::System.Obsolete (@"deprecated")]
 	[Register ("comparingOld", "()I", "")]
 	public static unsafe int ComparingOld ()
 	{

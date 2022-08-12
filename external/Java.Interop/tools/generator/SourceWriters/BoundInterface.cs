@@ -43,7 +43,7 @@ namespace generator.SourceWriters
 			iface.JavadocInfo?.AddJavadocs (Comments);
 			Comments.Add ($"// Metadata.xml XPath interface reference: path=\"{iface.MetadataXPathReference}\"");
 
-			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, iface.IsDeprecated, writeAttributeSuffix: true, writeEmptyString: true);
+			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, iface.IsDeprecated);
 
 			if (!iface.IsConstSugar (opt)) {
 				var signature = string.IsNullOrWhiteSpace (iface.Namespace)

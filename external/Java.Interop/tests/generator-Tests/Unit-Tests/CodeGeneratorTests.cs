@@ -528,7 +528,7 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure [Obsolete] was written
-			Assert.True (writer.ToString ().Contains ("[Obsolete (@\"This is so old!\")]"), writer.ToString ());
+			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is so old!\")]"), writer.ToString ());
 		}
 
 		[Test]

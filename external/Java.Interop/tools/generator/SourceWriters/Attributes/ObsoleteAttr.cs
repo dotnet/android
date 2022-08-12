@@ -11,10 +11,6 @@ namespace generator.SourceWriters
 	{
 		public string Message { get; set; }
 		public bool IsError { get; set; }
-		public bool NoAtSign { get; set; }		// TODO: Temporary to match unit tests
-		public bool WriteEmptyString { get; set; }      // TODO: Temporary to match unit tests
-		public bool WriteAttributeSuffix { get; set; }  // TODO: Temporary to match unit tests
-		public bool WriteGlobal { get; set; }           // TODO: Temporary to match unit tests
 
 		public ObsoleteAttr (string message = null, bool isError = false)
 		{
@@ -24,22 +20,20 @@ namespace generator.SourceWriters
 
 		public override void WriteAttribute (CodeWriter writer)
 		{
-			var attr_name = WriteAttributeSuffix ? "ObsoleteAttribute" : "Obsolete";
+			var parts = new List<string> ();
 
-			if (WriteGlobal)
-				attr_name = "global::System." + attr_name;
-
-			if (Message is null && !WriteEmptyString && !IsError) {
-				writer.WriteLine ($"[{attr_name}]");
-				return;
-			}
-
-			writer.Write ($"[{attr_name} ({(NoAtSign ? "" : "@")}\"{Message}\"");
+			if (Message != null)
+				parts.Add ($"@\"{Message}\"");
 
 			if (IsError)
-				writer.Write (", error: true");
+				parts.Add ("error: true");
 
-			writer.WriteLine (")]");
+			var content = string.Join (", ", parts.ToArray ());
+
+			if (content.HasValue ())
+				writer.WriteLine ($"[global::System.Obsolete ({content})]");
+			else
+				writer.WriteLine ("[global::System.Obsolete]");
 		}
 	}
 }

@@ -44,7 +44,7 @@ namespace generator.SourceWriters
 			klass.JavadocInfo?.AddJavadocs (Comments);
 			Comments.Add ($"// Metadata.xml XPath class reference: path=\"{klass.MetadataXPathReference}\"");
 
-			SourceWriterExtensions.AddObsolete (Attributes, klass.DeprecatedComment, klass.IsDeprecated, writeAttributeSuffix: true);
+			SourceWriterExtensions.AddObsolete (Attributes, klass.DeprecatedComment, klass.IsDeprecated);
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
 

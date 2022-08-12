@@ -42,7 +42,7 @@ namespace generator.SourceWriters
 			Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) { AcwLast = true });
 
 			if (should_obsolete)
-				Attributes.Add (new ObsoleteAttr ($"Use the '{iface.FullName}' type. This class will be removed in a future release.") { WriteGlobal = true, NoAtSign = true });
+				SourceWriterExtensions.AddObsolete (Attributes, $"Use the '{iface.FullName}' type. This class will be removed in a future release.");
 
 			Constructors.Add (new ConstructorWriter { Name = Name, IsInternal = true });
 
@@ -180,7 +180,7 @@ namespace generator.SourceWriters
 			IsAbstract = true;
 
 			Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()));
-			Attributes.Add (new ObsoleteAttr ($"Use the '{iface.Name.Substring (1)}' type. This type will be removed in a future release.", true) { NoAtSign = true, WriteGlobal = true });
+			SourceWriterExtensions.AddObsolete (Attributes, $"Use the '{iface.Name.Substring (1)}' type. This type will be removed in a future release.", isError: true);
 
 			Constructors.Add (new ConstructorWriter {
 				Name = Name,

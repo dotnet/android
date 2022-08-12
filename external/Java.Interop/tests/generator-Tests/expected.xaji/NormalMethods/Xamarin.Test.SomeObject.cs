@@ -269,7 +269,7 @@ namespace Xamarin.Test {
 
 		static Delegate cb_ObsoleteMethod;
 #pragma warning disable 0169
-		[Obsolete]
+		[global::System.Obsolete]
 		static Delegate GetObsoleteMethodHandler ()
 		{
 			if (cb_ObsoleteMethod == null)
@@ -277,7 +277,7 @@ namespace Xamarin.Test {
 			return cb_ObsoleteMethod;
 		}
 
-		[Obsolete]
+		[global::System.Obsolete]
 		static int n_ObsoleteMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
@@ -286,7 +286,7 @@ namespace Xamarin.Test {
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='ObsoleteMethod' and count(parameter)=0]"
-		[Obsolete (@"Deprecated please use IntegerMethod instead")]
+		[global::System.Obsolete (@"Deprecated please use IntegerMethod instead")]
 		[Register ("ObsoleteMethod", "()I", "GetObsoleteMethodHandler")]
 		public virtual unsafe int ObsoleteMethod ()
 		{

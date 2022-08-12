@@ -126,7 +126,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='ObsoleteMethod' and count(parameter)=0]"
-		[Obsolete (@"Deprecated please use IntegerMethod instead")]
+		[global::System.Obsolete (@"Deprecated please use IntegerMethod instead")]
 		public virtual unsafe int ObsoleteMethod ()
 		{
 			const string __id = "ObsoleteMethod.()I";

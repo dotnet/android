@@ -301,18 +301,13 @@ namespace generator.SourceWriters
 
 		}
 
-		public static void AddObsolete (List<AttributeWriter> attributes, string message, bool forceDeprecate = false, bool isError = false, bool noAtSign = false, bool writeEmptyString = false, bool writeAttributeSuffix = false, bool writeGlobal = false)
+		public static void AddObsolete (List<AttributeWriter> attributes, string message, bool forceDeprecate = false, bool isError = false)
 		{
 			// Bail if we're not obsolete
 			if ((!forceDeprecate && !message.HasValue ()) || message == "not deprecated")
 				return;
 
-			attributes.Add (new ObsoleteAttr (message: message?.Replace ("\"", "\"\"").Trim (), isError: isError) {
-				NoAtSign = noAtSign,
-				WriteAttributeSuffix = writeAttributeSuffix,
-				WriteEmptyString = writeEmptyString,
-				WriteGlobal = writeGlobal
-			});
+			attributes.Add (new ObsoleteAttr (message: message?.Replace ("\"", "\"\"").Trim (), isError: isError));
 		}
 
 		public static void WriteMethodInvokerBody (CodeWriter writer, Method method, CodeGenerationOptions opt, string contextThis)

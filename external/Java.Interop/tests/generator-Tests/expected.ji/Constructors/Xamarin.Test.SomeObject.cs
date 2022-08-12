@@ -20,7 +20,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/constructor[@name='SomeObject' and count(parameter)=0]"
-		[Obsolete (@"deprecated")]
+		[global::System.Obsolete (@"deprecated")]
 		public unsafe SomeObject () : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const string __id = "()V";

@@ -44,7 +44,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='Obsoletemethod' and count(parameter)=0]"
-		[Obsolete (@"Deprecated please use methodAsString")]
+		[global::System.Obsolete (@"Deprecated please use methodAsString")]
 		[global::Java.Interop.JniMethodSignature ("Obsoletemethod", "()Ljava/lang/String;")]
 		public static unsafe string Obsoletemethod ()
 		{
