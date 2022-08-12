@@ -39,6 +39,13 @@ so when adding a new message, follow these steps:
 
  6. The [OneLocBuild][oneloc] task will manage handoff and handback for string translations.
 
+### Templates
+
+All updates to `src/Microsoft.Android.Templates` should be built locally to update the
+`templatestrings.*.json` used for localization.  The [OneLocBuild][oneloc] task
+will manage handoff and handback for string translations after the
+`templatestrings.*.json` changes are committed.
+
 ## Guidelines
 
   * When an error or warning code is used with more than one output string, use
