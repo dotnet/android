@@ -93,7 +93,7 @@ the Android SDK packages specified in the `@(AndroidDependency)` item group.
 
 The [`$(AndroidManifestType)`](~/android/deploy-test/building-apps/build-properties.md#androidmanifesttype)
 MSBuild property controls which
-[Visual Studio SDK Manager repository](xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection)
+[Visual Studio SDK Manager repository](~/android/get-started/installation/android-sdk.md?tabs=windows#repository-selection)
 is used for package name and package version detection, and URLs to download.
 
 ## SignAndroidPackage

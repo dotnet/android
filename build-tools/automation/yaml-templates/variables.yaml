@@ -35,3 +35,6 @@ variables:
   value: net7.0
 - name: DotNetStableTargetFramework
   value: net6.0
+# Workaround: https://github.com/dotnet/sdk/issues/26965
+- name: DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER
+  value: true

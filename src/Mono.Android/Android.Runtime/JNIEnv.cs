@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
@@ -198,9 +196,16 @@ namespace Android.Runtime {
 			}
 
 #if !MONOANDROID1_0
-			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
+			SetSynchronizationContext ();
 #endif
 		}
+
+#if !MONOANDROID1_0
+		// NOTE: prevents Android.App.Application static ctor from running
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static void SetSynchronizationContext () =>
+			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
+#endif
 
 		internal static void Exit ()
 		{
