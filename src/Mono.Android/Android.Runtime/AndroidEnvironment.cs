@@ -24,6 +24,7 @@ namespace Android.Runtime {
 		static IX509TrustManager? sslTrustManager;
 		static KeyStore? certStore;
 		static object lock_ = new object ();
+		static Type? httpMessageHandlerType;
 
 		static void SetupTrustManager ()
 		{
@@ -346,18 +347,22 @@ namespace Android.Runtime {
 #endif
 		static object GetHttpMessageHandler ()
 		{
-			var handlerTypeName = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
-			Type? handlerType = null;
-			if (!String.IsNullOrEmpty (handlerTypeName))
-				handlerType = Type.GetType (handlerTypeName, throwOnError: false);
+			if (httpMessageHandlerType is null) {
+				var handlerTypeName = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
+				Type? handlerType = null;
+				if (!String.IsNullOrEmpty (handlerTypeName))
+					handlerType = Type.GetType (handlerTypeName, throwOnError: false);
 
-			// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
-			if (handlerType is null || !IsAcceptableHttpMessageHandlerType (handlerType)) {
-				handlerType = GetFallbackHttpMessageHandlerType ();
+				// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
+				if (handlerType is null || !IsAcceptableHttpMessageHandlerType (handlerType)) {
+					handlerType = GetFallbackHttpMessageHandlerType ();
+				}
+
+				httpMessageHandlerType = handlerType;
 			}
 
-			return Activator.CreateInstance (handlerType)
-				?? throw new InvalidOperationException ($"Could not create an instance of HTTP message handler type {handlerType.AssemblyQualifiedName}");
+			return Activator.CreateInstance (httpMessageHandlerType)
+				?? throw new InvalidOperationException ($"Could not create an instance of HTTP message handler type {httpMessageHandlerType.AssemblyQualifiedName}");
 		}
 
 		static bool IsAcceptableHttpMessageHandlerType (Type handlerType)
