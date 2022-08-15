@@ -4,6 +4,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
+using Android.Runtime;
 using Xamarin.Android.Net;
 
 using NUnit.Framework;
@@ -48,7 +49,6 @@ namespace Xamarin.Android.NetTests
 		public async Task ServerCertificateCustomValidationCallback_RejectRequest ()
 		{
 			bool callbackHasBeenCalled = false;
-			bool exceptionWasThrown = false;
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -56,26 +56,17 @@ namespace Xamarin.Android.NetTests
 					return false;
 				}
 			};
-
 			var client = new HttpClient (handler);
 
-			try {
-				await client.GetStringAsync ("https://microsoft.com/");
-			} catch (System.Net.WebException) {
-				exceptionWasThrown = true;
-			} catch (Java.IO.IOException) {
-				exceptionWasThrown = true;
-			}
+			await AssertRejectsRemoteCertificate (() => client.GetStringAsync ("https://microsoft.com/"));
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
-			Assert.IsTrue (exceptionWasThrown, "validation callback hasn't rejected the request");
 		}
 
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
-			Exception? exception = null;
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -85,41 +76,24 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
+			await client.GetStringAsync ("https://self-signed.badssl.com/");
 
-			try {
-				await client.GetStringAsync ("https://self-signed.badssl.com/");
-			} catch (Exception e) {
-				exception = e;
-			}
-
-			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 		}
 
 		[Test]
 		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
 		{
-			bool exceptionWasThrown = false;
-
 			var handler = new AndroidMessageHandler ();
 			var client = new HttpClient (handler);
 
-			try {
-				await client.GetStringAsync ("https://wrong.host.badssl.com/");
-			} catch (System.Net.WebException) {
-				exceptionWasThrown = true;
-			} catch (Java.IO.IOException) {
-				exceptionWasThrown = true;
-			}
-
-			Assert.IsTrue (exceptionWasThrown, $"no exception was thrown");
+			await AssertRejectsRemoteCertificate (() => client.GetStringAsync ("https://wrong.host.badssl.com/"));
 		}
 
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_IgnoresCertificateHostnameMismatch ()
 		{
 			bool callbackHasBeenCalled = false;
-			Exception? exception = null;
 			SslPolicyErrors reportedErrors = SslPolicyErrors.None;
 
 			var handler = new AndroidMessageHandler {
@@ -131,16 +105,22 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
+			await client.GetStringAsync ("https://wrong.host.badssl.com/");
 
-			try {
-				await client.GetStringAsync ("https://wrong.host.badssl.com/");
-			} catch (Exception e) {
-				exception = e;
-			}
-
-			Assert.IsNull (exception, $"an exception was thrown: {exception}");
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 			Assert.AreEqual (SslPolicyErrors.RemoteCertificateNameMismatch, reportedErrors & SslPolicyErrors.RemoteCertificateNameMismatch);
+		}
+
+		private async Task AssertRejectsRemoteCertificate (Func<Task> makeRequest)
+		{
+			try {
+				await makeRequest();
+			} catch (Java.IO.IOException) {
+				// the Java.IO.IOException is thrown when the TLS connection cannot be established
+			} catch (System.Net.WebException ex) when (ex.InnerException is Java.IO.IOException javaException && JNIEnv.ShouldWrapJavaException (javaException)) {
+				// the Java.IO.IOException can be wrapped in System.Net.WebException
+				// based on the value of the $(AndroidBoundExceptionType) build property
+			}
 		}
 	}
 }
