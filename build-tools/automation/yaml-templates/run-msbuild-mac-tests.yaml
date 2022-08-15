@@ -15,7 +15,7 @@ jobs:
     displayName: "macOS > Tests > MSBuild ${{ parameters.job_suffix }} #${{ parameters.node_id }}"
     pool:
       vmImage: $(HostedMacImage)
-    timeoutInMinutes: 180
+    timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
