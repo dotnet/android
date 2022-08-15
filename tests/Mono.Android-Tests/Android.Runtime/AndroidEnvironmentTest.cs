@@ -74,6 +74,9 @@ namespace Android.RuntimeTests {
 		{
 			var method = typeof (AndroidEnvironment).GetMethod ("GetHttpMessageHandler", BindingFlags.Static | BindingFlags.NonPublic);
 			lock (envLock) {
+				var cacheField = typeof (AndroidEnvironment).GetField ("httpMessageHandlerType", BindingFlags.Static | BindingFlags.NonPublic)!;
+				cacheField.SetValue (null, null);
+
 				Environment.SetEnvironmentVariable (EnvironmentVariable, typeName);
 				return method.Invoke (null, null);
 			}
