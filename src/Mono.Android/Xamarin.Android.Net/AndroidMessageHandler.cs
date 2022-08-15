@@ -163,7 +163,13 @@ namespace Xamarin.Android.Net
 		{
 			get => _serverCertificateCustomValidator?.Callback;
 			set {
-				_serverCertificateCustomValidator = value != null ? new ServerCertificateCustomValidator (value) : null;
+				if (value is null) {
+					_serverCertificateCustomValidator = null;
+				} else if (_serverCertificateCustomValidator is null) {
+					_serverCertificateCustomValidator = new ServerCertificateCustomValidator (value);
+				} else {
+					_serverCertificateCustomValidator.Callback = value;
+				}
 			}
 		}
 
@@ -329,11 +335,7 @@ namespace Xamarin.Android.Net
 		/// <param name="connection">HTTPS connection object.</param>
 		protected virtual IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
 		{
-			if (_serverCertificateCustomValidator != null) {
-				return _serverCertificateCustomValidator.HostnameVerifier;
-			}
-
-			return null;
+			return _serverCertificateCustomValidator?.HostnameVerifier;
 		}
 
 		internal IHostnameVerifier? GetSSLHostnameVerifierInternal (HttpsURLConnection connection)
@@ -1073,7 +1075,7 @@ namespace Xamarin.Android.Net
 			if (tmf == null) {
 				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
 				// there is no point in changing the behavior of the default SSL socket factory
-				if (!gotCerts && _serverCertificateCustomValidator == null)
+				if (!gotCerts && _serverCertificateCustomValidator is null)
 					return;
 
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
@@ -1082,8 +1084,9 @@ namespace Xamarin.Android.Net
 
 			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
 
-			if (_serverCertificateCustomValidator is not null) {
-				trustManagers = _serverCertificateCustomValidator.ReplaceX509TrustManager (trustManagers, requestMessage);
+			var customValidator = _serverCertificateCustomValidator;
+			if (customValidator is not null) {
+				trustManagers = customValidator.ReplaceX509TrustManager (trustManagers, requestMessage);
 			}
 
 			var context = SSLContext.GetInstance ("TLS");

@@ -13,8 +13,9 @@ namespace Xamarin.Android.Net
 {
 	internal sealed class ServerCertificateCustomValidator
 	{
-		public IHostnameVerifier HostnameVerifier { get; } = new AlwaysAcceptingHostnameVerifier();
-		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> Callback { get; }
+		public IHostnameVerifier HostnameVerifier => AlwaysAcceptingHostnameVerifier.Instance;
+
+		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> Callback { get; set; }
 
 		public ServerCertificateCustomValidator (Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
 		{
@@ -150,6 +151,10 @@ namespace Xamarin.Android.Net
 		// mismatch) so at this point there's no verification left to.
 		private sealed class AlwaysAcceptingHostnameVerifier : Java.Lang.Object, IHostnameVerifier
 		{
+			private readonly static Lazy<AlwaysAcceptingHostnameVerifier> s_instance = new Lazy<AlwaysAcceptingHostnameVerifier> (() => new AlwaysAcceptingHostnameVerifier ());
+
+			public static AlwaysAcceptingHostnameVerifier Instance => s_instance.Value;
+
 			public bool Verify (string? hostname, ISSLSession? session) => true;
 		}
 
