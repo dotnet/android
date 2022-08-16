@@ -22,6 +22,7 @@ namespace Android.RuntimeTests {
 		public void TearDown ()
 		{
 			Environment.SetEnvironmentVariable (EnvironmentVariable, _originalValue);
+			ClearHttpMessageHandlerTypeCache ();
 		}
 
 		[Test]
@@ -74,12 +75,16 @@ namespace Android.RuntimeTests {
 		{
 			var method = typeof (AndroidEnvironment).GetMethod ("GetHttpMessageHandler", BindingFlags.Static | BindingFlags.NonPublic);
 			lock (envLock) {
-				var cacheField = typeof (AndroidEnvironment).GetField ("httpMessageHandlerType", BindingFlags.Static | BindingFlags.NonPublic)!;
-				cacheField.SetValue (null, null);
-
+				ClearHttpMessageHandlerTypeCache ();
 				Environment.SetEnvironmentVariable (EnvironmentVariable, typeName);
 				return method.Invoke (null, null);
 			}
+		}
+
+		private static void ClearHttpMessageHandlerTypeCache ()
+		{
+			var cacheField = typeof (AndroidEnvironment).GetField ("httpMessageHandlerType", BindingFlags.Static | BindingFlags.NonPublic)!;
+			cacheField.SetValue (null, null);
 		}
 	}
 }
