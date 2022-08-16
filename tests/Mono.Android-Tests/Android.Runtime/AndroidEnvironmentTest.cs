@@ -55,6 +55,7 @@ namespace Android.RuntimeTests {
 
 		[Test]
 		[TestCase ("Xamarin.Android.Net.AndroidMessageHandler")]
+		[TestCase ("System.Net.Http.SocketsHttpHandler, System.Net.Http")]
 #if !NET
 		[TestCase ("Xamarin.Android.Net.AndroidClientHandler")]
 		[TestCase ("System.Net.Http.HttpClientHandler, System.Net.Http")]
