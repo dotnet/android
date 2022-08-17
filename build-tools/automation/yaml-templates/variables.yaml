@@ -29,3 +29,6 @@ variables:
   value: VSEngSS-MicroBuild2022-1ES
 - name: TeamName
   value: XamarinAndroid
+# Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
+- name: _WriteTelemetryProperties
+  value: false
