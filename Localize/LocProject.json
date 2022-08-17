@@ -12,7 +12,7 @@
           "CopyOption": "LangIDOnName",
           "SourceFile": ".\\src\\Xamarin.Android.Build.Tasks\\Properties\\Resources.resx",
           "OutputPath": ".\\src\\Xamarin.Android.Build.Tasks\\Properties\\"
-        },
+        }
       ]
     }
   ]
