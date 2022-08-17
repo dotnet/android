@@ -1112,7 +1112,7 @@ stages:
   jobs:
   - job: wear_tests
     displayName: macOS > Tests > WearOS 
-    timeoutInMinutes: 360
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
     strategy:
       matrix:

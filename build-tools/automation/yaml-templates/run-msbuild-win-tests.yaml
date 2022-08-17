@@ -15,7 +15,7 @@ jobs:
   - job: ${{ parameters.job_name }}
     displayName: "Windows > Tests > MSBuild ${{ parameters.job_suffix }} #${{ parameters.node_id }}/${{ parameters.additional_node_id }}"
     pool: $(1ESWindowsPool)
-    timeoutInMinutes: 360
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     variables:
       VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
