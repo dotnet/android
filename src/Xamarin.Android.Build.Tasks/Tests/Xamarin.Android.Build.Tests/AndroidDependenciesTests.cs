@@ -15,6 +15,7 @@ namespace Xamarin.Android.Build.Tests
 	public class AndroidDependenciesTests : BaseTest
 	{
 		[Test]
+		[Ignore ("Fixed in main via: https://github.com/xamarin/android-sdk-installer/pull/685")]
 		[NonParallelizable] // Do not run environment modifying tests in parallel.
 		public void InstallAndroidDependenciesTest ()
 		{
