@@ -38,3 +38,6 @@ variables:
 # Workaround: https://github.com/dotnet/sdk/issues/26965
 - name: DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER
   value: true
+# Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
+- name: _WriteTelemetryProperties
+  value: false
