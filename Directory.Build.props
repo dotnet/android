@@ -49,7 +49,8 @@
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
     <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
     <MonoOptionsVersion>6.12.0.148</MonoOptionsVersion>
-    <SystemCollectionsImmutableVersion>1.7.1</SystemCollectionsImmutableVersion>
+    <SystemCollectionsImmutableVersion>6.0.0</SystemCollectionsImmutableVersion>
+    <SystemRuntimeCompilerServicesUnsafeVersion>6.0.0</SystemRuntimeCompilerServicesUnsafeVersion>
     <ELFSharpVersion>2.13.1</ELFSharpVersion>
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.8.9.2</MdocPackageVersion>
   </PropertyGroup>
