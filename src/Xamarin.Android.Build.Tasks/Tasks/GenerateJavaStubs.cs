@@ -216,14 +216,6 @@ namespace Xamarin.Android.Tasks
 				return;
 
 #if ENABLE_MARSHAL_METHODS
-			if (classifier.RejectedMethodCount > 0) {
-				Log.LogWarning ($"Number of methods in the project that will be registered dynamically: {classifier.RejectedMethodCount}");
-			}
-
-			if (classifier.WrappedMethodCount > 0) {
-				Log.LogWarning ($"Number of methods in the project that need marshal method wrappers: {classifier.WrappedMethodCount}");
-			}
-
 			if (!Debug) {
 				// TODO: we must rewrite assemblies for all SupportedAbis. Alternatively, we need to copy the ones that are identical
 				// Cecil does **not** guarantee that the same assembly modified twice in the same will yield the same result - tokens may differ, so can
@@ -376,6 +368,18 @@ namespace Xamarin.Android.Tasks
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
 
 #if ENABLE_MARSHAL_METHODS
+			if (!Debug) {
+				Log.LogDebugMessage ($"Number of generated marshal methods: {classifier.MarshalMethods.Count}");
+
+				if (classifier.RejectedMethodCount > 0) {
+					Log.LogWarning ($"Number of methods in the project that will be registered dynamically: {classifier.RejectedMethodCount}");
+				}
+
+				if (classifier.WrappedMethodCount > 0) {
+					Log.LogWarning ($"Number of methods in the project that need marshal method wrappers: {classifier.WrappedMethodCount}");
+				}
+			}
+
 			void StoreMarshalAssemblyPath (string name, ITaskItem asm)
 			{
 				if (Debug) {

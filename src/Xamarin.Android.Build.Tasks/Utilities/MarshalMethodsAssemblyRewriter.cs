@@ -38,12 +38,13 @@ namespace Xamarin.Android.Tasks
 			Console.WriteLine ();
 			Console.WriteLine ("Modifying assemblies");
 
-			var processedMethods = new HashSet<string> (StringComparer.Ordinal);
+			var processedMethods = new Dictionary<string, MethodDefinition> (StringComparer.Ordinal);
 			Console.WriteLine ("Adding the [UnmanagedCallersOnly] attribute to native callback methods and removing unneeded fields+methods");
 			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
 				foreach (MarshalMethodEntry method in methodList) {
 					string fullNativeCallbackName = method.NativeCallback.FullName;
-					if (processedMethods.Contains (fullNativeCallbackName)) {
+					if (processedMethods.TryGetValue (fullNativeCallbackName, out MethodDefinition nativeCallbackWrapper)) {
+						method.NativeCallbackWrapper = nativeCallbackWrapper;
 						continue;
 					}
 
@@ -51,7 +52,7 @@ namespace Xamarin.Android.Tasks
 					Console.WriteLine ($"\t  Top type == '{method.DeclaringType}'");
 					Console.WriteLine ($"\t  NativeCallback == '{method.NativeCallback}'");
 					Console.WriteLine ($"\t  Connector == '{method.Connector}'");
-					Console.WriteLine ($"\t  method.NativeCallback.CustomAttributes == {ToStringOrNull (method.NativeCallback?.CustomAttributes)}");
+					Console.WriteLine ($"\t  method.NativeCallback.CustomAttributes == {ToStringOrNull (method.NativeCallback.CustomAttributes)}");
 					Console.WriteLine ($"\t  method.Connector.DeclaringType == {ToStringOrNull (method.Connector?.DeclaringType)}");
 					Console.WriteLine ($"\t  method.Connector.DeclaringType.Methods == {ToStringOrNull (method.Connector.DeclaringType?.Methods)}");
 					Console.WriteLine ($"\t  method.CallbackField == {ToStringOrNull (method.CallbackField)}");
@@ -59,7 +60,7 @@ namespace Xamarin.Android.Tasks
 					Console.WriteLine ($"\t  method.CallbackField?.DeclaringType.Fields == {ToStringOrNull (method.CallbackField?.DeclaringType?.Fields)}");
 
 					if (method.NeedsBlittableWorkaround) {
-						GenerateBlittableWrapper (method, unmanagedCallersOnlyAttributes);
+						method.NativeCallbackWrapper = GenerateBlittableWrapper (method, unmanagedCallersOnlyAttributes);
 					} else {
 						method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
 					}
@@ -67,7 +68,7 @@ namespace Xamarin.Android.Tasks
 					method.Connector?.DeclaringType?.Methods?.Remove (method.Connector);
 					method.CallbackField?.DeclaringType?.Fields?.Remove (method.CallbackField);
 
-					processedMethods.Add (fullNativeCallbackName);
+					processedMethods.Add (fullNativeCallbackName, method.NativeCallback);
 				}
 			}
 
@@ -137,7 +138,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void GenerateBlittableWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, CustomAttribute> unmanagedCallersOnlyAttributes)
+		MethodDefinition GenerateBlittableWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, CustomAttribute> unmanagedCallersOnlyAttributes)
 		{
 			Console.WriteLine ($"\t  Generating blittable wrapper for: {method.NativeCallback.FullName}");
 			MethodDefinition callback = method.NativeCallback;
@@ -203,6 +204,7 @@ namespace Xamarin.Android.Tasks
 
 			body.Instructions.Add (Instruction.Create (OpCodes.Ret));
 			Console.WriteLine ($"\t    New method: {wrapperMethod.FullName}");
+			return wrapperMethod;
 
 			void GenerateNonBlittableConversion (TypeReference sourceType, TypeReference targetType)
 			{

@@ -34,7 +34,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	}
 
 	MonoMethod *method = mono_get_method (image, method_token, klass.klass);
-	log_warn (LOG_DEFAULT, "  method == %p", method);
+	log_warn (LOG_DEFAULT, "  method == %p (%s.%s:%s)", method, mono_class_get_namespace (klass.klass), mono_class_get_name (klass.klass), mono_method_get_name (method));
 
 	MonoError error;
 	void *ret = mono_method_get_unmanaged_callers_only_ftnptr (method, &error);

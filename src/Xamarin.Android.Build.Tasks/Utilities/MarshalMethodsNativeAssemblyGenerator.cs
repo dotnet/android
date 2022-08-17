@@ -289,7 +289,7 @@ namespace Xamarin.Android.Tasks
 			Console.WriteLine ($"  JNI name: {entry.JniMethodName}");
 			Console.WriteLine ($"  JNI signature: {entry.JniMethodSignature}");
 
-			CecilMethodDefinition nativeCallback = entry.NativeCallbackWrapper ?? entry.NativeCallback;
+			CecilMethodDefinition nativeCallback = entry.NativeCallback;
 			string nativeSymbolName = MakeNativeSymbolName (entry, useFullNativeSignature);
 			string klass = $"{nativeCallback.DeclaringType.FullName}, {nativeCallback.Module.Assembly.FullName}";
 			Console.WriteLine ($"  klass == {klass}");
@@ -525,7 +525,7 @@ namespace Xamarin.Android.Tasks
 
 			var usedBackingFields = new HashSet<string> (StringComparer.Ordinal);
 			foreach (MarshalMethodInfo mmi in methods) {
-				CecilMethodDefinition nativeCallback = mmi.Method.NativeCallbackWrapper ?? mmi.Method.NativeCallback;
+				CecilMethodDefinition nativeCallback = mmi.Method.NativeCallback;
 				string asmName = nativeCallback.DeclaringType.Module.Assembly.Name.Name;
 				if (!asmNameToIndex.TryGetValue (asmName, out uint asmIndex)) {
 					throw new InvalidOperationException ($"Unable to translate assembly name '{asmName}' to its index");
@@ -544,7 +544,7 @@ namespace Xamarin.Android.Tasks
 				FieldValue = "null",
 			};
 
-			CecilMethodDefinition nativeCallback = method.Method.NativeCallbackWrapper ?? method.Method.NativeCallback;
+			CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
 			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{method.AssemblyCacheIndex}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken.ToUInt32():x}";
 			var backingFieldRef = new LlvmIrVariableReference (backingFieldSignature, backingFieldName, isGlobal: true);
 
