@@ -1880,7 +1880,7 @@ stages:
   # Check - "Xamarin.Android (Tenets OneLocBuild)"
   - job: OneLocBuild
     displayName: OneLocBuild
-    condition: eq(variables['MicroBuildSignType'], 'Real')
+    condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     pool: VSEngSS-MicroBuild2022-1ES
     timeoutInMinutes: 30
     variables:
@@ -1890,6 +1890,13 @@ stages:
     steps:
     - checkout: self
       clean: true
+
+    - task: PowerShell@2
+      displayName: Update LocProject.json
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)\Localize\update-locproject.ps1
+        arguments: -SourcesDirectory "$(Build.SourcesDirectory)" -LocProjectPath "$(Build.SourcesDirectory)\Localize\LocProject.json"
 
     - task: OneLocBuild@2
       displayName: OneLocBuild
