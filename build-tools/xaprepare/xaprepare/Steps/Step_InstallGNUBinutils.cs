@@ -65,6 +65,7 @@ namespace Xamarin.Android.Prepare
 
 			string osSourcePath = Path.Combine (sourceDir, osName);
 			string sourcePath = Path.Combine (osSourcePath, "bin");
+			string symbolArchiveDir = Path.Combine (destinationDir, "windows-toolchain-pdb");
 			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
 				string prefix = kvp.Value;
 				CopyTools (prefix);
@@ -108,18 +109,18 @@ namespace Xamarin.Android.Prepare
 						continue;
 					}
 
-					toolSourcePath = Path.ChangeExtension (toolSourcePath, ".pdb");
-					if (!File.Exists (toolSourcePath)) {
+					// Copy PDBs and corresponding EXEs to a folder to be zipped up for symbol archiving
+					string toolSourcePdbPath = Path.ChangeExtension (toolSourcePath, ".pdb");
+					if (!File.Exists (toolSourcePdbPath)) {
 						continue;
 					}
 
-					toolDestinationPath = Path.ChangeExtension (toolDestinationPath, ".pdb");
+					toolDestinationPath = Path.Combine (symbolArchiveDir, toolName);
+					string toolDestinationPdbPath = Path.ChangeExtension (toolDestinationPath, ".pdb");
 
-					Log.StatusLine ($"  {context.Characters.Bullet} Installing ", toolName, tailColor: ConsoleColor.White);
+					Log.StatusLine ($"  {context.Characters.Bullet} Copying symbols for ", toolName, tailColor: ConsoleColor.White);
 					Utilities.CopyFile (toolSourcePath, toolDestinationPath);
-
-					versionMarkerPath = GetVersionMarker (toolDestinationPath);
-					File.WriteAllText (versionMarkerPath, DateTime.UtcNow.ToString ());
+					Utilities.CopyFile (toolSourcePdbPath, toolDestinationPdbPath);
 				}
 			}
 		}
