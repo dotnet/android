@@ -5,11 +5,45 @@
 
 using namespace xamarin::android::internal;
 
+static constexpr char Unknown[] = "Unknown";
+
+const char*
+MonodroidRuntime::get_method_name (uint32_t mono_image_index, uint32_t method_token) noexcept
+{
+	uint64_t id = (static_cast<uint64_t>(mono_image_index) << 32) | method_token;
+
+	size_t i = 0;
+	while (mm_method_names[i].id != 0) {
+		if (mm_method_names[i].id == id) {
+			return mm_method_names[i].name;
+		}
+	}
+
+	return Unknown;
+}
+
+const char*
+MonodroidRuntime::get_class_name (uint32_t class_index) noexcept
+{
+	if (class_index >= marshal_methods_number_of_classes) {
+		return Unknown;
+	}
+
+	return mm_class_names[class_index];
+}
+
 template<bool NeedsLocking>
 force_inline void
 MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void *&target_ptr) noexcept
 {
 	log_warn (LOG_DEFAULT, __PRETTY_FUNCTION__);
+	log_debug (
+		LOG_ASSEMBLY,
+		"MM: Trying to look up pointer to method '%s' in class '%s'",
+		get_method_name (mono_image_index, method_token),
+		get_class_name (class_index)
+	);
+
 	if (XA_UNLIKELY (class_index >= marshal_methods_number_of_classes)) {
 		log_fatal (LOG_DEFAULT,
 		           "Internal error: invalid index for class cache (expected at most %u, got %u)",
@@ -41,11 +75,22 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	log_warn (LOG_DEFAULT, "  ret == %p", ret);
 
 	if (ret == nullptr || error.error_code != MONO_ERROR_NONE) {
-		// TODO: make the error message friendlier somehow (class, method and assembly names)
 		log_fatal (LOG_DEFAULT,
-		           "Failed to obtain function pointer to method with token 0x%x; class index: %u; assembly index: %u",
-		           method_token, class_index, mono_image_index
+		           "Failed to obtain function pointer to method '%s' in class '%s'",
+		           get_method_name (mono_image_index, method_token),
+		           get_class_name (class_index)
 		);
+		log_fatal (LOG_DEFAULT,
+		           "Looked for image index %u, class index %u, method token 0x%x",
+		           mono_image_index,
+		           class_index,
+		           method_token
+		);
+		if (image == nullptr) {
+			log_fatal (LOG_DEFAULT, "Failed to load MonoImage for the assembly");
+		} else if (method == nullptr) {
+			log_fatal (LOG_DEFAULT, "Failed to load class from the assembly");
+		}
 
 		const char *msg = mono_error_get_message (&error);
 		if (msg != nullptr) {
