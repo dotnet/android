@@ -53,7 +53,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					sb.Append ('"');
 				}
 
-				RenderAssignedValue (sb);
+				var value = new StringBuilder ();
+				RenderAssignedValue (value);
+
+				// LLVM IR escapes characters as \xx where xx is hexadecimal ASCII code
+				value.Replace ("\"", "\\22");
+				sb.Append (value);
 
 				if (Quoted) {
 					sb.Append ('"');

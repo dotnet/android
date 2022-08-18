@@ -182,6 +182,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void WarnAboutAppDomains ([Values (true, false)] bool isRelease)
 		{
+			if (isRelease) {
+				// NOTE: trimmer warnings are hidden by default in .NET 7 rc1
+				Assert.Ignore("https://github.com/dotnet/linker/issues/2982");
+			}
+
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
