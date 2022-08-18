@@ -38,9 +38,6 @@ endif
 
 export NO_SUDO       ?= false
 
-# Workaround: https://github.com/dotnet/sdk/issues/26965
-export DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER = true
-
 ifneq ($(NO_SUDO),false)
 _PREPARE_ARGS += --auto-provisioning-uses-sudo=false
 endif
