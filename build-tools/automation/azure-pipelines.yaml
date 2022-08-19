@@ -115,10 +115,10 @@ stages:
 
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
-        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/bin/*.pdb
-        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/
+        cd $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/windows-toolchain-pdb &&
+        zip -r $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/windows-toolchain-pdb.zip .
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: copy Windows toolchain pdb files
+      displayName: zip Windows toolchain pdb files
 
     - task: PublishPipelineArtifact@1
       displayName: upload Windows toolchain pdb files
@@ -1497,6 +1497,11 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: vs-msi-nugets
+        downloadPath: $(Build.StagingDirectory)\nuget-signed
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
         downloadPath: $(Build.StagingDirectory)\nuget-signed
 
     - task: NuGetCommand@2
