@@ -491,13 +491,14 @@ namespace Android.Runtime {
 
 		public void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
+#if ENABLE_MARSHAL_METHODS
 			Logger.Log (LogLevel.Info, "monodroid-mm", $"RegisterNativeMembers ('{nativeClass?.Name}', '{type?.FullName}', '{methods.ToString ()}')");
 			Logger.Log (LogLevel.Info, "monodroid-mm", "RegisterNativeMembers called from:");
 			var st = new StackTrace (true);
 			foreach (string l in st.ToString ().Split ("\n")) {
 				Logger.Log (LogLevel.Info, "monodroid-mm", l);
 			}
-#if ENABLE_MARSHAL_METHODS
+
 			if (methods.IsEmpty) {
 				Logger.Log (LogLevel.Info, "monodroid-mm", "No methods to register, returning");
 				return;
