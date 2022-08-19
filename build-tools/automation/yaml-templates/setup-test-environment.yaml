@@ -21,8 +21,6 @@ steps:
 
 - template: run-installer.yaml
   parameters:
-    # Disabled on .NET 6 release branches
-    condition: false
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
     provisionatorChannel: ${{ parameters.provisionatorChannel }}
 

@@ -1003,8 +1003,6 @@ stages:
   # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - Legacy)"
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
-      # Disabled on .NET 6 release branches
-      condition: false
       node_id: 1
       job_name: mac_msbuilddevice_tests_1
       job_suffix: Legacy
@@ -1013,8 +1011,6 @@ stages:
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
-      # Disabled on .NET 6 release branches
-      condition: false
       node_id: 2
       job_name: mac_msbuilddevice_tests_2
       job_suffix: Legacy
@@ -1023,8 +1019,6 @@ stages:
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
-      # Disabled on .NET 6 release branches
-      condition: false
       node_id: 3
       job_name: mac_msbuilddevice_tests_3
       job_suffix: Legacy
@@ -1033,8 +1027,6 @@ stages:
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
-      # Disabled on .NET 6 release branches
-      condition: false
       node_id: 4
       job_name: mac_msbuilddevice_tests_with_debugger
       job_suffix: Legacy

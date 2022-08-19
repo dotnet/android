@@ -11,6 +11,8 @@ parameters:
 jobs:
   - job: ${{ parameters.job_name }}
     displayName: MSBuild With Emulator - macOS-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
+    # Disabled on .NET 6 release branches
+    condition: ne(${{ parameters.job_suffix }}, 'Legacy')
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 90
