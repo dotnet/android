@@ -69,44 +69,46 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	MonoError error;
 	void *ret = mono_method_get_unmanaged_callers_only_ftnptr (method, &error);
 
-	if (ret == nullptr || error.error_code != MONO_ERROR_NONE) {
-		log_fatal (
-			LOG_DEFAULT,
-			"Failed to obtain function pointer to method '%s' in class '%s'",
-			get_method_name (mono_image_index, method_token),
-			get_class_name (class_index)
-		);
-
-		log_fatal (
-			LOG_DEFAULT,
-			"Looked for image index %u, class index %u, method token 0x%x",
-			mono_image_index,
-			class_index,
-			method_token
-		);
-
-		if (image == nullptr) {
-			log_fatal (LOG_DEFAULT, "Failed to load MonoImage for the assembly");
-		} else if (method == nullptr) {
-			log_fatal (LOG_DEFAULT, "Failed to load class from the assembly");
+	if (XA_LIKELY (ret != nullptr)) {
+		if constexpr (NeedsLocking) {
+			__atomic_store_n (&target_ptr, ret, __ATOMIC_RELEASE);
+		} else {
+			target_ptr = ret;
 		}
 
+		log_debug (LOG_ASSEMBLY, "Loaded pointer to method %s", mono_method_get_name (method));
+		return;
+	}
+
+	log_fatal (
+		LOG_DEFAULT,
+		"Failed to obtain function pointer to method '%s' in class '%s'",
+		get_method_name (mono_image_index, method_token),
+		get_class_name (class_index)
+	);
+
+	log_fatal (
+		LOG_DEFAULT,
+		"Looked for image index %u, class index %u, method token 0x%x",
+		mono_image_index,
+		class_index,
+		method_token
+	);
+
+	if (image == nullptr) {
+		log_fatal (LOG_DEFAULT, "Failed to load MonoImage for the assembly");
+	} else if (method == nullptr) {
+		log_fatal (LOG_DEFAULT, "Failed to load class from the assembly");
+	}
+
+	if (error.error_code != MONO_ERROR_NONE) {
 		const char *msg = mono_error_get_message (&error);
 		if (msg != nullptr) {
 			log_fatal (LOG_DEFAULT, msg);
 		}
-
-		abort ();
 	}
 
-	log_debug (LOG_ASSEMBLY, "Loaded pointer to method %s", mono_method_get_name (method));
-
-	if constexpr (NeedsLocking) {
-		__atomic_store_n (&target_ptr, ret, __ATOMIC_RELEASE);
-		//target_ptr = ret;
-	} else {
-		target_ptr = ret;
-	}
+	abort ();
 }
 
 void
