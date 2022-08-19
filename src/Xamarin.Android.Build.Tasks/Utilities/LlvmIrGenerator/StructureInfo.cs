@@ -20,6 +20,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool HasPreAllocatedBuffers { get; private set; }
 
 		public bool IsOpaque => Members.Count == 0;
+		public string NativeTypeDesignator { get; }
 
 		public StructureInfo (LlvmIrGenerator generator)
 		{
@@ -27,12 +28,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Name = type.GetShortName ();
 			Size = GatherMembers (type, generator);
 			DataProvider = type.GetDataProvider ();
+			NativeTypeDesignator = type.IsNativeClass () ? "class" : "struct";
 		}
 
 		public void RenderDeclaration (LlvmIrGenerator generator)
 		{
 			TextWriter output = generator.Output;
-			generator.WriteStructureDeclarationStart (Name, forOpaqueType: IsOpaque);
+			generator.WriteStructureDeclarationStart (NativeTypeDesignator, Name, forOpaqueType: IsOpaque);
 
 			if (IsOpaque) {
 				return;

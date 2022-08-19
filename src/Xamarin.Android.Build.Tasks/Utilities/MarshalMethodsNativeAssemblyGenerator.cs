@@ -18,22 +18,137 @@ namespace Xamarin.Android.Tasks
 {
 	class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
 	{
-		sealed class MarshalMethodInfo
-		{
-			public MarshalMethodEntry Method { get; }
-			public string NativeSymbolName   { get; }
-		}
-
 		// This is here only to generate strongly-typed IR
 		internal sealed class MonoClass
 		{}
 
-		struct MarshalMethodsManagedClass
+		[NativeClass]
+		sealed class _JNIEnv
+		{}
+
+		// TODO: figure out why opaque classes like these have one byte field in clang's output
+		[NativeClass]
+		class _jobject
 		{
-			uint       token;
+			public byte b;
+		}
+
+		sealed class _jclass : _jobject
+		{}
+
+		sealed class _jstring : _jobject
+		{}
+
+		sealed class _jthrowable : _jobject
+		{}
+
+		class _jarray : _jobject
+		{}
+
+		sealed class _jobjectArray : _jarray
+		{}
+
+		sealed class _jbooleanArray : _jarray
+		{}
+
+		sealed class _jbyteArray : _jarray
+		{}
+
+		sealed class _jcharArray : _jarray
+		{}
+
+		sealed class _jshortArray : _jarray
+		{}
+
+		sealed class _jintArray : _jarray
+		{}
+
+		sealed class _jlongArray : _jarray
+		{}
+
+		sealed class _jfloatArray : _jarray
+		{}
+
+		sealed class _jdoubleArray : _jarray
+		{}
+
+		sealed class MarshalMethodInfo
+		{
+			public MarshalMethodEntry Method                { get; }
+			public string NativeSymbolName                  { get; }
+			public List<LlvmIrFunctionParameter> Parameters { get; }
+			public Type ReturnType                          { get; }
+			public uint ClassCacheIndex                     { get; }
+
+			// This one isn't known until the generation time, which happens after we instantiate the class
+			// in Init and it may be different between architectures/ABIs, hence it needs to be settable from
+			// the outside.
+			public uint AssemblyCacheIndex                  { get; set; }
+
+			public MarshalMethodInfo (MarshalMethodEntry method, Type returnType, string nativeSymbolName, int classCacheIndex)
+			{
+				Method = method ?? throw new ArgumentNullException (nameof (method));
+				ReturnType = returnType ?? throw new ArgumentNullException (nameof (returnType));
+				if (String.IsNullOrEmpty (nativeSymbolName)) {
+					throw new ArgumentException ("must not be null or empty", nameof (nativeSymbolName));
+				}
+				NativeSymbolName = nativeSymbolName;
+				Parameters = new List<LlvmIrFunctionParameter> {
+					new LlvmIrFunctionParameter (typeof (_JNIEnv), "env", isNativePointer: true), // JNIEnv *env
+					new LlvmIrFunctionParameter (typeof (_jclass), "klass", isNativePointer: true), // jclass klass
+				};
+				ClassCacheIndex = (uint)classCacheIndex;
+			}
+		}
+
+		sealed class MarshalMethodsManagedClassDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var klass = EnsureType<MarshalMethodsManagedClass> (data);
+
+				if (String.Compare ("token", fieldName, StringComparison.Ordinal) == 0) {
+					return $"token 0x{klass.token:x}; class name: {klass.ClassName}";
+				}
+
+				return String.Empty;
+			}
+		}
+
+		[NativeAssemblerStructContextDataProvider (typeof(MarshalMethodsManagedClassDataProvider))]
+		sealed class MarshalMethodsManagedClass
+		{
+			[NativeAssembler (UsesDataProvider = true)]
+			public uint       token;
 
 			[NativePointer (IsNull = true)]
-			MonoClass  klass;
+			public MonoClass  klass;
+
+			[NativeAssembler (Ignore = true)]
+			public string ClassName;
+		};
+
+		static readonly Dictionary<char, Type> jniSimpleTypeMap = new Dictionary<char, Type> {
+			{ 'Z', typeof(bool) },
+			{ 'B', typeof(byte) },
+			{ 'C', typeof(char) },
+			{ 'S', typeof(short) },
+			{ 'I', typeof(int) },
+			{ 'J', typeof(long) },
+			{ 'F', typeof(float) },
+			{ 'D', typeof(double) },
+		};
+
+		static readonly Dictionary<char, Type> jniArrayTypeMap = new Dictionary<char, Type> {
+			{ 'Z', typeof(_jbooleanArray) },
+			{ 'B', typeof(_jbyteArray) },
+			{ 'C', typeof(_jcharArray) },
+			{ 'S', typeof(_jshortArray) },
+			{ 'I', typeof(_jintArray) },
+			{ 'J', typeof(_jlongArray) },
+			{ 'F', typeof(_jfloatArray) },
+			{ 'D', typeof(_jdoubleArray) },
+			{ 'L', typeof(_jobjectArray) },
 		};
 
 		public ICollection<string> UniqueAssemblyNames                       { get; set; }
@@ -41,25 +156,428 @@ namespace Xamarin.Android.Tasks
 		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods { get; set; }
 
 		StructureInfo<TypeMappingReleaseNativeAssemblyGenerator.MonoImage> monoImage;
+		StructureInfo<MarshalMethodsManagedClass> marshalMethodsClass;
 		StructureInfo<MonoClass> monoClass;
+		StructureInfo<_JNIEnv> _jniEnvSI;
+		StructureInfo<_jobject> _jobjectSI;
+		StructureInfo<_jclass> _jclassSI;
+		StructureInfo<_jstring> _jstringSI;
+		StructureInfo<_jthrowable> _jthrowableSI;
+		StructureInfo<_jarray> _jarraySI;
+		StructureInfo<_jobjectArray> _jobjectArraySI;
+		StructureInfo<_jbooleanArray> _jbooleanArraySI;
+		StructureInfo<_jbyteArray> _jbyteArraySI;
+		StructureInfo<_jcharArray> _jcharArraySI;
+		StructureInfo<_jshortArray> _jshortArraySI;
+		StructureInfo<_jintArray> _jintArraySI;
+		StructureInfo<_jlongArray> _jlongArraySI;
+		StructureInfo<_jfloatArray> _jfloatArraySI;
+		StructureInfo<_jdoubleArray> _jdoubleArraySI;
+
+		List<MarshalMethodInfo> methods;
+		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
 		public override void Init ()
 		{
 			Console.WriteLine ($"Marshal methods count: {MarshalMethods?.Count ?? 0}");
+			if (MarshalMethods == null || MarshalMethods.Count == 0) {
+				return;
+			}
+
+			var seenClasses = new Dictionary<string, int> (StringComparer.Ordinal);
+			methods = new List<MarshalMethodInfo> ();
+			foreach (IList<MarshalMethodEntry> entryList in MarshalMethods.Values) {
+				bool useFullNativeSignature = entryList.Count > 1;
+				foreach (MarshalMethodEntry entry in entryList) {
+					ProcessAndAddMethod (entry, useFullNativeSignature, seenClasses);
+				}
+			}
+		}
+
+		void ProcessAndAddMethod (MarshalMethodEntry entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses)
+		{
+			Console.WriteLine ("marshal method:");
+			Console.WriteLine ($"  top type: {entry.DeclaringType.FullName}");
+			Console.WriteLine ($"  registered method: [{entry.RegisteredMethod.DeclaringType.FullName}] {entry.RegisteredMethod.FullName}");
+			Console.WriteLine ($"  implemented method: [{entry.ImplementedMethod.DeclaringType.FullName}] {entry.ImplementedMethod.FullName}");
+			Console.WriteLine ($"  native callback: {entry.NativeCallback.FullName}");
+			Console.WriteLine ($"  connector: {entry.Connector.FullName}");
+			Console.WriteLine ($"  JNI name: {entry.JniMethodName}");
+			Console.WriteLine ($"  JNI signature: {entry.JniMethodSignature}");
+
+			var sb = new StringBuilder ("Java_");
+			sb.Append (MangleForJni (entry.JniTypeName));
+			sb.Append ('_');
+			sb.Append (MangleForJni ($"n_{entry.JniMethodName}"));
+
+			if (useFullNativeSignature) {
+				string signature = entry.JniMethodSignature;
+				if (signature.Length < 2) {
+					ThrowInvalidSignature (signature, "must be at least two characters long");
+				}
+
+				if (signature[0] != '(') {
+					ThrowInvalidSignature (signature, "must start with '('");
+				}
+
+				int sigEndIdx = signature.LastIndexOf (')');
+				if (sigEndIdx < 1) { // the first position where ')' can appear is 1, for a method without parameters
+					ThrowInvalidSignature (signature, "missing closing parenthesis");
+				}
+
+				string sigParams = signature.Substring (1, sigEndIdx - 1);
+				if (sigParams.Length > 0) {
+					sb.Append ("__");
+					sb.Append (MangleForJni (sigParams));
+				}
+			}
+
+			string klass = $"{entry.NativeCallback.DeclaringType.FullName}, {entry.NativeCallback.Module.Assembly.FullName}";
+			if (!seenClasses.TryGetValue (klass, out int classIndex)) {
+				seenClasses.Add (klass, classes.Count);
+
+				var mc = new MarshalMethodsManagedClass {
+					token = entry.NativeCallback.DeclaringType.MetadataToken.ToUInt32 (),
+					ClassName = klass,
+				};
+
+				classes.Add (new StructureInstance<MarshalMethodsManagedClass> (mc));
+			}
+
+			(Type returnType, List<LlvmIrFunctionParameter>? parameters) = ParseJniSignature (entry.JniMethodSignature, entry.ImplementedMethod);
+			var method = new MarshalMethodInfo (entry, returnType, nativeSymbolName: sb.ToString (), classIndex);
+			if (parameters != null && parameters.Count > 0) {
+				method.Parameters.AddRange (parameters);
+			}
+
+			Console.WriteLine ($"  Generated native symbol: {method.NativeSymbolName}");
+			Console.WriteLine ($"  Parsed return type: {returnType}");
+			if (method.Parameters.Count > 0) {
+				Console.WriteLine ("  Parsed parameters:");
+				foreach (LlvmIrFunctionParameter p in method.Parameters) {
+					Console.WriteLine ($"    {p.Type} {p.Name}");
+				}
+			}
+			Console.WriteLine ();
+
+			methods.Add (method);
+
+			void ThrowInvalidSignature (string signature, string reason)
+			{
+				throw new InvalidOperationException ($"Invalid JNI signature '{signature}': {reason}");
+			}
+		}
+
+		string MangleForJni (string name)
+		{
+			Console.WriteLine ($"    mangling '{name}'");
+			var sb = new StringBuilder (name);
+
+			sb.Replace ("_", "_1");
+			sb.Replace ('/', '_');
+			sb.Replace (";", "_2");
+			sb.Replace ("[", "_3");
+			// TODO: process unicode chars
+
+			return sb.ToString ();
+		}
+
+		(Type returnType, List<LlvmIrFunctionParameter>? functionParams) ParseJniSignature (string signature, Mono.Cecil.MethodDefinition implementedMethod)
+		{
+			Type returnType = null;
+			List<LlvmIrFunctionParameter>? parameters = null;
+			bool paramsDone = false;
+			int idx = 0;
+			while (!paramsDone && idx < signature.Length) {
+				char jniType = signature[idx];
+				Type? managedType = JniTypeToManaged (jniType);
+
+				if (managedType != null) {
+					AddParameter (managedType);
+					continue;
+				}
+
+				if (jniType == '(') {
+					idx++;
+					continue;
+				}
+
+				if (jniType == ')') {
+					paramsDone = true;
+					continue;
+				}
+
+				throw new InvalidOperationException ($"Unsupported JNI type '{jniType}' at position {idx} of signature '{signature}'");
+			}
+
+			if (!paramsDone || idx >= signature.Length || signature[idx] != ')') {
+				throw new InvalidOperationException ($"Missing closing arguments parenthesis: '{signature}'");
+			}
+
+			idx++;
+			if (signature[idx] == 'V') {
+				returnType = typeof(void);
+			} else {
+				returnType = JniTypeToManaged (signature[idx]);
+			}
+
+			return (returnType, parameters);
+
+			Type? JniTypeToManaged (char jniType)
+			{
+				if (jniSimpleTypeMap.TryGetValue (jniType, out Type managedType)) {
+					idx++;
+					return managedType;
+				}
+
+				if (jniType == 'L') {
+					return JavaClassToManaged (justSkip: false);
+				}
+
+				if (jniType == '[') {
+					idx++;
+					jniType = signature[idx];
+					if (jniArrayTypeMap.TryGetValue (jniType, out managedType)) {
+						JavaClassToManaged (justSkip: true);
+						return managedType;
+					}
+
+					throw new InvalidOperationException ($"Unsupported JNI array type '{jniType}' at index {idx} of signature '{signature}'");
+				}
+
+				return null;
+			}
+
+			Type? JavaClassToManaged (bool justSkip)
+			{
+				idx++;
+				StringBuilder sb = null;
+				if (!justSkip) {
+					sb = new StringBuilder ();
+				}
+
+				while (idx < signature.Length) {
+					if (signature[idx] == ')') {
+						throw new InvalidOperationException ($"Syntax error: unterminated class type (missing ';' before closing parenthesis) in signature '{signature}'");
+					}
+
+					if (signature[idx] == ';') {
+						idx++;
+						break;
+					}
+
+					sb?.Append (signature[idx++]);
+				}
+
+				if (justSkip) {
+					return null;
+				}
+
+				string typeName = sb.ToString ();
+				if (String.Compare (typeName, "java/lang/Class", StringComparison.Ordinal) == 0) {
+					return typeof(_jclass);
+				}
+
+				if (String.Compare (typeName, "java/lang/String", StringComparison.Ordinal) == 0) {
+					return typeof(_jstring);
+				}
+
+				if (String.Compare (typeName, "java/lang/Throwable", StringComparison.Ordinal) == 0) {
+					return typeof(_jthrowable);
+				}
+
+				return typeof(_jobject);
+			}
+
+			void AddParameter (Type type)
+			{
+				if (parameters == null) {
+					parameters = new List<LlvmIrFunctionParameter> ();
+				}
+
+				if (implementedMethod.Parameters.Count <= parameters.Count) {
+					throw new InvalidOperationException ($"Method {implementedMethod.FullName} managed signature doesn't match its JNI signature '{signature}' (not enough parameters)");
+				}
+
+				// Every parameter which isn't a primitive type becomes a pointer
+				parameters.Add (new LlvmIrFunctionParameter (type, implementedMethod.Parameters[parameters.Count].Name, isNativePointer: type.IsNativeClass ()));
+			}
+		}
+
+		protected override void InitGenerator (LlvmIrGenerator generator)
+		{
+			generator.InitCodeOutput ();
 		}
 
 		protected override void MapStructures (LlvmIrGenerator generator)
 		{
 			monoImage = generator.MapStructure<TypeMappingReleaseNativeAssemblyGenerator.MonoImage> ();
 			monoClass = generator.MapStructure<MonoClass> ();
+			marshalMethodsClass = generator.MapStructure<MarshalMethodsManagedClass> ();
+			_jniEnvSI = generator.MapStructure<_JNIEnv> ();
+			_jobjectSI = generator.MapStructure<_jobject> ();
+			_jclassSI = generator.MapStructure<_jclass> ();
+			_jstringSI = generator.MapStructure<_jstring> ();
+			_jthrowableSI = generator.MapStructure<_jthrowable> ();
+			_jarraySI = generator.MapStructure<_jarray> ();
+			_jobjectArraySI = generator.MapStructure<_jobjectArray> ();
+			_jbooleanArraySI = generator.MapStructure<_jbooleanArray> ();
+			_jbyteArraySI = generator.MapStructure<_jbyteArray> ();
+			_jcharArraySI = generator.MapStructure<_jcharArray> ();
+			_jshortArraySI = generator.MapStructure<_jshortArray> ();
+			_jintArraySI = generator.MapStructure<_jintArray> ();
+			_jlongArraySI = generator.MapStructure<_jlongArray> ();
+			_jfloatArraySI = generator.MapStructure<_jfloatArray> ();
+			_jdoubleArraySI = generator.MapStructure<_jdoubleArray> ();
 		}
 
 		protected override void Write (LlvmIrGenerator generator)
 		{
-			WriteAssemblyImageCache (generator);
+			Dictionary<string, uint> asmNameToIndex = WriteAssemblyImageCache (generator);
+			WriteClassCache (generator);
+			LlvmIrVariableReference get_function_pointer_ref = WriteXamarinAppInitFunction (generator);
+			WriteNativeMethods (generator, asmNameToIndex, get_function_pointer_ref);
 		}
 
-		void WriteAssemblyImageCache (LlvmIrGenerator generator)
+		void WriteNativeMethods (LlvmIrGenerator generator, Dictionary<string, uint> asmNameToIndex, LlvmIrVariableReference get_function_pointer_ref)
+		{
+			if (methods == null || methods.Count == 0) {
+				return;
+			}
+
+			foreach (MarshalMethodInfo mmi in methods) {
+				string asmName = mmi.Method.NativeCallback.DeclaringType.Module.Assembly.Name.Name;
+				if (!asmNameToIndex.TryGetValue (asmName, out uint asmIndex)) {
+					throw new InvalidOperationException ($"Unable to translate assembly name '{asmName}' to its index");
+				}
+				mmi.AssemblyCacheIndex = asmIndex;
+
+				WriteMarshalMethod (generator, mmi, get_function_pointer_ref);
+			}
+		}
+
+		void WriteMarshalMethod (LlvmIrGenerator generator, MarshalMethodInfo method, LlvmIrVariableReference get_function_pointer_ref)
+		{
+			var backingFieldSignature = new LlvmNativeFunctionSignature (
+				returnType: method.ReturnType,
+				parameters: method.Parameters
+			) {
+				FieldValue = "null",
+			};
+
+			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{method.AssemblyCacheIndex}_{method.ClassCacheIndex}_{method.Method.NativeCallback.MetadataToken.ToUInt32():x}";
+			var backingFieldRef = new LlvmIrVariableReference (backingFieldSignature, backingFieldName, isGlobal: true);
+
+			generator.WriteVariable (backingFieldName, backingFieldSignature, LlvmIrVariableOptions.LocalWritableInsignificantAddr);
+
+			var func = new LlvmIrFunction (
+				name: method.NativeSymbolName,
+				returnType: method.ReturnType,
+				attributeSetID: LlvmIrGenerator.FunctionAttributesJniMethods,
+				parameters: method.Parameters
+			);
+
+			generator.WriteFunctionStart (func);
+
+			LlvmIrFunctionLocalVariable callbackVariable1 = generator.EmitLoadInstruction (func, backingFieldRef, "cb1");
+			var callbackVariable1Ref = new LlvmIrVariableReference (callbackVariable1, isGlobal: false);
+
+			LlvmIrFunctionLocalVariable isNullVariable = generator.EmitIcmpInstruction (func, LlvmIrIcmpCond.Equal, callbackVariable1Ref, expectedValue: "null", resultVariableName: "isNull");
+			var isNullVariableRef = new LlvmIrVariableReference (isNullVariable, isGlobal: false);
+
+			const string loadCallbackLabel = "loadCallback";
+			const string callbackLoadedLabel = "callbackLoaded";
+
+			generator.EmitBrInstruction (func, isNullVariableRef, loadCallbackLabel, callbackLoadedLabel);
+
+			generator.WriteEOL ();
+			generator.EmitLabel (func, loadCallbackLabel);
+			LlvmIrFunctionLocalVariable getFunctionPointerVariable = generator.EmitLoadInstruction (func, get_function_pointer_ref, "get_func_ptr");
+			var getFunctionPtrRef = new LlvmIrVariableReference (getFunctionPointerVariable, isGlobal: false);
+
+			generator.EmitCall (
+				func,
+				getFunctionPtrRef,
+				new List<LlvmIrFunctionArgument> {
+					new LlvmIrFunctionArgument (typeof(uint), method.AssemblyCacheIndex),
+					new LlvmIrFunctionArgument (typeof(uint), method.ClassCacheIndex),
+					new LlvmIrFunctionArgument (typeof(uint), method.Method.NativeCallback.MetadataToken.ToUInt32 ()),
+					new LlvmIrFunctionArgument (typeof(LlvmIrVariableReference), backingFieldRef),
+				}
+			);
+
+			LlvmIrFunctionLocalVariable callbackVariable2 = generator.EmitLoadInstruction (func, backingFieldRef, "cb2");
+			var callbackVariable2Ref = new LlvmIrVariableReference (callbackVariable2, isGlobal: false);
+
+			generator.EmitBrInstruction (func, callbackLoadedLabel);
+
+			generator.WriteEOL ();
+			generator.EmitLabel (func, callbackLoadedLabel);
+
+			LlvmIrFunctionLocalVariable fnVariable = generator.EmitPhiInstruction (
+				func,
+				backingFieldRef,
+				new List<(LlvmIrVariableReference variableRef, string label)> {
+					(callbackVariable1Ref, func.ImplicitFuncTopLabel),
+					(callbackVariable2Ref, loadCallbackLabel),
+				},
+				resultVariableName: "fn"
+			);
+			var fnVariableRef = new LlvmIrVariableReference (fnVariable, isGlobal: false);
+
+			LlvmIrFunctionLocalVariable? result = generator.EmitCall (
+				func,
+				fnVariableRef,
+				func.ParameterVariables.Select (pv => new LlvmIrFunctionArgument (pv)).ToList ()
+			);
+
+			if (result != null) {
+				generator.EmitReturnInstruction (func, result);
+			}
+
+			generator.WriteFunctionEnd (func);
+		}
+
+		LlvmIrVariableReference WriteXamarinAppInitFunction (LlvmIrGenerator generator)
+		{
+			var get_function_pointer_sig = new LlvmNativeFunctionSignature (
+				returnType: typeof(void),
+				parameters: new List<LlvmIrFunctionParameter> {
+					new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
+					new LlvmIrFunctionParameter (typeof(uint), "class_index"),
+					new LlvmIrFunctionParameter (typeof(uint), "method_token"),
+					new LlvmIrFunctionParameter (typeof(IntPtr), "target_ptr", isNativePointer: true, isCplusPlusReference: true)
+				}
+			) {
+				FieldValue = "null",
+			};
+
+			const string GetFunctionPointerFieldName = "get_function_pointer";
+			generator.WriteVariable (GetFunctionPointerFieldName, get_function_pointer_sig, LlvmIrVariableOptions.LocalWritableInsignificantAddr);
+
+			var fnParameter = new LlvmIrFunctionParameter (get_function_pointer_sig, "fn");
+			var func = new LlvmIrFunction (
+				name: "xamarin_app_init",
+				returnType: typeof (void),
+				attributeSetID: LlvmIrGenerator.FunctionAttributesXamarinAppInit,
+				parameters: new List<LlvmIrFunctionParameter> {
+					fnParameter,
+				}
+			);
+
+			generator.WriteFunctionStart (func);
+			generator.EmitStoreInstruction (func, fnParameter, new LlvmIrVariableReference (get_function_pointer_sig, GetFunctionPointerFieldName, isGlobal: true));
+			generator.WriteFunctionEnd (func);
+
+			return new LlvmIrVariableReference (get_function_pointer_sig, GetFunctionPointerFieldName, isGlobal: true);
+		}
+
+		void WriteClassCache (LlvmIrGenerator generator)
+		{
+			generator.WriteStructureArray (marshalMethodsClass, classes,  LlvmIrVariableOptions.GlobalWritable, "marshal_methods_class_cache");
+		}
+
+		Dictionary<string, uint> WriteAssemblyImageCache (LlvmIrGenerator generator)
 		{
 			if (UniqueAssemblyNames == null) {
 				throw new InvalidOperationException ("Internal error: unique assembly names not provided");
@@ -72,11 +590,14 @@ namespace Xamarin.Android.Tasks
 			bool is64Bit = generator.Is64Bit;
 			generator.WriteStructureArray (monoImage, (ulong)NumberOfAssembliesInApk, "assembly_image_cache", isArrayOfPointers: true);
 
+			var asmNameToIndex = new Dictionary<string, uint> (StringComparer.Ordinal);
 			if (is64Bit) {
 				WriteHashes<ulong> ();
 			} else {
 				WriteHashes<uint> ();
 			}
+
+			return asmNameToIndex;
 
 			void WriteHashes<T> () where T: struct
 			{
@@ -109,7 +630,9 @@ namespace Xamarin.Android.Tasks
 
 				var indices = new List<uint> ();
 				for (int i = 0; i < keys.Count; i++) {
-					indices.Add (hashes[keys[i]].index);
+					(string name, uint idx) = hashes[keys[i]];
+					indices.Add (idx);
+					asmNameToIndex.Add (name, idx);
 				}
 				generator.WriteArray (
 					indices,

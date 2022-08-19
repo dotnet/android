@@ -10,7 +10,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	/// <summary>
 	/// Base class for all classes which implement architecture-specific code generators.
 	/// </summary>
-	abstract class LlvmIrGenerator
+	abstract partial class LlvmIrGenerator
 	{
 		internal sealed class StructureBodyWriterOptions
 		{
@@ -78,6 +78,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			{ typeof (double), "double" },
 			{ typeof (string), "i8*" },
 			{ typeof (IntPtr), "i8*" },
+			{ typeof (void), "void" },
 		};
 
 		// https://llvm.org/docs/LangRef.html#single-value-types
@@ -150,6 +151,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		List<IStructureInfo> structures = new List<IStructureInfo> ();
 		Dictionary<string, StringSymbolInfo> stringSymbolCache = new Dictionary<string, StringSymbolInfo> (StringComparer.Ordinal);
+		LlvmIrMetadataItem llvmModuleFlags;
+
+		public const string Indent = "\t";
 
 		protected abstract string DataLayout { get; }
 		public abstract int PointerSize { get; }
@@ -159,7 +163,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public TextWriter Output { get; }
 		public AndroidTargetArch TargetArch { get; }
 
-		protected string Indent => "\t";
 		protected LlvmIrMetadataManager MetadataManager { get; }
 
 		protected LlvmIrGenerator (AndroidTargetArch arch, TextWriter output, string fileName)
@@ -231,15 +234,22 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			Type actualType = GetActualType (type);
 			string irType = EnsureIrType (actualType);
-			if (!typeSizes.TryGetValue (actualType, out size)) {
-				if (actualType == typeof (string) || actualType == typeof (IntPtr)) {
+			size = GetTypeSize (actualType);
+
+			return irType;
+		}
+
+		ulong GetTypeSize (Type actualType)
+		{
+			if (!typeSizes.TryGetValue (actualType, out ulong size)) {
+				if (actualType == typeof (string) || actualType == typeof (IntPtr) || actualType == typeof (LlvmNativeFunctionSignature)) {
 					size = (ulong)PointerSize;
 				} else {
-					throw new InvalidOperationException ($"Unsupported managed type {type}");
+					throw new InvalidOperationException ($"Unsupported managed type {actualType}");
 				}
 			}
 
-			return irType;
+			return size;
 		}
 
 		/// <summary>
@@ -278,24 +288,71 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return type.GetShortName ();
 		}
 
+		public string GetIRType<T> (out ulong size, T? value = default)
+		{
+			if (typeof(T) == typeof(LlvmNativeFunctionSignature)) {
+				if (value == null) {
+					throw new ArgumentNullException (nameof (value));
+				}
+
+				size = (ulong)PointerSize;
+				return RenderFunctionSignature ((LlvmNativeFunctionSignature)(object)value);
+			}
+
+			return MapManagedTypeToIR<T> (out size);
+		}
+
+		public string GetKnownIRType (Type type)
+		{
+			if (type == null) {
+				throw new ArgumentNullException (nameof (type));
+			}
+
+			if (type.IsNativeClass ()) {
+				IStructureInfo si = GetStructureInfo (type);
+				return $"%{si.NativeTypeDesignator}.{si.Name}";
+			}
+
+			return MapManagedTypeToIR (type);
+		}
+
+		public string GetValue<T> (T value)
+		{
+			if (typeof(T) == typeof(LlvmNativeFunctionSignature)) {
+				if (value == null) {
+					throw new ArgumentNullException (nameof (value));
+				}
+
+				var v = (LlvmNativeFunctionSignature)(object)value;
+				return v.FieldValue?.ToString () ?? v.ToString ();
+			}
+
+			return value?.ToString () ?? String.Empty;
+		}
+
 		/// <summary>
 		/// Initialize the generator.  It involves adding required LLVM IR module metadata (such as data model specification,
 		/// code generation flags etc)
 		/// </summary>
-		public virtual void Init ()
+		protected virtual void Init ()
 		{
-			LlvmIrMetadataItem flags = MetadataManager.Add ("llvm.module.flags");
+			llvmModuleFlags = MetadataManager.Add ("llvm.module.flags");
 			LlvmIrMetadataItem ident = MetadataManager.Add ("llvm.ident");
 
 			var flagsFields = new List<LlvmIrMetadataItem> ();
 			AddModuleFlagsMetadata (flagsFields);
 
 			foreach (LlvmIrMetadataItem item in flagsFields) {
-				flags.AddReferenceField (item.Name);
+				llvmModuleFlags.AddReferenceField (item.Name);
 			}
 
 			LlvmIrMetadataItem identValue = MetadataManager.AddNumbered ($"Xamarin.Android {XABuildConfig.XamarinAndroidBranch} @ {XABuildConfig.XamarinAndroidCommitHash}");
 			ident.AddReferenceField (identValue.Name);
+		}
+
+		protected void AddLlvmModuleFlag (LlvmIrMetadataItem flag)
+		{
+			llvmModuleFlags.AddReferenceField (flag.Name);
 		}
 
 		/// <summary>
@@ -463,7 +520,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			bool named = WriteStructureArrayStart<T> (info, null, options, symbolName, initialComment);
 			string pointerAsterisk = isArrayOfPointers ? "*" : String.Empty;
-			Output.Write ($"[{count} x %struct.{info.Name}{pointerAsterisk}] zeroinitializer");
+			Output.Write ($"[{count} x %{info.NativeTypeDesignator}.{info.Name}{pointerAsterisk}] zeroinitializer");
 
 			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: true, isArrayOfPointers: isArrayOfPointers);
 		}
@@ -488,7 +545,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			bool named = WriteStructureArrayStart<T> (info, instances, options, symbolName, initialComment, arrayOutput);
 			int count = instances != null ? instances.Count : 0;
 
-			arrayOutput.Write ($"[{count} x %struct.{info.Name}] ");
+			arrayOutput.Write ($"[{count} x %{info.NativeTypeDesignator}.{info.Name}] ");
 			if (instances != null) {
 				var bodyWriterOptions = new StructureBodyWriterOptions (
 					writeFieldComment: true,
@@ -667,7 +724,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions options, Action<LlvmIrGenerator, StructureBodyWriterOptions, Type, object>? nestedStructureWriter = null)
 		{
 			TextWriter structureOutput = EnsureOutput (options.StructureOutput);
-			structureOutput.Write ($"{options.StructIndent}%struct.{info.Name} ");
+			structureOutput.Write ($"{options.StructIndent}%{info.NativeTypeDesignator}.{info.Name} ");
 
 			if (instance != null) {
 				structureOutput.WriteLine ("{");
@@ -843,7 +900,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				bool firstField;
 				instanceType.Clear ();
 				if (!hasPaddedFields) {
-					instanceType.Append ($"\t%struct.{info.Name}");
+					instanceType.Append ($"\t%{info.NativeTypeDesignator}.{info.Name}");
 				} else {
 					instanceType.Append ("\t{ ");
 
@@ -1108,10 +1165,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			WriteEOL ();
-			string irType = MapManagedTypeToIR<T> (out ulong size);
+			string irType = GetIRType<T> (out ulong size, value);
 			WriteGlobalSymbolStart (symbolName, options);
 
-			Output.WriteLine ($"{irType} {value}, align {size}");
+			Output.WriteLine ($"{irType} {GetValue (value)}, align {size}");
 		}
 
 		/// <summary>
@@ -1238,6 +1295,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			Output.WriteLine ();
 
+			WriteAttributeSets ();
+
 			foreach (LlvmIrMetadataItem metadata in MetadataManager.Items) {
 				Output.WriteLine (metadata.Render ());
 			}
@@ -1255,10 +1314,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public void WriteStructureDeclarationStart (string name, bool forOpaqueType = false)
+		public void WriteStructureDeclarationStart (string typeDesignator, string name, bool forOpaqueType = false)
 		{
 			WriteEOL ();
-			Output.Write ($"%struct.{name} = type ");
+			Output.Write ($"%{typeDesignator}.{name} = type ");
 			if (forOpaqueType) {
 				Output.WriteLine ("opaque");
 			} else {

@@ -7,6 +7,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		Type Type             { get; }
 		ulong Size            { get; }
 		int MaxFieldAlignment { get; }
+		string Name           { get; }
+		string NativeTypeDesignator { get; }
 
 		void RenderDeclaration (LlvmIrGenerator generator);
 	}

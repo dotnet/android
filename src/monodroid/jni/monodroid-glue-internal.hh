@@ -350,7 +350,7 @@ namespace xamarin::android::internal
 		static void monodroid_debugger_unhandled_exception (MonoException *ex);
 
 #if defined (RELEASE) && defined (ANDROID)
-		static void* get_function_pointer (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token) noexcept;
+		static void get_function_pointer (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token, void*& target_ptr) noexcept;
 #endif // def RELEASE && def ANDROID
 #endif // def NET
 

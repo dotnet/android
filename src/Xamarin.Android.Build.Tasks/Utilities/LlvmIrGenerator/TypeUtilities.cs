@@ -67,5 +67,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			return Activator.CreateInstance (attr.Type) as NativeAssemblerStructContextDataProvider;
 		}
+
+		public static bool IsNativeClass (this Type t)
+		{
+			var attr = t.GetCustomAttribute<NativeClassAttribute> ();
+			return attr != null;
+		}
 	}
 }

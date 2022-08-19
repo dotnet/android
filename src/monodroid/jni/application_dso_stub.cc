@@ -186,7 +186,7 @@ MarshalMethodsManagedClass marshal_methods_class_cache[] = {
 	},
 };
 
-void xamarin_app_init ([[maybe_unused]] get_function_pointer_fn fn)
+void xamarin_app_init ([[maybe_unused]] get_function_pointer_fn fn) noexcept
 {
 	// Dummy
 }
