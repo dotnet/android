@@ -16,6 +16,7 @@ using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks.LLVMIR;
 
 using CecilMethodDefinition = global::Mono.Cecil.MethodDefinition;
+using CecilParameterDefinition = global::Mono.Cecil.ParameterDefinition;
 
 namespace Xamarin.Android.Tasks
 {
@@ -131,9 +132,25 @@ namespace Xamarin.Android.Tasks
 			public string ClassName;
 		};
 
-		struct MarshalMethodName
+		sealed class MarshalMethodNameDataProvider : NativeAssemblerStructContextDataProvider
 		{
-			public uint   id;
+			public override string GetComment (object data, string fieldName)
+			{
+				var methodName = EnsureType<MarshalMethodName> (data);
+
+				if (String.Compare ("id", fieldName, StringComparison.Ordinal) == 0) {
+					return $"id 0x{methodName.id:x}; name: {methodName.name}";
+				}
+
+				return String.Empty;
+			}
+		}
+
+		[NativeAssemblerStructContextDataProvider (typeof(MarshalMethodNameDataProvider))]
+		sealed class MarshalMethodName
+		{
+			[NativeAssembler (UsesDataProvider = true)]
+			public ulong  id;
 			public string name;
 		}
 
@@ -568,27 +585,32 @@ namespace Xamarin.Android.Tasks
 			}
 			generator.WriteArray (mm_class_names, "mm_class_names", "Names of classes in which marshal methods reside");
 
-			var uniqueMethods = new Dictionary<string, MarshalMethodInfo> (StringComparer.Ordinal);
+			var uniqueMethods = new Dictionary<ulong, MarshalMethodInfo> ();
 			foreach (MarshalMethodInfo mmi in methods) {
-				if (uniqueMethods.ContainsKey (mmi.Method.NativeCallback.FullName)) {
-					continue;
-				}
-				uniqueMethods.Add (mmi.Method.NativeCallback.FullName, mmi);
-			}
-
-			MarshalMethodName name;
-			var mm_method_names = new List<StructureInstance<MarshalMethodName>> ();
-			foreach (var kvp in uniqueMethods) {
-				MarshalMethodInfo mmi = kvp.Value;
 				string asmName = Path.GetFileName (mmi.Method.NativeCallback.Module.Assembly.MainModule.FileName);
 				if (!asmNameToIndex.TryGetValue (asmName, out uint idx)) {
 					throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to cache array index");
 				}
 
+				ulong id = ((ulong)idx << 32) | (ulong)mmi.Method.NativeCallback.MetadataToken.ToUInt32 ();
+				if (uniqueMethods.ContainsKey (id)) {
+					continue;
+				}
+				uniqueMethods.Add (id, mmi);
+			}
+
+			MarshalMethodName name;
+			var methodName = new StringBuilder ();
+			var mm_method_names = new List<StructureInstance<MarshalMethodName>> ();
+			foreach (var kvp in uniqueMethods) {
+				ulong id = kvp.Key;
+				MarshalMethodInfo mmi = kvp.Value;
+
+				RenderMethodNameWithParams (mmi.Method.NativeCallback, methodName);
 				name = new MarshalMethodName {
 					// Tokens are unique per assembly
-					id = mmi.Method.NativeCallback.MetadataToken.ToUInt32 () | (idx << 32),
-					name = mmi.Method.NativeCallback.Name,
+					id = id,
+					name = methodName.ToString (),
 				};
 				mm_method_names.Add (new StructureInstance<MarshalMethodName> (name));
 			}
@@ -601,6 +623,28 @@ namespace Xamarin.Android.Tasks
 			mm_method_names.Add (new StructureInstance<MarshalMethodName> (name));
 
 			generator.WriteStructureArray (marshalMethodName, mm_method_names, LlvmIrVariableOptions.GlobalConstant, "mm_method_names");
+
+			void RenderMethodNameWithParams (CecilMethodDefinition md, StringBuilder buffer)
+			{
+				buffer.Clear ();
+				buffer.Append (md.Name);
+				buffer.Append ('(');
+
+				if (md.HasParameters) {
+					bool first = true;
+					foreach (CecilParameterDefinition pd in md.Parameters) {
+						if (!first) {
+							buffer.Append (',');
+						} else {
+							first = false;
+						}
+
+						buffer.Append (pd.ParameterType.Name);
+					}
+				}
+
+				buffer.Append (')');
+			}
 		}
 
 		void WriteNativeMethods (LlvmIrGenerator generator, Dictionary<string, uint> asmNameToIndex, LlvmIrVariableReference get_function_pointer_ref)
