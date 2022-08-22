@@ -479,13 +479,6 @@ namespace Android.Runtime {
 			{"Android.Views.View+IOnLayoutChangeListenerImplementor",             new List<string> { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
 			{"Android.Views.View+IOnLayoutChangeListenerInvoker",                 new List<string> { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
 			{"Java.Interop.TypeManager+JavaTypeManager",                          new List<string> { "GetActivateHandler" }},
-			{"Microsoft.Maui.Controls.Platform.Compatibility.ShellPageContainer", new List<string> { "GetOnLayout_ZIIIIHandler" }},
-			{"Microsoft.Maui.Platform.ContentViewGroup",                          new List<string> { "GetOnLayout_ZIIIIHandler" }},
-			{"Microsoft.Maui.Platform.LayoutViewGroup",                           new List<string> { "GetOnLayout_ZIIIIHandler" }},
-			{"Microsoft.Maui.Platform.MauiMaterialButton",                        new List<string> { "GetOnLayout_ZIIIIHandler" }},
-			{"Microsoft.Maui.Platform.MauiScrollView",                            new List<string> { "GetOnLayout_ZIIIIHandler" }},
-			{"Microsoft.Maui.Platform.MauiTextView",                              new List<string> { "GetOnLayout_ZIIIIHandler" }},
-			{"Microsoft.Maui.Controls.Platform.Compatibility.ShellFlyoutRenderer", new List<string> { "GetDrawChild_Landroid_graphics_Canvas_Landroid_view_View_JHandler" }},
 		};
 #endif
 
@@ -568,9 +561,6 @@ namespace Android.Runtime {
 #if ENABLE_MARSHAL_METHODS
 							// TODO: this is temporary hack, it needs a full fledged registration mechanism for methods like these (that is, ones which
 							// aren't registered with [Register] but are baked into Mono.Android's managed and Java code)
-							//
-							// It is also a temporary hack to register methods taking a `bool` parameter (as `bool` is not blittable, it cannot be used
-							// with `[UnmanagedCallersOnly]`)
 							bool createCallback = false;
 							string declaringTypeName = callbackDeclaringType.FullName;
 							string callbackName = callbackString.ToString ();
