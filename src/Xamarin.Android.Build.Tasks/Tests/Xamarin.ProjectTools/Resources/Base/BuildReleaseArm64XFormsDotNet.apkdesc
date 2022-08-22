@@ -11,7 +11,7 @@
       "Size": 66533
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 441958
+      "Size": 441885
     },
     "assemblies/mscorlib.dll": {
       "Size": 3857
@@ -100,6 +100,9 @@
     "assemblies/System.Runtime.dll": {
       "Size": 2578
     },
+    "assemblies/System.Runtime.InteropServices.dll": {
+      "Size": 3722
+    },
     "assemblies/System.Runtime.Serialization.dll": {
       "Size": 1948
     },
@@ -122,7 +125,7 @@
       "Size": 1857
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 117251
+      "Size": 117246
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5872
@@ -212,7 +215,7 @@
       "Size": 148696
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 99208
+      "Size": 99272
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -326,13 +329,13 @@
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 78979
+      "Size": 79096
     },
     "META-INF/com.google.android.material_material.version": {
       "Size": 10
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 78852
+      "Size": 78969
     },
     "META-INF/proguard/androidx-annotations.pro": {
       "Size": 339
@@ -779,7 +782,7 @@
       "Size": 470
     },
     "res/drawable-hdpi-v4/icon.png": {
-      "Size": 4762
+      "Size": 4791
     },
     "res/drawable-hdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 212
@@ -1967,5 +1970,5 @@
       "Size": 341228
     }
   },
-  "PackageSize": 7995895
+  "PackageSize": 8000082
 }

@@ -8,7 +8,7 @@
       "Size": 58665
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 87971
+      "Size": 87905
     },
     "assemblies/rc.bin": {
       "Size": 1182
@@ -25,8 +25,11 @@
     "assemblies/System.Runtime.dll": {
       "Size": 2375
     },
+    "assemblies/System.Runtime.InteropServices.dll": {
+      "Size": 3722
+    },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3560
+      "Size": 3554
     },
     "classes.dex": {
       "Size": 360744
@@ -50,19 +53,19 @@
       "Size": 148696
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 9784
+      "Size": 9848
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 2690
+      "Size": 2807
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2563
+      "Size": 2680
     },
     "res/drawable-hdpi-v4/icon.png": {
-      "Size": 4762
+      "Size": 4791
     },
     "res/drawable-mdpi-v4/icon.png": {
       "Size": 2200
@@ -86,5 +89,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2664509
+  "PackageSize": 2668696
 }
