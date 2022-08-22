@@ -113,14 +113,17 @@ namespace Xamarin.Android.NetTests
 
 		private async Task AssertRejectsRemoteCertificate (Func<Task> makeRequest)
 		{
+			// there is a difference between the exception that's thrown in the .NET build and the legacy Xamarin
+			// because there's a difference in the $(AndroidBoundExceptionType) property value (legacy: Java, .NET: System)
 			try {
 				await makeRequest();
-			} catch (Java.IO.IOException) {
-				// the Java.IO.IOException is thrown when the TLS connection cannot be established
-			} catch (System.Net.WebException ex) when (ex.InnerException is Java.IO.IOException javaException && JNIEnv.ShouldWrapJavaException (javaException)) {
-				// the Java.IO.IOException can be wrapped in System.Net.WebException
-				// based on the value of the $(AndroidBoundExceptionType) build property
+				Assert.Fail ("The request wasn't rejected");
 			}
+#if NET
+			catch (System.Net.WebException ex) {}
+#else
+			catch (Java.IO.IOException) {}
+#endif
 		}
 	}
 }
