@@ -5,13 +5,11 @@ using System.Linq;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.TypeNameMappings;
-using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
-#if ENABLE_MARSHAL_METHODS
 	public sealed class MarshalMethodEntry
 	{
 		/// <summary>
@@ -63,11 +61,9 @@ namespace Xamarin.Android.Tasks
 			return s;
 		}
 	}
-#endif
 
 	class MarshalMethodsClassifier : JavaCallableMethodClassifier
 	{
-#if ENABLE_MARSHAL_METHODS
 		sealed class ConnectorInfo
 		{
 			public string MethodName                  { get; }
@@ -203,23 +199,19 @@ namespace Xamarin.Android.Tasks
 		public ICollection<AssemblyDefinition> Assemblies => assemblies;
 		public ulong RejectedMethodCount => rejectedMethodCount;
 		public ulong WrappedMethodCount => wrappedMethodCount;
-#endif
 
 		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, DirectoryAssemblyResolver res, TaskLoggingHelper log)
 		{
-#if ENABLE_MARSHAL_METHODS
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
 			resolver = res ?? throw new ArgumentNullException (nameof (tdCache));
 			marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
 			assemblies = new HashSet<AssemblyDefinition> ();
 			typesWithDynamicallyRegisteredMethods = new HashSet<TypeDefinition> ();
-#endif
 		}
 
 		public override bool ShouldBeDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute? registerAttribute)
 		{
-#if ENABLE_MARSHAL_METHODS
 			if (registeredMethod == null) {
 				throw new ArgumentNullException (nameof (registeredMethod));
 			}
@@ -237,11 +229,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			typesWithDynamicallyRegisteredMethods.Add (topType);
-#endif // def ENABLE_MARSHAL_METHODS
 			return true;
 		}
 
-#if ENABLE_MARSHAL_METHODS
 		public bool FoundDynamicallyRegisteredMethods (TypeDefinition type)
 		{
 			return typesWithDynamicallyRegisteredMethods.Contains (type);
@@ -571,6 +561,5 @@ namespace Xamarin.Android.Tasks
 
 			assemblies.Add (asm);
 		}
-#endif
 	}
 }

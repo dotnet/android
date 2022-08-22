@@ -17,7 +17,7 @@
 #include "search.hh"
 #include "strings.hh"
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET) && defined (ENABLE_MARSHAL_METHODS)
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
 #define USE_CACHE 1
 #endif
 
@@ -114,9 +114,6 @@ namespace xamarin::android::internal {
 
 		force_inline static MonoImage* stash_and_return (MonoImage *image, MonoImageOpenStatus status, [[maybe_unused]] hash_t hash) noexcept
 		{
-#if ENABLE_MARSHAL_METHODS
-			log_info (LOG_DEFAULT, "Stashing image %p; hash 0x%zx", image, hash);
-#endif
 			if (image == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
 				log_warn (LOG_ASSEMBLY, "Failed to open assembly image for '%s'. %s", mono_image_strerror (status));
 				return nullptr;

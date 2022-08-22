@@ -50,8 +50,6 @@ option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFA
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 option(USE_CCACHE "Use ccache, if found, to speed up recompilation" ${CCACHE_OPTION_DEFAULT})
 
-set(ENABLE_MARSHAL_METHODS False)
-
 if((MINGW OR NOT WIN32) AND USE_CCACHE)
   if(CMAKE_CXX_COMPILER MATCHES "/ccache/")
     message(STATUS "ccache: compiler already uses ccache")
@@ -276,9 +274,6 @@ add_compile_definitions(HAVE_CONFIG_H)
 add_compile_definitions(_REENTRANT)
 add_compile_definitions(JI_DLL_EXPORT)
 add_compile_definitions(MONO_DLL_EXPORT)
-if(ENABLE_MARSHAL_METHODS)
-  add_compile_definitions(ENABLE_MARSHAL_METHODS)
-endif()
 
 if(ENABLE_NET)
   add_compile_definitions(NET)
@@ -476,9 +471,6 @@ endif()
 set(XAMARIN_INTERNAL_API_LIB xa-internal-api${CHECKED_BUILD_INFIX})
 set(XAMARIN_DEBUG_APP_HELPER_LIB xamarin-debug-app-helper${CHECKED_BUILD_INFIX})
 set(XAMARIN_APP_STUB_LIB xamarin-app)
-if(ENABLE_MARSHAL_METHODS)
-  set(XAMARIN_APP_MARSHALING_LIB xamarin-app-marshaling)
-endif()
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
@@ -515,7 +507,7 @@ if(ANDROID)
     ${LZ4_SOURCES}
     )
 
-  if(NOT DEBUG_BUILD AND ENABLE_NET AND ENABLE_MARSHAL_METHODS)
+  if(NOT DEBUG_BUILD AND ENABLE_NET)
     list(APPEND XAMARIN_MONODROID_SOURCES
       ${SOURCES_DIR}/xamarin-android-app-context.cc
       )
@@ -577,12 +569,6 @@ set(XAMARIN_DEBUG_APP_HELPER_SOURCES
   ${SOURCES_DIR}/shared-constants.cc
   )
 
-if(ENABLE_MARSHAL_METHODS)
-  set(XAMARIN_APP_MARSHALING_LIB_SOURCES
-    ${SOURCES_DIR}/xamarin-app-marshaling.cc
-  )
-endif()
-
 # Build
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 
@@ -622,20 +608,6 @@ target_link_options(
   )
 
 if(ANDROID)
-  if(NOT DEBUG_BUILD AND ENABLE_NET AND ENABLE_MARSHAL_METHODS)
-    # The marshaling lib is used only when building for devices
-    add_library(
-      ${XAMARIN_APP_MARSHALING_LIB}
-      SHARED
-      ${XAMARIN_APP_MARSHALING_LIB_SOURCES}
-      )
-
-    target_link_libraries(
-      ${XAMARIN_APP_MARSHALING_LIB}
-      ${MONOSGEN_LIB_LINK}
-      )
-  endif()
-
   # Only Android builds need to go in separate directories, desktop builds have the same ABI
   set_target_properties(
     ${XAMARIN_APP_STUB_LIB}
@@ -743,10 +715,3 @@ target_link_libraries(
   ${XAMARIN_MONO_ANDROID_LIB}
   ${LINK_LIBS} xamarin-app
   )
-
-# if((NOT DEBUG_BUILD) AND ANDROID AND ENABLE_NET AND ENABLE_MARSHAL_METHODS)
-#   target_link_libraries(
-#     ${XAMARIN_MONO_ANDROID_LIB}
-#     ${XAMARIN_APP_MARSHALING_LIB}
-#   )
-# endif()

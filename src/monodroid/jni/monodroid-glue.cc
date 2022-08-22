@@ -874,7 +874,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET) && ENABLE_MARSHAL_METHODS
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
 	xamarin_app_init (get_function_pointer_at_startup);
 #endif // def RELEASE && def ANDROID && def NET
 }
@@ -2402,7 +2402,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif // ndef NET
 	}
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET) && ENABLE_MARSHAL_METHODS
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
 	xamarin_app_init (get_function_pointer_at_runtime);
 #endif // def RELEASE && def ANDROID && def NET
 	startup_in_progress = false;
@@ -2492,18 +2492,6 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		total_time_index = internal_timing->start_event (TimingEventKind::RuntimeRegister);
 	}
-
-#if defined (ENABLE_MARSHAL_METHODS)
-	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-	log_info (LOG_DEFAULT, "[TESTING] Registering managed type: '%s'", mt_ptr);
-	bool ignore = strcmp (mt_ptr, "HelloAndroid.MainActivity, HelloAndroid") == 0;
-	env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-	if (ignore) {
-		log_info (LOG_DEFAULT, "[TESTING] This type's registration is ignored");
-		return;
-	}
-#endif
 
 	jsize managedType_len = env->GetStringLength (managedType);
 	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);

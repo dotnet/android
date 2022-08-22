@@ -1,16 +1,10 @@
-#if ENABLE_MARSHAL_METHODS
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Text;
 
-using Java.Interop.Tools.TypeNameMappings;
-using Java.Interop.Tools.JavaCallableWrappers;
-
 using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tasks.LLVMIR;
@@ -851,4 +845,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-#endif

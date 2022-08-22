@@ -22,10 +22,6 @@
     <NoWarn>$(NoWarn);CA1310</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(_EnableMarshalMethods)' == 'YesPlease' ">
-    <DefineConstants>$(DefineConstants);ENABLE_MARSHAL_METHODS</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
     <Reference Include="pdb2mdb.exe">
       <HintPath>$(MicrosoftAndroidSdkOutDir)pdb2mdb.exe</HintPath>

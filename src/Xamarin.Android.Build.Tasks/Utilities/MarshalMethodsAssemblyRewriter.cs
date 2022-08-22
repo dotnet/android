@@ -1,4 +1,3 @@
-#if ENABLE_MARSHAL_METHODS
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +7,6 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -329,4 +327,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-#endif
