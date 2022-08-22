@@ -33,11 +33,9 @@ namespace Xamarin.Android.Tasks
 				unmanagedCallersOnlyAttributes.Add (asm, CreateImportedUnmanagedCallersOnlyAttribute (asm, unmanagedCallersOnlyAttributeCtor));
 			}
 
-			Console.WriteLine ();
-			Console.WriteLine ("Modifying assemblies");
+			log.LogDebugMessage ("Rewriting assemblies for marshal methods support");
 
 			var processedMethods = new Dictionary<string, MethodDefinition> (StringComparer.Ordinal);
-			Console.WriteLine ("Adding the [UnmanagedCallersOnly] attribute to native callback methods and removing unneeded fields+methods");
 			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
 				foreach (MarshalMethodEntry method in methodList) {
 					string fullNativeCallbackName = method.NativeCallback.FullName;
@@ -46,32 +44,27 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					Console.WriteLine ($"\t{fullNativeCallbackName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
-					Console.WriteLine ($"\t  Top type == '{method.DeclaringType}'");
-					Console.WriteLine ($"\t  NativeCallback == '{method.NativeCallback}'");
-					Console.WriteLine ($"\t  Connector == '{method.Connector}'");
-					Console.WriteLine ($"\t  method.NativeCallback.CustomAttributes == {ToStringOrNull (method.NativeCallback.CustomAttributes)}");
-					Console.WriteLine ($"\t  method.Connector.DeclaringType == {ToStringOrNull (method.Connector?.DeclaringType)}");
-					Console.WriteLine ($"\t  method.Connector.DeclaringType.Methods == {ToStringOrNull (method.Connector.DeclaringType?.Methods)}");
-					Console.WriteLine ($"\t  method.CallbackField == {ToStringOrNull (method.CallbackField)}");
-					Console.WriteLine ($"\t  method.CallbackField?.DeclaringType == {ToStringOrNull (method.CallbackField?.DeclaringType)}");
-					Console.WriteLine ($"\t  method.CallbackField?.DeclaringType.Fields == {ToStringOrNull (method.CallbackField?.DeclaringType?.Fields)}");
-
 					if (method.NeedsBlittableWorkaround) {
+						log.LogDebugMessage ($"Generating non-blittable type wrapper for callback method {method.NativeCallback.FullName}");
 						method.NativeCallbackWrapper = GenerateBlittableWrapper (method, unmanagedCallersOnlyAttributes);
 					} else {
+						log.LogDebugMessage ($"Adding the 'UnmanagedCallersOnly' attribute to callback method {method.NativeCallback.FullName}");
 						method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
 					}
 
-					method.Connector?.DeclaringType?.Methods?.Remove (method.Connector);
-					method.CallbackField?.DeclaringType?.Fields?.Remove (method.CallbackField);
+					if (method.Connector != null) {
+						log.LogDebugMessage ($"Removing connector method {method.Connector.FullName}");
+						method.Connector.DeclaringType?.Methods?.Remove (method.Connector);
+					}
+
+					if (method.CallbackField != null) {
+						log.LogDebugMessage ($"Removing callback delegate backing field {method.CallbackField.FullName}");
+						method.CallbackField.DeclaringType?.Fields?.Remove (method.CallbackField);
+					}
 
 					processedMethods.Add (fullNativeCallbackName, method.NativeCallback);
 				}
 			}
-
-			Console.WriteLine ();
-			Console.WriteLine ("Rewriting assemblies");
 
 			var newAssemblyPaths = new List<string> ();
 			foreach (AssemblyDefinition asm in uniqueAssemblies) {
@@ -81,7 +74,6 @@ namespace Xamarin.Android.Tasks
 					};
 
 					string output = $"{path}.new";
-					Console.WriteLine ($"\t{asm.Name} => {output}");
 					asm.Write (output, writerParams);
 					newAssemblyPaths.Add (output);
 				}
@@ -107,17 +99,8 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			Console.WriteLine ();
-			Console.WriteLine ("Method tokens:");
-			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
-				foreach (MarshalMethodEntry method in methodList) {
-					Console.WriteLine ($"\t{method.NativeCallback.FullName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
-				}
-			}
-
 			void MoveFile (string source, string target)
 			{
-				Console.WriteLine ($"Moving '{source}' => '{target}'");
 				Files.CopyIfChanged (source, target);
 				try {
 					File.Delete (source);
@@ -125,20 +108,10 @@ namespace Xamarin.Android.Tasks
 					log.LogWarning ($"Unable to delete source file '{source}' when moving it to '{target}'");
 				}
 			}
-
-			string ToStringOrNull (object? o)
-			{
-				if (o == null) {
-					return "'null'";
-				}
-
-				return o.ToString ();
-			}
 		}
 
 		MethodDefinition GenerateBlittableWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, CustomAttribute> unmanagedCallersOnlyAttributes)
 		{
-			Console.WriteLine ($"\t  Generating blittable wrapper for: {method.NativeCallback.FullName}");
 			MethodDefinition callback = method.NativeCallback;
 			string wrapperName = $"{callback.Name}_mm_wrapper";
 			TypeReference retType = MapToBlittableTypeIfNecessary (callback.ReturnType, out bool returnTypeMapped);
@@ -201,7 +174,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			body.Instructions.Add (Instruction.Create (OpCodes.Ret));
-			Console.WriteLine ($"\t    New method: {wrapperMethod.FullName}");
 			return wrapperMethod;
 
 			void GenerateNonBlittableConversion (TypeReference sourceType, TypeReference targetType)

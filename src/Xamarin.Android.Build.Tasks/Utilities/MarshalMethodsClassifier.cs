@@ -239,16 +239,12 @@ namespace Xamarin.Android.Tasks
 
 		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
 		{
-			Console.WriteLine ($"Classifying:\n\tmethod: {implementedMethod.FullName}\n\tregistered method: {registeredMethod.FullName})\n\tAttr: {registerAttribute.AttributeType.FullName} (parameter count: {registerAttribute.ConstructorArguments.Count})");
-			Console.WriteLine ($"\tTop type: {topType.FullName}\n\tManaged type: {registeredMethod.DeclaringType.FullName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}");
 			if (registerAttribute.ConstructorArguments.Count != 3) {
 				log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically, not enough arguments to the [Register] attribute to generate marshal method.");
 				return true;
 			}
 
 			var connector = new ConnectorInfo ((string)registerAttribute.ConstructorArguments[2].Value);
-
-			Console.WriteLine ($"\tconnector: {connector.MethodName} (from spec: '{(string)registerAttribute.ConstructorArguments[2].Value}')");
 
 			if (IsStandardHandler (topType, connector, registeredMethod, implementedMethod, jniName: (string)registerAttribute.ConstructorArguments[0].Value, jniSignature: (string)registerAttribute.ConstructorArguments[1].Value)) {
 				return false;
@@ -281,7 +277,6 @@ namespace Xamarin.Android.Tasks
 			string delegateFieldName = $"cb_{Char.ToLowerInvariant (callbackNameCore[0])}{callbackNameCore.Substring (1)}";
 
 			TypeDefinition connectorDeclaringType = connector.AssemblyName == null ? registeredMethod.DeclaringType : FindType (resolver.Resolve (connector.AssemblyName), connector.TypeName);
-			Console.WriteLine ($"\tconnector name: {connectorName}\n\tnative callback name: {nativeCallbackName}\n\tdelegate field name: {delegateFieldName}");
 
 			MethodDefinition connectorMethod = FindMethod (connectorDeclaringType, connectorName);
 			if (connectorMethod == null) {
@@ -344,11 +339,6 @@ namespace Xamarin.Android.Tasks
 			// 	method.CallbackField == System.Delegate cb_getItem_I
 			// 	method.CallbackField?.DeclaringType == 'null'
 			// 	method.CallbackField?.DeclaringType.Fields == 'null'
-
-			Console.WriteLine ($"##G1: {implementedMethod.DeclaringType.FullName} -> {JavaNativeTypeManager.ToJniName (implementedMethod.DeclaringType, tdCache)}");
-			Console.WriteLine ($"##G1: top type: {topType.FullName} -> {JavaNativeTypeManager.ToJniName (topType, tdCache)}");
-			Console.WriteLine ($"##G1: connectorMethod: {connectorMethod?.FullName}");
-			Console.WriteLine ($"##G1: delegateField: {delegateField?.FullName}");
 
 			StoreMethod (
 				connectorName,

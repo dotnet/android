@@ -213,7 +213,6 @@ namespace Xamarin.Android.Tasks
 
 		public override void Init ()
 		{
-			Console.WriteLine ($"Marshal methods count: {marshalMethods?.Count ?? 0}");
 			if (marshalMethods == null || marshalMethods.Count == 0) {
 				return;
 			}
@@ -238,11 +237,8 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				Console.WriteLine ($"Overloaded MM: {mmiList[0].NativeSymbolName}");
 				foreach (MarshalMethodInfo overloadedMethod in mmiList) {
-					Console.WriteLine ($"  implemented in: {overloadedMethod.Method.DeclaringType.FullName} ({overloadedMethod.Method.RegisteredMethod.FullName})");
 					overloadedMethod.NativeSymbolName = MakeNativeSymbolName (overloadedMethod.Method, useFullNativeSignature: true);
-					Console.WriteLine ($"     new native symbol name: {overloadedMethod.NativeSymbolName}");
 				}
 			}
 
@@ -278,7 +274,6 @@ namespace Xamarin.Android.Tasks
 			sb.Append (MangleForJni ($"n_{entry.JniMethodName}"));
 
 			if (useFullNativeSignature) {
-				Console.WriteLine ("  Using FULL signature");
 				string signature = entry.JniMethodSignature;
 				if (signature.Length < 2) {
 					ThrowInvalidSignature (signature, "must be at least two characters long");
@@ -310,20 +305,10 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessAndAddMethod (List<MarshalMethodInfo> allMethods, MarshalMethodEntry entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses, Dictionary<string, List<MarshalMethodInfo>> overloadedNativeSymbolNames)
 		{
-			Console.WriteLine ("marshal method:");
-			Console.WriteLine ($"  top type: {entry.DeclaringType.FullName} (token: 0x{entry.DeclaringType.MetadataToken.ToUInt32 ():x})");
-			Console.WriteLine ($"  registered method: [{entry.RegisteredMethod.DeclaringType.FullName}] {entry.RegisteredMethod.FullName}");
-			Console.WriteLine ($"  implemented method: [{entry.ImplementedMethod.DeclaringType.FullName}] {entry.ImplementedMethod.FullName}");
-			Console.WriteLine ($"  native callback: {entry.NativeCallback.FullName} (token: 0x{entry.NativeCallback.MetadataToken.ToUInt32 ():x})");
-			Console.WriteLine ($"  native callback wrapper: {entry.NativeCallbackWrapper}");
-			Console.WriteLine ($"  connector: {entry.Connector.FullName}");
-			Console.WriteLine ($"  JNI name: {entry.JniMethodName}");
-			Console.WriteLine ($"  JNI signature: {entry.JniMethodSignature}");
-
 			CecilMethodDefinition nativeCallback = entry.NativeCallback;
 			string nativeSymbolName = MakeNativeSymbolName (entry, useFullNativeSignature);
 			string klass = $"{nativeCallback.DeclaringType.FullName}, {nativeCallback.Module.Assembly.FullName}";
-			Console.WriteLine ($"  klass == {klass}");
+
 			if (!seenClasses.TryGetValue (klass, out int classIndex)) {
 				classIndex = classes.Count;
 				seenClasses.Add (klass, classIndex);
@@ -336,24 +321,12 @@ namespace Xamarin.Android.Tasks
 				classes.Add (new StructureInstance<MarshalMethodsManagedClass> (mc));
 			}
 
-			Console.WriteLine ("  about to parse JNI sig");
 			(Type returnType, List<LlvmIrFunctionParameter>? parameters) = ParseJniSignature (entry.JniMethodSignature, entry.ImplementedMethod);
-			Console.WriteLine ("  parsed!");
 
 			var method = new MarshalMethodInfo (entry, returnType, nativeSymbolName: nativeSymbolName, classIndex);
 			if (parameters != null && parameters.Count > 0) {
 				method.Parameters.AddRange (parameters);
 			}
-
-			Console.WriteLine ($"  Generated native symbol: {method.NativeSymbolName}");
-			Console.WriteLine ($"  Parsed return type: {returnType}");
-			if (method.Parameters.Count > 0) {
-				Console.WriteLine ("  Parsed parameters:");
-				foreach (LlvmIrFunctionParameter p in method.Parameters) {
-					Console.WriteLine ($"    {p.Type} {p.Name}");
-				}
-			}
-			Console.WriteLine ();
 
 			if (!overloadedNativeSymbolNames.TryGetValue (method.NativeSymbolName, out List<MarshalMethodInfo> overloadedMethods)) {
 				overloadedMethods = new List<MarshalMethodInfo> ();
@@ -366,7 +339,6 @@ namespace Xamarin.Android.Tasks
 
 		string MangleForJni (string name)
 		{
-			Console.WriteLine ($"    mangling '{name}'");
 			var sb = new StringBuilder ();
 
 			foreach (char ch in name) {
@@ -448,10 +420,8 @@ namespace Xamarin.Android.Tasks
 
 			Type? JniTypeToManaged (char jniType)
 			{
-				Console.WriteLine ($"  turning JNI type '{jniType}' into managed type");
 				if (jniSimpleTypeMap.TryGetValue (jniType, out Type managedType)) {
 					idx++;
-					Console.WriteLine ($"    will return {managedType}");
 					return managedType;
 				}
 
@@ -460,24 +430,21 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (jniType == '[') {
-					Console.WriteLine ("    an array");
 					idx++;
 					jniType = signature[idx];
 					if (jniArrayTypeMap.TryGetValue (jniType, out managedType)) {
 						if (jniType == 'L') {
-							Console.WriteLine ("    skipping");
 							JavaClassToManaged (justSkip: true);
 						} else {
 							idx++;
 						}
-						Console.WriteLine ($"    will return {managedType}");
+
 						return managedType;
 					}
 
 					throw new InvalidOperationException ($"Unsupported JNI array type '{jniType}' at index {idx} of signature '{signature}'");
 				}
 
-				Console.WriteLine ("  returning NULL managed type");
 				return null;
 			}
 
