@@ -104,8 +104,9 @@ namespace Xamarin.Android.Tasks
 				Files.CopyIfChanged (source, target);
 				try {
 					File.Delete (source);
-				} catch (Exception) {
+				} catch (Exception ex) {
 					log.LogWarning ($"Unable to delete source file '{source}' when moving it to '{target}'");
+					log.LogDebugMessage (ex.ToString ());
 				}
 			}
 		}
