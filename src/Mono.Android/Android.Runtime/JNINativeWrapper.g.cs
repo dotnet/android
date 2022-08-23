@@ -367,6 +367,17 @@ namespace Android.Runtime
 			}
 		}
 
+		internal static IntPtr Wrap_JniMarshal_PPIZI_L (this _JniMarshal_PPIZI_L callback, IntPtr jnienv, IntPtr klazz, int p0, bool p1, int p2)
+		{
+			JNIEnv.WaitForBridgeProcessing ();
+			try {
+				return callback (jnienv, klazz, p0, p1, p2);
+			} catch (Exception e) when (_unhandled_exception (e)) {
+				AndroidEnvironment.UnhandledException (e);
+				return default;
+			}
+		}
+
 		internal static void Wrap_JniMarshal_PPIIII_V (this _JniMarshal_PPIIII_V callback, IntPtr jnienv, IntPtr klazz, int p0, int p1, int p2, int p3)
 		{
 			JNIEnv.WaitForBridgeProcessing ();
@@ -500,6 +511,8 @@ namespace Android.Runtime
 					return new _JniMarshal_PPLLL_L (Unsafe.As<_JniMarshal_PPLLL_L> (dlg).Wrap_JniMarshal_PPLLL_L);
 				case nameof (_JniMarshal_PPLLL_Z):
 					return new _JniMarshal_PPLLL_Z (Unsafe.As<_JniMarshal_PPLLL_Z> (dlg).Wrap_JniMarshal_PPLLL_Z);
+				case nameof (_JniMarshal_PPIZI_L):
+					return new _JniMarshal_PPIZI_L (Unsafe.As<_JniMarshal_PPIZI_L> (dlg).Wrap_JniMarshal_PPIZI_L);
 				case nameof (_JniMarshal_PPIIII_V):
 					return new _JniMarshal_PPIIII_V (Unsafe.As<_JniMarshal_PPIIII_V> (dlg).Wrap_JniMarshal_PPIIII_V);
 				case nameof (_JniMarshal_PPLLLL_V):
