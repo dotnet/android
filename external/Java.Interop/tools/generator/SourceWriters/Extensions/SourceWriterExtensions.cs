@@ -301,13 +301,36 @@ namespace generator.SourceWriters
 
 		}
 
-		public static void AddObsolete (List<AttributeWriter> attributes, string message, bool forceDeprecate = false, bool isError = false)
+		public static void AddObsolete (List<AttributeWriter> attributes, string message, CodeGenerationOptions opt, bool forceDeprecate = false, bool isError = false, int? deprecatedSince = null)
 		{
 			// Bail if we're not obsolete
 			if ((!forceDeprecate && !message.HasValue ()) || message == "not deprecated")
 				return;
 
-			attributes.Add (new ObsoleteAttr (message: message?.Replace ("\"", "\"\"").Trim (), isError: isError));
+			// Check if we should use [ObsoletedOSPlatform] instead of [Obsolete]
+			if (AddObsoletedOSPlatformAttribute (attributes, message, deprecatedSince, opt))
+				return;
+
+			attributes.Add (new ObsoleteAttr (message, isError));
+		}
+
+		// Returns true if attribute was applied
+		static bool AddObsoletedOSPlatformAttribute (List<AttributeWriter> attributes, string message, int? deprecatedSince, CodeGenerationOptions opt)
+		{
+			if (!opt.UseObsoletedOSPlatformAttributes)
+				return false;
+
+			// If it was obsoleted in a version earlier than we support (like 15), use a regular [Obsolete] instead
+			if (!deprecatedSince.HasValue || deprecatedSince <= 21)
+				return false;
+
+			// This is the default Android message, but it isn't useful so remove it
+			if (message == "deprecated")
+				message = string.Empty;
+
+			attributes.Add (new ObsoletedOSPlatformAttr (message, deprecatedSince.Value));
+
+			return true;
 		}
 
 		public static void WriteMethodInvokerBody (CodeWriter writer, Method method, CodeGenerationOptions opt, string contextThis)

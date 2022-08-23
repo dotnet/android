@@ -155,6 +155,7 @@ namespace MonoDroid.Generation
 				ApiAvailableSince = declaringType.ApiAvailableSince,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
+				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
 				GenericArguments = elem.GenericArguments (),
 				Name = elem.XGetAttribute ("name"),
 				Visibility = elem.Visibility ()
@@ -200,6 +201,7 @@ namespace MonoDroid.Generation
 			var field = new Field {
 				ApiAvailableSince = declaringType.ApiAvailableSince,
 				DeprecatedComment = elem.XGetAttribute ("deprecated"),
+				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
 				IsAcw = true,
 				IsDeprecated = elem.XGetAttribute ("deprecated") != "not deprecated",
 				IsDeprecatedError = elem.XGetAttribute ("deprecated-error") == "true",
@@ -237,6 +239,7 @@ namespace MonoDroid.Generation
 		public static GenBaseSupport CreateGenBaseSupport (XElement pkg, XElement elem, CodeGenerationOptions opt, bool isInterface)
 		{
 			var support = new GenBaseSupport {
+				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
 				IsAcw = true,
 				IsDeprecated = elem.XGetAttribute ("deprecated") != "not deprecated",
 				IsGeneratable = true,
@@ -348,6 +351,7 @@ namespace MonoDroid.Generation
 				ArgsType = elem.Attribute ("argsType")?.Value,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
+				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
 				ExplicitInterface = elem.XGetAttribute ("explicitInterface"),
 				EventName = elem.Attribute ("eventName")?.Value,
 				GenerateAsyncWrapper = elem.Attribute ("generateAsyncWrapper") != null,

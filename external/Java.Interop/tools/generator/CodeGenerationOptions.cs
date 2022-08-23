@@ -66,6 +66,7 @@ namespace MonoDroid.Generation
 		public bool SupportNestedInterfaceTypes { get; set; }
 		public bool SupportNullableReferenceTypes { get; set; }
 		public bool UseShallowReferencedTypes { get; set; }
+		public bool UseObsoletedOSPlatformAttributes { get; set; }
 		public bool RemoveConstSugar => BuildingCoreAssembly;
 
 		bool? buildingCoreAssembly;

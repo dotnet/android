@@ -20,5 +20,18 @@ namespace Xamarin.Android.Tools {
 			var attr = nav.GetAttribute (name, ns);
 			return attr != null ? attr.Trim () : null;
 		}
+
+		public static int? XGetAttributeAsIntOrNull (this XElement element, string name)
+		{
+			var attr = element.Attribute (name);
+
+			if (attr?.Value is null)
+				return null;
+
+			if (int.TryParse (attr.Value, out var val))
+				return val;
+
+			return null;
+		}
 	}
 }

@@ -14,21 +14,19 @@ namespace generator.SourceWriters
 
 		public ObsoleteAttr (string message = null, bool isError = false)
 		{
-			Message = message;
+			Message = message?.Replace ("\"", "\"\"").Trim ();
 			IsError = isError;
 		}
 
 		public override void WriteAttribute (CodeWriter writer)
 		{
-			var parts = new List<string> ();
+			var content = string.Empty;
 
-			if (Message != null)
-				parts.Add ($"@\"{Message}\"");
+			if (Message != null || IsError)
+				content += $"@\"{Message}\"";
 
 			if (IsError)
-				parts.Add ("error: true");
-
-			var content = string.Join (", ", parts.ToArray ());
+				content += ", error: true";
 
 			if (content.HasValue ())
 				writer.WriteLine ($"[global::System.Obsolete ({content})]");

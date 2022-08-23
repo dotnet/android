@@ -42,7 +42,7 @@ namespace generator.SourceWriters
 			Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) { AcwLast = true });
 
 			if (should_obsolete)
-				SourceWriterExtensions.AddObsolete (Attributes, $"Use the '{iface.FullName}' type. This class will be removed in a future release.");
+				SourceWriterExtensions.AddObsolete (Attributes, $"Use the '{iface.FullName}' type. This class will be removed in a future release.", opt);
 
 			Constructors.Add (new ConstructorWriter { Name = Name, IsInternal = true });
 
@@ -53,7 +53,7 @@ namespace generator.SourceWriters
 				Fields.Add (new PeerMembersField (opt, iface.RawJniName, Name, false));
 
 			if (!iface.HasManagedName && !opt.SupportInterfaceConstants)
-				sibling_classes.Add (new InterfaceConstsForwardClass (iface));
+				sibling_classes.Add (new InterfaceConstsForwardClass (iface, opt));
 		}
 
 		void AddMethods (InterfaceGen iface, bool shouldObsolete, CodeGenerationOptions opt)
@@ -171,7 +171,7 @@ namespace generator.SourceWriters
 
 	public class InterfaceConstsForwardClass : ClassWriter
 	{
-		public InterfaceConstsForwardClass (InterfaceGen iface)
+		public InterfaceConstsForwardClass (InterfaceGen iface, CodeGenerationOptions opt)
 		{
 			Name = iface.Name.Substring (1) + "Consts";
 			Inherits = iface.Name.Substring (1);
@@ -180,7 +180,7 @@ namespace generator.SourceWriters
 			IsAbstract = true;
 
 			Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()));
-			SourceWriterExtensions.AddObsolete (Attributes, $"Use the '{iface.Name.Substring (1)}' type. This type will be removed in a future release.", isError: true);
+			SourceWriterExtensions.AddObsolete (Attributes, $"Use the '{iface.Name.Substring (1)}' type. This type will be removed in a future release.", opt, isError: true);
 
 			Constructors.Add (new ConstructorWriter {
 				Name = Name,

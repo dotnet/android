@@ -251,6 +251,8 @@ namespace MonoDroid.Generation
 
 		public string DeprecatedComment => support.DeprecatedComment;
 
+		public int? DeprecatedSince => support.DeprecatedSince;
+
 		IEnumerable<GenBase> Descendants (IList<GenBase> gens)
 		{
 			foreach (var directDescendants in gens.Where (x => x.BaseGen == this)) {

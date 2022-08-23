@@ -53,6 +53,7 @@ namespace Xamarin.Android.Binder
 		public bool		    SupportNestedInterfaceTypes { get; set; }
 		public bool		    SupportNullableReferenceTypes { get; set; }
 		public bool		    UseLegacyJavaResolver { get; set; }
+		public bool			UseObsoletedOSPlatformAttributes { get; set; }
 
 		public XmldocStyle		    XmldocStyle { get; set; } = XmldocStyle.IntelliSense;
 
@@ -102,12 +103,13 @@ namespace Xamarin.Android.Binder
 					"SDK Platform {VERSION}/API level.",
 					v => opts.ApiLevel = v },
 				{ "lang-features=",
-					"For internal use. (Flags: interface-constants,default-interface-methods,nullable-reference-types)",
+					"For internal use. (Flags: interface-constants,default-interface-methods,nested-interface-types,nullable-reference-types,obsoleted-platform-attributes)",
 					v => {
 						opts.SupportInterfaceConstants = v?.Contains ("interface-constants") == true;
 						opts.SupportDefaultInterfaceMethods = v?.Contains ("default-interface-methods") == true;
 						opts.SupportNestedInterfaceTypes = v?.Contains ("nested-interface-types") == true;
 						opts.SupportNullableReferenceTypes = v?.Contains ("nullable-reference-types") == true;
+						opts.UseObsoletedOSPlatformAttributes = v?.Contains ("obsoleted-platform-attributes") == true;
 						}},
 				{ "preserve-enums",
 					"For internal use.",

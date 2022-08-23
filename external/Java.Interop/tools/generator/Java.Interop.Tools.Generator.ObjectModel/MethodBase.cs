@@ -18,6 +18,7 @@ namespace MonoDroid.Generation
 		public string AssemblyName { get; set; }
 		public GenBase DeclaringType { get; }
 		public string Deprecated { get; set; }
+		public int? DeprecatedSince { get; set; }
 		public GenericParameterDefinitionList GenericArguments { get; set; }
 		public bool IsAcw { get; set; }
 		public bool IsValid { get; private set; }

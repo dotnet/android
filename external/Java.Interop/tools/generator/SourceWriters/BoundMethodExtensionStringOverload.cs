@@ -26,7 +26,7 @@ namespace generator.SourceWriters
 			SetVisibility (method.Visibility);
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
 
-			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated);
+			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 

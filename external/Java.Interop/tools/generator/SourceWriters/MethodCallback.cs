@@ -43,7 +43,7 @@ namespace generator.SourceWriters
 			IsStatic = true;
 			IsPrivate = method.IsInterfaceDefaultMethod;
 
-			SourceWriterExtensions.AddObsolete (Attributes, null, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated));
+			SourceWriterExtensions.AddObsolete (Attributes, null, opt, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated), deprecatedSince: method.DeprecatedSince);
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
@@ -135,7 +135,7 @@ namespace generator.SourceWriters
 			IsStatic = true;
 			IsPrivate = method.IsInterfaceDefaultMethod;
 
-			SourceWriterExtensions.AddObsolete (Attributes, null, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated));
+			SourceWriterExtensions.AddObsolete (Attributes, null, opt, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated), deprecatedSince: method.DeprecatedSince);
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 		}

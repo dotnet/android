@@ -53,7 +53,7 @@ namespace generator.SourceWriters
 			if (method.DeclaringType.IsGeneratable)
 				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
 
-			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated);
+			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
