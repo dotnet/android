@@ -231,6 +231,29 @@ namespace Xamarin.Android.Tasks
 			// names and similar signatures) will actually share the same **short** native symbol name. In this case we must
 			// ensure that they all use long symbol names.  This has to be done as a post-processing step, after we
 			// have already iterated over the entire method collection.
+			//
+			// A handful of examples from the Hello World MAUI app:
+			//
+			// Overloaded MM: Java_crc64e1fb321c08285b90_CellAdapter_n_1onActionItemClicked
+			//   implemented in: Microsoft.Maui.Controls.Handlers.Compatibility.CellAdapter (System.Boolean Android.Views.ActionMode/ICallback::OnActionItemClicked(Android.Views.ActionMode,Android.Views.IMenuItem))
+			//   implemented in: Microsoft.Maui.Controls.Handlers.Compatibility.CellAdapter (System.Boolean AndroidX.AppCompat.View.ActionMode/ICallback::OnActionItemClicked(AndroidX.AppCompat.View.ActionMode,Android.Views.IMenuItem))
+			//   new native symbol name: Java_crc64e1fb321c08285b90_CellAdapter_n_1onActionItemClicked__Landroidx_appcompat_view_ActionMode_2Landroid_view_MenuItem_2
+			//
+			// Overloaded MM: Java_crc64e1fb321c08285b90_CellAdapter_n_1onCreateActionMode
+			//   implemented in: Microsoft.Maui.Controls.Handlers.Compatibility.CellAdapter (System.Boolean Android.Views.ActionMode/ICallback::OnCreateActionMode(Android.Views.ActionMode,Android.Views.IMenu))
+			//   implemented in: Microsoft.Maui.Controls.Handlers.Compatibility.CellAdapter (System.Boolean AndroidX.AppCompat.View.ActionMode/ICallback::OnCreateActionMode(AndroidX.AppCompat.View.ActionMode,Android.Views.IMenu))
+			//   new native symbol name: Java_crc64e1fb321c08285b90_CellAdapter_n_1onCreateActionMode__Landroidx_appcompat_view_ActionMode_2Landroid_view_Menu_2
+			//
+			// Overloaded MM: Java_crc64e1fb321c08285b90_CellAdapter_n_1onDestroyActionMode
+			//   implemented in: Microsoft.Maui.Controls.Handlers.Compatibility.CellAdapter (System.Void Android.Views.ActionMode/ICallback::OnDestroyActionMode(Android.Views.ActionMode))
+			//   implemented in: Microsoft.Maui.Controls.Handlers.Compatibility.CellAdapter (System.Void AndroidX.AppCompat.View.ActionMode/ICallback::OnDestroyActionMode(AndroidX.AppCompat.View.ActionMode))
+			//   new native symbol name: Java_crc64e1fb321c08285b90_CellAdapter_n_1onDestroyActionMode__Landroidx_appcompat_view_ActionMode_2
+			//
+			// Overloaded MM: Java_crc64e1fb321c08285b90_CellAdapter_n_1onPrepareActionMode
+			//   implemented in: Microsoft.Maui.Controls.Handlers.Compatibility.CellAdapter (System.Boolean Android.Views.ActionMode/ICallback::OnPrepareActionMode(Android.Views.ActionMode,Android.Views.IMenu))
+			//   implemented in: Microsoft.Maui.Controls.Handlers.Compatibility.CellAdapter (System.Boolean AndroidX.AppCompat.View.ActionMode/ICallback::OnPrepareActionMode(AndroidX.AppCompat.View.ActionMode,Android.Views.IMenu))
+			//   new native symbol name: Java_crc64e1fb321c08285b90_CellAdapter_n_1onPrepareActionMode__Landroidx_appcompat_view_ActionMode_2Landroid_view_Menu_2
+			//
 			var overloadedNativeSymbolNames = new Dictionary<string, List<MarshalMethodInfo>> (StringComparer.Ordinal);
 			foreach (IList<MarshalMethodEntry> entryList in marshalMethods.Values) {
 				bool useFullNativeSignature = entryList.Count > 1;

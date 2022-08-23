@@ -283,7 +283,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			// TODO: if we can't native callback and/or delegate field using `callbackNameCore`, fall back to `jniName` (which is the first argument to the `[Register]`
+			// TODO: if we can't find native callback and/or delegate field using `callbackNameCore`, fall back to `jniName` (which is the first argument to the `[Register]`
 			// attribute). Or simply use `jniName` at once - needs testing.
 
 			string callbackNameCore = connectorName.Substring (HandlerNameStart.Length, connectorName.Length - HandlerNameStart.Length - HandlerNameEnd.Length);

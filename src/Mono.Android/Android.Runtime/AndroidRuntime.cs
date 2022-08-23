@@ -475,10 +475,10 @@ namespace Android.Runtime {
 
 #if ENABLE_MARSHAL_METHODS
 		// Temporary hack, see comments in RegisterNativeMembers below
-		static readonly Dictionary<string, List<string>> dynamicRegistrationMethods = new Dictionary<string, List<string>> (StringComparer.Ordinal) {
-			{"Android.Views.View+IOnLayoutChangeListenerImplementor",             new List<string> { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
-			{"Android.Views.View+IOnLayoutChangeListenerInvoker",                 new List<string> { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
-			{"Java.Interop.TypeManager+JavaTypeManager",                          new List<string> { "GetActivateHandler" }},
+		static readonly Dictionary<string, string[]> dynamicRegistrationMethods = new Dictionary<string, string[]> (StringComparer.Ordinal) {
+			{"Android.Views.View+IOnLayoutChangeListenerImplementor",             new string[] { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
+			{"Android.Views.View+IOnLayoutChangeListenerInvoker",                 new string[] { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
+			{"Java.Interop.TypeManager+JavaTypeManager",                          new string[] { "GetActivateHandler" }},
 		};
 #endif
 
@@ -488,9 +488,7 @@ namespace Android.Runtime {
 			Logger.Log (LogLevel.Info, "monodroid-mm", $"RegisterNativeMembers ('{nativeClass?.Name}', '{type?.FullName}', '{methods.ToString ()}')");
 			Logger.Log (LogLevel.Info, "monodroid-mm", "RegisterNativeMembers called from:");
 			var st = new StackTrace (true);
-			foreach (string l in st.ToString ().Split ("\n")) {
-				Logger.Log (LogLevel.Info, "monodroid-mm", l);
-			}
+			Logger.Log (LogLevel.Info, "monodroid-mm", st.ToString ());
 
 			if (methods.IsEmpty) {
 				Logger.Log (LogLevel.Info, "monodroid-mm", "No methods to register, returning");
