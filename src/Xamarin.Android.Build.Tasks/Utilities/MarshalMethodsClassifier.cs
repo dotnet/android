@@ -10,7 +10,7 @@ using Mono.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
-	public sealed class MarshalMethodEntry
+	sealed class MarshalMethodEntry
 	{
 		/// <summary>
 		/// The "real" native callback, used if it doesn't contain any non-blittable types in its parameters
@@ -138,8 +138,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					if (typeDef.IsEnum) {
-						// TODO: get the underlying type
-						return "System.Int32";
+						return GetEnumUnderlyingType (typeDef).FullName;
 					}
 				}
 
@@ -152,6 +151,19 @@ namespace Xamarin.Android.Tasks
 				}
 
 				return "System.IntPtr";
+			}
+
+			static TypeReference GetEnumUnderlyingType (TypeDefinition td)
+			{
+				var fields = td.Fields;
+
+				for (int i = 0; i < fields.Count; i++) {
+					var field = fields [i];
+					if (!field.IsStatic)
+						return field.FieldType;
+				}
+
+				throw new InvalidOperationException ($"Unable to determine underlying type of the '{td.FullName}' enum");
 			}
 
 			public bool Matches (MethodDefinition method)
@@ -258,6 +270,9 @@ namespace Xamarin.Android.Tasks
 		// TODO: Probably should check if all the methods and fields are private and static - only then it is safe(ish) to remove them
 		bool IsStandardHandler (TypeDefinition topType, ConnectorInfo connector, MethodDefinition registeredMethod, MethodDefinition implementedMethod, string jniName, string jniSignature)
 		{
+			Console.WriteLine ($"  topType: {topType.FullName}");
+			Console.WriteLine ($"  registered method type: {registeredMethod.DeclaringType.FullName}");
+			Console.WriteLine ($"  implemented method type: {implementedMethod.DeclaringType.FullName}");
 			const string HandlerNameStart = "Get";
 			const string HandlerNameEnd = "Handler";
 

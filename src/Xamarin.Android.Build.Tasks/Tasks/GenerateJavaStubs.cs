@@ -51,6 +51,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool GenerateNativeAssembly { get; set; }
 
+		[Required]
+		public bool EnableMarshalMethods { get; set; }
+
 		public string ManifestTemplate { get; set; }
 		public string[] MergedManifestDocuments { get; set; }
 
@@ -97,7 +100,7 @@ namespace Xamarin.Android.Tasks
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
 				using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true)) {
-					Run (res);
+					Run (res, useMarshalMethods: !Debug && EnableMarshalMethods);
 				}
 			} catch (XamarinAndroidException e) {
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);
@@ -115,7 +118,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		void Run (DirectoryAssemblyResolver res)
+		void Run (DirectoryAssemblyResolver res, bool useMarshalMethods)
 		{
 			PackageNamingPolicy pnp;
 			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
@@ -126,7 +129,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			Dictionary<string, HashSet<string>> marshalMethodsAssemblyPaths = null;
-			if (!Debug) {
+			if (useMarshalMethods) {
 				marshalMethodsAssemblyPaths = new Dictionary<string, HashSet<string>> (StringComparer.Ordinal);
 			}
 
@@ -164,7 +167,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				res.Load (assembly.ItemSpec);
-				if (!Debug) {
+				if (useMarshalMethods) {
 					StoreMarshalAssemblyPath (Path.GetFileNameWithoutExtension (assembly.ItemSpec), assembly);
 				}
 			}
@@ -193,7 +196,10 @@ namespace Xamarin.Android.Tasks
 
 			var javaTypes = new List<TypeDefinition> ();
 			foreach (TypeDefinition td in allJavaTypes) {
-				if (!userAssemblies.ContainsKey (td.Module.Assembly.Name.Name) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache)) {
+				// Whem marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
+				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
+				// build and stored in a jar file.
+				if ((!useMarshalMethods && !userAssemblies.ContainsKey (td.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache)) {
 					continue;
 				}
 
@@ -201,16 +207,16 @@ namespace Xamarin.Android.Tasks
 			}
 
 			MarshalMethodsClassifier classifier = null;
-			if (!Debug) {
+			if (useMarshalMethods) {
 				classifier = new MarshalMethodsClassifier (cache, res, Log);
 			}
 
 			// Step 2 - Generate Java stub code
-			var success = CreateJavaSources (javaTypes, cache, classifier);
+			var success = CreateJavaSources (javaTypes, cache, classifier, useMarshalMethods);
 			if (!success)
 				return;
 
-			if (!Debug) {
+			if (useMarshalMethods) {
 				// TODO: we must rewrite assemblies for all SupportedAbis. Alternatively, we need to copy the ones that are identical
 				// Cecil does **not** guarantee that the same assembly modified twice in the same will yield the same result - tokens may differ, so can
 				// MVID.
@@ -343,7 +349,7 @@ namespace Xamarin.Android.Tasks
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
 			foreach (var type in javaTypes) {
 				if (JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache)) {
-					if (!classifier.FoundDynamicallyRegisteredMethods (type)) {
+					if (classifier != null && !classifier.FoundDynamicallyRegisteredMethods (type)) {
 						continue;
 					}
 
@@ -359,7 +365,7 @@ namespace Xamarin.Android.Tasks
 			SaveResource (applicationTemplateFile, applicationTemplateFile, real_app_dir,
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
 
-			if (!Debug) {
+			if (useMarshalMethods) {
 				Log.LogDebugMessage ($"Number of generated marshal methods: {classifier.MarshalMethods.Count}");
 
 				if (classifier.RejectedMethodCount > 0) {
@@ -373,7 +379,7 @@ namespace Xamarin.Android.Tasks
 
 			void StoreMarshalAssemblyPath (string name, ITaskItem asm)
 			{
-				if (Debug) {
+				if (!useMarshalMethods) {
 					return;
 				}
 
@@ -387,8 +393,12 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier)
+		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier, bool useMarshalMethods)
 		{
+			if (useMarshalMethods && classifier == null) {
+				throw new ArgumentNullException (nameof (classifier));
+			}
+
 			string outputPath = Path.Combine (OutputDirectory, "src");
 			string monoInit = GetMonoInitSource (AndroidSdkPlatform);
 			bool hasExportReference = ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll");
@@ -410,7 +420,7 @@ namespace Xamarin.Android.Tasks
 						};
 
 						jti.Generate (writer);
-						if (!Debug) {
+						if (useMarshalMethods) {
 							if (classifier.FoundDynamicallyRegisteredMethods (t)) {
 								Log.LogWarning ($"Type '{t.GetAssemblyQualifiedName ()}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
 							}
@@ -449,7 +459,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			if (!Debug) {
+			if (useMarshalMethods) {
 				BuildEngine4.RegisterTaskObjectAssemblyLocal (MarshalMethodsRegisterTaskKey, new MarshalMethodsState (classifier.MarshalMethods), RegisteredTaskObjectLifetime.Build);
 			}
 
