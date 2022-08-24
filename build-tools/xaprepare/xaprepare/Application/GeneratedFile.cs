@@ -36,4 +36,16 @@ namespace Xamarin.Android.Prepare
 			Utilities.CreateDirectory (Path.GetDirectoryName (OutputPath));
 		}
 	}
+
+	sealed class SkipGeneratedFile : GeneratedFile {
+
+		public SkipGeneratedFile ()
+			: base (Path.Combine (BuildPaths.XAPrepareSourceDir, "shall-not-exist.txt"))
+		{
+		}
+
+		public override void Generate (Context context)
+		{
+		}
+	}
 }

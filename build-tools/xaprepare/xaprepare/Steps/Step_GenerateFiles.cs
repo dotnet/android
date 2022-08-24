@@ -10,6 +10,10 @@ namespace Xamarin.Android.Prepare
 		bool atBuildStart;
 		bool onlyRequired;
 
+		IEnumerable<GitSubmoduleInfo>?  gitSubmodules;
+		string?                         xaCommit;
+
+
 		public Step_GenerateFiles (bool atBuildStart, bool onlyRequired = false)
 			: base ("Generating files required by the build")
 		{
@@ -17,9 +21,14 @@ namespace Xamarin.Android.Prepare
 			this.onlyRequired = onlyRequired;
 		}
 
-#pragma warning disable CS1998
 		protected override async Task<bool> Execute (Context context)
 		{
+			var git                 = new GitRunner (context);
+			xaCommit                = git.GetTopCommitHash (workingDirectory: BuildPaths.XamarinAndroidSourceRoot, shortHash: false);
+			var gitSubmoduleInfo    = await git.ConfigList (new[]{"--blob", "HEAD:.gitmodules"});
+			var gitSubmoduleStatus  = await git.SubmoduleStatus ();
+			gitSubmodules           = GitSubmoduleInfo.GetGitSubmodules (gitSubmoduleInfo, gitSubmoduleStatus);
+
 			List<GeneratedFile>? filesToGenerate = GetFilesToGenerate (context);
 			if (filesToGenerate != null && filesToGenerate.Count > 0) {
 				foreach (GeneratedFile gf in filesToGenerate) {
@@ -39,13 +48,13 @@ namespace Xamarin.Android.Prepare
 
 			return true;
 		}
-#pragma warning restore CS1998
 
 		List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
 			if (atBuildStart) {
 				if (onlyRequired) {
 					return new List<GeneratedFile> {
+						Get_SourceLink_Json (context),
 						Get_MonoGitHash_props (context),
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
@@ -53,6 +62,7 @@ namespace Xamarin.Android.Prepare
 					};
 				} else {
 					return new List <GeneratedFile> {
+						Get_SourceLink_Json (context),
 						Get_Configuration_OperatingSystem_props (context),
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
@@ -252,6 +262,18 @@ namespace Xamarin.Android.Prepare
 				replacements,
 				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
 				Path.Combine (BuildPaths.XamarinAndroidSourceRoot, OutputFileName)
+			);
+		}
+
+		public GeneratedFile Get_SourceLink_Json (Context context)
+		{
+			if (gitSubmodules == null || xaCommit == null) {
+				return new SkipGeneratedFile ();
+			}
+			return new GeneratedSourceLinkJsonFile (
+					gitSubmodules!,
+					xaCommit!,
+					Path.Combine (Configurables.Paths.BuildBinDir, "SourceLink.json")
 			);
 		}
 	}
