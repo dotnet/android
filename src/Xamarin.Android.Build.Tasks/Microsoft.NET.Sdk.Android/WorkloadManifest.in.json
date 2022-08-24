@@ -14,7 +14,12 @@
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "osx-x64", "osx-arm64" ],
-      "extends" : [ "microsoft-net-runtime-android", "microsoft-net-runtime-android-aot" ]
+      "extends" : [ 
+        "microsoft-net-runtime-android-net6",
+        "microsoft-net-runtime-android-aot-net6",
+        "microsoft-net-runtime-android",
+        "microsoft-net-runtime-android-aot"
+      ]
     }
   },
   "packs": {
