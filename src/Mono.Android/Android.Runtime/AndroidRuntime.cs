@@ -585,11 +585,6 @@ namespace Android.Runtime {
 				}
 
 				if (needToRegisterNatives) {
-					// We need to reallocate as JniEnvironment.Types.RegisterNatives uses a `foreach` loop and will NREX otherwise (since we aren't filling all
-					// the slots in the original array potentially)
-					var newNatives = new JniNativeMethodRegistration[nativesIndex];
-					Array.Copy (natives, newNatives, nativesIndex);
-					natives = newNatives;
 					JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
 				}
 			} catch (Exception e) {
