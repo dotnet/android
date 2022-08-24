@@ -1318,6 +1318,8 @@ stages:
   jobs:
   # Check - "Xamarin.Android (BCL Emulator Tests macOS)"
   - job: mac_bcl_tests
+    # Disabled on .NET 6 release branches
+    condition: false
     displayName: macOS
     pool:
       vmImage: $(HostedMacImage)
