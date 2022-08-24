@@ -93,6 +93,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 			};
 			proj.SetAndroidSupportedAbis (DeviceAbi); // Use a single ABI
+			proj.SetProperty ("_FastDeploymentDiagnosticLogging", "False");
 			return proj;
 		}
 
