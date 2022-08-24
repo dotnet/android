@@ -8,8 +8,7 @@ steps:
     artifactName: $(InstallerArtifactName)
     downloadPath: $(System.DefaultWorkingDirectory)
     patterns: xamarin.android*.pkg
-  # Disabled on .NET 6 release branches
-  condition: false
+  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
 - task: DownloadPipelineArtifact@2
   inputs:
@@ -31,8 +30,8 @@ steps:
     }
     Write-Host "##vso[task.setvariable variable=XA.Provisionator.Args]$installer"
   displayName: find installer and set provisionator variable
-  # Disabled on .NET 6 release branches
-  condition: false
+  # Disabled Windows on .NET 6 release branches
+  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
 - task: provisionator@2
   inputs:
@@ -40,7 +39,7 @@ steps:
     github_token: $(GitHub.Token)
     provisioning_script: $(XA.Provisionator.Args)
     provisioning_extra_args: ${{ parameters.provisionExtraArgs }}
-  # Disabled on .NET 6 release branches
-  condition: false
+  # Disabled Windows on .NET 6 release branches
+  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
   env:
     PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
