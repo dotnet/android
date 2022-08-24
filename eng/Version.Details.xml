@@ -12,7 +12,11 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>430c42acb0eb0481f58d1acb172af346363e2edc</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Manifest-7.0.100" Version="7.0.0-rc.1.22411.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.net6.Manifest-7.0.100" Version="7.0.0-rc.1.22411.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+      <Uri>https://github.com/dotnet/emsdk</Uri>
+      <Sha>216093204c415b6e37dfadfcbcf183881b443636</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.net7.Manifest-7.0.100" Version="7.0.0-rc.1.22411.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
       <Sha>216093204c415b6e37dfadfcbcf183881b443636</Sha>
     </Dependency>

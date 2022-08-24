@@ -6,7 +6,7 @@
     <MicrosoftNETCoreAppRefPackageVersion>7.0.0-rc.1.22423.16</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenManifest70100Version>7.0.0-rc.1.22411.1</MicrosoftNETWorkloadEmscriptenManifest70100Version>
+    <MicrosoftNETWorkloadEmscriptennet7Manifest70100Version>7.0.0-rc.1.22411.1</MicrosoftNETWorkloadEmscriptennet7Manifest70100Version>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenManifest70100Version)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
   </PropertyGroup>
