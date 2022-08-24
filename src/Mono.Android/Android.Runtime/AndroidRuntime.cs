@@ -475,15 +475,13 @@ namespace Android.Runtime {
 
 		// Temporary hack, see comments in RegisterNativeMembers below
 		static readonly Dictionary<string, string[]> dynamicRegistrationMethods = new Dictionary<string, string[]> (StringComparer.Ordinal) {
-			{"Android.Views.View+IOnLayoutChangeListenerImplementor",             new string[] { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
-			{"Android.Views.View+IOnLayoutChangeListenerInvoker",                 new string[] { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
 			{"Java.Interop.TypeManager+JavaTypeManager",                          new string[] { "GetActivateHandler" }},
 		};
 
 		public void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
 			if (methods.IsEmpty) {
-				Logger.Log (LogLevel.Info, "monodroid-mm", "No methods to register, returning");
+				Logger.Log (LogLevel.Debug, "monodroid-mm", "No methods to register, returning");
 				return;
 			}
 

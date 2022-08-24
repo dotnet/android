@@ -366,12 +366,13 @@ namespace Xamarin.Android.Tasks
 
 			foreach (char ch in name) {
 				switch (ch) {
-					case '_':
-						sb.Append ("_1");
+					case '/':
+					case '.':
+						sb.Append ('_');
 						break;
 
-					case '/':
-						sb.Append ('_');
+					case '_':
+						sb.Append ("_1");
 						break;
 
 					case ';':
@@ -382,16 +383,12 @@ namespace Xamarin.Android.Tasks
 						sb.Append ("_3");
 						break;
 
-					case '$':
-						sb.Append ("_00024");
-						break;
-
 					default:
-						if ((int)ch > 127) {
+						if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
+							sb.Append (ch);
+						} else {
 							sb.Append ("_0");
 							sb.Append (((int)ch).ToString ("x04"));
-						} else {
-							sb.Append (ch);
 						}
 						break;
 				}
