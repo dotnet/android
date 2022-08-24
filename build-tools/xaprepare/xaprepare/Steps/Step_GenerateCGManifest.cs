@@ -149,6 +149,7 @@ namespace Xamarin.Android.Prepare
 
 		public  string      RepositoryUrl   {get; private set;} = String.Empty;
 		public  string      CommitHash      {get; private set;} = String.Empty;
+		public  string      LocalPath       {get; private set;} = String.Empty;
 
 		GitSubmoduleInfo ()
 		{
@@ -225,6 +226,7 @@ namespace Xamarin.Android.Prepare
 					break;
 				}
 				return new GitSubmoduleInfo () {
+					LocalPath       = path,
 					RepositoryUrl   = url,
 					CommitHash      = hash ?? String.Empty,
 				};
