@@ -199,6 +199,9 @@
     <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' And '$(AndroidApiLevel)' != '' And $(AndroidApiLevel) &gt; 23 ">1.8</JavacSourceVersion>
     <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.6</JavacSourceVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <JavaCallableWrapperSource Include="java\**\*.java" />
+  </ItemGroup>
   
   <!-- Generates 'FrameworkList.xml' file -->
   <Target Name="_GenerateFrameworkList"

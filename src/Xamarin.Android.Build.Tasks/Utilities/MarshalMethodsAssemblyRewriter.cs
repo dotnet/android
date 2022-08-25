@@ -53,13 +53,21 @@ namespace Xamarin.Android.Tasks
 					}
 
 					if (method.Connector != null) {
-						log.LogDebugMessage ($"Removing connector method {method.Connector.FullName}");
-						method.Connector.DeclaringType?.Methods?.Remove (method.Connector);
+						if (method.Connector.IsStatic && method.Connector.IsPrivate) {
+							log.LogDebugMessage ($"Removing connector method {method.Connector.FullName}");
+							method.Connector.DeclaringType?.Methods?.Remove (method.Connector);
+						} else {
+							log.LogWarning ($"NOT removing connector method {method.Connector.FullName} because it's either not static or not private");
+						}
 					}
 
 					if (method.CallbackField != null) {
-						log.LogDebugMessage ($"Removing callback delegate backing field {method.CallbackField.FullName}");
-						method.CallbackField.DeclaringType?.Fields?.Remove (method.CallbackField);
+						if (method.CallbackField.IsStatic && method.CallbackField.IsPrivate) {
+							log.LogDebugMessage ($"Removing callback delegate backing field {method.CallbackField.FullName}");
+							method.CallbackField.DeclaringType?.Fields?.Remove (method.CallbackField);
+						} else {
+							log.LogWarning ($"NOT removing callback field {method.CallbackField.FullName} because it's either not static or not private");
+						}
 					}
 
 					processedMethods.Add (fullNativeCallbackName, method.NativeCallback);

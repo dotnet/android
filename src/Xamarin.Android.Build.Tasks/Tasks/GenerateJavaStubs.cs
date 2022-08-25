@@ -366,6 +366,8 @@ namespace Xamarin.Android.Tasks
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
 
 			if (useMarshalMethods) {
+				classifier.AddSpecialCaseMethods ();
+
 				Log.LogDebugMessage ($"Number of generated marshal methods: {classifier.MarshalMethods.Count}");
 
 				if (classifier.RejectedMethodCount > 0) {

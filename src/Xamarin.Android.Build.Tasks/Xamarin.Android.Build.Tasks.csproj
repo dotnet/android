@@ -404,6 +404,9 @@
     <EmbeddedResource Include="Resources\ApplicationRegistration.java">
       <LogicalName>ApplicationRegistration.java</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="..\Mono.Android\java\mono\android\TypeManager.java">
+      <LogicalName>JavaInteropTypeManager.java</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

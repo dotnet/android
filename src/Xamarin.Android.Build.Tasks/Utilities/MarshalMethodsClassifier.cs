@@ -25,16 +25,17 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public MethodDefinition? NativeCallbackWrapper { get; set; }
 		public TypeDefinition DeclaringType            { get; }
-		public MethodDefinition Connector              { get; }
-		public MethodDefinition RegisteredMethod       { get; }
-		public MethodDefinition ImplementedMethod      { get; }
-		public FieldDefinition CallbackField           { get; }
+		public MethodDefinition? Connector             { get; }
+		public MethodDefinition? RegisteredMethod      { get; }
+		public MethodDefinition? ImplementedMethod     { get; }
+		public FieldDefinition? CallbackField          { get; }
 		public string JniTypeName                      { get; }
 		public string JniMethodName                    { get; }
 		public string JniMethodSignature               { get; }
 		public bool NeedsBlittableWorkaround           { get; }
 
 		public MethodDefinition NativeCallback         => NativeCallbackWrapper ?? nativeCallbackReal;
+		public bool IsSpecial                          { get; }
 
 		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
 				registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
@@ -50,6 +51,14 @@ namespace Xamarin.Android.Tasks
 			JniMethodName = EnsureNonEmpty (jniName, nameof (jniName));
 			JniMethodSignature = EnsureNonEmpty (jniSignature, nameof (jniSignature));
 			NeedsBlittableWorkaround = needsBlittableWorkaround;
+			IsSpecial = false;
+		}
+
+		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback)
+		{
+			DeclaringType = declaringType ?? throw new ArgumentNullException (nameof (declaringType));
+			nativeCallbackReal = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
+			IsSpecial = true;
 		}
 
 		string EnsureNonEmpty (string s, string argName)
@@ -249,6 +258,55 @@ namespace Xamarin.Android.Tasks
 			return typesWithDynamicallyRegisteredMethods.Contains (type);
 		}
 
+		/// <summary>
+		/// Adds MarshalMethodEntry for each method that won't be returned by the JavaInterop type scanner, mostly
+		/// used for hand-written methods (e.g. Java.Interop.TypeManager+JavaTypeManager::n_Activate)
+		/// </summary>
+		public void AddSpecialCaseMethods ()
+		{
+			AssemblyDefinition monoAndroid = resolver.Resolve ("Mono.Android");
+			TypeDefinition? typeManager = monoAndroid?.MainModule.FindType ("Java.Interop.TypeManager");
+			TypeDefinition? javaTypeManager = typeManager?.GetNestedType ("JavaTypeManager");
+
+			if (javaTypeManager == null) {
+				throw new InvalidOperationException ("Internal error: unable to find the Java.Interop.TypeManager+JavaTypeManager type in the Mono.Android assembly");
+			}
+
+			MethodDefinition? nActivate = null;
+			foreach (MethodDefinition method in javaTypeManager.Methods) {
+				Console.WriteLine ($"    considering method: {method.Name}");
+				if (String.Compare ("n_Activate_mm", method.Name, StringComparison.Ordinal) != 0) {
+					continue;
+				}
+
+				if (!method.IsStatic) {
+					log.LogWarning ($"Method '{method.FullName}' is not static");
+					continue;
+				}
+
+				if (!method.IsPrivate) {
+					log.LogWarning ($"Method '{method.FullName}' is not private");
+					continue;
+				}
+
+				if (!method.GetCustomAttributes ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute").Any (cattr => cattr != null)) {
+					log.LogWarning ($"Method '{method.FullName}' isn't decorated with the UnmanagedCallersOnly attribute");
+					continue;
+				}
+
+				nActivate = method;
+				break;
+			}
+
+			if (nActivate == null) {
+				throw new InvalidOperationException ("Internal error: unable to find the 'n_Activate_mm' method in the 'Java.Interop.TypeManager+JavaTypeManager, Mono.Android' type");
+			}
+
+			// TODO: obtain and pass to the constructor the JNI type name, method name and signature
+			var entry = new MarshalMethodEntry (javaTypeManager, nActivate);
+			marshalMethods.Add (".:!SpEcIaL:Java.Interop.TypeManager+JavaTypeManager::n_Activate_mm", new List<MarshalMethodEntry> { entry });
+		}
+
 		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
 		{
 			if (registerAttribute.ConstructorArguments.Count != 3) {
@@ -267,12 +325,8 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		// TODO: Probably should check if all the methods and fields are private and static - only then it is safe(ish) to remove them
 		bool IsStandardHandler (TypeDefinition topType, ConnectorInfo connector, MethodDefinition registeredMethod, MethodDefinition implementedMethod, string jniName, string jniSignature)
 		{
-			Console.WriteLine ($"  topType: {topType.FullName}");
-			Console.WriteLine ($"  registered method type: {registeredMethod.DeclaringType.FullName}");
-			Console.WriteLine ($"  implemented method type: {implementedMethod.DeclaringType.FullName}");
 			const string HandlerNameStart = "Get";
 			const string HandlerNameEnd = "Handler";
 
@@ -356,7 +410,6 @@ namespace Xamarin.Android.Tasks
 			// 	method.CallbackField?.DeclaringType.Fields == 'null'
 
 			StoreMethod (
-				connectorName,
 				registeredMethod,
 				new MarshalMethodEntry (
 					topType,
@@ -540,7 +593,7 @@ namespace Xamarin.Android.Tasks
 			return FindField (tdCache.Resolve (type.BaseType), fieldName, lookForInherited);
 		}
 
-		void StoreMethod (string connectorName, MethodDefinition registeredMethod, MarshalMethodEntry entry)
+		void StoreMethod (MethodDefinition registeredMethod, MarshalMethodEntry entry)
 		{
 			string typeName = registeredMethod.DeclaringType.FullName.Replace ('/', '+');
 			string key = $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{registeredMethod.Name}";
