@@ -37,6 +37,7 @@ steps:
     github_token: $(GitHub.Token)
     provisioning_script: $(XA.Provisionator.Args)
     provisioning_extra_args: ${{ parameters.provisionExtraArgs }}
-  condition: and(succeeded(), ne(variables['agent.os'], 'Linux'))
+  # Disabled on Windows on .NET release branches
+  condition: and(succeeded(), ne(variables['agent.os'], 'Linux'), or(not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')), eq(variables['agent.os'], 'Darwin')))
   env:
     PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
