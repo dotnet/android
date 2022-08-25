@@ -1422,6 +1422,7 @@ stages:
         !*Darwin*
       propsArtifactName: nuget-unsigned
       signType: $(MicroBuildSignType)
+      useDateTimeVersion: false
 
   # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
   - job: push_signed_nugets
