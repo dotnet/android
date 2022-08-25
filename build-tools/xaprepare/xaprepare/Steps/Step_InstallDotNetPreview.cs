@@ -49,13 +49,16 @@ namespace Xamarin.Android.Prepare
 			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests", context.Properties.GetRequiredValue (KnownProperties.DotNetSdkManifestsFolder));
 
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.* listed in package-download.proj
-			var destination = Path.Combine (sdk_manifests, "microsoft.net.workload.mono.toolchain");
-			foreach (var file in Directory.GetFiles (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, "WorkloadManifest.*")) {
-				Utilities.CopyFileToDir (file, destination);
-			}
-			destination = Path.Combine (sdk_manifests, "microsoft.net.workload.emscripten");
-			foreach (var file in Directory.GetFiles (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, "WorkloadManifest.*")) {
-				Utilities.CopyFileToDir (file, destination);
+			var dotnets = new [] { "net6", "net7" };
+			foreach (var dotnet in dotnets) {
+				var destination = Path.Combine (sdk_manifests, $"microsoft.net.workload.mono.toolchain.{dotnet}");
+				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "WorkloadManifest.*")) {
+					Utilities.CopyFileToDir (file, destination);
+				}
+				destination = Path.Combine (sdk_manifests, $"microsoft.net.workload.emscripten.{dotnet}");
+				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, dotnet), "WorkloadManifest.*")) {
+					Utilities.CopyFileToDir (file, destination);
+				}
 			}
 
 			return true;
