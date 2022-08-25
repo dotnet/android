@@ -715,14 +715,18 @@ stages:
   - template: yaml-templates/run-msbuild-mac-tests.yaml
     parameters:
       job_name: mac_msbuild_tests_0
-      nunit_categories: '|| cat == SmokeTests'
+      job_suffix: One .NET
+      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
+      target_framework: 'net6.0'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Xamarin.Android (Smoke Tests MSBuild - Win-0)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
-      job_name: win_msbuild_tests_0
-      nunit_categories: '|| cat == SmokeTests'
+      job_name: win_dotnet_tests_0
+      job_suffix: One .NET
+      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
+      target_framework: 'net6.0'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Check - "Xamarin.Android (Smoke Tests MSBuild Emulator - macOS)"
