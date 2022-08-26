@@ -41,6 +41,7 @@
         <HintPath>$(PkgHtmlAgilityPack)\lib\netstandard2.0\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

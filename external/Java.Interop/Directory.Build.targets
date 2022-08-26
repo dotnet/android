@@ -21,6 +21,7 @@
     <PackageReference Update="Microsoft.DotNet.GenAPI"                      Version="7.0.0-beta.22103.1" />
     <PackageReference Update="Microsoft.NET.Test.Sdk"                       Version="16.11.0" />
     <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies"   Version="1.0.2" />
+    <PackageReference Update="Microsoft.SourceLink.GitHub"                  Version="1.1.1" />
     <PackageReference Update="Mono.CSharp"                                  Version="4.0.0.143" />
     <PackageReference Update="Mono.Linq.Expressions"                        Version="2.0.0" />
     <PackageReference Update="Mono.Options"                                 Version="6.12.0.148" />

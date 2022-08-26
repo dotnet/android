@@ -22,6 +22,7 @@
     </Reference>
     <PackageReference Include="Mono.Options" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaSource\Java.Interop.Tools.JavaSource.csproj" />

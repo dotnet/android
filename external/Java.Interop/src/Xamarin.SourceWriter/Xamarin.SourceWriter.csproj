@@ -6,4 +6,8 @@
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
 </Project>

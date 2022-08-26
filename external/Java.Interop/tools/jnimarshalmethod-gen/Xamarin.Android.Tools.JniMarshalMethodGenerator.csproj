@@ -22,6 +22,7 @@
   <ItemGroup>
     <PackageReference Include="Mono.Options" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(_DumpRegisterNativeMembers)' == 'True' ">

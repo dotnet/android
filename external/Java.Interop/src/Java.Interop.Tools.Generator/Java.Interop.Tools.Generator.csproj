@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Java.Interop.Localization\Java.Interop.Localization.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
 </Project>

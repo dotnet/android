@@ -127,4 +127,7 @@
         AdditionalProperties="TargetFramework=net472"
     />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
 </Project>
