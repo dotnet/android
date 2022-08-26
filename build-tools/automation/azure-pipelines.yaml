@@ -715,14 +715,18 @@ stages:
   - template: yaml-templates/run-msbuild-mac-tests.yaml
     parameters:
       job_name: mac_msbuild_tests_0
-      nunit_categories: '|| cat == SmokeTests'
+      job_suffix: One .NET
+      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
+      target_framework: 'net6.0'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Xamarin.Android (Smoke Tests MSBuild - Win-0)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
-      job_name: win_msbuild_tests_0
-      nunit_categories: '|| cat == SmokeTests'
+      job_name: win_dotnet_tests_0
+      job_suffix: One .NET
+      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
+      target_framework: 'net6.0'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Check - "Xamarin.Android (Smoke Tests MSBuild Emulator - macOS)"
@@ -1409,7 +1413,7 @@ stages:
       usePipelineArtifactTasks: true
 
   # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-  - template: nuget-msi-convert/job/v2.yml@yaml
+  - template: nuget-msi-convert/job/v3.yml@yaml
     parameters:
       yamlResourceName: yaml
       dependsOn: sign_net_mac_win
@@ -1418,7 +1422,7 @@ stages:
         !*Darwin*
       propsArtifactName: nuget-unsigned
       signType: $(MicroBuildSignType)
-      runInParallel: false
+      useDateTimeVersion: false
 
   # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
   - job: push_signed_nugets
@@ -1483,6 +1487,20 @@ stages:
           inputs:
             artifactName: vsdrop-signed
             downloadPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
+
+    - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
+      parameters:
+        githubToken: $(GitHub.Token)
+        githubContext: $(MultiTargetVSDropCommitStatusName)
+        blobName: $(MultiTargetVSDropCommitStatusName)
+        packagePrefix: xamarin-android
+        artifactsPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
+        yamlResourceName: yaml
+        downloadSteps:
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: vsdrop-multitarget-signed
+            downloadPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
 
     - powershell: >-
         & dotnet build -v:n -c $(XA.Build.Configuration)
