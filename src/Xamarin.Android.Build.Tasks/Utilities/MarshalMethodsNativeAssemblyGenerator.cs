@@ -344,7 +344,8 @@ namespace Xamarin.Android.Tasks
 				classes.Add (new StructureInstance<MarshalMethodsManagedClass> (mc));
 			}
 
-			(Type returnType, List<LlvmIrFunctionParameter>? parameters) = ParseJniSignature (entry.JniMethodSignature, entry.ImplementedMethod);
+			// Methods with `IsSpecial == true` are "synthetic" methods - they contain only the callback reference
+			(Type returnType, List<LlvmIrFunctionParameter>? parameters) = ParseJniSignature (entry.JniMethodSignature, entry.IsSpecial ? entry.NativeCallback : entry.ImplementedMethod);
 
 			var method = new MarshalMethodInfo (entry, returnType, nativeSymbolName: nativeSymbolName, classIndex);
 			if (parameters != null && parameters.Count > 0) {

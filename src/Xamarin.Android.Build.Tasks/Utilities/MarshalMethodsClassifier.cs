@@ -5,6 +5,8 @@ using System.Linq;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.TypeNameMappings;
+
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 
@@ -54,10 +56,13 @@ namespace Xamarin.Android.Tasks
 			IsSpecial = false;
 		}
 
-		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback)
+		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, string jniTypeName, string jniName, string jniSignature)
 		{
 			DeclaringType = declaringType ?? throw new ArgumentNullException (nameof (declaringType));
 			nativeCallbackReal = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
+			JniTypeName = EnsureNonEmpty (jniTypeName, nameof (jniTypeName));
+			JniMethodName = EnsureNonEmpty (jniName, nameof (jniName));
+			JniMethodSignature = EnsureNonEmpty (jniSignature, nameof (jniSignature));
 			IsSpecial = true;
 		}
 
@@ -258,53 +263,132 @@ namespace Xamarin.Android.Tasks
 			return typesWithDynamicallyRegisteredMethods.Contains (type);
 		}
 
+		void AddTypeManagerSpecialCaseMethods ()
+		{
+			const string FullTypeName = "Java.Interop.TypeManager+JavaTypeManager, Mono.Android";
+
+			AssemblyDefinition monoAndroid = resolver.Resolve ("Mono.Android");
+			TypeDefinition? typeManager = monoAndroid?.MainModule.FindType ("Java.Interop.TypeManager");
+			TypeDefinition? javaTypeManager = typeManager?.GetNestedType ("JavaTypeManager");
+
+			if (javaTypeManager == null) {
+				throw new InvalidOperationException ($"Internal error: unable to find the {FullTypeName} type in the Mono.Android assembly");
+			}
+
+			MethodDefinition? nActivate_mm = null;
+			MethodDefinition? nActivate = null;
+
+			foreach (MethodDefinition method in javaTypeManager.Methods) {
+				if (nActivate_mm == null && IsMatchingMethod (method, "n_Activate_mm")) {
+					if (method.GetCustomAttributes ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute").Any (cattr => cattr != null)) {
+						nActivate_mm = method;
+					} else {
+						log.LogWarning ($"Method '{method.FullName}' isn't decorated with the UnmanagedCallersOnly attribute");
+						continue;
+					}
+				}
+
+				if (nActivate == null && IsMatchingMethod (method, "n_Activate")) {
+					nActivate = method;
+				}
+
+				if (nActivate_mm != null && nActivate != null) {
+					break;
+				}
+			}
+
+			if (nActivate_mm == null) {
+				ThrowMissingMethod ("nActivate_mm");
+			}
+
+			if (nActivate == null) {
+				ThrowMissingMethod ("nActivate");
+			}
+
+			string? jniTypeName = null;
+			foreach (CustomAttribute cattr in javaTypeManager.GetCustomAttributes ("Android.Runtime.RegisterAttribute")) {
+				if (cattr.ConstructorArguments.Count != 1) {
+					log.LogDebugMessage ($"[Register] attribute on type '{FullTypeName}' is expected to have 1 constructor argument, found {cattr.ConstructorArguments.Count}");
+					continue;
+				}
+
+				jniTypeName = (string)cattr.ConstructorArguments[0].Value;
+				if (!String.IsNullOrEmpty (jniTypeName)) {
+					break;
+				}
+			}
+
+			string? jniMethodName = null;
+			string? jniSignature = null;
+			foreach (CustomAttribute cattr in nActivate.GetCustomAttributes ("Android.Runtime.RegisterAttribute")) {
+				if (cattr.ConstructorArguments.Count != 3) {
+					log.LogDebugMessage ($"[Register] attribute on method '{nActivate.FullName}' is expected to have 3 constructor arguments, found {cattr.ConstructorArguments.Count}");
+					continue;
+				}
+
+				jniMethodName = (string)cattr.ConstructorArguments[0].Value;
+				jniSignature = (string)cattr.ConstructorArguments[1].Value;
+
+				if (!String.IsNullOrEmpty (jniMethodName) && !String.IsNullOrEmpty (jniSignature)) {
+					break;
+				}
+			}
+
+			bool missingInfo = false;
+			if (String.IsNullOrEmpty (jniTypeName)) {
+				missingInfo = true;
+				log.LogDebugMessage ($"Failed to obtain Java type name from the [Register] attribute on type '{FullTypeName}'");
+			}
+
+			if (String.IsNullOrEmpty (jniMethodName)) {
+				missingInfo = true;
+				log.LogDebugMessage ($"Failed to obtain Java method name from the [Register] attribute on method '{nActivate.FullName}'");
+			}
+
+			if (String.IsNullOrEmpty (jniSignature)) {
+				missingInfo = true;
+				log.LogDebugMessage ($"Failed to obtain Java method signature from the [Register] attribute on method '{nActivate.FullName}'");
+			}
+
+			if (missingInfo) {
+				throw new InvalidOperationException ($"Missing information while constructing marshal method for the '{nActivate_mm.FullName}' method");
+			}
+
+			var entry = new MarshalMethodEntry (javaTypeManager, nActivate_mm, jniTypeName, jniMethodName, jniSignature);
+			marshalMethods.Add (".:!SpEcIaL:Java.Interop.TypeManager+JavaTypeManager::n_Activate_mm", new List<MarshalMethodEntry> { entry });
+
+			void ThrowMissingMethod (string name)
+			{
+				throw new InvalidOperationException ($"Internal error: unable to find the '{name}' method in the '{FullTypeName}' type");
+			}
+
+			bool IsMatchingMethod (MethodDefinition method, string name)
+			{
+				if (String.Compare (name, method.Name, StringComparison.Ordinal) != 0) {
+					return false;
+				}
+
+				if (!method.IsStatic) {
+					log.LogWarning ($"Method '{method.FullName}' is not static");
+					return false;
+				}
+
+				if (!method.IsPrivate) {
+					log.LogWarning ($"Method '{method.FullName}' is not private");
+					return false;
+				}
+
+				return true;
+			}
+		}
+
 		/// <summary>
 		/// Adds MarshalMethodEntry for each method that won't be returned by the JavaInterop type scanner, mostly
 		/// used for hand-written methods (e.g. Java.Interop.TypeManager+JavaTypeManager::n_Activate)
 		/// </summary>
 		public void AddSpecialCaseMethods ()
 		{
-			AssemblyDefinition monoAndroid = resolver.Resolve ("Mono.Android");
-			TypeDefinition? typeManager = monoAndroid?.MainModule.FindType ("Java.Interop.TypeManager");
-			TypeDefinition? javaTypeManager = typeManager?.GetNestedType ("JavaTypeManager");
-
-			if (javaTypeManager == null) {
-				throw new InvalidOperationException ("Internal error: unable to find the Java.Interop.TypeManager+JavaTypeManager type in the Mono.Android assembly");
-			}
-
-			MethodDefinition? nActivate = null;
-			foreach (MethodDefinition method in javaTypeManager.Methods) {
-				Console.WriteLine ($"    considering method: {method.Name}");
-				if (String.Compare ("n_Activate_mm", method.Name, StringComparison.Ordinal) != 0) {
-					continue;
-				}
-
-				if (!method.IsStatic) {
-					log.LogWarning ($"Method '{method.FullName}' is not static");
-					continue;
-				}
-
-				if (!method.IsPrivate) {
-					log.LogWarning ($"Method '{method.FullName}' is not private");
-					continue;
-				}
-
-				if (!method.GetCustomAttributes ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute").Any (cattr => cattr != null)) {
-					log.LogWarning ($"Method '{method.FullName}' isn't decorated with the UnmanagedCallersOnly attribute");
-					continue;
-				}
-
-				nActivate = method;
-				break;
-			}
-
-			if (nActivate == null) {
-				throw new InvalidOperationException ("Internal error: unable to find the 'n_Activate_mm' method in the 'Java.Interop.TypeManager+JavaTypeManager, Mono.Android' type");
-			}
-
-			// TODO: obtain and pass to the constructor the JNI type name, method name and signature
-			var entry = new MarshalMethodEntry (javaTypeManager, nActivate);
-			marshalMethods.Add (".:!SpEcIaL:Java.Interop.TypeManager+JavaTypeManager::n_Activate_mm", new List<MarshalMethodEntry> { entry });
+			AddTypeManagerSpecialCaseMethods ();
 		}
 
 		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
