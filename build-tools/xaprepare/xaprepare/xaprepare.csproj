@@ -52,7 +52,7 @@
     <PackageReference Include="7-Zip.CommandLine" Version="18.1.0" GeneratePathProperty="true" />
     <PackageReference Include="Kajabity.Tools.Java" Version="0.2.6862.30334" />
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
-    <PackageReference Include="Mono.Unix" Version="7.0.0-final.1.21369.2" />
+    <PackageReference Include="Mono.Unix" Version="7.1.0-final.1.21458.1" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Private.Uri" Version="4.3.2" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" GeneratePathProperty="true" />
