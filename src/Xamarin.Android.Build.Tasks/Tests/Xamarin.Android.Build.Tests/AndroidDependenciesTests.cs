@@ -39,6 +39,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (b.Build (proj, parameters: new string [] {
 						"AcceptAndroidSDKLicenses=true",
 						"AndroidManifestType=GoogleV2",     // Need GoogleV2 so we can install API-32
+						"AndroidSdkPlatformToolsVersion=33.0.3",
 					}), "InstallAndroidDependencies should have succeeded.");
 					b.Target = defaultTarget;
 					b.BuildLogFile = "build.log";
