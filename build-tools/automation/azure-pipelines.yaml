@@ -338,6 +338,8 @@ stages:
   # Check - "Xamarin.Android (macOS > Tests > APKs Classic)"
   - job: mac_apk_tests_legacy
     displayName: macOS > Tests > APKs Classic
+    # Disabled on .NET release branches
+    condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 240
@@ -749,20 +751,24 @@ stages:
   # Xamarin.Android (Smoke Tests MSBuild - Mac-0)
   - template: yaml-templates/run-msbuild-mac-tests.yaml
     parameters:
-      job_name: mac_msbuild_tests_0
-      nunit_categories: '|| cat == SmokeTests'
+      job_name: mac_dotnet_tests_0
+      job_suffix: One .NET
+      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Xamarin.Android (Smoke Tests MSBuild - Win-0)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
-      job_name: win_msbuild_tests_0
-      nunit_categories: '|| cat == SmokeTests'
+      job_name: win_dotnet_tests_0
+      job_suffix: One .NET
+      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
+      target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator)"
   - job: mac_msbuilddevice_tests
-    displayName: macOS > Tests > MSBuild+Emulator
+    displayName: macOS > Tests > MSBuild+Emulator One .NET
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 90
@@ -793,9 +799,10 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
+        useDotNet: true
         testRunTitle: MSBuildDeviceIntegration Smoke - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "cat == SmokeTests"
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+        nunitConsoleExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
         testResultsFile: TestResult-MSBuildDeviceIntegrationSmoke-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
@@ -810,7 +817,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: Test Results - MSBuild Smoke With Emulator - macOS
+        artifactName: Test Results - MSBuild Smoke With Emulator - macOS - One .NET
 
     - template: yaml-templates/fail-on-issue.yaml
 
@@ -857,7 +864,8 @@ stages:
 - stage: msbuild_legacy
   displayName: Legacy Tests
   dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
+  # Disabled on .NET release branches
+  condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
   jobs:
   # Xamarin.Android (Test MSBuild Legacy - macOS)
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -865,7 +873,6 @@ stages:
       node_id: 1
       job_name: mac_msbuild_tests_1
       job_suffix: Legacy
-      nunit_categories: '&& cat != SmokeTests'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -873,7 +880,6 @@ stages:
       node_id: 2
       job_name: mac_msbuild_tests_2
       job_suffix: Legacy
-      nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -882,7 +888,6 @@ stages:
       node_id: 3
       job_name: mac_msbuild_tests_3
       job_suffix: Legacy
-      nunit_categories: '&& cat != SmokeTests'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -890,7 +895,6 @@ stages:
       node_id: 4
       job_name: mac_msbuild_tests_4
       job_suffix: Legacy
-      nunit_categories: '&& cat != SmokeTests'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -898,7 +902,6 @@ stages:
       node_id: 5
       job_name: mac_msbuild_tests_5
       job_suffix: Legacy
-      nunit_categories: '&& cat != SmokeTests'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -906,7 +909,6 @@ stages:
       node_id: 6
       job_name: mac_msbuild_tests_6
       job_suffix: Legacy
-      nunit_categories: '&& cat != SmokeTests'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Xamarin.Android (Test MSBuild Legacy - Windows)
@@ -916,7 +918,6 @@ stages:
       additional_node_id: 4
       job_name: win_msbuild_tests_1
       job_suffix: Legacy
-      nunit_categories: '&& cat != SmokeTests'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -925,7 +926,6 @@ stages:
       additional_node_id: 5
       job_name: win_msbuild_tests_2
       job_suffix: Legacy
-      nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -935,7 +935,6 @@ stages:
       additional_node_id: 6
       job_name: win_msbuild_tests_3
       job_suffix: Legacy
-      nunit_categories: '&& cat != SmokeTests'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
 - stage: msbuild_dotnet
@@ -949,7 +948,7 @@ stages:
       node_id: 1
       job_name: mac_dotnet_tests_1
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
+      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -958,7 +957,7 @@ stages:
       node_id: 2
       job_name: mac_dotnet_tests_2
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
+      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -967,7 +966,7 @@ stages:
       node_id: 3
       job_name: mac_dotnet_tests_3
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
+      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -976,7 +975,7 @@ stages:
       node_id: 4
       job_name: mac_dotnet_tests_4
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
+      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -985,7 +984,7 @@ stages:
       node_id: 5
       job_name: mac_dotnet_tests_5
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
+      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -994,7 +993,7 @@ stages:
       node_id: 6
       job_name: mac_dotnet_tests_6
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
+      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -1005,7 +1004,7 @@ stages:
       additional_node_id: 4
       job_name: win_dotnet_tests_1
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
+      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -1015,7 +1014,7 @@ stages:
       additional_node_id: 5
       job_name: win_dotnet_tests_2
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
+      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -1025,7 +1024,7 @@ stages:
       additional_node_id: 6
       job_name: win_dotnet_tests_3
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
+      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
@@ -1042,6 +1041,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
+      jobCondition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
@@ -1050,6 +1050,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
+      jobCondition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
@@ -1058,6 +1059,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
+      jobCondition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
@@ -1067,6 +1069,7 @@ stages:
       jdkTestFolder: $(XA.Jdk11.Folder)
       nunit_categories: '&& cat == Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
+      jobCondition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
 
   # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator One .NET #N)"
   - template: yaml-templates/run-msbuild-device-tests.yaml
@@ -1348,7 +1351,8 @@ stages:
 - stage: bcl_tests
   displayName: BCL Emulator Tests
   dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'BCL')))
+  # Disabled on .NET release branches
+  condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'BCL')))
   jobs:
   # Check - "Xamarin.Android (macOS > Tests > BCL (Emulator))"
   - job: mac_bcl_tests
