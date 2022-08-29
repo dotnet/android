@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -74,6 +75,13 @@ namespace Xamarin.Android.Build.Tests
 				};
 			}
 			proj.TargetFramework = targetFramework;
+			if (targetFramework.Contains ("net6.0")) {
+				proj.ExtraNuGetConfigSources = new List<string> () {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org or dotnet6
+					"https://api.nuget.org/v3/index.json",
+					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
+				};
+			}
 			if (publishTrimmed != null) {
 				proj.SetProperty (KnownProperties.PublishTrimmed, publishTrimmed.ToString ());
 			}
@@ -156,6 +164,13 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XASdkProject ();
 			proj.TargetFramework = targetFramework;
+			if (targetFramework.Contains ("net6.0")) {
+				proj.ExtraNuGetConfigSources = new List<string> () {
+					// Projects targeting net6.0 require ref/runtime packs on NuGet.org or dotnet6
+					"https://api.nuget.org/v3/index.json",
+					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
+				};
+			}
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 
