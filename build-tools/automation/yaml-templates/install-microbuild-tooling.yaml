@@ -15,7 +15,7 @@ steps:
     version: '2.8.0'
     condition: and(${{ parameters.condition }}, eq(variables['agent.os'], 'Darwin'))
 
-- task: MicroBuildSigningPlugin@3
+- task: MicroBuildSigningPlugin@4
   displayName: install signing plugin
   condition: ${{ parameters.condition }}
   inputs:
