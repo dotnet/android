@@ -122,5 +122,30 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.IsNotNull (t.Methods.SingleOrDefault (m => m.Name == "DoT"), "Method with generic T not found");
 			Assert.IsNotNull (t.Methods.SingleOrDefault (m => m.Name == "DoU"), "Method with generic U not found");
 		}
+
+		[Test]
+		public void InvalidBaseTypeResolution ()
+		{
+			var api = new JavaTypeCollection ();
+
+			// Create "my.ns" package
+			var my_ns = api.AddPackage ("my.ns", "my/ns");
+
+			// Create new "my.ns.MyObject" type with "my.ns.MyObject" as base type
+			var jlo = JavaApiTestHelper.CreateClass (my_ns, "MyObject", javaBaseType: "my.ns.MyObject", javaBaseTypeGeneric: "my.ns.MyObject");
+
+			api.AddType (jlo);
+
+			// Run the resolver
+			var results = api.ResolveCollection ();
+
+			// Ensure we marked it as unresolvable
+			Assert.AreEqual (1, results.Count);
+			Assert.AreEqual (1, results [0].Unresolvables.Count);
+			Assert.AreEqual ("The class '[Class] my.ns.MyObject' was removed because the base type 'my.ns.MyObject' is invalid.", results [0].Unresolvables [0].GetDisplayMessage ());
+
+			// Ensure we removed the type from the collection
+			Assert.AreEqual (0, api.TypesFlattened.Count);
+		}
 	}
 }

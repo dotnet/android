@@ -37,6 +37,13 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 					throw;
 				}
 
+				// Apparently some Java obfuscator sets a class's base type to itself, which
+				// results in a stack overflow. Check for this case and remove the offending type.
+				if (BaseTypeReference.ReferencedType is JavaClassModel jcm && jcm == this) {
+					unresolvables.Add (new JavaUnresolvableModel (this, BaseTypeGeneric, UnresolvableType.InvalidBaseType));
+					throw new JavaTypeResolutionException (BaseTypeGeneric);
+				}
+
 				// We don't resolve reference-only types by default, so if our base class
 				// is a reference only type, we need to force it to resolve here. This will be
 				// needed later when we attempt to resolve base methods.

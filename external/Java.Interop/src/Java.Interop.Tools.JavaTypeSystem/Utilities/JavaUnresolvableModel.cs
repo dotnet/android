@@ -25,6 +25,9 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 					$"The type '{member?.DeclaringType.FullName}' was removed because the required {GetUnresolvableType ()} '{GetUnresolvable ()}' was removed because its name contains a dollar sign." :
 					$"The {GetUnresolvableType ()} '{GetUnresolvable ()}' was removed because its name contains a dollar sign.";
 
+			if (Type == UnresolvableType.InvalidBaseType)
+				return $"The {GetUnresolvableType ()} '{GetUnresolvable ()}' was removed because the base type '{MissingType}' is invalid.";
+
 			if (Unresolvable is JavaTypeModel)
 				return $"The {GetUnresolvableType ()} '{GetUnresolvable ()}' was removed because the Java {GetReason ()} '{MissingType}' could not be found.";
 
@@ -77,6 +80,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 		ReturnType,
 		ParameterType,
 		BaseType,
-		ImplementsType
+		ImplementsType,
+		InvalidBaseType,
 	}
 }
