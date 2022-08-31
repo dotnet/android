@@ -2,6 +2,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
   makeMSBuildArgs: ''
   provisionatorChannel: latest
+  signClassicPkgContent: true
 
 steps:
 - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-11"
@@ -63,15 +64,52 @@ steps:
     msbuildArguments: /t:Restore /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
 
 - task: MSBuild@1
-  displayName: sign and harden classic installer content
+  displayName: PKG signing - add entitlements and sign classic libraries
   inputs:
     solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     configuration: $(XA.Build.Configuration)
     msbuildArguments: >-
-      /t:AddMachOEntitlements;Build
+      /t:AddMachOEntitlements;AddMSBuildFilesUnixSign;Build
       /p:SignType=$(MicroBuildSignType)
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
+  condition: and(succeeded(), eq('${{ parameters.signClassicPkgContent }}', 'true'))
+
+- task: MSBuild@1
+  displayName: PKG signing - sign classic executables
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: >-
+      /t:AddMSBuildFilesUnixSignAndHarden;Build
+      /p:SignType=$(MicroBuildSignType)
+      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
+  condition: and(succeeded(), eq('${{ parameters.signClassicPkgContent }}', 'true'))
+
+- task: MSBuild@1
+  displayName: PKG signing - sign binutils libraries
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: >-
+      /t:AddBinUtilsFilesUnixSign;Build
+      /p:SignType=$(MicroBuildSignType)
+      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
+  condition: and(succeeded(), eq('${{ parameters.signClassicPkgContent }}', 'true'))
+
+- task: MSBuild@1
+  displayName: PKG signing - sign binutils executables
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: >-
+      /t:AddBinUtilsFilesUnixSignAndHarden;Build
+      /p:SignType=$(MicroBuildSignType)
+      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
+  condition: and(succeeded(), eq('${{ parameters.signClassicPkgContent }}', 'true'))
 
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}

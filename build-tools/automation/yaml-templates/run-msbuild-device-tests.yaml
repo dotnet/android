@@ -8,10 +8,12 @@ parameters:
   target_framework: 'net472'
   dotnet_targetframework: $(DotNetStableTargetFramework)
   provisionatorChannel: latest
+  jobCondition: succeeded()
 
 jobs:
   - job: ${{ parameters.job_name }}
     displayName: "macOS > Tests > MSBuild+Emulator ${{ parameters.job_suffix }} #${{ parameters.node_id }}"
+    condition: ${{ parameters.jobCondition }}
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 90

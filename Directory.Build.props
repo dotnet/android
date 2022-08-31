@@ -38,8 +38,8 @@
 
   <!-- Common <PackageReference/> versions -->
   <PropertyGroup>
-    <LibZipSharpVersion>2.0.4</LibZipSharpVersion>
-    <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
+    <LibZipSharpVersion>2.0.7</LibZipSharpVersion>
+    <MicroBuildCoreVersion>1.0.0</MicroBuildCoreVersion>
     <MonoCecilVersion>0.11.4</MonoCecilVersion>
     <NewtonsoftJsonPackageVersion>13.0.1</NewtonsoftJsonPackageVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
