@@ -368,15 +368,12 @@
     <_MSBuildLibHostFilesWin Include="$(MicrosoftAndroidSdkOutDir)lib\host-mxe-Win64\libxa-internal-api.dll" Condition=" '$(HostOS)' != 'Windows' " />
   </ItemGroup>
   <ItemDefinitionGroup>
-    <_MSBuildFilesUnixSign>
-      <CodeSign>True</CodeSign>
-    </_MSBuildFilesUnixSign>
     <_MSBuildFilesUnixSignAndHarden>
-      <CodeSign>True</CodeSign>
-      <HardenRuntime>True</HardenRuntime>
-      <EntitlementsPath>$(DefaultRuntimeEntitlementsPath)</EntitlementsPath>
       <Permission>755</Permission>
     </_MSBuildFilesUnixSignAndHarden>
+    <_BinUtilsFilesUnixSignAndHarden>
+      <Permission>755</Permission>
+    </_BinUtilsFilesUnixSignAndHarden>
   </ItemDefinitionGroup>
   <Import Project="unix-binutils.projitems" />
   <ItemGroup>
@@ -498,7 +495,7 @@
       <LegacyMSBuildItemsWin Include="@(_LegacyJIFiles);@(JIUtilityFile->'$(LegacyMSBuildSrcDir)%(Identity)')">
         <RelativePath>%(Filename)%(Extension)</RelativePath>
       </LegacyMSBuildItemsWin>
-      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)">
+      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden);@(_BinUtilsFilesUnixSign);@(_BinUtilsFilesUnixSignAndHarden)">
         <RelativePath>$([MSBuild]::MakeRelative($(MicrosoftAndroidSdkOutDir), %(FullPath)))</RelativePath>
       </MSBuildItemsUnix>
       <MSBuildItemsUnix Include="@(_MSBuildTargetsSrcFiles)">

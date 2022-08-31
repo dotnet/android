@@ -38,3 +38,5 @@ variables:
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false
+- name: DotNetReleaseBranchPrefix
+  value: refs/heads/release/

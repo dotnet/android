@@ -306,6 +306,7 @@ public class JavaSourceTest {
 				ExtraNuGetConfigSources = {
 					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
 					"https://api.nuget.org/v3/index.json",
+					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
 				},
 			};
 			if (IsPreviewFrameworkVersion (targetFramework)) {
@@ -843,6 +844,7 @@ public class JavaSourceTest {
 				ExtraNuGetConfigSources = {
 					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
 					"https://api.nuget.org/v3/index.json",
+					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
 				},
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
@@ -928,7 +930,7 @@ public class JavaSourceTest {
 		public void XamarinLegacySdk ([Values ("net6.0-android32.0", "net7.0-android33.0")] string dotnetTargetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
-				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha1",
+				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha2",
 				Sources = {
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
@@ -937,6 +939,7 @@ public class JavaSourceTest {
 				ExtraNuGetConfigSources = {
 					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
 					"https://api.nuget.org/v3/index.json",
+					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
 				},
 			};
 
@@ -969,6 +972,7 @@ public class JavaSourceTest {
 				ExtraNuGetConfigSources = {
 					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
 					"https://api.nuget.org/v3/index.json",
+					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
 				},
 			};
 

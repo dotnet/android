@@ -31,13 +31,40 @@ ourself (using an empty signing identity) before passing these files to ESRP.
   </ItemGroup>
 
   <Target Name="AddMachOEntitlements" >
-    <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;%(_MSBuildFilesUnixSignAndHarden.EntitlementsPath)&quot; &quot;%(_MSBuildFilesUnixSignAndHarden.Identity)&quot;" />
+    <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;%(_MSBuildFilesUnixSignAndHarden.Identity)&quot;" />
+    <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;%(_BinUtilsFilesUnixSignAndHarden.Identity)&quot;" />
+  </Target>
+
+  <Target Name="AddMSBuildFilesUnixSign" >
     <ItemGroup>
       <FilesToSign Include="@(_MSBuildFilesUnixSign)">
         <Authenticode>MacDeveloperVNext</Authenticode>
         <Zip>true</Zip>
       </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AddMSBuildFilesUnixSignAndHarden" >
+    <ItemGroup>
       <FilesToSign Include="@(_MSBuildFilesUnixSignAndHarden)">
+        <Authenticode>MacDeveloperVNextHarden</Authenticode>
+        <Zip>true</Zip>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AddBinUtilsFilesUnixSign" >
+    <ItemGroup>
+      <FilesToSign Include="@(_BinUtilsFilesUnixSign)">
+        <Authenticode>MacDeveloperVNext</Authenticode>
+        <Zip>true</Zip>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AddBinUtilsFilesUnixSignAndHarden" >
+    <ItemGroup>
+      <FilesToSign Include="@(_BinUtilsFilesUnixSignAndHarden)">
         <Authenticode>MacDeveloperVNextHarden</Authenticode>
         <Zip>true</Zip>
       </FilesToSign>
