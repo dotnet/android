@@ -641,8 +641,8 @@ for use with
 [`System.Type.GetType(string)`](/dotnet/api/system.type.gettype#System_Type_GetType_System_String_).
 
 In .NET 6 and newer, this property has effect only when used together
-with `$(UseNativeHttpHandler)=true`. The most common values for this
-property are:
+with [`$(UseNativeHttpHandler)=true`](https://github.com/dotnet/runtime/blob/main/docs/workflow/trimming/feature-switches.md).
+The most common values for this property are:
 
 - `Xamarin.Android.Net.AndroidMessageHandler`: Use the Android Java APIs
   to perform HTTP requests. It is similar to the legacy
