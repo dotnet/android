@@ -24,6 +24,7 @@ namespace Android.Runtime {
 		static IX509TrustManager? sslTrustManager;
 		static KeyStore? certStore;
 		static object lock_ = new object ();
+		static Type? httpMessageHandlerType;
 
 		static void SetupTrustManager ()
 		{
@@ -344,18 +345,56 @@ namespace Android.Runtime {
 #if !MONOANDROID1_0
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (Xamarin.Android.Net.AndroidMessageHandler))]
 #endif
-		static object? GetHttpMessageHandler ()
+		static object GetHttpMessageHandler ()
 		{
-			var envvar = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
-			Type? handlerType = null;
-			if (!String.IsNullOrEmpty (envvar))
-				handlerType = Type.GetType (envvar, false);
-			else
-				return null;
-			if (handlerType == null)
-				return null;
-			// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
-			return Activator.CreateInstance (handlerType);
+			if (httpMessageHandlerType is null) {
+				var handlerTypeName = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
+				Type? handlerType = null;
+				if (!String.IsNullOrEmpty (handlerTypeName))
+					handlerType = Type.GetType (handlerTypeName, throwOnError: false);
+
+				// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
+				if (handlerType is null || !IsAcceptableHttpMessageHandlerType (handlerType)) {
+					handlerType = GetFallbackHttpMessageHandlerType ();
+				}
+
+				httpMessageHandlerType = handlerType;
+			}
+
+			return Activator.CreateInstance (httpMessageHandlerType)
+				?? throw new InvalidOperationException ($"Could not create an instance of HTTP message handler type {httpMessageHandlerType.AssemblyQualifiedName}");
+		}
+
+		static bool IsAcceptableHttpMessageHandlerType (Type handlerType)
+		{
+#if !MONOANDROID1_0
+			if (Extends (handlerType, "System.Net.Http.HttpClientHandler, System.Net.Http")) {
+				// It's not possible to construct HttpClientHandler in this method because it would cause infinite recursion
+				// as HttpClientHandler's constructor calls the GetHttpMessageHandler function
+				Logger.Log (LogLevel.Warn, "MonoAndroid", $"The type {handlerType.AssemblyQualifiedName} cannot be used as the native HTTP handler because it is derived from System.Net.Htt.HttpClientHandler. Use a type that extends System.Net.Http.HttpMessageHandler instead.");
+				return false;
+			}
+#endif
+			if (!Extends (handlerType, "System.Net.Http.HttpMessageHandler, System.Net.Http")) {
+				Logger.Log (LogLevel.Warn, "MonoAndroid", $"The type {handlerType.AssemblyQualifiedName} set as the default HTTP handler is invalid. Use a type that extends System.Net.Http.HttpMessageHandler.");
+				return false;
+			}
+
+			return true;
+		}
+
+		static bool Extends (Type handlerType, string baseTypeName) {
+			var baseType = Type.GetType (baseTypeName, throwOnError: false);
+			return baseType?.IsAssignableFrom (handlerType) ?? false;
+		}
+
+		static Type GetFallbackHttpMessageHandlerType (string typeName = "Xamarin.Android.Net.AndroidMessageHandler, Mono.Android")
+		{
+			var handlerType = Type.GetType (typeName, throwOnError: false)
+				?? throw new InvalidOperationException ($"The {typeName} was not found. The type was probably linked away.");
+
+			Logger.Log (LogLevel.Info, "MonoAndroid", $"Using {typeName} as the native HTTP message handler.");
+			return handlerType;
 		}
 
 		internal static bool VSAndroidDesignerIsEnabled { get; } = InitializeVSAndroidDesignerIsEnabled ();
