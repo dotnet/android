@@ -38,5 +38,9 @@ variables:
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false
+# Workaround: error NU1102: Unable to find package Microsoft.NETCore.App.Host.osx-x64 with version (= 6.0.10)
+# https://github.com/dotnet/sdk/pull/25358
+- name: DisableTransitiveFrameworkReferenceDownloads
+  value: true
 - name: DotNetReleaseBranchPrefix
   value: refs/heads/release/
