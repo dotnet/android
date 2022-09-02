@@ -639,7 +639,31 @@ the `System.Net.Http.HttpClient` default constructor. The value is an
 assembly-qualified type name of an `HttpMessageHandler` subclass, suitable
 for use with
 [`System.Type.GetType(string)`](/dotnet/api/system.type.gettype#System_Type_GetType_System_String_).
+
+In .NET 6 and newer, this property has effect only when used together
+with [`$(UseNativeHttpHandler)=true`](https://github.com/dotnet/runtime/blob/main/docs/workflow/trimming/feature-switches.md).
 The most common values for this property are:
+
+- `Xamarin.Android.Net.AndroidMessageHandler`: Use the Android Java APIs
+  to perform HTTP requests. It is similar to the legacy
+  `Xamarin.Android.Net.AndroidClientHandler` with several improvements.
+  It supports HTTP 1.1 and TLS 1.2. It is the default HTTP message handler.
+
+- `System.Net.Http.SocketsHttpHandler, System.Net.Http`: The default message
+  handler in .NET. It supports HTTP/2, TLS 1.2, and it is the recommended
+  HTTP message handler to use with [Grpc.Net.Client](https://www.nuget.org/packages/Grpc.Net.Client).
+  This value is equivalent to `$(UseNativeHttpHandler)=false`.
+
+> [!NOTE]
+> There are differences in the internal implementation of .NET 6 and
+> "legacy" Xamarin.Android and the valid values for this property are
+> different. In .NET 6, the type you specify must not be
+> `Xamarin.Android.Net.AndroidClientHandler` or `System.Net.Http.HttpClientHandler`
+> or inherit from either of these classes. If you are migrating from
+> "legacy" Xamarin.Android, use `AndroidMessageHandler` or derive your
+> custom handler from it instead.
+
+In legacy Xamarin apps, the most common values for this property are:
 
 - `Xamarin.Android.Net.AndroidClientHandler`: Use the Android Java APIs
   to perform network requests. Using Java APIs allows accessing TLS 1.2 URLs when
