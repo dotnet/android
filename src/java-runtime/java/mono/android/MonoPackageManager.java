@@ -45,10 +45,13 @@ public class MonoPackageManager {
 				String dataDir      = getNativeLibraryPath (context);
 				ClassLoader loader  = context.getClassLoader ();
 				String runtimeDir = getNativeLibraryPath (runtimePackage);
-				int localDateTimeOffset = (Calendar.getInstance ().get (Calendar.ZONE_OFFSET) + Calendar.getInstance ().get (Calendar.DST_OFFSET)) / 1000;
+				int localDateTimeOffset;
 
 				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 					localDateTimeOffset = OffsetDateTime.now().getOffset().getTotalSeconds();
+				}
+				else {
+					localDateTimeOffset = (Calendar.getInstance ().get (Calendar.ZONE_OFFSET) + Calendar.getInstance ().get (Calendar.DST_OFFSET)) / 1000;
 				}
 
 				//

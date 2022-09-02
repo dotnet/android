@@ -31,9 +31,9 @@ namespace xamarin::android::internal
 
 			_property_values[APP_CONTEXT_BASE_DIRECTORY_INDEX] = strdup (filesDir.get_cstr ());
 
-			char localDateTimeOffsetBuffer[32];
-			snprintf (localDateTimeOffsetBuffer, sizeof(localDateTimeOffsetBuffer), "%d", localDateTimeOffset);
-			_property_values[LOCAL_DATE_TIME_OFFSET_INDEX] = strdup (localDateTimeOffsetBuffer);
+			static_local_string<32> localDateTimeOffsetBuffer;
+			localDateTimeOffsetBuffer.append (localDateTimeOffset);
+			_property_values[LOCAL_DATE_TIME_OFFSET_INDEX] = strdup (localDateTimeOffsetBuffer.get ());
 		}
 
 		constexpr int property_count () const
