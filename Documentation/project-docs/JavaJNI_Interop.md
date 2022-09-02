@@ -1,21 +1,20 @@
 <!--toc:start-->
 - [Introduction](#introduction)
 - [Java <-> Managed interoperability overview](#java-managed-interoperability-overview)
- - [Java Callable Wrappers](#java-callable-wrappers)
- - [Managed Callable Wrappers](#managed-callable-wrappers)
+  - [Java Callable Wrappers (JCW)](#java-callable-wrappers-jcw)
 - [Registration](#registration)
- - [Dynamic registration](#dynamic-registration)
-  - [Dynamic Java Callable Wrappers registration code](#dynamic-java-callable-wrappers-registration-code)
-  - [Dynamic Registration call sequence](#dynamic-registration-call-sequence)
- - [Marshal methods](#marshal-methods)
-  - [Marshal Methods Java Callable Wrappers registration code](#marshal-methods-java-callable-wrappers-registration-code)
-  - [Marshal methods C# source code](#marshal-methods-c-source-code)
-  - [JNI requirements](#jni-requirements)
-  - [LLVM IR code generation](#llvm-ir-code-generation)
-  - [Assembly rewriting](#assembly-rewriting)
-   - [Wrappers for methods with non-blittable types](#wrappers-for-methods-with-non-blittable-types)
-   - [UnmanagedCallersOnly attribute](#unmanagedcallersonly-attribute)
-  - [Marshal Methods Registration call sequence](#marshal-methods-registration-call-sequence)
+  - [Dynamic registration](#dynamic-registration)
+    - [Dynamic Java Callable Wrappers registration code](#dynamic-java-callable-wrappers-registration-code)
+    - [Dynamic Registration call sequence](#dynamic-registration-call-sequence)
+  - [Marshal methods](#marshal-methods)
+    - [Marshal Methods Java Callable Wrappers registration code](#marshal-methods-java-callable-wrappers-registration-code)
+    - [Marshal methods C# source code](#marshal-methods-c-source-code)
+    - [JNI requirements](#jni-requirements)
+    - [LLVM IR code generation](#llvm-ir-code-generation)
+    - [Assembly rewriting](#assembly-rewriting)
+      - [Wrappers for methods with non-blittable types](#wrappers-for-methods-with-non-blittable-types)
+      - [UnmanagedCallersOnly attribute](#unmanagedcallersonly-attribute)
+    - [Marshal Methods Registration call sequence](#marshal-methods-registration-call-sequence)
 <!--toc:end-->
 
 # Introduction
@@ -26,9 +25,9 @@ work, it is necessary to "bridge" the two separate worlds of Java VM
 (`ART` in the Android OS) and the Managed VM (`MonoVM`).  Application
 developers expect to be able to call native Android APIs and receive
 calls (or react to events) from the Android side using code written in
-one of the .NET managed languages.  In order to make it work,
-`Xamarin.Android` employs a number of techniques, both at build and at
-run time, which are described in the sections below.
+one of the .NET managed languages.  To make it work, `Xamarin.Android`
+employs a number of techniques, both at build and at run time, which
+are described in the sections below.
 
 This guide is meant to explain the technical implementation in a way
 that is sufficient to understand the system without having to read the
@@ -41,11 +40,10 @@ co-exist in the same process/application.  Despite sharing the same
 process resources, they don't "naturally" communicate with each other.
 There is no direct way to call Java/Kotlin from .NET a'la the
 `p/invoke` mechanism which allows calling native code APIs.  Nor there
-exists a way for Java/Kotlin code to invoke managed methods.  In order
-to make it possible, `Xamarin.Android` takes advantage of the Java's
-[JNI](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
+exists a way for Java/Kotlin code to invoke managed methods.  To make
+it possible, `Xamarin.Android` takes advantage of the Java's [JNI](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
 (`Java Native Interface`), a mechanism that allows native code
-(managed code being "native" in this context) to register
+(.NET managed code being "native" in this context) to register
 implementations of Java methods, written outside the Java VM and in
 languages other than Java/Kotlin (for instance in `C`, `C++` or
 `Rust`).
@@ -79,7 +77,7 @@ native function implementing the Java method.
 Both ways of registration are described in detail in the following
 sections.
 
-## Java Callable Wrappers
+## Java Callable Wrappers (JCW)
 
 `Xamarin.Android` wraps the entire Android API by generating
 appropriate C# code which reflects the Java/Kotlin code (classes,
@@ -87,12 +85,12 @@ interfaces, methods, properties etc).  Each generated class that
 corresponds to a Java/Kotlin type, is derived from the
 `Java.Lang.Object` class (implemented in the `Mono.Android` assembly),
 which marks it as a "Java interoperable type", meaning that it can
-implement or override virtual Java methods.  In order to make it
-possible to register and invoke such methods, it is necessary to
-generate a Java class which reflects the Managed one and provides an
-entry point to the Java <-> Managed transition.  The Java classes are
-generated during application (as well as `Xamarin.Android`) build and
-we call them **Java Callable Wrappers**.  For instance, the following
+implement or override virtual Java methods.  To make registration and
+invoking of such methods possible, it is necessary to generate a Java
+class which reflects the Managed one and provides an entry point to
+the Java <-> Managed transition.  The Java classes are generated
+during application (as well as `Xamarin.Android`) build and we call
+them **Java Callable Wrappers**.  For instance, the following 
 managed class:
 
 ```csharp
@@ -118,7 +116,8 @@ public class MainActivity : AppCompatActivity
 
 overrides two Java virtual methods found in the `AppCompatActivity`
 type: `OnCreateView` and `OnCreate`.  The `DoSomething` method does
-not correspond to any method found in the base Java type.
+not correspond to any method found in the base Java type, and thus it
+won't be included in the JCW.
 
 The Java Callable Wrapper generated for the above class would look as
 follows (a few generated methods not relevant to the discussion have
@@ -149,12 +148,10 @@ mechanisms described in sections found later in this document.  The
 this example in order to explain the details of how the Managed type
 and its methods are registered with the Java VM.
 
-## Managed Callable Wrappers
-
 # Registration
 
 Both mechanisms of method registration rely on generation of [Java
-Callable Wrappers](#java-callable-wrappers), with [Dynamic
+Callable Wrappers](#java-callable-wrappers-jcw), with [Dynamic
 registration](#dynamic-registration) requiring more code to be
 generated so that the registration can be performed at the runtime.
 
@@ -245,8 +242,8 @@ when the application is built in the `Debug` configuration or when
 ### Dynamic Java Callable Wrappers registration code
 
 Building on the C# example shown in the [Java Callable
-Wrappers](#java-callable-wrappers) section, the following Java code is 
-generated (only the parts relevant to registration are shown):
+Wrappers](#java-callable-wrappers-jcw) section, the following Java
+code is generated (only the parts relevant to registration are shown):
 
 ```java
 public class MainActivity
@@ -278,19 +275,75 @@ public class MainActivity
 }
 ```
 
+Code fragment which takes part in registration is the class's static
+constructor.  For each method registered for the type (that is,
+implemented or overridden in the managed code), the JCW generator
+outputs a single string which contains full information about the type
+and method to register.  Each such registration string is terminated
+with the newline character and the entire sequence ends with an empty
+string.  Together, all the lines are concatenated and placed in the
+`__md_methods` static variable.  The `mono.android.Runtime.register`
+method (see below for more details) is then invoked to register all
+the methods.
+
 ### Dynamic Registration call sequence
+
+All the "native" methods declared in the generated Java type are
+registered when the type is constructed or accessed for the first
+time.  This is when the Java VM invokes the type's static constructor,
+kicking off a sequence of calls that eventually ends with all the type
+methods registered with JNI:
+
+  1. `mono.android.Runtime.register` is itself a native method,
+     declared in the
+     [`Runtime`](../../src/java-runtime/java/mono/android/Runtime.java)
+     class of Xamarin.Android's Java runtime code, and implemented in
+     the native Xamarin.Android
+     [runtime](../../src/monodroid/jni/monodroid-glue.cc) (the
+     `MonodroidRuntime::Java_mono_android_Runtime_register` method).
+	 Purpose of this method is to prepare a call into the
+     Xamarin.Android managed runtime code, the
+     [`Android.Runtime.JNIEnv::RegisterJniNatives`](../../src/Mono.Android/Android.Runtime/JNIEnv.cs)
+     method.
+  2. `Android.Runtime.JNIEnv::RegisterJniNatives` is passed name of
+     the managed type for which to register Java methods and uses .NET
+     reflection to load that type, followed by a call to cache the
+     type (via `RegisterType` method in the
+     [`TypeManager`](../../src/Mono.Android/Java.Interop/TypeManager.cs)
+     class) to end with a call to the
+     `Android.Runtime.AndroidTypeManager::RegisterNativeMembers`
+     method.
+  3. `Android.Runtime.AndroidTypeManager::RegisterNativeMembers`
+     eventually calls the
+     `Java.Interop.JniEnvironment.Types::RegisterNatives` method which
+	 first generates a delegate to the native callback method, using
+     `System.Reflection.Emit` (via the
+     [`Android.Runtime.JNINativeWrapper::CreateDelegate`](../../src/Mono.Android/Android.Runtime/JNINativeWrapper.cs)
+     method) and, eventually, invokes Java JNI's `RegisterNatives`
+     function, finally registering the native methods for a managed
+     type.
+  
+The `System.Reflection.Emit` sequence mentioned in 3. above is among
+the most costly operations, repeated for each registered method.
+
+Some more information about Java type registration can be found
+[here](https://github.com/xamarin/xamarin-android/wiki/Blueprint#java-type-registration).
 
 ## Marshal methods
 
+The goal of marshal methods is to completely bypass the [dynamic
+registration sequence](#dynamic-registration-call-sequence), replacing
+it with native code generated and compiled during application build,
+thus saving on the startup time of the application.
+
 Marshal methods registration mechanism takes advantage of the JNI
 ability to look up implementations of `native` Java methods in actual
-native (shared) libraries.  Such symbols must have names that need to
-follow a set of rules, in order for JNI to be able to properly locate
-them (details are explained in the [JNI
-Requirements](#jni-requirements) section below).
+native (shared) libraries.  Such symbols must have names that follow a
+set of rules, so that JNI is able to properly locate them (details are
+explained in the [JNI Requirements](#jni-requirements) section below).
 
-In order to achieve that, the marshal methods mechanism uses a number
-of classes which [generate native](#llvm-ir-code-generation) code and
+To achieve that, the marshal methods mechanism uses a number of
+classes which [generate native](#llvm-ir-code-generation) code and 
 [modify assemblies](#assembly-rewriting) that contain the registered
 methods.
 
@@ -323,8 +376,8 @@ registered dynamically.
 ### Marshal Methods Java Callable Wrappers registration code
 
 Building on the C# example show in the [Java Callable
-Wrappers](#java-callable-wrappers) section, the following Java code is 
-generated (only the parts relevant to registration are shown):
+Wrappers](#java-callable-wrappers-jcw) section, the following Java
+code is generated (only the parts relevant to registration are shown):
 
 ```java
 public class MainActivity
@@ -538,13 +591,13 @@ The exact modifications we apply are:
   * Addition of the `[UnmanagedCallersOnly]` attribute to the **native
     callback** method
   * Optionally, generation of a [non-blittable types
-    wrapper](#wrappers-for-methods-with-non-blittable-types) for the
+    wrapper](#wrappers-for-methods-with-non-blittable-types) for the 
     **native callback** method.
 
 All the modifications are performed with `Mono.Cecil`.
 
-After the modifications, the assembly contains equivalent of the
-following C# code for each marshal method:
+After modifications, the assembly contains equivalent of the following
+C# code for each marshal method:
 
 ```csharp
 public class MainActivity : AppCompatActivity
@@ -578,8 +631,9 @@ public class MainActivity : AppCompatActivity
 
 The
 [`[UnmanagedCallersOnly]`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.unmanagedcallersonlyattribute?view=net-6.0)
-requires that all the argument types as well as the method return type
-are [blittable](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types). 
+attribute requires that all the argument types as well as the method
+return type are
+[blittable](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types).
 
 Among these types is one that's commonly used by the managed classes
 implementing Java methods: `bool`.  Currently this is the **only**
@@ -670,3 +724,27 @@ from native code with minimal overhead compared to traditional
 managed-from-native method calls (`mono_runtime_invoke`)
 
 ### Marshal Methods Registration call sequence
+
+The sequence described in the [dynamic
+registration sequence](#dynamic-registration-call-sequence) section
+above is completely removed for the marshal methods.  What remains
+common for both dynamic and marshal methods registration, is the
+resolution of the native function target done by the Java VM runtime.
+In both cases the method declared in a Java class as `native` is
+looked up by the Java VM when first JIT-ing the code.  The difference
+lies in the way this lookup is performed.
+
+Dynamic registration uses the
+[`RegisterNatives`](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/functions.html#RegisterNatives)
+JNI function at the runtime, which stores a pointer to the registered
+method inside the structure which describes a Java class in the Java
+VM. 
+
+Marshal methods, however, don't register anything with the JNI,
+instead they rely on the symbol lookup mechanism of the Java VM.
+Whenever a call to `native` Java method is JIT-ed and it is not
+registered previously using the `RegisterNatives` JNI function, Java
+VM will proceed to look for symbols in the process runtime image (e.g.
+using `dlopen` + `dlsym` calls on Unix) and, having found a matching
+symbol, use pointer to it as the target of the `native` Java method
+call.
