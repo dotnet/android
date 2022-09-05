@@ -199,6 +199,19 @@ namespace Xamarin.Android.Tasks
 		List<MarshalMethodInfo> methods;
 		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
+		readonly bool generateEmptyCode;
+
+		/// <summary>
+		/// Constructor to be used ONLY when marshal methods are DISABLED
+		/// </summary>
+		public MarshalMethodsNativeAssemblyGenerator ()
+		{
+			generateEmptyCode = true;
+		}
+
+		/// <summary>
+		/// Constructor to be used ONLY when marshal methods are ENABLED
+		/// </summary>
 		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, TaskLoggingHelper logger)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
@@ -209,11 +222,13 @@ namespace Xamarin.Android.Tasks
 			if (uniqueAssemblyNames.Count != numberOfAssembliesInApk) {
 				throw new InvalidOperationException ("Internal error: number of assemblies in the apk doesn't match the number of unique assembly names");
 			}
+
+			generateEmptyCode = false;
 		}
 
 		public override void Init ()
 		{
-			if (marshalMethods == null || marshalMethods.Count == 0) {
+			if (generateEmptyCode || marshalMethods == null || marshalMethods.Count == 0) {
 				return;
 			}
 
@@ -568,17 +583,19 @@ namespace Xamarin.Android.Tasks
 			generator.WriteArray (mm_class_names, "mm_class_names", "Names of classes in which marshal methods reside");
 
 			var uniqueMethods = new Dictionary<ulong, MarshalMethodInfo> ();
-			foreach (MarshalMethodInfo mmi in methods) {
-				string asmName = Path.GetFileName (mmi.Method.NativeCallback.Module.Assembly.MainModule.FileName);
-				if (!asmNameToIndex.TryGetValue (asmName, out uint idx)) {
-					throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to cache array index");
-				}
+			if (!generateEmptyCode && methods != null) {
+				foreach (MarshalMethodInfo mmi in methods) {
+					string asmName = Path.GetFileName (mmi.Method.NativeCallback.Module.Assembly.MainModule.FileName);
+					if (!asmNameToIndex.TryGetValue (asmName, out uint idx)) {
+						throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to cache array index");
+					}
 
-				ulong id = ((ulong)idx << 32) | (ulong)mmi.Method.NativeCallback.MetadataToken.ToUInt32 ();
-				if (uniqueMethods.ContainsKey (id)) {
-					continue;
+					ulong id = ((ulong)idx << 32) | (ulong)mmi.Method.NativeCallback.MetadataToken.ToUInt32 ();
+					if (uniqueMethods.ContainsKey (id)) {
+						continue;
+					}
+					uniqueMethods.Add (id, mmi);
 				}
-				uniqueMethods.Add (id, mmi);
 			}
 
 			MarshalMethodName name;
@@ -631,7 +648,7 @@ namespace Xamarin.Android.Tasks
 
 		void WriteNativeMethods (LlvmIrGenerator generator, Dictionary<string, uint> asmNameToIndex, LlvmIrVariableReference get_function_pointer_ref)
 		{
-			if (methods == null || methods.Count == 0) {
+			if (generateEmptyCode || methods == null || methods.Count == 0) {
 				return;
 			}
 
@@ -793,22 +810,28 @@ namespace Xamarin.Android.Tasks
 			{
 				var hashes = new Dictionary<T, (string name, uint index)> ();
 				uint index = 0;
-				foreach (string name in uniqueAssemblyNames) {
-					string clippedName = Path.GetFileNameWithoutExtension (name);
-					ulong hashFull = HashName (name, is64Bit);
-					ulong hashClipped = HashName (clippedName, is64Bit);
+				List<T> keys;
 
-					//
-					// If the number of name forms changes, xamarin-app.hh MUST be updated to set value of the
-					// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
-					//
-					hashes.Add ((T)Convert.ChangeType (hashFull, typeof(T)), (name, index));
-					hashes.Add ((T)Convert.ChangeType (hashClipped, typeof(T)), (clippedName, index));
+				if (!generateEmptyCode) {
+					foreach (string name in uniqueAssemblyNames) {
+						string clippedName = Path.GetFileNameWithoutExtension (name);
+						ulong hashFull = HashName (name, is64Bit);
+						ulong hashClipped = HashName (clippedName, is64Bit);
 
-					index++;
+						//
+						// If the number of name forms changes, xamarin-app.hh MUST be updated to set value of the
+						// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
+						//
+						hashes.Add ((T)Convert.ChangeType (hashFull, typeof(T)), (name, index));
+						hashes.Add ((T)Convert.ChangeType (hashClipped, typeof(T)), (clippedName, index));
+
+						index++;
+					}
+					keys = hashes.Keys.ToList ();
+					keys.Sort ();
+				} else {
+					keys = new List<T> ();
 				}
-				List<T> keys = hashes.Keys.ToList ();
-				keys.Sort ();
 
 				generator.WriteCommentLine ("Each entry maps hash of an assembly name to an index into the `assembly_image_cache` array");
 				generator.WriteArray (

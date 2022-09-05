@@ -68,6 +68,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool InstantRunEnabled { get; set; }
 
+		[Required]
+		public bool EnableMarshalMethods { get; set; }
+
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
 
@@ -298,11 +301,12 @@ namespace Xamarin.Android.Tasks
 			};
 
 			int assemblyCount = 0;
+			bool enableMarshalMethods = EnableMarshalMethods;
 			HashSet<string> archAssemblyNames = null;
-			var uniqueAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			HashSet<string> uniqueAssemblyNames = enableMarshalMethods ? new HashSet<string> (StringComparer.OrdinalIgnoreCase) : null;
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
 				string assemblyName = Path.GetFileName (assembly.ItemSpec);
-				if (!uniqueAssemblyNames.Contains (assemblyName)) {
+				if (enableMarshalMethods && !uniqueAssemblyNames.Contains (assemblyName)) {
 					uniqueAssemblyNames.Add (assemblyName);
 				}
 
@@ -436,16 +440,23 @@ namespace Xamarin.Android.Tasks
 				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
 				JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
 				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
+				MarshalMethodsEnabled = EnableMarshalMethods,
 			};
 			appConfigAsmGen.Init ();
 
 			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (GenerateJavaStubs.MarshalMethodsRegisterTaskKey, RegisteredTaskObjectLifetime.Build);
-			var marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
-				assemblyCount,
-				uniqueAssemblyNames,
-				marshalMethodsState?.MarshalMethods,
-				Log
-			);
+			MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
+
+			if (enableMarshalMethods) {
+				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
+					assemblyCount,
+					uniqueAssemblyNames,
+					marshalMethodsState?.MarshalMethods,
+					Log
+				);
+			} else {
+				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator ();
+			}
 			marshalMethodsAsmGen.Init ();
 
 			foreach (string abi in SupportedAbis) {

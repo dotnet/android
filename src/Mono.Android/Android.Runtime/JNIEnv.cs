@@ -34,6 +34,7 @@ namespace Android.Runtime {
 		public byte            ioExceptionType;
 		public int             jniAddNativeMethodRegistrationAttributePresent;
 		public bool            jniRemappingInUse;
+		public bool            marshalMethodsEnabled;
 	}
 #pragma warning restore 0649
 
@@ -57,6 +58,7 @@ namespace Android.Runtime {
 
 		internal static bool IsRunningOnDesktop;
 		internal static bool LogAssemblyCategory;
+		internal static bool MarshalMethodsEnabled;
 
 		static AndroidRuntime? androidRuntime;
 		static BoundExceptionType BoundExceptionType;
@@ -156,6 +158,9 @@ namespace Android.Runtime {
 			gref_gc_threshold = args->grefGcThreshold;
 
 			jniRemappingInUse = args->jniRemappingInUse;
+#if NETCOREAPP
+			MarshalMethodsEnabled = args->marshalMethodsEnabled;
+#endif
 			java_vm = args->javaVm;
 
 			version = args->version;

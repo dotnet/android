@@ -546,23 +546,28 @@ namespace Android.Runtime {
 
 							// TODO: this is temporary hack, it needs a full fledged registration mechanism for methods like these (that is, ones which
 							// aren't registered with [Register] but are baked into Mono.Android's managed and Java code)
-							bool createCallback = false;
-							string declaringTypeName = callbackDeclaringType.FullName;
-							string callbackName = callbackString.ToString ();
+							bool createCallback;
+							if (JNIEnv.MarshalMethodsEnabled) {
+								string declaringTypeName = callbackDeclaringType.FullName;
+								string callbackName = callbackString.ToString ();
 
-							foreach (var kvp in dynamicRegistrationMethods) {
-								string dynamicTypeName = kvp.Key;
+								createCallback = false;
+								foreach (var kvp in dynamicRegistrationMethods) {
+									string dynamicTypeName = kvp.Key;
 
-								foreach (string dynamicCallbackMethodName in kvp.Value) {
-									if (ShouldRegisterDynamically (declaringTypeName, callbackName, dynamicTypeName, dynamicCallbackMethodName)) {
-										createCallback = true;
+									foreach (string dynamicCallbackMethodName in kvp.Value) {
+										if (ShouldRegisterDynamically (declaringTypeName, callbackName, dynamicTypeName, dynamicCallbackMethodName)) {
+											createCallback = true;
+											break;
+										}
+									}
+
+									if (createCallback) {
 										break;
 									}
 								}
-
-								if (createCallback) {
-									break;
-								}
+							} else {
+								createCallback = true;
 							}
 
 							if (createCallback) {

@@ -132,6 +132,7 @@ namespace xamarin::android::internal
 			uint8_t         boundExceptionType;
 			int             jniAddNativeMethodRegistrationAttributePresent;
 			bool            jniRemappingInUse;
+			bool            marshalMethodsEnabled;
 		};
 
 #if defined (NET)

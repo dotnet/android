@@ -1596,7 +1596,6 @@ because xbuild doesn't support framework reference assemblies.
       <Output TaskParameter="AssemblySources" ItemName="_CompressedAssembliesAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
-    Condition=" '$(_EnableMarshalMethods)' == 'YesPlease' "
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
     InstantRunEnabled="$(_InstantRunEnabled)"
@@ -1712,6 +1711,7 @@ because xbuild doesn't support framework reference assemblies.
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
+    EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
