@@ -87,9 +87,9 @@ Overridable MSBuild properties include:
 
   * `$(AndroidSupportedTargetAotAbis)`: The Android ABIs for which to build the
     Mono AOT compilers. The AOT compilers are required in order to set the
-    [`$(AotAssemblies)`][aot-assemblies] app configuration property to True.
+    [`$(RunAOTCompilation)`][runaotcompilation] app configuration property to True.
 
-    [aot-assemblies]: https://developer.xamarin.com/guides/android/under_the_hood/build_process/#AotAssemblies
+    [runaotcompilation]: https://developer.xamarin.com/guides/android/under_the_hood/build_process/#RunAOTCompilation
 
   * `$(AndroidSupportedTargetJitAbis)`: The Android ABIs for which to build the
     the Mono JIT for inclusion within apps. This is a `:`-separated list of

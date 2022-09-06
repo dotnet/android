@@ -78,6 +78,7 @@
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
+    <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>
     <AotAssemblies>$(RunAOTCompilation)</AotAssemblies>
     <AndroidEnableProfiledAot Condition=" '$(AndroidEnableProfiledAot)' == '' and '$(RunAOTCompilation)' == 'true' ">true</AndroidEnableProfiledAot>
 
