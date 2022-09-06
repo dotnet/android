@@ -13,7 +13,7 @@ This file contains targets specific for Android application projects.
     <!-- see: https://github.com/xamarin/xamarin-macios/blob/a6eb528197854c074d9dd5847328c096890337be/dotnet/targets/Xamarin.Shared.Sdk.props#L38-L52 -->
     <_RuntimeIdentifierUsesAppHost>false</_RuntimeIdentifierUsesAppHost>
     <RunCommand>dotnet</RunCommand>
-    <RunArguments>build &quot;$(MSBuildProjectFullPath)&quot; -target:Run</RunArguments>
+    <RunArguments>build &quot;$(MSBuildProjectFullPath)&quot; -target:Run --configuration &quot;$(Configuration)&quot;</RunArguments>
 
     <!-- If Xamarin.Android.Common.Debugging.targets exists, we can rely on _Run for debugging. -->
     <_RunDependsOn Condition=" '$(_XASupportsFastDev)' == 'true' ">
