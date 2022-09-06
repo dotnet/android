@@ -53,6 +53,19 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     </ItemGroup>
   </Target>
 
+  <Target Name="_AndroidAotAndComputeFilesToPublishForRuntimeIdentifiers"
+          DependsOnTargets="_AndroidAot"
+          Returns="@(ResolvedFileToPublish)">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
+      <ResolvedFileToPublish
+          Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
+          Update="@(ResolvedFileToPublish)"
+          RuntimeIdentifier="$(RuntimeIdentifier)"
+      />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_AndroidAotCompilation"
       Inputs="@(_AndroidAotInputs)"
       Outputs="$(_AndroidStampDirectory)_AndroidAot.stamp">

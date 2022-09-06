@@ -82,6 +82,7 @@ namespace Xamarin.Android.Tasks
 					};
 
 					string output = $"{path}.new";
+					log.LogDebugMessage ($"Writing new version of assembly: {output}");
 					asm.Write (output, writerParams);
 					newAssemblyPaths.Add (output);
 				}
@@ -91,6 +92,7 @@ namespace Xamarin.Android.Tasks
 			// versions around.
 			foreach (string path in newAssemblyPaths) {
 				string target = Path.Combine (Path.GetDirectoryName (path), Path.GetFileNameWithoutExtension (path));
+				log.LogDebugMessage ($"Copying rewritten assembly: {path} -> {target}");
 				MoveFile (path, target);
 
 				string source = Path.ChangeExtension (path, ".pdb");

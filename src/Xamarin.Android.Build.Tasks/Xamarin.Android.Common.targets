@@ -1658,9 +1658,21 @@ because xbuild doesn't support framework reference assemblies.
       />
 </Target>
 
+<Target Name="_RunAotForAllRIDs"
+        Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
+        Returns="@(ResolvedFileToPublish)">
+  <MSBuild
+      Projects="@(_ProjectToBuild)"
+      BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
+      Targets="_AndroidAotAndComputeFilesToPublishForRuntimeIdentifiers">
+    <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
+  </MSBuild>
+</Target>
+
 <PropertyGroup>
   <_GeneratePackageManagerJavaDependsOn>
     _GenerateJavaStubs;
+    _RunAotForAllRIDs;
     _ManifestMerger;
     _ConvertCustomView;
     $(_AfterConvertCustomView);

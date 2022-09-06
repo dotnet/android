@@ -38,8 +38,13 @@ _ResolveAssemblies MSBuild target.
     </CompileDependsOn>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- When marshal methods are enabled, AOT needs to run after the GenerateJavaStubs task -->
+    <_RunAotMaybe Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">_AndroidAot</_RunAotMaybe>
+  </PropertyGroup>
+
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
-      DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;_AndroidAot"
+      DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
         <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
