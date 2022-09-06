@@ -1,26 +1,28 @@
 {
-    "Registrations": [
+    "$schema": "https://json.schemastore.org/component-detection-manifest.json",
+    "version": 1,
+    "registrations": [
         {
-            "Component": {
-                "Type": "maven",
-                "Maven": {
-                    "GroupId": "com.github.javaparser",
-                    "ArtifactId": "javaparser-core",
-                    "Version": "3.16.1"
+            "component": {
+                "type": "maven",
+                "maven": {
+                    "groupId": "com.github.javaparser",
+                    "artifactId": "javaparser-core",
+                    "version": "3.16.1"
                 }
             },
-            "DevelopmentDependency":false
+            "developmentDependency":false
         },
         {
-            "Component": {
-                "Type": "maven",
-                "Maven": {
-                    "GroupId": "com.github.javaparser",
-                    "ArtifactId": "javaparser-symbol-solver-core",
-                    "Version": "3.16.1"
+            "component": {
+                "type": "maven",
+                "maven": {
+                    "groupId": "com.github.javaparser",
+                    "artifactId": "javaparser-symbol-solver-core",
+                    "version": "3.16.1"
                 }
             },
-            "DevelopmentDependency":false
+            "developmentDependency":false
         }
     ]
 }
