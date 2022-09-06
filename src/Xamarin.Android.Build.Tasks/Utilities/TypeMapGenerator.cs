@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tasks
 			public byte[] MvidBytes;
 			public AssemblyDefinition Assembly;
 			public TypeMapReleaseEntry[] Types;
-			public Dictionary<uint, TypeMapReleaseEntry> DuplicateTypes;
+			public List<TypeMapReleaseEntry> DuplicateTypes;
 			public string AssemblyName;
 			public string OutputFilePath;
 
@@ -368,7 +368,7 @@ namespace Xamarin.Android.Tasks
 						Assembly = td.Module.Assembly,
 						AssemblyName = td.Module.Assembly.Name.Name,
 						TypesScratch = new Dictionary<string, TypeMapReleaseEntry> (StringComparer.Ordinal),
-						DuplicateTypes = new Dictionary<uint, TypeMapReleaseEntry> (),
+						DuplicateTypes = new List<TypeMapReleaseEntry> (),
 					};
 					tempModules.Add (moduleUUID, moduleData);
 				}
@@ -392,7 +392,7 @@ namespace Xamarin.Android.Tasks
 					// build) and has no value for the end user. The message is left here because it may be useful to us
 					// in our devloop at some point.
 					//logger ($"Warning: duplicate Java type name '{entry.JavaName}' in assembly '{moduleData.AssemblyName}' (new token: {entry.Token}).");
-					moduleData.DuplicateTypes.Add (entry.Token, entry);
+					moduleData.DuplicateTypes.Add (entry);
 				} else
 					moduleData.TypesScratch.Add (entry.JavaName, entry);
 			}

@@ -579,6 +579,185 @@
         ],
         "taskName": "[New Issues] Apply 'needs-triage' to new issues"
       }
+    },
+    {
+      "taskType": "trigger",
+      "capabilityId": "IssueResponder",
+      "subCapability": "IssuesOnlyResponder",
+      "version": "1.0",
+      "config": {
+        "conditions": {
+          "operator": "and",
+          "operands": [
+            {
+              "name": "labelAdded",
+              "parameters": {
+                "label": "possibly-stale"
+              }
+            }
+          ]
+        },
+        "eventType": "issue",
+        "eventNames": [
+          "issues",
+          "project_card"
+        ],
+        "taskName": "Manual Issue Cleanup",
+        "actions": [
+          {
+            "name": "addReply",
+            "parameters": {
+              "comment": "We suspect this issue is stale and no longer relevant. It will be closed if no further activity occurs within 14 more days. Any new comment (by anyone, not necessarily the author) will undo this process."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "taskType": "trigger",
+      "capabilityId": "IssueResponder",
+      "subCapability": "IssueCommentResponder",
+      "version": "1.0",
+      "config": {
+        "conditions": {
+          "operator": "and",
+          "operands": [
+            {
+              "name": "hasLabel",
+              "parameters": {
+                "label": "possibly-stale"
+              }
+            }
+          ]
+        },
+        "eventType": "issue",
+        "eventNames": [
+          "issue_comment"
+        ],
+        "taskName": "Remove `possibly-stale` label when an issue is commented on",
+        "actions": [
+          {
+            "name": "removeLabel",
+            "parameters": {
+              "label": "possibly-stale"
+            }
+          },
+          {
+            "name": "addLabel",
+            "parameters": {
+              "label": "need-attention"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "taskType": "scheduled",
+      "capabilityId": "ScheduledSearch",
+      "subCapability": "ScheduledSearch",
+      "version": "1.1",
+      "config": {
+        "frequency": [
+          {
+            "weekDay": 0,
+            "hours": [
+              0,
+              6,
+              12,
+              18
+            ]
+          },
+          {
+            "weekDay": 1,
+            "hours": [
+              0,
+              6,
+              12,
+              18
+            ]
+          },
+          {
+            "weekDay": 2,
+            "hours": [
+              0,
+              6,
+              12,
+              18
+            ]
+          },
+          {
+            "weekDay": 3,
+            "hours": [
+              0,
+              6,
+              12,
+              18
+            ]
+          },
+          {
+            "weekDay": 4,
+            "hours": [
+              0,
+              6,
+              12,
+              18
+            ]
+          },
+          {
+            "weekDay": 5,
+            "hours": [
+              0,
+              6,
+              12,
+              18
+            ]
+          },
+          {
+            "weekDay": 6,
+            "hours": [
+              0,
+              6,
+              12,
+              18
+            ]
+          }
+        ],
+        "searchTerms": [
+          {
+            "name": "isIssue",
+            "parameters": {}
+          },
+          {
+            "name": "isOpen",
+            "parameters": {}
+          },
+          {
+            "name": "hasLabel",
+            "parameters": {
+              "label": "possibly-stale"
+            }
+          },
+          {
+            "name": "noActivitySince",
+            "parameters": {
+              "days": 14
+            }
+          }
+        ],
+        "taskName": "Close 'possibly-stale' issues with no recent activity",
+        "actions": [
+          {
+            "name": "addReply",
+            "parameters": {
+              "comment": "This issue will now be closed since it had been marked `possibly-stale` but received no further activity in the past 14 days. It is still possible to reopen or comment on the issue, but please note that the issue will be locked if it remains inactive for another 30 days."
+            }
+          },
+          {
+            "name": "closeIssue",
+            "parameters": {}
+          }
+        ]
+      }
     }
   ],
   "userGroups": []
