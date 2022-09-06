@@ -281,7 +281,7 @@ namespace Xamarin.Android.Tasks
 				TypeMapModule module = moduleInstance.Obj;
 				PrepareMapModuleData (module.MapSymbolName, module.Data.Types, allMapModulesData);
 				if (module.Data.DuplicateTypes.Count > 0) {
-					PrepareMapModuleData (module.DuplicateMapSymbolName, module.Data.DuplicateTypes.Values, allMapModulesData);
+					PrepareMapModuleData (module.DuplicateMapSymbolName, module.Data.DuplicateTypes, allMapModulesData);
 				}
 			}
 
