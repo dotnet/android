@@ -237,7 +237,7 @@ namespace Xamarin.Android.Tasks
 				if (mapOutput != null) {
 					WriteManagedMaps (generator, mapOutput, mapName, data.Types);
 					if (data.DuplicateTypes.Count > 0) {
-						WriteManagedMaps (generator, mapOutput, duplicateMapName, data.DuplicateTypes.Values);
+						WriteManagedMaps (generator, mapOutput, duplicateMapName, data.DuplicateTypes);
 					}
 				}
 			}
