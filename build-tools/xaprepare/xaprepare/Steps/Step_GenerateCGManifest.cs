@@ -67,7 +67,9 @@ namespace Xamarin.Android.Prepare
 			using var json  = File.CreateText (jsonPath);
 
 			json.WriteLine ("{");
-			json.WriteLine ("    \"Registrations\": [");
+			json.WriteLine ("    \"$schema\": \"https://json.schemastore.org/component-detection-manifest.json\",");
+			json.WriteLine ("    \"version\": 1,");
+			json.WriteLine ("    \"registrations\": [");
 
 			var properties = new Dictionary<string, string> ();
 
@@ -100,8 +102,8 @@ namespace Xamarin.Android.Prepare
 			entry.FillComponentProperties (properties);
 
 			json.WriteLine ($"        {{");
-			json.WriteLine ($"            \"Component\": {{");
-			json.WriteLine ($"                \"Type\": \"{entry.Type.ToLowerInvariant ()}\",");
+			json.WriteLine ($"            \"component\": {{");
+			json.WriteLine ($"                \"type\": \"{entry.Type.ToLowerInvariant ()}\",");
 			json.WriteLine ($"                \"{entry.Type}\": {{");
 			bool firstProp = true;
 			foreach (var key in properties.Keys.OrderBy (p => p, StringComparer.OrdinalIgnoreCase)) {
@@ -116,7 +118,7 @@ namespace Xamarin.Android.Prepare
 			json.WriteLine ();
 			json.WriteLine ($"                }}");
 			json.WriteLine ($"            }},");
-			json.WriteLine ($"            \"DevelopmentDependency\":{dev}");
+			json.WriteLine ($"            \"developmentDependency\":{dev}");
 			json.Write     ($"        }}");
 		}
 	}
@@ -145,7 +147,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		public  override    string      Type    => "Git";
+		public  override    string      Type    => "git";
 
 		public  string      RepositoryUrl   {get; private set;} = String.Empty;
 		public  string      CommitHash      {get; private set;} = String.Empty;
@@ -157,8 +159,8 @@ namespace Xamarin.Android.Prepare
 
 		public override void FillComponentProperties (Dictionary<string, string> properties)
 		{
-			properties ["RepositoryUrl"]    = RepositoryUrl;
-			properties ["CommitHash"]       = CommitHash;
+			properties ["repositoryUrl"]    = RepositoryUrl;
+			properties ["commitHash"]       = CommitHash;
 		}
 
 		const string Submodule = "submodule.external/";
@@ -256,7 +258,7 @@ namespace Xamarin.Android.Prepare
 		string name;
 
 		public  override    string      Name    => name;
-		public  override    string      Type    => "Nuget";
+		public  override    string      Type    => "nuget";
 
 		public  string      Version {get; private set;}
 
@@ -268,8 +270,8 @@ namespace Xamarin.Android.Prepare
 
 		public override void FillComponentProperties (Dictionary<string, string> properties)
 		{
-			properties ["Name"]     = Name;
-			properties ["Version"]  = Version;
+			properties ["name"]     = Name;
+			properties ["version"]  = Version;
 		}
 
 		static  readonly    XNamespace      MSBuildXmlns    = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
