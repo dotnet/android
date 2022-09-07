@@ -600,7 +600,8 @@ namespace Xamarin.Android.Tasks
 
 			void WarnWhy (string why)
 			{
-				log.LogWarning ($"Method '{method.FullName}' {why}. A workaround is required, this may make the application slower");
+				// TODO: change to LogWarning once the generator can output code which requires no non-blittable wrappers
+				log.LogDebugMessage ($"Method '{method.FullName}' {why}. A workaround is required, this may make the application slower");
 			}
 		}
 

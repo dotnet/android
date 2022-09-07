@@ -375,7 +375,8 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (classifier.WrappedMethodCount > 0) {
-					Log.LogWarning ($"Number of methods in the project that need marshal method wrappers: {classifier.WrappedMethodCount}");
+					// TODO: change to LogWarning once the generator can output code which requires no non-blittable wrappers
+					Log.LogDebugMessage ($"Number of methods in the project that need marshal method wrappers: {classifier.WrappedMethodCount}");
 				}
 			}
 
