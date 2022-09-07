@@ -7,6 +7,7 @@ using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -34,13 +35,40 @@ namespace Xamarin.Android.Tasks
 				unmanagedCallersOnlyAttributes.Add (asm, CreateImportedUnmanagedCallersOnlyAttribute (asm, unmanagedCallersOnlyAttributeCtor));
 			}
 
+			Console.WriteLine ();
+			Console.WriteLine ("Modifying assemblies");
+
+			var processedMethods = new Dictionary<string, MethodDefinition> (StringComparer.Ordinal);
 			Console.WriteLine ("Adding the [UnmanagedCallersOnly] attribute to native callback methods and removing unneeded fields+methods");
 			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
 				foreach (MarshalMethodEntry method in methodList) {
-					Console.WriteLine ($"\t{method.NativeCallback.FullName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
-					method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
-					method.Connector.DeclaringType.Methods.Remove (method.Connector);
-					method.CallbackField?.DeclaringType.Fields.Remove (method.CallbackField);
+					string fullNativeCallbackName = method.NativeCallback.FullName;
+					if (processedMethods.TryGetValue (fullNativeCallbackName, out MethodDefinition nativeCallbackWrapper)) {
+						method.NativeCallbackWrapper = nativeCallbackWrapper;
+						continue;
+					}
+
+					Console.WriteLine ($"\t{fullNativeCallbackName} (token: 0x{method.NativeCallback.MetadataToken.RID:x})");
+					Console.WriteLine ($"\t  Top type == '{method.DeclaringType}'");
+					Console.WriteLine ($"\t  NativeCallback == '{method.NativeCallback}'");
+					Console.WriteLine ($"\t  Connector == '{method.Connector}'");
+					Console.WriteLine ($"\t  method.NativeCallback.CustomAttributes == {ToStringOrNull (method.NativeCallback.CustomAttributes)}");
+					Console.WriteLine ($"\t  method.Connector.DeclaringType == {ToStringOrNull (method.Connector?.DeclaringType)}");
+					Console.WriteLine ($"\t  method.Connector.DeclaringType.Methods == {ToStringOrNull (method.Connector.DeclaringType?.Methods)}");
+					Console.WriteLine ($"\t  method.CallbackField == {ToStringOrNull (method.CallbackField)}");
+					Console.WriteLine ($"\t  method.CallbackField?.DeclaringType == {ToStringOrNull (method.CallbackField?.DeclaringType)}");
+					Console.WriteLine ($"\t  method.CallbackField?.DeclaringType.Fields == {ToStringOrNull (method.CallbackField?.DeclaringType?.Fields)}");
+
+					if (method.NeedsBlittableWorkaround) {
+						method.NativeCallbackWrapper = GenerateBlittableWrapper (method, unmanagedCallersOnlyAttributes);
+					} else {
+						method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
+					}
+
+					method.Connector?.DeclaringType?.Methods?.Remove (method.Connector);
+					method.CallbackField?.DeclaringType?.Fields?.Remove (method.CallbackField);
+
+					processedMethods.Add (fullNativeCallbackName, method.NativeCallback);
 				}
 			}
 
@@ -97,7 +125,159 @@ namespace Xamarin.Android.Tasks
 					File.Delete (source);
 				} catch (Exception ex) {
 					log.LogWarning ($"Unable to delete source file '{source}' when moving it to '{target}'");
+					log.LogDebugMessage (ex.ToString ());
 				}
+			}
+
+			string ToStringOrNull (object? o)
+			{
+				if (o == null) {
+					return "'null'";
+				}
+
+				return o.ToString ();
+			}
+		}
+
+		MethodDefinition GenerateBlittableWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, CustomAttribute> unmanagedCallersOnlyAttributes)
+		{
+			Console.WriteLine ($"\t  Generating blittable wrapper for: {method.NativeCallback.FullName}");
+			MethodDefinition callback = method.NativeCallback;
+			string wrapperName = $"{callback.Name}_mm_wrapper";
+			TypeReference retType = MapToBlittableTypeIfNecessary (callback.ReturnType, out bool returnTypeMapped);
+			bool hasReturnValue = String.Compare ("System.Void", retType.FullName, StringComparison.Ordinal) != 0;
+			var wrapperMethod = new MethodDefinition (wrapperName, callback.Attributes, retType);
+			callback.DeclaringType.Methods.Add (wrapperMethod);
+			wrapperMethod.CustomAttributes.Add (unmanagedCallersOnlyAttributes [callback.Module.Assembly]);
+
+			MethodBody body = wrapperMethod.Body;
+			int nparam = 0;
+
+			foreach (ParameterDefinition pdef in callback.Parameters) {
+				TypeReference newType = MapToBlittableTypeIfNecessary (pdef.ParameterType, out _);
+				wrapperMethod.Parameters.Add (new ParameterDefinition (pdef.Name, pdef.Attributes, newType));
+
+				OpCode ldargOp;
+				bool paramRef = false;
+				switch (nparam++) {
+					case 0:
+						ldargOp = OpCodes.Ldarg_0;
+						break;
+
+					case 1:
+						ldargOp = OpCodes.Ldarg_1;
+						break;
+
+					case 2:
+						ldargOp = OpCodes.Ldarg_2;
+						break;
+
+					case 3:
+						ldargOp = OpCodes.Ldarg_3;
+						break;
+
+					default:
+						ldargOp = OpCodes.Ldarg_S;
+						paramRef = true;
+						break;
+				}
+
+				Instruction ldarg;
+
+				if (!paramRef) {
+					ldarg = Instruction.Create (ldargOp);
+				} else {
+					ldarg = Instruction.Create (ldargOp, pdef);
+				}
+
+				body.Instructions.Add (ldarg);
+
+				if (!pdef.ParameterType.IsBlittable ()) {
+					GenerateNonBlittableConversion (pdef.ParameterType, newType);
+				}
+			}
+
+			body.Instructions.Add (Instruction.Create (OpCodes.Call, callback));
+
+			if (hasReturnValue && returnTypeMapped) {
+				GenerateRetValCast (callback.ReturnType, retType);
+			}
+
+			body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+			Console.WriteLine ($"\t    New method: {wrapperMethod.FullName}");
+			return wrapperMethod;
+
+			void GenerateNonBlittableConversion (TypeReference sourceType, TypeReference targetType)
+			{
+				if (IsBooleanConversion (sourceType, targetType)) {
+					// We output equivalent of the `param != 0` C# code
+					body.Instructions.Add (Instruction.Create (OpCodes.Ldc_I4_0));
+					body.Instructions.Add (Instruction.Create (OpCodes.Cgt_Un));
+					return;
+				}
+
+				ThrowUnsupportedType (sourceType);
+			}
+
+			void GenerateRetValCast (TypeReference sourceType, TypeReference targetType)
+			{
+				if (IsBooleanConversion (sourceType, targetType)) {
+					var insLoadOne = Instruction.Create (OpCodes.Ldc_I4_1);
+					var insConvert = Instruction.Create (OpCodes.Conv_U1);
+
+					body.Instructions.Add (Instruction.Create (OpCodes.Brtrue_S, insLoadOne));
+					body.Instructions.Add (Instruction.Create (OpCodes.Ldc_I4_0));
+					body.Instructions.Add (Instruction.Create (OpCodes.Br_S, insConvert));
+					body.Instructions.Add (insLoadOne);
+					body.Instructions.Add (insConvert);
+					return;
+				}
+
+				ThrowUnsupportedType (sourceType);
+			}
+
+			bool IsBooleanConversion (TypeReference sourceType, TypeReference targetType)
+			{
+				if (String.Compare ("System.Boolean", sourceType.FullName, StringComparison.Ordinal) == 0) {
+					if (String.Compare ("System.Byte", targetType.FullName, StringComparison.Ordinal) != 0) {
+						throw new InvalidOperationException ($"Unexpected conversion from '{sourceType.FullName}' to '{targetType.FullName}'");
+					}
+
+					return true;
+				}
+
+				return false;
+			}
+
+			void ThrowUnsupportedType (TypeReference type)
+			{
+				throw new InvalidOperationException ($"Unsupported non-blittable type '{type.FullName}'");
+			}
+		}
+
+		TypeReference MapToBlittableTypeIfNecessary (TypeReference type, out bool typeMapped)
+		{
+			if (type.IsBlittable () || String.Compare ("System.Void", type.FullName, StringComparison.Ordinal) == 0) {
+				typeMapped = false;
+				return type;
+			}
+
+			if (String.Compare ("System.Boolean", type.FullName, StringComparison.Ordinal) == 0) {
+				// Maps to Java JNI's jboolean which is an unsigned 8-bit type
+				typeMapped = true;
+				return ReturnValid (typeof(byte));
+			}
+
+			throw new NotSupportedException ($"Cannot map unsupported blittable type '{type.FullName}'");
+
+			TypeReference ReturnValid (Type typeToLookUp)
+			{
+				TypeReference? mappedType = type.Module.Assembly.MainModule.ImportReference (typeToLookUp);
+				if (mappedType == null) {
+					throw new InvalidOperationException ($"Unable to obtain reference to type '{typeToLookUp.FullName}'");
+				}
+
+				return mappedType;
 			}
 		}
 

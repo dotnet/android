@@ -5,24 +5,120 @@
 
 using namespace xamarin::android::internal;
 
-void MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void *&target_ptr) noexcept
+static constexpr char Unknown[] = "Unknown";
+
+const char*
+MonodroidRuntime::get_method_name (uint32_t mono_image_index, uint32_t method_token) noexcept
 {
-	MonoImage *image = MonoImageLoader::get_from_index (mono_image_index);
+	uint64_t id = (static_cast<uint64_t>(mono_image_index) << 32) | method_token;
 
-	// TODO: implement MonoClassLoader with caching. Best to use indexes instead of keying on tokens.
-	MonoClass *method_klass = mono_class_get (image, class_index);
-	MonoMethod *method = mono_get_method (image, method_token, method_klass);
+	log_debug (LOG_ASSEMBLY, "Looking for name of method with id 0x%llx, in mono image at index %u", id, mono_image_index);
+	size_t i = 0;
+	while (mm_method_names[i].id != 0) {
+		if (mm_method_names[i].id == id) {
+			return mm_method_names[i].name;
+		}
+		i++;
+	}
 
-	MonoError error;
-	void *ret = mono_method_get_unmanaged_callers_only_ftnptr (method, &error);
-	if (ret == nullptr || error.error_code != MONO_ERROR_NONE) {
-		// TODO: make the error message friendlier somehow (class, method and assembly names)
+	return Unknown;
+}
+
+const char*
+MonodroidRuntime::get_class_name (uint32_t class_index) noexcept
+{
+	if (class_index >= marshal_methods_number_of_classes) {
+		return Unknown;
+	}
+
+	return mm_class_names[class_index];
+}
+
+template<bool NeedsLocking>
+force_inline void
+MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
+{
+	log_warn (LOG_DEFAULT, __PRETTY_FUNCTION__);
+	log_debug (
+		LOG_ASSEMBLY,
+		"MM: Trying to look up pointer to method '%s' (token 0x%x) in class '%s' (index %u)",
+		get_method_name (mono_image_index, method_token), method_token,
+		get_class_name (class_index), class_index
+	);
+
+	if (XA_UNLIKELY (class_index >= marshal_methods_number_of_classes)) {
 		log_fatal (LOG_DEFAULT,
-		           "Failed to obtain function pointer to method with token 0x%x; class token: 0x%x; assembly index: %u",
-		           method_token, class_index, mono_images_cleanup
+		           "Internal error: invalid index for class cache (expected at most %u, got %u)",
+		           marshal_methods_number_of_classes - 1,
+		           class_index
 		);
 		abort ();
 	}
 
-	target_ptr = ret;
+	// We don't check for valid return values from image loader, class and method lookup because if any
+	// of them fails to find the requested entity, they will return `null`.  In consequence, we can pass
+	// these pointers without checking all the way to `mono_method_get_unmanaged_callers_only_ftnptr`, after
+	// which call we check for errors.  This saves some time (not much, but definitely more than zero)
+	MonoImage *image = MonoImageLoader::get_from_index (mono_image_index);
+	MarshalMethodsManagedClass &klass = marshal_methods_class_cache[class_index];
+	if (klass.klass == nullptr) {
+		klass.klass = mono_class_get (image, klass.token);
+	}
+
+	MonoMethod *method = mono_get_method (image, method_token, klass.klass);
+	MonoError error;
+	void *ret = mono_method_get_unmanaged_callers_only_ftnptr (method, &error);
+
+	if (XA_LIKELY (ret != nullptr)) {
+		if constexpr (NeedsLocking) {
+			__atomic_store_n (&target_ptr, ret, __ATOMIC_RELEASE);
+		} else {
+			target_ptr = ret;
+		}
+
+		log_debug (LOG_ASSEMBLY, "Loaded pointer to method %s", mono_method_get_name (method));
+		return;
+	}
+
+	log_fatal (
+		LOG_DEFAULT,
+		"Failed to obtain function pointer to method '%s' in class '%s'",
+		get_method_name (mono_image_index, method_token),
+		get_class_name (class_index)
+	);
+
+	log_fatal (
+		LOG_DEFAULT,
+		"Looked for image index %u, class index %u, method token 0x%x",
+		mono_image_index,
+		class_index,
+		method_token
+	);
+
+	if (image == nullptr) {
+		log_fatal (LOG_DEFAULT, "Failed to load MonoImage for the assembly");
+	} else if (method == nullptr) {
+		log_fatal (LOG_DEFAULT, "Failed to load class from the assembly");
+	}
+
+	if (error.error_code != MONO_ERROR_NONE) {
+		const char *msg = mono_error_get_message (&error);
+		if (msg != nullptr) {
+			log_fatal (LOG_DEFAULT, msg);
+		}
+	}
+
+	abort ();
+}
+
+void
+MonodroidRuntime::get_function_pointer_at_startup (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
+{
+	get_function_pointer<false> (mono_image_index, class_index, method_token, target_ptr);
+}
+
+void
+MonodroidRuntime::get_function_pointer_at_runtime (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
+{
+	get_function_pointer<true> (mono_image_index, class_index, method_token, target_ptr);
 }

@@ -91,6 +91,7 @@ namespace Xamarin.Android.Build.Tests
 					"System.Console.dll",
 					"System.Private.CoreLib.dll",
 					"System.Runtime.dll",
+					"System.Runtime.InteropServices.dll",
 					"System.Linq.dll",
 					"UnnamedProject.dll",
 					//NOTE: appeared in .NET 7.0.100-rc.1.22423.7

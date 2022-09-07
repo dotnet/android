@@ -217,6 +217,9 @@ namespace Xamarin.Android.Tasks
 
 #if ENABLE_MARSHAL_METHODS
 			if (!Debug) {
+				// TODO: we must rewrite assemblies for all SupportedAbis. Alternatively, we need to copy the ones that are identical
+				// Cecil does **not** guarantee that the same assembly modified twice in the same will yield the same result - tokens may differ, so can
+				// MVID.
 				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths, Log);
 				rewriter.Rewrite (res);
 			}
@@ -349,6 +352,11 @@ namespace Xamarin.Android.Tasks
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
 			foreach (var type in javaTypes) {
 				if (JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache)) {
+#if ENABLE_MARSHAL_METHODS
+					if (!classifier.FoundDynamicallyRegisteredMethods (type)) {
+						continue;
+					}
+#endif
 					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 					regCallsWriter.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
 						type.GetAssemblyQualifiedName (cache), javaKey);
@@ -362,12 +370,25 @@ namespace Xamarin.Android.Tasks
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
 
 #if ENABLE_MARSHAL_METHODS
+			if (!Debug) {
+				Log.LogDebugMessage ($"Number of generated marshal methods: {classifier.MarshalMethods.Count}");
+
+				if (classifier.RejectedMethodCount > 0) {
+					Log.LogWarning ($"Number of methods in the project that will be registered dynamically: {classifier.RejectedMethodCount}");
+				}
+
+				if (classifier.WrappedMethodCount > 0) {
+					Log.LogWarning ($"Number of methods in the project that need marshal method wrappers: {classifier.WrappedMethodCount}");
+				}
+			}
+
 			void StoreMarshalAssemblyPath (string name, ITaskItem asm)
 			{
 				if (Debug) {
 					return;
 				}
 
+				// TODO: we need to keep paths to ALL the assemblies, we need to rewrite them for all RIDs eventually. Right now we rewrite them just for one RID
 				if (!marshalMethodsAssemblyPaths.TryGetValue (name, out HashSet<string> assemblyPaths)) {
 					assemblyPaths = new HashSet<string> ();
 					marshalMethodsAssemblyPaths.Add (name, assemblyPaths);
@@ -406,7 +427,7 @@ namespace Xamarin.Android.Tasks
 						jti.Generate (writer);
 #if ENABLE_MARSHAL_METHODS
 						if (!Debug) {
-							if (classifier.FoundDynamicallyRegisteredMethods) {
+							if (classifier.FoundDynamicallyRegisteredMethods (t)) {
 								Log.LogWarning ($"Type '{t.GetAssemblyQualifiedName ()}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
 							}
 						}

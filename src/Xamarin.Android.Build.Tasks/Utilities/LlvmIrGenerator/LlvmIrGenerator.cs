@@ -588,10 +588,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteStructureArray<T> (info, instances, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
 		}
 
-		public void WriteArray (IList<string> values, string symbolName)
+		public void WriteArray (IList<string> values, string symbolName, string? initialComment = null)
 		{
 			WriteEOL ();
-			WriteEOL (symbolName);
+			WriteEOL (initialComment ?? symbolName);
 
 			ulong arrayStringCounter = 0;
 			var strings = new List<StringSymbolInfo> ();

@@ -49,6 +49,10 @@
     <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(_EnableMarshalMethods)' == 'YesPlease' ">
+    <DefineConstants>$(DefineConstants);ENABLE_MARSHAL_METHODS</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
     <Reference Include="mscorlib">
       <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>

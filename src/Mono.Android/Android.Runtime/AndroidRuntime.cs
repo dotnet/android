@@ -473,8 +473,28 @@ namespace Android.Runtime {
 		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
+#if ENABLE_MARSHAL_METHODS
+		// Temporary hack, see comments in RegisterNativeMembers below
+		static readonly Dictionary<string, string[]> dynamicRegistrationMethods = new Dictionary<string, string[]> (StringComparer.Ordinal) {
+			{"Android.Views.View+IOnLayoutChangeListenerImplementor",             new string[] { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
+			{"Android.Views.View+IOnLayoutChangeListenerInvoker",                 new string[] { "GetOnLayoutChange_Landroid_view_View_IIIIIIIIHandler" }},
+			{"Java.Interop.TypeManager+JavaTypeManager",                          new string[] { "GetActivateHandler" }},
+		};
+#endif
+
 		public void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
+#if ENABLE_MARSHAL_METHODS
+			Logger.Log (LogLevel.Info, "monodroid-mm", $"RegisterNativeMembers ('{nativeClass?.Name}', '{type?.FullName}', '{methods.ToString ()}')");
+			Logger.Log (LogLevel.Info, "monodroid-mm", "RegisterNativeMembers called from:");
+			var st = new StackTrace (true);
+			Logger.Log (LogLevel.Info, "monodroid-mm", st.ToString ());
+
+			if (methods.IsEmpty) {
+				Logger.Log (LogLevel.Info, "monodroid-mm", "No methods to register, returning");
+				return;
+			}
+#endif
 			try {
 				if (FastRegisterNativeMembers (nativeClass, type, methods))
 					return;
@@ -497,6 +517,9 @@ namespace Android.Runtime {
 				MethodInfo []? typeMethods = null;
 
 				ReadOnlySpan<char> methodsSpan = methods;
+#if ENABLE_MARSHAL_METHODS
+				bool needToRegisterNatives = false;
+#endif
 				while (!methodsSpan.IsEmpty) {
 					int newLineIndex = methodsSpan.IndexOf ('\n');
 
@@ -508,7 +531,7 @@ namespace Android.Runtime {
 							out ReadOnlySpan<char> callbackString,
 							out ReadOnlySpan<char> callbackDeclaringTypeString);
 
-						Delegate callback;
+						Delegate? callback = null;
 						if (callbackString.SequenceEqual ("__export__")) {
 							var mname = name.Slice (2);
 							MethodInfo? minfo = null;
@@ -522,6 +545,9 @@ namespace Android.Runtime {
 							if (minfo == null)
 								throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname.ToString (), signature.ToString ()));
 							callback = CreateDynamicCallback (minfo);
+#if ENABLE_MARSHAL_METHODS
+							needToRegisterNatives = true;
+#endif
 						} else {
 							Type callbackDeclaringType = type;
 							if (!callbackDeclaringTypeString.IsEmpty) {
@@ -530,20 +556,73 @@ namespace Android.Runtime {
 							while (callbackDeclaringType.ContainsGenericParameters) {
 								callbackDeclaringType = callbackDeclaringType.BaseType!;
 							}
-							GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
-								callbackDeclaringType, callbackString.ToString ());
-							callback = connector ();
+#if ENABLE_MARSHAL_METHODS
+							// TODO: this is temporary hack, it needs a full fledged registration mechanism for methods like these (that is, ones which
+							// aren't registered with [Register] but are baked into Mono.Android's managed and Java code)
+							bool createCallback = false;
+							string declaringTypeName = callbackDeclaringType.FullName;
+							string callbackName = callbackString.ToString ();
+
+							foreach (var kvp in dynamicRegistrationMethods) {
+								string dynamicTypeName = kvp.Key;
+
+								foreach (string dynamicCallbackMethodName in kvp.Value) {
+									if (ShouldRegisterDynamically (declaringTypeName, callbackName, dynamicTypeName, dynamicCallbackMethodName)) {
+										createCallback = true;
+										break;
+									}
+								}
+
+								if (createCallback) {
+									break;
+								}
+							}
+
+							if (createCallback) {
+								Logger.Log (LogLevel.Info, "monodroid-mm", $"  creating delegate for: '{callbackString.ToString()}' in type {callbackDeclaringType.FullName}");
+#endif
+								GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
+								                                                                             callbackDeclaringType, callbackString.ToString ());
+								callback = connector ();
+#if ENABLE_MARSHAL_METHODS
+							} else {
+								Logger.Log (LogLevel.Warn, "monodroid-mm", $"  would try to create delegate for: '{callbackString.ToString()}' in type {callbackDeclaringType.FullName}");
+							}
+#endif
 						}
-						natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
+
+						if (callback != null) {
+#if ENABLE_MARSHAL_METHODS
+							needToRegisterNatives = true;
+#endif
+							natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
+						}
 					}
 
 					methodsSpan = newLineIndex != -1 ? methodsSpan.Slice (newLineIndex + 1) : default;
 				}
 
-				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, natives.Length);
+#if ENABLE_MARSHAL_METHODS
+				if (needToRegisterNatives) {
+#endif
+					JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
+#if ENABLE_MARSHAL_METHODS
+				}
+#endif
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);
 			}
+
+#if ENABLE_MARSHAL_METHODS
+			bool ShouldRegisterDynamically (string callbackTypeName, string callbackString, string typeName, string callbackName)
+			{
+				if (String.Compare (typeName, callbackTypeName, StringComparison.Ordinal) != 0) {
+					return false;
+				}
+
+				return String.Compare (callbackName, callbackString, StringComparison.Ordinal) == 0;
+			}
+#endif
 		}
 
 		static int CountMethods (ReadOnlySpan<char> methodsSpan)

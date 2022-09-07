@@ -186,6 +186,23 @@ MarshalMethodsManagedClass marshal_methods_class_cache[] = {
 	},
 };
 
+const char* const mm_class_names[2] = {
+	"one",
+	"two",
+};
+
+const MarshalMethodName mm_method_names[] = {
+	{
+		.id = 1,
+		.name = "one",
+	},
+
+	{
+		.id = 2,
+		.name = "two",
+	},
+};
+
 void xamarin_app_init ([[maybe_unused]] get_function_pointer_fn fn) noexcept
 {
 	// Dummy

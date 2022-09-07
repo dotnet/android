@@ -330,6 +330,24 @@ MONO_API MONO_API_EXPORT const xamarin::android::hash_t assembly_image_cache_has
 MONO_API MONO_API_EXPORT uint32_t marshal_methods_number_of_classes;
 MONO_API MONO_API_EXPORT MarshalMethodsManagedClass marshal_methods_class_cache[];
 
+//
+// These tables store names of classes and managed callback methods used in the generated marshal methods
+// code. They are used just for error reporting.
+//
+// Class names are found at the same indexes as their corresponding entries in the `marshal_methods_class_cache` array
+// above. Method names are stored as token:name pairs and the array must end with an "invalid" terminator entry (token
+// == 0; name == nullptr)
+//
+struct MarshalMethodName
+{
+	// combination of assembly index (high 32 bits) and method token (low 32 bits)
+	const uint64_t  id;
+	const char     *name;
+};
+
+MONO_API MONO_API_EXPORT const char* const mm_class_names[];
+MONO_API MONO_API_EXPORT const MarshalMethodName mm_method_names[];
+
 using get_function_pointer_fn = void(*)(uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
 
 MONO_API MONO_API_EXPORT void xamarin_app_init (get_function_pointer_fn fn) noexcept;
