@@ -353,7 +353,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <ItemGroup>
 	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
-	<AndroidPackagingOptionsExclude Include="%2A.kotlin_%2A" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
 </ItemGroup>
 
 <!--
