@@ -204,6 +204,26 @@ used to specify the ABI that the library targets. Thus, if you add
 </ItemGroup>
 ```
 
+## AndroidPackagingOptionsExclude
+
+A set if RegEx compatible items which will allow for items to be
+excluded from the final package. The default values are as follows
+
+```
+<ItemGroup>
+	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
+	<AndroidPackagingOptionsExclude Include="%2A.kotlin_%2A" />
+</ItemGroup>
+```
+
+NOTE: The Items MUST use URL encoding for characters like `*`. This
+is so MSBuild does not try to interpret them as file wildcards.
+
+NOTE: `*` will be replaced in the `BuildApk` task with the RegEx
+`(.)` to match all characters.
+
+Added in Xamarin.Android XX.X.
+
 ## AndroidResource
 
 All files with an *AndroidResource* build action are compiled into

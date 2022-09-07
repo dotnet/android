@@ -74,6 +74,8 @@ namespace Xamarin.Android.Tasks
 
 		public string[] DoNotPackageJavaLibraries { get; set; }
 
+		public string [] ExcludeFiles { get; set; }
+
 		public string Debug { get; set; }
 
 		public string AndroidSequencePointsMode { get; set; }
@@ -121,6 +123,8 @@ namespace Xamarin.Android.Tasks
 		protected virtual void FixupArchive (ZipArchiveEx zip) { }
 
 		List<string> existingEntries = new List<string> ();
+
+		List<Regex> excludePatterns = new List<Regex> ();
 
 		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
@@ -248,6 +252,13 @@ namespace Xamarin.Android.Tasks
 								Log.LogDebugMessage ($"Skipping {path} as the archive file is up to date.");
 								continue;
 							}
+							// check for ignored items
+							foreach (var pattern in excludePatterns) {
+								if(pattern.IsMatch (path)) {
+									Log.LogDebugMessage ($"Ignoring jar entry '{name}' from '{Path.GetFileName (jarFile)}'. Filename matched the exclude pattern '{pattern}'.");
+									continue;
+								}
+							}
 							if (string.Compare (Path.GetFileName (name), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0) {
 								Log.LogDebugMessage ("Ignoring jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
 								continue;
@@ -292,6 +303,10 @@ namespace Xamarin.Android.Tasks
 			uncompressedFileExtensions = UncompressedFileExtensions?.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string> ();
 
 			existingEntries.Clear ();
+
+			foreach (var pattern in ExcludeFiles) {
+				excludePatterns.Add (new Regex (pattern.Replace ("*", "(.)"), RegexOptions.IgnoreCase | RegexOptions.Compiled));
+			}
 
 			bool debug = _Debug;
 			bool compress = !debug && EnableCompression;
