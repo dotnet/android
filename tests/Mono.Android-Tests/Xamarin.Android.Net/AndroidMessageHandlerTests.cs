@@ -4,6 +4,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
+using Android.Runtime;
 using Xamarin.Android.Net;
 
 using NUnit.Framework;
@@ -48,7 +49,6 @@ namespace Xamarin.Android.NetTests
 		public async Task ServerCertificateCustomValidationCallback_RejectRequest ()
 		{
 			bool callbackHasBeenCalled = false;
-			bool exceptionWasThrown = false;
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -56,26 +56,17 @@ namespace Xamarin.Android.NetTests
 					return false;
 				}
 			};
-
 			var client = new HttpClient (handler);
 
-			try {
-				await client.GetStringAsync ("https://microsoft.com/");
-			} catch {
-				// System.Net.WebException is thrown in Debug mode
-				// Java.Security.Cert.CertificateException is thrown in Release mode
-				exceptionWasThrown = true;
-			}
+			await AssertRejectsRemoteCertificate (() => client.GetStringAsync ("https://microsoft.com/"));
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
-			Assert.IsTrue (exceptionWasThrown, "validation callback hasn't rejected the request");
 		}
 
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
-			Exception? exception = null;
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -85,15 +76,54 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
-
-			try {
-				await client.GetStringAsync ("https://self-signed.badssl.com/");
-			} catch (Exception e) {
-				exception = e;
-			}
+			await client.GetStringAsync ("https://self-signed.badssl.com/");
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
-			Assert.IsNull (exception, $"an exception was thrown: {exception}");
+		}
+
+		[Test]
+		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
+		{
+			var handler = new AndroidMessageHandler ();
+			var client = new HttpClient (handler);
+
+			await AssertRejectsRemoteCertificate (() => client.GetStringAsync ("https://wrong.host.badssl.com/"));
+		}
+
+		[Test]
+		public async Task ServerCertificateCustomValidationCallback_IgnoresCertificateHostnameMismatch ()
+		{
+			bool callbackHasBeenCalled = false;
+			SslPolicyErrors reportedErrors = SslPolicyErrors.None;
+
+			var handler = new AndroidMessageHandler {
+				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
+					callbackHasBeenCalled = true;
+					reportedErrors = errors;
+					return true;
+				}
+			};
+
+			var client = new HttpClient (handler);
+			await client.GetStringAsync ("https://wrong.host.badssl.com/");
+
+			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
+			Assert.AreEqual (SslPolicyErrors.RemoteCertificateNameMismatch, reportedErrors & SslPolicyErrors.RemoteCertificateNameMismatch);
+		}
+
+		private async Task AssertRejectsRemoteCertificate (Func<Task> makeRequest)
+		{
+			// there is a difference between the exception that's thrown in the .NET build and the legacy Xamarin
+			// because there's a difference in the $(AndroidBoundExceptionType) property value (legacy: Java, .NET: System)
+			try {
+				await makeRequest();
+				Assert.Fail ("The request wasn't rejected");
+			}
+#if NET
+			catch (System.Net.WebException ex) {}
+#else
+			catch (Java.IO.IOException) {}
+#endif
 		}
 	}
 }
