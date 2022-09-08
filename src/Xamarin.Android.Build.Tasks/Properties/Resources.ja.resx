@@ -462,6 +462,10 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>MSBuild の 'AndroidEnableProguard' プロパティが 'true' に設定されており、MSBuild の 'AndroidLinkTool' プロパティが空であるため、'AndroidLinkTool' の既定値は 'proguard' になります。</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
   </data>
+  <data name="XA1029" xml:space="preserve">
+    <value>The 'AotAssemblies' MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the 'RunAOTCompilation' MSBuild property instead.</value>
+    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>アセンブリ {0} で AppDomain.CreateDomain() が使用されていることが検出されました。.NET 6 以降では単一の AppDomain のみがサポートされる予定のため、.NET 6 がリリースされるとこの API は Xamarin.Android では使用できなくなります。</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
