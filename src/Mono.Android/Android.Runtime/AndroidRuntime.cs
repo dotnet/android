@@ -475,7 +475,7 @@ namespace Android.Runtime {
 
 		// Temporary hack, see comments in RegisterNativeMembers below
 		static readonly Dictionary<string, string[]> dynamicRegistrationMethods = new Dictionary<string, string[]> (StringComparer.Ordinal) {
-			{"Java.Interop.TypeManager+JavaTypeManager",                          new string[] { "GetActivateHandler" }},
+			// leaving it empty for now, until we're sure it's no longer needed (there are some test failures which may still require it to fix them)
 		};
 
 		public void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)

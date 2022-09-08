@@ -388,7 +388,6 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public void AddSpecialCaseMethods ()
 		{
-			// TODO: make sure it works
 			AddTypeManagerSpecialCaseMethods ();
 		}
 
