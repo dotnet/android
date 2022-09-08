@@ -157,13 +157,19 @@ namespace Xamarin.Android.Net
 
 		public bool CheckCertificateRevocationList { get; set; } = false;
 
-		X509TrustManagerWithValidationCallback.Helper? _callbackTrustManagerHelper = null;
+		ServerCertificateCustomValidator? _serverCertificateCustomValidator = null;
 
 		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? ServerCertificateCustomValidationCallback
 		{
-			get => _callbackTrustManagerHelper?.Callback;
+			get => _serverCertificateCustomValidator?.Callback;
 			set {
-				_callbackTrustManagerHelper = value != null ? new X509TrustManagerWithValidationCallback.Helper (value) : null;
+				if (value is null) {
+					_serverCertificateCustomValidator = null;
+				} else if (_serverCertificateCustomValidator is null) {
+					_serverCertificateCustomValidator = new ServerCertificateCustomValidator (value);
+				} else {
+					_serverCertificateCustomValidator.Callback = value;
+				}
 			}
 		}
 
@@ -329,7 +335,7 @@ namespace Xamarin.Android.Net
 		/// <param name="connection">HTTPS connection object.</param>
 		protected virtual IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
 		{
-			return null;
+			return _serverCertificateCustomValidator?.HostnameVerifier;
 		}
 
 		internal IHostnameVerifier? GetSSLHostnameVerifierInternal (HttpsURLConnection connection)
@@ -1069,7 +1075,7 @@ namespace Xamarin.Android.Net
 			if (tmf == null) {
 				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
 				// there is no point in changing the behavior of the default SSL socket factory
-				if (!gotCerts && _callbackTrustManagerHelper == null)
+				if (!gotCerts && _serverCertificateCustomValidator is null)
 					return;
 
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
@@ -1078,8 +1084,9 @@ namespace Xamarin.Android.Net
 
 			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
 
-			if (_callbackTrustManagerHelper != null) {
-				trustManagers = _callbackTrustManagerHelper.Inject (trustManagers, requestMessage);
+			var customValidator = _serverCertificateCustomValidator;
+			if (customValidator is not null) {
+				trustManagers = customValidator.ReplaceX509TrustManager (trustManagers, requestMessage);
 			}
 
 			var context = SSLContext.GetInstance ("TLS");
