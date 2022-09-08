@@ -693,7 +693,7 @@ projects. .NET 5 projects will not import this file.
     <Aot
         Condition="'$(AotAssemblies)' == 'True'"
         AndroidAotMode="$(AndroidAotMode)"
-        AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+        AndroidNdkDirectory="$(AndroidNdkDirectory)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         AndroidApiLevel="$(_AndroidApiLevel)"
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"

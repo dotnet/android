@@ -77,7 +77,6 @@ projects.
         LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
         ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)">
       <Output TaskParameter="CommandLineToolsPath"      PropertyName="_AndroidToolsDirectory" />
-      <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
       <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />
       <Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"    Condition=" '$(JavaSdkDirectory)' == '' " />
       <Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />

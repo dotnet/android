@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tasks
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			NdkTools ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: EnableLLVM, log: Log);
+			NdkTools ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: UseAndroidNdk, log: Log);
 			if (Log.HasLoggedErrors) {
 				return; // NdkTools.Create will log appropriate error
 			}
@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var abi in SupportedAbis) {
 				(string aotCompiler, string outdir, string mtriple, AndroidTargetArch arch) = GetAbiSettings (abi);
 
-				if (EnableLLVM && !ndk.ValidateNdkPlatform (LogMessage, LogCodedError, arch, enableLLVM:EnableLLVM)) {
+				if (UseAndroidNdk && !ndk.ValidateNdkPlatform (LogMessage, LogCodedError, arch, enableLLVM:EnableLLVM)) {
 					yield return Config.Invalid;
 					yield break;
 				}
