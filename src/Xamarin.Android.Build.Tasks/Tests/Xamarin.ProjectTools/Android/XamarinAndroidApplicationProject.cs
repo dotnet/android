@@ -108,9 +108,11 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.BundleAssemblies, value.ToString ()); }
 		}
 
+		string AotAssembliesPropertyName => Builder.UseDotNet ? KnownProperties.RunAOTCompilation : KnownProperties.AotAssemblies;
+
 		public bool AotAssemblies {
-			get { return string.Equals (GetProperty (KnownProperties.AotAssemblies), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.AotAssemblies, value.ToString ()); }
+			get { return string.Equals (GetProperty (AotAssembliesPropertyName), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (AotAssembliesPropertyName, value.ToString ()); }
 		}
 
 		public bool AndroidEnableProfiledAot {

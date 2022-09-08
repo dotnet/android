@@ -16,6 +16,7 @@ namespace Xamarin.ProjectTools
 		public const string AndroidSupportedAbis = "AndroidSupportedAbis";
 		public const string RuntimeIdentifier = "RuntimeIdentifier";
 		public const string RuntimeIdentifiers = "RuntimeIdentifiers";
+		public const string RunAOTCompilation = "RunAOTCompilation";
 		public const string PublishTrimmed = "PublishTrimmed";
 		public const string SupportedOSPlatformVersion = "SupportedOSPlatformVersion";
 

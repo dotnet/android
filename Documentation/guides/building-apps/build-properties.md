@@ -1517,13 +1517,15 @@ Support for this property was added in Xamarin.Android 11.3.
 
 ## AotAssemblies
 
-A boolean property that determines
-whether or not assemblies will be Ahead-of-Time compiled into
-native code and included in the `.apk`.
+A boolean property that determines whether or not assemblies will be
+Ahead-of-Time compiled into native code and included in applications.
+This property is `False` by default.
 
 Support for this property was added in Xamarin.Android 5.1.
 
-This property is `False` by default.
+Deprecated in .NET 7. Migrate to the new
+[`$(RunAOTCompilation)`](#runaotcompilation) MSBuild property instead,
+as support for `$(AotAssemblies)` will be removed in a future release.
 
 ## AProfUtilExtraOptions
 
@@ -1822,3 +1824,18 @@ debugging symbols enabled:
 is True.
 
 Added in Xamarin.Android 7.1.
+
+## RunAOTCompilation
+
+A boolean property that determines whether or not assemblies will be
+Ahead-of-Time compiled into native code and included in applications.
+This property is `False` by default for `Debug` builds and `True` by
+default for `Release` builds.
+
+This MSBuild property replaces the
+[`$(AotAssemblies)`](#aotassemblies) MSBuild property from
+Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
+
+Added in .NET 6, not supported in Xamarin.Android.
+
+[blazor]: https://docs.microsoft.com/aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
