@@ -210,25 +210,47 @@ namespace MonoDroid.Tuner {
 			if (!type.HasInterfaces)
 				return;
 
-			// Return if [Register(DoNotGenerateAcw=true)] is on the type
-			if (type.HasCustomAttributes) {
-				foreach (var attr in type.CustomAttributes) {
-					if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute") {
-						foreach (var property in attr.Properties) {
-							if (property.Name == "DoNotGenerateAcw") {
-								if (property.Argument.Value is bool value && value)
-									return;
-								break;
-							}
-						}
-						break;
-					}
-				}
-			}
+			if (!ShouldPreserveInterfaces (type))
+				return;
 
 			foreach (var iface in type.Interfaces) {
 				Annotations.Mark (iface.InterfaceType.Resolve ());
 			}
+		}
+
+		// False if [Register(DoNotGenerateAcw=true)] is on the type
+		// False if [JniTypeSignature(GenerateJavaPeer=false)] is on the type
+		bool ShouldPreserveInterfaces (TypeDefinition type)
+		{
+			if (!type.HasCustomAttributes)
+				return true;
+
+			foreach (var attr in type.CustomAttributes) {
+				switch (attr.AttributeType.FullName) {
+					case "Android.Runtime.RegisterAttribute":
+						foreach (var property in attr.Properties) {
+							if (property.Name == "DoNotGenerateAcw") {
+								if (property.Argument.Value is bool value && value)
+									return false;
+								break;
+							}
+						}
+						break;
+					case "Java.Interop.JniTypeSignatureAttribute":
+						foreach (var property in attr.Properties) {
+							if (property.Name == "GenerateJavaPeer") {
+								if (property.Argument.Value is bool value && !value)
+									return false;
+								break;
+							}
+						}
+						break;
+					default:
+						break;
+				}
+			}
+
+			return true;
 		}
 #endif // ILLINK
 
