@@ -97,7 +97,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var readerParams = new ReaderParameters {
-				ReadingMode = ReadingMode.Immediate,
+//				ReadingMode = ReadingMode.Immediate,
 				ReadWrite = true,
 				InMemory = true,
 			};
