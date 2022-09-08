@@ -2038,6 +2038,10 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(_BuildApkEmbedOutputs)"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
   <!-- Put the assemblies and native libraries in the apk -->
+  <!--
+    NOTE: Adding Arguments to BuildApk or BuildBaseAppBundle
+    also need to have the args added in monodroid.
+  -->
   <BuildApk
     Condition=" '$(AndroidPackageFormat)' != 'aab' "
     AndroidNdkDirectory="$(_AndroidNdkDirectory)"
