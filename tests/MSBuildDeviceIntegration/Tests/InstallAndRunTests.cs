@@ -661,6 +661,34 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
+		public void RunWithLLVMEnabled ()
+		{
+			AssertHasDevices ();
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetProperty ("EnableLLVM", true.ToString ());
+			if (!Builder.UseDotNet) {
+				proj.AotAssemblies = true;
+			}
+
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			if (Builder.UseDotNet)
+				Assert.True (builder.RunTarget (proj, "Run"), "Project should have run.");
+			else if (CommercialBuildAvailable)
+				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+			else
+				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")));
+		}
+
+		[Test]
 		public void SingleProject_ApplicationId ()
 		{
 			AssertHasDevices ();

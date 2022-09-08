@@ -13,6 +13,7 @@ namespace Xamarin.Android.NetTests {
 	// Important: We expect the Negotiate authentication feature to be enabled in all of these tests because we set $(AndroidUseNegotiateAuthentication)=true
 	// in the Mono.Android.NET-Tests.csproj file.
 	[TestFixture]
+	[Category ("InetAccess")]
 	public sealed class AndroidMessageHandlerNegotiateAuthenticationTests
 	{
 		// Negotiate authentication is available for Android since .NET 7

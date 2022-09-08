@@ -75,6 +75,7 @@ namespace Xamarin.Android.Tasks
 		protected AotMode AotMode;
 		protected SequencePointsMode SequencePointsMode;
 		protected string SdkBinDirectory = "";
+		protected bool UseAndroidNdk => !string.IsNullOrWhiteSpace (AndroidNdkDirectory);
 
 		public static bool GetAndroidAotMode(string androidAotMode, out AotMode aotMode)
 		{
@@ -125,7 +126,7 @@ namespace Xamarin.Android.Tasks
 		protected string GetToolPrefix (NdkTools ndk, AndroidTargetArch arch, out int level)
 		{
 			level = 0;
-			return EnableLLVM
+			return UseAndroidNdk
 				? ndk.GetNdkToolPrefixForAOT (arch, level = GetNdkApiLevel (ndk, arch))
 				: Path.Combine (AndroidBinUtilsDirectory, $"{ndk.GetArchDirName (arch)}-");
 		}
@@ -230,7 +231,7 @@ namespace Xamarin.Android.Tasks
 				MsymPath = outdir;
 
 			string ldName;
-			if (EnableLLVM) {
+			if (UseAndroidNdk) {
 				ldName = ndk.GetToolPath (NdkToolKind.Linker, arch, level);
 				if (!string.IsNullOrEmpty (ldName)) {
 					ldName = Path.GetFileName (ldName);
@@ -250,11 +251,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		string GetLdFlags(NdkTools ndk, AndroidTargetArch arch, int level, string toolPrefix)
+		string GetLdFlags (NdkTools ndk, AndroidTargetArch arch, int level, string toolPrefix)
 		{
 			var toolchainPath = toolPrefix.Substring (0, toolPrefix.LastIndexOf (Path.DirectorySeparatorChar));
 			var ldFlags = new StringBuilder ();
-			if (EnableLLVM) {
+			if (UseAndroidNdk && EnableLLVM) {
 				string androidLibPath = string.Empty;
 				try {
 					androidLibPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
@@ -306,7 +307,9 @@ namespace Xamarin.Android.Tasks
 				// Without the flag, `lld` will modify AOT-generated code in a way that the Mono runtime doesn't support. Until
 				// the runtime issue is fixed, we need to pass this flag then.
 				//
-				ldFlags.Append ("--no-relax");
+				if (!UseAndroidNdk) {
+					ldFlags.Append ("--no-relax");
+				}
 			}
 
 			if (StripLibraries) {

@@ -62,9 +62,13 @@ namespace Xamarin.Android.Build.Tests {
 				IntermediateAssemblyDir = path
 			};
 
-			Assert.IsFalse (task2.Execute (), "Task should fail!");
-			BuildErrorEventArgs error2 = errors [1];
-			Assert.AreEqual (error1.Message, error2.Message, "Aot and MakeBundleNativeCodeExternal should produce the same error messages.");
+			if (androidNdkDirectory == "DoesNotExist") {
+				Assert.IsFalse (task2.Execute (), "Task should fail!");
+				BuildErrorEventArgs error2 = errors [1];
+				Assert.AreEqual (error1.Message, error2.Message, "Aot and MakeBundleNativeCodeExternal should produce the same error messages.");
+			} else {
+				Assert.IsTrue (task2.Execute (), "Aot task should succeed with null or empty NDK!");
+			}
 		}
 	}
 }
