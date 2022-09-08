@@ -304,7 +304,7 @@ namespace Xamarin.Android.Tasks
 
 			existingEntries.Clear ();
 
-			foreach (var pattern in ExcludeFiles) {
+			foreach (var pattern in ExcludeFiles ?? Array.Empty<string> ()) {
 				excludePatterns.Add (new Regex (pattern.Replace ("*", "(.)"), RegexOptions.IgnoreCase | RegexOptions.Compiled));
 			}
 
