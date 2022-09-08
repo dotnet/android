@@ -2040,7 +2040,8 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Put the assemblies and native libraries in the apk -->
   <!--
     NOTE: Adding Arguments to BuildApk or BuildBaseAppBundle
-    also need to have the args added in monodroid.
+    also need to have the args added to Xamarin.Android.Common.Debugging.targets
+    in monodroid.
   -->
   <BuildApk
     Condition=" '$(AndroidPackageFormat)' != 'aab' "
