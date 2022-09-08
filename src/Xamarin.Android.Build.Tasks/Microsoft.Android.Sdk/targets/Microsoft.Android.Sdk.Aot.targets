@@ -48,6 +48,12 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
       <FileWrites Include="@(_AotCompiledAssemblies)" />
       <ResolvedFileToPublish
           Include="@(_AotCompiledAssemblies)"
+          Condition=" '$(_AndroidUseMarshalMethods)' != 'True' "
+          ArchiveFileName="libaot-$([System.IO.Path]::GetFileNameWithoutExtension('%(_AotCompiledAssemblies.Identity)')).so"
+      />
+      <_AotResolvedFileToPublish
+          Include="@(_AotCompiledAssemblies)"
+          Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
           ArchiveFileName="libaot-$([System.IO.Path]::GetFileNameWithoutExtension('%(_AotCompiledAssemblies.Identity)')).so"
       />
     </ItemGroup>
@@ -55,12 +61,12 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
 
   <Target Name="_AndroidAotAndComputeFilesToPublishForRuntimeIdentifiers"
           DependsOnTargets="_AndroidAot"
-          Returns="@(ResolvedFileToPublish)">
+          Returns="@(_AotResolvedFileToPublish)">
     <ItemGroup>
-      <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
-      <ResolvedFileToPublish
-          Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
-          Update="@(ResolvedFileToPublish)"
+      <_AotResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
+      <_AotResolvedFileToPublish
+          Condition=" '%(_AotResolvedFileToPublish.RuntimeIdentifier)' == '' "
+          Update="@(_AotResolvedFileToPublish)"
           RuntimeIdentifier="$(RuntimeIdentifier)"
       />
     </ItemGroup>
