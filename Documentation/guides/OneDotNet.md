@@ -172,9 +172,9 @@ AOT. This is the same property used for [Blazor WASM][blazor].
 migration from "legacy" Xamarin.Android to .NET 6.
 
 It is recommended to migrate to the new `$(RunAOTCompilation)`
-property, as `$(AotAssemblies)` will eventually be deprecated.
+property, as `$(AotAssemblies)` is deprecated in .NET 7.
 
-[blazor]: https://devblogs.microsoft.com/aspnet/asp-net-core-updates-in-net-6-preview-4/#blazor-webassembly-ahead-of-time-aot-compilation
+[blazor]: https://docs.microsoft.com/aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
 
 We want to choose the optimal settings for startup time and app size.
 By default `Release` builds will default to:

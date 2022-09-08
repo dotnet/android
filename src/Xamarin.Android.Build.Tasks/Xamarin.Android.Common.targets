@@ -512,6 +512,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1028"
       Condition=" $(_AndroidXA1028) == 'true' "
   />
+  <AndroidWarning Code="XA1029"
+      ResourceName="XA1029"
+      Condition=" $(_AndroidXA1029) == 'true' "
+  />
   <AndroidError Code="XA1011"
       ResourceName="XA1011"
       Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidDexTool)' == 'd8' "

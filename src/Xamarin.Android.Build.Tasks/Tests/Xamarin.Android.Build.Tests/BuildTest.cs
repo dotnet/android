@@ -1717,9 +1717,9 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
+				AotAssemblies = true,
 			};
 			proj.SetProperty ("UseInterpreter", "true");
-			proj.SetProperty ("AotAssemblies", "true");
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
