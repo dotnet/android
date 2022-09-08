@@ -219,10 +219,6 @@ namespace Xamarin.Android.Tasks
 			this.marshalMethods = marshalMethods;
 			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
 
-			if (uniqueAssemblyNames.Count != numberOfAssembliesInApk) {
-				throw new InvalidOperationException ("Internal error: number of assemblies in the apk doesn't match the number of unique assembly names");
-			}
-
 			generateEmptyCode = false;
 		}
 
