@@ -68,9 +68,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool InstantRunEnabled { get; set; }
 
-		[Required]
 		public bool EnableMarshalMethods { get; set; }
-
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
 

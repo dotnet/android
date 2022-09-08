@@ -51,9 +51,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool GenerateNativeAssembly { get; set; }
 
-		[Required]
 		public bool EnableMarshalMethods { get; set; }
-
 		public string ManifestTemplate { get; set; }
 		public string[] MergedManifestDocuments { get; set; }
 
@@ -97,7 +95,6 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var readerParams = new ReaderParameters {
-//				ReadingMode = ReadingMode.Immediate,
 				ReadWrite = true,
 				InMemory = true,
 			};
