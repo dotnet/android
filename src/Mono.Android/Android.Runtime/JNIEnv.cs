@@ -538,7 +538,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		static readonly int nameBufferLength = 1024;
+		const int nameBufferLength = 1024;
 		[ThreadStatic] static char[]? nameBuffer;
 
 		static unsafe IntPtr BinaryName (string classname)
