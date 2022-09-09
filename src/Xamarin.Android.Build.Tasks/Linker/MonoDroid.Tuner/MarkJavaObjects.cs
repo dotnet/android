@@ -214,7 +214,10 @@ namespace MonoDroid.Tuner {
 				return;
 
 			foreach (var iface in type.Interfaces) {
-				Annotations.Mark (iface.InterfaceType.Resolve ());
+				var td = iface.InterfaceType.Resolve ();
+				if (!td.ImplementsIJavaPeerable ())
+					continue;
+				Annotations.Mark (td);
 			}
 		}
 
