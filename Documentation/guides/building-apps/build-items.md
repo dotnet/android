@@ -212,7 +212,7 @@ excluded from the final package. The default values are as follows
 ```
 <ItemGroup>
 	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
-	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*')" />
 </ItemGroup>
 ```
 Items can use file blob characters for wildcards such as `*` and `?`.
