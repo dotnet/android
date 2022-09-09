@@ -305,7 +305,7 @@ namespace Xamarin.Android.Tasks
 			existingEntries.Clear ();
 
 			foreach (var pattern in ExcludeFiles ?? Array.Empty<string> ()) {
-				excludePatterns.Add (new Regex (pattern.Replace ("*", "(.)"), RegexOptions.IgnoreCase | RegexOptions.Compiled));
+				excludePatterns.Add (FileGlobToRegEx (pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
 			}
 
 			bool debug = _Debug;
@@ -339,6 +339,23 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  [Output] OutputFiles :", OutputFiles);
 
 			return !Log.HasLoggedErrors;
+		}
+
+		static Regex FileGlobToRegEx (string fileGlob, RegexOptions options) {
+			StringBuilder sb = new StringBuilder ();
+			foreach (char c in fileGlob) {
+				switch (c) {
+					case '*': sb.Append (".*");
+						break;
+					case '?': sb.Append (".");
+						break;
+					case '.': sb.Append (@"\.");
+						break;
+					default: sb.Append (c);
+						break;
+				}
+			}
+			return new Regex (sb.ToString (), options);
 		}
 
 		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)

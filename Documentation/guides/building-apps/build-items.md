@@ -212,15 +212,15 @@ excluded from the final package. The default values are as follows
 ```
 <ItemGroup>
 	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
-	<AndroidPackagingOptionsExclude Include="%2A.kotlin_%2A" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
 </ItemGroup>
 ```
+Items can use file blob characters for wildcards such as `*` and `?`.
+However these Items MUST use URL encoding or '$([MSBuild]::Escape(''))'.
+This is so MSBuild does not try to interpret them as actual file wildcards.
 
-NOTE: The Items MUST use URL encoding for characters like `*`. This
-is so MSBuild does not try to interpret them as file wildcards.
-
-NOTE: `*` will be replaced in the `BuildApk` task with the RegEx
-`(.)` to match all characters.
+NOTE: `*`, `?` and `.` will be replaced in the `BuildApk` task with the
+appropriate RegEx expressions.
 
 Added in Xamarin.Android XX.X.
 
