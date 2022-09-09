@@ -206,7 +206,7 @@ used to specify the ABI that the library targets. Thus, if you add
 
 ## AndroidPackagingOptionsExclude
 
-A set if RegEx compatible items which will allow for items to be
+A set of file glob compatible items which will allow for items to be
 excluded from the final package. The default values are as follows
 
 ```
