@@ -462,6 +462,10 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>A propriedade 'AndroidEnableProguard' do MSBuild está definida como 'true' e a propriedade 'AndroidLinkTool' do MSBuild está vazia, portanto, a 'AndroidLinkTool' usará 'proguard' como padrão.</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
   </data>
+  <data name="XA1029" xml:space="preserve">
+    <value>The 'AotAssemblies' MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the 'RunAOTCompilation' MSBuild property instead.</value>
+    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>O uso de AppDomain.CreateDomain() foi detectado no assembly: {0}. O .NET 6 e superior dará suporte apenas a um único AppDomain, portanto, esta API não estará mais disponível no Xamarin.Android quando o .NET 6 for lançado.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
