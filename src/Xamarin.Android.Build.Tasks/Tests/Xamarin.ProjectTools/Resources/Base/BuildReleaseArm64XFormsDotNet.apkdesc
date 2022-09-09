@@ -5,13 +5,13 @@
       "Size": 3568
     },
     "assemblies/FormsViewGroup.dll": {
-      "Size": 7114
+      "Size": 7131
     },
     "assemblies/Java.Interop.dll": {
       "Size": 66767
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 442556
+      "Size": 437613
     },
     "assemblies/mscorlib.dll": {
       "Size": 3859
@@ -149,10 +149,10 @@
       "Size": 5872
     },
     "assemblies/Xamarin.AndroidX.AppCompat.AppCompatResources.dll": {
-      "Size": 5889
+      "Size": 5908
     },
     "assemblies/Xamarin.AndroidX.AppCompat.dll": {
-      "Size": 112363
+      "Size": 112407
     },
     "assemblies/Xamarin.AndroidX.CardView.dll": {
       "Size": 6596
@@ -161,13 +161,13 @@
       "Size": 16407
     },
     "assemblies/Xamarin.AndroidX.Core.dll": {
-      "Size": 96515
+      "Size": 96466
     },
     "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
-      "Size": 14065
+      "Size": 13924
     },
     "assemblies/Xamarin.AndroidX.Fragment.dll": {
-      "Size": 39713
+      "Size": 39483
     },
     "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
       "Size": 5924
@@ -185,16 +185,16 @@
       "Size": 12476
     },
     "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
-      "Size": 84474
+      "Size": 83675
     },
     "assemblies/Xamarin.AndroidX.SavedState.dll": {
       "Size": 4869
     },
     "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
-      "Size": 10180
+      "Size": 10116
     },
     "assemblies/Xamarin.AndroidX.ViewPager.dll": {
-      "Size": 17786
+      "Size": 17484
     },
     "assemblies/Xamarin.Forms.Core.dll": {
       "Size": 528450
@@ -209,13 +209,13 @@
       "Size": 60774
     },
     "assemblies/Xamarin.Google.Android.Material.dll": {
-      "Size": 39911
+      "Size": 39785
     },
     "classes.dex": {
-      "Size": 3473196
+      "Size": 3090268
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 425416
+      "Size": 432408
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3073392
@@ -230,7 +230,7 @@
       "Size": 148696
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 99640
+      "Size": 321936
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -1985,5 +1985,5 @@
       "Size": 341228
     }
   },
-  "PackageSize": 8078308
+  "PackageSize": 8037348
 }
