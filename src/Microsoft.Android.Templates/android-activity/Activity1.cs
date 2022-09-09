@@ -1,6 +1,6 @@
 namespace AndroidApp1;
 
-[Activity(Label = "@string/app_name", MainLauncher = true)]
+[Activity(Label = "Activity1")]
 public class Activity1 : Activity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
