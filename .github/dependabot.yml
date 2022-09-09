@@ -9,3 +9,15 @@ updates:
     directory: "/src/manifestmerger/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/external/android-api-docs"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/external/Java.Interop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/external/xamarin-android-tools"
+    schedule:
+      interval: "daily"
