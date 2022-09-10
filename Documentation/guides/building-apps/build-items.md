@@ -222,7 +222,7 @@ This is so MSBuild does not try to interpret them as actual file wildcards.
 NOTE: `*`, `?` and `.` will be replaced in the `BuildApk` task with the
 appropriate RegEx expressions.
 
-Added in Xamarin.Android 13.0.
+Added in Xamarin.Android 13.1 and .NET 7.
 
 ## AndroidResource
 
