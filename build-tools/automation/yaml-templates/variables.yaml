@@ -38,5 +38,8 @@ variables:
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false
+# Workaround: https://github.com/dotnet/linker/issues/3012
+- name: DOTNET_gcServer
+  value: 0
 - name: DotNetReleaseBranchPrefix
   value: refs/heads/release/
