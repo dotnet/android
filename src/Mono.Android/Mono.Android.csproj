@@ -249,6 +249,7 @@
     <Compile Include="Android.Runtime\JavaSet.cs" />
     <Compile Include="Android.Runtime\JNIEnv.cs" />
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
+    <Compile Include="Android.Runtime\JNIEnvInit.cs" />
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.g.cs">

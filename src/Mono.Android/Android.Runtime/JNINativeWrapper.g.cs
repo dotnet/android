@@ -8,7 +8,7 @@ namespace Android.Runtime
 	{
 		static bool _unhandled_exception (Exception e)
 		{
-			if (Debugger.IsAttached || !JNIEnv.PropagateExceptions) {
+			if (Debugger.IsAttached || !JNIEnvInit.PropagateExceptions) {
 				JNIEnv.mono_unhandled_exception?.Invoke (e);
 				return false;
 			}
@@ -22,7 +22,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -55,7 +55,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -121,7 +121,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -154,7 +154,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -165,7 +165,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -176,7 +176,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -187,7 +187,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -198,7 +198,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -253,7 +253,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -286,7 +286,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -297,7 +297,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -319,7 +319,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -341,7 +341,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -385,7 +385,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2, p3);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -396,7 +396,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2, p3);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -418,7 +418,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2, p3, p4);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -429,7 +429,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2, p3, p4);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
@@ -440,7 +440,7 @@ namespace Android.Runtime
 				callback (jnienv, klazz, p0, p1, p2, p3, p4, p5, p6, p7, p8);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 

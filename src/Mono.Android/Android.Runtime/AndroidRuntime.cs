@@ -54,7 +54,7 @@ namespace Android.Runtime {
 		{
 			if (!reference.IsValid)
 				return null;
-			var peeked      = JNIEnv.AndroidValueManager?.PeekPeer (reference);
+			var peeked      = JNIEnvInit.AndroidValueManager?.PeekPeer (reference);
 			var peekedExc   = peeked as Exception;
 			if (peekedExc == null) {
 				var throwable = Java.Lang.Object.GetObject<Java.Lang.Throwable> (reference.Handle, JniHandleOwnership.DoNotTransfer);
@@ -62,7 +62,7 @@ namespace Android.Runtime {
 				return throwable;
 			}
 			JniObjectReference.Dispose (ref reference, options);
-			var unwrapped = JNIEnv.AndroidValueManager?.UnboxException (peeked!);
+			var unwrapped = JNIEnvInit.AndroidValueManager?.UnboxException (peeked!);
 			if (unwrapped != null) {
 				return unwrapped;
 			}
@@ -182,7 +182,7 @@ namespace Android.Runtime {
 			var tid   = log ? Thread.CurrentThread.ManagedThreadId : 0;
 			var from  = log ? new StringBuilder (new StackTrace (true).ToString ()) : null;
 			int gc 		= JNIEnv._monodroid_gref_log_new (value.Handle, ctype, r.Handle, ntype, tname, tid, from, 1);
-			if (gc >= JNIEnv.gref_gc_threshold) {
+			if (gc >= JNIEnvInit.gref_gc_threshold) {
 				Logger.Log (LogLevel.Info, "monodroid-gc", gc + " outstanding GREFs. Performing a full GC!");
 				System.GC.Collect ();
 			}
@@ -276,7 +276,7 @@ namespace Android.Runtime {
 #endif  // NET
 					j;
 			}
-			if (JNIEnv.IsRunningOnDesktop) {
+			if (JNIEnvInit.IsRunningOnDesktop) {
 				return JavaNativeTypeManager.ToJniName (type);
 			}
 			return null;
@@ -288,7 +288,7 @@ namespace Android.Runtime {
 #if NET
 			j   = GetReplacementTypeCore (j) ?? j;
 #endif  // NET
-			if (JNIEnv.IsRunningOnDesktop) {
+			if (JNIEnvInit.IsRunningOnDesktop) {
 				string? d = JavaNativeTypeManager.ToJniName (type);
 				if (j != null && d != null) {
 					return new[]{j, d};
@@ -328,7 +328,7 @@ namespace Android.Runtime {
 
 		protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		{
-			if (!JNIEnv.jniRemappingInUse) {
+			if (!JNIEnvInit.jniRemappingInUse) {
 				return null;
 			}
 
@@ -345,7 +345,7 @@ namespace Android.Runtime {
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		{
-			if (!JNIEnv.jniRemappingInUse) {
+			if (!JNIEnvInit.jniRemappingInUse) {
 				return null;
 			}
 
@@ -547,7 +547,7 @@ namespace Android.Runtime {
 							// TODO: this is temporary hack, it needs a full fledged registration mechanism for methods like these (that is, ones which
 							// aren't registered with [Register] but are baked into Mono.Android's managed and Java code)
 							bool createCallback;
-							if (JNIEnv.MarshalMethodsEnabled) {
+							if (JNIEnvInit.MarshalMethodsEnabled) {
 								string declaringTypeName = callbackDeclaringType.FullName;
 								string callbackName = callbackString.ToString ();
 
@@ -665,7 +665,7 @@ namespace Android.Runtime {
 				throw new ArgumentException ("Must have a valid JNI object reference!", nameof (value));
 
 			var reference       = value.PeerReference;
-			var hash            = JNIEnv.IdentityHash! (reference.Handle);
+			var hash            = JNIEnvInit.IdentityHash! (reference.Handle);
 
 			AddPeer (value, reference, hash);
 		}
@@ -728,7 +728,7 @@ namespace Android.Runtime {
 			if (handleField == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to allocate Global Reference for object '" + value.ToString () + "'!");
 
-			IntPtr hash = JNIEnv.IdentityHash! (handleField);
+			IntPtr hash = JNIEnvInit.IdentityHash! (handleField);
 			value.SetJniIdentityHashCode ((int) hash);
 			if ((transfer & JniHandleOwnership.DoNotRegister) == 0) {
 				AddPeer (value, new JniObjectReference (handleField, JniObjectReferenceType.Global), hash);
@@ -786,7 +786,7 @@ namespace Android.Runtime {
 				// Likely an idempotent DIspose(); ignore.
 				return;
 			}
-			var hash            = JNIEnv.IdentityHash! (reference.Handle);
+			var hash            = JNIEnvInit.IdentityHash! (reference.Handle);
 
 			RemovePeer (value, hash);
 		}
@@ -820,7 +820,7 @@ namespace Android.Runtime {
 			if (!reference.IsValid)
 				return null;
 
-			var hash    = JNIEnv.IdentityHash! (reference.Handle);
+			var hash    = JNIEnvInit.IdentityHash! (reference.Handle);
 			lock (instances) {
 				if (instances.TryGetValue (hash, out var targets)) {
 					for (int i = targets.Count - 1; i >= 0; i--) {

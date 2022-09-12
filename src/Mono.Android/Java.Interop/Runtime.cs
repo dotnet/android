@@ -11,7 +11,7 @@ namespace Java.Interop {
 		[Obsolete ("Please use Java.Interop.JniEnvironment.Runtime.ValueManager.GetSurfacedPeers()")]
 		public static List<WeakReference> GetSurfacedObjects ()
 		{
-			var peers = JNIEnv.AndroidValueManager!.GetSurfacedPeers ();
+			var peers = JNIEnvInit.AndroidValueManager!.GetSurfacedPeers ();
 			var r = new List<WeakReference> (peers.Count);
 			foreach (var p in peers) {
 				if (p.SurfacedPeer.TryGetTarget (out var target))

@@ -18,7 +18,7 @@ namespace Android.App {
 		{
 			if (looper == null) {
 				var message = $"No Android message loop is available. Skipping invocation of `{d.Method.DeclaringType?.FullName}.{d.Method.Name}`!";
-				if (JNIEnv.IsRunningOnDesktop)
+				if (JNIEnvInit.IsRunningOnDesktop)
 					message += " Using `await` when running on the Android Designer is not currently supported. Please use the `View.IsInEditMode` property.";
 				Logger.Log (LogLevel.Error, "monodroid-synccontext", message);
 				return false;

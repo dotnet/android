@@ -1180,12 +1180,12 @@ MonodroidRuntime::init_android_runtime (
 #endif // def NET && def ANDROID
 		}
 	}
-	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.RegisterJniNatives! %s", mono_error_get_message (&error));
+	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s", mono_error_get_message (&error));
 
 	MonoClass *android_runtime_jnienv = runtime;
 	MonoClassField *bridge_processing_field = mono_class_get_field_from_name (runtime, const_cast<char*> ("BridgeProcessing"));
-	if (android_runtime_jnienv ==nullptr || bridge_processing_field == nullptr) {
-		log_fatal (LOG_DEFAULT, "INTERNAL_ERROR: Unable to find Android.Runtime.JNIEnv.BridgeProcessing");
+	if (android_runtime_jnienv == nullptr || bridge_processing_field == nullptr) {
+		log_fatal (LOG_DEFAULT, "INTERNAL_ERROR: Unable to find Android.Runtime.JNIEnvInit.BridgeProcessing");
 		exit (FATAL_EXIT_CANNOT_FIND_JNIENV);
 	}
 
@@ -1217,7 +1217,7 @@ MonodroidRuntime::init_android_runtime (
 
 	abort_unless (
 		initialize != nullptr,
-		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnv.Initialize method. %s",
+		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
 		mono_error_get_message (&error)
 	);
 	log_warn (LOG_DEFAULT, "grendel: #12");

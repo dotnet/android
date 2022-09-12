@@ -241,7 +241,7 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
-			JNIEnv.AndroidValueManager?.AddPeer (this, value, transfer, out handle);
+			JNIEnvInit.AndroidValueManager?.AddPeer (this, value, transfer, out handle);
 			handle_type = JObjectRefType.Global;
 		}
 
@@ -296,7 +296,7 @@ namespace Java.Lang {
 
 		public void UnregisterFromRuntime ()
 		{
-			JNIEnv.AndroidValueManager?.RemovePeer (this, key_handle);
+			JNIEnvInit.AndroidValueManager?.RemovePeer (this, key_handle);
 		}
 
 		void IJavaPeerable.Disposed ()
@@ -332,7 +332,7 @@ namespace Java.Lang {
 
 		public void Dispose ()
 		{
-			JNIEnv.AndroidValueManager?.DisposePeer (this);
+			JNIEnvInit.AndroidValueManager?.DisposePeer (this);
 		}
 
 		protected virtual void Dispose (bool disposing)
@@ -340,4 +340,3 @@ namespace Java.Lang {
 		}
 	}
 }
-

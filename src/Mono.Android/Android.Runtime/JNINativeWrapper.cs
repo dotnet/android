@@ -41,7 +41,7 @@ namespace Android.Runtime {
 			if (result != null)
 				return result;
 
-			if (JNIEnv.LogAssemblyCategory) {
+			if (JNIEnvInit.LogAssemblyCategory) {
 				JNIEnv.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{delegateType}': {dlg.Method}");
 			}
 
@@ -72,7 +72,7 @@ namespace Android.Runtime {
 
 			ig.Emit (OpCodes.Leave, label);
 
-			bool  filter = Debugger.IsAttached || !JNIEnv.PropagateExceptions;
+			bool  filter = Debugger.IsAttached || !JNIEnvInit.PropagateExceptions;
 			if (filter && JNIEnv.mono_unhandled_exception_method != null) {
 				ig.BeginExceptFilterBlock ();
 
@@ -101,4 +101,3 @@ namespace Android.Runtime {
 
 	}
 }
-
