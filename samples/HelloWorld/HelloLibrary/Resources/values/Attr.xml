@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="MyLibraryWidget">
+        <attr name="library_bool_attr" format="boolean" />
+        <attr name="library_int_attr" format="integer" />
+    </declare-styleable>
+</resources>

@@ -16,7 +16,7 @@ using Android.Util;
 using Android.Views;
 using Android.Widget;
 
-namespace Mono.Samples.Hello
+namespace HelloLibrary
 {
     [Activity(Label = "Library Activity", Name="mono.samples.hello.LibraryActivity")]
     public class LibraryActivity : Activity

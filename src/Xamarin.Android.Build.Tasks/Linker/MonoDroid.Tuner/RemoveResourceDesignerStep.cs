@@ -55,14 +55,19 @@ namespace MonoDroid.Tuner
 			Dictionary<Instruction, int> instructions = new Dictionary<Instruction, int>();
 			var processor = body.GetILProcessor ();
 			string designerFullName = $"{designer.FullName}/";
+			bool isDesignerMethod = designerFullName.Contains (body.Method.DeclaringType.FullName);
+			string declaringTypeName = body.Method.DeclaringType.Name;
 			foreach (var i in body.Instructions)
 			{
 				string line = i.ToString ();
-				if (line.Contains (designerFullName) && !instructions.ContainsKey (i))
+				if ((line.Contains (designerFullName) || (isDesignerMethod && i.OpCode == OpCodes.Stsfld)) && !instructions.ContainsKey (i))
 				{
 					var match = opCodeRegex.Match (line);
 					if (match.Success && match.Groups.Count == 5) {
 						string key = match.Groups[4].Value.Replace (designerFullName, string.Empty);
+						if (isDesignerMethod) {
+							key = declaringTypeName +"::" + key;
+						}
 						if (designerConstants.ContainsKey (key) && !instructions.ContainsKey (i))
 							instructions.Add(i, designerConstants [key]);
 					}

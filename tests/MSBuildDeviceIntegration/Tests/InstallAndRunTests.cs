@@ -712,5 +712,116 @@ using System.Runtime.Serialization.Json;
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
+
+		[Test]
+		public void AppWithStyleableUsageRuns ([Values (true, false)] bool isRelease, [Values (true, false)] bool linkResources)
+		{
+			AssertHasDevices ();
+
+			var rootPath = Path.Combine (Root, "temp", TestName);
+			var lib = new XamarinAndroidLibraryProject () {
+				ProjectName = "Styleable.Library"
+			};
+
+			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styleables.xml") {
+				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
+<resources>
+	<declare-styleable name='MyLibraryView'>
+		<attr name='MyBool' format='boolean' />
+		<attr name='MyInt' format='integer' />
+	</declare-styleable>
+</resources>",
+			});
+			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\librarylayout.xml") {
+				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
+<Styleable.Library.MyLibraryLayout xmlns:app='http://schemas.android.com/apk/res-auto' app:MyBool='true' app:MyInt='128'/>
+",
+			});
+			lib.Sources.Add (new BuildItem.Source ("MyLibraryLayout.cs") {
+				TextContent = () => @"using System;
+
+namespace Styleable.Library {
+	public class MyLibraryLayout : Android.Widget.LinearLayout
+	{
+
+		public MyLibraryLayout (Android.Content.Context context, Android.Util.IAttributeSet attrs) : base (context, attrs)
+		{
+			Android.Content.Res.TypedArray a = context.Theme.ObtainStyledAttributes (attrs, Resource.Styleable.MyLibraryView, 0,0);
+			try {
+					bool b = a.GetBoolean (Resource.Styleable.MyLibraryView_MyBool, defValue: false);
+					if (!b)
+						throw new Exception (""MyBool was not true."");
+					int i = a.GetInteger (Resource.Styleable.MyLibraryView_MyInt, defValue: -1);
+					if (i != 128)
+						throw new Exception (""MyInt was not 128."");
+			}
+			finally {
+				a.Recycle();
+			}
+		}
+	}
+}"
+			});
+
+			proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.AddReference (lib);
+
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styleables.xml") {
+				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
+<resources>
+	<declare-styleable name='MyView'>
+		<attr name='MyBool' format='boolean' />
+		<attr name='MyInt' format='integer' />
+	</declare-styleable>
+</resources>",
+			});
+			proj.SetProperty ("AndroidLinkResources", linkResources ? "False" : "True");
+			proj.LayoutMain = proj.LayoutMain.Replace ("<LinearLayout", "<UnnamedProject.MyLayout xmlns:app='http://schemas.android.com/apk/res-auto' app:MyBool='true' app:MyInt='128'")
+				.Replace ("</LinearLayout>", "</UnnamedProject.MyLayout>");
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_MAINACTIVITY}",
+@"public class MyLayout : Android.Widget.LinearLayout
+{
+
+	public MyLayout (Android.Content.Context context, Android.Util.IAttributeSet attrs) : base (context, attrs)
+	{
+		Android.Content.Res.TypedArray a = context.Theme.ObtainStyledAttributes (attrs, Resource.Styleable.MyView, 0,0);
+		try {
+				bool b = a.GetBoolean (Resource.Styleable.MyView_MyBool, defValue: false);
+				if (!b)
+					throw new Exception (""MyBool was not true."");
+				int i = a.GetInteger (Resource.Styleable.MyView_MyInt, defValue: -1);
+				if (i != 128)
+					throw new Exception (""MyInt was not 128."");
+		}
+		finally {
+			a.Recycle();
+		}
+	}
+}
+");
+
+			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+			var libBuilder = CreateDllBuilder (Path.Combine (rootPath, lib.ProjectName));
+			Assert.IsTrue (libBuilder.Build (lib), "Library should have built succeeded.");
+			builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
+
+
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			if (Builder.UseDotNet)
+				Assert.True (builder.RunTarget (proj, "Run"), "Project should have run.");
+			else if (CommercialBuildAvailable)
+				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+			else
+				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
+			Assert.IsTrue (didStart, "Activity should have started.");
+		}
 	}
 }

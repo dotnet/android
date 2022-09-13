@@ -7,6 +7,7 @@ using Xamarin.Android.Tasks;
 using System.Collections.Generic;
 using Mono.Cecil.Cil;
 using System.Text.RegularExpressions;
+using Mono.Collections.Generic;
 #if ILLINK
 using Microsoft.Android.Sdk.ILLink;
 #endif
@@ -69,8 +70,17 @@ namespace MonoDroid.Tuner  {
 		protected void ClearDesignerClass (TypeDefinition designer)
 		{
 			LogMessage ($"    TryRemoving {designer.FullName}");
-			designer.NestedTypes.Clear ();
-			designer.Methods.Clear ();
+			// for each of the nested types clear all but the
+			// int[] fields.
+			for (int i = designer.NestedTypes.Count -1; i >= 0; i--) {
+				var nestedType = designer.NestedTypes [i];
+				RemoveFieldsFromType (nestedType, designer.Module);
+				if (nestedType.Fields.Count == 0) {
+					// no fields we do not need this class at all.
+					designer.NestedTypes.RemoveAt (i);
+				}
+			}
+			RemoveUpdateIdValues (designer);
 			designer.Fields.Clear ();
 			designer.Properties.Clear ();
 			designer.CustomAttributes.Clear ();
@@ -114,6 +124,48 @@ namespace MonoDroid.Tuner  {
 			foreach (TypeDefinition nestedType in type.NestedTypes)
 			{
 				FixType (nestedType, localDesigner);
+			}
+		}
+
+		protected void RemoveFieldsFromType (TypeDefinition type, ModuleDefinition module)
+		{
+			for (int i = type.Fields.Count - 1; i >= 0; i--) {
+				var field = type.Fields [i];
+				if (field.FieldType.IsArray) {
+					continue;
+				}
+				LogMessage ($"Removing {type.Name}::{field.Name}");
+				type.Fields.RemoveAt (i);
+			}
+		}
+
+		protected void RemoveUpdateIdValues (TypeDefinition type)
+		{
+			foreach (var method in type.Methods) {
+				if (method.Name.Contains ("UpdateIdValues")) {
+					FixUpdateIdValuesBody (method);
+				} else {
+					FixBody (method.Body, type);
+				}
+			}
+
+			foreach (var nestedType in type.NestedTypes) {
+				RemoveUpdateIdValues (nestedType);
+			}
+		}
+
+		protected void FixUpdateIdValuesBody (MethodDefinition method)
+		{
+			List<Instruction> finalInstructions = new List<Instruction> ();
+			Collection<Instruction> instructions = method.Body.Instructions;
+			for (int i = 0; i < method.Body.Instructions.Count-1; i++) {
+				Instruction instruction = instructions[i];
+				string line = instruction.ToString ();
+				bool found = line.Contains ("Int32[]") || instruction.OpCode == OpCodes.Ret;
+				if (!found) {
+					method.Body.Instructions.Remove (instruction);
+					i--;
+				}
 			}
 		}
 
