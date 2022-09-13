@@ -421,6 +421,24 @@ namespace Library1 {
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
 					new BuildItem ("ProjectReference", "..\\LinkTestLib\\LinkTestLib.csproj"),
 				},
+				PackageReferences = {
+					KnownPackages.AndroidXMigration,
+					KnownPackages.AndroidXAppCompat,
+					KnownPackages.AndroidXAppCompatResources,
+					KnownPackages.AndroidXBrowser,
+					KnownPackages.AndroidXMediaRouter,
+					KnownPackages.AndroidXLegacySupportV4,
+					KnownPackages.AndroidXLifecycleLiveData,
+					KnownPackages.XamarinGoogleAndroidMaterial,
+				},
+				Sources = {
+					new BuildItem.Source ("MaterialTextChanged.cs") {
+						TextContent = () => {
+							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MaterialTextChanged.cs")))
+								return sr.ReadToEnd ();
+						},
+					},
+				},
 				OtherBuildItems = {
 					new BuildItem ("LinkDescription", "linker.xml") {
 						TextContent = () => linkMode == AndroidLinkMode.SdkOnly ? "<linker/>" : @"
