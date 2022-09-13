@@ -341,7 +341,8 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		static Regex FileGlobToRegEx (string fileGlob, RegexOptions options) {
+		static Regex FileGlobToRegEx (string fileGlob, RegexOptions options)
+		{
 			StringBuilder sb = new StringBuilder ();
 			foreach (char c in fileGlob) {
 				switch (c) {
