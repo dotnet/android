@@ -95,15 +95,15 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			// var readerParams = new ReaderParameters {
-			// 	ReadWrite = true,
-			// 	InMemory = true,
-			// };
+			var readerParams = new ReaderParameters {
+				ReadWrite = true,
+				InMemory = true,
+			};
 
 			try {
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
-				using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true/*, loadReaderParameters: readerParams*/)) {
+				using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParams)) {
 					Run (res, useMarshalMethods: !Debug && EnableMarshalMethods);
 				}
 			} catch (XamarinAndroidException e) {
