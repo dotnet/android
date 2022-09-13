@@ -499,6 +499,10 @@ namespace Xamarin.ProjectTools
 			Id = "Xamarin.GooglePlayServices.Maps",
 			Version = "117.0.1.2",
 		};
+		public static Package Xamarin_Kotlin_StdLib_Common = new Package {
+			Id = "Xamarin.Kotlin.Stdlib.Common",
+			Version = "1.6.20.1"
+		};
 		public static Package Acr_UserDialogs = new Package {
 			Id = "Acr.UserDialogs",
 			Version = "6.5.1",

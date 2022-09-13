@@ -351,6 +351,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</AllowedReferenceRelatedFileExtensions>
 </PropertyGroup>
 
+<ItemGroup>
+	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
+</ItemGroup>
+
 <!--
 *******************************************
           Imports
@@ -2037,6 +2042,11 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(_BuildApkEmbedOutputs)"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
   <!-- Put the assemblies and native libraries in the apk -->
+  <!--
+    NOTE: Adding Arguments to BuildApk or BuildBaseAppBundle
+    also need to have the args added to Xamarin.Android.Common.Debugging.targets
+    in monodroid.
+  -->
   <BuildApk
     Condition=" '$(AndroidPackageFormat)' != 'aab' "
     AndroidNdkDirectory="$(_AndroidNdkDirectory)"
@@ -2067,6 +2077,7 @@ because xbuild doesn't support framework reference assemblies.
     IncludeWrapSh="$(AndroidIncludeWrapSh)"
     CheckedBuild="$(_AndroidCheckedBuild)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+    ExcludeFiles="@(AndroidPackagingOptionsExclude)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
@@ -2100,6 +2111,7 @@ because xbuild doesn't support framework reference assemblies.
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+      ExcludeFiles="@(AndroidPackagingOptionsExclude)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
