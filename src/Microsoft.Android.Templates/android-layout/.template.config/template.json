@@ -10,9 +10,9 @@
   },
   "identity": "Microsoft.Android.AndroidLayout",
   "shortName": "android-layout",
-  "sourceName": "Layout",
+  "sourceName": "Layout1",
   "primaryOutputs": [
-    { "path": "Layout.xml" }
+    { "path": "Layout1.xml" }
   ],
-  "defaultName": "Layout"
+  "defaultName": "Layout1"
 }
