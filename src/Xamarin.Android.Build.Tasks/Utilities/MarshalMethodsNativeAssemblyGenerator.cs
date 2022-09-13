@@ -204,8 +204,9 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator ()
+		public MarshalMethodsNativeAssemblyGenerator (ICollection<string> uniqueAssemblyNames)
 		{
+			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			generateEmptyCode = true;
 		}
 
@@ -788,6 +789,7 @@ namespace Xamarin.Android.Tasks
 			generator.WriteStructureArray (marshalMethodsClass, classes,  LlvmIrVariableOptions.GlobalWritable, "marshal_methods_class_cache");
 		}
 
+		// TODO: this should probably be moved to a separate writer, since not only marshal methods use the cache
 		void WriteAssemblyImageCache (LlvmIrGenerator generator, out Dictionary<string, uint> asmNameToIndex)
 		{
 			bool is64Bit = generator.Is64Bit;
@@ -806,28 +808,23 @@ namespace Xamarin.Android.Tasks
 			{
 				var hashes = new Dictionary<T, (string name, uint index)> ();
 				uint index = 0;
-				List<T> keys;
 
-				if (!generateEmptyCode) {
-					foreach (string name in uniqueAssemblyNames) {
-						string clippedName = Path.GetFileNameWithoutExtension (name);
-						ulong hashFull = HashName (name, is64Bit);
-						ulong hashClipped = HashName (clippedName, is64Bit);
+				foreach (string name in uniqueAssemblyNames) {
+					string clippedName = Path.GetFileNameWithoutExtension (name);
+					ulong hashFull = HashName (name, is64Bit);
+					ulong hashClipped = HashName (clippedName, is64Bit);
 
-						//
-						// If the number of name forms changes, xamarin-app.hh MUST be updated to set value of the
-						// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
-						//
-						hashes.Add ((T)Convert.ChangeType (hashFull, typeof(T)), (name, index));
-						hashes.Add ((T)Convert.ChangeType (hashClipped, typeof(T)), (clippedName, index));
+					//
+					// If the number of name forms changes, xamarin-app.hh MUST be updated to set value of the
+					// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
+					//
+					hashes.Add ((T)Convert.ChangeType (hashFull, typeof(T)), (name, index));
+					hashes.Add ((T)Convert.ChangeType (hashClipped, typeof(T)), (clippedName, index));
 
-						index++;
-					}
-					keys = hashes.Keys.ToList ();
-					keys.Sort ();
-				} else {
-					keys = new List<T> ();
+					index++;
 				}
+				List<T> keys = hashes.Keys.ToList ();
+				keys.Sort ();
 
 				generator.WriteCommentLine ("Each entry maps hash of an assembly name to an index into the `assembly_image_cache` array");
 				generator.WriteArray (

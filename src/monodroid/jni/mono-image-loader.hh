@@ -55,7 +55,6 @@ namespace xamarin::android::internal {
 #if defined (NET)
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, MonoAssemblyLoadContextGCHandle alc_gchandle, hash_t name_hash, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
-			log_debug (LOG_ASSEMBLY, "Mono image loader: loading assembly %s; hash 0x%zx", name.get (), name_hash);
 			MonoImageOpenStatus status;
 			MonoImage *image = mono_image_open_from_data_alc (
 				alc_gchandle,
@@ -71,7 +70,6 @@ namespace xamarin::android::internal {
 
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, MonoAssemblyLoadContextGCHandle alc_gchandle, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
-
 			return load (name, alc_gchandle, xxhash::hash (name.get (), name.length ()), assembly_data, assembly_data_size);
 		}
 #endif // def NET
@@ -136,7 +134,7 @@ namespace xamarin::android::internal {
 		}
 
 #if defined (USE_CACHE)
-		static size_t number_of_cache_index_entries;
+		static inline size_t number_of_cache_index_entries = application_config.number_of_assemblies_in_apk * number_of_assembly_name_forms_in_image_cache;;
 #endif // def USE_CACHE
 	};
 }

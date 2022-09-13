@@ -489,7 +489,6 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/jni-remapping.cc
   ${SOURCES_DIR}/monodroid-glue.cc
-  ${SOURCES_DIR}/mono-image-loader.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc

@@ -301,10 +301,10 @@ namespace Xamarin.Android.Tasks
 			int assemblyCount = 0;
 			bool enableMarshalMethods = EnableMarshalMethods;
 			HashSet<string> archAssemblyNames = null;
-			HashSet<string> uniqueAssemblyNames = enableMarshalMethods ? new HashSet<string> (StringComparer.OrdinalIgnoreCase) : null;
+			HashSet<string> uniqueAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
 				string assemblyName = Path.GetFileName (assembly.ItemSpec);
-				if (enableMarshalMethods && !uniqueAssemblyNames.Contains (assemblyName)) {
+				if (!uniqueAssemblyNames.Contains (assemblyName)) {
 					uniqueAssemblyNames.Add (assemblyName);
 				}
 
@@ -453,7 +453,7 @@ namespace Xamarin.Android.Tasks
 					Log
 				);
 			} else {
-				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator ();
+				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (uniqueAssemblyNames);
 			}
 			marshalMethodsAsmGen.Init ();
 
