@@ -56,10 +56,14 @@ namespace Android.Runtime {
 		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_free (IntPtr ptr);
 
-		public static IntPtr Handle {
-			get {
-				return JNIEnvInit.Handle;
-			}
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		extern static IntPtr _monodroid_get_identity_hash_code (IntPtr env, IntPtr value);
+
+		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
+
+		internal static IntPtr IdentityHash (IntPtr v)
+		{
+			return JNIEnvInit.LocalRefsAreIndirect ? _monodroid_get_identity_hash_code (Handle, v) : v;
 		}
 
 		public static void CheckHandle (IntPtr jnienv)

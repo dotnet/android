@@ -1133,15 +1133,12 @@ MonodroidRuntime::init_android_runtime (
 #endif // def NET
 		method = mono_class_get_method_from_name (runtime, "Initialize", 1);
 	} else {
-		log_warn (LOG_DEFAULT, "grendel: #1");
 		runtime = mono_class_get (image, application_config.android_runtime_jnienv_class_token);
-		log_warn (LOG_DEFAULT, "grendel: #2");
 		method = mono_get_method (image, application_config.jnienv_initialize_method_token, runtime);
-		log_warn (LOG_DEFAULT, "grendel: #3");
 	}
 
-	abort_unless (runtime != nullptr, "INTERNAL ERROR: unable to find the Android.Runtime.JNIEnv class!");
-	abort_unless (method != nullptr, "INTERNAL ERROR: Unable to find the Android.Runtime.JNIEnv.Initialize method!");
+	abort_unless (runtime != nullptr, "INTERNAL ERROR: unable to find the Android.Runtime.JNIEnvInit class!");
+	abort_unless (method != nullptr, "INTERNAL ERROR: Unable to find the Android.Runtime.JNIEnvInit.Initialize method!");
 
 	MonoAssembly *ji_assm;
 #if defined (NET)
@@ -1170,13 +1167,9 @@ MonodroidRuntime::init_android_runtime (
 		if constexpr (is_running_on_desktop) {
 			registerType = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
 		} else {
-			log_warn (LOG_DEFAULT, "grendel: #4");
 			registerType = mono_get_method (image, application_config.jnienv_registerjninatives_method_token, runtime);
-			log_warn (LOG_DEFAULT, "grendel: #5");
 #if defined (NET) && defined (ANDROID)
-			log_warn (LOG_DEFAULT, "grendel: #6");
 			jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn>(mono_method_get_unmanaged_callers_only_ftnptr (registerType, &error));
-			log_warn (LOG_DEFAULT, "grendel: #7");
 #endif // def NET && def ANDROID
 		}
 	}
@@ -1196,9 +1189,7 @@ MonodroidRuntime::init_android_runtime (
 	init.grefLoader           = env->NewGlobalRef (loader);
 	init.grefIGCUserPeer      = utils.get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
 
-	log_warn (LOG_DEFAULT, "grendel: #8");
 	osBridge.initialize_on_runtime_init (env, runtimeClass);
-	log_warn (LOG_DEFAULT, "grendel: #9");
 
 	log_debug (LOG_DEFAULT, "Calling into managed runtime init");
 
@@ -1208,9 +1199,7 @@ MonodroidRuntime::init_android_runtime (
 	}
 
 #if defined (NET) && defined (ANDROID)
-	log_warn (LOG_DEFAULT, "grendel: #10");
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (mono_method_get_unmanaged_callers_only_ftnptr (method, &error));
-	log_warn (LOG_DEFAULT, "grendel: #11");
 	if (initialize == nullptr) {
 		log_fatal (LOG_DEFAULT, "Failed to get pointer to Initialize. Mono error: %s", mono_error_get_message (&error));
 	}
@@ -1220,9 +1209,7 @@ MonodroidRuntime::init_android_runtime (
 		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
 		mono_error_get_message (&error)
 	);
-	log_warn (LOG_DEFAULT, "grendel: #12");
 	initialize (&init);
-	log_warn (LOG_DEFAULT, "grendel: #13");
 #else // def NET && def ANDROID
 	void *args [] = {
 		&init,

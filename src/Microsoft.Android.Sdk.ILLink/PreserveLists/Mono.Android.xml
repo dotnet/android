@@ -8,12 +8,11 @@
 		<type fullname="Android.Runtime.JNIEnv">
 			<method name="Exit" />
 			<method name="PropagateUncaughtException" />
+		</type>
+		<type fullname="Android.Runtime.JNIEnvInit">
+			<method name="Initialize" />
 			<method name="RegisterJniNatives" />
 		</type>
-        <type fullname="Android.Runtime.JNIEnvInit">
-          <method name="Initialize" />
-          <method name="RegisterJniNatives" />
-        </type>
 		<type fullname="Android.Runtime.JNINativeWrapper" />
 		<type fullname="Android.Runtime.JObjectRefType" />
 		<type fullname="Android.Runtime.JValue" />

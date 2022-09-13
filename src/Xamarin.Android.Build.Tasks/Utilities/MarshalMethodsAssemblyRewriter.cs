@@ -25,8 +25,20 @@ namespace Xamarin.Android.Tasks
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 		}
 
-		public void Rewrite (DirectoryAssemblyResolver resolver)
+		public void Rewrite (DirectoryAssemblyResolver resolver, List<string> targetAssemblyPaths)
 		{
+			if (resolver == null) {
+				throw new ArgumentNullException (nameof (resolver));
+			}
+
+			if (targetAssemblyPaths == null) {
+				throw new ArgumentNullException (nameof (targetAssemblyPaths));
+			}
+
+			if (targetAssemblyPaths.Count == 0) {
+				throw new ArgumentException ("must contain at least one target path", nameof (targetAssemblyPaths));
+			}
+
 			MethodDefinition unmanagedCallersOnlyAttributeCtor = GetUnmanagedCallersOnlyAttributeConstructor (resolver);
 			var unmanagedCallersOnlyAttributes = new Dictionary<AssemblyDefinition, CustomAttribute> ();
 			foreach (AssemblyDefinition asm in uniqueAssemblies) {
@@ -44,7 +56,6 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					// TODO: verify again whether the generated code is valid
 					if (method.NeedsBlittableWorkaround) {
 						log.LogDebugMessage ($"Generating non-blittable type wrapper for callback method {method.NativeCallback.FullName}");
 						method.NativeCallbackWrapper = GenerateBlittableWrapper (method, unmanagedCallersOnlyAttributes);
@@ -82,8 +93,13 @@ namespace Xamarin.Android.Tasks
 						WriteSymbols = (File.Exists (path + ".mdb") || File.Exists (Path.ChangeExtension (path, ".pdb"))),
 					};
 
+					File.Copy (path, $"{path}.old");
 					string output = $"{path}.new";
 					log.LogDebugMessage ($"Writing new version of assembly: {output}");
+
+					// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
+					// since Cecil doesn't update the MVID in the already loaded types
+					//asm.MainModule.Mvid = Guid.NewGuid ();
 					asm.Write (output, writerParams);
 					newAssemblyPaths.Add (output);
 				}
@@ -92,31 +108,55 @@ namespace Xamarin.Android.Tasks
 			// Replace old versions of the assemblies only after we've finished rewriting without issues, otherwise leave the new
 			// versions around.
 			foreach (string path in newAssemblyPaths) {
-				string target = Path.Combine (Path.GetDirectoryName (path), Path.GetFileNameWithoutExtension (path));
-				log.LogDebugMessage ($"Copying rewritten assembly: {path} -> {target}");
-				MoveFile (path, target);
+				string? pdb = null;
+				string? mdb = null;
 
 				string source = Path.ChangeExtension (path, ".pdb");
 				if (File.Exists (source)) {
-					target = Path.ChangeExtension (Path.Combine (Path.GetDirectoryName (source), Path.GetFileNameWithoutExtension (source)), ".pdb");
-
-					MoveFile (source, target);
+					pdb = source;
 				}
 
 				source = $"{path}.mdb";
 				if (File.Exists (source)) {
-					target = Path.ChangeExtension (path, ".mdb");
-					MoveFile (source, target);
+					mdb = source;
 				}
+
+				foreach (string targetPath in targetAssemblyPaths) {
+					string target = Path.Combine (targetPath, Path.GetFileNameWithoutExtension (path));
+					CopyFile (path, target);
+
+					if (!String.IsNullOrEmpty (pdb)) {
+						target = Path.ChangeExtension (Path.Combine (targetPath, Path.GetFileNameWithoutExtension (source)), ".pdb");
+						CopyFile (source, target);
+					}
+
+					if (!String.IsNullOrEmpty (mdb)) {
+						target = Path.Combine (targetPath, Path.ChangeExtension (Path.GetFileName (path), ".mdb"));
+						CopyFile (mdb, target);
+					}
+				}
+
+				RemoveFile (path);
+				RemoveFile (pdb);
+				RemoveFile (mdb);
 			}
 
-			void MoveFile (string source, string target)
+			void CopyFile (string source, string target)
 			{
+				log.LogDebugMessage ($"Copying rewritten assembly: {source} -> {target}");
 				Files.CopyIfChanged (source, target);
+			}
+
+			void RemoveFile (string? path)
+			{
+				if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+					return;
+				}
+
 				try {
-					File.Delete (source);
+					File.Delete (path);
 				} catch (Exception ex) {
-					log.LogWarning ($"Unable to delete source file '{source}' when moving it to '{target}'");
+					log.LogWarning ($"Unable to delete source file '{path}'");
 					log.LogDebugMessage (ex.ToString ());
 				}
 			}

@@ -144,7 +144,7 @@ namespace Java.Interop {
 							string.Format ("warning: Skipping managed constructor invocation for handle 0x{0} (key_handle 0x{1}). " +
 								"Please use JNIEnv.StartCreateInstance() + JNIEnv.FinishCreateInstance() instead of " +
 								"JNIEnv.NewObject() and/or JNIEnv.CreateInstance().",
-								jobject.ToString ("x"), JNIEnvInit.IdentityHash! (jobject).ToString ("x")));
+								jobject.ToString ("x"), JNIEnv.IdentityHash (jobject).ToString ("x")));
 				}
 				return;
 			}
@@ -183,7 +183,7 @@ namespace Java.Interop {
 				cinfo.Invoke (newobj, parms);
 			} catch (Exception e) {
 				var m = string.Format ("Could not activate JNI Handle 0x{0} (key_handle 0x{1}) of Java type '{2}' as managed type '{3}'.",
-						jobject.ToString ("x"), JNIEnvInit.IdentityHash! (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), cinfo.DeclaringType.FullName);
+						jobject.ToString ("x"), JNIEnv.IdentityHash (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), cinfo.DeclaringType.FullName);
 				Logger.Log (LogLevel.Warn, "monodroid", m);
 				Logger.Log (LogLevel.Warn, "monodroid", CreateJavaLocationException ().ToString ());
 
@@ -314,7 +314,7 @@ namespace Java.Interop {
 					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable);
 				}
 			} catch (MissingMethodException e) {
-				var key_handle  = JNIEnvInit.IdentityHash! (handle);
+				var key_handle  = JNIEnv.IdentityHash (handle);
 				JNIEnv.DeleteRef (handle, transfer);
 				throw new NotSupportedException (
 						string.Format ("Unable to activate instance of type {0} from native handle 0x{1} (key_handle 0x{2}).",

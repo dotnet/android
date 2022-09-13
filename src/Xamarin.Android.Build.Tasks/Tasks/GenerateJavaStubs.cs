@@ -51,6 +51,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool GenerateNativeAssembly { get; set; }
 
+		public bool LinkingEnabled { get; set; }
 		public bool EnableMarshalMethods { get; set; }
 		public string ManifestTemplate { get; set; }
 		public string[] MergedManifestDocuments { get; set; }
@@ -94,15 +95,15 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			var readerParams = new ReaderParameters {
-				ReadWrite = true,
-				InMemory = true,
-			};
+			// var readerParams = new ReaderParameters {
+			// 	ReadWrite = true,
+			// 	InMemory = true,
+			// };
 
 			try {
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
-				using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParams)) {
+				using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true/*, loadReaderParameters: readerParams*/)) {
 					Run (res, useMarshalMethods: !Debug && EnableMarshalMethods);
 				}
 			} catch (XamarinAndroidException e) {
@@ -220,11 +221,41 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			if (useMarshalMethods) {
-				// TODO: we must rewrite assemblies for all SupportedAbis. Alternatively, we need to copy the ones that are identical
-				// Cecil does **not** guarantee that the same assembly modified twice in the same will yield the same result - tokens may differ, so can
-				// MVID.
+				var targetPaths = new List<string> ();
+
+				if (!LinkingEnabled) {
+					targetPaths.Add (Path.GetDirectoryName (ResolvedAssemblies[0].ItemSpec));
+				} else {
+					foreach (string abi in SupportedAbis) {
+						string rid;
+
+						switch (abi) {
+							case "arm64-v8a":
+								rid = "android-arm64";
+								break;
+
+							case "armeabi-v7a":
+								rid = "android-arm";
+								break;
+
+							case "x86":
+								rid = "android-x86";
+								break;
+
+							case "x86_64":
+								rid = "android-x64";
+								break;
+
+							default:
+								throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
+						}
+
+						targetPaths.Add (Path.Combine (OutputDirectory, rid));
+					}
+				}
+
 				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths, Log);
-				rewriter.Rewrite (res);
+				rewriter.Rewrite (res, targetPaths);
 			}
 
 			// Step 3 - Generate type maps

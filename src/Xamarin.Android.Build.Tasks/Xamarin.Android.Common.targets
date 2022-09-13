@@ -1473,6 +1473,8 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
     <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' != 'None'">True</_LinkingEnabled>
+    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
   </PropertyGroup>
   <ItemGroup>
     <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
@@ -1509,7 +1511,8 @@ because xbuild doesn't support framework reference assemblies.
       SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)">
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      LinkingEnabled="$(_LinkingEnabled)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
 

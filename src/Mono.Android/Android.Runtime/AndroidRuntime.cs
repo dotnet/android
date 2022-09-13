@@ -665,7 +665,7 @@ namespace Android.Runtime {
 				throw new ArgumentException ("Must have a valid JNI object reference!", nameof (value));
 
 			var reference       = value.PeerReference;
-			var hash            = JNIEnvInit.IdentityHash! (reference.Handle);
+			var hash            = JNIEnv.IdentityHash (reference.Handle);
 
 			AddPeer (value, reference, hash);
 		}
@@ -728,7 +728,7 @@ namespace Android.Runtime {
 			if (handleField == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to allocate Global Reference for object '" + value.ToString () + "'!");
 
-			IntPtr hash = JNIEnvInit.IdentityHash! (handleField);
+			IntPtr hash = JNIEnv.IdentityHash (handleField);
 			value.SetJniIdentityHashCode ((int) hash);
 			if ((transfer & JniHandleOwnership.DoNotRegister) == 0) {
 				AddPeer (value, new JniObjectReference (handleField, JniObjectReferenceType.Global), hash);
@@ -786,7 +786,7 @@ namespace Android.Runtime {
 				// Likely an idempotent DIspose(); ignore.
 				return;
 			}
-			var hash            = JNIEnvInit.IdentityHash! (reference.Handle);
+			var hash            = JNIEnv.IdentityHash (reference.Handle);
 
 			RemovePeer (value, hash);
 		}
@@ -820,7 +820,7 @@ namespace Android.Runtime {
 			if (!reference.IsValid)
 				return null;
 
-			var hash    = JNIEnvInit.IdentityHash! (reference.Handle);
+			var hash    = JNIEnv.IdentityHash (reference.Handle);
 			lock (instances) {
 				if (instances.TryGetValue (hash, out var targets)) {
 					for (int i = targets.Count - 1; i >= 0; i--) {
