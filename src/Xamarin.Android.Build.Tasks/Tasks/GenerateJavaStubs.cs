@@ -238,31 +238,37 @@ namespace Xamarin.Android.Tasks
 						throw new InvalidOperationException ($"Internal error: marshal methods require the `IntermediateOutputDirectory` property of the `GenerateJavaStubs` task to have a value");
 					}
 
-					foreach (string abi in SupportedAbis) {
-						string rid;
+					string baseDir;
 
-						switch (abi) {
-							case "arm64-v8a":
-								rid = "android-arm64";
-								break;
+					if (SupportedAbis.Length == 1) {
+						targetPaths.Add (Path.Combine (IntermediateOutputDirectory, "linked"));
+					} else {
+						foreach (string abi in SupportedAbis) {
+							string rid;
 
-							case "armeabi-v7a":
-								rid = "android-arm";
-								break;
+							switch (abi) {
+								case "arm64-v8a":
+									rid = "android-arm64";
+									break;
 
-							case "x86":
-								rid = "android-x86";
-								break;
+								case "armeabi-v7a":
+									rid = "android-arm";
+									break;
 
-							case "x86_64":
-								rid = "android-x64";
-								break;
+								case "x86":
+									rid = "android-x86";
+									break;
 
-							default:
-								throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
+								case "x86_64":
+									rid = "android-x64";
+									break;
+
+								default:
+									throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
+							}
+
+							targetPaths.Add (Path.Combine (IntermediateOutputDirectory, rid, "linked"));
 						}
-
-						targetPaths.Add (Path.Combine (IntermediateOutputDirectory, rid, "linked"));
 					}
 				}
 
