@@ -49,6 +49,9 @@ namespace Xamarin.Android.Tasks
 		public string TypemapOutputDirectory { get; set; }
 
 		[Required]
+		public string IntermediateOutputDirectory { get; set; }
+
+		[Required]
 		public bool GenerateNativeAssembly { get; set; }
 
 		public bool LinkingEnabled { get; set; }
@@ -95,15 +98,10 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			var readerParams = new ReaderParameters {
-				ReadWrite = true,
-				InMemory = true,
-			};
-
 			try {
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
-				using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParams)) {
+				using (DirectoryAssemblyResolver res = MakeResolver ()) {
 					Run (res, useMarshalMethods: !Debug && EnableMarshalMethods);
 				}
 			} catch (XamarinAndroidException e) {
@@ -122,15 +120,27 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
+		DirectoryAssemblyResolver MakeResolver ()
+		{
+			var readerParams = new ReaderParameters {
+				ReadWrite = true,
+				InMemory = true,
+			};
+
+			var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParams);
+			foreach (var dir in FrameworkDirectories) {
+				if (Directory.Exists (dir.ItemSpec)) {
+					res.SearchDirectories.Add (dir.ItemSpec);
+				}
+			}
+
+			return res;
+		}
+
 		void Run (DirectoryAssemblyResolver res, bool useMarshalMethods)
 		{
 			PackageNamingPolicy pnp;
 			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
-
-			foreach (var dir in FrameworkDirectories) {
-				if (Directory.Exists (dir.ItemSpec))
-					res.SearchDirectories.Add (dir.ItemSpec);
-			}
 
 			Dictionary<string, HashSet<string>> marshalMethodsAssemblyPaths = null;
 			if (useMarshalMethods) {
@@ -250,7 +260,7 @@ namespace Xamarin.Android.Tasks
 								throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
 						}
 
-						targetPaths.Add (Path.Combine (OutputDirectory, rid));
+						targetPaths.Add (Path.Combine (IntermediateOutputDirectory, rid, "linked"));
 					}
 				}
 

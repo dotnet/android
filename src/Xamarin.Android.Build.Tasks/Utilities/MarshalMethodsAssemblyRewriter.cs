@@ -93,7 +93,6 @@ namespace Xamarin.Android.Tasks
 						WriteSymbols = (File.Exists (path + ".mdb") || File.Exists (Path.ChangeExtension (path, ".pdb"))),
 					};
 
-					File.Copy (path, $"{path}.old");
 					string output = $"{path}.new";
 					log.LogDebugMessage ($"Writing new version of assembly: {output}");
 

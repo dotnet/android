@@ -1517,7 +1517,8 @@ because xbuild doesn't support framework reference assemblies.
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
       CheckedBuild="$(_AndroidCheckedBuild)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      LinkingEnabled="$(_LinkingEnabled)">
+      LinkingEnabled="$(_LinkingEnabled)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
 
