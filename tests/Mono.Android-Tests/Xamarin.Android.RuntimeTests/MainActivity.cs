@@ -7,7 +7,7 @@ using Xamarin.Android.NUnitLite;
 
 namespace Xamarin.Android.RuntimeTests
 {
-	[Activity (Label = "runtime", MainLauncher = true,
+	[Activity (Label = "Mono.Android Tests", MainLauncher = true,
 			Name="xamarin.android.runtimetests.MainActivity")]
 	public partial class MainActivity : TestSuiteActivity
 	{

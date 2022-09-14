@@ -1127,7 +1127,7 @@ MonodroidRuntime::init_android_runtime (
 
 	if constexpr (is_running_on_desktop) {
 #if defined (NET)
-		runtime = mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+		runtime = mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 #else
 		runtime = utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
 #endif // def NET
