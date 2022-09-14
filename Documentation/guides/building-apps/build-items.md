@@ -204,6 +204,26 @@ used to specify the ABI that the library targets. Thus, if you add
 </ItemGroup>
 ```
 
+## AndroidPackagingOptionsExclude
+
+A set of file glob compatible items which will allow for items to be
+excluded from the final package. The default values are as follows
+
+```
+<ItemGroup>
+	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*')" />
+</ItemGroup>
+```
+Items can use file blob characters for wildcards such as `*` and `?`.
+However these Items MUST use URL encoding or '$([MSBuild]::Escape(''))'.
+This is so MSBuild does not try to interpret them as actual file wildcards.
+
+NOTE: `*`, `?` and `.` will be replaced in the `BuildApk` task with the
+appropriate RegEx expressions.
+
+Added in Xamarin.Android 13.1 and .NET 7.
+
 ## AndroidResource
 
 All files with an *AndroidResource* build action are compiled into

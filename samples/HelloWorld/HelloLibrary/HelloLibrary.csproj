@@ -14,6 +14,8 @@
     <FileAlignment>512</FileAlignment>
     <AndroidApplication>false</AndroidApplication>
     <DebugType>portable</DebugType>
+    <AndroidUseIntermediateDesignerFile>True</AndroidUseIntermediateDesignerFile>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
   </PropertyGroup>
   <Import
       Condition="Exists('..\..\..\Configuration.props')"
@@ -71,5 +73,6 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\Case_Check.png" />
+    <AndroidResource Include="Resources\values\Attr.xml" />
   </ItemGroup>
 </Project>

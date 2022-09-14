@@ -115,6 +115,9 @@ namespace UnnamedProject
 			// [Test] Post
 			Android.Util.Log.Info(TAG, HttpClientTest.Post ());
 
+			// [Test] TextChanged
+			Android.Util.Log.Info (TAG, MaterialTextChanged.TextChanged (this));
+
 			var cldt = new CustomLinkerDescriptionTests();
 			Android.Util.Log.Info(TAG, cldt.TryAccessNonXmlPreservedMethodOfLinkerModeFullClass());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped());
