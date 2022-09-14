@@ -126,7 +126,7 @@ namespace Xamarin.Android.Tasks
 
 					if (!String.IsNullOrEmpty (pdb)) {
 						target = Path.ChangeExtension (Path.Combine (targetPath, Path.GetFileNameWithoutExtension (source)), ".pdb");
-						CopyFile (source, target);
+						CopyFile (pdb, target);
 					}
 
 					if (!String.IsNullOrEmpty (mdb)) {

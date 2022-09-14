@@ -49,11 +49,9 @@ namespace Xamarin.Android.Tasks
 		public string TypemapOutputDirectory { get; set; }
 
 		[Required]
-		public string IntermediateOutputDirectory { get; set; }
-
-		[Required]
 		public bool GenerateNativeAssembly { get; set; }
 
+		public string IntermediateOutputDirectory { get; set; }
 		public bool LinkingEnabled { get; set; }
 		public bool EnableMarshalMethods { get; set; }
 		public string ManifestTemplate { get; set; }
@@ -236,6 +234,10 @@ namespace Xamarin.Android.Tasks
 				if (!LinkingEnabled) {
 					targetPaths.Add (Path.GetDirectoryName (ResolvedAssemblies[0].ItemSpec));
 				} else {
+					if (String.IsNullOrEmpty (IntermediateOutputDirectory)) {
+						throw new InvalidOperationException ($"Internal error: marshal methods require the `IntermediateOutputDirectory` property of the `GenerateJavaStubs` task to have a value");
+					}
+
 					foreach (string abi in SupportedAbis) {
 						string rid;
 
