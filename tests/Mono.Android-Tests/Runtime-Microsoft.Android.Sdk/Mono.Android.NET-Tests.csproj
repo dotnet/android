@@ -21,14 +21,7 @@
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
-    <!--
-      TODO: Fix excluded tests
-      For $(EnableLLVM)
-        InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
-        NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
-    -->
     <ExcludeCategories>DotNetIgnore</ExcludeCategories>
-    <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
