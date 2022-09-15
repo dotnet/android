@@ -41,6 +41,7 @@
 
   <ItemGroup>
     <Compile Remove="..\Resources\Resource.designer.cs" />
+    <Compile Remove="..\Java.Interop-Tests\obj\Release\net7.0-android\designtime\Resource.designer.cs" />
     <Compile Include="System\AppContextTests.cs" />
     <!-- Mono.Data.Sqlite is not supported in .NET 6 -->
     <Compile Remove="..\Mono.Data.Sqlite\SqliteTests.cs" />
