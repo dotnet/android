@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.IO;
@@ -69,15 +69,15 @@ namespace Xamarin.Android.Tools
 		internal static string GetXamarinAndroidCacheDir ()
 		{
 			if (IsMac) {
-				var home = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+				var home = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
 				return Path.Combine (home, "Library", "Caches", "Xamarin.Android");
 			} else if (IsWindows) {
 				var localAppData = Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData);
 				return Path.Combine (localAppData, "Xamarin.Android", "Cache");
 			} else {
-				var home = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
 				var xdgCacheHome = Environment.GetEnvironmentVariable ("XDG_CACHE_HOME");
 				if (string.IsNullOrEmpty (xdgCacheHome)) {
+					var home = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
 					xdgCacheHome = Path.Combine (home, ".cache");
 				}
 				return Path.Combine (xdgCacheHome, "Xamarin.Android");

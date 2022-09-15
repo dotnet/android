@@ -21,7 +21,7 @@ namespace Xamarin.Android.Tools {
 			var jdks    = AppDomain.CurrentDomain.GetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}")
 				?.ToString ();
 			if (jdks == null) {
-				var home    = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+				var home    = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
 				jdks        = Path.Combine (home, "Library", "Developer", "Xamarin", "jdk");
 			}
 			if (!Directory.Exists (jdks))

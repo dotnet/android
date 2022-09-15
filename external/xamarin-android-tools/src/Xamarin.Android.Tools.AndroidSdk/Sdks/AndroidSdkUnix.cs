@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -111,7 +111,7 @@ namespace Xamarin.Android.Tools
 			}
 
 			// Check some hardcoded paths for good measure
-			var macSdkPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.Personal), "Library", "Android", "sdk");
+			var macSdkPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Android", "sdk");
 			yield return macSdkPath;
 		}
 
