@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
 {
-	partial class Step_GenerateFiles : Step
+	partial class Step_GenerateFiles : Step_BaseGenerateFiles
 	{
 		bool atBuildStart;
 		bool onlyRequired;
@@ -15,7 +15,6 @@ namespace Xamarin.Android.Prepare
 
 
 		public Step_GenerateFiles (bool atBuildStart, bool onlyRequired = false)
-			: base ("Generating files required by the build")
 		{
 			this.atBuildStart = atBuildStart;
 			this.onlyRequired = onlyRequired;
@@ -49,7 +48,7 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		List<GeneratedFile>? GetFilesToGenerate (Context context)
+		protected override List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
 			if (atBuildStart) {
 				if (onlyRequired) {

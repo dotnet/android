@@ -42,6 +42,10 @@ core workload SDK packs imported by WorkloadManifest.targets.
     />
 
     <ItemGroup>
+      <_AndroidApiInfo
+          Condition=" '%(AndroidApiInfo.DotNetSupported)' == 'true' "
+          Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net6.0-android%(AndroidApiInfo.Level)\AndroidApiInfo.xml"
+      />
       <_PackageFiles Include="@(AndroidSdkBuildTools)" PackagePath="%(AndroidSdkBuildTools.PackagePath)" />
       <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
       <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />

@@ -1,43 +1,41 @@
 <Project>
   <PropertyGroup>
-    <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
     <_BinlogDateTime>$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogDateTime>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
   </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
+
   <Target Name="BuildExternal">
     <MSBuild
-        Projects="$(_Root)\external\monodroid\monodroid.proj"
+        Projects="$(XamarinAndroidSourcePath)\external\monodroid\monodroid.proj"
         Properties="DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir);CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild\Novell"
     />
   </Target>
   <Target Name="PrepareJavaInterop">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_Root)bin/Build$(Configuration)/msbuild-$(_BinlogDateTime)-prepare-java-interop.binlog"
-        WorkingDirectory="$(_Root)external\Java.Interop"
+        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(XamarinAndroidSourcePath)bin/Build$(Configuration)/msbuild-$(_BinlogDateTime)-prepare-java-interop.binlog"
+        WorkingDirectory="$(XamarinAndroidSourcePath)external\Java.Interop"
     />
   </Target>
   <Target Name="BuildDotNet"
       DependsOnTargets="PrepareJavaInterop">
-    <MSBuild Projects="$(_Root)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
-    <MSBuild Projects="$(_Root)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
-    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ConfigureLocalWorkload" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ConfigureLocalWorkload" />
   </Target>
   <Target Name="PackDotNet">
     <!-- Build extra versions of Mono.Android.dll if necessary -->
     <MSBuild
-         Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=$(DotNetTargetFramework);AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);DisableApiCompatibilityCheck=true"
+         Condition=" '%(AndroidApiInfo.DotNetSupported)' == 'true' and '%(AndroidApiInfo.Level)' != '$(AndroidLatestStableApiLevel)' "
+         Projects="$(XamarinAndroidSourcePath)src\Mono.Android\Mono.Android.csproj"
+         Properties="TargetFramework=net6.0;AndroidApiLevel=%(AndroidApiInfo.Level);AndroidPlatformId=%(AndroidApiInfo.Id);DisableApiCompatibilityCheck=true"
     />
-    <MSBuild
-         Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=$(DotNetTargetFramework);AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);DisableApiCompatibilityCheck=true"
-    />
-    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
-    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
     <!-- Clean up old, previously restored packages -->
     <ItemGroup>
-      <_OldPackages Include="$(_Root)packages\microsoft.android.*\**\*.nupkg" />
+      <_OldPackages Include="$(XamarinAndroidSourcePath)packages\microsoft.android.*\**\*.nupkg" />
       <_DirectoriesToRemove Include="%(_OldPackages.RootDir)%(_OldPackages.Directory)" />
     </ItemGroup>
     <RemoveDir Directories="@(_DirectoriesToRemove)" />
