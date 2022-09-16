@@ -37,7 +37,7 @@ MonodroidRuntime::get_class_name (uint32_t class_index) noexcept
 
 template<bool NeedsLocking>
 force_inline void
-MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
+MonodroidRuntime::get_function_pointer (JNIEnv *env, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
 {
 	log_debug (
 		LOG_ASSEMBLY,
@@ -57,7 +57,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	}
 
 	// We need to do that, as Mono APIs cannot be invoked from threads that aren't attached to the runtime.
-	mono_thread_attach (mono_get_root_domain());
+	mono_thread_attach (mono_get_root_domain ());
 
 	// We don't check for valid return values from image loader, class and method lookup because if any
 	// of them fails to find the requested entity, they will return `null`.  In consequence, we can pass
@@ -119,13 +119,13 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 }
 
 void
-MonodroidRuntime::get_function_pointer_at_startup (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
+MonodroidRuntime::get_function_pointer_at_startup (JNIEnv *env, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
 {
-	get_function_pointer<false> (mono_image_index, class_index, method_token, target_ptr);
+	get_function_pointer<false> (env, mono_image_index, class_index, method_token, target_ptr);
 }
 
 void
-MonodroidRuntime::get_function_pointer_at_runtime (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
+MonodroidRuntime::get_function_pointer_at_runtime (JNIEnv *env, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
 {
-	get_function_pointer<true> (mono_image_index, class_index, method_token, target_ptr);
+	get_function_pointer<true> (env, mono_image_index, class_index, method_token, target_ptr);
 }

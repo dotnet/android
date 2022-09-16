@@ -93,6 +93,7 @@ namespace Xamarin.Android.Tasks
 						WriteSymbols = (File.Exists (path + ".mdb") || File.Exists (Path.ChangeExtension (path, ".pdb"))),
 					};
 
+
 					string output = $"{path}.new";
 					log.LogDebugMessage ($"Writing new version of assembly: {output}");
 
@@ -110,7 +111,7 @@ namespace Xamarin.Android.Tasks
 				string? pdb = null;
 				string? mdb = null;
 
-				string source = Path.ChangeExtension (path, ".pdb");
+				string source = Path.ChangeExtension (Path.Combine (Path.GetDirectoryName (path), Path.GetFileNameWithoutExtension (path)), ".pdb");
 				if (File.Exists (source)) {
 					pdb = source;
 				}
@@ -125,7 +126,7 @@ namespace Xamarin.Android.Tasks
 					CopyFile (path, target);
 
 					if (!String.IsNullOrEmpty (pdb)) {
-						target = Path.ChangeExtension (Path.Combine (targetPath, Path.GetFileNameWithoutExtension (source)), ".pdb");
+						target = Path.ChangeExtension (Path.Combine (targetPath, Path.GetFileNameWithoutExtension (pdb)), ".pdb");
 						CopyFile (pdb, target);
 					}
 
@@ -143,7 +144,7 @@ namespace Xamarin.Android.Tasks
 			void CopyFile (string source, string target)
 			{
 				log.LogDebugMessage ($"Copying rewritten assembly: {source} -> {target}");
-				Files.CopyIfChanged (source, target);
+				File.Copy (source, target, true);
 			}
 
 			void RemoveFile (string? path)

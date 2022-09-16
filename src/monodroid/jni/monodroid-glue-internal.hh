@@ -355,9 +355,9 @@ namespace xamarin::android::internal
 		static const char* get_class_name (uint32_t class_index) noexcept;
 
 		template<bool NeedsLocking>
-		static void get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept;
-		static void get_function_pointer_at_startup (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token, void*& target_ptr) noexcept;
-		static void get_function_pointer_at_runtime (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token, void*& target_ptr) noexcept;
+		static void get_function_pointer (JNIEnv *env, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept;
+		static void get_function_pointer_at_startup (JNIEnv *env, uint32_t mono_image_index, uint32_t class_token, uint32_t method_token, void*& target_ptr) noexcept;
+		static void get_function_pointer_at_runtime (JNIEnv *env, uint32_t mono_image_index, uint32_t class_token, uint32_t method_token, void*& target_ptr) noexcept;
 #endif // def RELEASE && def ANDROID
 #endif // def NET
 

@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 
+#include <jni.h>
 #include <mono/metadata/image.h>
 
 #include "monodroid.h"
@@ -349,7 +350,7 @@ struct MarshalMethodName
 MONO_API MONO_API_EXPORT const char* const mm_class_names[];
 MONO_API MONO_API_EXPORT const MarshalMethodName mm_method_names[];
 
-using get_function_pointer_fn = void(*)(uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
+using get_function_pointer_fn = void(*)(JNIEnv *env, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
 
 MONO_API MONO_API_EXPORT void xamarin_app_init (get_function_pointer_fn fn) noexcept;
 #endif // def RELEASE && def ANDROID && def NET

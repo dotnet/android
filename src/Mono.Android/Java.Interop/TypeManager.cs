@@ -379,7 +379,7 @@ namespace Java.Interop {
 		{
 			LazyInitPackageLookup ();
 
-			lock (packageLookup) {
+			lock (packageLookup!) {
 				if (!packageLookup.TryGetValue (package, out var lookups))
 					packageLookup.Add (package, lookups = new List<Converter<string, Type?>> ());
 				lookups.Add (lookup);
@@ -397,7 +397,7 @@ namespace Java.Interop {
 			if (packages.Length != lookups.Length)
 				throw new ArgumentException ("`packages` and `lookups` arrays must have same number of elements.");
 
-			lock (packageLookup) {
+			lock (packageLookup!) {
 				for (int i = 0; i < packages.Length; ++i) {
 					string package                  = packages [i];
 					var lookup			= lookups [i];
@@ -422,7 +422,11 @@ namespace Java.Interop {
 			[UnmanagedCallersOnly]
 			static void n_Activate_mm (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 			{
-				TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
+				try {
+					TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
+				} catch (Exception ex) {
+					AndroidEnvironment.UnhandledException (ex);
+				}
 			}
 #endif
 			internal static Delegate GetActivateHandler ()

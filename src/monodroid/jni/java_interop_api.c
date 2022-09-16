@@ -5,9 +5,6 @@
  */
 
 #include "java_interop_api.h"
-#ifdef ANDROID
-#include <android/log.h>
-#endif
 
 JI_API jint
 java_interop_jnienv_get_version (JNIEnv *env)
@@ -28,9 +25,6 @@ java_interop_jnienv_define_class (JNIEnv *env, jthrowable *_thrown, const char* 
 JI_API jclass
 java_interop_jnienv_find_class (JNIEnv *env, jthrowable *_thrown, const char* classname)
 {
-#if defined (ANDROID) && defined (NET)
-	__android_log_print (ANDROID_LOG_WARN, "monodroid", "%s looking for '%s'", __PRETTY_FUNCTION__, classname);
-#endif
 	*_thrown = 0;
 	jclass _r_ = (*env)->FindClass (env, classname);
 	*_thrown = (*env)->ExceptionOccurred (env);

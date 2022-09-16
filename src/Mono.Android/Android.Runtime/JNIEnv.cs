@@ -420,21 +420,15 @@ namespace Android.Runtime {
 		public static unsafe void InvokeConstructor (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
 		{
 			IntPtr lrefClass = GetObjectClass (instance);
-			monodroid_log (LogLevel.Warn, LogCategories.Default, $"InvokeConstructor: lrefClass == {lrefClass}");
 			try {
 				IntPtr ctor = JNIEnv.GetMethodID (lrefClass, "<init>", jniCtorSignature);
 				if (ctor == IntPtr.Zero)
 					throw new ArgumentException (string.Format ("Could not find constructor JNI signature '{0}' on type '{1}'.",
 								jniCtorSignature, Java.Interop.TypeManager.GetClassName (lrefClass)));
 				CallNonvirtualVoidMethod (instance, lrefClass, ctor, constructorParameters);
-			} catch (Exception ex) {
-				monodroid_log (LogLevel.Warn, LogCategories.Default, $"Exception in InvokeConstructor: {ex.GetType()}");
-//				throw;
 			} finally {
-				//DeleteLocalRef (lrefClass);
+				DeleteLocalRef (lrefClass);
 			}
-
-//			DeleteLocalRef (lrefClass);
 		}
 
 		public static unsafe void InvokeConstructor (IntPtr instance, string jniCtorSignature, params JValue[] constructorParameters)
