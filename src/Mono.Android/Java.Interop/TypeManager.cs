@@ -422,6 +422,7 @@ namespace Java.Interop {
 			[UnmanagedCallersOnly]
 			static void n_Activate_mm (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 			{
+				// TODO: need a full wrapper code here, a'la JNINativeWrapper.CreateDelegate
 				try {
 					TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
 				} catch (Exception ex) {
