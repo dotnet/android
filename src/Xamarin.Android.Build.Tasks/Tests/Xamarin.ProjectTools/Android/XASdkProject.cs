@@ -63,6 +63,8 @@ namespace Xamarin.ProjectTools
 			SetProperty (KnownProperties.OutputType, outputType);
 			SetProperty (KnownProperties.Nullable, "enable");
 			SetProperty (KnownProperties.ImplicitUsings, "enable");
+			// Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref
+			SetProperty ("DisableTransitiveFrameworkReferenceDownloads", "true");
 
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {

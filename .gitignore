@@ -23,8 +23,8 @@ apk-sizes-*.txt
 *~
 external/monodroid/
 external/mono/
-tests/api-compatibility/reference/*.dll
-tests/api-compatibility/reference/*.cs
+tests/api-compatibility/reference/*/*.dll
+tests/api-compatibility/reference/*/*.cs
 Novell
 *.patch
 *.keystore

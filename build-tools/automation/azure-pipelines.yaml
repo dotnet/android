@@ -346,8 +346,7 @@ stages:
     condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
     pool:
       vmImage: $(HostedMacImage)
-    timeoutInMinutes: 240
-    cancelTimeoutInMinutes: 5
+    timeoutInMinutes: 180
     workspace:
       clean: all
     variables:
@@ -771,8 +770,7 @@ stages:
     displayName: macOS > Tests > MSBuild+Emulator One .NET
     pool:
       vmImage: $(HostedMacImage)
-    timeoutInMinutes: 90
-    cancelTimeoutInMinutes: 5
+    timeoutInMinutes: 180
     workspace:
       clean: all
     steps:
@@ -802,7 +800,7 @@ stages:
         useDotNet: true
         testRunTitle: MSBuildDeviceIntegration Smoke - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
+        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
         testResultsFile: TestResult-MSBuildDeviceIntegrationSmoke-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
