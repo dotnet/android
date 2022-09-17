@@ -6,7 +6,7 @@
     <MicrosoftNETCoreAppRefPackageVersion>6.0.10</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion>6.0.9</MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion>
+    <MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion>6.0.10</MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenManifest60300PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
