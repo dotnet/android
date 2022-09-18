@@ -39,7 +39,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>33.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>rc.2</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>rtm</AndroidPackVersionSuffix>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->
