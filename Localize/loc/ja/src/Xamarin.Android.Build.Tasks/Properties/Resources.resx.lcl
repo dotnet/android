@@ -648,6 +648,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1029" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'AotAssemblies' MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the 'RunAOTCompilation' MSBuild property instead.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['AotAssemblies' MSBuild プロパティは非推奨です。テキスト エディターでプロジェクト ファイルを編集してこのプロパティを削除し、代わりに 'RunAOTCompilation' MSBuild プロパティを使用してください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA2000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
