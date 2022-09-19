@@ -1,6 +1,6 @@
-{
+﻿{
   "author": "Microsoft",
-  "name": "Android Java Library Binding",
-  "description": "A project for creating a .NET Android class library that binds to a native Java library",
-  "symbols/supportedOSVersion/description": "Overrides $(SupportedOSPlatformVersion) in the project"
+  "name": "Android Java Kitaplığı Bağlaması",
+  "description": "Yerel bir Java kitaplık dosyasını bağlayan bir .NET Android sınıf kitaplığı oluşturmak için proje.",
+  "symbols/supportedOSVersion/description": "Projedeki $(SupportedOSPlatformVersion) öğesini geçersiz kılar"
 }
