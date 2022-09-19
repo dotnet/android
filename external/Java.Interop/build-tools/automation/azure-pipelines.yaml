@@ -21,7 +21,7 @@ variables:
   RunningOnCI: true
   Build.Configuration: Release
   MaxJdkVersion: 8
-  DotNetCoreVersion: 7.0.100-preview.4.22252.9
+  DotNetCoreVersion: 7.0.100-rc.1.22431.12
   DotNetTargetFramework: net7.0
   NetCoreTargetFrameworkPathSuffix: -$(DotNetTargetFramework)
   1ESWindowsPool: AzurePipelines-EO
