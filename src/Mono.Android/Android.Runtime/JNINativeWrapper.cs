@@ -42,7 +42,7 @@ namespace Android.Runtime {
 				return result;
 
 			if (JNIEnvInit.LogAssemblyCategory) {
-				JNIEnv.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{delegateType}': {dlg.Method}");
+				RuntimeNativeMethods.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{delegateType}': {dlg.Method}");
 			}
 
 			var ret_type = dlg.Method.ReturnType;
@@ -73,10 +73,10 @@ namespace Android.Runtime {
 			ig.Emit (OpCodes.Leave, label);
 
 			bool  filter = Debugger.IsAttached || !JNIEnvInit.PropagateExceptions;
-			if (filter && JNIEnv.mono_unhandled_exception_method != null) {
+			if (filter && JNIEnvInit.mono_unhandled_exception_method != null) {
 				ig.BeginExceptFilterBlock ();
 
-				ig.Emit (OpCodes.Call, JNIEnv.mono_unhandled_exception_method);
+				ig.Emit (OpCodes.Call, JNIEnvInit.mono_unhandled_exception_method);
 				ig.Emit (OpCodes.Ldc_I4_1);
 				ig.BeginCatchBlock (null!);
 			} else {

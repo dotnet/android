@@ -17,6 +17,9 @@ namespace xamarin::android::internal
 	class SharedConstants
 	{
 	public:
+#if defined (NET)
+		static constexpr char MONO_ANDROID_RUNTIME_ASSEMBLY_NAME[] = "Mono.Android.Runtime";
+#endif
 		static constexpr char MONO_ANDROID_ASSEMBLY_NAME[] = "Mono.Android";
 		static constexpr char JAVA_INTEROP_ASSEMBLY_NAME[] = "Java.Interop";
 

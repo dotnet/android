@@ -15,55 +15,14 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Android.Runtime {
 	public static partial class JNIEnv {
-		//static IntPtr java_class_loader;
-		//static IntPtr java_vm;
-		//static IntPtr load_class_id;
-		//static IntPtr gref_class;
-		//static JniMethodInfo? mid_Class_forName;
-		//static int version;
-		//static int androidSdkVersion;
-
-		//static bool AllocObjectSupported;
-		//internal static bool jniRemappingInUse;
-
-		//static IntPtr grefIGCUserPeer_class;
-
-		//internal static int    gref_gc_threshold;
-
-		//internal  static  bool  PropagateExceptions;
-
-		//internal static bool IsRunningOnDesktop;
-		//internal static bool LogAssemblyCategory;
-		//internal static bool MarshalMethodsEnabled;
-
-		//static AndroidRuntime? androidRuntime;
-		//static BoundExceptionType BoundExceptionType;
-
 		[ThreadStatic]
 		static byte[]? mvid_bytes;
-
-		//internal    static      AndroidValueManager? AndroidValueManager;
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal extern static void monodroid_log (LogLevel level, LogCategories category, string message);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal extern static IntPtr monodroid_timing_start (string? message);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal extern static void monodroid_timing_stop (IntPtr sequence, string? message);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal extern static void monodroid_free (IntPtr ptr);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		extern static IntPtr _monodroid_get_identity_hash_code (IntPtr env, IntPtr value);
 
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
 		internal static IntPtr IdentityHash (IntPtr v)
 		{
-			return JNIEnvInit.LocalRefsAreIndirect ? _monodroid_get_identity_hash_code (Handle, v) : v;
+			return JNIEnvInit.LocalRefsAreIndirect ? RuntimeNativeMethods._monodroid_get_identity_hash_code (Handle, v) : v;
 		}
 
 		public static void CheckHandle (IntPtr jnienv)
@@ -82,7 +41,7 @@ namespace Android.Runtime {
 		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
 		{
 			if (t == null) {
-				monodroid_log (LogLevel.Warn,
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn,
 				               LogCategories.Default,
 				               $"ShouldWrapJavaException was not passed a valid `Java.Lang.Throwable` instance. Called from method `{caller}`");
 				return false;
@@ -90,9 +49,11 @@ namespace Android.Runtime {
 
 			bool wrap = JNIEnvInit.BoundExceptionType == BoundExceptionType.System;
 			if (!wrap) {
-				monodroid_log (LogLevel.Warn,
-				               LogCategories.Default,
-				               $"Not wrapping exception of type {t.GetType().FullName} from method `{caller}`. This will change in a future release.");
+				RuntimeNativeMethods.monodroid_log (
+					LogLevel.Warn,
+					LogCategories.Default,
+					$"Not wrapping exception of type {t.GetType().FullName} from method `{caller}`. This will change in a future release."
+				);
 			}
 
 			return wrap;
@@ -100,97 +61,6 @@ namespace Android.Runtime {
 
 		[DllImport ("libc")]
 		static extern int gettid ();
-
-// #if NETCOREAPP
-// 		[UnmanagedCallersOnly]
-// #endif
-// 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
-// 		{
-			// string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
-			// var type = Type.GetType (typeName);
-			// if (type == null) {
-			// 	monodroid_log (LogLevel.Error,
-			// 	               LogCategories.Default,
-			// 	               $"Could not load type '{typeName}'. Skipping JNI registration of type '{Java.Interop.TypeManager.GetClassName (jniClass)}'.");
-			// 	return;
-			// }
-
-			// var className = Java.Interop.TypeManager.GetClassName (jniClass);
-			// Java.Interop.TypeManager.RegisterType (className, type);
-
-			// JniType? jniType = null;
-			// JniType.GetCachedJniType (ref jniType, className);
-
-			// ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
-			// ((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
-//		}
-
-// #if NETCOREAPP
-// 		[UnmanagedCallersOnly]
-// #endif
-// 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
-// 		{
-// 			IntPtr total_timing_sequence = IntPtr.Zero;
-// 			IntPtr partial_timing_sequence = IntPtr.Zero;
-
-// 			LogAssemblyCategory = (args->logCategories & (uint)LogCategories.Assembly) != 0;
-
-// 			gref_gc_threshold = args->grefGcThreshold;
-
-// 			jniRemappingInUse = args->jniRemappingInUse;
-// #if NETCOREAPP
-// 			MarshalMethodsEnabled = args->marshalMethodsEnabled;
-// #endif
-// 			java_vm = args->javaVm;
-
-// 			version = args->version;
-
-// 			androidSdkVersion = args->androidSdkVersion;
-
-// 			java_class_loader = args->grefLoader;
-// 			load_class_id     = args->Loader_loadClass;
-// 			gref_class        = args->grefClass;
-// 			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
-
-// 			if (args->localRefsAreIndirect == 1)
-// 				IdentityHash = v => _monodroid_get_identity_hash_code (Handle, v);
-// 			else
-// 				IdentityHash = v => v;
-
-// #if MONOANDROID1_0
-// 			Mono.SystemDependencyProvider.Initialize ();
-// #endif
-
-// 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
-// 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidSdkVersion > 10, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
-// 			AndroidValueManager = (AndroidValueManager) androidRuntime.ValueManager;
-
-// 			AllocObjectSupported = androidSdkVersion > 10;
-// 			IsRunningOnDesktop = args->isRunningOnDesktop == 1;
-
-// 			grefIGCUserPeer_class = args->grefIGCUserPeer;
-
-// 			PropagateExceptions = args->brokenExceptionTransitions == 0;
-
-// 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
-// 			if (IsRunningOnDesktop) {
-// 				var packageNamingPolicy = Environment.GetEnvironmentVariable ("__XA_PACKAGE_NAMING_POLICY__");
-// 				if (Enum.TryParse (packageNamingPolicy, out PackageNamingPolicy pnp)) {
-// 					JavaNativeTypeManager.PackageNamingPolicy = pnp;
-// 				}
-// 			}
-
-// #if !MONOANDROID1_0
-// 			SetSynchronizationContext ();
-// #endif
-// 		}
-
-// #if !MONOANDROID1_0
-// 		// NOTE: prevents Android.App.Application static ctor from running
-// 		[MethodImpl (MethodImplOptions.NoInlining)]
-// 		static void SetSynchronizationContext () =>
-// 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
-// #endif
 
 		internal static void Exit ()
 		{
@@ -204,7 +74,7 @@ namespace Android.Runtime {
 						obj.Dispose ();
 					continue;
 				} catch (Exception e) {
-					monodroid_log (LogLevel.Warn, LogCategories.Default, $"Couldn't dispose object: {e}");
+					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Couldn't dispose object: {e}");
 				}
 				/* If calling Dispose failed, the assumption is that user-code in
 				 * the Dispose(bool) overload is to blame for it. In that case we
@@ -232,29 +102,13 @@ namespace Android.Runtime {
 			GC.SuppressFinalize (obj);
 		}
 
-#if NETCOREAPP
-		internal static Action<Exception> mono_unhandled_exception = monodroid_debugger_unhandled_exception;
-#else  // NETCOREAPP
-		internal static Action<Exception> mono_unhandled_exception = null!;
-#endif  // NETCOREAPP
-		internal static MethodInfo? mono_unhandled_exception_method = null;
-
 #if !NETCOREAPP
 		static Action<AppDomain, UnhandledExceptionEventArgs> AppDomain_DoUnhandledException = null!;
 #endif // ndef NETCOREAPP
 
 		static void Initialize ()
 		{
-			if (mono_unhandled_exception == null) {
-				mono_unhandled_exception_method = typeof (System.Diagnostics.Debugger)
-					.GetMethod ("Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
-				if (mono_unhandled_exception_method != null)
-					mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), mono_unhandled_exception_method);
-			}
-			if (mono_unhandled_exception_method == null && mono_unhandled_exception != null) {
-				mono_unhandled_exception_method = mono_unhandled_exception.Method;
-			}
-
+			JNIEnvInit.InitializeUnhandledExceptionMethod ();
 #if !NETCOREAPP
 			if (AppDomain_DoUnhandledException == null) {
 				var ad_due = typeof (AppDomain)
@@ -271,11 +125,6 @@ namespace Android.Runtime {
 #endif // ndef NETCOREAPP
 		}
 
-#if NETCOREAPP
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		extern static void monodroid_unhandled_exception (Exception javaException);
-#endif // def NETCOREAPP
-
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
 			if (!JNIEnvInit.PropagateExceptions)
@@ -290,7 +139,7 @@ namespace Android.Runtime {
 			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
 
 			if (Debugger.IsAttached) {
-				mono_unhandled_exception?.Invoke (javaException);
+				JNIEnvInit.mono_unhandled_exception?.Invoke (javaException);
 			}
 
 			try {
@@ -306,27 +155,19 @@ namespace Android.Runtime {
 				//AppDomain.CurrentDomain.DoUnhandledException (args);
 				AppDomain_DoUnhandledException?.Invoke (AppDomain.CurrentDomain, args);
 #else // ndef NETCOREAPP
-				monodroid_unhandled_exception (innerException ?? javaException);
+				RuntimeNativeMethods.monodroid_unhandled_exception (innerException ?? javaException);
 #endif // def NETCOREAPP
 			} catch (Exception e) {
 				Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 			}
 		}
 
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		extern static void _monodroid_gc_wait_for_bridge_processing ();
-
 		public static void WaitForBridgeProcessing ()
 		{
 			if (!JNIEnvInit.BridgeProcessing)
 				return;
-			_monodroid_gc_wait_for_bridge_processing ();
+			RuntimeNativeMethods._monodroid_gc_wait_for_bridge_processing ();
 		}
-
-		// [DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		// extern static IntPtr _monodroid_get_identity_hash_code (IntPtr env, IntPtr value);
-
-		//internal static Func<IntPtr, IntPtr>? IdentityHash;
 
 		public static IntPtr AllocObject (string jniClassName)
 		{
@@ -494,7 +335,7 @@ namespace Android.Runtime {
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
-				monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
 				var jni = Java.Interop.TypeManager.GetJniTypeName (type);
 				if (jni != null) {
 					e.Dispose ();
@@ -615,27 +456,6 @@ namespace Android.Runtime {
 			}
 		}
 
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int _monodroid_gref_log (string message);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int _monodroid_gref_log_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void _monodroid_gref_log_delete (IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void _monodroid_weak_gref_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void _monodroid_weak_gref_delete (IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder from, int from_writable);
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void _monodroid_lref_log_delete (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder from, int from_writable);
-
 		public static IntPtr NewGlobalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject);
@@ -696,20 +516,15 @@ namespace Android.Runtime {
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvid);
 
-#if NETCOREAPP
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		static extern unsafe void monodroid_debugger_unhandled_exception (Exception e);
-#endif  // NETCOREAPP
-
 		internal static void LogTypemapTrace (StackTrace st)
 		{
 			string? trace = st.ToString ()?.Trim ();
 			if (String.IsNullOrEmpty (trace))
 				return;
 
-			monodroid_log (LogLevel.Warn, LogCategories.Assembly, "typemap: called from");
+			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Assembly, "typemap: called from");
 			foreach (string line in trace!.Split ('\n')) {
-				monodroid_log (LogLevel.Warn, LogCategories.Assembly, line);
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Assembly, line);
 			}
 		}
 
@@ -721,7 +536,7 @@ namespace Android.Runtime {
 			var mvid = new Span<byte>(mvid_bytes);
 			byte[]? mvid_data = null;
 			if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
-				monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
 				mvid_data = type.Module.ModuleVersionId.ToByteArray ();
 			} else {
 				mvid_data = mvid_bytes;
@@ -734,7 +549,7 @@ namespace Android.Runtime {
 
 			if (ret == IntPtr.Zero) {
 				if (JNIEnvInit.LogAssemblyCategory) {
-					monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
+					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
 					LogTypemapTrace (new StackTrace (true));
 				}
 

@@ -220,7 +220,7 @@ namespace Java.Lang {
 				return;
 
 			if (Logger.LogGlobalRef) {
-				JNIEnv._monodroid_gref_log (
+				RuntimeNativeMethods._monodroid_gref_log (
 						string.Format ("Disposing handle 0x{0}\n", handle.ToString ("x")));
 			}
 

@@ -1073,8 +1073,8 @@ MonodroidRuntime::init_android_runtime (
 #endif // def RELEASE && def ANDROID
 
 #if defined (NET)
-	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
-	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
+	mono_add_internal_call ("Android.Runtime.RuntimeNativeMethods::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
+	mono_add_internal_call ("Android.Runtime.RuntimeNativeMethods::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
 #endif // def NET
 
 	struct JnienvInitializeArgs init = {};
@@ -1103,7 +1103,7 @@ MonodroidRuntime::init_android_runtime (
 
 	MonoAssembly *assm;
 #if defined (NET)
-	assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+	assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME);
 #else // def NET
 	assm = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 #endif // ndef NET
@@ -1129,7 +1129,7 @@ MonodroidRuntime::init_android_runtime (
 #if defined (NET)
 		runtime = mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 #else
-		runtime = utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+		runtime = utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 #endif // def NET
 		method = mono_class_get_method_from_name (runtime, "Initialize", 1);
 	} else {

@@ -264,16 +264,13 @@ namespace Android.Runtime {
 		//
 		static string GetDefaultTimeZone ()
 		{
-			IntPtr id = _monodroid_timezone_get_default_id ();
+			IntPtr id = RuntimeNativeMethods._monodroid_timezone_get_default_id ();
 			try {
 				return Marshal.PtrToStringAnsi (id)!;
 			} finally {
-				JNIEnv.monodroid_free (id);
+				RuntimeNativeMethods.monodroid_free (id);
 			}
 		}
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr _monodroid_timezone_get_default_id ();
 
 		// This is invoked by
 		// mscorlib.dll!System.AndroidPlatform.GetDefaultSyncContext()
@@ -293,27 +290,18 @@ namespace Android.Runtime {
 		// These are invoked by
 		// System.dll!System.AndroidPlatform.getifaddrs
 		// DO NOT REMOVE
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern int _monodroid_getifaddrs (out IntPtr ifap);
-
 		static int GetInterfaceAddresses (out IntPtr ifap)
 		{
-			return _monodroid_getifaddrs (out ifap);
+			return RuntimeNativeMethods._monodroid_getifaddrs (out ifap);
 		}
 
 		// These are invoked by
 		// System.dll!System.AndroidPlatform.freeifaddrs
 		// DO NOT REMOVE
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-                static extern void _monodroid_freeifaddrs (IntPtr ifap);
-
 		static void FreeInterfaceAddresses (IntPtr ifap)
 		{
-			_monodroid_freeifaddrs (ifap);
+			RuntimeNativeMethods._monodroid_freeifaddrs (ifap);
 		}
-
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern void _monodroid_detect_cpu_and_architecture (ref ushort built_for_cpu, ref ushort running_on_cpu, ref byte is64bit);
 
 		static void DetectCPUAndArchitecture (out ushort builtForCPU, out ushort runningOnCPU, out bool is64bit)
 		{
@@ -321,7 +309,7 @@ namespace Android.Runtime {
 			ushort running_on_cpu = 0;
 			byte _is64bit = 0;
 
-			_monodroid_detect_cpu_and_architecture (ref built_for_cpu, ref running_on_cpu, ref _is64bit);
+			RuntimeNativeMethods._monodroid_detect_cpu_and_architecture (ref built_for_cpu, ref running_on_cpu, ref _is64bit);
 			builtForCPU = built_for_cpu;
 			runningOnCPU = running_on_cpu;
 			is64bit = _is64bit != 0;

@@ -1143,7 +1143,17 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	 * use GC API to allocate memory and thus can't be called from within the GC callback as it causes a deadlock
 	 * (the routine allocating the memory waits for the GC round to complete first)
 	 */
-	MonoClass *jnienv = utils.monodroid_get_class_from_name (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);;
+	MonoClass *jnienv = utils.monodroid_get_class_from_name (
+		domain,
+#if defined (NET)
+		SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME,
+#else
+		SharedConstants::MONO_ANDROID_ASSEMBLY_NAME,
+#endif
+		SharedConstants::ANDROID_RUNTIME_NS_NAME,
+		SharedConstants::JNIENVINIT_CLASS_NAME
+	);
+
 	node->domain = domain;
 	node->bridge_processing_field = mono_class_get_field_from_name (jnienv, const_cast<char*> ("BridgeProcessing"));
 	node->jnienv_vtable = mono_class_vtable (domain, jnienv);

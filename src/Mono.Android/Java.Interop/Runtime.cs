@@ -20,18 +20,12 @@ namespace Java.Interop {
 			return r;
 		}
 
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern int _monodroid_max_gref_get ();
-
 		public static int MaxGlobalReferenceCount {
-			get {return _monodroid_max_gref_get ();}
+			get {return RuntimeNativeMethods._monodroid_max_gref_get ();}
 		}
 
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern int _monodroid_gref_get ();
-
 		public static int GlobalReferenceCount {
-			get {return _monodroid_gref_get ();}
+			get {return RuntimeNativeMethods._monodroid_gref_get ();}
 		}
 
 		public static int LocalReferenceCount {

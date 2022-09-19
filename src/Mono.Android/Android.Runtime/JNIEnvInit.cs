@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -8,7 +9,7 @@ using Java.Interop.Tools.TypeNameMappings;
 
 namespace Android.Runtime
 {
-	static class JNIEnvInit
+	static internal class JNIEnvInit
 	{
 #pragma warning disable 0649
 		internal struct JnienvInitializeArgs {
@@ -34,9 +35,6 @@ namespace Android.Runtime
 		}
 #pragma warning restore 0649
 
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		extern static void monodroid_log (LogLevel level, LogCategories category, string message);
-
 		internal static AndroidValueManager? AndroidValueManager;
 		internal static bool AllocObjectSupported;
 		internal static bool IsRunningOnDesktop;
@@ -53,6 +51,13 @@ namespace Android.Runtime
 
 		static AndroidRuntime? androidRuntime;
 
+		internal static MethodInfo? mono_unhandled_exception_method = null;
+#if NETCOREAPP
+		internal static Action<Exception> mono_unhandled_exception = RuntimeNativeMethods.monodroid_debugger_unhandled_exception;
+#else  // NETCOREAPP
+		internal static Action<Exception> mono_unhandled_exception = null!;
+#endif  // NETCOREAPP
+
 #pragma warning disable CS0649 // Field is never assigned to.  This field is assigned from monodroid-glue.cc.
 		internal static volatile bool BridgeProcessing; // = false
 #pragma warning restore CS0649 // Field is never assigned to.
@@ -65,7 +70,7 @@ namespace Android.Runtime
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
 			var type = Type.GetType (typeName);
 			if (type == null) {
-				monodroid_log (LogLevel.Error,
+				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
 				               LogCategories.Default,
 				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{Java.Interop.TypeManager.GetClassName (jniClass)}'.");
 				return;
@@ -130,6 +135,19 @@ namespace Android.Runtime
 #if !MONOANDROID1_0
 			SetSynchronizationContext ();
 #endif
+		}
+
+		internal static void InitializeUnhandledExceptionMethod ()
+		{
+			if (mono_unhandled_exception == null) {
+				JNIEnvInit.mono_unhandled_exception_method = typeof (System.Diagnostics.Debugger)
+					.GetMethod ("Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
+				if (JNIEnvInit.mono_unhandled_exception_method != null)
+					mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), JNIEnvInit.mono_unhandled_exception_method);
+			}
+			if (JNIEnvInit.mono_unhandled_exception_method == null && mono_unhandled_exception != null) {
+				JNIEnvInit.mono_unhandled_exception_method = mono_unhandled_exception.Method;
+			}
 		}
 
 #if !MONOANDROID1_0
