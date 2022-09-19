@@ -463,7 +463,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
   </data>
   <data name="XA1029" xml:space="preserve">
-    <value>The 'AotAssemblies' MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the 'RunAOTCompilation' MSBuild property instead.</value>
+    <value>Vlastnost MSBuild „AotAssemblies“ je zastaralá. Upravte soubor projektu v textovém editoru, aby se tato vlastnost odebrala, a místo toho použijte vlastnost MSBuild „RunAOTCompilation“.</value>
     <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">

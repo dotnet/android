@@ -1,6 +1,6 @@
-{
+﻿{
   "author": "Microsoft",
-  "name": "Android Class Library",
-  "description": "A project for creating a .NET Android class library",
-  "symbols/supportedOSVersion/description": "Overrides $(SupportedOSPlatformVersion) in the project"
+  "name": "Biblioteca de Classes do Android",
+  "description": "Um projeto para criar uma biblioteca de classes Android .NET",
+  "symbols/supportedOSVersion/description": "Substitui a $(SupportedOSPlatformVersion) no projeto"
 }

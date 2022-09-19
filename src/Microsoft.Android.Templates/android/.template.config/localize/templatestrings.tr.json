@@ -1,7 +1,7 @@
-{
+﻿{
   "author": "Microsoft",
-  "name": "Android Application",
-  "description": "A project for creating a .NET Android application",
-  "symbols/packageName/description": "Overrides the package name in the AndroidManifest.xml",
-  "symbols/supportedOSVersion/description": "Overrides $(SupportedOSPlatformVersion) in the project"
+  "name": "Android Uygulaması",
+  "description": ".NET Android uygulaması oluşturmak için proje",
+  "symbols/packageName/description": "AndroidManifest.xm öğesindeki paket adını geçersiz kılar",
+  "symbols/supportedOSVersion/description": "Projedeki $(SupportedOSPlatformVersion) öğesini geçersiz kılar"
 }

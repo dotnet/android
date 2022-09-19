@@ -1,7 +1,7 @@
-{
+﻿{
   "author": "Microsoft",
-  "name": "Android Wear Application",
-  "description": "A project for creating a .NET Android Wear application",
-  "symbols/packageName/description": "Overrides the package name in the AndroidManifest.xml",
-  "symbols/supportedOSVersion/description": "Overrides $(SupportedOSPlatformVersion) in the project"
+  "name": "Aplicativo Android Wear",
+  "description": "Um projeto para criar um aplicativo .NET Android Wear",
+  "symbols/packageName/description": "Substitui o nome do pacote no AndroidManifest.xml",
+  "symbols/supportedOSVersion/description": "Substitui a $(SupportedOSPlatformVersion) no projeto"
 }

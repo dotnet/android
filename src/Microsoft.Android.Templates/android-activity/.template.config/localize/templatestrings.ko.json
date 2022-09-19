@@ -1,6 +1,6 @@
-{
+﻿{
   "author": "Microsoft",
-  "name": "Android Activity template",
-  "description": "An Android Activity class",
-  "symbols/namespace/description": "namespace for the generated code"
+  "name": "Android 활동 템플릿",
+  "description": "Android 활동 클래스",
+  "symbols/namespace/description": "생성된 코드의 네임스페이스"
 }

@@ -1,6 +1,6 @@
-{
+﻿{
   "author": "Microsoft",
-  "name": "Android Java Library Binding",
-  "description": "A project for creating a .NET Android class library that binds to a native Java library",
-  "symbols/supportedOSVersion/description": "Overrides $(SupportedOSPlatformVersion) in the project"
+  "name": "Android Java 程式庫繫結",
+  "description": "用於建立繫結至原生 Java 程式庫的 .NET Android 類別庫的專案",
+  "symbols/supportedOSVersion/description": "覆寫專案中的 $(SupportedOSPlatformVersion)"
 }
