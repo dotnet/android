@@ -94,14 +94,6 @@ namespace Xamarin.Android.Build.Tests
 					"System.Runtime.InteropServices.dll",
 					"System.Linq.dll",
 					"UnnamedProject.dll",
-					//NOTE: appeared in .NET 7.0.100-rc.1.22423.7
-					"System.Diagnostics.Tracing.dll",
-					"System.Memory.dll",
-					"System.Runtime.InteropServices.dll",
-					"System.Threading.Thread.dll",
-					"System.Threading.ThreadPool.dll",
-					"System.Threading.dll",
-					"System.Transactions.Local.dll",
 				} :
 				new [] {
 					"Java.Interop.dll",
