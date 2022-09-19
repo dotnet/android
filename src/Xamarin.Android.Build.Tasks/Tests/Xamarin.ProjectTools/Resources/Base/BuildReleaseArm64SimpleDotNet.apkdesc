@@ -5,58 +5,40 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 59188
+      "Size": 58888
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 88549
+      "Size": 88068
     },
     "assemblies/rc.bin": {
       "Size": 1182
     },
     "assemblies/System.Console.dll": {
-      "Size": 6408
-    },
-    "assemblies/System.Diagnostics.Tracing.dll": {
-      "Size": 2089
+      "Size": 6591
     },
     "assemblies/System.Linq.dll": {
-      "Size": 9096
-    },
-    "assemblies/System.Memory.dll": {
-      "Size": 3388
+      "Size": 9250
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 533485
+      "Size": 462205
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 3498
+      "Size": 2373
     },
     "assemblies/System.Runtime.InteropServices.dll": {
-      "Size": 3770
-    },
-    "assemblies/System.Threading.dll": {
-      "Size": 5486
-    },
-    "assemblies/System.Threading.Thread.dll": {
-      "Size": 1978
-    },
-    "assemblies/System.Threading.ThreadPool.dll": {
-      "Size": 2008
-    },
-    "assemblies/System.Transactions.Local.dll": {
-      "Size": 62998
+      "Size": 2262
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3560
+      "Size": 3561
     },
     "classes.dex": {
-      "Size": 360720
+      "Size": 368288
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 425416
+      "Size": 425432
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3073392
+      "Size": 3073360
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723840
@@ -68,16 +50,16 @@
       "Size": 148696
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 10216
+      "Size": 9640
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 3339
+      "Size": 2687
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 3212
+      "Size": 2560
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 4762
@@ -104,5 +86,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2791978
+  "PackageSize": 2639930
 }
