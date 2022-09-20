@@ -1,6 +1,6 @@
-{
+﻿{
   "author": "Microsoft",
-  "name": "Android Activity template",
-  "description": "An Android Activity class",
-  "symbols/namespace/description": "namespace for the generated code"
+  "name": "Modelo de Atividade do Android",
+  "description": "Uma classe de Atividade do Android",
+  "symbols/namespace/description": "namespace do código gerado"
 }
