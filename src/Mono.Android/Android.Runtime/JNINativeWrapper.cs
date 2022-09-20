@@ -20,9 +20,9 @@ namespace Android.Runtime {
 			if (exception_handler_method == null)
 				AndroidEnvironment.FailFast ("Cannot find AndroidEnvironment.UnhandledException");
 
-			wait_for_bridge_processing_method = typeof (JNIEnv).GetMethod ("WaitForBridgeProcessing", BindingFlags.Public | BindingFlags.Static);
+			wait_for_bridge_processing_method = typeof (AndroidRuntimeInternal).GetMethod ("WaitForBridgeProcessing", BindingFlags.NonPublic | BindingFlags.Static);
 			if (wait_for_bridge_processing_method == null)
-				AndroidEnvironment.FailFast ("Cannot find JNIEnv.WaitForBridgeProcessing");
+				AndroidEnvironment.FailFast ("Cannot find AndroidRuntimeInternal.WaitForBridgeProcessing");
 		}
 
 		public static Delegate CreateDelegate (Delegate dlg)
@@ -73,10 +73,10 @@ namespace Android.Runtime {
 			ig.Emit (OpCodes.Leave, label);
 
 			bool  filter = Debugger.IsAttached || !JNIEnvInit.PropagateExceptions;
-			if (filter && JNIEnvInit.mono_unhandled_exception_method != null) {
+			if (filter && AndroidRuntimeInternal.mono_unhandled_exception_method != null) {
 				ig.BeginExceptFilterBlock ();
 
-				ig.Emit (OpCodes.Call, JNIEnvInit.mono_unhandled_exception_method);
+				ig.Emit (OpCodes.Call, AndroidRuntimeInternal.mono_unhandled_exception_method);
 				ig.Emit (OpCodes.Ldc_I4_1);
 				ig.BeginCatchBlock (null!);
 			} else {

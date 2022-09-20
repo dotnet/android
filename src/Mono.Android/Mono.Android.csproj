@@ -229,6 +229,7 @@
     <Compile Include="Android.Preferences\CheckBoxPreference.cs" />
     <Compile Include="Android.Runtime\AndroidEnvironment.cs" />
     <Compile Include="Android.Runtime\AndroidRuntime.cs" />
+    <Compile Include="Android.Runtime\AndroidRuntimeInternal.cs" />
     <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
     <Compile Include="Android.Runtime\BoundExceptionType.cs" />
     <Compile Include="Android.Runtime\CharSequence.cs" />

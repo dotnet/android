@@ -12,6 +12,15 @@ namespace Xamarin.Android.Tasks
 {
 	class MarshalMethodsAssemblyRewriter
 	{
+		sealed class AssemblyImports
+		{
+			public CustomAttribute UnmanagedCallersOnlyAttribute;
+			public FieldReference MonoUnhandledExceptionMethod;
+			public MethodReference UnhandledExceptionMethod;
+			public MethodReference WaitForBridgeProcessingMethod;
+			public TypeReference SystemException;
+		}
+
 		IDictionary<string, IList<MarshalMethodEntry>> methods;
 		ICollection<AssemblyDefinition> uniqueAssemblies;
 		IDictionary <string, HashSet<string>> assemblyPaths;
@@ -25,7 +34,7 @@ namespace Xamarin.Android.Tasks
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 		}
 
-		public void Rewrite (DirectoryAssemblyResolver resolver, List<string> targetAssemblyPaths)
+		public void Rewrite (DirectoryAssemblyResolver resolver, List<string> targetAssemblyPaths, bool brokenExceptionTransitions)
 		{
 			if (resolver == null) {
 				throw new ArgumentNullException (nameof (resolver));
@@ -39,10 +48,33 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentException ("must contain at least one target path", nameof (targetAssemblyPaths));
 			}
 
+			AssemblyDefinition? monoAndroidRuntime = resolver.Resolve ("Mono.Android.Runtime");
+			if (monoAndroidRuntime == null) {
+				throw new InvalidOperationException ($"Internal error: unable to load the Mono.Android.Runtime assembly");
+			}
+
+			TypeDefinition runtime = FindType (monoAndroidRuntime, "Android.Runtime.AndroidRuntimeInternal", required: true)!;
+			MethodDefinition waitForBridgeProcessingMethod = FindMethod (runtime, "WaitForBridgeProcessing", required: true)!;
+			FieldDefinition monoUnhandledExceptionMethod = FindField (runtime, "mono_unhandled_exception_method", required: true)!;
+
+			TypeDefinition androidEnvironment = FindType (monoAndroidRuntime, "Android.Runtime.AndroidEnvironmentInternal", required: true)!;
+			MethodDefinition unhandledExceptionMethod = FindMethod (androidEnvironment, "UnhandledException", required: true)!;
+
+			AssemblyDefinition corlib = resolver.Resolve ("System.Private.CoreLib");
+			TypeDefinition systemException = FindType (corlib, "System.Exception", required: true);
+
 			MethodDefinition unmanagedCallersOnlyAttributeCtor = GetUnmanagedCallersOnlyAttributeConstructor (resolver);
-			var unmanagedCallersOnlyAttributes = new Dictionary<AssemblyDefinition, CustomAttribute> ();
+			var assemblyImports = new Dictionary<AssemblyDefinition, AssemblyImports> ();
 			foreach (AssemblyDefinition asm in uniqueAssemblies) {
-				unmanagedCallersOnlyAttributes.Add (asm, CreateImportedUnmanagedCallersOnlyAttribute (asm, unmanagedCallersOnlyAttributeCtor));
+				var imports = new AssemblyImports {
+					MonoUnhandledExceptionMethod = asm.MainModule.ImportReference (monoUnhandledExceptionMethod),
+					SystemException = asm.MainModule.ImportReference (systemException),
+					UnhandledExceptionMethod = asm.MainModule.ImportReference (unhandledExceptionMethod),
+					UnmanagedCallersOnlyAttribute = CreateImportedUnmanagedCallersOnlyAttribute (asm, unmanagedCallersOnlyAttributeCtor),
+					WaitForBridgeProcessingMethod = asm.MainModule.ImportReference (waitForBridgeProcessingMethod),
+				};
+
+				assemblyImports.Add (asm, imports);
 			}
 
 			log.LogDebugMessage ("Rewriting assemblies for marshal methods support");
@@ -58,10 +90,11 @@ namespace Xamarin.Android.Tasks
 
 					if (method.NeedsBlittableWorkaround) {
 						log.LogDebugMessage ($"Generating non-blittable type wrapper for callback method {method.NativeCallback.FullName}");
-						method.NativeCallbackWrapper = GenerateBlittableWrapper (method, unmanagedCallersOnlyAttributes);
+						method.NativeCallbackWrapper = GenerateBlittableWrapper (method, assemblyImports, brokenExceptionTransitions);
 					} else {
 						log.LogDebugMessage ($"Adding the 'UnmanagedCallersOnly' attribute to callback method {method.NativeCallback.FullName}");
-						method.NativeCallback.CustomAttributes.Add (unmanagedCallersOnlyAttributes [method.NativeCallback.Module.Assembly]);
+						//method.NativeCallback.CustomAttributes.Add (assemblyImports [method.NativeCallback.Module.Assembly].UnmanagedCallersOnlyAttribute);
+						method.NativeCallbackWrapper = GenerateExceptionWrapper (method, assemblyImports, brokenExceptionTransitions);
 					}
 
 					if (method.Connector != null) {
@@ -162,57 +195,114 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		MethodDefinition GenerateBlittableWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, CustomAttribute> unmanagedCallersOnlyAttributes)
+		string GetWrapperName (MethodDefinition method) => $"{method.Name}_mm_wrapper";
+
+		MethodDefinition GenerateExceptionWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, AssemblyImports> assemblyImports, bool brokenExceptionTransitions)
 		{
 			MethodDefinition callback = method.NativeCallback;
-			string wrapperName = $"{callback.Name}_mm_wrapper";
+			AssemblyImports imports = assemblyImports [callback.Module.Assembly];
+			string wrapperName = GetWrapperName (callback);
+			bool hasReturnValue = String.Compare ("System.Void", callback.ReturnType.FullName, StringComparison.Ordinal) != 0;
+			var wrapperMethod = new MethodDefinition (wrapperName, callback.Attributes, callback.ReturnType);
+
+			callback.DeclaringType.Methods.Add (wrapperMethod);
+			wrapperMethod.CustomAttributes.Add (imports.UnmanagedCallersOnlyAttribute);
+
+			MethodBody body = wrapperMethod.Body;
+			VariableDefinition? retval = null;
+			if (hasReturnValue) {
+				body.InitLocals = true;
+				retval = new VariableDefinition (callback.ReturnType);
+				body.Variables.Add (retval);
+			}
+
+			var exceptionHandler = new ExceptionHandler (ExceptionHandlerType.Catch) {
+				CatchType = imports.SystemException,
+			};
+
+			body.ExceptionHandlers.Add (exceptionHandler);
+
+			uint nparam = 0;
+			foreach (ParameterDefinition pdef in callback.Parameters) {
+				TypeReference newType = MapToBlittableTypeIfNecessary (pdef.ParameterType, out _);
+				wrapperMethod.Parameters.Add (new ParameterDefinition (pdef.Name, pdef.Attributes, newType));
+				body.Instructions.Add (GetLoadArgInstruction (nparam++, pdef));
+			}
+
+			exceptionHandler.TryStart = body.Instructions[0];
+			body.Instructions.Add (Instruction.Create (OpCodes.Call, callback));
+
+			if (hasReturnValue) {
+				body.Instructions.Add (Instruction.Create (OpCodes.Stloc, retval));
+			}
+
+			Instruction ret = Instruction.Create (OpCodes.Ret);
+			Instruction? retValLoadInst = null;
+			Instruction leaveTarget;
+
+			if (hasReturnValue) {
+				retValLoadInst = Instruction.Create (OpCodes.Ldloc, retval);
+				leaveTarget = retValLoadInst;
+			} else {
+				leaveTarget = ret;
+			}
+
+			var leaveTryInst = Instruction.Create (OpCodes.Leave_S, leaveTarget);
+			body.Instructions.Add (leaveTryInst);
+			exceptionHandler.TryEnd = leaveTryInst;
+
+			var exceptionVar = new VariableDefinition (imports.SystemException);
+			body.Variables.Add (exceptionVar);
+
+			var catchStartInst = Instruction.Create (OpCodes.Stloc, exceptionVar);
+			exceptionHandler.HandlerStart = catchStartInst;
+
+			body.Instructions.Add (catchStartInst);
+			body.Instructions.Add (Instruction.Create (OpCodes.Ldarg_0));
+			body.Instructions.Add (Instruction.Create (OpCodes.Ldloc, exceptionVar));
+
+			if (brokenExceptionTransitions) {
+				// TODO: add nullcheck
+				body.Instructions.Add (Instruction.Create (OpCodes.Call, imports.MonoUnhandledExceptionMethod));
+				body.Instructions.Add (Instruction.Create (OpCodes.Throw));
+			} else {
+				body.Instructions.Add (Instruction.Create (OpCodes.Call, imports.UnhandledExceptionMethod));
+
+				if (hasReturnValue) {
+					// TODO: add equivalent to `return default`
+				}
+			}
+
+			var leaveCatchInst = Instruction.Create (OpCodes.Leave_S, leaveTarget);
+			exceptionHandler.HandlerEnd = leaveCatchInst;
+			body.Instructions.Add (leaveCatchInst);
+
+			if (hasReturnValue) {
+				body.Instructions.Add (retValLoadInst);
+			}
+			body.Instructions.Add (ret);
+
+			return wrapperMethod;
+		}
+
+		MethodDefinition GenerateBlittableWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, AssemblyImports> assemblyImports, bool brokenExceptionTransitions)
+		{
+			MethodDefinition callback = method.NativeCallback;
+			AssemblyImports imports = assemblyImports [callback.Module.Assembly];
+			string wrapperName = GetWrapperName (callback);
 			TypeReference retType = MapToBlittableTypeIfNecessary (callback.ReturnType, out bool returnTypeMapped);
 			bool hasReturnValue = String.Compare ("System.Void", retType.FullName, StringComparison.Ordinal) != 0;
 			var wrapperMethod = new MethodDefinition (wrapperName, callback.Attributes, retType);
 			callback.DeclaringType.Methods.Add (wrapperMethod);
-			wrapperMethod.CustomAttributes.Add (unmanagedCallersOnlyAttributes [callback.Module.Assembly]);
+			wrapperMethod.CustomAttributes.Add (imports.UnmanagedCallersOnlyAttribute);
 
 			MethodBody body = wrapperMethod.Body;
-			int nparam = 0;
+			uint nparam = 0;
 
 			foreach (ParameterDefinition pdef in callback.Parameters) {
 				TypeReference newType = MapToBlittableTypeIfNecessary (pdef.ParameterType, out _);
 				wrapperMethod.Parameters.Add (new ParameterDefinition (pdef.Name, pdef.Attributes, newType));
-
-				OpCode ldargOp;
-				bool paramRef = false;
-				switch (nparam++) {
-					case 0:
-						ldargOp = OpCodes.Ldarg_0;
-						break;
-
-					case 1:
-						ldargOp = OpCodes.Ldarg_1;
-						break;
-
-					case 2:
-						ldargOp = OpCodes.Ldarg_2;
-						break;
-
-					case 3:
-						ldargOp = OpCodes.Ldarg_3;
-						break;
-
-					default:
-						ldargOp = OpCodes.Ldarg_S;
-						paramRef = true;
-						break;
-				}
-
-				Instruction ldarg;
-
-				if (!paramRef) {
-					ldarg = Instruction.Create (ldargOp);
-				} else {
-					ldarg = Instruction.Create (ldargOp, pdef);
-				}
-
-				body.Instructions.Add (ldarg);
+				body.Instructions.Add (GetLoadArgInstruction (nparam++, pdef));
 
 				if (!pdef.ParameterType.IsBlittable ()) {
 					GenerateNonBlittableConversion (pdef.ParameterType, newType);
@@ -274,6 +364,41 @@ namespace Xamarin.Android.Tasks
 			{
 				throw new InvalidOperationException ($"Unsupported non-blittable type '{type.FullName}'");
 			}
+		}
+
+		Instruction GetLoadArgInstruction (uint nparam, ParameterDefinition pdef)
+		{
+			OpCode ldargOp;
+			bool paramRef = false;
+
+			switch (nparam++) {
+				case 0:
+					ldargOp = OpCodes.Ldarg_0;
+					break;
+
+				case 1:
+					ldargOp = OpCodes.Ldarg_1;
+					break;
+
+				case 2:
+					ldargOp = OpCodes.Ldarg_2;
+					break;
+
+				case 3:
+					ldargOp = OpCodes.Ldarg_3;
+					break;
+
+				default:
+					ldargOp = OpCodes.Ldarg_S;
+					paramRef = true;
+					break;
+			}
+
+			if (!paramRef) {
+				return Instruction.Create (ldargOp);
+			}
+
+			return Instruction.Create (ldargOp, pdef);
 		}
 
 		TypeReference MapToBlittableTypeIfNecessary (TypeReference type, out bool typeMapped)
@@ -348,6 +473,53 @@ namespace Xamarin.Android.Tasks
 		CustomAttribute CreateImportedUnmanagedCallersOnlyAttribute (AssemblyDefinition targetAssembly, MethodDefinition unmanagedCallersOnlyAtributeCtor)
 		{
 			return new CustomAttribute (targetAssembly.MainModule.ImportReference (unmanagedCallersOnlyAtributeCtor));
+		}
+
+		MethodDefinition? FindMethod (TypeDefinition type, string methodName, bool required)
+		{
+			log.LogDebugMessage ($"Looking for method '{methodName}' in type {type}");
+			foreach (MethodDefinition method in type.Methods) {
+				log.LogDebugMessage ($"  method: {method.Name}");
+				if (String.Compare (methodName, method.Name, StringComparison.Ordinal) == 0) {
+					log.LogDebugMessage ("    match!");
+					return method;
+				}
+			}
+
+			if (required) {
+				throw new InvalidOperationException ($"Internal error: required method '{methodName}' in type {type} not found");
+			}
+
+			return null;
+		}
+
+		FieldDefinition? FindField (TypeDefinition type, string fieldName, bool required)
+		{
+			foreach (FieldDefinition field in type.Fields) {
+				if (String.Compare (fieldName, field.Name, StringComparison.Ordinal) == 0) {
+					return field;
+				}
+			}
+
+			if (required) {
+				throw new InvalidOperationException ($"Internal error: required field '{fieldName}' in type {type} not found");
+			}
+
+			return null;
+		}
+
+		TypeDefinition? FindType (AssemblyDefinition asm, string typeName, bool required)
+		{
+			TypeDefinition? type = asm.MainModule.FindType (typeName);
+			if (type != null) {
+				return type;
+			}
+
+			if (required) {
+				throw new InvalidOperationException ($"Internal error: required type '{typeName}' in assembly {asm} not found");
+			}
+
+			return null;
 		}
 	}
 }

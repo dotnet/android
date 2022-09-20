@@ -1472,7 +1472,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateJavaStubs"
     DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-    Inputs="@(_AndroidMSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
+    Inputs="@(_AndroidMSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
   <PropertyGroup>
@@ -1518,7 +1518,8 @@ because xbuild doesn't support framework reference assemblies.
       CheckedBuild="$(_AndroidCheckedBuild)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       LinkingEnabled="$(_LinkingEnabled)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)">
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      Environments="@(AndroidEnvironment);@(LibraryEnvironments)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
 
@@ -1689,7 +1690,6 @@ because xbuild doesn't support framework reference assemblies.
     _ManifestMerger;
     _ConvertCustomView;
     $(_AfterConvertCustomView);
-    _GenerateEnvironmentFiles;
     _AddStaticResources;
     $(_AfterAddStaticResources);
     _PrepareAssemblies;

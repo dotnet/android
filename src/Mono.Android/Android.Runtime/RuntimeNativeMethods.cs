@@ -76,7 +76,6 @@ namespace Android.Runtime
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_max_gref_get ();
-
 #if NETCOREAPP
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);

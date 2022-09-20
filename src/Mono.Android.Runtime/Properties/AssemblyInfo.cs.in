@@ -15,7 +15,6 @@ using System.Runtime.Versioning;
 [assembly: AssemblyTitle ("Mono.Android.Runtime.dll")]
 [assembly: AssemblyProduct ("Xamarin.Android")]
 [assembly: AssemblyCompany ("Microsoft Corporation")]
-[assembly: AssemblyMetadata ("IsTrimmable", "False")]
 [assembly: TargetPlatform("Android@API_LEVEL@.0")]
 [assembly: SupportedOSPlatform("Android@MIN_API_LEVEL@.0")]
 

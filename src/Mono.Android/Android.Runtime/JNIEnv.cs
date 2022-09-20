@@ -108,7 +108,7 @@ namespace Android.Runtime {
 
 		static void Initialize ()
 		{
-			JNIEnvInit.InitializeUnhandledExceptionMethod ();
+			AndroidRuntimeInternal.InitializeUnhandledExceptionMethod ();
 #if !NETCOREAPP
 			if (AppDomain_DoUnhandledException == null) {
 				var ad_due = typeof (AppDomain)
@@ -139,7 +139,7 @@ namespace Android.Runtime {
 			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
 
 			if (Debugger.IsAttached) {
-				JNIEnvInit.mono_unhandled_exception?.Invoke (javaException);
+				AndroidRuntimeInternal.mono_unhandled_exception?.Invoke (javaException);
 			}
 
 			try {
@@ -164,9 +164,7 @@ namespace Android.Runtime {
 
 		public static void WaitForBridgeProcessing ()
 		{
-			if (!JNIEnvInit.BridgeProcessing)
-				return;
-			RuntimeNativeMethods._monodroid_gc_wait_for_bridge_processing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 		}
 
 		public static IntPtr AllocObject (string jniClassName)
