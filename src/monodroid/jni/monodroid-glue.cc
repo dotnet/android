@@ -1103,11 +1103,9 @@ MonodroidRuntime::init_android_runtime (
 	log_warn (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
 
 	init.grefClass = utils.get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
-	log_warn (LOG_DEFAULT, "  loc #1");
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
-	log_warn (LOG_DEFAULT, "  loc #2");
 	MonoAssembly *runtime_assembly;
 	MonoAssembly *mono_android_assembly;
 
@@ -1126,11 +1124,9 @@ MonodroidRuntime::init_android_runtime (
 #else
 	mono_android_assembly_image = runtime_assembly_image;
 #endif
-	log_warn (LOG_DEFAULT, "  loc #3");
 	uint32_t i = 0;
 
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES; ++i) {
-		log_warn (LOG_DEFAULT, "  loc #4");
 		lookup_bridge_info (
 #if !defined (NET)
 			domain,
@@ -1139,10 +1135,7 @@ MonodroidRuntime::init_android_runtime (
 			&osBridge.get_java_gc_bridge_type (i),
 			&osBridge.get_java_gc_bridge_info (i)
 		);
-		log_warn (LOG_DEFAULT, "  loc #5");
 	}
-
-	log_warn (LOG_DEFAULT, "  loc #6");
 
 	MonoClass *runtime;
 	MonoMethod *method;
@@ -1185,20 +1178,16 @@ MonodroidRuntime::init_android_runtime (
 	/* If running on desktop, we may be swapping in a new Mono.Android image when calling this
 	 * so always make sure we have the freshest handle to the method.
 	 */
-	log_warn (LOG_DEFAULT, "  loc #7");
 	if (registerType == nullptr || is_running_on_desktop) {
 		if constexpr (is_running_on_desktop) {
 			registerType = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
 		} else {
-			log_warn (LOG_DEFAULT, "  loc #8");
 			registerType = mono_get_method (mono_android_assembly_image, application_config.jnienv_registerjninatives_method_token, runtime);
 #if defined (NET) && defined (ANDROID)
 			jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn>(mono_method_get_unmanaged_callers_only_ftnptr (registerType, &error));
 #endif // def NET && def ANDROID
-			log_warn (LOG_DEFAULT, "  loc #9");
 		}
 	}
-	log_warn (LOG_DEFAULT, "  loc #10");
 	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s", mono_error_get_message (&error));
 
 	jclass lrefLoaderClass = env->GetObjectClass (loader);

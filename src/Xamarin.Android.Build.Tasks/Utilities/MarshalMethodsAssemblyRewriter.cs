@@ -34,6 +34,7 @@ namespace Xamarin.Android.Tasks
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 		}
 
+		// TODO: do away with broken exception transitions, there's no point in supporting them
 		public void Rewrite (DirectoryAssemblyResolver resolver, List<string> targetAssemblyPaths, bool brokenExceptionTransitions)
 		{
 			if (resolver == null) {
@@ -530,9 +531,13 @@ namespace Xamarin.Android.Tasks
 
 		TypeDefinition? FindType (AssemblyDefinition asm, string typeName, bool required)
 		{
-			TypeDefinition? type = asm.MainModule.FindType (typeName);
-			if (type != null) {
-				return type;
+			log.LogDebugMessage ($"Looking for type '{typeName}' in assembly '{asm}'");
+			foreach (TypeDefinition t in asm.MainModule.Types) {
+				log.LogDebugMessage ($"   checking {t.FullName}");
+				if (String.Compare (typeName, t.FullName, StringComparison.Ordinal) == 0) {
+					log.LogDebugMessage ($"    match!");
+					return t;
+				}
 			}
 
 			if (required) {

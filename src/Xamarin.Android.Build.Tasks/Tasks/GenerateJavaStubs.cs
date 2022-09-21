@@ -89,7 +89,6 @@ namespace Xamarin.Android.Tasks
 
 		public string SupportedOSPlatformVersion { get; set; }
 
-		[Required]
 		public ITaskItem[] Environments { get; set; }
 
 		[Output]
@@ -245,8 +244,12 @@ namespace Xamarin.Android.Tasks
 						throw new InvalidOperationException ($"Internal error: marshal methods require the `IntermediateOutputDirectory` property of the `GenerateJavaStubs` task to have a value");
 					}
 
-					foreach (string abi in SupportedAbis) {
-						targetPaths.Add (Path.Combine (IntermediateOutputDirectory, AbiToRid (abi), "linked"));
+					if (SupportedAbis.Length == 1) {
+						targetPaths.Add (Path.Combine (IntermediateOutputDirectory, "linked"));
+					} else {
+						foreach (string abi in SupportedAbis) {
+							targetPaths.Add (Path.Combine (IntermediateOutputDirectory, AbiToRid (abi), "linked"));
+						}
 					}
 				}
 
