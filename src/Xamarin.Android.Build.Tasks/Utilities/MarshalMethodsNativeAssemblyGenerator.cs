@@ -708,7 +708,6 @@ namespace Xamarin.Android.Tasks
 				func,
 				getFunctionPtrRef,
 				new List<LlvmIrFunctionArgument> {
-					new LlvmIrFunctionArgument (func.ParameterVariables[0]),
 					new LlvmIrFunctionArgument (typeof(uint), method.AssemblyCacheIndex),
 					new LlvmIrFunctionArgument (typeof(uint), method.ClassCacheIndex),
 					new LlvmIrFunctionArgument (typeof(uint), nativeCallback.MetadataToken.ToUInt32 ()),
@@ -753,7 +752,6 @@ namespace Xamarin.Android.Tasks
 			var get_function_pointer_sig = new LlvmNativeFunctionSignature (
 				returnType: typeof(void),
 				parameters: new List<LlvmIrFunctionParameter> {
-				        new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true),
 					new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
 					new LlvmIrFunctionParameter (typeof(uint), "class_index"),
 					new LlvmIrFunctionParameter (typeof(uint), "method_token"),
