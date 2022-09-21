@@ -841,6 +841,10 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 		mono_jit_parse_options (argc, args);
 	}
 
+	// int argc = 5;
+	// char* argv[] = { "-v", "-v", "-v", "-v", "-v" };
+	// mono_jit_parse_options (argc, argv);
+
 	mono_set_signal_chaining (1);
 	mono_set_crash_chaining (1);
 
@@ -1056,6 +1060,7 @@ MonodroidRuntime::init_android_runtime (
 #endif // ndef NET
 	JNIEnv *env, jclass runtimeClass, jobject loader)
 {
+	log_warn (LOG_DEFAULT, __PRETTY_FUNCTION__);
 	constexpr char icall_typemap_java_to_managed[] = "Java.Interop.TypeManager::monodroid_typemap_java_to_managed";
 	constexpr char icall_typemap_managed_to_java[] = "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java";
 
@@ -1098,43 +1103,60 @@ MonodroidRuntime::init_android_runtime (
 	log_warn (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
 
 	init.grefClass = utils.get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
+	log_warn (LOG_DEFAULT, "  loc #1");
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
-	MonoAssembly *assm;
-#if defined (NET)
-	assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME);
-#else // def NET
-	assm = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
-#endif // ndef NET
-	MonoImage *image = mono_assembly_get_image (assm);
+	log_warn (LOG_DEFAULT, "  loc #2");
+	MonoAssembly *runtime_assembly;
+	MonoAssembly *mono_android_assembly;
 
+#if defined (NET)
+	mono_android_assembly = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+	runtime_assembly = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME);
+#else // def NET
+	mono_android_assembly = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+	runtime_assembly = mono_android_assembly;
+#endif // ndef NET
+	MonoImage *runtime_assembly_image = mono_assembly_get_image (runtime_assembly);
+	MonoImage *mono_android_assembly_image;
+
+#if defined (NET)
+	mono_android_assembly_image = mono_assembly_get_image (mono_android_assembly);
+#else
+	mono_android_assembly_image = runtime_assembly_image;
+#endif
+	log_warn (LOG_DEFAULT, "  loc #3");
 	uint32_t i = 0;
 
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES; ++i) {
+		log_warn (LOG_DEFAULT, "  loc #4");
 		lookup_bridge_info (
 #if !defined (NET)
 			domain,
 #endif // ndef NET
-			image,
+			mono_android_assembly_image,
 			&osBridge.get_java_gc_bridge_type (i),
 			&osBridge.get_java_gc_bridge_info (i)
 		);
+		log_warn (LOG_DEFAULT, "  loc #5");
 	}
+
+	log_warn (LOG_DEFAULT, "  loc #6");
 
 	MonoClass *runtime;
 	MonoMethod *method;
 
 	if constexpr (is_running_on_desktop) {
 #if defined (NET)
-		runtime = mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
+		runtime = mono_class_from_name (mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 #else
-		runtime = utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
+		runtime = utils.monodroid_get_class_from_image (domain, mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 #endif // def NET
 		method = mono_class_get_method_from_name (runtime, "Initialize", 1);
 	} else {
-		runtime = mono_class_get (image, application_config.android_runtime_jnienv_class_token);
-		method = mono_get_method (image, application_config.jnienv_initialize_method_token, runtime);
+		runtime = mono_class_get (mono_android_assembly_image, application_config.android_runtime_jnienv_class_token);
+		method = mono_get_method (mono_android_assembly_image, application_config.jnienv_initialize_method_token, runtime);
 	}
 
 	abort_unless (runtime != nullptr, "INTERNAL ERROR: unable to find the Android.Runtime.JNIEnvInit class!");
@@ -1163,24 +1185,21 @@ MonodroidRuntime::init_android_runtime (
 	/* If running on desktop, we may be swapping in a new Mono.Android image when calling this
 	 * so always make sure we have the freshest handle to the method.
 	 */
+	log_warn (LOG_DEFAULT, "  loc #7");
 	if (registerType == nullptr || is_running_on_desktop) {
 		if constexpr (is_running_on_desktop) {
 			registerType = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
 		} else {
-			registerType = mono_get_method (image, application_config.jnienv_registerjninatives_method_token, runtime);
+			log_warn (LOG_DEFAULT, "  loc #8");
+			registerType = mono_get_method (mono_android_assembly_image, application_config.jnienv_registerjninatives_method_token, runtime);
 #if defined (NET) && defined (ANDROID)
 			jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn>(mono_method_get_unmanaged_callers_only_ftnptr (registerType, &error));
 #endif // def NET && def ANDROID
+			log_warn (LOG_DEFAULT, "  loc #9");
 		}
 	}
+	log_warn (LOG_DEFAULT, "  loc #10");
 	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s", mono_error_get_message (&error));
-
-	MonoClass *android_runtime_jnienv = runtime;
-	MonoClassField *bridge_processing_field = mono_class_get_field_from_name (runtime, const_cast<char*> ("BridgeProcessing"));
-	if (android_runtime_jnienv == nullptr || bridge_processing_field == nullptr) {
-		log_fatal (LOG_DEFAULT, "INTERNAL_ERROR: Unable to find Android.Runtime.JNIEnvInit.BridgeProcessing");
-		exit (FATAL_EXIT_CANNOT_FIND_JNIENV);
-	}
 
 	jclass lrefLoaderClass = env->GetObjectClass (loader);
 	init.Loader_loadClass     = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");

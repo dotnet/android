@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace Android.Runtime
 {
-	static internal class AndroidRuntimeInternal
+	public static class AndroidRuntimeInternal
 	{
 		internal static MethodInfo? mono_unhandled_exception_method = null;
 #if NETCOREAPP
@@ -29,7 +29,7 @@ namespace Android.Runtime
 			}
 		}
 
-		internal static void WaitForBridgeProcessing ()
+		public static void WaitForBridgeProcessing ()
 		{
 			if (!BridgeProcessing)
 				return;

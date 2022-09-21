@@ -635,7 +635,7 @@ namespace Android.Runtime {
 
 		public override void WaitForGCBridgeProcessing ()
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 		}
 
 		public override IJavaPeerable? CreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)

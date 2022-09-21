@@ -27,6 +27,7 @@ namespace xamarin::android::internal
 		static constexpr char JNIENVINIT_CLASS_NAME[] = "JNIEnvInit";
 		static constexpr char JNIENV_CLASS_NAME[] = "JNIEnv";
 		static constexpr char ANDROID_ENVIRONMENT_CLASS_NAME[] = "AndroidEnvironment";
+		static constexpr char ANDROID_RUNTIME_INTERNAL_CLASS_NAME[] = "AndroidRuntimeInternal";
 
 		static constexpr char DLL_EXTENSION[] = ".dll";
 
