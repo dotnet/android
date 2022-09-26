@@ -53,6 +53,7 @@ namespace Xamarin.Android.Tasks
 
 		public string IntermediateOutputDirectory { get; set; }
 		public bool LinkingEnabled { get; set; }
+		public bool HaveMultipleRIDs { get; set; }
 		public bool EnableMarshalMethods { get; set; }
 		public string ManifestTemplate { get; set; }
 		public string[] MergedManifestDocuments { get; set; }
@@ -244,7 +245,8 @@ namespace Xamarin.Android.Tasks
 						throw new InvalidOperationException ($"Internal error: marshal methods require the `IntermediateOutputDirectory` property of the `GenerateJavaStubs` task to have a value");
 					}
 
-					if (SupportedAbis.Length == 1) {
+					// If the <ResourceIdentifiers> property is set then, even if we have just one RID, the linked assemblies path will include the RID
+					if (!HaveMultipleRIDs && SupportedAbis.Length == 1) {
 						targetPaths.Add (Path.Combine (IntermediateOutputDirectory, "linked"));
 					} else {
 						foreach (string abi in SupportedAbis) {

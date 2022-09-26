@@ -1,3 +1,4 @@
+#if !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
 using System;
 using System.Reflection;
 
@@ -37,3 +38,4 @@ namespace Android.Runtime
 		}
 	}
 }
+#endif // !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME

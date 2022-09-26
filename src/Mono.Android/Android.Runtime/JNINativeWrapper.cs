@@ -20,7 +20,7 @@ namespace Android.Runtime {
 			if (exception_handler_method == null)
 				AndroidEnvironment.FailFast ("Cannot find AndroidEnvironment.UnhandledException");
 
-			wait_for_bridge_processing_method = typeof (AndroidRuntimeInternal).GetMethod ("WaitForBridgeProcessing", BindingFlags.NonPublic | BindingFlags.Static);
+			wait_for_bridge_processing_method = typeof (AndroidRuntimeInternal).GetMethod ("WaitForBridgeProcessing", BindingFlags.Public | BindingFlags.Static);
 			if (wait_for_bridge_processing_method == null)
 				AndroidEnvironment.FailFast ("Cannot find AndroidRuntimeInternal.WaitForBridgeProcessing");
 		}
