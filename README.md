@@ -4,7 +4,7 @@ Android for .NET
 ===============
 
 `Android for .NET` provides open-source bindings of the Android SDK and tooling for use with
-.NET managed languages such as C#. This repository is also home to the legacy `Xamarin.Android`
+.NET managed languages such as C#. This repository is also home to the classic `Xamarin.Android`
 product.
 
 # Build Status
@@ -29,7 +29,7 @@ the [workload documentation][workload-documentation] for installation commands.
 [dotnet-download]: https://dotnet.microsoft.com/en-us/download
 [workload-documentation]: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-workload-install
 
-Legacy `Xamarin.Android` installers are available here:
+Classic `Xamarin.Android` installers are available here:
 
 | Platform        | Link   |
 |-----------------|--------|
