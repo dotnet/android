@@ -2441,7 +2441,7 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 /* !DO NOT REMOVE! Used by the Android Designer */
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
-                                jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
+                                jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                 [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava, [[maybe_unused]] jstring packageName,
                                 jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
 {
@@ -2452,7 +2452,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		runtimeApksJava,
 		runtimeNativeLibDir,
 		appDirs,
-		localDateTimeOffset,
+		0,
 		loader,
 		assembliesJava,
 		apiLevel,

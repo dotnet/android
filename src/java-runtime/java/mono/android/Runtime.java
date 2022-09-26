@@ -14,7 +14,7 @@ public class Runtime {
 		Thread.setDefaultUncaughtExceptionHandler (new XamarinUncaughtExceptionHandler (Thread.getDefaultUncaughtExceptionHandler ()));
 	}
 
-	public static native void init (String lang, String[] runtimeApks, String runtimeDataDir, String[] appDirs, int localDateTimeOffset, ClassLoader loader, String[] externalStorageDirs, String[] assemblies, String packageName, int apiLevel, String[] environmentVariables);
+	public static native void init (String lang, String[] runtimeApks, String runtimeDataDir, String[] appDirs, ClassLoader loader, String[] externalStorageDirs, String[] assemblies, String packageName, int apiLevel, String[] environmentVariables);
 	public static native void initInternal (
 		String lang,
 		String[] runtimeApks,
