@@ -87,6 +87,7 @@ namespace Xamarin.Android.Build.Tests
 				new [] {
 					"Java.Interop.dll",
 					"Mono.Android.dll",
+					"Mono.Android.Runtime.dll",
 					"rc.bin",
 					"System.Console.dll",
 					"System.Private.CoreLib.dll",

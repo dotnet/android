@@ -471,18 +471,12 @@ namespace Android.Runtime {
 
 		public void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
-			if (methods.IsEmpty) {
-				Logger.Log (LogLevel.Debug, "monodroid-mm", "No methods to register, returning");
-				return;
-			}
-
 			try {
-				if (FastRegisterNativeMembers (nativeClass, type, methods))
-					return;
-
 				if (methods.IsEmpty) {
 					if (jniAddNativeMethodRegistrationAttributePresent)
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
+					return;
+				} else if (FastRegisterNativeMembers (nativeClass, type, methods)) {
 					return;
 				}
 

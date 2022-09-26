@@ -5,13 +5,16 @@
       "Size": 3568
     },
     "assemblies/FormsViewGroup.dll": {
-      "Size": 7131
+      "Size": 7314
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66767
+      "Size": 66760
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 437613
+      "Size": 444587
+    },
+    "assemblies/Mono.Android.Runtime.dll": {
+      "Size": 5776
     },
     "assemblies/mscorlib.dll": {
       "Size": 3859
@@ -104,7 +107,7 @@
       "Size": 16635
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 3647
+      "Size": 3808
     },
     "assemblies/System.Runtime.InteropServices.dll": {
       "Size": 3770
@@ -143,16 +146,16 @@
       "Size": 1860
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 117252
+      "Size": 117251
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5872
     },
     "assemblies/Xamarin.AndroidX.AppCompat.AppCompatResources.dll": {
-      "Size": 5908
+      "Size": 6118
     },
     "assemblies/Xamarin.AndroidX.AppCompat.dll": {
-      "Size": 112407
+      "Size": 112654
     },
     "assemblies/Xamarin.AndroidX.CardView.dll": {
       "Size": 6596
@@ -161,13 +164,13 @@
       "Size": 16407
     },
     "assemblies/Xamarin.AndroidX.Core.dll": {
-      "Size": 96466
+      "Size": 96736
     },
     "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
-      "Size": 13924
+      "Size": 14237
     },
     "assemblies/Xamarin.AndroidX.Fragment.dll": {
-      "Size": 39483
+      "Size": 39952
     },
     "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
       "Size": 5924
@@ -185,16 +188,16 @@
       "Size": 12476
     },
     "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
-      "Size": 83675
+      "Size": 84803
     },
     "assemblies/Xamarin.AndroidX.SavedState.dll": {
       "Size": 4869
     },
     "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
-      "Size": 10116
+      "Size": 10391
     },
     "assemblies/Xamarin.AndroidX.ViewPager.dll": {
-      "Size": 17484
+      "Size": 18044
     },
     "assemblies/Xamarin.Forms.Core.dll": {
       "Size": 528450
@@ -209,13 +212,13 @@
       "Size": 60774
     },
     "assemblies/Xamarin.Google.Android.Material.dll": {
-      "Size": 39785
+      "Size": 40159
     },
     "classes.dex": {
       "Size": 3090268
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 432408
+      "Size": 433600
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3073392
@@ -230,7 +233,7 @@
       "Size": 148696
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 321936
+      "Size": 324464
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -344,13 +347,13 @@
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 79628
+      "Size": 79735
     },
     "META-INF/com.google.android.material_material.version": {
       "Size": 10
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 79501
+      "Size": 79608
     },
     "META-INF/proguard/androidx-annotations.pro": {
       "Size": 339
@@ -1985,5 +1988,5 @@
       "Size": 341228
     }
   },
-  "PackageSize": 8037348
+  "PackageSize": 8057909
 }
