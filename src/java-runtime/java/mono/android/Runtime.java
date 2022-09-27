@@ -20,6 +20,7 @@ public class Runtime {
 		String[] runtimeApks,
 		String runtimeDataDir,
 		String[] appDirs,
+		int localDateTimeOffset,
 		ClassLoader loader,
 		String[] assemblies,
 		int apiLevel,
