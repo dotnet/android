@@ -56,7 +56,9 @@ namespace Android.Runtime
 #endif
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
+			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, "JNIEnvInit.RegisterJniNatives called");
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
+			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"  typeName: '{typeName}'; methods_len: {methods_len}");
 			var type = Type.GetType (typeName);
 			if (type == null) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
@@ -67,9 +69,11 @@ namespace Android.Runtime
 
 			var className = Java.Interop.TypeManager.GetClassName (jniClass);
 			Java.Interop.TypeManager.RegisterType (className, type);
+			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"  className: '{className}'");
 
 			JniType? jniType = null;
 			JniType.GetCachedJniType (ref jniType, className);
+			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"  jniType: '{jniType.Name}'");
 
 			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
 			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);

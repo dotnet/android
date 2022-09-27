@@ -165,9 +165,9 @@ namespace Xamarin.Android.Tasks
 				}
 
 				// Android.Graphics.Color is mapped to/from a native `int`
-				if (String.Compare (typeName, "Android.Graphics.Color", StringComparison.Ordinal) == 0) {
-					return "System.Int32";
-				}
+				// if (String.Compare (typeName, "Android.Graphics.Color", StringComparison.Ordinal) == 0) {
+				// 	return "System.Int32";
+				// }
 
 				return "System.IntPtr";
 			}
