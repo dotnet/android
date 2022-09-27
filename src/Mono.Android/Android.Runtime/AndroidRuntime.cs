@@ -464,32 +464,22 @@ namespace Android.Runtime {
 		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		// Temporary hack, see comments in RegisterNativeMembers below
-		static readonly Dictionary<string, string[]> dynamicRegistrationMethods = new Dictionary<string, string[]> (StringComparer.Ordinal) {
-			// leaving it empty for now, until we're sure it's no longer needed (there are some test failures which may still require it to fix them)
-		};
-
 		public void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, "AndroidTypeManager.RegisterNativeMembers called");
 			try {
 				if (methods.IsEmpty) {
 					if (jniAddNativeMethodRegistrationAttributePresent)
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
 					return;
 				} else if (FastRegisterNativeMembers (nativeClass, type, methods)) {
-					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, "   FastRegisterNativeMembers succeeded, returning");
 					return;
 				}
 
 				int methodCount = CountMethods (methods);
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"   methodCount: {methodCount}");
 				if (methodCount < 1) {
 					if (jniAddNativeMethodRegistrationAttributePresent) {
-						RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"   calling base.RegisterNativeMembers");
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
 					}
-					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"   no methods to register??");
 					return;
 				}
 
@@ -527,7 +517,6 @@ namespace Android.Runtime {
 							callback = CreateDynamicCallback (minfo);
 							needToRegisterNatives = true;
 						} else {
-							RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"   normal registration for '{name.ToString ()}'");
 							Type callbackDeclaringType = type;
 							if (!callbackDeclaringTypeString.IsEmpty) {
 								callbackDeclaringType = Type.GetType (callbackDeclaringTypeString.ToString (), throwOnError: true)!;
@@ -536,40 +525,9 @@ namespace Android.Runtime {
 								callbackDeclaringType = callbackDeclaringType.BaseType!;
 							}
 
-							// TODO: this is temporary hack, it needs a full fledged registration mechanism for methods like these (that is, ones which
-							// aren't registered with [Register] but are baked into Mono.Android's managed and Java code)
-							// bool createCallback;
-							// if (JNIEnvInit.MarshalMethodsEnabled) {
-							// 	RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"   JNI marshal methods enabled, checking if we need to create the callback");
-							// 	string declaringTypeName = callbackDeclaringType.FullName;
-							// 	string callbackName = callbackString.ToString ();
-
-							// 	createCallback = false;
-							// 	foreach (var kvp in dynamicRegistrationMethods) {
-							// 		string dynamicTypeName = kvp.Key;
-
-							// 		foreach (string dynamicCallbackMethodName in kvp.Value) {
-							// 			if (ShouldRegisterDynamically (declaringTypeName, callbackName, dynamicTypeName, dynamicCallbackMethodName)) {
-							// 				createCallback = true;
-							// 				break;
-							// 			}
-							// 		}
-
-							// 		if (createCallback) {
-							// 			break;
-							// 		}
-							// 	}
-							// 	RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"   createCallback after loop: {createCallback}");
-							// } else {
-							// 	createCallback = true;
-							// }
-
-							// if (createCallback) {
-								Logger.Log (LogLevel.Info, "monodroid-mm", $"  creating delegate for: '{callbackString.ToString()}' in type {callbackDeclaringType.FullName}");
-								GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
-								                                                                             callbackDeclaringType, callbackString.ToString ());
-								callback = connector ();
-							//}
+							GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
+							                                                                             callbackDeclaringType, callbackString.ToString ());
+							callback = connector ();
 						}
 
 						if (callback != null) {
