@@ -2152,8 +2152,8 @@ MonodroidRuntime::install_logging_handlers ()
 
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
-                                                          jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                                          jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+                                                          jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
+                                                          jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {
 	char *mono_log_mask_raw = nullptr;
@@ -2180,7 +2180,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	mono_opt_aot_lazy_assembly_load = application_config.aot_lazy_load ? TRUE : FALSE;
 
 	{
-		MonoVMProperties monovm_props { home };
+		MonoVMProperties monovm_props { home, localDateTimeOffset };
 
 		// NOTE: the `const_cast` breaks the contract made to MonoVMProperties that the arrays it returns won't be
 		// modified, but it's "ok" since Mono doesn't modify them and by using `const char* const*` in MonoVMProperties
@@ -2455,6 +2455,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		runtimeApksJava,
 		runtimeNativeLibDir,
 		appDirs,
+		0,
 		loader,
 		assembliesJava,
 		apiLevel,
@@ -2465,7 +2466,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
-                                jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
+                                jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
                                 jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
                                 jboolean haveSplitApks)
 {
@@ -2476,6 +2477,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		runtimeApksJava,
 		runtimeNativeLibDir,
 		appDirs,
+		localDateTimeOffset,
 		loader,
 		assembliesJava,
 		apiLevel,
