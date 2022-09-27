@@ -23,44 +23,43 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				/* isRelease */      false,
 				/* xamarinForms */   false,
-				/* publishTrimmed */ default (bool?),
 				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   false,
-				/* publishTrimmed */ default (bool?),
 				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
 				/* isRelease */      false,
 				/* xamarinForms */   true,
-				/* publishTrimmed */ default (bool?),
 				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   true,
-				/* publishTrimmed */ default (bool?),
 				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   false,
-				/* publishTrimmed */ false,
 				/* targetFramework*/ "net7.0-android",
+			},
+			new object[] {
+				/* isRelease */      false,
+				/* xamarinForms */   true,
+				/* targetFramework*/ "net6.0-android",
 			},
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   true,
-				/* publishTrimmed */ true,
 				/* targetFramework*/ "net6.0-android",
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (DotNetInstallAndRunSource))]
-		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, bool? publishTrimmed, string targetFramework)
+		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, string targetFramework)
 		{
 			AssertHasDevices ();
 
@@ -81,9 +80,6 @@ namespace Xamarin.Android.Build.Tests
 					"https://api.nuget.org/v3/index.json",
 					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
 				};
-			}
-			if (publishTrimmed != null) {
-				proj.SetProperty (KnownProperties.PublishTrimmed, publishTrimmed.ToString ());
 			}
 			proj.SetRuntimeIdentifier (DeviceAbi);
 

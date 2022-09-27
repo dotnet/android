@@ -1103,6 +1103,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 				/* useInterpreter */ true,
 				/* publishTrimmed */ true,
 				/* aot */            true,
+				/* expected */       true,
 			},
 			// Debug + AOT
 			new object [] {
@@ -1110,6 +1111,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 				/* useInterpreter */ false,
 				/* publishTrimmed */ true,
 				/* aot */            true,
+				/* expected */       true,
 			},
 			// Debug + PublishTrimmed
 			new object [] {
@@ -1117,12 +1119,21 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 				/* useInterpreter */ false,
 				/* publishTrimmed */ true,
 				/* aot */            false,
+				/* expected */       true,
+			},
+			// AOT + PublishTrimmed=false
+			new object [] {
+				/* isRelease */      true,
+				/* useInterpreter */ false,
+				/* publishTrimmed */ false,
+				/* aot */            true,
+				/* expected */       false,
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (SettingCombinationsSource))]
-		public void SettingCombinations (bool isRelease, bool useInterpreter, bool publishTrimmed, bool aot)
+		public void SettingCombinations (bool isRelease, bool useInterpreter, bool publishTrimmed, bool aot, bool expected)
 		{
 			var proj = new XASdkProject {
 				IsRelease = isRelease,
@@ -1131,7 +1142,7 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			proj.SetProperty ("PublishTrimmed", publishTrimmed.ToString ());
 			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
 			var builder = CreateDotNetBuilder (proj);
-			Assert.IsTrue (builder.Build (), $"{proj.ProjectName} should succeed");
+			Assert.AreEqual (expected, builder.Build (), $"{proj.ProjectName} should {(expected ? "succeed" : "fail")}");
 		}
 
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
