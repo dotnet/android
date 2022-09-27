@@ -56,6 +56,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool Debug { get; set; }
 		public bool MultiDex { get; set; }
+		public string ApplicationIcon { get; set; }
+		public string ApplicationRoundIcon { get; set; }
 		public string ApplicationLabel { get; set; }
 		public string PackageName { get; set; }
 		public string VersionName { get; set; }
@@ -304,6 +306,8 @@ namespace Xamarin.Android.Tasks
 			var manifest = new ManifestDocument (ManifestTemplate) {
 				PackageName = PackageName,
 				VersionName = VersionName,
+				ApplicationIcon = ApplicationIcon,
+				ApplicationRoundIcon = ApplicationRoundIcon,
 				ApplicationLabel = ApplicationLabel ?? PackageName,
 				Placeholders = ManifestPlaceholders,
 				Resolver = res,
