@@ -164,6 +164,11 @@ namespace Xamarin.Android.Tasks
 					return typeName;
 				}
 
+				// Android.Graphics.Color is mapped to/from a native `int`
+				if (String.Compare (typeName, "Android.Graphics.Color", StringComparison.Ordinal) == 0) {
+					return "System.Int32";
+				}
+
 				return "System.IntPtr";
 			}
 
@@ -188,7 +193,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (String.Compare (returnType, method.ReturnType.FullName, StringComparison.Ordinal) != 0) {
-					log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature (invalid return type)");
+					log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature (invalid return type: expected '{returnType}', found '{method.ReturnType.FullName}')");
 					return false;
 				}
 
