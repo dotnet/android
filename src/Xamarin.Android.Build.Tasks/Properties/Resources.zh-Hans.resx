@@ -466,6 +466,10 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>"AotAssemblies" MSBuild 属性已弃用。在文本编辑器中编辑项目文件以删除此属性，并改用 "RunAOTCompilation" MSBuild 属性。</value>
     <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
   </data>
+  <data name="XA1030" xml:space="preserve">
+    <value>The 'RunAOTCompilation' MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set 'PublishTrimmed' to 'true' for this build configuration.</value>
+    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>在程序集 {0} 中检测到使用了 AppDomain.CreateDomain()。.NET 6 及更高版本将仅支持一个 AppDomain，因此 .NET 6 发布后，将无法再在 Xamarin.Android 中使用此 API。</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
