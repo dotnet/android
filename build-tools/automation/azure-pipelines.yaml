@@ -1203,6 +1203,7 @@ stages:
       clean: all
     variables:
       EnableRegressionTest: true
+      AndroidEnableMarshalMethods: false
     steps:
     - checkout: uitools
       clean: true
