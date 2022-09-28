@@ -35,6 +35,7 @@ namespace Java.Interop.Tools.JavaSource {
 						| FormCtrlDeclaration
 						*/
 						| InlineHyperLinkDeclaration
+						| CodeElementDeclaration
 						| grammar.InlineTagsTerms.AllInlineTerms
 						| UnknownHtmlElementStart
 						,
@@ -136,6 +137,12 @@ namespace Java.Interop.Tools.JavaSource {
 					var aElementValue = new XText (parseNode.ChildNodes [1].AstNode.ToString ());
 					parseNode.AstNode = aElementValue;
 				};
+
+				CodeElementDeclaration.Rule = CreateStartElement ("code", grammar) + InlineDeclarations + CreateEndElement ("code", grammar);
+				CodeElementDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
+					var target = parseNode.ChildNodes [1].AstNode;
+					parseNode.AstNode = new XElement ("c", target);
+				};
 			}
 
 			static IEnumerable<XElement> GetParagraphs (ParseTreeNodeList children)
@@ -205,6 +212,7 @@ namespace Java.Interop.Tools.JavaSource {
 			public  readonly    NonTerminal PreBlockDeclaration         = new NonTerminal (nameof (PreBlockDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal InlineHyperLinkDeclaration  = new NonTerminal (nameof (InlineHyperLinkDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal IgnorableElementDeclaration = new NonTerminal (nameof (IgnorableElementDeclaration), ConcatChildNodes);
+			public  readonly    NonTerminal CodeElementDeclaration      = new NonTerminal (nameof (CodeElementDeclaration), ConcatChildNodes);
 
 			public  readonly    Terminal    InlineHyperLinkOpenTerm     = new RegexBasedTerminal ("<a href=", @"(?i)<a\s*href\s*=") {
 				AstConfig = new AstNodeConfig {

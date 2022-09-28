@@ -67,5 +67,16 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("\"AutofillService.html#FieldClassification\"&gt;field classification",
 					r.Root.AstNode.ToString ());
 		}
+
+		[Test]
+		public void CodeElementDeclaration ()
+		{
+			var p = CreateParser (g => g.HtmlTerms.CodeElementDeclaration);
+
+			var r = p.Parse ("<code>input.position()</code>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("<c>input.position()</c>", r.Root.AstNode.ToString ());
+		}
+
 	}
 }

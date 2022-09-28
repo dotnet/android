@@ -146,14 +146,14 @@ more description here.</para>
 			new ParseResult {
 				Javadoc = "Something {@link #method}: description, \"<code>declaration</code>\" or \"<code>another declaration</code>\".\n\n@apiSince 1\n",
 				FullXml = @"<member>
-  <summary>Something <c>#method</c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</summary>
+  <summary>Something <c>#method</c>: description, ""<c>declaration</c>"" or ""<c>another declaration</c>"".</summary>
   <remarks>
-    <para>Something <c>#method</c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</para>
+    <para>Something <c>#method</c>: description, ""<c>declaration</c>"" or ""<c>another declaration</c>"".</para>
     <para>Added in API level 1.</para>
   </remarks>
 </member>",
 				IntelliSenseXml = @"<member>
-  <summary>Something <c>#method</c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</summary>
+  <summary>Something <c>#method</c>: description, ""<c>declaration</c>"" or ""<c>another declaration</c>"".</summary>
 </member>",
 			},
 			new ParseResult {
