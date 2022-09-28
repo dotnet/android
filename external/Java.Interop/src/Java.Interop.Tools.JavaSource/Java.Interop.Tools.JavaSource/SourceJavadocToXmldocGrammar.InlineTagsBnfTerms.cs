@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -28,6 +29,7 @@ namespace Java.Interop.Tools.JavaSource {
 					| LiteralDeclaration
 					| SeeDeclaration
 					| ValueDeclaration
+					| IgnorableDeclaration
 					;
 
 				CodeDeclaration.Rule = grammar.ToTerm ("{@code") + InlineValue + "}";
@@ -54,12 +56,20 @@ namespace Java.Interop.Tools.JavaSource {
 					parseNode.AstNode = new XText ("To be added");
 				};
 
-				LinkDeclaration.Rule = grammar.ToTerm ("{@link") + InlineValue + "}";
+				LinkDeclaration.Rule = grammar.ToTerm ("{@link") + InlineValue + new NonTerminal ("Optional }", nodeCreator: (context, parseNode) => parseNode.AstNode = "") {
+					Rule = grammar.ToTerm ("}") | grammar.Empty,
+				};
 				LinkDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					// TODO: *everything*; {@link target label}, but target can contain spaces!
 					// Also need to convert to appropriate CREF value, use code text for now.
+					// Also some {@link tags are missing a closing bracket, use plain text rather than throwing for now.
 					var target = parseNode.ChildNodes [1].AstNode;
-					parseNode.AstNode = new XElement ("c", target);
+					var optionalBracketMatch = parseNode.ChildNodes [2];
+					if (optionalBracketMatch.ChildNodes.Count > 0 && optionalBracketMatch.ChildNodes [0].Term.Name == "}") {
+						parseNode.AstNode = new XElement ("c", target);
+					} else {
+						parseNode.AstNode = new XText (target.ToString ());
+					}
 				};
 
 				LinkplainDeclaration.Rule = grammar.ToTerm ("{@linkplain") + InlineValue + "}";
@@ -97,6 +107,15 @@ namespace Java.Interop.Tools.JavaSource {
 						parseNode.AstNode = new XText ("To be added");
 					}
 				};
+
+				// Inline content may contain reserved characters with no tags or special parsing rules, do not throw when encountering them
+				IgnorableDeclaration.Rule = grammar.ToTerm ("@ ")
+					| grammar.ToTerm ("{")
+					| grammar.ToTerm ("}")
+					;
+				IgnorableDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
+					parseNode.AstNode = new XText (parseNode.ChildNodes [0].Term.Name.Trim ());
+				};
 			}
 
 			public  readonly    NonTerminal AllInlineTerms              = new NonTerminal (nameof (AllInlineTerms), ConcatChildNodes);
@@ -129,6 +148,9 @@ namespace Java.Interop.Tools.JavaSource {
 
 			// https://docs.oracle.com/javase/7/docs/technotes/tools/windows/javadoc.html#value
 			public  readonly    NonTerminal ValueDeclaration            = new NonTerminal (nameof (ValueDeclaration));
+
+			public  readonly    NonTerminal IgnorableDeclaration        = new NonTerminal (nameof (IgnorableDeclaration));
+
 		}
 	}
 }

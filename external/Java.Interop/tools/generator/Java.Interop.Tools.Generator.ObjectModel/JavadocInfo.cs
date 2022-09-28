@@ -172,7 +172,7 @@ namespace MonoDroid.Generation
 				nodes       = parser.TryParse (Javadoc, fileName: null, out tree);
 			}
 			catch (Exception e) {
-				Console.Error.WriteLine ($"## Exception translating remarks: {e.ToString ()}");
+				Console.Error.WriteLine ($"## Exception translating remarks for {MemberDescription}:\n{e.ToString ()}");
 			}
 
 			if (tree != null && tree.HasErrors ()) {

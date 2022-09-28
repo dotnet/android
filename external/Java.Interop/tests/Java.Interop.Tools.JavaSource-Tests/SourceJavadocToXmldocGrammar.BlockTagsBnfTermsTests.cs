@@ -65,6 +65,11 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.IsFalse (r.HasErrors (), "@inheritDoc: " + DumpMessages (r, p));
 			// TODO: Enable after adding support for @inheritDoc
 			Assert.IsNull (r.Root.AstNode, "@inheritDoc should be ignored, but node was not null.");
+
+			r = p.Parse ("@inheritDoc With extra");
+			Assert.IsFalse (r.HasErrors (), "@inheritDoc with trailing content " + DumpMessages (r, p));
+			// TODO: Enable after adding support for @inheritDoc
+			Assert.IsNull (r.Root.AstNode, "@inheritDoc with trailing content should be ignored, but node was not null.");
 		}
 
 		[Test]
@@ -75,6 +80,9 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			var r = p.Parse ("@hide");
 			Assert.IsFalse (r.HasErrors (), "@hide: " + DumpMessages (r, p));
 			Assert.IsNull (r.Root.AstNode, "@hide should be ignored, but node was not null.");
+			r = p.Parse ("@hide Method is broken");
+			Assert.IsFalse (r.HasErrors (), "@hide with trailing content: " + DumpMessages (r, p));
+			Assert.IsNull (r.Root.AstNode, "@hide with trailing content should be ignored, but node was not null.");
 		}
 
 		[Test]

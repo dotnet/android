@@ -23,6 +23,7 @@ namespace Java.Interop.Tools.JavaSource {
 				AllHtmlTerms.Rule = TopLevelInlineDeclaration
 					| PBlockDeclaration
 					| PreBlockDeclaration
+					| IgnorableElementDeclaration
 					;
 
 				var inlineDeclaration = new NonTerminal ("<html inline decl>", ConcatChildNodes) {
@@ -59,11 +60,11 @@ namespace Java.Interop.Tools.JavaSource {
 					parseNode.AstNode       = "";
 				};
 
-				var fontstyle_tt    = CreateHtmlToCrefElement (grammar, "tt",   "c", InlineDeclarations);
-				var fontstyle_i     = CreateHtmlToCrefElement (grammar, "i",    "i", InlineDeclarations);
+				var fontstyle_tt    = CreateHtmlToCrefElement (grammar, "tt",   "c", InlineDeclarations, optionalEnd: true);
+				var fontstyle_i     = CreateHtmlToCrefElement (grammar, "i",    "i", InlineDeclarations, optionalEnd: true);
 
 				var preText = new PreBlockDeclarationBodyTerminal ();
-				PreBlockDeclaration.Rule = CreateStartElement ("pre", grammar) + preText + CreateEndElement ("pre", grammar);
+				PreBlockDeclaration.Rule = CreateStartElementIgnoreAttribute ("pre") + preText + CreateEndElement ("pre", grammar, optional: true);
 				PreBlockDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					if (!grammar.ShouldImport (ImportJavadoc.Remarks)) {
 						parseNode.AstNode   = "";
@@ -124,6 +125,16 @@ namespace Java.Interop.Tools.JavaSource {
 						Console.Error.WriteLine ($"# Unable to parse HTML element: <see href={unparsedAElementValue}</see>");
 						parseNode.AstNode = astNodeElement;
 					}
+				};
+
+				// Start to trim out unusable HTML elements/tags, but not any inner values
+				IgnorableElementDeclaration.Rule =
+					CreateStartElementIgnoreAttribute ("a", "name") + InlineDeclarations + CreateEndElement ("a", grammar, optional: true)
+					| CreateStartElementIgnoreAttribute ("a", "id") + InlineDeclarations + CreateEndElement ("a", grammar, optional: true)
+					;
+				IgnorableElementDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
+					var aElementValue = new XText (parseNode.ChildNodes [1].AstNode.ToString ());
+					parseNode.AstNode = aElementValue;
 				};
 			}
 
@@ -193,8 +204,9 @@ namespace Java.Interop.Tools.JavaSource {
 			public  readonly    NonTerminal PBlockDeclaration           = new NonTerminal (nameof (PBlockDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal PreBlockDeclaration         = new NonTerminal (nameof (PreBlockDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal InlineHyperLinkDeclaration  = new NonTerminal (nameof (InlineHyperLinkDeclaration), ConcatChildNodes);
+			public  readonly    NonTerminal IgnorableElementDeclaration = new NonTerminal (nameof (IgnorableElementDeclaration), ConcatChildNodes);
 
-			public	readonly	Terminal	InlineHyperLinkOpenTerm		= new RegexBasedTerminal ("<a href=", @"<a\s*href=") {
+			public  readonly    Terminal    InlineHyperLinkOpenTerm     = new RegexBasedTerminal ("<a href=", @"(?i)<a\s*href\s*=") {
 				AstConfig = new AstNodeConfig {
 					NodeCreator = (context, parseNode) => parseNode.AstNode = "",
 				},
@@ -229,6 +241,20 @@ namespace Java.Interop.Tools.JavaSource {
 					Rule    = grammar.ToTerm ("<" + startElement + ">") | "<" + startElement.ToUpperInvariant () + ">",
 				};
 				return start;
+			}
+
+			static RegexBasedTerminal CreateStartElementIgnoreAttribute (string startElement, string attribute)
+			{
+				return new RegexBasedTerminal ($"<{startElement} {attribute}", $@"(?i)<{startElement}\s*{attribute}[^>]*>") {
+					AstConfig = new AstNodeConfig {
+						NodeCreator = (context, parseNode) => parseNode.AstNode = "",
+					},
+				};
+			}
+
+			static RegexBasedTerminal CreateStartElementIgnoreAttribute (string startElement)
+			{
+				return CreateStartElementIgnoreAttribute (startElement, "");
 			}
 
 			static NonTerminal CreateEndElement (string endElement, Grammar grammar, bool optional = false)

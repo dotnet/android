@@ -102,12 +102,16 @@ namespace Java.Interop.Tools.JavaSource {
 				};
 
 				// Ignore @hide tags
-				HideDeclaration.Rule = "@hide";
+				HideDeclaration.Rule = "@hide"
+					| "@hide" + BlockValues
+					;
 				HideDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					FinishParse (context, parseNode);
 				};
 
-				InheritDocDeclaration.Rule = "@inheritDoc";
+				InheritDocDeclaration.Rule = "@inheritDoc"
+					| "@inheritDoc" + BlockValues
+					;
 				InheritDocDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					if (!grammar.ShouldImport (ImportJavadoc.InheritDocTag)) {
 						return;

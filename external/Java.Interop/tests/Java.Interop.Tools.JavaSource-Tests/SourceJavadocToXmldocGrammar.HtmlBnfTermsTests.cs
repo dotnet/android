@@ -46,6 +46,10 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<code lang=\"text/java\">this @contains &lt;arbitrary/&gt; text.</code>",
 					r.Root.AstNode.ToString ());
 
+			r = p.Parse ("<pre class=\"prettyprint\">ColorSpace cs = ColorSpace.get(ColorSpace.Named.DCI_P3);");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ($"<code lang=\"text/java\">ColorSpace cs = ColorSpace.get(ColorSpace.Named.DCI_P3);</code>",
+					r.Root.AstNode.ToString ());
 		}
 
 		[Test]
