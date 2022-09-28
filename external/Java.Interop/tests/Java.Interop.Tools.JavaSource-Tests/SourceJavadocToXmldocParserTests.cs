@@ -188,7 +188,7 @@ more description {e.g. something} here.  Include @ character.
 How about another link <a href=""http://man7.org/linux/man-pages/man2/accept.2.html"">accept(2)</a>
 @param manifest The value of the <a
 HREF = ""{@docRoot}guide/topics/manifest/manifest-element.html#vcode"">{@code
-android:versionCode}</a> manifest attribute.
+android:versionCode}</a> manifest attribute.  See {@param empty}.
 @param empty
 @param options Additional options.
 See {@link foo()}
@@ -196,7 +196,7 @@ bar()} for more details.
 @return the return value
 ",
 				FullXml = $@"<member>
-  <param name=""manifest"">The value of the <see href=""{DocRootPrefixExpected}guide/topics/manifest/manifest-element.html#vcode""><c>android:versionCode</c></see> manifest attribute.</param>
+  <param name=""manifest"">The value of the <see href=""{DocRootPrefixExpected}guide/topics/manifest/manifest-element.html#vcode""><c>android:versionCode</c></see> manifest attribute.  See <paramref>empty</paramref>.</param>
   <param name=""empty"">empty</param>
   <param name=""options"">Additional options.
 See <c>foo()</c>
@@ -210,7 +210,7 @@ How about another link <see href=""http://man7.org/linux/man-pages/man2/accept.2
   <returns>the return value</returns>
 </member>",
 				IntelliSenseXml = $@"<member>
-  <param name=""manifest"">The value of the <see href=""{DocRootPrefixExpected}guide/topics/manifest/manifest-element.html#vcode""><c>android:versionCode</c></see> manifest attribute.</param>
+  <param name=""manifest"">The value of the <see href=""{DocRootPrefixExpected}guide/topics/manifest/manifest-element.html#vcode""><c>android:versionCode</c></see> manifest attribute.  See <paramref>empty</paramref>.</param>
   <param name=""empty"">empty</param>
   <param name=""options"">Additional options.
 See <c>foo()</c>

@@ -30,6 +30,7 @@ namespace Java.Interop.Tools.JavaSource {
 					| SeeDeclaration
 					| ValueDeclaration
 					| IgnorableDeclaration
+					| InlineParamDeclaration
 					;
 
 				CodeDeclaration.Rule = grammar.ToTerm ("{@code") + InlineValue + "}";
@@ -116,6 +117,12 @@ namespace Java.Interop.Tools.JavaSource {
 				IgnorableDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					parseNode.AstNode = new XText (parseNode.ChildNodes [0].Term.Name.Trim ());
 				};
+
+				InlineParamDeclaration.Rule = grammar.ToTerm ("{@param") + InlineValue + "}";
+				InlineParamDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
+					var target = parseNode.ChildNodes [1].AstNode;
+					parseNode.AstNode = new XElement ("paramref", target);
+				};
 			}
 
 			public  readonly    NonTerminal AllInlineTerms              = new NonTerminal (nameof (AllInlineTerms), ConcatChildNodes);
@@ -151,6 +158,7 @@ namespace Java.Interop.Tools.JavaSource {
 
 			public  readonly    NonTerminal IgnorableDeclaration        = new NonTerminal (nameof (IgnorableDeclaration));
 
+			public  readonly    NonTerminal InlineParamDeclaration      = new NonTerminal (nameof (InlineParamDeclaration));
 		}
 	}
 }

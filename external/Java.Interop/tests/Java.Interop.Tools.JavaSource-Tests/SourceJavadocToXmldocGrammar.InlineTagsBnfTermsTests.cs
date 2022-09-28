@@ -98,5 +98,15 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
 			Assert.AreEqual ("<c>#field</c>", r.Root.AstNode.ToString ());
 		}
+
+		[Test]
+		public void InlineParamDeclaration ()
+		{
+			var p = CreateParser (g => g.InlineTagsTerms.InlineParamDeclaration);
+
+			var r = p.Parse ("{@param phoneNumberString}");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("<paramref>phoneNumberString</paramref>", r.Root.AstNode.ToString ());
+		}
 	}
 }
