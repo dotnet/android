@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_LlvmLibExtension Condition=" '$(HostOS)' == 'Linux' ">so.14</_LlvmLibExtension>
+    <_LlvmLibExtension Condition=" '$(HostOS)' == 'Linux' ">so.15</_LlvmLibExtension>
     <_LlvmLibExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</_LlvmLibExtension>
   </PropertyGroup>
 
@@ -69,11 +69,12 @@
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMLibDriver.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMLinker.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMLTO.$(_LlvmLibExtension)" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMC.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMCDisassembler.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMCParser.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMC.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMIRParser.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMObjCARCOpts.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMObjCopy.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMObject.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMOption.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMPasses.$(_LlvmLibExtension)" />
@@ -82,12 +83,14 @@
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMScalarOpts.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMSelectionDAG.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMSupport.$(_LlvmLibExtension)" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTableGen.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMSymbolize.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTableGenGlobalISel.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTableGen.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTarget.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTextAPI.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTransformUtils.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMVectorize.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMWindowsDriver.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMWindowsManifest.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMX86AsmParser.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMX86CodeGen.$(_LlvmLibExtension)" />
