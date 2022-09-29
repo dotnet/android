@@ -78,9 +78,11 @@ namespace Xamarin.Android.Build.Tests
 					Assert.AreEqual (versionName, doc.Root.Attribute (AndroidAppManifest.AndroidXNamespace + "versionName")?.Value);
 					Assert.AreEqual (versionCode, doc.Root.Attribute (AndroidAppManifest.AndroidXNamespace + "versionCode")?.Value);
 					var application = doc.Root.Element ("application");
-					Assert.AreEqual (applicationIcon, application.Attribute (AndroidAppManifest.AndroidXNamespace + "icon")?.Value);
-					Assert.AreEqual (applicationRoundIcon, application.Attribute (AndroidAppManifest.AndroidXNamespace + "roundIcon")?.Value);
 					Assert.AreEqual (applicationLabel, application.Attribute (AndroidAppManifest.AndroidXNamespace + "label")?.Value);
+					if (Builder.UseDotNet) {
+						Assert.AreEqual (applicationIcon, application.Attribute (AndroidAppManifest.AndroidXNamespace + "icon")?.Value);
+						Assert.AreEqual (applicationRoundIcon, application.Attribute (AndroidAppManifest.AndroidXNamespace + "roundIcon")?.Value);
+					}
 				}
 
 				var apk = b.Output.GetIntermediaryPath ($"android/bin/{packageName}.apk");
@@ -152,9 +154,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (versionName, doc.Root.Attribute (AndroidAppManifest.AndroidXNamespace + "versionName")?.Value);
 			Assert.AreEqual (versionCode, doc.Root.Attribute (AndroidAppManifest.AndroidXNamespace + "versionCode")?.Value);
 			var application = doc.Root.Element ("application");
-			Assert.AreEqual (applicationIcon, application.Attribute (AndroidAppManifest.AndroidXNamespace + "icon")?.Value);
-			Assert.AreEqual (applicationRoundIcon, application.Attribute (AndroidAppManifest.AndroidXNamespace + "roundIcon")?.Value);
 			Assert.AreEqual (applicationLabel, application.Attribute (AndroidAppManifest.AndroidXNamespace + "label")?.Value);
+			if (Builder.UseDotNet) {
+				Assert.AreEqual (applicationIcon, application.Attribute (AndroidAppManifest.AndroidXNamespace + "icon")?.Value);
+				Assert.AreEqual (applicationRoundIcon, application.Attribute (AndroidAppManifest.AndroidXNamespace + "roundIcon")?.Value);
+			}
 		}
 	}
 }

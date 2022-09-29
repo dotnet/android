@@ -29,7 +29,7 @@ Xamarin.Android and Xamarin.iOS/Mac SDKs:
 * `$(ApplicationTitle)` maps to `/application/@android:title` or
   `CFBundleDisplayName`
 
-Added in Xamarin.Android 12.2 / .NET 7:
+Added in .NET 7:
 
 * `$(ApplicationIcon)` maps to `/application/@android:icon`
 * `$(ApplicationRoundIcon)` maps to `/application/@android:roundIcon`

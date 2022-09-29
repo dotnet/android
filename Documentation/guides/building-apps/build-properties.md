@@ -1476,14 +1476,12 @@ Added in Xamarin.Android 7.2.
 
 An MSBuild property that can be used as an alternative to
 `/application/@android:icon` in the [`AndroidManifest.xml`](~/android/platform/android-manifest.md)
-file. To opt into this feature you must also enable
-`<GenerateApplicationManifest>true</GenerateApplicationManifest>`.
-This will be the default going forward in .NET 6.
+file.
 
 See the [Android documentation][application-element] for further details
 about the requirements for `/manifest/application/@android:icon`.
 
-Support for this property was added in Xamarin.Android 12.2 and .NET 7.
+Support for this property was added in .NET 7.
 
 ## ApplicationId
 
@@ -1504,14 +1502,12 @@ Support for this property was added in Xamarin.Android 11.3.
 
 An MSBuild property that can be used as an alternative to
 `/application/@android:roundIcon` in the [`AndroidManifest.xml`](~/android/platform/android-manifest.md)
-file. To opt into this feature you must also enable
-`<GenerateApplicationManifest>true</GenerateApplicationManifest>`.
-This will be the default going forward in .NET 6.
+file.
 
 See the [Android documentation][application-element] for further details
 about the requirements for `/manifest/application/@android:roundIcon`.
 
-Support for this property was added in Xamarin.Android 12.2 and .NET 7.
+Support for this property was added in .NET 7.
 
 ## ApplicationTitle
 
