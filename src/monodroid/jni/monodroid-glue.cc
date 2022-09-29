@@ -2504,7 +2504,6 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 force_inline void
 MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods)
 {
-	log_info (LOG_DEFAULT, __PRETTY_FUNCTION__);
 	size_t total_time_index;
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
@@ -2578,7 +2577,6 @@ JNICALL Java_mono_android_Runtime_dumpTimingData ([[maybe_unused]] JNIEnv *env, 
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_register (JNIEnv *env, [[maybe_unused]] jclass klass, jstring managedType, jclass nativeClass, jstring methods)
 {
-	log_info (LOG_DEFAULT, __PRETTY_FUNCTION__);
 	monodroidRuntime.Java_mono_android_Runtime_register (env, managedType, nativeClass, methods);
 }
 
