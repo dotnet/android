@@ -1060,7 +1060,6 @@ MonodroidRuntime::init_android_runtime (
 #endif // ndef NET
 	JNIEnv *env, jclass runtimeClass, jobject loader)
 {
-	log_warn (LOG_DEFAULT, __PRETTY_FUNCTION__);
 	constexpr char icall_typemap_java_to_managed[] = "Java.Interop.TypeManager::monodroid_typemap_java_to_managed";
 	constexpr char icall_typemap_managed_to_java[] = "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java";
 

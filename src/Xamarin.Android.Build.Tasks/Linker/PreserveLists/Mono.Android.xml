@@ -13,7 +13,7 @@
 		<type fullname="Android.Runtime.InputStreamAdapter" />
 		<type fullname="Android.Runtime.InputStreamInvoker" />
 		<type fullname="Android.Runtime.JNIEnv" />
-        <type fullname="Android.Runtime.JNIEnvInit" />
+		<type fullname="Android.Runtime.JNIEnvInit" />
 		<type fullname="Android.Runtime.JniNativeInterfaceStruct" />
 		<type fullname="Android.Runtime.JniNativeInterfaceInvoker" />
 		<type fullname="Android.Runtime.JNINativeWrapper" />

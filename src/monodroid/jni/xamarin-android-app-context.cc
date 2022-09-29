@@ -46,7 +46,6 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 		get_class_name (class_index), class_index
 	);
 
-	log_warn (LOG_DEFAULT, "  mono_image_index == %u; class_index == %u; method_token == 0x%x", mono_image_index, class_index, method_token);
 	if (XA_UNLIKELY (class_index >= marshal_methods_number_of_classes)) {
 		log_fatal (LOG_DEFAULT,
 		           "Internal error: invalid index for class cache (expected at most %u, got %u)",
@@ -71,10 +70,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 
 	MonoMethod *method = mono_get_method (image, method_token, klass.klass);
 	MonoError error;
-	log_warn (LOG_DEFAULT, "  method == %p (mono_image_index == %u; class_index == %u; method_token == 0x%x)", method, mono_image_index, class_index, method_token);
-	log_warn (LOG_DEFAULT, "  pointer to method %s == %p, trying to get funcptr for it (mono_image_index == %u; class_index == %u; method_token == 0x%x)", mono_method_full_name (method, true), method, mono_image_index, class_index, method_token);
 	void *ret = mono_method_get_unmanaged_callers_only_ftnptr (method, &error);
-	log_warn (LOG_DEFAULT, "  obtained pointer == %p (mono_image_index == %u; class_index == %u; method_token == 0x%x)", ret, mono_image_index, class_index, method_token);
 
 	if (XA_LIKELY (ret != nullptr)) {
 		if constexpr (NeedsLocking) {

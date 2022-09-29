@@ -16,7 +16,7 @@ namespace Android.Runtime
 			public IntPtr          javaVm;
 			public IntPtr          env;
 			public IntPtr          grefLoader;
-			public IntPtr          Loader_loadClass; // TODO: remove, not needed anymore
+			public IntPtr          Loader_loadClass;
 			public IntPtr          grefClass; // TODO: remove, not needed anymore
 			public IntPtr          Class_forName;
 			public uint            logCategories;
