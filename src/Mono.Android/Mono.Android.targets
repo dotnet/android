@@ -292,7 +292,7 @@
     <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">31</DocsApiLevel>
     <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">31</DocsPlatformId>
     <DocsFxVersion Condition=" '$(DocsFxVersion)' == '' ">v12.0</DocsFxVersion>
-    <_Binlog>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).binlog</_Binlog>
+    <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
   </PropertyGroup>
 
   <!-- Generate documentation using MDoc -->
@@ -312,7 +312,7 @@
       <_BuildProps Include="-p:AndroidFrameworkVersion=$(DocsFxVersion)" />
     </ItemGroup>
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build -v:n -c $(Configuration) -bl:$(_Binlog) @(_BuildProps, ' ')"
+        Command="&quot;$(DotNetPreviewTool)&quot; build -v:n -c $(Configuration) -bl:$(_LogPrefix).binlog @(_BuildProps, ' ')"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
@@ -365,14 +365,20 @@
         Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug update --use-docid --delete $(_Libdir) $(_ImportXml) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_Lang)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
+    <!-- Ensure updated docs can also be exported to msxdoc format -->
+    <Exec
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug export-msxdoc -o &quot;$(_LogPrefix)-Export.xml&quot; &quot;$(XamarinAndroidSourcePath)external/android-api-docs/docs/Mono.Android/en/&quot;"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
   </Target>
 
   <Target Name="_GenerateApiDocsDiff">
-    <PropertyGroup>
-      <_DiffFile>$(XamarinAndroidSourcePath)bin/Build$(Configuration)/UpdateApiDocs$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss")).diff</_DiffFile>
-    </PropertyGroup>
     <Exec
-        Command="git diff --output=&quot;$(_DiffFile)&quot;"
+        Command="git add ."
+        WorkingDirectory="$(XamarinAndroidSourcePath)external/android-api-docs"
+    />
+    <Exec
+        Command="git diff --cached --output=&quot;$(_LogPrefix).diff&quot;"
         WorkingDirectory="$(XamarinAndroidSourcePath)external/android-api-docs"
     />
   </Target>
