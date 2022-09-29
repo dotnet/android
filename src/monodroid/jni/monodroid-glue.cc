@@ -2511,18 +2511,12 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		total_time_index = internal_timing->start_event (TimingEventKind::RuntimeRegister);
 	}
 
-	log_info (LOG_DEFAULT, "  loc #1");
 	jsize managedType_len = env->GetStringLength (managedType);
-	log_info (LOG_DEFAULT, "  loc #2");
 	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
-	log_info (LOG_DEFAULT, "  loc #3");
 	int methods_len = env->GetStringLength (methods);
-	log_info (LOG_DEFAULT, "  loc #4");
 	const jchar *methods_ptr = env->GetStringChars (methods, nullptr);
-	log_info (LOG_DEFAULT, "  loc #5");
 
 #if !defined (NET) || !defined (ANDROID)
-	log_info (LOG_DEFAULT, "  loc #6");
 	void *args[] = {
 		&managedType_ptr,
 		&managedType_len,
@@ -2530,37 +2524,24 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		&methods_ptr,
 		&methods_len,
 	};
-	log_info (LOG_DEFAULT, "  loc #7");
 	MonoMethod *register_jni_natives = registerType;
-	log_info (LOG_DEFAULT, "  loc #8 (register_jni_natives == %p)", register_jni_natives);
 #endif // ndef NET || ndef ANDROID
 
 #if !defined (NET)
-	log_info (LOG_DEFAULT, "  loc #8");
 	MonoDomain *domain = utils.get_current_domain (/* attach_thread_if_needed */ false);
-	log_info (LOG_DEFAULT, "  loc #9");
 	mono_jit_thread_attach (domain);
-	log_info (LOG_DEFAULT, "  loc #10");
 	// Refresh current domain as it might have been modified by the above call
 	domain = mono_domain_get ();
-	log_info (LOG_DEFAULT, "  loc #11");
 
 	if constexpr (is_running_on_desktop) {
-		log_info (LOG_DEFAULT, "  loc #12");
 		MonoClass *runtime = utils.monodroid_get_class_from_name (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
-		log_info (LOG_DEFAULT, "  loc #13 (runtime == %p)", runtime);
 		register_jni_natives = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
-		log_info (LOG_DEFAULT, "  loc #14 (register_jni_natives == %p)", register_jni_natives);
 	}
 
-	log_info (LOG_DEFAULT, "  loc #15");
 	utils.monodroid_runtime_invoke (domain, register_jni_natives, nullptr, args, nullptr);
-	log_info (LOG_DEFAULT, "  loc #16");
 #else // ndef NET
 #if !defined (ANDROID)
-	log_info (LOG_DEFAULT, "  loc #17");
 	mono_runtime_invoke (register_jni_natives, nullptr, args, nullptr);
-	log_info (LOG_DEFAULT, "  loc #18");
 #else
 	jnienv_register_jni_natives (managedType_ptr, managedType_len, nativeClass, methods_ptr, methods_len);
 #endif // ndef ANDROID
