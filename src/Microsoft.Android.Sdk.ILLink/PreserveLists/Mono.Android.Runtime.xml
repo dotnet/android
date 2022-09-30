@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+	<assembly fullname="Mono.Android.Runtime">
+		<type fullname="Android.Runtime.LogLevel" />
+		<type fullname="Android.Runtime.LogCategories" />
+        <type fullname="Android.Runtime.AndroidRuntimeInternal">
+          <method name="InitializeUnhandledExceptionMethod" />
+          <method name="WaitForBridgeProcessing" />
+        </type>
+        <type fullname="Android.Runtime.AndroidEnvironmentInternal">
+          <method name="UnhandledException" />
+        </type>
+	</assembly>
+</linker>

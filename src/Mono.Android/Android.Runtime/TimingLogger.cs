@@ -45,7 +45,7 @@ namespace Android.Runtime
 			if (sequence != IntPtr.Zero)
 				return;
 
-			sequence = JNIEnv.monodroid_timing_start (startMessage ?? initStartMessage);
+			sequence = RuntimeNativeMethods.monodroid_timing_start (startMessage ?? initStartMessage);
 		}
 
 		/// <summary>
@@ -65,7 +65,7 @@ namespace Android.Runtime
 			if (sequence == IntPtr.Zero)
 				return;
 
-			JNIEnv.monodroid_timing_stop (sequence, stopMessage);
+			RuntimeNativeMethods.monodroid_timing_stop (sequence, stopMessage);
 			sequence = IntPtr.Zero;
 		}
 
@@ -86,7 +86,7 @@ namespace Android.Runtime
 		{
 			if (!disposed) {
 				if (sequence != IntPtr.Zero) {
-					JNIEnv.monodroid_timing_stop (sequence, null);
+					RuntimeNativeMethods.monodroid_timing_stop (sequence, null);
 					sequence = IntPtr.Zero;
 				}
 

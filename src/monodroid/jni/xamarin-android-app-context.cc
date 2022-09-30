@@ -1,4 +1,5 @@
 #include <mono/metadata/class.h>
+#include <mono/metadata/debug-helpers.h>
 
 #include "monodroid-glue-internal.hh"
 #include "mono-image-loader.hh"
@@ -38,7 +39,6 @@ template<bool NeedsLocking>
 force_inline void
 MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
 {
-	log_warn (LOG_DEFAULT, __PRETTY_FUNCTION__);
 	log_debug (
 		LOG_ASSEMBLY,
 		"MM: Trying to look up pointer to method '%s' (token 0x%x) in class '%s' (index %u)",
@@ -54,6 +54,9 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 		);
 		abort ();
 	}
+
+	// We need to do that, as Mono APIs cannot be invoked from threads that aren't attached to the runtime.
+	mono_thread_attach (mono_get_root_domain ());
 
 	// We don't check for valid return values from image loader, class and method lookup because if any
 	// of them fails to find the requested entity, they will return `null`.  In consequence, we can pass
@@ -76,7 +79,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 			target_ptr = ret;
 		}
 
-		log_debug (LOG_ASSEMBLY, "Loaded pointer to method %s", mono_method_get_name (method));
+		log_debug (LOG_ASSEMBLY, "Loaded pointer to method %s (%p) (mono_image_index == %u; class_index == %u; method_token == 0x%x)", mono_method_full_name (method, true), ret, mono_image_index, class_index, method_token);
 		return;
 	}
 

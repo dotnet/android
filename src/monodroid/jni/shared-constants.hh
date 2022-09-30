@@ -17,12 +17,17 @@ namespace xamarin::android::internal
 	class SharedConstants
 	{
 	public:
+#if defined (NET)
+		static constexpr char MONO_ANDROID_RUNTIME_ASSEMBLY_NAME[] = "Mono.Android.Runtime";
+#endif
 		static constexpr char MONO_ANDROID_ASSEMBLY_NAME[] = "Mono.Android";
 		static constexpr char JAVA_INTEROP_ASSEMBLY_NAME[] = "Java.Interop";
 
 		static constexpr char ANDROID_RUNTIME_NS_NAME[] = "Android.Runtime";
+		static constexpr char JNIENVINIT_CLASS_NAME[] = "JNIEnvInit";
 		static constexpr char JNIENV_CLASS_NAME[] = "JNIEnv";
 		static constexpr char ANDROID_ENVIRONMENT_CLASS_NAME[] = "AndroidEnvironment";
+		static constexpr char ANDROID_RUNTIME_INTERNAL_CLASS_NAME[] = "AndroidRuntimeInternal";
 
 		static constexpr char DLL_EXTENSION[] = ".dll";
 

@@ -26,7 +26,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// <summary>
 		/// Writes the function definition up to the opening curly brace
 		/// </summary>
-		public void WriteFunctionStart (LlvmIrFunction function)
+		public void WriteFunctionStart (LlvmIrFunction function, string? comment = null)
 		{
 			if (function == null) {
 				throw new ArgumentNullException (nameof (function));
@@ -38,6 +38,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			Output.WriteLine ();
+			if (!String.IsNullOrEmpty (comment)) {
+				foreach (string line in comment.Split ('\n')) {
+					WriteCommentLine (line);
+				}
+			}
+
 			if (attributes != null) {
 				WriteCommentLine ($"Function attributes: {attributes.Render ()}");
 			}

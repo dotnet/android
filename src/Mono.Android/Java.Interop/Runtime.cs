@@ -11,7 +11,7 @@ namespace Java.Interop {
 		[Obsolete ("Please use Java.Interop.JniEnvironment.Runtime.ValueManager.GetSurfacedPeers()")]
 		public static List<WeakReference> GetSurfacedObjects ()
 		{
-			var peers = JNIEnv.AndroidValueManager!.GetSurfacedPeers ();
+			var peers = JNIEnvInit.AndroidValueManager!.GetSurfacedPeers ();
 			var r = new List<WeakReference> (peers.Count);
 			foreach (var p in peers) {
 				if (p.SurfacedPeer.TryGetTarget (out var target))
@@ -20,18 +20,12 @@ namespace Java.Interop {
 			return r;
 		}
 
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern int _monodroid_max_gref_get ();
-
 		public static int MaxGlobalReferenceCount {
-			get {return _monodroid_max_gref_get ();}
+			get {return RuntimeNativeMethods._monodroid_max_gref_get ();}
 		}
 
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern int _monodroid_gref_get ();
-
 		public static int GlobalReferenceCount {
-			get {return _monodroid_gref_get ();}
+			get {return RuntimeNativeMethods._monodroid_gref_get ();}
 		}
 
 		public static int LocalReferenceCount {

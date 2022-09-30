@@ -7,8 +7,10 @@
 		<type fullname="Android.Runtime.InputStreamInvoker" preserve="methods" />
 		<type fullname="Android.Runtime.JNIEnv">
 			<method name="Exit" />
-			<method name="Initialize" />
 			<method name="PropagateUncaughtException" />
+		</type>
+		<type fullname="Android.Runtime.JNIEnvInit">
+			<method name="Initialize" />
 			<method name="RegisterJniNatives" />
 		</type>
 		<type fullname="Android.Runtime.JNINativeWrapper" />
@@ -16,8 +18,6 @@
 		<type fullname="Android.Runtime.JValue" />
 		<type fullname="Android.Runtime.JniHandleOwnership" />
 		<type fullname="Android.Runtime.Logger" />
-		<type fullname="Android.Runtime.LogLevel" />
-		<type fullname="Android.Runtime.LogCategories" />
 		<type fullname="Android.Runtime.NamespaceMappingAttribute" />
 		<type fullname="Android.Runtime.OutputStreamAdapter" preserve="methods" />
 		<type fullname="Android.Runtime.OutputStreamInvoker" preserve="methods" />

@@ -38,14 +38,11 @@ namespace Java.Interop {
 	}
 
 	public static partial class TypeManager {
-		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		extern static IntPtr monodroid_TypeManager_get_java_class_name (IntPtr klass);
-
 		internal static string GetClassName (IntPtr class_ptr)
 		{
-			IntPtr ptr = monodroid_TypeManager_get_java_class_name (class_ptr);
+			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
 			string ret = Marshal.PtrToStringAnsi (ptr)!;
-			JNIEnv.monodroid_free (ptr);
+			RuntimeNativeMethods.monodroid_free (ptr);
 
 			return ret;
 		}
@@ -144,7 +141,7 @@ namespace Java.Interop {
 							string.Format ("warning: Skipping managed constructor invocation for handle 0x{0} (key_handle 0x{1}). " +
 								"Please use JNIEnv.StartCreateInstance() + JNIEnv.FinishCreateInstance() instead of " +
 								"JNIEnv.NewObject() and/or JNIEnv.CreateInstance().",
-								jobject.ToString ("x"), JNIEnv.IdentityHash! (jobject).ToString ("x")));
+								jobject.ToString ("x"), JNIEnv.IdentityHash (jobject).ToString ("x")));
 				}
 				return;
 			}
@@ -183,7 +180,7 @@ namespace Java.Interop {
 				cinfo.Invoke (newobj, parms);
 			} catch (Exception e) {
 				var m = string.Format ("Could not activate JNI Handle 0x{0} (key_handle 0x{1}) of Java type '{2}' as managed type '{3}'.",
-						jobject.ToString ("x"), JNIEnv.IdentityHash! (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), cinfo.DeclaringType.FullName);
+						jobject.ToString ("x"), JNIEnv.IdentityHash (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), cinfo.DeclaringType.FullName);
 				Logger.Log (LogLevel.Warn, "monodroid", m);
 				Logger.Log (LogLevel.Warn, "monodroid", CreateJavaLocationException ().ToString ());
 
@@ -224,9 +221,9 @@ namespace Java.Interop {
 			if (type != null)
 				return type;
 
-			if (!JNIEnv.IsRunningOnDesktop) {
+			if (!JNIEnvInit.IsRunningOnDesktop) {
 				// Miss message is logged in the native runtime
-				if (JNIEnv.LogAssemblyCategory)
+				if (JNIEnvInit.LogAssemblyCategory)
 					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
 				return null;
 			}
@@ -314,7 +311,7 @@ namespace Java.Interop {
 					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable);
 				}
 			} catch (MissingMethodException e) {
-				var key_handle  = JNIEnv.IdentityHash! (handle);
+				var key_handle  = JNIEnv.IdentityHash (handle);
 				JNIEnv.DeleteRef (handle, transfer);
 				throw new NotSupportedException (
 						string.Format ("Unable to activate instance of type {0} from native handle 0x{1} (key_handle 0x{2}).",
@@ -359,7 +356,7 @@ namespace Java.Interop {
 					if (String.Compare (jniFromType, java_class, StringComparison.OrdinalIgnoreCase) != 0) {
 						TypeManagerMapDictionaries.ManagedToJni.Add (t, java_class);
 					}
-				} else if (!JNIEnv.IsRunningOnDesktop || t != typeof (Java.Interop.TypeManager)) {
+				} else if (!JNIEnvInit.IsRunningOnDesktop || t != typeof (Java.Interop.TypeManager)) {
 					// skip the registration and output a warning
 					Logger.Log (LogLevel.Warn, "monodroid", string.Format ("Type Registration Skipped for {0} to {1} ", java_class, t.ToString()));
 				}
@@ -379,7 +376,7 @@ namespace Java.Interop {
 		{
 			LazyInitPackageLookup ();
 
-			lock (packageLookup) {
+			lock (packageLookup!) {
 				if (!packageLookup.TryGetValue (package, out var lookups))
 					packageLookup.Add (package, lookups = new List<Converter<string, Type?>> ());
 				lookups.Add (lookup);
@@ -397,7 +394,7 @@ namespace Java.Interop {
 			if (packages.Length != lookups.Length)
 				throw new ArgumentException ("`packages` and `lookups` arrays must have same number of elements.");
 
-			lock (packageLookup) {
+			lock (packageLookup!) {
 				for (int i = 0; i < packages.Length; ++i) {
 					string package                  = packages [i];
 					var lookup			= lookups [i];
@@ -418,6 +415,18 @@ namespace Java.Interop {
 				TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
 			}
 
+#if NETCOREAPP
+			[UnmanagedCallersOnly]
+			static void n_Activate_mm (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
+			{
+				// TODO: need a full wrapper code here, a'la JNINativeWrapper.CreateDelegate
+				try {
+					TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
+				} catch (Exception ex) {
+					AndroidEnvironment.UnhandledException (ex);
+				}
+			}
+#endif
 			internal static Delegate GetActivateHandler ()
 			{
 				return TypeManager.GetActivateHandler ();

@@ -208,7 +208,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_ProtobufFormat Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</_ProtobufFormat>
     <_ProtobufFormat Condition=" '$(_ProtobufFormat)' == '' ">False</_ProtobufFormat>
     <_Aapt2ProguardRules Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)aapt_rules.txt</_Aapt2ProguardRules>
+    <_OutputFileDir>$([System.IO.Path]::GetDirectoryName ('$(_PackagedResources)'))</_OutputFileDir>
   </PropertyGroup>
+  <MakeDir Directories="$(_OutputFileDir)" Condition=" !Exists ('$(_OutputFileDir)') " />
   <Aapt2Link
       AndroidManifestFile="$(_AndroidManifestAbs)"
       CompiledResourceFlatFiles="@(_CompiledFlatFiles)"

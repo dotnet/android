@@ -170,7 +170,7 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public void UnregisterFromRuntime ()
 		{
-			JNIEnv.AndroidValueManager?.RemovePeer (this, key_handle);
+			JNIEnvInit.AndroidValueManager?.RemovePeer (this, key_handle);
 		}
 
 		void IJavaPeerable.Disposed ()
@@ -207,7 +207,7 @@ namespace Java.Lang {
 
 		public void Dispose ()
 		{
-			JNIEnv.AndroidValueManager?.DisposePeer (this);
+			JNIEnvInit.AndroidValueManager?.DisposePeer (this);
 		}
 
 		protected virtual void Dispose (bool disposing)
@@ -220,11 +220,11 @@ namespace Java.Lang {
 				return;
 
 			if (Logger.LogGlobalRef) {
-				JNIEnv._monodroid_gref_log (
+				RuntimeNativeMethods._monodroid_gref_log (
 						string.Format ("Disposing handle 0x{0}\n", handle.ToString ("x")));
 			}
 
-			JNIEnv.AndroidValueManager?.RemovePeer (instance, key_handle);
+			JNIEnvInit.AndroidValueManager?.RemovePeer (instance, key_handle);
 
 			switch (handle_type) {
 				case JObjectRefType.Global:
@@ -248,13 +248,13 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
-			JNIEnv.AndroidValueManager?.AddPeer (this, value, transfer, out handle);
+			JNIEnvInit.AndroidValueManager?.AddPeer (this, value, transfer, out handle);
 			handle_type = JObjectRefType.Global;
 		}
 
 		internal static IJavaPeerable? PeekObject (IntPtr handle, Type? requiredType = null)
 		{
-			var peeked  = JNIEnv.AndroidValueManager?.PeekPeer (new JniObjectReference (handle));
+			var peeked  = JNIEnvInit.AndroidValueManager?.PeekPeer (new JniObjectReference (handle));
 			if (peeked == null)
 				return null;
 			if (requiredType != null && !requiredType.IsAssignableFrom (peeked.GetType ()))
