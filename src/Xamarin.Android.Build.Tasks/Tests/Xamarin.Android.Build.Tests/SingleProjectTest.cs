@@ -50,12 +50,13 @@ namespace Xamarin.Android.Build.Tests
 				.Replace ("android:label=\"${PROJECT_NAME}\"", "")
 				.Replace ("android:versionName=\"1.0\"", "")
 				.Replace ("android:versionCode=\"1\"", "");
-			if (!Builder.UseDotNet) {
+			if (Builder.UseDotNet) {
+				proj.SetProperty ("ApplicationIcon", applicationIcon);
+				proj.SetProperty ("ApplicationRoundIcon", applicationRoundIcon);
+			} else {
 				proj.SetProperty ("GenerateApplicationManifest", "true");
 			}
 			proj.SetProperty ("ApplicationId", packageName);
-			proj.SetProperty ("ApplicationIcon", applicationIcon);
-			proj.SetProperty ("ApplicationRoundIcon", applicationRoundIcon);
 			proj.SetProperty ("ApplicationTitle", applicationLabel);
 			proj.SetProperty ("ApplicationVersion", versionCode);
 			proj.SetProperty ("ApplicationDisplayVersion", versionName);
@@ -133,12 +134,13 @@ namespace Xamarin.Android.Build.Tests
 				.Replace ("android:label=\"${PROJECT_NAME}\"", $"android:label=\"{applicationLabel}\" android:icon=\"{applicationIcon}\" android:roundIcon=\"{applicationRoundIcon}\"")
 				.Replace ("android:versionName=\"1.0\"", $"android:versionName=\"{versionName}\"")
 				.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
-			if (!Builder.UseDotNet) {
+			if (Builder.UseDotNet) {
+				proj.SetProperty ("ApplicationIcon", "@drawable/shouldnotbeused");
+				proj.SetProperty ("ApplicationRoundIcon", "@drawable/shouldnotbeused");
+			} else {
 				proj.SetProperty ("GenerateApplicationManifest", "true");
 			}
 			proj.SetProperty ("ApplicationId", "com.i.should.not.be.used");
-			proj.SetProperty ("ApplicationIcon", "@drawable/shouldnotbeused");
-			proj.SetProperty ("ApplicationRoundIcon", "@drawable/shouldnotbeused");
 			proj.SetProperty ("ApplicationTitle", "I should not be used");
 			proj.SetProperty ("ApplicationVersion", "21");
 			proj.SetProperty ("ApplicationDisplayVersion", "1.1.1.1");
