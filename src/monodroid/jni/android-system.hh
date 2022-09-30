@@ -55,6 +55,13 @@ namespace xamarin::android::internal
 		void  setup_environment ();
 		void  setup_process_args (jstring_array_wrapper &runtimeApks);
 		void  create_update_dir (char *override_dir);
+
+		template<size_t N>
+		bool  monodroid_system_property_exists (const char (&name)[N]) noexcept
+		{
+			return monodroid_system_property_exists_impl (static_cast<const char*>(name));
+		}
+
 		int   monodroid_get_system_property (const char *name, char **value);
 		int   monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value);
 		size_t monodroid_get_system_property_from_overrides (const char *name, char ** value);
@@ -134,7 +141,7 @@ namespace xamarin::android::internal
 		const char* lookup_system_property (const char *name, size_t &value_len);
 		long  get_max_gref_count_from_system ();
 		void setup_process_args_apk (const char *apk, size_t index, size_t apk_count, void *user_data);
-		int  _monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len);
+		int  _monodroid__system_property_get (const char *name, char *sp_value, const size_t sp_value_len);
 #if defined (DEBUG) || !defined (ANDROID)
 		size_t  _monodroid_get_system_property_from_file (const char *path, char **value);
 #endif
@@ -144,6 +151,8 @@ namespace xamarin::android::internal
 		void* load_dso_from_override_dirs (const char *name, unsigned int dl_flags);
 		bool get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path);
 
+		int fetch_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept;
+		bool monodroid_system_property_exists_impl (const char *name) noexcept;
 #if defined (WINDOWS)
 		struct _wdirent* readdir_windows (_WDIR *dirp);
 		char* get_libmonoandroid_directory_path ();

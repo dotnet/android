@@ -37,7 +37,7 @@ do_abort_unless (const char* fmt, ...)
 
 #define abort_unless(_condition_, _fmt_, ...) \
 	if (XA_UNLIKELY (!(_condition_))) { \
-		do_abort_unless ("%s:%d (%s): " _fmt_, __FILE__, __LINE__, __FUNCTION__, ## __VA_ARGS__); \
+		do_abort_unless ("%s:%d (%s): " _fmt_, __FILE__, __LINE__, static_cast<const char*>(__FUNCTION__), ## __VA_ARGS__); \
 	}
 
 #define abort_if_invalid_pointer_argument(_ptr_) abort_unless ((_ptr_) != nullptr, "Parameter '%s' must be a valid pointer", #_ptr_)

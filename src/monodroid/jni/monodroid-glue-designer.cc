@@ -1,3 +1,4 @@
+#if !defined (ANDROID)
 //
 // Android designer support code, not used on devices
 //
@@ -145,3 +146,4 @@ JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, [[maybe_unused]]
 {
 	monodroidRuntime.Java_mono_android_Runtime_destroyContexts (env, array);
 }
+#endif // ndef ANDROID

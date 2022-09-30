@@ -30,11 +30,13 @@
 
 #include "monodroid.h"
 #include "monodroid-glue.hh"
+#include "strings.hh"
 
 #include "util.hh"
 #include "globals.hh"
 
 using namespace xamarin::android;
+using namespace xamarin::android::internal;
 
 static pthread_once_t java_classes_once_control = PTHREAD_ONCE_INIT;
 static jclass NetworkInterface_class;
@@ -147,18 +149,18 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	*dns_servers_array = nullptr;
 
 	size_t  len;
-	char   *dns;
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> dns;
 	char   *dns_servers [8];
 	int     count = 0;
 	char    prop_name[] = "net.dnsX";
 	for (int i = 0; i < 8; i++) {
 		prop_name [7] = (char)(i + 0x31);
-		len = static_cast<size_t>(androidSystem.monodroid_get_system_property (prop_name, &dns));
+		len = static_cast<size_t>(androidSystem.monodroid_get_system_property (prop_name, dns));
 		if (len == 0) {
 			dns_servers [i] = nullptr;
 			continue;
 		}
-		dns_servers [i] = strndup (dns, len);
+		dns_servers [i] = strndup (dns.get (), len);
 		count++;
 	}
 

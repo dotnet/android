@@ -1,3 +1,4 @@
+#if defined (NET)
 #include <compare>
 #include <unistd.h>
 #include <stdarg.h>
@@ -574,3 +575,4 @@ MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const ch
 
 	return handle_other_pinvoke_request (library_name, library_name_hash, entrypoint_name, entrypoint_hash);
 }
+#endif // def NET

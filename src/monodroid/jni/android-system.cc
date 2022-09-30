@@ -1,3 +1,4 @@
+#include <array>
 #include <cstring>
 #include <cstdlib>
 #include <cerrno>
@@ -80,8 +81,8 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len)
 		return nullptr;
 	}
 
-	const char *prop_name;
-	const char *prop_value;
+	const char *prop_name = nullptr;
+	const char *prop_value = nullptr;
 	for (size_t i = 0; i < application_config.system_property_count; i += 2) {
 		prop_name = app_system_properties[i];
 		if (prop_name == nullptr || *prop_name == '\0')
@@ -190,31 +191,32 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 }
 #else
 int
-AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len)
+AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, const size_t sp_value_len)
 {
 	if (name == nullptr || sp_value == nullptr)
 		return -1;
 
-	char *buf = nullptr;
-	if (sp_value_len < PROPERTY_VALUE_BUFFER_LEN) {
-		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, PROPERTY_VALUE_BUFFER_LEN, 1);
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> buf;
+	bool use_buf = sp_value_len < PROPERTY_VALUE_BUFFER_LEN;
+	if (use_buf) {
 		log_warn (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only %u bytes", sp_value_len);
-		buf = new char [alloc_size];
 	}
 
-	int len = __system_property_get (name, buf ? buf : sp_value);
-	if (buf != nullptr) {
-		strncpy (sp_value, buf, sp_value_len);
+	int len = __system_property_get (name, use_buf ? buf.get () : sp_value);
+	if (use_buf) {
+		strncpy (sp_value, buf.get (), sp_value_len);
 		sp_value [sp_value_len] = '\0';
-		delete[] buf;
 	}
 
 	return len;
 }
 #endif
 
+#if !defined (WINDOWS) // mingw doesn't like it
+[[gnu::always_inline]]
+#endif
 int
-AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value)
+AndroidSystem::fetch_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept
 {
 	int len = _monodroid__system_property_get (name, value.get (), value.size ());
 	if (len > 0) {
@@ -223,7 +225,7 @@ AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_st
 		return len;
 	}
 
-	size_t plen;
+	size_t plen = 0;
 	const char *v = lookup_system_property (name, plen);
 	if (v == nullptr)
 		return len;
@@ -233,17 +235,23 @@ AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_st
 }
 
 int
+AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value)
+{
+	return fetch_system_property (name, value);
+}
+
+int
 AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 {
 	if (value)
 		*value = nullptr;
 
-	char  sp_value [PROPERTY_VALUE_BUFFER_LEN] = { 0, };
-	char *pvalue = sp_value;
-	int len = _monodroid__system_property_get (name, sp_value, sizeof (sp_value));
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> sp_value;
+	char *pvalue = sp_value.get ();
+	int len = _monodroid__system_property_get (name, sp_value.get (), sp_value.length ());
 
 	if (len <= 0) {
-		size_t plen;
+		size_t plen = 0;
 		const char *v = lookup_system_property (name, plen);
 		if (v != nullptr) {
 			pvalue  = const_cast<char*> (v);
@@ -261,6 +269,13 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 		(*value)[len] = '\0';
 	}
 	return len;
+}
+
+bool
+AndroidSystem::monodroid_system_property_exists_impl (const char *name) noexcept
+{
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
+	return fetch_system_property (name, value) >= 1;
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -332,7 +347,7 @@ AndroidSystem::create_update_dir (char *override_dir)
 	 * However, if any logging is enabled (which should _not_ happen with
 	 * pre-loaded apps!), we need the .__override__ directory...
 	 */
-	if (log_categories == 0 && monodroid_get_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, nullptr) == 0) {
+	if (log_categories == 0 && monodroid_system_property_exists (Debug::DEBUG_MONO_PROFILE_PROPERTY) == 0) {
 		return;
 	}
 #endif
@@ -345,11 +360,14 @@ AndroidSystem::create_update_dir (char *override_dir)
 bool
 AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
 {
-	if (dso_path == nullptr)
+	if (dso_path == nullptr || *dso_path == '\0') {
 		return false;
+	}
 
-	if (base_dir == nullptr || utils.is_path_rooted (dso_path))
-		return const_cast<char*>(dso_path); // Absolute path or no base path, can't do much with it
+	if (base_dir == nullptr || utils.is_path_rooted (dso_path)) {
+		path.assign_c (dso_path); // Absolute path or no base path, can't do much with it
+		return true;
+	}
 
 	path.assign_c (base_dir)
 		.append (MONODROID_PATH_SEPARATOR)
@@ -410,7 +428,7 @@ AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [
 #ifdef RELEASE
 	return nullptr;
 #else
-	return load_dso_from_specified_dirs (const_cast<const char**> (AndroidSystem::override_dirs), AndroidSystem::MAX_OVERRIDES, name, dl_flags);
+	return load_dso_from_specified_dirs (const_cast<const char**>(override_dirs.data ()), override_dirs.size (), name, dl_flags);
 #endif
 }
 
@@ -459,18 +477,15 @@ AndroidSystem::count_override_assemblies (void)
 {
 	int c = 0;
 
-	for (size_t i = 0; i < MAX_OVERRIDES; ++i) {
-		monodroid_dir_t *dir;
-		monodroid_dirent_t *e;
-
-		const char *dir_path = override_dirs [i];
-
+	for (auto const dir_path : override_dirs) {
 		if (dir_path == nullptr || !utils.directory_exists (dir_path))
 			continue;
 
-		if ((dir = utils.monodroid_opendir (dir_path)) == nullptr)
+		monodroid_dir_t *dir = utils.monodroid_opendir (dir_path);
+		if (dir == nullptr)
 			continue;
 
+		monodroid_dirent_t *e = nullptr;
 		while ((e = readdir (dir)) != nullptr && e) {
 			if (utils.monodroid_dirent_hasextension (e, ".dll"))
 				++c;
@@ -484,26 +499,27 @@ AndroidSystem::count_override_assemblies (void)
 long
 AndroidSystem::get_max_gref_count_from_system (void)
 {
-	long max;
+	constexpr long MAX_GREF_FOR_EMULATOR = 2000;
+	constexpr long MAX_GREF_FOR_DEVICE = 51200;
 
-	if (running_in_emulator) {
-		max = 2000;
-	} else {
-		max = 51200;
-	}
+	long max = running_in_emulator ? MAX_GREF_FOR_EMULATOR : MAX_GREF_FOR_DEVICE;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> override;
 	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_MAX_GREFC, override) > 0) {
-		char *e;
-		max       = strtol (override.get (), &e, 10);
+		constexpr long KILOBYTES_MULTIPLIER = 1000;
+		constexpr long MEGABYTES_MULTIPLIER = 1000000;
+		constexpr long CONVERSION_BASE_DECIMAL = 10;
+
+		char *e = nullptr;
+		max       = strtol (override.get (), &e, CONVERSION_BASE_DECIMAL);
 		switch (*e) {
 			case 'k':
 				e++;
-				max *= 1000;
+				max *= KILOBYTES_MULTIPLIER;
 				break;
 			case 'm':
 				e++;
-				max *= 1000000;
+				max *= MEGABYTES_MULTIPLIER;
 				break;
 		}
 		if (max < 0)
@@ -687,14 +703,12 @@ AndroidSystem::setup_environment ()
 		return;
 	}
 
-	const char *var_name;
-	const char *var_value;
 	for (size_t i = 0; i < application_config.environment_variable_count; i += 2) {
-		var_name = app_environment_variables [i];
+		const char *var_name = app_environment_variables [i];
 		if (var_name == nullptr || *var_name == '\0')
 			continue;
 
-		var_value = app_environment_variables [i + 1];
+		const char *var_value = app_environment_variables [i + 1];
 		if (var_value == nullptr)
 			var_value = "";
 
@@ -706,8 +720,8 @@ AndroidSystem::setup_environment ()
 	}
 #if defined (DEBUG) || !defined (ANDROID)
 	// TODO: for debug read from file in the override directory named `environment`
-	for (size_t oi = 0; oi < MAX_OVERRIDES; oi++) {
-		std::unique_ptr<char[]> env_override_file {utils.path_combine (override_dirs [oi], OVERRIDE_ENVIRONMENT_FILE_NAME)};
+	for (const auto override_dir : override_dirs) {
+		std::unique_ptr<char[]> env_override_file {utils.path_combine (override_dir, OVERRIDE_ENVIRONMENT_FILE_NAME)};
 		if (utils.file_exists (env_override_file.get ())) {
 			setup_environment_from_override_file (env_override_file.get ());
 		}
@@ -721,8 +735,8 @@ AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk
 	if (apk == nullptr || index != apk_count - 1)
 		return;
 
-	char *args[1] = { (char*) apk };
-	mono_runtime_set_main_args (1, args);
+	std::array<char*, 1> args { const_cast<char*>(apk) };
+	mono_runtime_set_main_args (1, args.data ());
 }
 
 void

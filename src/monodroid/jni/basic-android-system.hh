@@ -1,6 +1,7 @@
 #ifndef __BASIC_ANDROID_SYSTEM_HH
 #define __BASIC_ANDROID_SYSTEM_HH
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 
@@ -52,7 +53,7 @@ namespace xamarin::android::internal
 #endif
 
 		static constexpr size_t MAX_OVERRIDES = 1;
-		static char* override_dirs [MAX_OVERRIDES];
+		static std::array<char*, MAX_OVERRIDES> override_dirs;
 		static const char **app_lib_directories;
 		static size_t app_lib_directories_size;
 		static const char* get_built_for_abi_name ();

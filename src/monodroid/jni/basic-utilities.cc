@@ -39,8 +39,10 @@ void
 BasicUtilities::create_public_directory (const char *dir)
 {
 #ifndef WINDOWS
+	constexpr mode_t DIRECTORY_PERMISSION_BITS = 0777;
+
 	mode_t m = umask (0);
-	mkdir (dir, 0777);
+	mkdir (dir, DIRECTORY_PERMISSION_BITS);
 	umask (m);
 #else
 	wchar_t *buffer = utf8_to_utf16 (dir);
@@ -59,20 +61,23 @@ BasicUtilities::create_directory (const char *pathname, mode_t mode)
 		errno = EINVAL;
 		return -1;
 	}
+
+	constexpr mode_t DEFAULT_UMASK = 022;
+
 #ifdef WINDOWS
 	int oldumask;
 #else
 	mode_t oldumask;
 #endif
-	oldumask = umask (022);
+	oldumask = umask (DEFAULT_UMASK);
 	std::unique_ptr<char> path {strdup_new (pathname)};
-	int rv, ret = 0;
+	int ret = 0;
 	for (char *d = path.get (); d != nullptr && *d; ++d) {
 		if (*d != '/')
 			continue;
 		*d = 0;
 		if (*path) {
-			rv = make_directory (path.get (), mode);
+			int rv = make_directory (path.get (), mode);
 			if  (rv == -1 && errno != EEXIST)  {
 				ret = -1;
 				break;
@@ -92,13 +97,15 @@ void
 BasicUtilities::set_world_accessable ([[maybe_unused]] const char *path)
 {
 #ifdef ANDROID
+	constexpr mode_t WORLD_ACCESSIBLE_FILE_PERMISSION_BITS = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
+
 	int r;
-	do
-		r = chmod (path, 0664);
-	while (r == -1 && errno == EINTR);
+	do {
+		r = chmod (path, WORLD_ACCESSIBLE_FILE_PERMISSION_BITS);
+	} while (r == -1 && errno == EINTR);
 
 	if (r == -1)
-		log_error (LOG_DEFAULT, "chmod(\"%s\", 0664) failed: %s", path, strerror (errno));
+		log_error (LOG_DEFAULT, "chmod(\"%s\", %u) failed: %s", path, WORLD_ACCESSIBLE_FILE_PERMISSION_BITS, strerror (errno));
 #endif
 }
 
@@ -147,10 +154,6 @@ BasicUtilities::file_copy (const char *to, const char *from)
 		return false;
 	}
 
-	char buffer[BUFSIZ];
-	size_t n;
-	int saved_errno;
-
 	FILE *f1 = monodroid_fopen (from, "r");
 	if (f1 == nullptr)
 		return false;
@@ -159,9 +162,13 @@ BasicUtilities::file_copy (const char *to, const char *from)
 	if (f2 == nullptr)
 		return false;
 
-	while ((n = fread (buffer, sizeof(char), sizeof(buffer), f1)) > 0) {
-		if (fwrite (buffer, sizeof(char), n, f2) != n) {
-			saved_errno = errno;
+	using read_buffer_t = std::array<char, BUFSIZ>;
+	read_buffer_t buffer;
+	size_t n = 0;
+
+	while ((n = fread (buffer.data (), sizeof(read_buffer_t::value_type), buffer.size (), f1)) > 0) {
+		if (fwrite (buffer.data (), sizeof(read_buffer_t::value_type), n, f2) != n) {
+			int saved_errno = errno;
 			fclose (f1);
 			fclose (f2);
 			errno = saved_errno;

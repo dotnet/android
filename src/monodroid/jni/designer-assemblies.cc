@@ -1,3 +1,4 @@
+#if !defined (ANDROID)
 #include "designer-assemblies.hh"
 #include "globals.hh"
 
@@ -182,3 +183,4 @@ DesignerAssemblies::DesignerAssemblyEntry::~DesignerAssemblyEntry ()
 	delete[] assemblies_paths;
 	delete[] assemblies_bytes_len;
 }
+#endif // ndef ANDROID

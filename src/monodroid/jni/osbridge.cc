@@ -28,6 +28,7 @@
 
 #include "globals.hh"
 #include "osbridge.hh"
+#include "strings.hh"
 
 // These two must stay here until JavaInterop is converted to C++
 FILE  *gref_log;
@@ -1031,27 +1032,25 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 int
 OSBridge::platform_supports_weak_refs (void)
 {
-	char *value;
 	int api_level = 0;
 
-	if (androidSystem.monodroid_get_system_property ("ro.build.version.sdk", &value) > 0) {
-		api_level = atoi (value);
-		free (value);
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
+	if (androidSystem.monodroid_get_system_property ("ro.build.version.sdk", value) > 0) {
+		api_level = atoi (value.get ());
 	}
 
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_WREF_PROPERTY, &value) > 0) {
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_WREF_PROPERTY, value) > 0) {
 		int use_weak_refs = 0;
-		if (!strcmp ("jni", value))
+		if (!strcmp ("jni", value.get ()))
 			use_weak_refs = 1;
-		else if (!strcmp ("java", value))
+		else if (!strcmp ("java", value.get ()))
 			use_weak_refs = 0;
 		else {
 			use_weak_refs = -1;
 			log_warn (LOG_GC, "Unsupported debug.mono.wref value '%s'; "
 					"supported values are 'jni' and 'java'. Ignoring...",
-					value);
+			          value.get ());
 		}
-		free (value);
 
 		if (use_weak_refs && api_level < 8)
 			log_warn (LOG_GC, "Using JNI weak references instead of "

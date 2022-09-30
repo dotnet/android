@@ -1,3 +1,4 @@
+#if !defined (NET)
 #ifdef WINDOWS
 #include <windef.h>
 #include <winbase.h>
@@ -345,3 +346,4 @@ MonoAndroidInternalCalls_Impl::path_combine (const char *path1, const char *path
 {
 	return utils.path_combine (path1, path2);
 }
+#endif // ndef NET

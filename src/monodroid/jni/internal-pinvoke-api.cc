@@ -1,3 +1,4 @@
+#if !defined (NET)
 #include <unistd.h>
 #include <stdarg.h>
 #include <mono/utils/mono-publib.h>
@@ -341,3 +342,4 @@ monodroid_get_dylib (void)
 {
 	return nullptr;
 }
+#endif // ndef NET

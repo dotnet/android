@@ -683,7 +683,7 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 inline void
 MonodroidRuntime::set_debug_options (void)
 {
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_DEBUG_PROPERTY, nullptr) == 0)
+	if (androidSystem.monodroid_system_property_exists (Debug::DEBUG_MONO_DEBUG_PROPERTY) == 0)
 		return;
 
 	embeddedAssemblies.set_register_debug_symbols (true);
@@ -2167,7 +2167,7 @@ MonodroidRuntime::install_logging_handlers ()
 
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
-                                                          jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
+                                                          jstring runtimeNativeLibDir, jobjectArray appDirs, [[maybe_unused]] jint localDateTimeOffset,
                                                           jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {

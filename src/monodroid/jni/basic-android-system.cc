@@ -7,7 +7,7 @@
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-char* BasicAndroidSystem::override_dirs [MAX_OVERRIDES];
+std::array<char*, BasicAndroidSystem::MAX_OVERRIDES> BasicAndroidSystem::override_dirs;
 const char **BasicAndroidSystem::app_lib_directories;
 size_t BasicAndroidSystem::app_lib_directories_size = 0;
 const char* BasicAndroidSystem::built_for_abi_name = nullptr;
@@ -41,9 +41,8 @@ BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtim
 		BasicAndroidSystem::app_lib_directories_size = runtimeApks.get_length ();
 		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
 
-		unsigned short built_for_cpu = 0, running_on_cpu = 0;
-		unsigned char is64bit = 0;
-		_monodroid_detect_cpu_and_architecture (&built_for_cpu, &running_on_cpu, &is64bit);
+		unsigned short running_on_cpu = 0;
+		_monodroid_detect_running_cpu (&running_on_cpu);
 		setup_apk_directories (running_on_cpu, runtimeApks, have_split_apks);
 	}
 }
@@ -101,10 +100,7 @@ const char*
 BasicAndroidSystem::get_built_for_abi_name ()
 {
 	if (built_for_abi_name == nullptr) {
-		unsigned short built_for_cpu = 0, running_on_cpu = 0;
-		unsigned char is64bit = 0;
-		_monodroid_detect_cpu_and_architecture (&built_for_cpu, &running_on_cpu, &is64bit);
-		built_for_abi_name = android_abi_names [built_for_cpu];
+		built_for_abi_name = android_abi_names [BuiltForCpu::cpu ()];
 	}
 	return built_for_abi_name;
 }

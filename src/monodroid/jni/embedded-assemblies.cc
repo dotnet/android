@@ -48,14 +48,19 @@ class MonoGuidString final
 {
 public:
 	explicit MonoGuidString (const uint8_t *id) noexcept
-	{
-		guid = mono_guid_to_string (id);
-	}
+		: guid (mono_guid_to_string (id))
+	{}
+
+	MonoGuidString (const MonoGuidString&) = delete;
+	MonoGuidString (MonoGuidString&&) = delete;
 
 	~MonoGuidString ()
 	{
 		::free (guid);
 	}
+
+	void operator = (const MonoGuidString&) = delete;
+	void operator = (MonoGuidString&&) = delete;
 
 	const char* get () const noexcept
 	{
@@ -929,9 +934,15 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 void
 EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register)
 {
-	int fd;
+	constexpr int OPEN_FLAGS =
+		          O_RDONLY
+#if !defined (WINDOWS)
+		          | O_CLOEXEC
+#endif
+		          ;
 
-	if ((fd = open (apk, O_RDONLY)) < 0) {
+	int fd;
+	if ((fd = open (apk, OPEN_FLAGS)) < 0) {
 		log_error (LOG_DEFAULT, "ERROR: Unable to load application package %s.", apk);
 		exit (FATAL_EXIT_NO_ASSEMBLIES);
 	}
