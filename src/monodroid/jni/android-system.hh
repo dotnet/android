@@ -17,6 +17,7 @@
 #include "shared-constants.hh"
 #include "basic-android-system.hh"
 #include "strings.hh"
+#include "gsl.hh"
 
 #include <mono/jit/jit.h>
 
@@ -62,8 +63,14 @@ namespace xamarin::android::internal
 			return monodroid_system_property_exists_impl (static_cast<const char*>(name));
 		}
 
-		int   monodroid_get_system_property (const char *name, char **value);
-		int   monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value);
+		int   monodroid_get_system_property (const char *name, gsl::owner<char**> value) noexcept;
+
+		template<size_t N>
+		int   monodroid_get_system_property (const char (&name)[N], dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept
+		{
+			return fetch_system_property (static_cast<const char*>(name), value);
+		}
+
 		size_t monodroid_get_system_property_from_overrides (const char *name, char ** value);
 		char* get_bundled_app (JNIEnv *env, jstring dir);
 		int   count_override_assemblies ();
@@ -146,12 +153,43 @@ namespace xamarin::android::internal
 		size_t  _monodroid_get_system_property_from_file (const char *path, char **value);
 #endif
 		bool get_full_dso_path (const char *base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path);
-		void* load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags);
+
+		template<class Container>
+		force_inline
+		void* load_dso_from_dirs (Container const& directories, const char *dso_name, unsigned int dl_flags) noexcept
+		{
+			if (dso_name == nullptr) {
+				return nullptr;
+			}
+
+			for (auto const& dir : directories) {
+				void *handle = load_dso_from_directory (dir, dso_name, dl_flags);
+				if (handle != nullptr) {
+					return handle;
+				}
+			}
+
+			return nullptr;
+		}
+
+		void* load_dso_from_specified_dirs (std::vector<char*> const& directories, const char *dso_name, unsigned int dl_flags) noexcept
+		{
+			return load_dso_from_dirs (directories, dso_name, dl_flags);
+		}
+
+		void* load_dso_from_specified_dirs (override_dirs_array const& directories, const char *dso_name, unsigned int dl_flags) noexcept
+		{
+			return load_dso_from_dirs (directories, dso_name, dl_flags);
+		}
+
+		void* load_dso_from_directory (const char *directory, const char *dso_name, unsigned int dl_flags) noexcept;
+
 		void* load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags);
 		void* load_dso_from_override_dirs (const char *name, unsigned int dl_flags);
 		bool get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path);
 
 		int fetch_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept;
+		int monodroid_get_system_property_impl (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept;
 		bool monodroid_system_property_exists_impl (const char *name) noexcept;
 #if defined (WINDOWS)
 		struct _wdirent* readdir_windows (_WDIR *dirp);

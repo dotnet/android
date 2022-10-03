@@ -140,11 +140,11 @@ copy_file_to_internal_location ([[maybe_unused]] char *to_dir, [[maybe_unused]] 
 static void
 copy_native_libraries_to_internal_location ()
 {
-	for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
+	for (auto const& override_dir : androidSystem.override_dirs ()) {
 		monodroid_dir_t *dir;
 		monodroid_dirent_t *e;
 
-		char *dir_path = utils.path_combine (BasicAndroidSystem::override_dirs [i], "lib");
+		char *dir_path = utils.path_combine (override_dir, "lib");
 		log_warn (LOG_DEFAULT, "checking directory: `%s`", dir_path);
 
 		if (dir_path == nullptr || !utils.directory_exists (dir_path)) {
@@ -210,14 +210,14 @@ get_libmonosgen_path ()
 		return SharedConstants::MONO_SGEN_SO;
 	}
 
-	for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
-		if (runtime_exists (BasicAndroidSystem::override_dirs [i], libmonoso)) {
+	for (auto const& override_dir : androidSystem.override_dirs ()) {
+		if (runtime_exists (override_dir, libmonoso)) {
 			return libmonoso;
 		}
 	}
 
-	for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
-		if (runtime_exists (BasicAndroidSystem::app_lib_directories [i], libmonoso)) {
+	for (auto const& dir : androidSystem.app_lib_directories ()) {
+		if (runtime_exists (dir, libmonoso)) {
 			return libmonoso;
 		}
 	}
@@ -264,14 +264,14 @@ get_libmonosgen_path ()
 		return libmonoso;
 	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", SharedConstants::MONO_SGEN_SO);
 
-	for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
-		if (BasicAndroidSystem::override_dirs [i] == nullptr)
+	for (auto const& override_dir : androidSystem.override_dirs ()) {
+		if (override_dir == nullptr)
 			continue;
-		log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::override_dirs [i]);
+		log_fatal (LOG_DEFAULT, "  %s", override_dir);
 	}
 
-	for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
-		log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::app_lib_directories [i]);
+	for (auto const& dir : androidSystem.app_lib_directories ()) {
+		log_fatal (LOG_DEFAULT, "  %s", dir);
 	}
 
 	log_fatal (LOG_DEFAULT, "Do you have a shared runtime build of your app with AndroidManifest.xml android:minSdkVersion < 10 while running on a 64-bit Android 5.0 target? This combination is not supported.");

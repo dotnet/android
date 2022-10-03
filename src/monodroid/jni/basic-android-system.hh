@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 #include "cpu-arch.hh"
 #include "jni-wrappers.hh"
@@ -12,9 +13,6 @@ namespace xamarin::android::internal
 {
 	class BasicAndroidSystem
 	{
-	protected:
-		using ForEachApkHandler = void (BasicAndroidSystem::*) (const char *apk, size_t index, size_t apk_count, void *user_data);
-
 	private:
 #if defined (__clang__)
 #pragma clang diagnostic push
@@ -34,6 +32,11 @@ namespace xamarin::android::internal
 #endif
 		static constexpr size_t ANDROID_ABI_NAMES_SIZE = sizeof(android_abi_names) / sizeof (android_abi_names[0]);
 		static const char* built_for_abi_name;
+		static constexpr size_t MAX_OVERRIDES = 1;
+
+	protected:
+		using ForEachApkHandler = void (BasicAndroidSystem::*) (const char *apk, size_t index, size_t apk_count, void *user_data);
+		using override_dirs_array = std::array<char*, MAX_OVERRIDES>;
 
 	public:
 #ifdef ANDROID64
@@ -52,29 +55,25 @@ namespace xamarin::android::internal
 		static constexpr char SYSTEM_LIB_PATH[] = "";
 #endif
 
-		static constexpr size_t MAX_OVERRIDES = 1;
-		static std::array<char*, MAX_OVERRIDES> override_dirs;
-		static const char **app_lib_directories;
-		static size_t app_lib_directories_size;
 		static const char* get_built_for_abi_name ();
 
 	public:
 		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks);
 
-		const char* get_override_dir (size_t index) const
+		const char* get_override_dir (size_t index) const noexcept
 		{
 			if (index >= MAX_OVERRIDES)
 				return nullptr;
 
-			return override_dirs [index];
+			return _override_dirs [index];
 		}
 
-		void set_override_dir (uint32_t index, const char* dir)
+		void set_override_dir (uint32_t index, const char* dir) noexcept
 		{
 			if (index >= MAX_OVERRIDES)
 				return;
 
-			override_dirs [index] = const_cast <char*> (dir);
+			_override_dirs [index] = const_cast <char*> (dir);
 		}
 
 		bool is_embedded_dso_mode_enabled () const
@@ -104,6 +103,16 @@ namespace xamarin::android::internal
 			primary_override_dir = determine_primary_override_dir (home);
 		}
 
+		override_dirs_array& override_dirs () noexcept
+		{
+			return _override_dirs;
+		}
+
+		std::vector<char*>& app_lib_directories () noexcept
+		{
+			return _app_lib_directories;
+		}
+
 	protected:
 		void  for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data);
 
@@ -121,6 +130,8 @@ namespace xamarin::android::internal
 		bool  embedded_dso_mode_enabled = false;
 		char *runtime_libdir = nullptr;
 		char *primary_override_dir = nullptr;
+		std::vector<char*> _app_lib_directories;
+		override_dirs_array _override_dirs;
 	};
 }
 #endif // !__BASIC_ANDROID_SYSTEM_HH

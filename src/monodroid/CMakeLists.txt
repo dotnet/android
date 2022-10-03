@@ -566,6 +566,7 @@ set(XAMARIN_DEBUG_APP_HELPER_SOURCES
   ${SOURCES_DIR}/debug-app-helper.cc
   ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/shared-constants.cc
+  ${SOURCES_DIR}/cxx-abi/vector.cc
   )
 
 # Build

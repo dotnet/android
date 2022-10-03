@@ -309,11 +309,9 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		log_debug (LOG_ASSEMBLY, "No in-memory assemblies detected", mono_assembly_name_get_name (aname));
 	}
 #endif
-	const char *override_dir;
 	bool found = false;
 
-	for (uint32_t oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi) {
-		override_dir = androidSystem.get_override_dir (oi);
+	for (auto const& override_dir : androidSystem.override_dirs ()) {
 		if (override_dir != nullptr && utils.directory_exists (override_dir)) {
 			found = true;
 			break;
@@ -346,8 +344,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 	if (!is_dll)
 		file_name_len += dll_extension_len;
 
-	for (uint32_t oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi) {
-		override_dir = androidSystem.get_override_dir (oi);
+	for (auto const& override_dir : androidSystem.override_dirs ()) {
 		if (override_dir == nullptr || !utils.directory_exists (override_dir))
 			continue;
 
@@ -383,8 +380,7 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 	}
 
 	size_t filename_len = strlen (filename) + 1; // includes space for path separator
-	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
-		const char *odir = androidSystem.get_override_dir (i);
+	for (auto const& odir : androidSystem.override_dirs ()) {
 		if (odir == nullptr)
 			continue;
 
@@ -407,8 +403,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 {
 #if defined(DEBUG) || !defined (ANDROID)
 	if (application_config.instant_run_enabled) {
-		for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
-			const char *p = androidSystem.get_override_dir (i);
+		for (auto const& p : androidSystem.override_dirs ()) {
 			if (!utils.directory_exists (p))
 				continue;
 			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", p);
@@ -930,7 +925,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 #if defined (DEBUG)
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
 		           androidSystem.get_override_dir (0),
-		           (AndroidSystem::MAX_OVERRIDES > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
+		           (androidSystem.override_dirs ().size () > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
 #else
 		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s)");
 #endif
@@ -1121,7 +1116,7 @@ MonodroidRuntime::init_android_runtime (
 #if defined (NET)
 	mono_android_assembly_image = mono_assembly_get_image (mono_android_assembly);
 #else
-	mono_android_assembly_image = runtime_assembly_image;
+	mono_android_assembly_image = mono_assembly_get_image (runtime_assembly);
 #endif
 	uint32_t i = 0;
 
