@@ -68,7 +68,7 @@ public:
 	}
 
 private:
-	char *guid = nullptr;
+	gsl::owner<char*> guid = nullptr;
 };
 
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
@@ -185,7 +185,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 
 	if constexpr (LogMapping) {
 		if (XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY) && map_info.area != nullptr)) {
-			const char *p = (const char*) file.data;
+			auto *p = reinterpret_cast<const char*>(file.data);
 
 			std::array<char, 9> header;
 			for (size_t j = 0; j < header.size () - 1; ++j)

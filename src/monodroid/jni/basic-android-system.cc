@@ -7,7 +7,7 @@
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-const char* BasicAndroidSystem::built_for_abi_name = nullptr;
+const char* BasicAndroidSystem::_built_for_abi_name = nullptr;
 
 void
 BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
@@ -81,8 +81,8 @@ BasicAndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstrin
 	}
 }
 
-char*
-BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home)
+gsl::owner<char*>
+BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home) noexcept
 {
 	return utils.path_combine (home.get_cstr (), ".__override__");
 }
@@ -90,8 +90,8 @@ BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home)
 const char*
 BasicAndroidSystem::get_built_for_abi_name ()
 {
-	if (built_for_abi_name == nullptr) {
-		built_for_abi_name = android_abi_names [BuiltForCpu::cpu ()];
+	if (_built_for_abi_name == nullptr) {
+		_built_for_abi_name = android_abi_names [BuiltForCpu::cpu ()];
 	}
-	return built_for_abi_name;
+	return _built_for_abi_name;
 }

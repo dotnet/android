@@ -9,6 +9,7 @@ constexpr uint16_t CPU_KIND_ARM64   = 2;
 constexpr uint16_t CPU_KIND_MIPS    = 3;
 constexpr uint16_t CPU_KIND_X86     = 4;
 constexpr uint16_t CPU_KIND_X86_64  = 5;
+constexpr size_t   CPU_KIND_COUNT   = CPU_KIND_X86_64 + 1;
 
 namespace xamarin::android::internal
 {

@@ -381,6 +381,13 @@ namespace xamarin::android::internal
 				assign (token.start (), token.length ());
 		}
 
+		template<size_t N>
+		explicit string_base (const char (&str)[N])
+			: string_base (N)
+		{
+			append (str);
+		}
+
 		force_inline size_t length () const noexcept
 		{
 			return idx;
@@ -781,47 +788,9 @@ namespace xamarin::android::internal
 	};
 
 	template<size_t MaxStackSize, typename TChar = char>
-	class static_local_string : public string_base<MaxStackSize, static_local_storage<MaxStackSize, TChar>, TChar>
-	{
-		using base = string_base<MaxStackSize, static_local_storage<MaxStackSize, TChar>, TChar>;
-
-	public:
-		explicit static_local_string (size_t initial_size = 0) noexcept
-			: base (initial_size)
-		{}
-
-		explicit static_local_string (const string_segment &token) noexcept
-			: base (token)
-		{}
-
-		template<size_t N>
-		explicit static_local_string (const char (&str)[N])
-			: base (N)
-		{
-			append (str);
-		}
-	};
+	using static_local_string = string_base<MaxStackSize, static_local_storage<MaxStackSize, TChar>, TChar>;
 
 	template<size_t MaxStackSize, typename TChar = char>
-	class dynamic_local_string : public string_base<MaxStackSize, dynamic_local_storage<MaxStackSize, TChar>, TChar>
-	{
-		using base = string_base<MaxStackSize, dynamic_local_storage<MaxStackSize, TChar>, TChar>;
-
-	public:
-		explicit dynamic_local_string (size_t initial_size = 0)
-			: base (initial_size)
-		{}
-
-		explicit dynamic_local_string (const string_segment &token) noexcept
-			: base (token)
-		{}
-
-		template<size_t N>
-		explicit dynamic_local_string (const char (&str)[N])
-			: base (N)
-		{
-			base::append (str);
-		}
-	};
+	using dynamic_local_string = string_base<MaxStackSize, dynamic_local_storage<MaxStackSize, TChar>, TChar>;
 }
 #endif // __STRINGS_HH

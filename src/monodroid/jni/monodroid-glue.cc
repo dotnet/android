@@ -263,12 +263,10 @@ MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name)
 	if (jit_log == nullptr)
 		return;
 
-	char* name = mono_method_full_name (method, 1);
+	c_unique_ptr<char> name { mono_method_full_name (method, 1) };
 
 	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, static_cast<long int>(diff.sec), diff.ms, diff.ns);
-
-	free (name);
+	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name.get (), static_cast<long int>(diff.sec), diff.ms, diff.ns);
 }
 
 void
@@ -528,7 +526,7 @@ MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved)
 
 	androidSystem.init_max_gref_count ();
 
-	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
+	vm->GetEnv (reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
 	osBridge.initialize_on_onload (vm, env);
 
 	return JNI_VERSION_1_6;
@@ -959,7 +957,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	if constexpr (is_running_on_desktop) {
 		if (is_root_domain) {
 			c_unique_ptr<char> corlib_error_message_guard {const_cast<char*>(mono_check_corlib_version ())};
-			char *corlib_error_message = corlib_error_message_guard.get ();
+			gsl::owner<char*> corlib_error_message = corlib_error_message_guard.get ();
 
 			if (corlib_error_message == nullptr) {
 				if (!androidSystem.monodroid_get_system_property ("xamarin.studio.fakefaultycorliberrormessage", &corlib_error_message)) {

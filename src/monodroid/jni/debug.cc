@@ -73,7 +73,7 @@ void
 Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, const char *logfile)
 {
 	const char* col = strchr (desc, ':');
-	char *mname_ptr;
+	gsl::owner<char*> mname_ptr = nullptr;
 
 	if (col != nullptr) {
 		size_t name_len = static_cast<size_t>(col - desc);
@@ -164,14 +164,15 @@ Debug::set_debugger_log_level (const char *level)
 	debugger_log_level = static_cast<int>(v);
 }
 
-inline void
-Debug::parse_options (char *options, ConnOptions *opts)
+force_inline void
+Debug::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options, ConnOptions *opts)
 {
 	char **args, **ptr;
 
-	log_info (LOG_DEFAULT, "Connection options: '%s'", options);
+	log_info (LOG_DEFAULT, "Connection options: '%s'", options.get ());
 
-	args = utils.monodroid_strsplit (options, ",", 0);
+	// TODO: migrate to the strings.hh tokenizer
+	args = utils.monodroid_strsplit (options.get (), ",", 0);
 
 	for (ptr = args; ptr && *ptr; ptr++) {
 		const char *arg = *ptr;
@@ -204,7 +205,7 @@ Debug::parse_options (char *options, ConnOptions *opts)
  *   Handle the communication with XS on startup. Call process_cmd () for each command received from XS.
  */
 DebuggerConnectionStatus
-Debug::start_connection (char *options)
+Debug::start_connection (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options) noexcept
 {
 	int res;
 	ConnOptions opts;
@@ -243,11 +244,11 @@ Debug::start_debugging_and_profiling ()
 		total_time_index = internal_timing->start_event (TimingEventKind::DebugStart);
 	}
 
-	char *connect_args = nullptr;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args) > 0) {
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> connect_args;
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, connect_args) > 0) {
 		DebuggerConnectionStatus res = start_connection (connect_args);
 		if (res == DebuggerConnectionStatus::Error) {
-			log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args);
+			log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args.get ());
 			exit (FATAL_EXIT_DEBUGGER_CONNECT);
 		} else if (res == DebuggerConnectionStatus::Connected) {
 			/* Wait for XS to configure debugging/profiling */
@@ -258,7 +259,6 @@ Debug::start_debugging_and_profiling ()
 			start_profiling ();
 		}
 	}
-	delete[] connect_args;
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		internal_timing->end_event (total_time_index);
@@ -610,22 +610,22 @@ Debug::enable_soft_breakpoints (void)
 		}
 	}
 
-	char *value;
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
 	/* Soft breakpoints are enabled by default */
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, &value) <= 0) {
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value) <= 0) {
 		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS);
 		return 1;
 	}
 
 	bool ret;
-	if (strcmp ("0", value) == 0) {
+	if (strcmp ("0", value.get ()) == 0) {
 		ret = false;
-		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
+		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value.get ());
 	} else {
 		ret = true;
-		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value.get ());
 	}
-	delete[] value;
+
 	return ret;
 }
 #endif /* DEBUG */

@@ -24,6 +24,7 @@
 #include "mono-image-loader.hh"
 #include "shared-constants.hh"
 #include "xxhash.hh"
+#include "gsl.hh"
 
 #undef HAVE_CONCEPTS
 
@@ -309,8 +310,10 @@ namespace xamarin::android::internal {
 		const AssemblyStoreHashEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept;
 
 	private:
-		std::vector<XamarinAndroidBundledAssembly> *bundled_debug_data = nullptr;
-		std::vector<XamarinAndroidBundledAssembly> *extra_bundled_assemblies = nullptr;
+		using bundled_assembly_vector = std::vector<XamarinAndroidBundledAssembly>;
+
+		gsl::owner<bundled_assembly_vector*> bundled_debug_data = nullptr;
+		gsl::owner<bundled_assembly_vector*> extra_bundled_assemblies = nullptr;
 
 		bool                   register_debug_symbols;
 		bool                   have_and_want_debug_symbols;

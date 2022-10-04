@@ -6,6 +6,9 @@
 #include <pthread.h>
 #include <sys/time.h>
 
+#include "android-system.hh"
+#include "strings.hh"
+
 #ifdef __cplusplus
 namespace xamarin::android
 {
@@ -70,8 +73,8 @@ namespace xamarin::android
 		}
 
 	private:
-		DebuggerConnectionStatus start_connection (char *options);
-		void         parse_options (char *options, ConnOptions *opts);
+		DebuggerConnectionStatus start_connection (internal::dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options) noexcept;
+		void         parse_options (internal::dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options, ConnOptions *opts);
 		bool         process_connection (int fd);
 		int          handle_server_connection (void);
 		bool         process_cmd (int fd, char *cmd);

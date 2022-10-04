@@ -13,8 +13,8 @@
 
 using namespace xamarin::android;
 
-char*
-BasicUtilities::path_combine (const char *path1, const char *path2)
+gsl::owner<char*>
+BasicUtilities::path_combine (const char *path1, const char *path2) noexcept
 {
 	// Don't let erroneous nullptr parameters situation propagate
 	abort_unless (path1 != nullptr || path2 != nullptr, "At least one path must be a valid pointer");
@@ -25,7 +25,7 @@ BasicUtilities::path_combine (const char *path1, const char *path2)
 		return strdup_new (path1);
 
 	size_t len = ADD_WITH_OVERFLOW_CHECK (size_t, strlen (path1), strlen (path2) + 2);
-	char *ret = new char [len];
+	gsl::owner<char*> ret = new char [len];
 	*ret = '\0';
 
 	strncat (ret, path1, len - 1);
@@ -65,11 +65,12 @@ BasicUtilities::create_directory (const char *pathname, mode_t mode)
 	constexpr mode_t DEFAULT_UMASK = 022;
 
 #ifdef WINDOWS
-	int oldumask;
+	using umask_t = int;
 #else
-	mode_t oldumask;
+	using umask_t = mode_t;
 #endif
-	oldumask = umask (DEFAULT_UMASK);
+
+	umask_t oldumask = umask (DEFAULT_UMASK);
 	std::unique_ptr<char> path {strdup_new (pathname)};
 	int ret = 0;
 	for (char *d = path.get (); d != nullptr && *d; ++d) {
@@ -154,11 +155,11 @@ BasicUtilities::file_copy (const char *to, const char *from)
 		return false;
 	}
 
-	FILE *f1 = monodroid_fopen (from, "r");
+	gsl::owner<FILE*> f1 = monodroid_fopen (from, "r");
 	if (f1 == nullptr)
 		return false;
 
-	FILE *f2 = monodroid_fopen (to, "w+");
+	gsl::owner<FILE*> f2 = monodroid_fopen (to, "w+");
 	if (f2 == nullptr)
 		return false;
 
@@ -197,10 +198,10 @@ BasicUtilities::is_path_rooted (const char *path)
 #endif
 }
 
-FILE *
-BasicUtilities::monodroid_fopen (const char *filename, const char *mode)
+gsl::owner<FILE*>
+BasicUtilities::monodroid_fopen (const char *filename, const char *mode) noexcept
 {
-	FILE *ret;
+	gsl::owner<FILE*> ret;
 #ifndef WINDOWS
 	/* On Unix, both path and system calls are all assumed
 	 * to be UTF-8 compliant.

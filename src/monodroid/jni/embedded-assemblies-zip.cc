@@ -115,7 +115,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 
 		if (register_debug_symbols && !entry_is_overridden && is_debug_file (entry_name)) {
 			if (bundled_debug_data == nullptr) {
-				bundled_debug_data = new std::vector<XamarinAndroidBundledAssembly> ();
+				bundled_debug_data = new bundled_assembly_vector ();
 				bundled_debug_data->reserve (application_config.number_of_assemblies_in_apk);
 			}
 
@@ -151,7 +151,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			}
 
 			if (extra_bundled_assemblies == nullptr) {
-				extra_bundled_assemblies = new std::vector<XamarinAndroidBundledAssembly> ();
+				extra_bundled_assemblies = new bundled_assembly_vector ();
 			}
 
 			extra_bundled_assemblies->emplace_back ();

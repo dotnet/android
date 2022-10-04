@@ -20,13 +20,14 @@
 #include "cpp-util.hh"
 #include "platform-compat.hh"
 #include "strings.hh"
+#include "gsl.hh"
 
 namespace xamarin::android
 {
 	class BasicUtilities
 	{
 	public:
-		FILE            *monodroid_fopen (const char* filename, const char* mode);
+		gsl::owner<FILE*> monodroid_fopen (const char* filename, const char* mode) noexcept;
 		int              monodroid_stat (const char *path, monodroid_stat_t *s);
 		monodroid_dir_t *monodroid_opendir (const char *filename);
 		int              monodroid_closedir (monodroid_dir_t *dirp);
@@ -35,7 +36,7 @@ namespace xamarin::android
 		char           **monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens);
 		char            *monodroid_strdup_printf (const char *format, ...);
 		char            *monodroid_strdup_vprintf (const char *format, va_list vargs);
-		char*            path_combine (const char *path1, const char *path2);
+		gsl::owner<char*> path_combine (const char *path1, const char *path2) noexcept;
 		void             create_public_directory (const char *dir);
 		int              create_directory (const char *pathname, mode_t mode);
 		void             set_world_accessable (const char *path);

@@ -1,4 +1,5 @@
 #include "globals.hh"
+#include "gsl.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -8,7 +9,7 @@ AndroidSystem androidSystem;
 OSBridge osBridge;
 EmbeddedAssemblies embeddedAssemblies;
 MonodroidRuntime monodroidRuntime;
-Timing *timing = nullptr;
+gsl::owner<Timing*> timing = nullptr;
 #ifndef ANDROID
 DesignerAssemblies designerAssemblies;
 #endif

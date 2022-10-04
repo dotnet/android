@@ -8,6 +8,7 @@
 
 #include "cpu-arch.hh"
 #include "jni-wrappers.hh"
+#include "gsl.hh"
 
 namespace xamarin::android::internal
 {
@@ -19,7 +20,7 @@ namespace xamarin::android::internal
 #pragma clang diagnostic ignored "-Wc99-designator"
 #endif
 		// Values correspond to the CPU_KIND_* macros
-		static constexpr const char* android_abi_names[CPU_KIND_X86_64+1] = {
+		static constexpr const char* android_abi_names[CPU_KIND_COUNT] = {
 			[0]                 = "unknown",
 			[CPU_KIND_ARM]      = "armeabi-v7a",
 			[CPU_KIND_ARM64]    = "arm64-v8a",
@@ -31,7 +32,6 @@ namespace xamarin::android::internal
 #pragma clang diagnostic pop
 #endif
 		static constexpr size_t ANDROID_ABI_NAMES_SIZE = sizeof(android_abi_names) / sizeof (android_abi_names[0]);
-		static const char* built_for_abi_name;
 		static constexpr size_t MAX_OVERRIDES = 1;
 
 	protected:
@@ -119,7 +119,7 @@ namespace xamarin::android::internal
 	private:
 		void add_apk_libdir (const char *apk, size_t &index, const char *abi) noexcept;
 		void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept;
-		char* determine_primary_override_dir (jstring_wrapper &home);
+		gsl::owner<char*> determine_primary_override_dir (jstring_wrapper &home) noexcept;
 
 		void set_embedded_dso_mode_enabled (bool yesno) noexcept
 		{
@@ -132,6 +132,7 @@ namespace xamarin::android::internal
 		char *primary_override_dir = nullptr;
 		std::vector<char*> _app_lib_directories;
 		override_dirs_array _override_dirs;
+		static const char* _built_for_abi_name;
 	};
 }
 #endif // !__BASIC_ANDROID_SYSTEM_HH
