@@ -467,7 +467,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
   </data>
   <data name="XA1030" xml:space="preserve">
-    <value>The 'RunAOTCompilation' MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set 'PublishTrimmed' to 'true' for this build configuration.</value>
+    <value>La proprietà MSBuild 'RunAOTCompilation' è supportata solo quando è abilitato il troncamento. Modifica il file di progetto in un editor di testo per impostare 'PublishTrimmed' su 'true' per questa configurazione di compilazione.</value>
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
