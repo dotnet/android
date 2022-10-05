@@ -1105,26 +1105,16 @@ MonodroidRuntime::init_android_runtime (
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
-	MonoAssembly *runtime_assembly;
 	MonoAssembly *mono_android_assembly;
 
 #if defined (NET)
 	mono_android_assembly = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
-	runtime_assembly = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME);
 #else // def NET
 	mono_android_assembly = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
-	runtime_assembly = mono_android_assembly;
 #endif // ndef NET
-	MonoImage *runtime_assembly_image = mono_assembly_get_image (runtime_assembly);
-	MonoImage *mono_android_assembly_image;
+	MonoImage *mono_android_assembly_image = mono_assembly_get_image (mono_android_assembly);
 
-#if defined (NET)
-	mono_android_assembly_image = mono_assembly_get_image (mono_android_assembly);
-#else
-	mono_android_assembly_image = runtime_assembly_image;
-#endif
 	uint32_t i = 0;
-
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES; ++i) {
 		lookup_bridge_info (
 #if !defined (NET)
