@@ -233,18 +233,6 @@ monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
 	internal_calls->monodroid_timing_stop (sequence, message);
 }
 
-MONO_API void
-monodroid_strfreev (char **str_array)
-{
-	internal_calls->monodroid_strfreev (str_array);
-}
-
-MONO_API char**
-monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
-{
-	return internal_calls->monodroid_strsplit (str, delimiter, max_tokens);
-}
-
 MONO_API char*
 monodroid_strdup_printf (const char *format, ...)
 {

@@ -343,6 +343,7 @@ set(LOCAL_COMMON_COMPILER_ARGS
   -Wformat
   -Wformat-security
   -Wmisleading-indentation
+  -Wmismatched-new-delete
   -Wnull-dereference
   -Wpointer-arith
   -Wshadow

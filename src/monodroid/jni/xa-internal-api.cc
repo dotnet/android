@@ -271,18 +271,6 @@ MonoAndroidInternalCalls_Impl::monodroid_timing_stop (managed_timing_sequence *s
 	timing->release_sequence (sequence);
 }
 
-void
-MonoAndroidInternalCalls_Impl::monodroid_strfreev (char **str_array)
-{
-	utils.monodroid_strfreev (str_array);
-}
-
-char**
-MonoAndroidInternalCalls_Impl::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
-{
-	return utils.monodroid_strsplit (str, delimiter, max_tokens);
-}
-
 char*
 MonoAndroidInternalCalls_Impl::monodroid_strdup_printf (const char *format, va_list args)
 {

@@ -401,7 +401,7 @@ namespace xamarin::android::internal
 		 * able to switch our different contexts from different threads.
 		 */
 		int                 current_context_id = -1;
-		static bool         startup_in_progress;
+		static inline bool  startup_in_progress = true;
 
 #if defined (NET)
 #if defined (ANDROID)
@@ -409,19 +409,26 @@ namespace xamarin::android::internal
 #endif
 		MonoAssemblyLoadContextGCHandle default_alc = nullptr;
 
-		static std::mutex             pinvoke_map_write_lock;
+		static inline std::mutex      pinvoke_map_write_lock;
 		static pinvoke_library_map    other_pinvoke_map;
-		static MonoCoreRuntimeProperties monovm_core_properties;
+
+		static inline MonoCoreRuntimeProperties monovm_core_properties = {
+			.trusted_platform_assemblies = nullptr,
+			.app_paths = nullptr,
+			.native_dll_search_directories = nullptr,
+			.pinvoke_override = &MonodroidRuntime::monodroid_pinvoke_override
+		};
+
 		MonovmRuntimeConfigArguments  runtime_config_args;
 
 		static void *system_native_library_handle;
 		static void *system_security_cryptography_native_android_library_handle;
 		static void *system_io_compression_native_library_handle;
 #else // def NET
-		static std::mutex   api_init_lock;
-		static void        *api_dso_handle;
+		static inline std::mutex   api_init_lock;
+		static inline void        *api_dso_handle = nullptr;
 #endif // !def NET
-		static std::mutex   dso_handle_write_lock;
+		static inline std::mutex dso_handle_write_lock;
 	};
 }
 #endif

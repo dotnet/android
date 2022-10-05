@@ -71,13 +71,14 @@ BasicUtilities::create_directory (const char *pathname, mode_t mode)
 #endif
 
 	umask_t oldumask = umask (DEFAULT_UMASK);
-	std::unique_ptr<char> path {strdup_new (pathname)};
+	std::unique_ptr<char[]> path {strdup_new (pathname)};
+
 	int ret = 0;
 	for (char *d = path.get (); d != nullptr && *d; ++d) {
 		if (*d != '/')
 			continue;
 		*d = 0;
-		if (*path) {
+		if (path[0]) {
 			int rv = make_directory (path.get (), mode);
 			if  (rv == -1 && errno != EEXIST)  {
 				ret = -1;

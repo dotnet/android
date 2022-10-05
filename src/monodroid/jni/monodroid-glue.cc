@@ -111,23 +111,7 @@ using namespace xamarin::android::internal;
 #if !defined (NET)
 #include "config.include"
 #include "machine.config.include"
-
-std::mutex MonodroidRuntime::api_init_lock;
-void *MonodroidRuntime::api_dso_handle = nullptr;
-#else // ndef NET
-std::mutex MonodroidRuntime::pinvoke_map_write_lock;
-
-MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
-	.trusted_platform_assemblies = nullptr,
-	.app_paths = nullptr,
-	.native_dll_search_directories = nullptr,
-	.pinvoke_override = &MonodroidRuntime::monodroid_pinvoke_override
-};
-
-#endif // def NET
-
-std::mutex MonodroidRuntime::dso_handle_write_lock;
-bool MonodroidRuntime::startup_in_progress = true;
+#endif // ndef NET
 
 #ifdef WINDOWS
 static const char* get_xamarin_android_msbuild_path (void);
@@ -834,10 +818,6 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 		mono_jit_parse_options (argc, args);
 	}
 
-	// int argc = 5;
-	// char* argv[] = { "-v", "-v", "-v", "-v", "-v" };
-	// mono_jit_parse_options (argc, argv);
-
 	mono_set_signal_chaining (1);
 	mono_set_crash_chaining (1);
 
@@ -1107,8 +1087,8 @@ MonodroidRuntime::init_android_runtime (
 #endif // ndef NET
 	MonoImage *mono_android_assembly_image = mono_assembly_get_image (mono_android_assembly);
 
-	uint32_t i = 0;
-	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES; ++i) {
+	size_t i = 0;
+	for ( ; i < OSBridge::mono_xa_gc_bridge_types.size (); ++i) {
 		lookup_bridge_info (
 #if !defined (NET)
 			domain,
@@ -1145,7 +1125,7 @@ MonodroidRuntime::init_android_runtime (
 #endif // ndef NET
 
 	MonoImage       *ji_image   = mono_assembly_get_image  (ji_assm);
-	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES + OSBridge::NUM_JI_GC_BRIDGE_TYPES; ++i) {
+	for ( ; i < OSBridge::NUM_GC_BRIDGE_TYPES; ++i) {
 		lookup_bridge_info (
 #if !defined (NET)
 			domain,

@@ -215,10 +215,7 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 }
 #endif
 
-#if !defined (WINDOWS) // mingw doesn't like it
-[[gnu::always_inline]]
-#endif
-int
+inline int
 AndroidSystem::fetch_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept
 {
 	int len = _monodroid__system_property_get (name, value.get (), value.size ());

@@ -1,3 +1,4 @@
+#include <array>
 #include <cstring>
 
 #include <sys/types.h>
@@ -38,35 +39,6 @@ bool    lref_to_logcat;
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
-
-const OSBridge::MonoJavaGCBridgeType OSBridge::mono_xa_gc_bridge_types[] = {
-	{ "Java.Lang",  "Object" },
-	{ "Java.Lang",  "Throwable" },
-};
-
-const OSBridge::MonoJavaGCBridgeType OSBridge::mono_ji_gc_bridge_types[] = {
-	{ "Java.Interop",       "JavaObject" },
-	{ "Java.Interop",       "JavaException" },
-};
-
-const OSBridge::MonoJavaGCBridgeType OSBridge::empty_bridge_type = {
-	"",
-	""
-};
-
-const uint32_t OSBridge::NUM_XA_GC_BRIDGE_TYPES = (sizeof (mono_xa_gc_bridge_types)/sizeof (mono_xa_gc_bridge_types [0]));
-const uint32_t OSBridge::NUM_JI_GC_BRIDGE_TYPES = (sizeof (mono_ji_gc_bridge_types)/sizeof (mono_ji_gc_bridge_types [0]));
-const uint32_t OSBridge::NUM_GC_BRIDGE_TYPES    = NUM_XA_GC_BRIDGE_TYPES + NUM_JI_GC_BRIDGE_TYPES;
-
-OSBridge::MonoJavaGCBridgeInfo OSBridge::mono_java_gc_bridge_info [NUM_GC_BRIDGE_TYPES];
-
-OSBridge::MonoJavaGCBridgeInfo OSBridge::empty_bridge_info = {
-	nullptr,
-	nullptr,
-	nullptr,
-	nullptr,
-	nullptr
-};
 
 extern "C" MonoGCBridgeObjectKind
 gc_bridge_class_kind_cb (MonoClass* klass)
@@ -126,7 +98,7 @@ OSBridge::get_gc_bridge_index (MonoClass *klass)
 {
 	uint32_t f = 0;
 
-	for (size_t i = 0; i < NUM_GC_BRIDGE_TYPES; ++i) {
+	for (size_t i = 0; i < mono_java_gc_bridge_info.size (); ++i) {
 		MonoClass *k = mono_java_gc_bridge_info [i].klass;
 		if (k == nullptr) {
 			f++;
@@ -152,7 +124,7 @@ OSBridge::get_gc_bridge_info_for_class (MonoClass *klass)
 	i   = get_gc_bridge_index (klass);
 	if (i < 0)
 		return nullptr;
-	return &mono_java_gc_bridge_info [i];
+	return &mono_java_gc_bridge_info [static_cast<size_t>(i)];
 }
 
 OSBridge::MonoJavaGCBridgeInfo *

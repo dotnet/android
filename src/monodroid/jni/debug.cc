@@ -87,7 +87,7 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 	std::unique_ptr<char> mname {mname_ptr};
 
 	unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
-	std::unique_ptr<char> libname {utils.string_concat ("libmono-profiler-", mname.get (), ".so")};
+	std::unique_ptr<char[]> libname {utils.string_concat ("libmono-profiler-", mname.get (), ".so")};
 	bool found = false;
 	void *handle = androidSystem.load_dso_from_any_directories (libname.get (), dlopen_flags);
 	found = load_profiler_from_handle (handle, desc, mname.get ());
@@ -131,7 +131,7 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 	if (!dso_handle)
 		return false;
 
-	std::unique_ptr<char> symbol {utils.string_concat (INITIALIZER_NAME, "_", name)};
+	std::unique_ptr<char[]> symbol {utils.string_concat (INITIALIZER_NAME, "_", name)};
 	bool result = load_profiler (dso_handle, desc, symbol.get ());
 
 	if (result)

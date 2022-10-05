@@ -2,8 +2,13 @@
 #ifndef __OS_BRIDGE_H
 #define __OS_BRIDGE_H
 
+#include <array>
+
 #include <jni.h>
 #include <mono/metadata/sgen-bridge.h>
+#include <mono/metadata/appdomain.h>
+
+#include "logger.hh"
 
 namespace xamarin::android::internal
 {
@@ -54,16 +59,31 @@ namespace xamarin::android::internal
 
 		using MonodroidGCTakeRefFunc = mono_bool (OSBridge::*) (JNIEnv *env, MonoObject *obj);
 
-		static const MonoJavaGCBridgeType empty_bridge_type;
-		static const MonoJavaGCBridgeType mono_xa_gc_bridge_types[];
-		static const MonoJavaGCBridgeType mono_ji_gc_bridge_types[];
-		static MonoJavaGCBridgeInfo empty_bridge_info;
-		static MonoJavaGCBridgeInfo mono_java_gc_bridge_info [];
+		inline static const MonoJavaGCBridgeType empty_bridge_type = {
+			"",
+			"",
+		};
 
-	public:
-		static const uint32_t NUM_XA_GC_BRIDGE_TYPES;
-		static const uint32_t NUM_JI_GC_BRIDGE_TYPES;
-		static const uint32_t NUM_GC_BRIDGE_TYPES;
+		static constexpr std::array<MonoJavaGCBridgeType, 2> mono_xa_gc_bridge_types {{
+			{ "Java.Lang",  "Object" },
+			{ "Java.Lang",  "Throwable" },
+		}};
+
+		static constexpr std::array<MonoJavaGCBridgeType, 2> mono_ji_gc_bridge_types {{
+			{ "Java.Interop",       "JavaObject" },
+			{ "Java.Interop",       "JavaException" },
+		}};
+
+		static inline MonoJavaGCBridgeInfo empty_bridge_info = {
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr
+		};
+
+		static constexpr uint32_t NUM_GC_BRIDGE_TYPES = mono_xa_gc_bridge_types.size () + mono_ji_gc_bridge_types.size ();
+		static inline std::array<MonoJavaGCBridgeInfo, NUM_GC_BRIDGE_TYPES> mono_java_gc_bridge_info;
 
 	public:
 		void clear_mono_java_gc_bridge_info ();
@@ -79,22 +99,21 @@ namespace xamarin::android::internal
 			return gc_weak_gref_count;
 		}
 
-		const MonoJavaGCBridgeType& get_java_gc_bridge_type (uint32_t index)
+		const MonoJavaGCBridgeType& get_java_gc_bridge_type (size_t index) noexcept
 		{
-			if (index < NUM_XA_GC_BRIDGE_TYPES)
+			if (index < mono_xa_gc_bridge_types.size ())
 				return mono_xa_gc_bridge_types [index];
 
-			index -= NUM_XA_GC_BRIDGE_TYPES;
-			if (index < NUM_JI_GC_BRIDGE_TYPES)
+			index -= mono_xa_gc_bridge_types.size ();
+			if (index < mono_ji_gc_bridge_types.size ())
 				return mono_ji_gc_bridge_types [index];
 
-			index -= NUM_JI_GC_BRIDGE_TYPES;
 			return empty_bridge_type; // Not ideal...
 		}
 
-		MonoJavaGCBridgeInfo& get_java_gc_bridge_info (uint32_t index)
+		MonoJavaGCBridgeInfo& get_java_gc_bridge_info (size_t index) noexcept
 		{
-			if (index >= NUM_GC_BRIDGE_TYPES)
+			if (index >= mono_java_gc_bridge_info.size ())
 				return empty_bridge_info; // Not ideal...
 
 			return mono_java_gc_bridge_info [index];

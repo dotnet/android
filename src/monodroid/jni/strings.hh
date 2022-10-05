@@ -730,7 +730,7 @@ namespace xamarin::android::internal
 			}
 
 			while (x > 0) {
-				*--p = (x % 10) + ZERO;
+				*--p = static_cast<TChar>(x % 10) + ZERO;
 				x /= 10;
 			}
 

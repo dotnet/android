@@ -171,7 +171,7 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			for (size_t i = str.length () - 1; i >= 0; i--) {
+			for (ssize_t i = str.length () - 1; i >= 0; i--) {
 				if (str[i] == ch) {
 					return str.get () + i;
 				}

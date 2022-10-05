@@ -196,7 +196,6 @@ runtime_exists (const char *dir, std::string& libmonoso)
 		log_info (LOG_DEFAULT, "Mono runtime found at: %s", libmonoso.c_str ());
 		return true;
 	}
-	libmonoso = nullptr;
 
 	return false;
 }
@@ -228,8 +227,9 @@ get_libmonosgen_path ()
 
 	if (androidSystem.get_runtime_libdir () != nullptr) {
 		libmonoso = combine_paths (androidSystem.get_runtime_libdir (), SharedConstants::MONO_SGEN_ARCH_SO);
-	} else
-		libmonoso = nullptr;
+	} else {
+		libmonoso.clear ();
+	}
 
 	if (!libmonoso.empty () && utils.file_exists (libmonoso.c_str ())) {
 		std::string links_dir = combine_paths (androidSystem.get_primary_override_dir (), "links");

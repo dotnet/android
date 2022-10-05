@@ -242,18 +242,6 @@ monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
 	timing->release_sequence (sequence);
 }
 
-static char**
-monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
-{
-	return utils.monodroid_strsplit (str, delimiter, max_tokens);
-}
-
-static void
-monodroid_strfreev (char **str_array)
-{
-	utils.monodroid_strfreev (str_array);
-}
-
 static char*
 monodroid_strdup_printf (const char *format, ...)
 {
