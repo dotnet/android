@@ -58,54 +58,5 @@
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
   </ItemGroup>
 
-   <!-- Creates 'AssemblyInfo.cs' with appropriate version information -->
-  <Target Name="_BuildAssemblyInfo_cs"
-      DependsOnTargets="GetXAVersionInfo"
-      BeforeTargets="CoreCompile"
-      Condition="!Exists ('$(IntermediateOutputPath)AssemblyInfo.cs')"
-      Inputs="Properties\AssemblyInfo.cs.in"
-      Outputs="$(IntermediateOutputPath)AssemblyInfo.cs">
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
-      <_PackageVersion>$(ProductVersion)</_PackageVersion>
-      <_PackageVersionBuild>$(XAVersionCommitCount)</_PackageVersionBuild>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
-      <_PackageVersion>$(AndroidPackVersion)</_PackageVersion>
-      <_PackageVersionBuild>$(PackVersionCommitCount)</_PackageVersionBuild>
-    </PropertyGroup>
-    <ReplaceFileContents
-        SourceFile="Properties\AssemblyInfo.cs.in"
-        DestinationFile="$(IntermediateOutputPath)AssemblyInfo.cs"
-        Replacements="@PACKAGE_VERSION@=$(_PackageVersion);@PACKAGE_VERSION_BUILD@=$(_PackageVersionBuild);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch);@API_LEVEL@=$(AndroidApiLevel);@MIN_API_LEVEL@=$(AndroidMinimumDotNetApiLevel)">
-    </ReplaceFileContents>
-  </Target>
-
-  <Target Name="_CopyToPackDirs" >
-    <Copy
-        SourceFiles="$(OutputPath)ref\Mono.Android.Runtime.dll"
-        DestinationFolder="$(MicrosoftAndroidRefPackDir)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="$(OutputPath)Mono.Android.Runtime.dll"
-        DestinationFolder="$(MicrosoftAndroidArmPackDir)lib\$(DotNetTargetFramework)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="$(OutputPath)Mono.Android.Runtime.dll"
-        DestinationFolder="$(MicrosoftAndroidArm64PackDir)lib\$(DotNetTargetFramework)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="$(OutputPath)Mono.Android.Runtime.dll"
-        DestinationFolder="$(MicrosoftAndroidx86PackDir)lib\$(DotNetTargetFramework)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="$(OutputPath)Mono.Android.Runtime.dll"
-        DestinationFolder="$(MicrosoftAndroidx64PackDir)lib\$(DotNetTargetFramework)"
-        SkipUnchangedFiles="true"
-    />
-  </Target>
-
+  <Import Project="Mono.Android.Runtime.targets" />
 </Project>
