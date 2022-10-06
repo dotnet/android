@@ -40,9 +40,9 @@ namespace Xamarin.Android.Prepare
 
 		protected override bool DeterminePackageVersion()
 		{
-			var output = Utilities.GetStringFromStdout ("equery", "--quiet", "list", PackageName).Replace($"{PackageName}-", "");
-			if (!String.IsNullOrEmpty(output)) {
-				CurrentVersion = output;
+			var output = Utilities.GetStringFromStdout ("equery", "--quiet", "list", PackageName).Replace ($"{PackageName.Split (':') [0]}-", "").Split('-','_');
+			if (output.Length >= 1 && !String.IsNullOrEmpty (output [0])) {
+				CurrentVersion = output [0];
 				return true;
 			}
 
