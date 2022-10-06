@@ -277,91 +277,91 @@ BasicUtilities::monodroid_dirent_hasextension (monodroid_dirent_t *e, const char
 #endif
 }
 
-void
-BasicUtilities::monodroid_strfreev (char **str_array)
-{
-	char **orig = str_array;
-	if (str_array == nullptr)
-		return;
-	while (*str_array != nullptr){
-		free (*str_array);
-		str_array++;
-	}
-	free (orig);
-}
+// void
+// BasicUtilities::monodroid_strfreev (char **str_array)
+// {
+// 	char **orig = str_array;
+// 	if (str_array == nullptr)
+// 		return;
+// 	while (*str_array != nullptr){
+// 		free (*str_array);
+// 		str_array++;
+// 	}
+// 	free (orig);
+// }
 
-char **
-BasicUtilities::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
-{
-	if (str == nullptr || *str == '\0') {
-		return static_cast<char**>(xcalloc (sizeof(char*), 1));
-	}
+// char **
+// BasicUtilities::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
+// {
+// 	if (str == nullptr || *str == '\0') {
+// 		return static_cast<char**>(xcalloc (sizeof(char*), 1));
+// 	}
 
-	const char *p_str = str;
-	size_t tokens_in_str = 0;
-	size_t delimiter_len = strlen (delimiter);
+// 	const char *p_str = str;
+// 	size_t tokens_in_str = 0;
+// 	size_t delimiter_len = strlen (delimiter);
 
-	while (*p_str != '\0') {
-		size_t bytes = strspn (p_str, delimiter);
-		if (bytes == 0) {
-			bytes = 1;
-		} else {
-			tokens_in_str += bytes / delimiter_len;
-		}
+// 	while (*p_str != '\0') {
+// 		size_t bytes = strspn (p_str, delimiter);
+// 		if (bytes == 0) {
+// 			bytes = 1;
+// 		} else {
+// 			tokens_in_str += bytes / delimiter_len;
+// 		}
 
-		p_str += bytes;
-	}
+// 		p_str += bytes;
+// 	}
 
-	size_t vector_size = (max_tokens > 0 && tokens_in_str >= max_tokens) ? max_tokens + 1 : tokens_in_str + 2; // Includes the terminating 'nullptr` entry
+// 	size_t vector_size = (max_tokens > 0 && tokens_in_str >= max_tokens) ? max_tokens + 1 : tokens_in_str + 2; // Includes the terminating 'nullptr` entry
 
-	char **vector = static_cast<char**>(xmalloc (MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(char*), vector_size)));
-	size_t vector_idx = 0;
+// 	char **vector = static_cast<char**>(xmalloc (MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(char*), vector_size)));
+// 	size_t vector_idx = 0;
 
-	while (*str != '\0' && !(max_tokens > 0 && vector_idx + 1 >= max_tokens)) {
-		const char *c = str;
+// 	while (*str != '\0' && !(max_tokens > 0 && vector_idx + 1 >= max_tokens)) {
+// 		const char *c = str;
 
-		if (strncmp (str, delimiter, delimiter_len) == 0) {
-			vector[vector_idx++] = strdup ("");
-			str += delimiter_len;
-			continue;
-		}
+// 		if (strncmp (str, delimiter, delimiter_len) == 0) {
+// 			vector[vector_idx++] = strdup ("");
+// 			str += delimiter_len;
+// 			continue;
+// 		}
 
-		while (*str != '\0' && strncmp (str, delimiter, delimiter_len) != 0) {
-			str++;
-		}
+// 		while (*str != '\0' && strncmp (str, delimiter, delimiter_len) != 0) {
+// 			str++;
+// 		}
 
-		if (*str == '\0') {
-			vector[vector_idx++] = strdup (c);
-			continue;
-		}
+// 		if (*str == '\0') {
+// 			vector[vector_idx++] = strdup (c);
+// 			continue;
+// 		}
 
-		size_t toklen = static_cast<size_t>((str - c));
-		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, toklen, 1);
-		char *token = static_cast<char*>(xmalloc (alloc_size));
-		strncpy (token, c, toklen);
-		token [toklen] = '\0';
-		vector[vector_idx++] = token;
+// 		size_t toklen = static_cast<size_t>((str - c));
+// 		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, toklen, 1);
+// 		char *token = static_cast<char*>(xmalloc (alloc_size));
+// 		strncpy (token, c, toklen);
+// 		token [toklen] = '\0';
+// 		vector[vector_idx++] = token;
 
-		/* Need to leave a trailing empty
-		 * token if the delimiter is the last
-		 * part of the string
-		 */
-		if (strcmp (str, delimiter) != 0) {
-			str += delimiter_len;
-		}
-	}
+// 		/* Need to leave a trailing empty
+// 		 * token if the delimiter is the last
+// 		 * part of the string
+// 		 */
+// 		if (strcmp (str, delimiter) != 0) {
+// 			str += delimiter_len;
+// 		}
+// 	}
 
-	if (*str != '\0') {
-		if (strncmp (str, delimiter, delimiter_len) == 0) {
-			vector[vector_idx++] = strdup ("");
-		} else {
-			vector[vector_idx++] = strdup (str);
-		}
-	}
+// 	if (*str != '\0') {
+// 		if (strncmp (str, delimiter, delimiter_len) == 0) {
+// 			vector[vector_idx++] = strdup ("");
+// 		} else {
+// 			vector[vector_idx++] = strdup (str);
+// 		}
+// 	}
 
-	vector[vector_idx] = nullptr;
-	return vector;
-}
+// 	vector[vector_idx] = nullptr;
+// 	return vector;
+// }
 
 char *
 BasicUtilities::monodroid_strdup_printf (const char *format, ...)

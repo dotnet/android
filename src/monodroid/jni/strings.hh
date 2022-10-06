@@ -638,7 +638,7 @@ namespace xamarin::android::internal
 		force_inline void set_at (size_t index, const TChar ch) noexcept
 		{
 			ensure_valid_index (index);
-			TChar *p = buffer + index;
+			TChar *p = buffer.get () + index;
 			if (*p == NUL) {
 				return;
 			}
@@ -717,7 +717,7 @@ namespace xamarin::android::internal
 					y = static_cast<uint64_t>(i);
 				}
 				while (y > std::numeric_limits<uint32_t>::max ()) {
-					*--p = (y % 10) + ZERO;
+					*--p = static_cast<TChar>((y % 10) + ZERO);
 					y /= 10;
 				}
 				x = static_cast<uint32_t>(y);

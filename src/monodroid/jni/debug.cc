@@ -167,18 +167,17 @@ Debug::set_debugger_log_level (const char *level)
 force_inline void
 Debug::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options, ConnOptions *opts)
 {
-	char **args, **ptr;
-
 	log_info (LOG_DEFAULT, "Connection options: '%s'", options.get ());
 
-	// TODO: migrate to the strings.hh tokenizer
-	args = utils.monodroid_strsplit (options.get (), ",", 0);
+	constexpr char   ARG_PORT[]         = "=port";
+	constexpr size_t ARG_PORT_LENGTH    = sizeof(ARG_PORT) - 1;
+	constexpr char   ARG_TIMEOUT[]      = "=timeout";
+	constexpr size_t ARG_TIMEOUT_LENGTH = sizeof(ARG_TIMEOUT) - 1;
 
-	for (ptr = args; ptr && *ptr; ptr++) {
-		const char *arg = *ptr;
-
-		if (strstr (arg, "port=") == arg) {
-			int port = atoi (arg + strlen ("port="));
+	string_segment token;
+	while (options.next_token (',', token)) {
+		if (token.starts_with (ARG_PORT, ARG_PORT_LENGTH)) {
+			int port = atoi (token.start () + ARG_PORT_LENGTH);
 			if (port < 0 || port > std::numeric_limits<unsigned short>::max ()) {
 				log_error (LOG_DEFAULT, "Invalid debug port value %d", port);
 				continue;
@@ -186,16 +185,21 @@ Debug::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& opt
 
 			conn_port = static_cast<uint16_t>(port);
 			log_info (LOG_DEFAULT, "XS port = %d", conn_port);
-		} else if (strstr (arg, "timeout=") == arg) {
-			char *endp;
-
-			arg += strlen ("timeout=");
-			opts->timeout_time = strtoll (arg, &endp, 10);
-			if ((endp == arg) || (*endp != '\0'))
-				log_error (LOG_DEFAULT, "Invalid --timeout argument.");
-		} else {
-			log_info (LOG_DEFAULT, "Unknown connection option: '%s'", arg);
+			continue;
 		}
+
+		if (token.starts_with (ARG_TIMEOUT, ARG_TIMEOUT_LENGTH)) {
+			char *endp;
+			const char *arg = token.start () + ARG_TIMEOUT_LENGTH;
+
+			opts->timeout_time = strtoll (arg, &endp, 10);
+			if ((endp == arg) || (*endp != '\0')) {
+				log_error (LOG_DEFAULT, "Invalid --timeout argument.");
+			}
+			continue;
+		}
+
+		log_info (LOG_DEFAULT, "Unknown connection option: '%s'", token.start ());
 	}
 }
 
@@ -260,8 +264,11 @@ Debug::start_debugging_and_profiling ()
 		}
 	}
 
+
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->end_event (total_time_index);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
 }
 

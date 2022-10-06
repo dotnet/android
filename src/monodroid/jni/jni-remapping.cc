@@ -9,7 +9,7 @@ using namespace xamarin::android::internal;
 force_inline bool
 JniRemapping::equal (JniRemappingString const& left, const char *right, size_t right_len) noexcept
 {
-	if (left.length != static_cast<uint32_t>(right_len) || left.str[0] != *right) {
+	if (right == nullptr || left.length != static_cast<uint32_t>(right_len) || left.str[0] != *right) {
 		return false;
 	}
 

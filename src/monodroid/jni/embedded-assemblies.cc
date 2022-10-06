@@ -757,7 +757,9 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 	MonoReflectionType *ret = typemap_java_to_managed (hash, java_type);
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->end_event (total_time_index);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
 
 	return ret;
@@ -896,7 +898,9 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 	const char *ret = typemap_managed_to_java (type, mono_class_from_mono_type (type), mvid);
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->end_event (total_time_index);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
 
 	return ret;

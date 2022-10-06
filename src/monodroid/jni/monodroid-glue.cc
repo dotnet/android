@@ -805,17 +805,36 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> prop_val;
 	/* Additional runtime arguments passed to mono_jit_parse_options () */
 	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_RUNTIME_ARGS_PROPERTY, prop_val) > 0) {
-		char **ptr;
-
 		log_warn (LOG_DEBUGGER, "passing '%s' as extra arguments to the runtime.\n", prop_val.get ());
 
-		char **args = utils.monodroid_strsplit (prop_val.get (), " ", 0);
-		int argc = 0;
+		//
+		// Assume the worst case where each character is our separator, which will usually not be true and we will
+		// allocate more memory than necessary, but with property values limited in size to 92 chars (in the current
+		// Android 13), that's not much loss compared to performance gain.
+		//
+		// TODO: consider implementing a generic container which keeps items on the stack until it hits a size limit and
+		// then allocates on stack
+		//
+		std::vector<char*> aargs;
+		aargs.reserve (prop_val.size ());
 
-		for (ptr = args; *ptr; ptr++)
-			argc ++;
+		// We don't need the property value to remain untouched
+		size_t last_start = 0;
+		for (size_t idx = 0; idx < prop_val.length (); idx++) {
+			if (prop_val[idx] != ' ') {
+				continue;
+			}
 
-		mono_jit_parse_options (argc, args);
+			prop_val.set_at (idx, '\0');
+			aargs.push_back (prop_val.get () + last_start);
+			last_start = idx + 1;
+		}
+
+		if (last_start < prop_val.length ()) {
+			aargs.push_back (prop_val.get () + last_start);
+		}
+
+		mono_jit_parse_options (static_cast<int>(aargs.size ()), aargs.data ());
 	}
 
 	mono_set_signal_chaining (1);
@@ -1189,7 +1208,9 @@ MonodroidRuntime::init_android_runtime (
 #endif // ndef NET && ndef ANDROID
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->end_event (native_to_managed_index);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
 }
 
@@ -1894,14 +1915,19 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 	mono_assembly_name_free (aname);
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->end_event (total_time_index, true /* uses_more_info */);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 
 		constexpr char PREFIX[] = " (domain): ";
 		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1;
 
 		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
 		more_info.append_c (assm_name);
+
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->add_more_info (total_time_index, more_info);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
 }
 
@@ -1923,11 +1949,16 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 	}
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->end_event (total_time_index, true /* uses-more_info */);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 
 		static_local_string<SharedConstants::INTEGER_BASE10_BUFFER_SIZE> more_info;
 		more_info.append (static_cast<uint64_t>(i + 1));
+
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->add_more_info (total_time_index, more_info);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
 }
 
@@ -2338,7 +2369,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	mono_runtime_init (runtime_args);
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->end_event (mono_runtime_init_index);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
 
 	jstring_array_wrapper assemblies (env, assembliesJava);
@@ -2374,7 +2407,11 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
+
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->end_event (total_time_index);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
+
 #if !defined (NET)
 		dump_counters ("## Runtime.init: end");
 #endif // ndef NET
@@ -2513,14 +2550,18 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 	env->ReleaseStringChars (managedType, managedType_ptr);
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->end_event (total_time_index, true /* uses_more_info */);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 
 		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
 		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 		type.assign (mt_ptr, strlen (mt_ptr));
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
 
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_START
 		internal_timing->add_more_info (total_time_index, type);
+		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 #if !defined (NET)
 		dump_counters ("## Runtime.register: type=%s\n", type.get ());
 #endif

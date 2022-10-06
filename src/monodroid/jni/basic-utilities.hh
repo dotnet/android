@@ -32,8 +32,6 @@ namespace xamarin::android
 		monodroid_dir_t *monodroid_opendir (const char *filename);
 		int              monodroid_closedir (monodroid_dir_t *dirp);
 		int              monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension);
-		void             monodroid_strfreev (char **str_array);
-		char           **monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens);
 		char            *monodroid_strdup_printf (const char *format, ...);
 		char            *monodroid_strdup_vprintf (const char *format, va_list vargs);
 		gsl::owner<char*> path_combine (const char *path1, const char *path2) noexcept;
@@ -171,10 +169,14 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			for (ssize_t i = str.length () - 1; i >= 0; i--) {
+			for (size_t i = str.length () - 1; i > 0; i--) {
 				if (str[i] == ch) {
 					return str.get () + i;
 				}
+			}
+
+			if (str[0] == ch) {
+				return str.get ();
 			}
 
 			return nullptr;
