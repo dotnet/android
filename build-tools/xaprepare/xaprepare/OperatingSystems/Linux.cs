@@ -45,7 +45,7 @@ and re-enable it after building with the following command:
 			{"arch",      "Arch"},
 			{"linuxmint", "LinuxMint"},
 			{"fedora",    "Fedora"},
-			{"gentoo",    "Gentoo"}
+			{"gentoo",    "Gentoo"},
 		};
 
 		bool warnBinFmt;
