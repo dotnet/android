@@ -17,7 +17,7 @@
 #include "search.hh"
 #include "strings.hh"
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET) && defined (ENABLE_MARSHAL_METHODS)
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
 #define USE_CACHE 1
 #endif
 
@@ -55,7 +55,6 @@ namespace xamarin::android::internal {
 #if defined (NET)
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, MonoAssemblyLoadContextGCHandle alc_gchandle, hash_t name_hash, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
-			log_info (LOG_DEFAULT, "Loading assembly %s; hash 0x%zx", name.get (), name_hash);
 			MonoImageOpenStatus status;
 			MonoImage *image = mono_image_open_from_data_alc (
 				alc_gchandle,
@@ -71,7 +70,6 @@ namespace xamarin::android::internal {
 
 		force_inline static MonoImage* load (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, MonoAssemblyLoadContextGCHandle alc_gchandle, uint8_t *assembly_data, uint32_t assembly_data_size) noexcept
 		{
-
 			return load (name, alc_gchandle, xxhash::hash (name.get (), name.length ()), assembly_data, assembly_data_size);
 		}
 #endif // def NET
@@ -114,23 +112,18 @@ namespace xamarin::android::internal {
 
 		force_inline static MonoImage* stash_and_return (MonoImage *image, MonoImageOpenStatus status, [[maybe_unused]] hash_t hash) noexcept
 		{
-#if ENABLE_MARSHAL_METHODS
-			log_info (LOG_DEFAULT, "Stashing image %p; hash 0x%zx", image, hash);
-#endif
 			if (image == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-				log_warn (LOG_ASSEMBLY, "Failed to open assembly image for '%s'. %s", mono_image_strerror (status));
+				log_warn (LOG_ASSEMBLY, "Failed to open assembly image. %s", mono_image_strerror (status));
 				return nullptr;
 			}
 
 #if defined (USE_CACHE)
 			ssize_t index = find_index (hash);
-			log_info (LOG_DEFAULT, "Index matching the hash == %zd", index);
 			if (index < 0) {
-				// TODO: Warn?
+				log_warn (LOG_ASSEMBLY, "Failed to look up image index for hash 0x%zx", hash);
 				return image;
 			}
 
-			log_info (LOG_DEFAULT, "Stashing");
 			// We don't need to worry about locking here.  Even if we're overwriting an entry just set by another
 			// thread, the image pointer is going to be the same (at least currently, it will change when we have
 			// support for unloadable Assembly Load Contexts) and the actual write operation to the destination is
@@ -141,7 +134,7 @@ namespace xamarin::android::internal {
 		}
 
 #if defined (USE_CACHE)
-		static size_t number_of_cache_index_entries;
+		static inline size_t number_of_cache_index_entries = application_config.number_of_assemblies_in_apk * number_of_assembly_name_forms_in_image_cache;;
 #endif // def USE_CACHE
 	};
 }

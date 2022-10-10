@@ -1,16 +1,10 @@
-#if ENABLE_MARSHAL_METHODS
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Text;
 
-using Java.Interop.Tools.TypeNameMappings;
-using Java.Interop.Tools.JavaCallableWrappers;
-
 using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tasks.LLVMIR;
@@ -205,6 +199,20 @@ namespace Xamarin.Android.Tasks
 		List<MarshalMethodInfo> methods;
 		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
+		readonly bool generateEmptyCode;
+
+		/// <summary>
+		/// Constructor to be used ONLY when marshal methods are DISABLED
+		/// </summary>
+		public MarshalMethodsNativeAssemblyGenerator (ICollection<string> uniqueAssemblyNames)
+		{
+			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
+			generateEmptyCode = true;
+		}
+
+		/// <summary>
+		/// Constructor to be used ONLY when marshal methods are ENABLED
+		/// </summary>
 		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, TaskLoggingHelper logger)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
@@ -212,15 +220,12 @@ namespace Xamarin.Android.Tasks
 			this.marshalMethods = marshalMethods;
 			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
 
-			if (uniqueAssemblyNames.Count != numberOfAssembliesInApk) {
-				throw new InvalidOperationException ("Internal error: number of assemblies in the apk doesn't match the number of unique assembly names");
-			}
+			generateEmptyCode = false;
 		}
 
 		public override void Init ()
 		{
-			Console.WriteLine ($"Marshal methods count: {marshalMethods?.Count ?? 0}");
-			if (marshalMethods == null || marshalMethods.Count == 0) {
+			if (generateEmptyCode || marshalMethods == null || marshalMethods.Count == 0) {
 				return;
 			}
 
@@ -267,11 +272,8 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				Console.WriteLine ($"Overloaded MM: {mmiList[0].NativeSymbolName}");
 				foreach (MarshalMethodInfo overloadedMethod in mmiList) {
-					Console.WriteLine ($"  implemented in: {overloadedMethod.Method.DeclaringType.FullName} ({overloadedMethod.Method.RegisteredMethod.FullName})");
 					overloadedMethod.NativeSymbolName = MakeNativeSymbolName (overloadedMethod.Method, useFullNativeSignature: true);
-					Console.WriteLine ($"     new native symbol name: {overloadedMethod.NativeSymbolName}");
 				}
 			}
 
@@ -307,7 +309,6 @@ namespace Xamarin.Android.Tasks
 			sb.Append (MangleForJni ($"n_{entry.JniMethodName}"));
 
 			if (useFullNativeSignature) {
-				Console.WriteLine ("  Using FULL signature");
 				string signature = entry.JniMethodSignature;
 				if (signature.Length < 2) {
 					ThrowInvalidSignature (signature, "must be at least two characters long");
@@ -339,20 +340,10 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessAndAddMethod (List<MarshalMethodInfo> allMethods, MarshalMethodEntry entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses, Dictionary<string, List<MarshalMethodInfo>> overloadedNativeSymbolNames)
 		{
-			Console.WriteLine ("marshal method:");
-			Console.WriteLine ($"  top type: {entry.DeclaringType.FullName} (token: 0x{entry.DeclaringType.MetadataToken.ToUInt32 ():x})");
-			Console.WriteLine ($"  registered method: [{entry.RegisteredMethod.DeclaringType.FullName}] {entry.RegisteredMethod.FullName}");
-			Console.WriteLine ($"  implemented method: [{entry.ImplementedMethod.DeclaringType.FullName}] {entry.ImplementedMethod.FullName}");
-			Console.WriteLine ($"  native callback: {entry.NativeCallback.FullName} (token: 0x{entry.NativeCallback.MetadataToken.ToUInt32 ():x})");
-			Console.WriteLine ($"  native callback wrapper: {entry.NativeCallbackWrapper}");
-			Console.WriteLine ($"  connector: {entry.Connector.FullName}");
-			Console.WriteLine ($"  JNI name: {entry.JniMethodName}");
-			Console.WriteLine ($"  JNI signature: {entry.JniMethodSignature}");
-
 			CecilMethodDefinition nativeCallback = entry.NativeCallback;
 			string nativeSymbolName = MakeNativeSymbolName (entry, useFullNativeSignature);
 			string klass = $"{nativeCallback.DeclaringType.FullName}, {nativeCallback.Module.Assembly.FullName}";
-			Console.WriteLine ($"  klass == {klass}");
+
 			if (!seenClasses.TryGetValue (klass, out int classIndex)) {
 				classIndex = classes.Count;
 				seenClasses.Add (klass, classIndex);
@@ -365,24 +356,13 @@ namespace Xamarin.Android.Tasks
 				classes.Add (new StructureInstance<MarshalMethodsManagedClass> (mc));
 			}
 
-			Console.WriteLine ("  about to parse JNI sig");
-			(Type returnType, List<LlvmIrFunctionParameter>? parameters) = ParseJniSignature (entry.JniMethodSignature, entry.ImplementedMethod);
-			Console.WriteLine ("  parsed!");
+			// Methods with `IsSpecial == true` are "synthetic" methods - they contain only the callback reference
+			(Type returnType, List<LlvmIrFunctionParameter>? parameters) = ParseJniSignature (entry.JniMethodSignature, entry.IsSpecial ? entry.NativeCallback : entry.ImplementedMethod);
 
 			var method = new MarshalMethodInfo (entry, returnType, nativeSymbolName: nativeSymbolName, classIndex);
 			if (parameters != null && parameters.Count > 0) {
 				method.Parameters.AddRange (parameters);
 			}
-
-			Console.WriteLine ($"  Generated native symbol: {method.NativeSymbolName}");
-			Console.WriteLine ($"  Parsed return type: {returnType}");
-			if (method.Parameters.Count > 0) {
-				Console.WriteLine ("  Parsed parameters:");
-				foreach (LlvmIrFunctionParameter p in method.Parameters) {
-					Console.WriteLine ($"    {p.Type} {p.Name}");
-				}
-			}
-			Console.WriteLine ();
 
 			if (!overloadedNativeSymbolNames.TryGetValue (method.NativeSymbolName, out List<MarshalMethodInfo> overloadedMethods)) {
 				overloadedMethods = new List<MarshalMethodInfo> ();
@@ -395,17 +375,17 @@ namespace Xamarin.Android.Tasks
 
 		string MangleForJni (string name)
 		{
-			Console.WriteLine ($"    mangling '{name}'");
 			var sb = new StringBuilder ();
 
 			foreach (char ch in name) {
 				switch (ch) {
-					case '_':
-						sb.Append ("_1");
+					case '/':
+					case '.':
+						sb.Append ('_');
 						break;
 
-					case '/':
-						sb.Append ('_');
+					case '_':
+						sb.Append ("_1");
 						break;
 
 					case ';':
@@ -416,16 +396,12 @@ namespace Xamarin.Android.Tasks
 						sb.Append ("_3");
 						break;
 
-					case '$':
-						sb.Append ("_00024");
-						break;
-
 					default:
-						if ((int)ch > 127) {
+						if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
+							sb.Append (ch);
+						} else {
 							sb.Append ("_0");
 							sb.Append (((int)ch).ToString ("x04"));
-						} else {
-							sb.Append (ch);
 						}
 						break;
 				}
@@ -477,10 +453,8 @@ namespace Xamarin.Android.Tasks
 
 			Type? JniTypeToManaged (char jniType)
 			{
-				Console.WriteLine ($"  turning JNI type '{jniType}' into managed type");
 				if (jniSimpleTypeMap.TryGetValue (jniType, out Type managedType)) {
 					idx++;
-					Console.WriteLine ($"    will return {managedType}");
 					return managedType;
 				}
 
@@ -489,24 +463,21 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (jniType == '[') {
-					Console.WriteLine ("    an array");
 					idx++;
 					jniType = signature[idx];
 					if (jniArrayTypeMap.TryGetValue (jniType, out managedType)) {
 						if (jniType == 'L') {
-							Console.WriteLine ("    skipping");
 							JavaClassToManaged (justSkip: true);
 						} else {
 							idx++;
 						}
-						Console.WriteLine ($"    will return {managedType}");
+
 						return managedType;
 					}
 
 					throw new InvalidOperationException ($"Unsupported JNI array type '{jniType}' at index {idx} of signature '{signature}'");
 				}
 
-				Console.WriteLine ("  returning NULL managed type");
 				return null;
 			}
 
@@ -609,17 +580,19 @@ namespace Xamarin.Android.Tasks
 			generator.WriteArray (mm_class_names, "mm_class_names", "Names of classes in which marshal methods reside");
 
 			var uniqueMethods = new Dictionary<ulong, MarshalMethodInfo> ();
-			foreach (MarshalMethodInfo mmi in methods) {
-				string asmName = Path.GetFileName (mmi.Method.NativeCallback.Module.Assembly.MainModule.FileName);
-				if (!asmNameToIndex.TryGetValue (asmName, out uint idx)) {
-					throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to cache array index");
-				}
+			if (!generateEmptyCode && methods != null) {
+				foreach (MarshalMethodInfo mmi in methods) {
+					string asmName = Path.GetFileName (mmi.Method.NativeCallback.Module.Assembly.MainModule.FileName);
+					if (!asmNameToIndex.TryGetValue (asmName, out uint idx)) {
+						throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to cache array index");
+					}
 
-				ulong id = ((ulong)idx << 32) | (ulong)mmi.Method.NativeCallback.MetadataToken.ToUInt32 ();
-				if (uniqueMethods.ContainsKey (id)) {
-					continue;
+					ulong id = ((ulong)idx << 32) | (ulong)mmi.Method.NativeCallback.MetadataToken.ToUInt32 ();
+					if (uniqueMethods.ContainsKey (id)) {
+						continue;
+					}
+					uniqueMethods.Add (id, mmi);
 				}
-				uniqueMethods.Add (id, mmi);
 			}
 
 			MarshalMethodName name;
@@ -672,7 +645,7 @@ namespace Xamarin.Android.Tasks
 
 		void WriteNativeMethods (LlvmIrGenerator generator, Dictionary<string, uint> asmNameToIndex, LlvmIrVariableReference get_function_pointer_ref)
 		{
-			if (methods == null || methods.Count == 0) {
+			if (generateEmptyCode || methods == null || methods.Count == 0) {
 				return;
 			}
 
@@ -713,7 +686,7 @@ namespace Xamarin.Android.Tasks
 				parameters: method.Parameters
 			);
 
-			generator.WriteFunctionStart (func);
+			generator.WriteFunctionStart (func, $"Method: {nativeCallback.FullName}\nAssembly: {nativeCallback.Module.Assembly.Name}");
 
 			LlvmIrFunctionLocalVariable callbackVariable1 = generator.EmitLoadInstruction (func, backingFieldRef, "cb1");
 			var callbackVariable1Ref = new LlvmIrVariableReference (callbackVariable1, isGlobal: false);
@@ -816,6 +789,7 @@ namespace Xamarin.Android.Tasks
 			generator.WriteStructureArray (marshalMethodsClass, classes,  LlvmIrVariableOptions.GlobalWritable, "marshal_methods_class_cache");
 		}
 
+		// TODO: this should probably be moved to a separate writer, since not only marshal methods use the cache
 		void WriteAssemblyImageCache (LlvmIrGenerator generator, out Dictionary<string, uint> asmNameToIndex)
 		{
 			bool is64Bit = generator.Is64Bit;
@@ -834,6 +808,7 @@ namespace Xamarin.Android.Tasks
 			{
 				var hashes = new Dictionary<T, (string name, uint index)> ();
 				uint index = 0;
+
 				foreach (string name in uniqueAssemblyNames) {
 					string clippedName = Path.GetFileNameWithoutExtension (name);
 					ulong hashFull = HashName (name, is64Bit);
@@ -874,4 +849,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-#endif

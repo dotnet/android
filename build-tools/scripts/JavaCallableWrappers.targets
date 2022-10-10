@@ -23,7 +23,6 @@
     />
     <ItemGroup>
       <_JavaSources Include="$(IntermediateOutputPath)jcw\src\**\*.java" />
-      <_JavaSources Include="$(JavaInteropSourceDirectory)\src\Java.Interop\java\com\xamarin\**\*.java" />
     </ItemGroup>
     <WriteLinesToFile
         File="$(IntermediateOutputPath)jcw/classes.txt"

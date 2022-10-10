@@ -841,6 +841,10 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 		mono_jit_parse_options (argc, args);
 	}
 
+	// int argc = 5;
+	// char* argv[] = { "-v", "-v", "-v", "-v", "-v" };
+	// mono_jit_parse_options (argc, argv);
+
 	mono_set_signal_chaining (1);
 	mono_set_crash_chaining (1);
 
@@ -874,7 +878,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET) && ENABLE_MARSHAL_METHODS
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
 	xamarin_app_init (get_function_pointer_at_startup);
 #endif // def RELEASE && def ANDROID && def NET
 }
@@ -1073,8 +1077,8 @@ MonodroidRuntime::init_android_runtime (
 #endif // def RELEASE && def ANDROID
 
 #if defined (NET)
-	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
-	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
+	mono_add_internal_call ("Android.Runtime.RuntimeNativeMethods::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
+	mono_add_internal_call ("Android.Runtime.RuntimeNativeMethods::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
 #endif // def NET
 
 	struct JnienvInitializeArgs init = {};
@@ -1090,6 +1094,7 @@ MonodroidRuntime::init_android_runtime (
 	init.boundExceptionType     = application_config.bound_exception_type;
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
+	init.marshalMethodsEnabled  = application_config.marshal_methods_enabled;
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold        = static_cast<int>(androidSystem.get_gref_gc_threshold ());
@@ -1100,22 +1105,22 @@ MonodroidRuntime::init_android_runtime (
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
-	MonoAssembly *assm;
+	MonoAssembly *mono_android_assembly;
+
 #if defined (NET)
-	assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+	mono_android_assembly = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 #else // def NET
-	assm = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+	mono_android_assembly = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 #endif // ndef NET
-	MonoImage *image = mono_assembly_get_image (assm);
+	MonoImage *mono_android_assembly_image = mono_assembly_get_image (mono_android_assembly);
 
 	uint32_t i = 0;
-
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES; ++i) {
 		lookup_bridge_info (
 #if !defined (NET)
 			domain,
 #endif // ndef NET
-			image,
+			mono_android_assembly_image,
 			&osBridge.get_java_gc_bridge_type (i),
 			&osBridge.get_java_gc_bridge_info (i)
 		);
@@ -1126,18 +1131,18 @@ MonodroidRuntime::init_android_runtime (
 
 	if constexpr (is_running_on_desktop) {
 #if defined (NET)
-		runtime = mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+		runtime = mono_class_from_name (mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 #else
-		runtime = utils.monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+		runtime = utils.monodroid_get_class_from_image (domain, mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 #endif // def NET
 		method = mono_class_get_method_from_name (runtime, "Initialize", 1);
 	} else {
-		runtime = mono_class_get (image, application_config.android_runtime_jnienv_class_token);
-		method = mono_get_method (image, application_config.jnienv_initialize_method_token, runtime);
+		runtime = mono_class_get (mono_android_assembly_image, application_config.android_runtime_jnienv_class_token);
+		method = mono_get_method (mono_android_assembly_image, application_config.jnienv_initialize_method_token, runtime);
 	}
 
-	abort_unless (runtime != nullptr, "INTERNAL ERROR: unable to find the Android.Runtime.JNIEnv class!");
-	abort_unless (method != nullptr, "INTERNAL ERROR: Unable to find the Android.Runtime.JNIEnv.Initialize method!");
+	abort_unless (runtime != nullptr, "INTERNAL ERROR: unable to find the Android.Runtime.JNIEnvInit class!");
+	abort_unless (method != nullptr, "INTERNAL ERROR: Unable to find the Android.Runtime.JNIEnvInit.Initialize method!");
 
 	MonoAssembly *ji_assm;
 #if defined (NET)
@@ -1158,6 +1163,7 @@ MonodroidRuntime::init_android_runtime (
 		);
 	}
 
+	MonoError error;
 	/* If running on desktop, we may be swapping in a new Mono.Android image when calling this
 	 * so always make sure we have the freshest handle to the method.
 	 */
@@ -1165,21 +1171,13 @@ MonodroidRuntime::init_android_runtime (
 		if constexpr (is_running_on_desktop) {
 			registerType = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
 		} else {
-			registerType = mono_get_method (image, application_config.jnienv_registerjninatives_method_token, runtime);
+			registerType = mono_get_method (mono_android_assembly_image, application_config.jnienv_registerjninatives_method_token, runtime);
 #if defined (NET) && defined (ANDROID)
-			MonoError error;
 			jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn>(mono_method_get_unmanaged_callers_only_ftnptr (registerType, &error));
 #endif // def NET && def ANDROID
 		}
 	}
-	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.RegisterJniNatives!");
-
-	MonoClass *android_runtime_jnienv = runtime;
-	MonoClassField *bridge_processing_field = mono_class_get_field_from_name (runtime, const_cast<char*> ("BridgeProcessing"));
-	if (android_runtime_jnienv ==nullptr || bridge_processing_field == nullptr) {
-		log_fatal (LOG_DEFAULT, "INTERNAL_ERROR: Unable to find Android.Runtime.JNIEnv.BridgeProcessing");
-		exit (FATAL_EXIT_CANNOT_FIND_JNIENV);
-	}
+	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s", mono_error_get_message (&error));
 
 	jclass lrefLoaderClass = env->GetObjectClass (loader);
 	init.Loader_loadClass     = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
@@ -1198,9 +1196,16 @@ MonodroidRuntime::init_android_runtime (
 	}
 
 #if defined (NET) && defined (ANDROID)
-	MonoError error;
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (mono_method_get_unmanaged_callers_only_ftnptr (method, &error));
-	abort_unless (initialize != nullptr, "Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnv.Initialize method");
+	if (initialize == nullptr) {
+		log_fatal (LOG_DEFAULT, "Failed to get pointer to Initialize. Mono error: %s", mono_error_get_message (&error));
+	}
+
+	abort_unless (
+		initialize != nullptr,
+		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
+		mono_error_get_message (&error)
+	);
 	initialize (&init);
 #else // def NET && def ANDROID
 	void *args [] = {
@@ -2402,7 +2407,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif // ndef NET
 	}
 
-#if defined (RELEASE) && defined (ANDROID) && defined (NET) && ENABLE_MARSHAL_METHODS
+#if defined (RELEASE) && defined (ANDROID) && defined (NET)
 	xamarin_app_init (get_function_pointer_at_runtime);
 #endif // def RELEASE && def ANDROID && def NET
 	startup_in_progress = false;
@@ -2495,18 +2500,6 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		total_time_index = internal_timing->start_event (TimingEventKind::RuntimeRegister);
 	}
 
-#if defined (ENABLE_MARSHAL_METHODS)
-	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-	log_info (LOG_DEFAULT, "[TESTING] Registering managed type: '%s'", mt_ptr);
-	bool ignore = strcmp (mt_ptr, "HelloAndroid.MainActivity, HelloAndroid") == 0;
-	env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-	if (ignore) {
-		log_info (LOG_DEFAULT, "[TESTING] This type's registration is ignored");
-		return;
-	}
-#endif
-
 	jsize managedType_len = env->GetStringLength (managedType);
 	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
 	int methods_len = env->GetStringLength (methods);
@@ -2530,7 +2523,7 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 	domain = mono_domain_get ();
 
 	if constexpr (is_running_on_desktop) {
-		MonoClass *runtime = utils.monodroid_get_class_from_name (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+		MonoClass *runtime = utils.monodroid_get_class_from_name (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 		register_jni_natives = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
 	}
 

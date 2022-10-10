@@ -41,6 +41,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CreateTypeManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyIfChanged" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -331,6 +332,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true' or '$(BundleAssemblies)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
+  <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' == 'True' And '$(AndroidEnableMarshalMethods)' == '' ">True</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' != 'True' ">False</AndroidEnableMarshalMethods>
+  <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
+  <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
@@ -1350,7 +1355,7 @@ because xbuild doesn't support framework reference assemblies.
     <_AndroidJarAndDexDirectory Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(TargetFrameworkDirectory)</_AndroidJarAndDexDirectory>
     <_AndroidJarAndDexDirectory Condition=" '$(UsingAndroidNETSdk)' == 'True' ">$(_XATargetFrameworkDirectories)</_AndroidJarAndDexDirectory>
   </PropertyGroup>
-  <GetMonoPlatformJar TargetFrameworkDirectory="$(_AndroidJarAndDexDirectory)">
+  <GetMonoPlatformJar Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " TargetFrameworkDirectory="$(_AndroidJarAndDexDirectory)">
     <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
     <Output TaskParameter="MonoPlatformDexPath" PropertyName="MonoPlatformDexPath" />
   </GetMonoPlatformJar>
@@ -1371,19 +1376,28 @@ because xbuild doesn't support framework reference assemblies.
       ResourceName="MonoRuntimeProvider.Bundled.20.java"
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
+  <CreateTypeManagerJava
+      Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
+      ResourceName="JavaInteropTypeManager.java"
+      OutputFilePath="$(_AndroidIntermediateJavaSourceDirectory)mono\TypeManager.java"
+  />
 
   <Copy
+    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' "
     SourceFiles="$(MonoPlatformJarPath)"
     DestinationFiles="$(IntermediateOutputPath)android\bin\mono.android.jar"
     SkipUnchangedFiles="true" />
-  <Touch Files="$(IntermediateOutputPath)android\bin\mono.android.jar" />
+  <Touch
+    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' "
+    Files="$(IntermediateOutputPath)android\bin\mono.android.jar" />
 
   <Touch Files="$(_AndroidStaticResourcesFlag)" AlwaysCreate="true" />
 
   <ItemGroup>
     <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java" />
+    <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)mono\JavaInteropTypeManager.java" />
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
-    <FileWrites Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
+    <FileWrites Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
   </ItemGroup>
 </Target>
@@ -1462,12 +1476,16 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateJavaStubs"
     DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-    Inputs="@(_AndroidMSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
+    Inputs="@(_AndroidMSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
   <PropertyGroup>
     <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
     <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' != 'None'">True</_LinkingEnabled>
+    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
+    <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
+    <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
   </PropertyGroup>
   <ItemGroup>
     <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
@@ -1503,7 +1521,12 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)"
       SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
-      CheckedBuild="$(_AndroidCheckedBuild)">
+      CheckedBuild="$(_AndroidCheckedBuild)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      LinkingEnabled="$(_LinkingEnabled)"
+      HaveMultipleRIDs="$(_HaveMultipleRIDs)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      Environments="@(AndroidEnvironment);@(LibraryEnvironments)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
 
@@ -1594,7 +1617,6 @@ because xbuild doesn't support framework reference assemblies.
       <Output TaskParameter="AssemblySources" ItemName="_CompressedAssembliesAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
-    Condition=" '$(_EnableMarshalMethods)' == 'YesPlease' "
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
     InstantRunEnabled="$(_InstantRunEnabled)"
@@ -1657,13 +1679,24 @@ because xbuild doesn't support framework reference assemblies.
       />
 </Target>
 
+<Target Name="_RunAotForAllRIDs"
+        Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
+        Returns="@(ResolvedFileToPublish)">
+  <MSBuild
+      Projects="@(_ProjectToBuild)"
+      BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
+      Targets="_AndroidAotAndComputeFilesToPublishForRuntimeIdentifiers">
+    <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
+  </MSBuild>
+</Target>
+
 <PropertyGroup>
   <_GeneratePackageManagerJavaDependsOn>
     _GenerateJavaStubs;
+    _RunAotForAllRIDs;
     _ManifestMerger;
     _ConvertCustomView;
     $(_AfterConvertCustomView);
-    _GenerateEnvironmentFiles;
     _AddStaticResources;
     $(_AfterAddStaticResources);
     _PrepareAssemblies;
@@ -1710,6 +1743,7 @@ because xbuild doesn't support framework reference assemblies.
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
+    EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>

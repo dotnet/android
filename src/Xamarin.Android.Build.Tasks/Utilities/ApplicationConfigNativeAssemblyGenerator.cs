@@ -173,6 +173,7 @@ namespace Xamarin.Android.Tasks
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; }
+		public bool MarshalMethodsEnabled { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 		{
@@ -201,6 +202,7 @@ namespace Xamarin.Android.Tasks
 				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
 				have_assemblies_blob = HaveAssemblyStore,
+				marshal_methods_enabled = MarshalMethodsEnabled,
 				bound_stream_io_exception_type = (byte)BoundExceptionType,
 				package_naming_policy = (uint)PackageNamingPolicy,
 				environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),

@@ -24,6 +24,66 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest2 : BaseTest
 	{
+		static object [] MarshalMethodsDefaultStatusSource = new object [] {
+			new object[] {
+				/* isClassic */              false,
+				/* isRelease */              true,
+				/* marshalMethodsEnabled */  true,
+			},
+			new object[] {
+				/* isClassic */              false,
+				/* isRelease */              false,
+				/* marshalMethodsEnabled */  false,
+			},
+			new object[] {
+				/* isClassic */              true,
+				/* isRelease */              false,
+				/* marshalMethodsEnabled */  false,
+			},
+			new object[] {
+				/* isClassic */              true,
+				/* isRelease */              true,
+				/* marshalMethodsEnabled */  false,
+			},
+		};
+
+		[Test]
+		[TestCaseSource (nameof (MarshalMethodsDefaultStatusSource))]
+		public void MarshalMethodsDefaultEnabledStatus (bool isClassic, bool isRelease, bool marshalMethodsEnabled)
+		{
+			if (isClassic) {
+				if (Builder.UseDotNet) {
+					Assert.Ignore ("Ignored in .NET6+");
+					return;
+				}
+			} else if (!Builder.UseDotNet) {
+				Assert.Ignore ("Ignored in classic");
+				return;
+			}
+
+			var abis = new [] { "armeabi-v7a", "x86" };
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease
+			};
+
+			proj.SetAndroidSupportedAbis (abis);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (
+					StringAssertEx.ContainsText (b.LastBuildOutput, $"_AndroidUseMarshalMethods = {marshalMethodsEnabled}"),
+					$"The '_AndroidUseMarshalMethods' MSBuild property should have had the value of '{marshalMethodsEnabled}'"
+				);
+
+				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
+				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+
+				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+				Assert.AreEqual (app_config.marshal_methods_enabled, marshalMethodsEnabled, $"Marshal methods enabled status should be '{marshalMethodsEnabled}', but it was '{app_config.marshal_methods_enabled}'");
+			}
+		}
+
 		[Test]
 		public void CompressedWithoutLinker ()
 		{
