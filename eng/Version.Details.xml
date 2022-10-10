@@ -1,24 +1,20 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="7.0.100-rc.2.22459.2">
+    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="8.0.200-alpha.1.22511.1">
       <Uri>https://github.com/dotnet/installer</Uri>
-      <Sha>11f6b8f7129e34d5317f47ccbc110b2b11c05749</Sha>
+      <Sha>fa294e422a71311738071f8cdb2d405eca86a3a1</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="7.0.100-1.22452.1" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="7.0.100-1.22507.1" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
       <Uri>https://github.com/dotnet/linker</Uri>
-      <Sha>5f9bfd94d9c687207872ae03f751ea19704381c0</Sha>
+      <Sha>6000a84c7e0b3678af032c25b7319aefdd057f6c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="7.0.0-rc.2.22451.11" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="8.0.0-alpha.1.22507.5" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>6d10e4c8bcd9f96ccd73748ff827561afa09af57</Sha>
+      <Sha>636777273b152a34bb244b35527ca563735efa35</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.net6.Manifest-7.0.100" Version="7.0.0-rc.2.22430.5" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.net7.Manifest-8.0.100" Version="8.0.0-alpha.1.22504.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>8d8d2122b16c81df4b158fe43995f958e8fe115e</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.net7.Manifest-7.0.100" Version="7.0.0-rc.2.22430.5" CoherentParentDependency="Microsoft.NETCore.App.Ref">
-      <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>8d8d2122b16c81df4b158fe43995f958e8fe115e</Sha>
+      <Sha>52e3130a816a7c8d734f1e9f0dc9ed6d5936e7ae</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>

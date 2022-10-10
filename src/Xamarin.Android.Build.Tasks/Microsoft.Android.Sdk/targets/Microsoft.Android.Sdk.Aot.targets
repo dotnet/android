@@ -23,11 +23,11 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     https://github.com/dotnet/runtime/blob/69711860262e44458bbe276393ea3eb9f7a2192a/src/mono/nuget/Microsoft.NET.Workload.Mono.Toolchain.Manifest/WorkloadManifest.targets.in#L20-L25
   -->
   <ImportGroup Condition=" '$(MonoAOTCompilerTasksAssemblyPath)' == '' and '$(AotAssemblies)' == 'true' ">
-    <Import Project="Sdk.props" Sdk="Microsoft.NET.Runtime.MonoAOTCompiler.Task.net7" />
-    <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.net7.android-x86" />
-    <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.net7.android-x64" />
-    <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.net7.android-arm" />
-    <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.net7.android-arm64" />
+    <Import Project="Sdk.props" Sdk="Microsoft.NET.Runtime.MonoAOTCompiler.Task" />
+    <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-x86" />
+    <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-x64" />
+    <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-arm" />
+    <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-arm64" />
   </ImportGroup>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAotAssemblies" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />

@@ -55,7 +55,7 @@ namespace Xamarin.ProjectTools
 		public XASdkProject (string outputType = "Exe", [CallerMemberName] string packageName = "")
 		{
 			Sdk = "Microsoft.NET.Sdk";
-			TargetFramework = "net7.0-android";
+			TargetFramework = "net8.0-android";
 			SupportedOSPlatformVersion = "21";
 			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();

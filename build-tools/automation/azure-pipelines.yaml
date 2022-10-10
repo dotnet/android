@@ -179,7 +179,8 @@ stages:
     # xabuild still depends on .NET Core 3 or earlier
     - template: yaml-templates\use-dot-net.yaml
       parameters:
-        version: 3.1.417
+        version: 3.1
+        quality: GA
 
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
