@@ -130,6 +130,9 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA1027](xa1027.md): The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 + [XA1028](xa1028.md): The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 + [XA1029](xa1029.md): The 'AotAssemblies' MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the 'RunAOTCompilation' MSBuild property instead.
++ [XA1031](xa1031.md): The 'AndroidHttpClientHandlerType' has an invalid value.
++ [XA1032](xa1032.md):Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.
++ [XA1033](xa1033.md): Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.
 
 ## XA2xxx: Linker
 

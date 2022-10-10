@@ -40,6 +40,7 @@ projects. .NET 5 projects will not import this file.
       _RemoveLegacyDesigner;
       _ValidateAndroidPackageProperties;
       $(BuildDependsOn);
+      _CheckAndroidHttpClientHandlerType;
       _CompileDex;
       $(_AfterCompileDex);
       $(_PostBuildTargets)

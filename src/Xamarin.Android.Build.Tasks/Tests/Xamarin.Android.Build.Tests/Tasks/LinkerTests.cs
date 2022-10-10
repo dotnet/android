@@ -170,13 +170,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // HttpClientHandler options not implemented in .NET 5+ yet
 		public void PreserveCustomHttpClientHandlers ()
 		{
-			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidClientHandler", "",
-				"temp/PreserveAndroidHttpClientHandler", "android/assets/Mono.Android.dll");
-			PreserveCustomHttpClientHandler ("System.Net.Http.MonoWebRequestHandler", "System.Net.Http",
-				"temp/PreserveMonoWebRequestHandler", "android/assets/System.Net.Http.dll");
+			if (Builder.UseDotNet) {
+				PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidMessageHandler", "",
+					"temp/PreserveAndroidMessageHandler", "android-arm64/linked/Mono.Android.dll");
+				PreserveCustomHttpClientHandler ("System.Net.Http.SocketsHttpHandler", "System.Net.Http",
+					"temp/PreserveSocketsHttpHandler", "android-arm64/linked/System.Net.Http.dll");
+			} else {
+				PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidClientHandler", "",
+					"temp/PreserveAndroidHttpClientHandler", "android/assets/Mono.Android.dll");
+				PreserveCustomHttpClientHandler ("System.Net.Http.MonoWebRequestHandler", "System.Net.Http",
+					"temp/PreserveMonoWebRequestHandler", "android/assets/System.Net.Http.dll");
+			}
 		}
 
 		[Test]

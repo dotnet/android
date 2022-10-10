@@ -28,6 +28,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CollectJavaSourceForBinding;
       _CompileBindingJava;
       $(BuildDependsOn);
+      _CheckAndroidHttpClientHandlerType;
       _CompileDex;
       $(_AfterCompileDex);
     </BuildDependsOn>

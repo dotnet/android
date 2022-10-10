@@ -14,7 +14,6 @@ namespace Xamarin.ProjectTools
 		{
 			ProjectDirectory = projectDirectory;
 			Target = "Build";
-			ThrowOnBuildFailure = true;
 			BuildLogFile = "build.log";
 		}
 
