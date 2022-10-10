@@ -8,8 +8,8 @@ namespace Android.Runtime
 	{
 		static bool _unhandled_exception (Exception e)
 		{
-			if (Debugger.IsAttached || !JNIEnv.PropagateExceptions) {
-				JNIEnv.mono_unhandled_exception?.Invoke (e);
+			if (Debugger.IsAttached || !JNIEnvInit.PropagateExceptions) {
+				AndroidRuntimeInternal.mono_unhandled_exception?.Invoke (e);
 				return false;
 			}
 			return true;
@@ -17,18 +17,18 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PP_V (this _JniMarshal_PP_V callback, IntPtr jnienv, IntPtr klazz)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static int Wrap_JniMarshal_PP_I (this _JniMarshal_PP_I callback, IntPtr jnienv, IntPtr klazz)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -39,7 +39,7 @@ namespace Android.Runtime
 
 		internal static bool Wrap_JniMarshal_PP_Z (this _JniMarshal_PP_Z callback, IntPtr jnienv, IntPtr klazz)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -50,18 +50,18 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PPI_V (this _JniMarshal_PPI_V callback, IntPtr jnienv, IntPtr klazz, int p0)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static IntPtr Wrap_JniMarshal_PPI_L (this _JniMarshal_PPI_L callback, IntPtr jnienv, IntPtr klazz, int p0)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -72,7 +72,7 @@ namespace Android.Runtime
 
 		internal static int Wrap_JniMarshal_PPI_I (this _JniMarshal_PPI_I callback, IntPtr jnienv, IntPtr klazz, int p0)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -83,7 +83,7 @@ namespace Android.Runtime
 
 		internal static long Wrap_JniMarshal_PPI_J (this _JniMarshal_PPI_J callback, IntPtr jnienv, IntPtr klazz, int p0)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -94,7 +94,7 @@ namespace Android.Runtime
 
 		internal static int Wrap_JniMarshal_PPL_I (this _JniMarshal_PPL_I callback, IntPtr jnienv, IntPtr klazz, IntPtr p0)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -105,7 +105,7 @@ namespace Android.Runtime
 
 		internal static IntPtr Wrap_JniMarshal_PPL_L (this _JniMarshal_PPL_L callback, IntPtr jnienv, IntPtr klazz, IntPtr p0)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -116,18 +116,18 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PPL_V (this _JniMarshal_PPL_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static bool Wrap_JniMarshal_PPL_Z (this _JniMarshal_PPL_Z callback, IntPtr jnienv, IntPtr klazz, IntPtr p0)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -138,7 +138,7 @@ namespace Android.Runtime
 
 		internal static bool Wrap_JniMarshal_PPJ_Z (this _JniMarshal_PPJ_Z callback, IntPtr jnienv, IntPtr klazz, long p0)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -149,62 +149,62 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PPII_V (this _JniMarshal_PPII_V callback, IntPtr jnienv, IntPtr klazz, int p0, int p1)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static void Wrap_JniMarshal_PPLI_V (this _JniMarshal_PPLI_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static void Wrap_JniMarshal_PPLZ_V (this _JniMarshal_PPLZ_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, bool p1)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static void Wrap_JniMarshal_PPLL_V (this _JniMarshal_PPLL_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static void Wrap_JniMarshal_PPLF_V (this _JniMarshal_PPLF_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, float p1)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static IntPtr Wrap_JniMarshal_PPLI_L (this _JniMarshal_PPLI_L callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -215,7 +215,7 @@ namespace Android.Runtime
 
 		internal static IntPtr Wrap_JniMarshal_PPLL_L (this _JniMarshal_PPLL_L callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -226,7 +226,7 @@ namespace Android.Runtime
 
 		internal static bool Wrap_JniMarshal_PPLL_Z (this _JniMarshal_PPLL_Z callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -237,7 +237,7 @@ namespace Android.Runtime
 
 		internal static bool Wrap_JniMarshal_PPIL_Z (this _JniMarshal_PPIL_Z callback, IntPtr jnienv, IntPtr klazz, int p0, IntPtr p1)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -248,18 +248,18 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PPIIL_V (this _JniMarshal_PPIIL_V callback, IntPtr jnienv, IntPtr klazz, int p0, int p1, IntPtr p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static int Wrap_JniMarshal_PPLII_I (this _JniMarshal_PPLII_I callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -270,7 +270,7 @@ namespace Android.Runtime
 
 		internal static bool Wrap_JniMarshal_PPLII_Z (this _JniMarshal_PPLII_Z callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -281,29 +281,29 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PPLII_V (this _JniMarshal_PPLII_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static void Wrap_JniMarshal_PPIII_V (this _JniMarshal_PPIII_V callback, IntPtr jnienv, IntPtr klazz, int p0, int p1, int p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static bool Wrap_JniMarshal_PPLLJ_Z (this _JniMarshal_PPLLJ_Z callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, long p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -314,18 +314,18 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PPILL_V (this _JniMarshal_PPILL_V callback, IntPtr jnienv, IntPtr klazz, int p0, IntPtr p1, IntPtr p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static bool Wrap_JniMarshal_PPLIL_Z (this _JniMarshal_PPLIL_Z callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, IntPtr p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -336,18 +336,18 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PPLLL_V (this _JniMarshal_PPLLL_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, IntPtr p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static IntPtr Wrap_JniMarshal_PPLLL_L (this _JniMarshal_PPLLL_L callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, IntPtr p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -358,7 +358,7 @@ namespace Android.Runtime
 
 		internal static bool Wrap_JniMarshal_PPLLL_Z (this _JniMarshal_PPLLL_Z callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, IntPtr p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -369,7 +369,7 @@ namespace Android.Runtime
 
 		internal static IntPtr Wrap_JniMarshal_PPIZI_L (this _JniMarshal_PPIZI_L callback, IntPtr jnienv, IntPtr klazz, int p0, bool p1, int p2)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1, p2);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -380,29 +380,29 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PPIIII_V (this _JniMarshal_PPIIII_V callback, IntPtr jnienv, IntPtr klazz, int p0, int p1, int p2, int p3)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2, p3);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static void Wrap_JniMarshal_PPLLLL_V (this _JniMarshal_PPLLLL_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, IntPtr p1, IntPtr p2, IntPtr p3)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2, p3);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static bool Wrap_JniMarshal_PPLZZL_Z (this _JniMarshal_PPLZZL_Z callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, bool p1, bool p2, IntPtr p3)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				return callback (jnienv, klazz, p0, p1, p2, p3);
 			} catch (Exception e) when (_unhandled_exception (e)) {
@@ -413,34 +413,34 @@ namespace Android.Runtime
 
 		internal static void Wrap_JniMarshal_PPLIIII_V (this _JniMarshal_PPLIIII_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2, int p3, int p4)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2, p3, p4);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static void Wrap_JniMarshal_PPZIIII_V (this _JniMarshal_PPZIIII_V callback, IntPtr jnienv, IntPtr klazz, bool p0, int p1, int p2, int p3, int p4)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2, p3, p4);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 
 		internal static void Wrap_JniMarshal_PPLIIIIIIII_V (this _JniMarshal_PPLIIIIIIII_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0, int p1, int p2, int p3, int p4, int p5, int p6, int p7, int p8)
 		{
-			JNIEnv.WaitForBridgeProcessing ();
+			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 			try {
 				callback (jnienv, klazz, p0, p1, p2, p3, p4, p5, p6, p7, p8);
 			} catch (Exception e) when (_unhandled_exception (e)) {
 				AndroidEnvironment.UnhandledException (e);
-				
+
 			}
 		}
 

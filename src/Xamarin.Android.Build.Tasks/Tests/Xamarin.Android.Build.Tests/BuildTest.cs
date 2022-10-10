@@ -1365,6 +1365,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				if (!Builder.UseDotNet)
 					proj.TargetFrameworkVersion = builder.LatestTargetFrameworkVersion ();
 				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.DesignTimeBuild (proj), "DesignTime build should succeed.");
+				Assert.IsFalse (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should not have been raised.");
 				builder.Target = "AndroidPrepareForBuild";
 				Assert.IsFalse (builder.Build (proj, parameters: new string [] {
 					$"AndroidSdkBuildToolsVersion=24.0.1",

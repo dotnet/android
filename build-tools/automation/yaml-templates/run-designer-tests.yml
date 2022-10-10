@@ -62,7 +62,10 @@ steps:
   displayName: 'Copy binlogs'
   inputs:
     sourceFolder: ${{ parameters.designerSourcePath }}/Xamarin.Designer.Android
-    contents: '**/*.binlog'
+    contents: |
+      **/*.binlog
+      **/hs*.log
+      **/hs*.mdmp
     targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
     overWrite: true
     flattenFolders: true

@@ -229,6 +229,7 @@
     <Compile Include="Android.Preferences\CheckBoxPreference.cs" />
     <Compile Include="Android.Runtime\AndroidEnvironment.cs" />
     <Compile Include="Android.Runtime\AndroidRuntime.cs" />
+    <Compile Include="Android.Runtime\AndroidRuntimeInternal.cs" />
     <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
     <Compile Include="Android.Runtime\BoundExceptionType.cs" />
     <Compile Include="Android.Runtime\CharSequence.cs" />
@@ -249,6 +250,7 @@
     <Compile Include="Android.Runtime\JavaSet.cs" />
     <Compile Include="Android.Runtime\JNIEnv.cs" />
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
+    <Compile Include="Android.Runtime\JNIEnvInit.cs" />
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.g.cs">
@@ -259,6 +261,8 @@
     <Compile Include="Android.Runtime\JObjectRefType.cs" />
     <Compile Include="Android.Runtime\JValue.cs" />
     <Compile Include="Android.Runtime\Logger.cs" />
+    <Compile Include="Android.Runtime\LogLevel.cs" />
+    <Compile Include="Android.Runtime\LogCategories.cs" />
     <Compile Include="Android.Runtime\NamespaceMappingAttribute.cs" />
     <Compile Include="Android.Runtime\OutputStreamAdapter.cs" />
     <Compile Include="Android.Runtime\OutputStreamInvoker.cs" />
@@ -266,7 +270,9 @@
     <Compile Include="Android.Runtime\RaiseThrowableEventArgs.cs" />
     <Compile Include="Android.Runtime\RequiresPermissionAttribute.cs" />
     <Compile Include="Android.Runtime\ResourceDesignerAttribute.cs" />
+    <Compile Include="Android.Runtime\RuntimeConstants.cs" />
     <Compile Include="Android.Runtime\ResourceIdManager.cs" />
+    <Compile Include="Android.Runtime\RuntimeNativeMethods.cs" />
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
     <Compile Include="Android.Runtime\TimingLogger.cs" />
     <Compile Include="Android.Runtime\TypeManager.cs" />
@@ -385,6 +391,10 @@
     <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(DotNetTargetFramework)' ">
+    <ProjectReference Include="..\Mono.Android.Runtime\Mono.Android.Runtime.csproj" />
   </ItemGroup>
 
   <!--NOTE: a workaround for the test runner in VS Windows-->

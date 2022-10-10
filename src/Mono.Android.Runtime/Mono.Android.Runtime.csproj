@@ -1,0 +1,62 @@
+<Project>
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
+    <LangVersion>10</LangVersion>
+    <NoStdLib>true</NoStdLib>
+    <Nullable>enable</Nullable>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <SignAssembly>true</SignAssembly>
+
+    <!-- Ignore "unused member" warnings from code that originates from Mono.CodeGeneration -->
+    <NoWarn>$(NoWarn);CS0169;CS0414;CS0649</NoWarn>
+
+    <DefineConstants>$(DefineConstants);INSIDE_MONO_ANDROID_RUNTIME;JAVA_INTEROP</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
+  </PropertyGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <!-- Only build the .NET 6+ version of 'Mono.Android.Export.dll' for the latest stable Android version. -->
+  <PropertyGroup Condition=" '$(AndroidApiLevel)' != '$(AndroidLatestStableApiLevel)' ">
+    <BuildDependsOn></BuildDependsOn>
+  </PropertyGroup>
+
+  <!-- Copy .NET ref/runtime assemblies to bin/$(Configuration)/dotnet/packs folder -->
+  <PropertyGroup Condition=" '$(AndroidApiLevel)' == '$(AndroidLatestStableApiLevel)' ">
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      _CopyToPackDirs;
+    </BuildDependsOn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
+    <Compile Include="..\Mono.Android\Android.Runtime\AndroidRuntimeInternal.cs" />
+    <Compile Include="..\Mono.Android\Android.Runtime\LogCategories.cs" />
+    <Compile Include="..\Mono.Android\Android.Runtime\LogLevel.cs" />
+    <Compile Include="..\Mono.Android\Android.Runtime\RuntimeConstants.cs" />
+    <Compile Include="..\Mono.Android\Android.Runtime\RuntimeNativeMethods.cs" />
+    <Compile Include="Android.Runtime\AndroidEnvironmentInternal.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+  </ItemGroup>
+
+  <Import Project="Mono.Android.Runtime.targets" />
+</Project>
