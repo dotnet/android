@@ -588,11 +588,13 @@ The exact modifications we apply are:
 
   * Removal of the **connector backing field**
   * Removal of the **connector method**
-  * Addition of the `[UnmanagedCallersOnly]` attribute to the **native
-    callback** method
-  * Optionally, generation of a [non-blittable types
-    wrapper](#wrappers-for-methods-with-non-blittable-types) for the 
-    **native callback** method.
+  * Generation of a **native callback wrapper** method, which catches
+    and propagates unhandled exceptions thrown by the native callback
+    or the target method.  This method is decorated with the
+    `[UnmanagedCallersOnly]` attribute and called directly from the
+    native code.
+  * Optionally, generate code in the **native callback wrapper** to handle
+    [non-blittable types](#wrappers-for-methods-with-non-blittable-types).
 
 All the modifications are performed with `Mono.Cecil`.
 
@@ -603,7 +605,6 @@ C# code for each marshal method:
 public class MainActivity : AppCompatActivity
 {
   // Native callback
-  [UnmanagedCallersOnly]
   static void n_OnCreate_Landroid_os_Bundle_ (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
   {
     var __this = global::Java.Lang.Object.GetObject<Android.App.Activity> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
@@ -611,6 +612,17 @@ public class MainActivity : AppCompatActivity
     __this.OnCreate (savedInstanceState);
   }
 
+  // Native callback exception wrapper
+  [UnmanagedCallersOnly]
+  static void n_OnCreate_Landroid_os_Bundle__mm_wrapper (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
+  {
+    try {
+      n_OnCreate_Landroid_os_Bundle_ (jnienv, native__this, native_savedInstanceState)
+	} catch (Exception ex) {
+	  Android.Runtime.AndroidEnvironmentInternal.UnhandledException (ex);
+	}
+  }
+  
   // Target method
   [Register ("onCreate", "(Landroid/os/Bundle;)V", "GetOnCreate_Landroid_os_Bundle_Handler")]
   protected virtual unsafe void OnCreate (Android.OS.Bundle? savedInstanceState)
@@ -665,13 +677,6 @@ value properly. Each wrapper method retains the native callback method
 name, but appends the `_mm_wrapper` suffix to it:
 
 ```csharp
-
-[UnmanagedCallersOnly]
-static byte n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent__mm_wrapper (IntPtr jnienv, IntPtr native__this, IntPtr native_v, IntPtr native_e)
-{
-   return n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_(jnienv, native__this, native_v, native_e) ? 1 : 0;
-}
-
 static bool n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v, IntPtr native_e)
 {
   var __this = global::Java.Lang.Object.GetObject<Android.Views.View.IOnTouchListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
@@ -679,6 +684,17 @@ static bool n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_ (IntPtr jnie
   var e = global::Java.Lang.Object.GetObject<Android.Views.MotionEvent> (native_e, JniHandleOwnership.DoNotTransfer);
   bool __ret = __this.OnTouch (v, e);
   return __ret;
+}
+
+[UnmanagedCallersOnly]
+static byte n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent__mm_wrapper (IntPtr jnienv, IntPtr native__this, IntPtr native_v, IntPtr native_e)
+{
+  try {
+    return n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_(jnienv, native__this, native_v, native_e) ? 1 : 0;
+  } catch (Exception ex) {
+	Android.Runtime.AndroidEnvironmentInternal.UnhandledException (ex);
+    return default;
+  }
 }
 ```
 
