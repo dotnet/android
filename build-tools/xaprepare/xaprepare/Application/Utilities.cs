@@ -820,7 +820,7 @@ namespace Xamarin.Android.Prepare
 					LogError ($"failed with exit code {runner.ExitCode}");
 					return String.Empty;
 				}
-
+				
 				string ret = sw.ToString ();
 				if (trimTrailingWhitespace)
 					return ret.TrimEnd ();
