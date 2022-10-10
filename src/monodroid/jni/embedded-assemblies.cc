@@ -925,7 +925,7 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 	}
 
 	mmap_info.size  = offsetSize;
-	file_info.area  = (void*)((const char*)mmap_info.area + offsetFromPage);
+	file_info.area  = reinterpret_cast<void*>(static_cast<uint8_t*>(mmap_info.area) + offsetFromPage);
 	file_info.size  = size;
 
 	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk descriptor: %d  file: %s",
@@ -945,8 +945,8 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 #endif
 		          ;
 
-	int fd;
-	if ((fd = open (apk, OPEN_FLAGS)) < 0) {
+	int fd = open (apk, OPEN_FLAGS);
+	if (fd < 0) {
 		log_error (LOG_DEFAULT, "ERROR: Unable to load application package %s.", apk);
 		exit (FATAL_EXIT_NO_ASSEMBLIES);
 	}

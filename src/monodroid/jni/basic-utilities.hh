@@ -182,21 +182,6 @@ namespace xamarin::android
 			return nullptr;
 		}
 
-		void *xmalloc (size_t size)
-		{
-			return ::xmalloc (size);
-		}
-
-		void *xrealloc (void *ptr, size_t size)
-		{
-			return ::xrealloc (ptr, size);
-		}
-
-		void *xcalloc (size_t nmemb, size_t size)
-		{
-			return ::xcalloc (nmemb, size);
-		}
-
 		char *strdup_new (const char* s, size_t len)
 		{
 			if (XA_UNLIKELY (len == 0 || s == nullptr)) {

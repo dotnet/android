@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <functional>
+#include <optional>
 #include <vector>
 #include <semaphore.h>
 
@@ -241,22 +242,11 @@ namespace xamarin::android::internal {
 		template<class T>
 		bool zip_ensure_valid_params (T const& buf, size_t index, size_t to_read) const noexcept;
 
-		// template<size_t BufSize>
-		// bool zip_read_field (std::array<uint8_t, BufSize> const& buf, size_t index, uint16_t& u)
-		// {
-		// 	return zip_read_field_unchecked (buf, u, index);
-		// }
-
-		// bool zip_read_field (std::vector<uint8_t> const& buf, size_t index, uint16_t& u)
-		// {
-		// 	return zip_read_field_unchecked (buf, u, index);
-		// }
+		template<ByteArrayContainer T>
+		std::optional<uint16_t> zip_read_field_u16 (T const& src, size_t source_index) const noexcept;
 
 		template<ByteArrayContainer T>
-		bool zip_read_field (T const& src, size_t source_index, uint16_t& dst) const noexcept;
-
-		template<ByteArrayContainer T>
-		bool zip_read_field (T const& src, size_t source_index, uint32_t& dst) const noexcept;
+		std::optional<uint32_t> zip_read_field_u32 (T const& src, size_t source_index) const noexcept;
 
 		template<ByteArrayContainer T>
 		bool zip_read_field (T const& src, size_t source_index, std::array<uint8_t, 4>& dst_sig) const noexcept;

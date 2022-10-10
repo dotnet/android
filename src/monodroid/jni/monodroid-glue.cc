@@ -837,10 +837,6 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 		mono_jit_parse_options (static_cast<int>(aargs.size ()), aargs.data ());
 	}
 
-	// int argc = 5;
-	// char* argv[] = { "-v", "-v", "-v", "-v", "-v" };
-	// mono_jit_parse_options (argc, argv);
-
 	mono_set_signal_chaining (1);
 	mono_set_crash_chaining (1);
 

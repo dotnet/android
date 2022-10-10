@@ -1,3 +1,4 @@
+#include <array>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <strings.h>
@@ -27,7 +28,7 @@ using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
 // Must match the same ordering as LogCategories
-static const char* log_names[] = {
+static constexpr const char* const log_names[] = {
 	"*none*",
 	"monodroid",
 	"monodroid-assembly",
@@ -49,7 +50,10 @@ static const char* log_names[] = {
 #endif
 
 // ffs(value) returns index of lowest bit set in `value`
-#define CATEGORY_NAME(value) (value == 0 ? log_names [0] : log_names [ffs (value)])
+force_inline static const char* CATEGORY_NAME (LogCategories value) noexcept
+{
+	return value == 0 ? log_names [0] : log_names [ffs (value)];
+}
 
 #ifndef ANDROID
 static void

@@ -443,21 +443,21 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, ZipEntryLoadState &state)
 		return false;
 	}
 
-	uint16_t file_name_length;
+	std::optional<uint16_t> file_name_length = zip_read_field_u16 (local_header, index);
 	index = LH_FILE_NAME_LENGTH_OFFSET;
-	if (!zip_read_field (local_header, index, file_name_length)) {
+	if (!file_name_length) {
 		log_error (LOG_ASSEMBLY, "Failed to read Local Header 'file name length' field at offset %u", (state.local_header_offset + index));
 		return false;
 	}
 
-	uint16_t extra_field_length;
+	std::optional<uint16_t> extra_field_length = zip_read_field_u16 (local_header, index);
 	index = LH_EXTRA_LENGTH_OFFSET;
-	if (!zip_read_field (local_header, index, extra_field_length)) {
+	if (!extra_field_length) {
 		log_error (LOG_ASSEMBLY, "Failed to read Local Header 'extra field length' field at offset %u", (state.local_header_offset + index));
 		return false;
 	}
 
-	state.data_offset = static_cast<uint32_t>(state.local_header_offset) + file_name_length + extra_field_length + local_header.size ();
+	state.data_offset = static_cast<uint32_t>(state.local_header_offset) + file_name_length.value () + extra_field_length.value () + local_header.size ();
 
 	return true;
 }
@@ -472,20 +472,26 @@ EmbeddedAssemblies::zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf
 
 	static_assert (BufSize >= ZIP_EOCD_LEN, "Buffer too short for EOCD");
 
-	if (!zip_read_field (buf, EOCD_TOTAL_ENTRIES_OFFSET, cd_entries)) {
+	std::optional<uint16_t> field_value = zip_read_field_u16 (buf, EOCD_TOTAL_ENTRIES_OFFSET);
+	if (!field_value) {
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'total number of entries' field");
 		return false;
 	}
+	cd_entries = field_value.value ();
 
-	if (!zip_read_field (buf, EOCD_CD_START_OFFSET, cd_offset)) {
+	field_value = zip_read_field_u16 (buf, EOCD_CD_START_OFFSET);
+	if (!field_value) {
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'central directory size' field");
 		return false;
 	}
+	cd_offset = field_value.value ();
 
-	if (!zip_read_field (buf, EOCD_CD_SIZE_OFFSET, cd_size)) {
+	field_value = zip_read_field_u16 (buf, EOCD_CD_SIZE_OFFSET);
+	if (!field_value) {
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'central directory offset' field");
 		return false;
 	}
+	cd_size = field_value.value ();
 
 	return true;
 }
@@ -503,33 +509,30 @@ EmbeddedAssemblies::zip_ensure_valid_params (T const& buf, size_t index, size_t 
 }
 
 template<ByteArrayContainer T>
-bool
-EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, uint16_t& dst) const noexcept
+std::optional<uint16_t>
+EmbeddedAssemblies::zip_read_field_u16 (T const& src, size_t source_index) const noexcept
 {
-	if (!zip_ensure_valid_params (src, source_index, sizeof (dst))) {
-		return false;
+	if (!zip_ensure_valid_params (src, source_index, sizeof (uint16_t))) {
+		return std::make_optional<uint16_t> ();
 	}
 
-	dst = static_cast<uint16_t>((src [source_index + 1] << 8) | src [source_index]);
-
-	return true;
+	return std::make_optional<uint16_t> (static_cast<uint16_t>((src [source_index + 1] << 8) | src [source_index]));
 }
 
 template<ByteArrayContainer T>
-bool
-EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, uint32_t& dst) const noexcept
+std::optional<uint32_t>
+EmbeddedAssemblies::zip_read_field_u32 (T const& src, size_t source_index) const noexcept
 {
-	if (!zip_ensure_valid_params (src, source_index, sizeof (dst))) {
-		return false;
+	if (!zip_ensure_valid_params (src, source_index, sizeof (uint32_t))) {
+		return std::make_optional<uint32_t> ();
 	}
 
-	dst =
+	return std::make_optional<uint32_t> (
 		(static_cast<uint32_t> (src [source_index + 3]) << 24) |
 		(static_cast<uint32_t> (src [source_index + 2]) << 16) |
 		(static_cast<uint32_t> (src [source_index + 1]) << 8)  |
-		(static_cast<uint32_t> (src [source_index + 0]));
-
-	return true;
+		(static_cast<uint32_t> (src [source_index + 0]))
+	);
 }
 
 template<ByteArrayContainer T>
@@ -581,52 +584,58 @@ EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynami
 	}
 
 	index = state.buf_offset + CD_COMPRESSION_METHOD_OFFSET;
-	if (!zip_read_field (buf, index, state.compression_method)) {
+	std::optional<uint16_t> compression_method = zip_read_field_u16 (buf, index);
+	if (!compression_method) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'compression method' field");
 		return false;
 	}
+	state.compression_method = compression_method.value ();
 
 	index = state.buf_offset + CD_UNCOMPRESSED_SIZE_OFFSET;;
-	if (!zip_read_field (buf, index, state.file_size)) {
+	std::optional<uint32_t> field_value = zip_read_field_u32 (buf, index);
+	if (!field_value) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'uncompressed size' field");
 		return false;
 	}
+	state.file_size = field_value.value ();
 
-	uint16_t file_name_length;
+	std::optional<uint16_t> file_name_length = zip_read_field_u16 (buf, index);
 	index = state.buf_offset + CD_FILENAME_LENGTH_OFFSET;
-	if (!zip_read_field (buf, index, file_name_length)) {
+	if (!file_name_length) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file name length' field");
 		return false;
 	}
 
-	uint16_t extra_field_length;
+	std::optional<uint16_t> extra_field_length = zip_read_field_u16 (buf, index);
 	index = state.buf_offset + CD_EXTRA_LENGTH_OFFSET;
-	if (!zip_read_field (buf, index, extra_field_length)) {
+	if (!extra_field_length) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'extra field length' field");
 		return false;
 	}
 
-	uint16_t comment_length;
+	std::optional<uint16_t> comment_length = zip_read_field_u16 (buf, index);
 	index = state.buf_offset + CD_COMMENT_LENGTH_OFFSET;
-	if (!zip_read_field (buf, index, comment_length)) {
+	if (!comment_length) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file comment length' field");
 		return false;
 	}
 
 	index = state.buf_offset + CD_LOCAL_HEADER_POS_OFFSET;
-	if (!zip_read_field (buf, index, state.local_header_offset)) {
+	field_value = zip_read_field_u32 (buf, index);
+	if (!field_value) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'relative offset of local header' field");
 		return false;
 	}
+	state.local_header_offset = field_value.value ();
 	index += sizeof(state.local_header_offset);
 
 	if (file_name_length == 0) {
 		file_name.clear ();
-	} else if (!zip_read_field (buf, index, file_name_length, file_name)) {
+	} else if (!zip_read_field (buf, index, file_name_length.value (), file_name)) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file name' field");
 		return false;
 	}
 
-	state.buf_offset += ZIP_CENTRAL_LEN + file_name_length + extra_field_length + comment_length;
+	state.buf_offset += ZIP_CENTRAL_LEN + file_name_length.value () + extra_field_length.value () + comment_length.value ();
 	return true;
 }
