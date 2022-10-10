@@ -28,7 +28,6 @@ variables:
   1ESWindowsImage: AzurePipelinesWindows2022compliant
   1ESMacPool: Azure Pipelines
   1ESMacImage: internal-macos-11
-  VSInstallRoot: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
 
 jobs:
 - job: windows_build
@@ -85,6 +84,8 @@ jobs:
     name: $(1ESWindowsPool)
     demands: 
     - ImageOverride -equals $(1ESWindowsImage)
+  variables:
+    VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\
   timeoutInMinutes: 20
   workspace:
     clean: all
