@@ -15,7 +15,7 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string BinutilsVersion                = "L_15.0.1-5.0.0";
+		const string BinutilsVersion                = "L_15.0.2-5.0.1 ";
 
 		const string MicrosoftOpenJDK11Version      = "11.0.16";
 		const string MicrosoftOpenJDK11Release      = "8.1";
