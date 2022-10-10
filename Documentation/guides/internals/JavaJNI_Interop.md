@@ -32,7 +32,7 @@ are described in the sections below.
 This guide is meant to explain the technical implementation in a way
 that is sufficient to understand the system without having to read the
 actual source code.
- 
+
 # Java <-> Managed interoperability overview
 
 Java VM and Managed VM are two entirely separate entities which
@@ -104,9 +104,9 @@ public class MainActivity : AppCompatActivity
   protected override void OnCreate (Bundle savedInstanceState)
   {
      base.OnCreate(savedInstanceState);
-	 DoSomething (savedInstanceState);
+     DoSomething (savedInstanceState);
   }
-  
+
   void DoSomething (Bundle bundle)
   {
      // do something with the bundle
@@ -161,7 +161,7 @@ Java.Interop's [`JavaTypeScanner`](../../external/Java.Interop/src/Java.Interop.
 which uses `Mono.Cecil` to read all the assemblies referenced by the
 application and its libraries.  The returned list of assemblies is
 then used by a variety of tasks, JCW being only one
-of them. 
+of them.
 
 After all types are found,
 [`JavaCallableWrapperGenerator`](../../external/Java.Interop/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs)
@@ -183,7 +183,7 @@ its constructor with three parameters:
   1. Java method name
   2. JNI method signature
   3. "Connector" method name
-  
+
 The "connector" is a static method which creates a delegate that
 subsequently allows calling of the native callback method:
 
@@ -509,7 +509,7 @@ static get_function_pointer_fn get_function_pointer;
 
 void xamarin_app_init (get_function_pointer_fn fn) noexcept
 {
-        get_function_pointer = fn;
+  get_function_pointer = fn;
 }
 
 using android_app_activity_on_create_bundle_fn = void (*) (JNIEnv *env, jclass klass, jobject savedInstanceState);
@@ -520,11 +520,11 @@ JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv
 {
   if (android_app_activity_on_create_bundle == nullptr) {
     get_function_pointer (
-	  16, // mono image index
-	  0,  // class index
-	  0x0600055B, // method token
-	  reinterpret_cast<void*&>(android_app_activity_on_create_bundle) // target pointer
-	);
+      16, // mono image index
+      0,  // class index
+      0x0600055B, // method token
+      reinterpret_cast<void*&>(android_app_activity_on_create_bundle) // target pointer
+    );
   }
 
   android_app_activity_on_create_bundle (env, klass, savedInstanceState);
@@ -588,11 +588,13 @@ The exact modifications we apply are:
 
   * Removal of the **connector backing field**
   * Removal of the **connector method**
-  * Addition of the `[UnmanagedCallersOnly]` attribute to the **native
-    callback** method
-  * Optionally, generation of a [non-blittable types
-    wrapper](#wrappers-for-methods-with-non-blittable-types) for the 
-    **native callback** method.
+  * Generation of a **native callback wrapper** method, which catches
+    and propagates unhandled exceptions thrown by the native callback
+    or the target method.  This method is decorated with the
+    `[UnmanagedCallersOnly]` attribute and called directly from the
+    native code.
+  * Optionally, generate code in the **native callback wrapper** to handle
+    [non-blittable types](#wrappers-for-methods-with-non-blittable-types).
 
 All the modifications are performed with `Mono.Cecil`.
 
@@ -603,12 +605,22 @@ C# code for each marshal method:
 public class MainActivity : AppCompatActivity
 {
   // Native callback
-  [UnmanagedCallersOnly]
   static void n_OnCreate_Landroid_os_Bundle_ (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
   {
     var __this = global::Java.Lang.Object.GetObject<Android.App.Activity> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
     var savedInstanceState = global::Java.Lang.Object.GetObject<Android.OS.Bundle> (native_savedInstanceState, JniHandleOwnership.DoNotTransfer);
     __this.OnCreate (savedInstanceState);
+  }
+
+  // Native callback exception wrapper
+  [UnmanagedCallersOnly]
+  static void n_OnCreate_Landroid_os_Bundle__mm_wrapper (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
+  {
+    try {
+      n_OnCreate_Landroid_os_Bundle_ (jnienv, native__this, native_savedInstanceState)
+    } catch (Exception ex) {
+      Android.Runtime.AndroidEnvironmentInternal.UnhandledException (ex);
+    }
   }
 
   // Target method
@@ -665,13 +677,6 @@ value properly. Each wrapper method retains the native callback method
 name, but appends the `_mm_wrapper` suffix to it:
 
 ```csharp
-
-[UnmanagedCallersOnly]
-static byte n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent__mm_wrapper (IntPtr jnienv, IntPtr native__this, IntPtr native_v, IntPtr native_e)
-{
-   return n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_(jnienv, native__this, native_v, native_e) ? 1 : 0;
-}
-
 static bool n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v, IntPtr native_e)
 {
   var __this = global::Java.Lang.Object.GetObject<Android.Views.View.IOnTouchListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
@@ -679,6 +684,17 @@ static bool n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_ (IntPtr jnie
   var e = global::Java.Lang.Object.GetObject<Android.Views.MotionEvent> (native_e, JniHandleOwnership.DoNotTransfer);
   bool __ret = __this.OnTouch (v, e);
   return __ret;
+}
+
+[UnmanagedCallersOnly]
+static byte n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent__mm_wrapper (IntPtr jnienv, IntPtr native__this, IntPtr native_v, IntPtr native_e)
+{
+  try {
+    return n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_(jnienv, native__this, native_v, native_e) ? 1 : 0;
+  } catch (Exception ex) {
+    Android.Runtime.AndroidEnvironmentInternal.UnhandledException (ex);
+    return default;
+  }
 }
 ```
 
@@ -738,7 +754,7 @@ Dynamic registration uses the
 [`RegisterNatives`](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/functions.html#RegisterNatives)
 JNI function at the runtime, which stores a pointer to the registered
 method inside the structure which describes a Java class in the Java
-VM. 
+VM.
 
 Marshal methods, however, don't register anything with the JNI,
 instead they rely on the symbol lookup mechanism of the Java VM.

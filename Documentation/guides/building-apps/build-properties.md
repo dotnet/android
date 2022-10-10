@@ -424,6 +424,15 @@ not wish to run those checks.
 
 Added in Xamarin.Android 9.4.
 
+## AndroidEnableMarshalMethods
+
+A bool property, not available in the classic Xamarin.Android
+releases.
+
+Enable or disable generation of [marshal
+methods](../../internals/JavaJNI_Interop.md). Defaults to `True` for
+`Release` builds and to `False` for `Debug` builds.
+
 ## AndroidEnableMultiDex
 
 A boolean property that
