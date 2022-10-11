@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -233,6 +234,7 @@ namespace Xamarin.Android.Net
 		/// If <c>true</c> then the server requested authorization and the application must use information
 		/// found in <see cref="RequestedAuthentication"/> to set the value of <see cref="PreAuthenticationData"/>
 		/// </summary>
+		[MemberNotNullWhen(true, nameof(RequestedAuthentication))]
 		public bool RequestNeedsAuthorization {
 			get { return RequestedAuthentication?.Count > 0; }
 		}
