@@ -182,9 +182,26 @@ namespace Xamarin.Android.Tasks
 					WriteLine (sw, $"--ref=\"{Path.Combine (Path.GetFullPath (fxpath), "mscorlib.dll")}\"");
 				}
 
-				if (ReferencedManagedLibraries != null)
-					foreach (var lib in ReferencedManagedLibraries)
+				if (ReferencedManagedLibraries != null) {
+					var lib_directories = new HashSet<string> ();
+
+					foreach (var lib in ReferencedManagedLibraries) {
+
+						// Skip .NET 6.0+ <FrameworkReference/> assemblies
+						var frameworkReferenceName = lib.GetMetadata ("FrameworkReferenceName") ?? "";
+
+						if (frameworkReferenceName.StartsWith ("Microsoft.NETCore.", StringComparison.OrdinalIgnoreCase)) {
+							lib_directories.Add (Path.GetDirectoryName (Path.GetFullPath (lib.ItemSpec)));
+							continue; // No need to process BCL assemblies, but we need to pass a directory where they live
+						}
+
 						WriteLine (sw, $"--ref=\"{Path.GetFullPath (lib.ItemSpec)}\"");
+					}
+
+					foreach (var dir in lib_directories)
+						WriteLine (sw, $"--L=\"{dir}\"");
+				}
+
 				if (AnnotationsZipFiles != null)
 					foreach (var zip in AnnotationsZipFiles)
 						WriteLine (sw, $"--annotations=\"{Path.GetFullPath (zip.ItemSpec)}\"");
