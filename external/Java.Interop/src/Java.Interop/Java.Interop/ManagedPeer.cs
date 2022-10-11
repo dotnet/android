@@ -25,11 +25,11 @@ namespace Java.Interop {
 					new JniNativeMethodRegistration (
 						"construct",
 						ConstructSignature,
-						(ConstructMarshalMethod) Construct),
+						new ConstructMarshalMethod (Construct)),
 					new JniNativeMethodRegistration (
 						"registerNativeMembers",
 						RegisterNativeMembersSignature,
-						(RegisterMarshalMethod) RegisterNativeMembers)
+						new RegisterMarshalMethod (RegisterNativeMembers))
 			);
 		}
 
