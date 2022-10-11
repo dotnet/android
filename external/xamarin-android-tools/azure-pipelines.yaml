@@ -12,7 +12,7 @@ pr:
 
 # Global variables
 variables:
-  DotNetCoreVersion: 3.1.100
+  DotNetCoreVersion: 6.0.x
 
 jobs:
 - job: build
@@ -42,22 +42,8 @@ jobs:
     inputs:
       version: $(DotNetCoreVersion)
 
-  - task: NuGetToolInstaller@0
-    displayName: 'Install NuGet'
-    inputs:
-      versionSpec: 5.x
-
-  - task: NuGetCommand@2
-    displayName: 'NuGet Restore'
-    inputs:
-      restoreSolution: Xamarin.Android.Tools.sln
-      feedsToUse: config
-      nugetConfigPath: NuGet.config
-
-  - task: MSBuild@1
+  - script: dotnet build Xamarin.Android.Tools.sln -bl:$(Build.ArtifactStagingDirectory)/build.binlog
     displayName: 'Build solution Xamarin.Android.Tools.sln'
-    inputs:
-      solution: Xamarin.Android.Tools.sln
 
   - task: DotNetCoreCLI@2
     displayName: 'Run Tests'
@@ -73,15 +59,13 @@ jobs:
       Write-Host "##vso[task.setvariable variable=xat.nuget.version]$version"
     condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-  - task: MSBuild@1
+  - script: dotnet pack src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj -p:Version=$(xat.nuget.version) -p:PackageOutputPath=$(Build.ArtifactStagingDirectory) -bl:$(Build.ArtifactStagingDirectory)/pack.binlog
     displayName: 'Build NuGet'
-    inputs:
-      solution: 'src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj'
-      msbuildArguments: '/t:pack /p:Version=$(xat.nuget.version) /p:OutputPath=$(Build.ArtifactStagingDirectory)'
     condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-  - task: PublishBuildArtifacts@1
+  - task: PublishPipelineArtifact@1
     displayName: Upload Artifacts
     inputs:
-      pathtoPublish: $(Build.ArtifactStagingDirectory)
-    condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+      path: $(Build.ArtifactStagingDirectory)
+      artifactName: $(vmImage)
+    condition: always()

@@ -15,7 +15,7 @@
   <PropertyGroup>
     <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' != '' And $(TargetFramework.StartsWith ('netcoreapp')) ">
+  <PropertyGroup Condition=" '$(TargetFramework)' != '' and '$(TargetFramework)' != 'net472' and '$(TargetFramework)' != 'netstandard2.0' ">
     <XATBuildingForNetCoreApp>True</XATBuildingForNetCoreApp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(XATBuildingForNetCoreApp)' == 'True' ">
