@@ -124,13 +124,13 @@ MonoAndroidInternalCalls_Impl::monodroid_log (LogLevel level, LogCategories cate
 int
 MonoAndroidInternalCalls_Impl::monodroid_get_system_property (const char *name, char **value)
 {
-	return androidSystem.monodroid_get_system_property (name, value);
+	return AndroidSystem::monodroid_get_system_property (name, value);
 }
 
 int
 MonoAndroidInternalCalls_Impl::monodroid_max_gref_get ()
 {
-	return static_cast<int>(androidSystem.get_max_gref_count ());
+	return static_cast<int>(AndroidSystem::get_max_gref_count ());
 }
 
 int
@@ -196,19 +196,19 @@ MonoAndroidInternalCalls_Impl::monodroid_gc_wait_for_bridge_processing ()
 int
 MonoAndroidInternalCalls_Impl::monodroid_get_android_api_level ()
 {
-	return monodroidRuntime.get_android_api_level ();
+	return MonodroidRuntime::get_android_api_level ();
 }
 
 void
 MonoAndroidInternalCalls_Impl::monodroid_clear_gdb_wait ()
 {
-	monodroidRuntime.set_monodroid_gdb_wait (false);
+	MonodroidRuntime::set_monodroid_gdb_wait (false);
 }
 
 void*
 MonoAndroidInternalCalls_Impl::monodroid_get_identity_hash_code (JNIEnv *env, void *v)
 {
-	intptr_t rv = env->CallStaticIntMethod (monodroidRuntime.get_java_class_System (), monodroidRuntime.get_java_class_method_System_identityHashCode (), v);
+	intptr_t rv = env->CallStaticIntMethod (MonodroidRuntime::get_java_class_System (), MonodroidRuntime::get_java_class_method_System_identityHashCode (), v);
 	return (void*) rv;
 }
 
@@ -216,9 +216,9 @@ void*
 MonoAndroidInternalCalls_Impl::monodroid_timezone_get_default_id ()
 {
 	JNIEnv *env          = osBridge.ensure_jnienv ();
-	jmethodID getDefault = env->GetStaticMethodID (monodroidRuntime.get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
-	jmethodID getID      = env->GetMethodID (monodroidRuntime.get_java_class_TimeZone (), "getID",      "()Ljava/lang/String;");
-	jobject d            = env->CallStaticObjectMethod (monodroidRuntime.get_java_class_TimeZone (), getDefault);
+	jmethodID getDefault = env->GetStaticMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
+	jmethodID getID      = env->GetMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getID",      "()Ljava/lang/String;");
+	jobject d            = env->CallStaticObjectMethod (MonodroidRuntime::get_java_class_TimeZone (), getDefault);
 	jstring id           = reinterpret_cast<jstring> (env->CallObjectMethod (d, getID));
 	const char *mutf8    = env->GetStringUTFChars (id, nullptr);
 	char *def_id         = strdup (mutf8);
@@ -233,7 +233,7 @@ MonoAndroidInternalCalls_Impl::monodroid_timezone_get_default_id ()
 void
 MonoAndroidInternalCalls_Impl::dump_counters (const char *format, va_list args)
 {
-	monodroidRuntime.dump_counters_v (format, args);
+	MonodroidRuntime::dump_counters_v (format, args);
 }
 
 int
@@ -280,7 +280,7 @@ MonoAndroidInternalCalls_Impl::monodroid_strdup_printf (const char *format, va_l
 char*
 MonoAndroidInternalCalls_Impl::monodroid_TypeManager_get_java_class_name (jclass klass)
 {
-	return monodroidRuntime.get_java_class_name_for_TypeManager (klass);
+	return MonodroidRuntime::get_java_class_name_for_TypeManager (klass);
 }
 
 void
@@ -292,7 +292,7 @@ MonoAndroidInternalCalls_Impl::monodroid_store_package_name (const char *name)
 int
 MonoAndroidInternalCalls_Impl::monodroid_get_namespaced_system_property (const char *name, char **value)
 {
-	return static_cast<int>(androidSystem.monodroid_get_system_property (name, value));
+	return static_cast<int>(AndroidSystem::monodroid_get_system_property (name, value));
 }
 
 FILE*

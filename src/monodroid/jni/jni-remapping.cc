@@ -68,7 +68,7 @@ JniRemapping::lookup_replacement_method_info (const char *jniSourceType, const c
 
 	bool have_signature = jniMethodSignature != nullptr;
 	size_t method_name_len = strlen (jniMethodName);
-	size_t signature_len = have_signature ? 0 : strlen (jniMethodSignature);
+	size_t signature_len = have_signature ? strlen (jniMethodSignature) : 0;
 
 	for (size_t i = 0; i < type->method_count; i++) {
 		JniRemappingIndexMethodEntry const& entry = type->methods[i];

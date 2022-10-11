@@ -62,6 +62,7 @@ public:
 	void operator = (const MonoGuidString&) = delete;
 	void operator = (MonoGuidString&&) = delete;
 
+	[[nodiscard]]
 	const char* get () const noexcept
 	{
 		return guid;
@@ -187,10 +188,26 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 		if (XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY) && map_info.area != nullptr)) {
 			auto *p = reinterpret_cast<const char*>(file.data);
 
-			std::array<char, 9> header;
-			for (size_t j = 0; j < header.size () - 1; ++j)
-				header[j] = isprint (p [j]) ? p [j] : '.';
-			header [header.size () - 1] = '\0';
+			auto byte_to_char = [&] (size_t index) {
+				if (index >= file.data_size) {
+					return '\0';
+				}
+
+				return isprint (p[index]) ? p[index] : '.';
+			};
+
+			constexpr size_t NEEDED_FILE_DATA_SIZE = 8;
+			std::array<char, NEEDED_FILE_DATA_SIZE + 1> header {
+				byte_to_char (0),
+				byte_to_char (1),
+				byte_to_char (2),
+				byte_to_char (3),
+				byte_to_char (4),
+				byte_to_char (5),
+				byte_to_char (6),
+				byte_to_char (7),
+				'\0',
+			};
 
 			log_info_nocheck (LOG_ASSEMBLY, "file-offset: % 8x  start: %08p  end: %08p  len: % 12i  zip-entry:  %s name: %s [%s]",
 			                  (int) file.data_offset, file.data, file.data + file.data_size, (int) file.data_size, file.name, file.name, header.data ());
@@ -523,7 +540,7 @@ EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unu
 }
 
 void
-EmbeddedAssemblies::install_preload_hooks_for_appdomains ()
+EmbeddedAssemblies::install_preload_hooks_for_appdomains () noexcept
 {
 	mono_install_assembly_preload_hook (open_from_bundles_full, nullptr);
 #if !defined (NET)
@@ -533,7 +550,7 @@ EmbeddedAssemblies::install_preload_hooks_for_appdomains ()
 
 #if defined (NET)
 void
-EmbeddedAssemblies::install_preload_hooks_for_alc ()
+EmbeddedAssemblies::install_preload_hooks_for_alc () noexcept
 {
 	mono_install_assembly_preload_hook_v3 (
 		open_from_bundles,
@@ -600,7 +617,7 @@ force_inline const TypeMapModuleEntry*
 EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept
 {
 	ssize_t left = -1;
-	ssize_t right = static_cast<ssize_t>(n);
+	auto right = static_cast<ssize_t>(n);
 	ssize_t middle;
 
 	while (right - left > 1) {
@@ -912,7 +929,7 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;
 
-	size_t pageSize        = static_cast<size_t>(utils.monodroid_getpagesize ());
+	auto pageSize          = static_cast<size_t>(utils.monodroid_getpagesize ());
 	size_t offsetFromPage  = offset % pageSize;
 	size_t offsetPage      = offset - offsetFromPage;
 	size_t offsetSize      = size + offsetFromPage;

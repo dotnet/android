@@ -53,8 +53,8 @@ namespace xamarin::android
 		void monodroid_profiler_load (const char *libmono_path, const char *desc, const char *logfile);
 
 	private:
-		bool load_profiler (void *handle, const char *desc, const char *symbol);
-		bool load_profiler_from_handle (void *dso_handle, const char *desc, const char *name);
+		static bool load_profiler (void *handle, const char *desc, const char *symbol) noexcept;
+		static bool load_profiler_from_handle (void *dso_handle, const char *desc, const char *name) noexcept;
 
 #if !defined (WINDOWS) && defined (DEBUG)
 	public:

@@ -2,7 +2,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cerrno>
-#include <ctype.h>
+#include <cctype>
 #include <fcntl.h>
 #include <concepts>
 #include <type_traits>
@@ -53,7 +53,7 @@ char *AndroidSystem::libmonoandroid_directory_path = nullptr;
 
 #if defined (DEBUG) || !defined (ANDROID)
 BundledProperty*
-AndroidSystem::lookup_system_property (const char *name)
+AndroidSystem::lookup_system_property (const char *name) noexcept
 {
 	for (BundledProperty *p = bundled_properties; p != nullptr; p = p->next) {
 		if (strcmp (p->name, name) == 0) {
@@ -65,7 +65,7 @@ AndroidSystem::lookup_system_property (const char *name)
 #endif // DEBUG || !ANDROID
 
 const char*
-AndroidSystem::lookup_system_property (const char *name, size_t &value_len)
+AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noexcept
 {
 	value_len = 0;
 #if defined (DEBUG) || !defined (ANDROID)
@@ -108,7 +108,7 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len)
 
 #if defined (DEBUG) || !defined (ANDROID)
 void
-AndroidSystem::add_system_property (const char *name, const char *value)
+AndroidSystem::add_system_property (const char *name, const char *value) noexcept
 {
 	BundledProperty* p = lookup_system_property (name);
 	if (p != nullptr) {
@@ -146,7 +146,7 @@ AndroidSystem::add_system_property (const char *name, const char *value)
 
 #ifndef ANDROID
 void
-AndroidSystem::monodroid_strreplace (char *buffer, char old_char, char new_char)
+AndroidSystem::monodroid_strreplace (char *buffer, char old_char, char new_char) noexcept
 {
 	if (buffer == nullptr)
 		return;
@@ -158,7 +158,7 @@ AndroidSystem::monodroid_strreplace (char *buffer, char old_char, char new_char)
 }
 
 int
-AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len)
+AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len) noexcept
 {
 	if (!name || !sp_value)
 		return -1;
@@ -194,7 +194,7 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 }
 #else
 int
-AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, const size_t sp_value_len)
+AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, const size_t sp_value_len) noexcept
 {
 	if (name == nullptr || sp_value == nullptr)
 		return -1;
@@ -260,7 +260,7 @@ AndroidSystem::monodroid_get_system_property (const char *name, gsl::owner<char*
 	}
 
 	if (len >= 0 && value) {
-		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, static_cast<size_t>(len), 1);
+		auto alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, static_cast<size_t>(len), 1);
 		*value = new char [alloc_size];
 		if (*value == nullptr)
 			return -len;
@@ -280,7 +280,7 @@ AndroidSystem::monodroid_system_property_exists_impl (const char *name) noexcept
 
 #if defined (DEBUG) || !defined (ANDROID)
 size_t
-AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char **value)
+AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char **value) noexcept
 {
 	if (value != nullptr)
 		*value = nullptr;
@@ -317,7 +317,7 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 #endif
 
 size_t
-AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] const char *name, [[maybe_unused]] char ** value)
+AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] const char *name, [[maybe_unused]] char ** value) noexcept
 {
 #if defined (DEBUG) || !defined (ANDROID)
 	for (auto const& dir : override_dirs ()) {
@@ -340,7 +340,7 @@ AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] co
 }
 
 void
-AndroidSystem::create_update_dir (char *override_dir)
+AndroidSystem::create_update_dir (char *override_dir) noexcept
 {
 #if defined(RELEASE)
 	/*
@@ -361,7 +361,7 @@ AndroidSystem::create_update_dir (char *override_dir)
 }
 
 bool
-AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
+AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept
 {
 	if (dso_path == nullptr || *dso_path == '\0') {
 		return false;
@@ -380,7 +380,7 @@ AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dy
 }
 
 void*
-AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check)
+AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check) noexcept
 {
 	if (path == nullptr || *path == '\0')
 		return nullptr;
@@ -411,13 +411,13 @@ AndroidSystem::load_dso_from_directory (const char *directory, const char *dso_n
 }
 
 void*
-AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags)
+AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags) noexcept
 {
 	return load_dso_from_specified_dirs (app_lib_directories (), name, dl_flags);
 }
 
 void*
-AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] unsigned int dl_flags)
+AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] unsigned int dl_flags) noexcept
 {
 #ifdef RELEASE
 	return nullptr;
@@ -427,7 +427,7 @@ AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [
 }
 
 void*
-AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_flags)
+AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_flags) noexcept
 {
 	void *handle = load_dso_from_override_dirs (name, dl_flags);
 	if (handle == nullptr)
@@ -436,7 +436,7 @@ AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_
 }
 
 bool
-AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
+AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept
 {
 	if (get_full_dso_path (base_dir, dso_name, path) && utils.file_exists (path.get ()))
 		return true;
@@ -445,7 +445,7 @@ AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *
 }
 
 bool
-AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
+AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept
 {
 	if (is_embedded_dso_mode_enabled ())
 		return false;
@@ -469,7 +469,7 @@ AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, dynamic_local_st
 }
 
 int
-AndroidSystem::count_override_assemblies (void)
+AndroidSystem::count_override_assemblies () noexcept
 {
 	int c = 0;
 
@@ -493,7 +493,7 @@ AndroidSystem::count_override_assemblies (void)
 }
 
 long
-AndroidSystem::get_max_gref_count_from_system (void)
+AndroidSystem::get_max_gref_count_from_system () noexcept
 {
 	constexpr long MAX_GREF_FOR_EMULATOR = 2000;
 	constexpr long MAX_GREF_FOR_DEVICE = 51200;
@@ -501,7 +501,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 	long max = running_in_emulator ? MAX_GREF_FOR_EMULATOR : MAX_GREF_FOR_DEVICE;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> override;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_MAX_GREFC, override) > 0) {
+	if (monodroid_get_system_property (Debug::DEBUG_MONO_MAX_GREFC, override) > 0) {
 		constexpr long KILOBYTES_MULTIPLIER = 1000;
 		constexpr long MEGABYTES_MULTIPLIER = 1000000;
 		constexpr long CONVERSION_BASE_DECIMAL = 10;
@@ -529,7 +529,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 }
 
 long
-AndroidSystem::get_gref_gc_threshold ()
+AndroidSystem::get_gref_gc_threshold () noexcept
 {
 	if (max_gref_count == std::numeric_limits<int>::max ())
 		return max_gref_count;
@@ -538,7 +538,7 @@ AndroidSystem::get_gref_gc_threshold ()
 
 #if defined (DEBUG) || !defined (ANDROID)
 void
-AndroidSystem::setup_environment (const char *name, const char *value)
+AndroidSystem::setup_environment (const char *name, const char *value) noexcept
 {
 	if (name == nullptr || *name == '\0')
 		return;
@@ -557,7 +557,7 @@ AndroidSystem::setup_environment (const char *name, const char *value)
 }
 
 void
-AndroidSystem::setup_environment_from_override_file (const char *path)
+AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 {
 #if WINDOWS
 	using read_count_type = unsigned int;
@@ -650,7 +650,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path)
 #endif // DEBUG || !ANDROID
 
 void
-AndroidSystem::setup_environment ()
+AndroidSystem::setup_environment () noexcept
 {
 	if (is_mono_aot_enabled () && *mono_aot_mode_name != '\0') {
 		switch (mono_aot_mode_name [0]) {
@@ -726,7 +726,7 @@ AndroidSystem::setup_environment ()
 }
 
 void
-AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk_count, [[maybe_unused]] void *user_data)
+AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk_count, [[maybe_unused]] void *user_data) noexcept
 {
 	if (apk == nullptr || index != apk_count - 1)
 		return;
@@ -736,13 +736,13 @@ AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk
 }
 
 void
-AndroidSystem::setup_process_args (jstring_array_wrapper &runtimeApks)
+AndroidSystem::setup_process_args (jstring_array_wrapper &runtimeApks) noexcept
 {
 	for_each_apk (runtimeApks, static_cast<BasicAndroidSystem::ForEachApkHandler> (&AndroidSystem::setup_process_args_apk), nullptr);
 }
 
 monodroid_dirent_t*
-AndroidSystem::readdir (monodroid_dir_t *dir)
+AndroidSystem::readdir (monodroid_dir_t *dir) noexcept
 {
 #if defined (WINDOWS)
 	return readdir_windows (dir);
@@ -753,7 +753,7 @@ AndroidSystem::readdir (monodroid_dir_t *dir)
 
 #if defined (WINDOWS)
 struct _wdirent*
-AndroidSystem::readdir_windows (_WDIR *dirp)
+AndroidSystem::readdir_windows (_WDIR *dirp) noexcept
 {
 	std::lock_guard<std::mutex> lock (readdir_mutex);
 	errno = 0;
@@ -767,7 +767,7 @@ AndroidSystem::readdir_windows (_WDIR *dirp)
 
 // Returns the directory in which this library was loaded from
 char*
-AndroidSystem::get_libmonoandroid_directory_path ()
+AndroidSystem::get_libmonoandroid_directory_path () noexcept
 {
 	wchar_t module_path[MAX_PATH];
 	HMODULE module = nullptr;
@@ -788,7 +788,7 @@ AndroidSystem::get_libmonoandroid_directory_path ()
 }
 
 int
-AndroidSystem::setenv (const char *name, const char *value, [[maybe_unused]] int overwrite)
+AndroidSystem::setenv (const char *name, const char *value, [[maybe_unused]] int overwrite) noexcept
 {
 	wchar_t *wname  = utils.utf8_to_utf16 (name);
 	wchar_t *wvalue = utils.utf8_to_utf16 (value);
@@ -801,7 +801,7 @@ AndroidSystem::setenv (const char *name, const char *value, [[maybe_unused]] int
 }
 
 int
-AndroidSystem::symlink (const char *target, const char *linkpath)
+AndroidSystem::symlink (const char *target, const char *linkpath) noexcept
 {
 	return utils.file_copy (target, linkpath);
 }

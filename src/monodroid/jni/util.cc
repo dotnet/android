@@ -10,7 +10,7 @@
 #endif
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <string.h>
+#include <cstring>
 #ifdef HAVE_BSD_STRING_H
 #include <bsd/string.h>
 #endif

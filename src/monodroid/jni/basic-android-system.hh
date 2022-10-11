@@ -35,7 +35,7 @@ namespace xamarin::android::internal
 		static constexpr size_t MAX_OVERRIDES = 1;
 
 	protected:
-		using ForEachApkHandler = void (BasicAndroidSystem::*) (const char *apk, size_t index, size_t apk_count, void *user_data);
+		using ForEachApkHandler = void (*) (const char *apk, size_t index, size_t apk_count, void *user_data);
 		using override_dirs_array = std::array<char*, MAX_OVERRIDES>;
 
 	public:
@@ -58,9 +58,9 @@ namespace xamarin::android::internal
 		static const char* get_built_for_abi_name ();
 
 	public:
-		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks);
+		static void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept;
 
-		const char* get_override_dir (size_t index) const noexcept
+		static const char* get_override_dir (size_t index) noexcept
 		{
 			if (index >= MAX_OVERRIDES)
 				return nullptr;
@@ -68,7 +68,7 @@ namespace xamarin::android::internal
 			return _override_dirs [index];
 		}
 
-		void set_override_dir (uint32_t index, const char* dir) noexcept
+		static void set_override_dir (uint32_t index, const char* dir) noexcept
 		{
 			if (index >= MAX_OVERRIDES)
 				return;
@@ -76,63 +76,63 @@ namespace xamarin::android::internal
 			_override_dirs [index] = const_cast <char*> (dir);
 		}
 
-		bool is_embedded_dso_mode_enabled () const
+		static bool is_embedded_dso_mode_enabled () noexcept
 		{
 			return embedded_dso_mode_enabled;
 		}
 
-		void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
+		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 
-		char *get_runtime_libdir () const
+		static char *get_runtime_libdir () noexcept
 		{
 			return runtime_libdir;
 		}
 
-		void set_runtime_libdir (char *dir)
+		static void set_runtime_libdir (char *dir) noexcept
 		{
 			runtime_libdir = dir;
 		}
 
-		char *get_primary_override_dir () const
+		static char *get_primary_override_dir () noexcept
 		{
 			return primary_override_dir;
 		}
 
-		void set_primary_override_dir (jstring_wrapper& home)
+		static void set_primary_override_dir (jstring_wrapper& home) noexcept
 		{
 			primary_override_dir = determine_primary_override_dir (home);
 		}
 
-		override_dirs_array& override_dirs () noexcept
+		static override_dirs_array& override_dirs () noexcept
 		{
 			return _override_dirs;
 		}
 
-		std::vector<char*>& app_lib_directories () noexcept
+		static std::vector<char*>& app_lib_directories () noexcept
 		{
 			return _app_lib_directories;
 		}
 
 	protected:
-		void  for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data);
+		static void for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data) noexcept;
 
 	private:
-		void add_apk_libdir (const char *apk, size_t &index, const char *abi) noexcept;
-		void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept;
-		gsl::owner<char*> determine_primary_override_dir (jstring_wrapper &home) noexcept;
+		static void add_apk_libdir (const char *apk, size_t &index, const char *abi) noexcept;
+		static void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept;
+		static gsl::owner<char*> determine_primary_override_dir (jstring_wrapper &home) noexcept;
 
-		void set_embedded_dso_mode_enabled (bool yesno) noexcept
+		static void set_embedded_dso_mode_enabled (bool yesno) noexcept
 		{
 			embedded_dso_mode_enabled = yesno;
 		}
 
 	private:
-		bool  embedded_dso_mode_enabled = false;
-		char *runtime_libdir = nullptr;
-		char *primary_override_dir = nullptr;
-		std::vector<char*> _app_lib_directories;
-		override_dirs_array _override_dirs;
-		static const char* _built_for_abi_name;
+		static inline bool embedded_dso_mode_enabled = false;
+		static inline char *runtime_libdir = nullptr;
+		static inline char *primary_override_dir = nullptr;
+		static inline std::vector<char*> _app_lib_directories;
+		static inline override_dirs_array _override_dirs;
+		static inline const char* _built_for_abi_name = nullptr;
 	};
 }
 #endif // !__BASIC_ANDROID_SYSTEM_HH

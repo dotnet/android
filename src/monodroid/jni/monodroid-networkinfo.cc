@@ -45,7 +45,7 @@ static jmethodID NetworkInterface_isUp;
 static jmethodID NetworkInterface_supportsMulticast;
 
 static void
-java_classes_init (void)
+java_classes_init ()
 {
 	JNIEnv *env = get_jnienv ();
 	NetworkInterface_class = env->FindClass ("java/net/NetworkInterface");
@@ -155,7 +155,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	char    prop_name[] = "net.dnsX";
 	for (int i = 0; i < 8; i++) {
 		prop_name [7] = (char)(i + 0x31);
-		len = static_cast<size_t>(androidSystem.monodroid_get_system_property (prop_name, dns));
+		len = static_cast<size_t>(AndroidSystem::monodroid_get_system_property (prop_name, dns));
 		if (len == 0) {
 			dns_servers [i] = nullptr;
 			continue;
@@ -167,7 +167,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	if (count <= 0)
 		return 0;
 
-	size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof (char*), static_cast<size_t>(count));
+	auto alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof (char*), static_cast<size_t>(count));
 	char **ret = (char**)malloc (alloc_size);
 	char **p = ret;
 	for (int i = 0; i < 8; i++) {

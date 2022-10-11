@@ -124,9 +124,9 @@ namespace xamarin::android::internal {
 #endif
 		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
 
-		void install_preload_hooks_for_appdomains ();
+		static void install_preload_hooks_for_appdomains () noexcept;
 #if defined (NET)
-		void install_preload_hooks_for_alc ();
+		static void install_preload_hooks_for_alc () noexcept;
 #endif // def NET
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (MonoString *java_type) noexcept;
 
@@ -281,7 +281,7 @@ namespace xamarin::android::internal {
 			return c_unique_ptr<char> (mono_string_to_utf8 (const_cast<MonoString*>(s)));
 		}
 
-		bool is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept;
+		static bool is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept;
 
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
 		static const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0) noexcept;
@@ -297,7 +297,7 @@ namespace xamarin::android::internal {
 		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
-		const AssemblyStoreHashEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept;
+		static const AssemblyStoreHashEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept;
 
 	private:
 		using bundled_assembly_vector = std::vector<XamarinAndroidBundledAssembly>;

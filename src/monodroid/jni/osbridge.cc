@@ -139,8 +139,8 @@ jobject
 OSBridge::lref_to_gref (JNIEnv *env, jobject lref)
 {
 	jobject g;
-	if (lref == 0)
-		return 0;
+	if (lref == nullptr)
+		return nullptr;
 	g = env->NewGlobalRef (lref);
 	env->DeleteLocalRef (lref);
 	return g;
@@ -1002,16 +1002,16 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 }
 
 int
-OSBridge::platform_supports_weak_refs (void)
+OSBridge::platform_supports_weak_refs ()
 {
 	int api_level = 0;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
-	if (androidSystem.monodroid_get_system_property ("ro.build.version.sdk", value) > 0) {
+	if (AndroidSystem::monodroid_get_system_property ("ro.build.version.sdk", value) > 0) {
 		api_level = atoi (value.get ());
 	}
 
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_WREF_PROPERTY, value) > 0) {
+	if (AndroidSystem::monodroid_get_system_property (Debug::DEBUG_MONO_WREF_PROPERTY, value) > 0) {
 		int use_weak_refs = 0;
 		if (!strcmp ("jni", value.get ()))
 			use_weak_refs = 1;
@@ -1038,7 +1038,7 @@ OSBridge::platform_supports_weak_refs (void)
 }
 
 void
-OSBridge::register_gc_hooks (void)
+OSBridge::register_gc_hooks ()
 {
 	MonoGCBridgeCallbacks bridge_cbs;
 
@@ -1060,7 +1060,7 @@ OSBridge::register_gc_hooks (void)
 }
 
 JNIEnv*
-OSBridge::ensure_jnienv (void)
+OSBridge::ensure_jnienv ()
 {
 	JNIEnv *env;
 	jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
@@ -1108,7 +1108,7 @@ OSBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass)
 void
 OSBridge::add_monodroid_domain (MonoDomain *domain)
 {
-	MonodroidBridgeProcessingInfo *node = new MonodroidBridgeProcessingInfo (); //calloc (1, sizeof (MonodroidBridgeProcessingInfo));
+	auto node = new MonodroidBridgeProcessingInfo (); //calloc (1, sizeof (MonodroidBridgeProcessingInfo));
 
 	/* We need to prefetch all these information prior to using them in gc_cross_reference as all those functions
 	 * use GC API to allocate memory and thus can't be called from within the GC callback as it causes a deadlock

@@ -332,6 +332,7 @@ endif()
 set(LINK_LIBS "")
 
 set(LOCAL_COMMON_COMPILER_ARGS
+  -fno-threadsafe-statics
   -Wall
   -Wconversion
   -Wdeprecated

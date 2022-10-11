@@ -7,8 +7,6 @@
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-const char* BasicAndroidSystem::_built_for_abi_name = nullptr;
-
 void
 BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
@@ -25,7 +23,7 @@ BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) no
 }
 
 void
-BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks)
+BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept
 {
 	if (!is_embedded_dso_mode_enabled ()) {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
@@ -42,13 +40,13 @@ BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtim
 }
 
 void
-BasicAndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data)
+BasicAndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data) noexcept
 {
 	size_t apksLength = runtimeApks.get_length ();
 	for (size_t i = 0; i < apksLength; ++i) {
 		jstring_wrapper &e = runtimeApks [i];
 
-		(this->*handler) (e.get_cstr (), i, apksLength, user_data);
+		(*handler) (e.get_cstr (), i, apksLength, user_data);
 	}
 }
 

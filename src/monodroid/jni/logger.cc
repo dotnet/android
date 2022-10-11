@@ -1,10 +1,10 @@
 #include <array>
-#include <stdlib.h>
-#include <stdarg.h>
+#include <cstdlib>
+#include <cstdarg>
 #include <strings.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
-#include <errno.h>
+#include <cerrno>
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -79,13 +79,13 @@ int gc_spew_enabled;
 static FILE*
 open_file (LogCategories category, const char *path, const char *override_dir, const char *filename)
 {
-	char *p = NULL;
+	char *p = nullptr;
 	FILE *f;
 
 	if (path && access (path, W_OK) < 0) {
 		log_warn (category, "Could not open path '%s' for logging (\"%s\"). Using '%s/%s' instead.",
 				path, strerror (errno), override_dir, filename);
-		path  = NULL;
+		path  = nullptr;
 	}
 
 	if (!path) {
@@ -160,7 +160,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 	log_timing_categories = LOG_TIMING_DEFAULT;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_LOG_PROPERTY, value) == 0)
+	if (AndroidSystem::monodroid_get_system_property (Debug::DEBUG_MONO_LOG_PROPERTY, value) == 0)
 		return;
 
 	string_segment param;
@@ -356,7 +356,7 @@ static constexpr size_t loglevel_map_max_index = (sizeof(loglevel_map) / sizeof(
 void
 log_write (LogCategories category, LogLevel level, const char *message) noexcept
 {
-	size_t map_index = static_cast<size_t>(level);
+	auto map_index = static_cast<size_t>(level);
 	android_LogPriority priority;
 
 	if (map_index > loglevel_map_max_index) {

@@ -23,7 +23,7 @@ reinitialize_android_runtime_type_manager (JNIEnv *env)
 }
 
 inline void
-MonodroidRuntime::shutdown_android_runtime (MonoDomain *domain)
+MonodroidRuntime::shutdown_android_runtime (MonoDomain *domain) noexcept
 {
 	MonoClass *runtime = get_android_runtime_class (domain);
 	MonoMethod *method = mono_class_get_method_from_name (runtime, "Exit", 0);
@@ -33,7 +33,7 @@ MonodroidRuntime::shutdown_android_runtime (MonoDomain *domain)
 
 inline jint
 MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
-                                                                      jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies)
+                                                                      jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies) noexcept
 {
 	log_info (LOG_DEFAULT, "CREATING NEW CONTEXT");
 	reinitialize_android_runtime_type_manager (env);
@@ -52,7 +52,7 @@ MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (JNIEnv *en
 }
 
 inline void
-MonodroidRuntime::Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint contextID)
+MonodroidRuntime::Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint contextID) noexcept
 {
 	log_info (LOG_DEFAULT, "SWITCHING CONTEXT");
 	MonoDomain *domain = mono_domain_get_by_id ((int)contextID);
@@ -65,7 +65,7 @@ MonodroidRuntime::Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint c
 }
 
 inline void
-MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintArray array)
+MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintArray array) noexcept
 {
 	MonoDomain *root_domain = mono_get_root_domain ();
 	mono_jit_thread_attach (root_domain);
@@ -107,7 +107,7 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintAr
 JNIEXPORT jint
 JNICALL Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava, jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies)
 {
-	return monodroidRuntime.Java_mono_android_Runtime_createNewContextWithData (
+	return MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (
 		env,
 		klass,
 		runtimeApksJava,
@@ -123,7 +123,7 @@ JNICALL Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass 
 JNIEXPORT jint
 JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava, jobject loader)
 {
-	return monodroidRuntime.Java_mono_android_Runtime_createNewContextWithData (
+	return MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (
 		env,
 		klass,
 		runtimeApksJava,
@@ -138,12 +138,12 @@ JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, j
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_switchToContext (JNIEnv *env, [[maybe_unused]] jclass klass, jint contextID)
 {
-	monodroidRuntime.Java_mono_android_Runtime_switchToContext (env, contextID);
+	MonodroidRuntime::Java_mono_android_Runtime_switchToContext (env, contextID);
 }
 
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, [[maybe_unused]] jclass klass, jintArray array)
 {
-	monodroidRuntime.Java_mono_android_Runtime_destroyContexts (env, array);
+	MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (env, array);
 }
 #endif // ndef ANDROID

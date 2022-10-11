@@ -76,8 +76,8 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 	gsl::owner<char*> mname_ptr = nullptr;
 
 	if (col != nullptr) {
-		size_t name_len = static_cast<size_t>(col - desc);
-		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
+		auto name_len = static_cast<size_t>(col - desc);
+		auto alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
 		mname_ptr = new char [alloc_size];
 		strncpy (mname_ptr, desc, name_len);
 		mname_ptr [name_len] = 0;
@@ -89,12 +89,12 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 	unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
 	std::unique_ptr<char[]> libname {utils.string_concat ("libmono-profiler-", mname.get (), ".so")};
 	bool found = false;
-	void *handle = androidSystem.load_dso_from_any_directories (libname.get (), dlopen_flags);
+	void *handle = AndroidSystem::load_dso_from_any_directories (libname.get (), dlopen_flags);
 	found = load_profiler_from_handle (handle, desc, mname.get ());
 
 	if (!found && libmono_path != nullptr) {
 		std::unique_ptr<char> full_path {utils.path_combine (libmono_path, libname.get ())};
-		handle = androidSystem.load_dso (full_path.get (), dlopen_flags, FALSE);
+		handle = AndroidSystem::load_dso (full_path.get (), dlopen_flags, FALSE);
 		found = load_profiler_from_handle (handle, desc, mname.get ());
 	}
 
@@ -110,12 +110,12 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 
 /* Profiler support cribbed from mono/metadata/profiler.c */
 
-typedef void (*ProfilerInitializer) (const char*);
+using ProfilerInitializer = void (*) (const char*);
 
 bool
-Debug::load_profiler (void *handle, const char *desc, const char *symbol)
+Debug::load_profiler (void *handle, const char *desc, const char *symbol) noexcept
 {
-	ProfilerInitializer func = reinterpret_cast<ProfilerInitializer> (java_interop_lib_symbol (handle, symbol, nullptr));
+	auto func = reinterpret_cast<ProfilerInitializer> (java_interop_lib_symbol (handle, symbol, nullptr));
 	log_warn (LOG_DEFAULT, "Looking for profiler init symbol '%s'? %p", symbol, func);
 
 	if (func != nullptr) {
@@ -126,7 +126,7 @@ Debug::load_profiler (void *handle, const char *desc, const char *symbol)
 }
 
 bool
-Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char *name)
+Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char *name) noexcept
 {
 	if (!dso_handle)
 		return false;
@@ -249,7 +249,7 @@ Debug::start_debugging_and_profiling ()
 	}
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> connect_args;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, connect_args) > 0) {
+	if (AndroidSystem::monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, connect_args) > 0) {
 		DebuggerConnectionStatus res = start_connection (connect_args);
 		if (res == DebuggerConnectionStatus::Error) {
 			log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args.get ());
@@ -589,7 +589,7 @@ Debug::start_profiling ()
 		return;
 
 	log_info (LOG_DEFAULT, "Loading profiler: '%s'", profiler_description);
-	monodroid_profiler_load (androidSystem.get_runtime_libdir (), profiler_description, nullptr);
+	monodroid_profiler_load (AndroidSystem::get_runtime_libdir (), profiler_description, nullptr);
 }
 
 #endif  // !def WINDOWS
@@ -619,7 +619,7 @@ Debug::enable_soft_breakpoints (void)
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
 	/* Soft breakpoints are enabled by default */
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value) <= 0) {
+	if (AndroidSystem::monodroid_get_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value) <= 0) {
 		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS);
 		return 1;
 	}

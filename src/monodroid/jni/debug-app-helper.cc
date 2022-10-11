@@ -2,7 +2,7 @@
 #include <string>
 
 #include <dlfcn.h>
-#include <string.h>
+#include <cstring>
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -127,7 +127,7 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 		}
 
 		utils.set_user_executable (to_file.get ());
-	} while (0);
+	} while (false);
 }
 #else  /* !defined (ANDROID) */
 static void

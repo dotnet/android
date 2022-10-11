@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
 
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/assembly.h>

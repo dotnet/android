@@ -1,6 +1,6 @@
 #include <cerrno>
-#include <stdlib.h>
-#include <stdarg.h>
+#include <cstdlib>
+#include <cstdarg>
 
 #ifdef WINDOWS
 #include <direct.h>
@@ -24,7 +24,7 @@ BasicUtilities::path_combine (const char *path1, const char *path2) noexcept
 	if (path2 == nullptr)
 		return strdup_new (path1);
 
-	size_t len = ADD_WITH_OVERFLOW_CHECK (size_t, strlen (path1), strlen (path2) + 2);
+	auto len = ADD_WITH_OVERFLOW_CHECK (size_t, strlen (path1), strlen (path2) + 2);
 	gsl::owner<char*> ret = new char [len];
 	*ret = '\0';
 
@@ -36,7 +36,7 @@ BasicUtilities::path_combine (const char *path1, const char *path2) noexcept
 }
 
 void
-BasicUtilities::create_public_directory (const char *dir)
+BasicUtilities::create_public_directory (const char *dir) noexcept
 {
 #ifndef WINDOWS
 	constexpr mode_t DIRECTORY_PERMISSION_BITS = 0777;
@@ -52,7 +52,7 @@ BasicUtilities::create_public_directory (const char *dir)
 }
 
 int
-BasicUtilities::create_directory (const char *pathname, mode_t mode)
+BasicUtilities::create_directory (const char *pathname, mode_t mode) noexcept
 {
 	if (mode <= 0)
 		mode = DEFAULT_DIRECTORY_MODE;
@@ -96,7 +96,7 @@ BasicUtilities::create_directory (const char *pathname, mode_t mode)
 }
 
 void
-BasicUtilities::set_world_accessable ([[maybe_unused]] const char *path)
+BasicUtilities::set_world_accessable ([[maybe_unused]] const char *path) noexcept
 {
 #ifdef ANDROID
 	constexpr mode_t WORLD_ACCESSIBLE_FILE_PERMISSION_BITS = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
@@ -112,7 +112,7 @@ BasicUtilities::set_world_accessable ([[maybe_unused]] const char *path)
 }
 
 void
-BasicUtilities::set_user_executable ([[maybe_unused]] const char *path)
+BasicUtilities::set_user_executable ([[maybe_unused]] const char *path) noexcept
 {
 #ifdef ANDROID
 	int r;
@@ -126,7 +126,7 @@ BasicUtilities::set_user_executable ([[maybe_unused]] const char *path)
 }
 
 bool
-BasicUtilities::file_exists (const char *file)
+BasicUtilities::file_exists (const char *file) noexcept
 {
 	monodroid_stat_t s;
 	if (monodroid_stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG)
@@ -135,7 +135,7 @@ BasicUtilities::file_exists (const char *file)
 }
 
 bool
-BasicUtilities::directory_exists (const char *directory)
+BasicUtilities::directory_exists (const char *directory) noexcept
 {
 	monodroid_stat_t s;
 	if (monodroid_stat (directory, &s) == 0 && (s.st_mode & S_IFMT) == S_IFDIR)
@@ -144,7 +144,7 @@ BasicUtilities::directory_exists (const char *directory)
 }
 
 bool
-BasicUtilities::file_copy (const char *to, const char *from)
+BasicUtilities::file_copy (const char *to, const char *from) noexcept
 {
 	if (to == nullptr || *to == '\0') {
 		log_error (LOG_DEFAULT, "BasicUtilities::file_copy: `to` parameter must not be null or empty");
@@ -185,7 +185,7 @@ BasicUtilities::file_copy (const char *to, const char *from)
 }
 
 bool
-BasicUtilities::is_path_rooted (const char *path)
+BasicUtilities::is_path_rooted (const char *path) noexcept
 {
 	if (path == nullptr)
 		return false;
@@ -226,7 +226,7 @@ BasicUtilities::monodroid_fopen (const char *filename, const char *mode) noexcep
 }
 
 int
-BasicUtilities::monodroid_stat (const char *path, monodroid_stat_t *s)
+BasicUtilities::monodroid_stat (const char *path, monodroid_stat_t *s) noexcept
 {
 	int result;
 
@@ -242,7 +242,7 @@ BasicUtilities::monodroid_stat (const char *path, monodroid_stat_t *s)
 }
 
 monodroid_dir_t*
-BasicUtilities::monodroid_opendir (const char *filename)
+BasicUtilities::monodroid_opendir (const char *filename) noexcept
 {
 #ifndef WINDOWS
 	return opendir (filename);
@@ -255,7 +255,7 @@ BasicUtilities::monodroid_opendir (const char *filename)
 }
 
 int
-BasicUtilities::monodroid_closedir (monodroid_dir_t *dirp)
+BasicUtilities::monodroid_closedir (monodroid_dir_t *dirp) noexcept
 {
 #ifndef WINDOWS
 	return closedir (dirp);
@@ -265,7 +265,7 @@ BasicUtilities::monodroid_closedir (monodroid_dir_t *dirp)
 }
 
 int
-BasicUtilities::monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension)
+BasicUtilities::monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension) noexcept
 {
 #ifndef WINDOWS
 	return ends_with_slow (e->d_name, extension);
@@ -278,7 +278,7 @@ BasicUtilities::monodroid_dirent_hasextension (monodroid_dirent_t *e, const char
 }
 
 char *
-BasicUtilities::monodroid_strdup_printf (const char *format, ...)
+BasicUtilities::monodroid_strdup_printf (const char *format, ...) noexcept
 {
         va_list args;
 
@@ -290,7 +290,7 @@ BasicUtilities::monodroid_strdup_printf (const char *format, ...)
 }
 
 char*
-BasicUtilities::monodroid_strdup_vprintf (const char *format, va_list vargs)
+BasicUtilities::monodroid_strdup_vprintf (const char *format, va_list vargs) noexcept
 {
 	char *ret = nullptr;
 	int n = vasprintf (&ret, format, vargs);

@@ -1,7 +1,7 @@
 #if defined (NET)
 #include <compare>
 #include <unistd.h>
-#include <stdarg.h>
+#include <cstdarg>
 #include <mono/utils/mono-publib.h>
 #include <mono/utils/mono-dl-fallback.h>
 
@@ -31,10 +31,6 @@ int _monodroid_get_dns_servers (void **dns_servers_array);
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-void* MonodroidRuntime::system_native_library_handle = nullptr;
-void* MonodroidRuntime::system_security_cryptography_native_android_library_handle = nullptr;
-void* MonodroidRuntime::system_io_compression_native_library_handle = nullptr;
-
 static unsigned int
 monodroid_get_log_categories ()
 {
@@ -44,7 +40,7 @@ monodroid_get_log_categories ()
 static int
 monodroid_get_system_property (const char *name, char **value)
 {
-        return androidSystem.monodroid_get_system_property (name, value);
+        return AndroidSystem::monodroid_get_system_property (name, value);
 }
 
 static int
@@ -97,7 +93,7 @@ monodroid_free (void *ptr)
 static int
 _monodroid_max_gref_get ()
 {
-        return static_cast<int>(androidSystem.get_max_gref_count ());
+        return static_cast<int>(AndroidSystem::get_max_gref_count ());
 }
 
 static int
@@ -164,19 +160,19 @@ _monodroid_gc_wait_for_bridge_processing ()
 static int
 _monodroid_get_android_api_level ()
 {
-        return monodroidRuntime.get_android_api_level ();
+        return MonodroidRuntime::get_android_api_level ();
 }
 
 static void
 monodroid_clear_gdb_wait ()
 {
-        monodroidRuntime.set_monodroid_gdb_wait (false);
+        MonodroidRuntime::set_monodroid_gdb_wait (false);
 }
 
 static void*
 _monodroid_get_identity_hash_code (JNIEnv *env, void *v)
 {
-        intptr_t rv = env->CallStaticIntMethod (monodroidRuntime.get_java_class_System (), monodroidRuntime.get_java_class_method_System_identityHashCode (), v);
+        intptr_t rv = env->CallStaticIntMethod (MonodroidRuntime::get_java_class_System (), MonodroidRuntime::get_java_class_method_System_identityHashCode (), v);
         return (void*) rv;
 }
 
@@ -184,10 +180,10 @@ static void*
 _monodroid_timezone_get_default_id ()
 {
 	JNIEnv *env          = osBridge.ensure_jnienv ();
-	jmethodID getDefault = env->GetStaticMethodID (monodroidRuntime.get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
-	jmethodID getID      = env->GetMethodID (monodroidRuntime.get_java_class_TimeZone (), "getID",      "()Ljava/lang/String;");
-	jobject d            = env->CallStaticObjectMethod (monodroidRuntime.get_java_class_TimeZone (), getDefault);
-	jstring id           = reinterpret_cast<jstring> (env->CallObjectMethod (d, getID));
+	jmethodID getDefault = env->GetStaticMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
+	jmethodID getID      = env->GetMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getID",      "()Ljava/lang/String;");
+	jobject d            = env->CallStaticObjectMethod (MonodroidRuntime::get_java_class_TimeZone (), getDefault);
+	auto id              = reinterpret_cast<jstring> (env->CallObjectMethod (d, getID));
 	const char *mutf8    = env->GetStringUTFChars (id, nullptr);
 
 	if (mutf8 == nullptr) {
@@ -210,7 +206,7 @@ static void
 _monodroid_counters_dump ([[maybe_unused]] const char *format, [[maybe_unused]] va_list args)
 {
 #if !defined (NET)
-	monodroidRuntime.dump_counters_v (format, args);
+	MonodroidRuntime::dump_counters_v (format, args);
 #endif // ndef NET
 }
 
@@ -257,7 +253,7 @@ monodroid_strdup_printf (const char *format, ...)
 static char*
 monodroid_TypeManager_get_java_class_name (jclass klass)
 {
-	return monodroidRuntime.get_java_class_name_for_TypeManager (klass);
+	return MonodroidRuntime::get_java_class_name_for_TypeManager (klass);
 }
 
 static void
@@ -269,7 +265,7 @@ monodroid_store_package_name (const char *name)
 static int
 monodroid_get_namespaced_system_property (const char *name, char **value)
 {
-	return static_cast<int>(androidSystem.monodroid_get_system_property (name, value));
+	return static_cast<int>(AndroidSystem::monodroid_get_system_property (name, value));
 }
 
 static FILE*
@@ -339,7 +335,7 @@ monodroid_dylib_mono_init (void *mono_imports, [[maybe_unused]] const char *libm
 }
 
 static void*
-monodroid_get_dylib (void)
+monodroid_get_dylib ()
 {
 	return nullptr;
 }
@@ -501,7 +497,7 @@ MonodroidRuntime::handle_other_pinvoke_request (const char *library_name, hash_t
 }
 
 void*
-MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name)
+MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name) noexcept
 {
 	if (library_name == nullptr || entrypoint_name == nullptr) {
 		return nullptr;

@@ -355,7 +355,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 		return false;
 	}
 
-	std::array<uint8_t, ZIP_EOCD_LEN> eocd;
+	UNINITIALIZED std::array<uint8_t, ZIP_EOCD_LEN> eocd;
 	ssize_t nread = ::read (fd, eocd.data (), static_cast<read_count_type>(eocd.size ()));
 	if (nread < 0 || nread != eocd.size ()) {
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD from the APK: %s (nread: %d; errno: %d)", std::strerror (errno), nread, errno);
@@ -363,7 +363,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	}
 
 	size_t index = 0; // signature
-	std::array<uint8_t, 4> signature;
+	UNINITIALIZED std::array<uint8_t, 4> signature;
 
 	if (!zip_read_field (eocd, index, signature)) {
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD signature");
@@ -394,7 +394,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	// We scan from the end to save time
 	bool found = false;
 	const uint8_t* data = buf.data ();
-	for (ssize_t i = static_cast<ssize_t>(alloc_size - (ZIP_EOCD_LEN + 2)); i >= 0; i--) {
+	for (auto i = static_cast<ssize_t>(alloc_size - (ZIP_EOCD_LEN + 2)); i >= 0; i--) {
 		if (memcmp (data + i, ZIP_EOCD_MAGIC, sizeof(ZIP_EOCD_MAGIC)) != 0)
 			continue;
 
@@ -423,15 +423,14 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, ZipEntryLoadState &state)
 		return false;
 	}
 
-	std::array<uint8_t, ZIP_LOCAL_LEN> local_header;
-	std::array<uint8_t, 4> signature;
-
+	UNINITIALIZED std::array<uint8_t, ZIP_LOCAL_LEN> local_header;
 	ssize_t nread = ::read (fd, local_header.data (), local_header.size ());
 	if (nread < 0 || nread != ZIP_LOCAL_LEN) {
 		log_error (LOG_ASSEMBLY, "Failed to read local header at offset %u: %s (nread: %d; errno: %d)", state.local_header_offset, std::strerror (errno), nread, errno);
 		return false;
 	}
 
+	UNINITIALIZED std::array<uint8_t, 4> signature;
 	size_t index = 0;
 	if (!zip_read_field (local_header, index, signature)) {
 		log_error (LOG_ASSEMBLY, "Failed to read Local Header entry signature at offset %u", state.local_header_offset);
@@ -572,7 +571,7 @@ EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynami
 	size_t index = state.buf_offset;
 	zip_ensure_valid_params (buf, index, ZIP_CENTRAL_LEN);
 
-	std::array<uint8_t, 4> signature;
+	UNINITIALIZED std::array<uint8_t, 4> signature;
 	if (!zip_read_field (buf, index, signature)) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry signature");
 		return false;
@@ -599,22 +598,22 @@ EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynami
 	}
 	state.file_size = field_value.value ();
 
-	std::optional<uint16_t> file_name_length = zip_read_field_u16 (buf, index);
 	index = state.buf_offset + CD_FILENAME_LENGTH_OFFSET;
+	std::optional<uint16_t> file_name_length = zip_read_field_u16 (buf, index);
 	if (!file_name_length) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file name length' field");
 		return false;
 	}
 
-	std::optional<uint16_t> extra_field_length = zip_read_field_u16 (buf, index);
 	index = state.buf_offset + CD_EXTRA_LENGTH_OFFSET;
+	std::optional<uint16_t> extra_field_length = zip_read_field_u16 (buf, index);
 	if (!extra_field_length) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'extra field length' field");
 		return false;
 	}
 
-	std::optional<uint16_t> comment_length = zip_read_field_u16 (buf, index);
 	index = state.buf_offset + CD_COMMENT_LENGTH_OFFSET;
+	std::optional<uint16_t> comment_length = zip_read_field_u16 (buf, index);
 	if (!comment_length) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file comment length' field");
 		return false;
