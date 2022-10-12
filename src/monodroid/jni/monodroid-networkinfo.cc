@@ -32,8 +32,8 @@
 #include "monodroid-glue.hh"
 #include "strings.hh"
 
+#include "android-system.hh"
 #include "util.hh"
-#include "globals.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;

@@ -1,6 +1,6 @@
 #if !defined (ANDROID)
 #include "designer-assemblies.hh"
-#include "globals.hh"
+#include "util.hh"
 
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/assembly.h>
@@ -44,7 +44,7 @@ DesignerAssemblies::try_load_assembly (MonoDomain *domain, MonoAssemblyName *nam
 		 * to select the loading context to use (it would require access to the MonoAssemblyLoadRequest API)
 		 * which mean we can't properly do either loading from memory or call LoadFrom
 		 */
-		MonoClass *assembly_klass = utils.monodroid_get_class_from_name (domain, "mscorlib", "System.Reflection", "Assembly");
+		MonoClass *assembly_klass = Util::monodroid_get_class_from_name (domain, "mscorlib", "System.Reflection", "Assembly");
 
 		if (entry_bytes_len > 0) {
 			MonoClass *byte_klass = mono_get_byte_class ();
@@ -58,15 +58,15 @@ DesignerAssemblies::try_load_assembly (MonoDomain *domain, MonoAssemblyName *nam
 			args[0] = byteArray;
 			args[1] = nullptr;
 			args[2] = nullptr;
-			MonoReflectionAssembly *res = (MonoReflectionAssembly *)utils.monodroid_runtime_invoke (domain, assembly_load_method, nullptr, args, nullptr);
+			MonoReflectionAssembly *res = (MonoReflectionAssembly *)Util::monodroid_runtime_invoke (domain, assembly_load_method, nullptr, args, nullptr);
 			return mono_reflection_assembly_get_assembly (res);
-		} else if (entry_path != nullptr && utils.file_exists (entry_path)) {
+		} else if (entry_path != nullptr && Util::file_exists (entry_path)) {
 			MonoMethod *assembly_load_method = mono_class_get_method_from_name (assembly_klass, "LoadFrom", 1);
 			MonoString *asm_path = mono_string_new (domain, entry_path);
 
 			void *args[1];
 			args[0] = asm_path;
-			MonoReflectionAssembly *res = (MonoReflectionAssembly *)utils.monodroid_runtime_invoke (domain, assembly_load_method, nullptr, args, nullptr);
+			MonoReflectionAssembly *res = (MonoReflectionAssembly *)Util::monodroid_runtime_invoke (domain, assembly_load_method, nullptr, args, nullptr);
 			return mono_reflection_assembly_get_assembly (res);
 		}
 	}
@@ -148,7 +148,7 @@ DesignerAssemblies::DesignerAssemblyEntry::DesignerAssemblyEntry (MonoDomain *do
 
 	for (unsigned int index = 0; index < assemblies_count; index++) {
 		jstring_wrapper &assembly = assemblies [index];
-		names[index] = utils.strdup_new (assembly.get_cstr ());
+		names[index] = Util::strdup_new (assembly.get_cstr ());
 
 		// Copy in-memory assembly bytes if any
 		jboolean is_copy;
@@ -167,7 +167,7 @@ DesignerAssemblies::DesignerAssemblyEntry::DesignerAssemblyEntry (MonoDomain *do
 
 		// Copy path to the specific assembly if any
 		jstring_wrapper &assembly_path = assembliesPaths [index];
-		assemblies_paths[index] = assembly_path.hasValue () ? utils.strdup_new (assembly_path.get_cstr ()) : nullptr;
+		assemblies_paths[index] = assembly_path.hasValue () ? Util::strdup_new (assembly_path.get_cstr ()) : nullptr;
 	}
 }
 

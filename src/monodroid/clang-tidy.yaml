@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-avoid-c-arrays,android-*,bugprone-*,-bugprone-easily-swappable-parameters,performance-*,-bugprone-dynamic-static-initializers,modernize-*,-modernize-use-trailing-return-type,-modernize-avoid-c-arrays,readability-*'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-avoid-c-arrays,android-*,bugprone-*,-bugprone-easily-swappable-parameters,performance-*,-bugprone-dynamic-static-initializers,modernize-*,-modernize-use-trailing-return-type,-modernize-avoid-c-arrays,readability-*,-readability-braces-around-statements,-readability-identifier-length'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

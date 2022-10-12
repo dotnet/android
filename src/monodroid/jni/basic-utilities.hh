@@ -39,10 +39,20 @@ namespace xamarin::android
 		static int                create_directory (const char *pathname, mode_t mode) noexcept;
 		static void               set_world_accessable (const char *path) noexcept;
 		static void               set_user_executable (const char *path) noexcept;
-		static bool               file_exists (const char *file) noexcept;
-		static bool               directory_exists (const char *directory) noexcept;
-		static bool               file_copy (const char *to, const char *from) noexcept;
 
+		static bool file_exists (const char *file) noexcept
+		{
+			monodroid_stat_t s;
+			return monodroid_stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG;
+		}
+
+		static bool directory_exists (const char *directory) noexcept
+		{
+			monodroid_stat_t s;
+			return monodroid_stat (directory, &s) == 0 && (s.st_mode & S_IFMT) == S_IFDIR;
+		}
+
+		static bool               file_copy (const char *to, const char *from) noexcept;
 
 		// Make sure that `buf` has enough space! This is by design, the methods are supposed to be fast.
 		template<size_t MaxStackSpace, typename TBuffer>

@@ -126,24 +126,6 @@ BasicUtilities::set_user_executable ([[maybe_unused]] const char *path) noexcept
 }
 
 bool
-BasicUtilities::file_exists (const char *file) noexcept
-{
-	monodroid_stat_t s;
-	if (monodroid_stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG)
-		return true;
-	return false;
-}
-
-bool
-BasicUtilities::directory_exists (const char *directory) noexcept
-{
-	monodroid_stat_t s;
-	if (monodroid_stat (directory, &s) == 0 && (s.st_mode & S_IFMT) == S_IFDIR)
-		return true;
-	return false;
-}
-
-bool
 BasicUtilities::file_copy (const char *to, const char *from) noexcept
 {
 	if (to == nullptr || *to == '\0') {

@@ -50,7 +50,7 @@ namespace xamarin::android
 		explicit Debug ()
 		{}
 
-		void monodroid_profiler_load (const char *libmono_path, const char *desc, const char *logfile);
+		static void monodroid_profiler_load (const char *libmono_path, const char *desc, const char *logfile) noexcept;
 
 	private:
 		static bool load_profiler (void *handle, const char *desc, const char *symbol) noexcept;
@@ -58,46 +58,46 @@ namespace xamarin::android
 
 #if !defined (WINDOWS) && defined (DEBUG)
 	public:
-		bool         enable_soft_breakpoints ();
-		void         start_debugging_and_profiling ();
-		void         set_debugger_log_level (const char *level);
+		static bool         enable_soft_breakpoints () noexcept;
+		static void         start_debugging_and_profiling () noexcept;
+		static void         set_debugger_log_level (const char *level) noexcept;
 
-		bool         have_debugger_log_level () const
+		static bool         have_debugger_log_level () noexcept
 		{
 			return got_debugger_log_level;
 		}
 
-		int          get_debugger_log_level () const
+		static int          get_debugger_log_level () noexcept
 		{
 			return debugger_log_level;
 		}
 
 	private:
-		DebuggerConnectionStatus start_connection (internal::dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options) noexcept;
-		void         parse_options (internal::dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options, ConnOptions *opts);
-		bool         process_connection (int fd);
-		int          handle_server_connection (void);
-		bool         process_cmd (int fd, char *cmd);
-		void         start_debugging ();
-		void         start_profiling ();
+		static DebuggerConnectionStatus start_connection (internal::dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options) noexcept;
+		static void         parse_options (internal::dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options, ConnOptions *opts) noexcept;
+		static bool         process_connection (int fd) noexcept;
+		static int          handle_server_connection (void) noexcept;
+		static bool         process_cmd (int fd, char *cmd) noexcept;
+		static void         start_debugging () noexcept;
+		static void         start_profiling () noexcept;
 
-		friend void* conn_thread (void *arg);
+		friend void* conn_thread (void *arg) noexcept;
 
 	private:
-		pthread_mutex_t  process_cmd_mutex = PTHREAD_MUTEX_INITIALIZER;
-		pthread_cond_t   process_cmd_cond  = PTHREAD_COND_INITIALIZER;
-		uint16_t         conn_port = 0;
-		pthread_t        conn_thread_id = 0;
-		bool             debugging_configured;
-		int              sdb_fd;
-		bool             profiler_configured;
-		int              profiler_fd;
-		char            *profiler_description;
-		bool             config_timedout;
-		timeval          wait_tv;
-		timespec         wait_ts;
-		bool             got_debugger_log_level = false;
-		int              debugger_log_level = 0;
+		static inline pthread_mutex_t  process_cmd_mutex = PTHREAD_MUTEX_INITIALIZER;
+		static inline pthread_cond_t   process_cmd_cond  = PTHREAD_COND_INITIALIZER;
+		static inline uint16_t         conn_port = 0;
+		static inline pthread_t        conn_thread_id = 0;
+		static inline bool             debugging_configured = false;
+		static inline int              sdb_fd = -1;
+		static inline bool             profiler_configured = false;
+		static inline int              profiler_fd = false;
+		static inline char            *profiler_description = nullptr;
+		static inline bool             config_timedout = false;
+		static inline timeval          wait_tv{};
+		static inline timespec         wait_ts{};
+		static inline bool             got_debugger_log_level = false;
+		static inline int              debugger_log_level = 0;
 #endif
 	};
 }

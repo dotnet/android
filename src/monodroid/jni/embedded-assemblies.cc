@@ -72,11 +72,11 @@ private:
 	gsl::owner<char*> guid = nullptr;
 };
 
-void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
+void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix) noexcept
 {
 	if (assemblies_prefix_override != nullptr)
 		delete[] assemblies_prefix_override;
-	assemblies_prefix_override = prefix != nullptr ? utils.strdup_new (prefix) : nullptr;
+	assemblies_prefix_override = prefix != nullptr ? Util::strdup_new (prefix) : nullptr;
 }
 
 force_inline void
@@ -185,7 +185,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 	}
 
 	if constexpr (LogMapping) {
-		if (XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY) && map_info.area != nullptr)) {
+		if (XA_UNLIKELY (Util::should_log (LOG_ASSEMBLY) && map_info.area != nullptr)) {
 			auto *p = reinterpret_cast<const char*>(file.data);
 
 			auto byte_to_char = [&] (size_t index) {
@@ -305,7 +305,7 @@ template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
-	if (!utils.ends_with (name, SharedConstants::DLL_EXTENSION)) {
+	if (!Util::ends_with (name, SharedConstants::DLL_EXTENSION)) {
 		name.append (SharedConstants::DLL_EXTENSION);
 	}
 
@@ -373,7 +373,7 @@ force_inline MonoAssembly*
 EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
 	size_t len = name.length ();
-	bool have_dll_ext = utils.ends_with (name, SharedConstants::DLL_EXTENSION);
+	bool have_dll_ext = Util::ends_with (name, SharedConstants::DLL_EXTENSION);
 
 	if (have_dll_ext) {
 		len -= sizeof(SharedConstants::DLL_EXTENSION) - 1;
@@ -425,8 +425,8 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 
 			// Mono takes ownership of the pointers
 			mono_register_config_for_assembly (
-				utils.string_concat (name.get (), ".dll"),
-				utils.strdup_new (reinterpret_cast<const char*>(assembly_runtime_info.config_data))
+				Util::string_concat (name.get (), ".dll"),
+				Util::strdup_new (reinterpret_cast<const char*>(assembly_runtime_info.config_data))
 			);
 		}
 #endif // NET
@@ -515,7 +515,7 @@ MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data, MonoError *error)
 {
 	constexpr bool ref_only = false;
-	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error, ref_only);
+	return open_from_bundles (aname, alc_gchandle, error, ref_only);
 }
 #else // def NET
 
@@ -527,7 +527,7 @@ EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_
 {
 	constexpr bool ref_only = true;
 
-	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
+	return open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
 #endif // ndef NET
 
@@ -536,7 +536,7 @@ EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unu
 {
 	constexpr bool ref_only = false;
 
-	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
+	return open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
 
 void
@@ -679,7 +679,7 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
 		return nullptr;
 	}
 
-	MonoReflectionType *ret = mono_type_get_object (utils.get_current_domain (), type);
+	MonoReflectionType *ret = mono_type_get_object (Util::get_current_domain (), type);
 	if (XA_UNLIKELY (ret == nullptr)) {
 		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type '%s'", managed_type_name);
 		return nullptr;
@@ -735,7 +735,7 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 	// calls `mono_get_root_domain`. Thus, we can save on a one function call here by passing `nullptr`
 	constexpr MonoDomain *domain = nullptr;
 #else
-	MonoDomain *domain = utils.get_current_domain ();
+	MonoDomain *domain = Util::get_current_domain ();
 #endif
 	MonoReflectionType *ret = mono_type_get_object (domain, mono_class_get_type (klass));
 	if (ret == nullptr) {
@@ -752,7 +752,7 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 {
 	size_t total_time_index;
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
-		timing = new Timing ();
+		MonodroidRuntime::init_managed_timing ();
 		total_time_index = internal_timing->start_event (TimingEventKind::JavaToManaged);
 	}
 
@@ -902,7 +902,7 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 {
 	size_t total_time_index;
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
-		timing = new Timing ();
+		MonodroidRuntime::init_managed_timing ();
 		total_time_index = internal_timing->start_event (TimingEventKind::ManagedToJava);
 	}
 
@@ -929,7 +929,7 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;
 
-	auto pageSize          = static_cast<size_t>(utils.monodroid_getpagesize ());
+	auto pageSize          = static_cast<size_t>(Util::monodroid_getpagesize ());
 	size_t offsetFromPage  = offset % pageSize;
 	size_t offsetPage      = offset - offsetFromPage;
 	size_t offsetSize      = size + offsetFromPage;
@@ -953,7 +953,7 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 }
 
 void
-EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register)
+EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register) noexcept
 {
 	constexpr int OPEN_FLAGS =
 		          O_RDONLY
@@ -973,7 +973,7 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
-ssize_t EmbeddedAssemblies::do_read (int fd, void *buf, size_t count)
+ssize_t EmbeddedAssemblies::do_read (int fd, void *buf, size_t count) noexcept
 {
 	ssize_t ret;
 	do {
@@ -993,13 +993,13 @@ ssize_t EmbeddedAssemblies::do_read (int fd, void *buf, size_t count)
 
 template<typename H>
 bool
-EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char *file_type, const char *dir_path, const char *file_path, uint32_t expected_magic, H &header, size_t &file_size, int &fd)
+EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char *file_type, const char *dir_path, const char *file_path, uint32_t expected_magic, H &header, size_t &file_size, int &fd) noexcept
 {
 	struct stat sbuf;
 	int res;
 
 #if __ANDROID_API__ < 21
-	std::unique_ptr<char> full_file_path {utils.path_combine (dir_path, file_path)};
+	std::unique_ptr<char> full_file_path {Util::path_combine (dir_path, file_path)};
 	res = stat (full_file_path.get (), &sbuf);
 #else
 	res = fstatat (dir_fd, file_path, &sbuf, 0);
@@ -1050,7 +1050,7 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 }
 
 std::unique_ptr<uint8_t[]>
-EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_size, int index_fd)
+EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_size, int index_fd) noexcept
 {
 	size_t entry_size = header.module_file_name_width;
 	size_t data_size = entry_size * type_map_count;
@@ -1076,7 +1076,7 @@ EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_
 }
 
 std::unique_ptr<uint8_t[]>
-EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const char *index_path)
+EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const char *index_path) noexcept
 {
 	log_debug (LOG_ASSEMBLY, "typemap: loading TypeMap index file '%s/%s'", dir_path, index_path);
 
@@ -1098,7 +1098,7 @@ EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const 
 }
 
 bool
-EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module)
+EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module) noexcept
 {
 	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, header.assembly_name_length, 1);
 	module.assembly_name = new char[alloc_size];
@@ -1172,7 +1172,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 }
 
 bool
-EmbeddedAssemblies::typemap_load_file (int dir_fd, const char *dir_path, const char *file_path, TypeMap &module)
+EmbeddedAssemblies::typemap_load_file (int dir_fd, const char *dir_path, const char *file_path, TypeMap &module) noexcept
 {
 	log_debug (LOG_ASSEMBLY, "typemap: loading TypeMap file '%s/%s'", dir_path, file_path);
 
@@ -1206,16 +1206,16 @@ EmbeddedAssemblies::typemap_load_file (int dir_fd, const char *dir_path, const c
 }
 
 void
-EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
+EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path) noexcept
 {
 	if (!application_config.instant_run_enabled) {
 		log_info (LOG_ASSEMBLY, "typemap: instant run disabled, not loading type maps from storage");
 		return;
 	}
 
-	std::unique_ptr<char> dir_path {utils.path_combine (path, "typemaps")};
+	std::unique_ptr<char> dir_path {Util::path_combine (path, "typemaps")};
 	monodroid_dir_t *dir;
-	if ((dir = utils.monodroid_opendir (dir_path.get ())) == nullptr) {
+	if ((dir = Util::monodroid_opendir (dir_path.get ())) == nullptr) {
 		log_warn (LOG_ASSEMBLY, "typemap: could not open directory: `%s`", dir_path.get ());
 		return;
 	}
@@ -1244,12 +1244,12 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 		}
 	}
 
-	utils.monodroid_closedir (dir);
+	Util::monodroid_closedir (dir);
 }
 #endif
 
 size_t
-EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register)
+EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register) noexcept
 {
 	size_t prev  = number_of_found_assemblies;
 

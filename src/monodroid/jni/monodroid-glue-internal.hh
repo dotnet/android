@@ -187,6 +187,21 @@ namespace xamarin::android::internal
 #endif
 		static jint Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept;
 
+		static void init_managed_timing () noexcept
+		{
+			timing = new Timing ();
+		}
+
+		static bool managed_timing_available () noexcept
+		{
+			return timing != nullptr;
+		}
+
+		static Timing* managed_timing () noexcept
+		{
+			return timing;
+		}
+
 		static bool is_startup_in_progress () noexcept
 		{
 			return startup_in_progress;
@@ -429,6 +444,7 @@ namespace xamarin::android::internal
 		static inline void        *api_dso_handle = nullptr;
 #endif // !def NET
 		static inline std::mutex dso_handle_write_lock;
+		static inline Timing *timing = nullptr;
 	};
 }
 #endif

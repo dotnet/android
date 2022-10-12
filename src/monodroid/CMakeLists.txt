@@ -332,7 +332,6 @@ endif()
 set(LINK_LIBS "")
 
 set(LOCAL_COMMON_COMPILER_ARGS
-  -fno-threadsafe-statics
   -Wall
   -Wconversion
   -Wdeprecated
@@ -360,6 +359,9 @@ endif()
 
 set(LOCAL_COMMON_LINKER_ARGS "")
 if(ANDROID)
+  # We don't need thread-safe initialization of statics on Android, our entire init sequence runs in a single thread
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS -fno-threadsafe-statics)
+
   if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
     list(APPEND LOCAL_COMMON_COMPILER_ARGS
       -fno-omit-frame-pointer

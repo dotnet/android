@@ -28,7 +28,7 @@ MonodroidRuntime::shutdown_android_runtime (MonoDomain *domain) noexcept
 	MonoClass *runtime = get_android_runtime_class (domain);
 	MonoMethod *method = mono_class_get_method_from_name (runtime, "Exit", 0);
 
-	utils.monodroid_runtime_invoke (domain, method, nullptr, nullptr, nullptr);
+	Util::monodroid_runtime_invoke (domain, method, nullptr, nullptr, nullptr);
 }
 
 inline jint
@@ -84,10 +84,10 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintAr
 			continue;
 		log_info (LOG_DEFAULT, "Shutting down domain `%d'", contextIDs[i]);
 		shutdown_android_runtime (domain);
-		osBridge.remove_monodroid_domain (domain);
+		OSBridge::remove_monodroid_domain (domain);
 		designerAssemblies.clear_for_domain (domain);
 	}
-	osBridge.on_destroy_contexts ();
+	OSBridge::on_destroy_contexts ();
 	for (jsize i = 0; i < count; i++) {
 		int domain_id = contextIDs[i];
 		MonoDomain *domain = mono_domain_get_by_id (domain_id);

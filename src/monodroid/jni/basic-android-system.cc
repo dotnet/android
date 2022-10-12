@@ -2,7 +2,8 @@
 
 #include "basic-android-system.hh"
 #include "cpp-util.hh"
-#include "globals.hh"
+#include "shared-constants.hh"
+#include "util.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -11,9 +12,9 @@ void
 BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
 	// appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
-	std::unique_ptr<char> libmonodroid_path {utils.path_combine (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr (), "libmonodroid.so")};
+	std::unique_ptr<char> libmonodroid_path {Util::path_combine (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr (), "libmonodroid.so")};
 	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path.get ());
-	if (!utils.file_exists (libmonodroid_path.get ())) {
+	if (!Util::file_exists (libmonodroid_path.get ())) {
 		log_debug (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path.get ());
 		set_embedded_dso_mode_enabled (true);
 	} else {
@@ -27,7 +28,7 @@ BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtim
 {
 	if (!is_embedded_dso_mode_enabled ()) {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
-		app_lib_directories ().push_back (utils.strdup_new (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ()));
+		app_lib_directories ().push_back (Util::strdup_new (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ()));
 		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 	} else {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
@@ -53,7 +54,7 @@ BasicAndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApk
 force_inline void
 BasicAndroidSystem::add_apk_libdir (const char *apk, size_t &index, const char *abi) noexcept
 {
-	app_lib_directories ().push_back (utils.string_concat (apk, "!/lib/", abi));
+	app_lib_directories ().push_back (Util::string_concat (apk, "!/lib/", abi));
 	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", app_lib_directories ()[index]);
 	index++;
 }
@@ -69,7 +70,7 @@ BasicAndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstrin
 		const char *apk = e.get_cstr ();
 
 		if (have_split_apks) {
-			if (utils.ends_with (apk, SharedConstants::split_config_abi_apk_name)) {
+			if (Util::ends_with (apk, SharedConstants::split_config_abi_apk_name)) {
 				add_apk_libdir (apk, number_of_added_directories, abi);
 				break;
 			}
@@ -82,7 +83,7 @@ BasicAndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstrin
 gsl::owner<char*>
 BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home) noexcept
 {
-	return utils.path_combine (home.get_cstr (), ".__override__");
+	return Util::path_combine (home.get_cstr (), ".__override__");
 }
 
 const char*

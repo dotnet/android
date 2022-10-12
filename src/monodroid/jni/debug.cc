@@ -44,6 +44,7 @@
 #include "globals.hh"
 #include "cpp-util.hh"
 #include "timing-internal.hh"
+#include "embedded-assemblies.hh"
 
 #include "java-interop-dlfcn.h"
 
@@ -66,11 +67,11 @@ using namespace xamarin::android::internal;
 
 namespace xamarin::android
 {
-	void* conn_thread (void *arg);
+	void* conn_thread (void *arg) noexcept;
 }
 
 void
-Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, const char *logfile)
+Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, const char *logfile) noexcept
 {
 	const char* col = strchr (desc, ':');
 	gsl::owner<char*> mname_ptr = nullptr;
@@ -82,24 +83,24 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 		strncpy (mname_ptr, desc, name_len);
 		mname_ptr [name_len] = 0;
 	} else {
-		mname_ptr = utils.strdup_new (desc);
+		mname_ptr = Util::strdup_new (desc);
 	}
 	std::unique_ptr<char> mname {mname_ptr};
 
 	unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
-	std::unique_ptr<char[]> libname {utils.string_concat ("libmono-profiler-", mname.get (), ".so")};
+	std::unique_ptr<char[]> libname {Util::string_concat ("libmono-profiler-", mname.get (), ".so")};
 	bool found = false;
 	void *handle = AndroidSystem::load_dso_from_any_directories (libname.get (), dlopen_flags);
 	found = load_profiler_from_handle (handle, desc, mname.get ());
 
 	if (!found && libmono_path != nullptr) {
-		std::unique_ptr<char> full_path {utils.path_combine (libmono_path, libname.get ())};
+		std::unique_ptr<char> full_path {Util::path_combine (libmono_path, libname.get ())};
 		handle = AndroidSystem::load_dso (full_path.get (), dlopen_flags, FALSE);
 		found = load_profiler_from_handle (handle, desc, mname.get ());
 	}
 
 	if (found && logfile != nullptr)
-		utils.set_world_accessable (logfile);
+		Util::set_world_accessable (logfile);
 
 	if (!found)
 		log_warn (LOG_DEFAULT,
@@ -131,7 +132,7 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 	if (!dso_handle)
 		return false;
 
-	std::unique_ptr<char[]> symbol {utils.string_concat (INITIALIZER_NAME, "_", name)};
+	std::unique_ptr<char[]> symbol {Util::string_concat (INITIALIZER_NAME, "_", name)};
 	bool result = load_profiler (dso_handle, desc, symbol.get ());
 
 	if (result)
@@ -142,7 +143,7 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 
 #if defined (DEBUG) && !defined (WINDOWS)
 void
-Debug::set_debugger_log_level (const char *level)
+Debug::set_debugger_log_level (const char *level) noexcept
 {
 	if (level == nullptr || *level == '\0') {
 		got_debugger_log_level = false;
@@ -165,7 +166,7 @@ Debug::set_debugger_log_level (const char *level)
 }
 
 force_inline void
-Debug::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options, ConnOptions *opts)
+Debug::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& options, ConnOptions *opts) noexcept
 {
 	log_info (LOG_DEFAULT, "Connection options: '%s'", options.get ());
 
@@ -231,7 +232,7 @@ Debug::start_connection (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& 
 		return DebuggerConnectionStatus::Unconnected;
 	}
 
-	res = pthread_create (&conn_thread_id, nullptr, xamarin::android::conn_thread, this);
+	res = pthread_create (&conn_thread_id, nullptr, xamarin::android::conn_thread, nullptr);
 	if (res) {
 		log_error (LOG_DEFAULT, "Failed to create connection thread: %s", strerror (errno));
 		return DebuggerConnectionStatus::Error;
@@ -241,7 +242,7 @@ Debug::start_connection (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& 
 }
 
 void
-Debug::start_debugging_and_profiling ()
+Debug::start_debugging_and_profiling () noexcept
 {
 	size_t total_time_index;
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
@@ -279,7 +280,7 @@ Debug::start_debugging_and_profiling ()
  * Call process_cmd () with each command received.
  */
 inline bool
-Debug::process_connection (int fd)
+Debug::process_connection (int fd) noexcept
 {
 	// make sure the fd/socket blocks on reads/writes
 	fcntl (fd, F_SETFL, fcntl (fd, F_GETFL, nullptr) & ~O_NONBLOCK);
@@ -288,7 +289,7 @@ Debug::process_connection (int fd)
 		char command [257];
 		uint8_t cmd_len;
 
-		ssize_t rv = utils.recv_uninterrupted (fd, &cmd_len, sizeof(cmd_len));
+		ssize_t rv = Util::recv_uninterrupted (fd, &cmd_len, sizeof(cmd_len));
 		if (rv == 0) {
 			log_info (LOG_DEFAULT, "EOF on socket.\n");
 			return false;
@@ -298,7 +299,7 @@ Debug::process_connection (int fd)
 			return false;
 		}
 
-		rv = utils.recv_uninterrupted (fd, command, cmd_len);
+		rv = Util::recv_uninterrupted (fd, command, cmd_len);
 		if (rv <= 0) {
 			log_info (LOG_DEFAULT, "Error while receiving command from XS (%s)\n", strerror (errno));
 			return false;
@@ -315,7 +316,7 @@ Debug::process_connection (int fd)
 }
 
 inline int
-Debug::handle_server_connection (void)
+Debug::handle_server_connection () noexcept
 {
 	int listen_socket = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (listen_socket == -1) {
@@ -325,7 +326,7 @@ Debug::handle_server_connection (void)
 
 	int flags = 1;
 	int rv = setsockopt (listen_socket, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof (flags));
-	if (rv == -1 && utils.should_log (LOG_DEFAULT)) {
+	if (rv == -1 && Util::should_log (LOG_DEFAULT)) {
 		log_info_nocheck (LOG_DEFAULT, "Could not set SO_REUSEADDR on the listening socket (%s)", strerror (errno));
 		// not a fatal failure
 	}
@@ -443,7 +444,7 @@ cleanup:
  * Return true, if a new connection need to be opened.
  */
 bool
-Debug::process_cmd (int fd, char *cmd)
+Debug::process_cmd (int fd, char *cmd) noexcept
 {
 	static constexpr char CONNECT_OUTPUT_CMD[] = "connect output";
 	if (strcmp (cmd, CONNECT_OUTPUT_CMD) == 0) {
@@ -471,7 +472,7 @@ Debug::process_cmd (int fd, char *cmd)
 
 	static constexpr char PING_CMD[] = "ping";
 	if (strcmp (cmd, PING_CMD) == 0) {
-		if (!utils.send_uninterrupted (fd, const_cast<void*> (reinterpret_cast<const void*> ("pong")), 5))
+		if (!Util::send_uninterrupted (fd, const_cast<void*> (reinterpret_cast<const void*> ("pong")), 5))
 			log_error (LOG_DEFAULT, "Got keepalive request from XS, but could not send response back (%s)\n", strerror (errno));
 		return false;
 	}
@@ -518,7 +519,7 @@ Debug::process_cmd (int fd, char *cmd)
 		} else if (strncmp (prof, PROFILER_LOG, PROFILER_LOG_LEN) == 0) {
 			use_fd = true;
 			profiler_fd = fd;
-			profiler_description = utils.monodroid_strdup_printf ("%s,output=#%i", prof, profiler_fd);
+			profiler_description = Util::monodroid_strdup_printf ("%s,output=#%i", prof, profiler_fd);
 		} else {
 			log_error (LOG_DEFAULT, "Unknown profiler: '%s'", prof);
 		}
@@ -538,7 +539,7 @@ Debug::process_cmd (int fd, char *cmd)
 #if !defined (WINDOWS)
 
 void
-Debug::start_debugging (void)
+Debug::start_debugging () noexcept
 {
 	// wait for debugger configuration to finish
 	pthread_mutex_lock (&process_cmd_mutex);
@@ -551,9 +552,9 @@ Debug::start_debugging (void)
 	if (sdb_fd == 0)
 		return;
 
-	embeddedAssemblies.set_register_debug_symbols (true);
+	EmbeddedAssemblies::set_register_debug_symbols (true);
 
-	char *debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
+	char *debug_arg = Util::monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
 	char *debug_options[] = {
 		debug_arg,
 		nullptr
@@ -575,7 +576,7 @@ Debug::start_debugging (void)
 }
 
 void
-Debug::start_profiling ()
+Debug::start_profiling () noexcept
 {
 	// wait for profiler configuration to finish
 	pthread_mutex_lock (&process_cmd_mutex);
@@ -601,7 +602,7 @@ static const char *soft_breakpoint_kernel_list[] = {
 };
 
 bool
-Debug::enable_soft_breakpoints (void)
+Debug::enable_soft_breakpoints () noexcept
 {
 	utsname name;
 
@@ -640,7 +641,7 @@ Debug::enable_soft_breakpoints (void)
 #if defined (DEBUG) && !defined (WINDOWS)
 #ifndef enable_soft_breakpoints
 [[maybe_unused]] bool
-Debug::enable_soft_breakpoints (void)
+Debug::enable_soft_breakpoints () noexcept
 {
 	return false;
 }
@@ -653,13 +654,12 @@ Debug::enable_soft_breakpoints (void)
 // app huge so we don't want to involve it). To better solve it we need our own equivalent
 // to std::function
 void*
-xamarin::android::conn_thread (void *arg)
+xamarin::android::conn_thread (void *arg) noexcept
 {
 	abort_if_invalid_pointer_argument (arg);
 
 	int res;
-	Debug *instance = static_cast<Debug*> (arg);
-	res = instance->handle_server_connection ();
+	res = Debug::handle_server_connection ();
 	if (res && res != 3) {
 		log_fatal (LOG_DEBUGGER, "Error communicating with the IDE, exiting...");
 		exit (FATAL_EXIT_DEBUGGER_CONNECT);

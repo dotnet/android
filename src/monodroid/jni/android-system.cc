@@ -16,8 +16,10 @@
 #include <shlwapi.h>
 #endif
 
-#include "globals.hh"
+#include <mono/metadata/object.h>
+
 #include "android-system.hh"
+#include "debug.hh"
 #include "monodroid.h"
 #include "monodroid-glue-internal.hh"
 #include "jni-wrappers.hh"
@@ -163,7 +165,7 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 	if (!name || !sp_value)
 		return -1;
 
-	char *env_name = utils.monodroid_strdup_printf ("__XA_%s", name);
+	char *env_name = Util::monodroid_strdup_printf ("__XA_%s", name);
 	monodroid_strreplace (env_name, '.', '_');
 	char *env_value = getenv (env_name);
 	free (env_name);
@@ -243,7 +245,7 @@ AndroidSystem::monodroid_get_system_property_impl (const char *name, dynamic_loc
 int
 AndroidSystem::monodroid_get_system_property (const char *name, gsl::owner<char**> value) noexcept
 {
-	if (value)
+	if (value != nullptr)
 		*value = nullptr;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> sp_value;
@@ -259,7 +261,7 @@ AndroidSystem::monodroid_get_system_property (const char *name, gsl::owner<char*
 		}
 	}
 
-	if (len >= 0 && value) {
+	if (len >= 0 && value != nullptr) {
 		auto alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, static_cast<size_t>(len), 1);
 		*value = new char [alloc_size];
 		if (*value == nullptr)
@@ -285,7 +287,7 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 	if (value != nullptr)
 		*value = nullptr;
 
-	FILE* fp = utils.monodroid_fopen (path, "r");
+	FILE* fp = Util::monodroid_fopen (path, "r");
 	if (fp == nullptr)
 		return 0;
 
@@ -325,7 +327,7 @@ AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] co
 			continue;
 		}
 
-		std::unique_ptr<char[]> override_file {utils.path_combine (dir, name)};
+		std::unique_ptr<char[]> override_file {Util::path_combine (dir, name)};
 		log_info (LOG_DEFAULT, "Trying to get property from %s", override_file.get ());
 
 		size_t result = _monodroid_get_system_property_from_file (override_file.get (), value);
@@ -350,13 +352,13 @@ AndroidSystem::create_update_dir (char *override_dir) noexcept
 	 * However, if any logging is enabled (which should _not_ happen with
 	 * pre-loaded apps!), we need the .__override__ directory...
 	 */
-	if (log_categories == 0 && monodroid_system_property_exists (Debug::DEBUG_MONO_PROFILE_PROPERTY) == 0) {
+	if (log_categories == 0 && monodroid_system_property_exists (Debug::DEBUG_MONO_PROFILE_PROPERTY)) {
 		return;
 	}
 #endif
 
 	set_override_dir (0, override_dir);
-	utils.create_public_directory (override_dir);
+	Util::create_public_directory (override_dir);
 	log_warn (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
 }
 
@@ -367,7 +369,7 @@ AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dy
 		return false;
 	}
 
-	if (base_dir == nullptr || utils.is_path_rooted (dso_path)) {
+	if (base_dir == nullptr || Util::is_path_rooted (dso_path)) {
 		path.assign_c (dso_path); // Absolute path or no base path, can't do much with it
 		return true;
 	}
@@ -386,14 +388,14 @@ AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exis
 		return nullptr;
 
 	log_info (LOG_ASSEMBLY, "Trying to load shared library '%s'", path);
-	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !utils.file_exists (path)) {
+	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !Util::file_exists (path)) {
 		log_info (LOG_ASSEMBLY, "Shared library '%s' not found", path);
 		return nullptr;
 	}
 
 	char *error = nullptr;
 	void *handle = java_interop_lib_load (path, dl_flags, &error);
-	if (handle == nullptr && utils.should_log (LOG_ASSEMBLY))
+	if (handle == nullptr && Util::should_log (LOG_ASSEMBLY))
 		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, error);
 	java_interop_free (error);
 	return handle;
@@ -438,10 +440,7 @@ AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_
 bool
 AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept
 {
-	if (get_full_dso_path (base_dir, dso_name, path) && utils.file_exists (path.get ()))
-		return true;
-
-	return false;
+	return get_full_dso_path (base_dir, dso_name, path) && Util::file_exists (path.get ());
 }
 
 bool
@@ -474,19 +473,19 @@ AndroidSystem::count_override_assemblies () noexcept
 	int c = 0;
 
 	for (auto const dir_path : override_dirs ()) {
-		if (dir_path == nullptr || !utils.directory_exists (dir_path))
+		if (dir_path == nullptr || !Util::directory_exists (dir_path))
 			continue;
 
-		monodroid_dir_t *dir = utils.monodroid_opendir (dir_path);
+		monodroid_dir_t *dir = Util::monodroid_opendir (dir_path);
 		if (dir == nullptr)
 			continue;
 
 		monodroid_dirent_t *e = nullptr;
 		while ((e = readdir (dir)) != nullptr && e) {
-			if (utils.monodroid_dirent_hasextension (e, ".dll"))
+			if (Util::monodroid_dirent_hasextension (e, ".dll"))
 				++c;
 		}
-		utils.monodroid_closedir (dir);
+		Util::monodroid_closedir (dir);
 	}
 
 	return c;
@@ -565,7 +564,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	using read_count_type = size_t;
 #endif
 	monodroid_stat_t sbuf;
-	if (utils.monodroid_stat (path, &sbuf) < 0) {
+	if (Util::monodroid_stat (path, &sbuf) < 0) {
 		log_warn (LOG_DEFAULT, "Failed to stat the environment override file %s: %s", path, strerror (errno));
 		return;
 	}
@@ -717,8 +716,8 @@ AndroidSystem::setup_environment () noexcept
 #if defined (DEBUG) || !defined (ANDROID)
 	// TODO: for debug read from file in the override directory named `environment`
 	for (const auto override_dir : override_dirs ()) {
-		std::unique_ptr<char[]> env_override_file {utils.path_combine (override_dir, OVERRIDE_ENVIRONMENT_FILE_NAME)};
-		if (utils.file_exists (env_override_file.get ())) {
+		std::unique_ptr<char[]> env_override_file {Util::path_combine (override_dir, OVERRIDE_ENVIRONMENT_FILE_NAME)};
+		if (Util::file_exists (env_override_file.get ())) {
 			setup_environment_from_override_file (env_override_file.get ());
 		}
 	}
@@ -783,15 +782,15 @@ AndroidSystem::get_libmonoandroid_directory_path () noexcept
 
 	GetModuleFileNameW (module, module_path, sizeof (module_path) / sizeof (module_path[0]));
 	PathRemoveFileSpecW (module_path);
-	libmonoandroid_directory_path = utils.utf16_to_utf8 (module_path);
+	libmonoandroid_directory_path = Util::utf16_to_utf8 (module_path);
 	return libmonoandroid_directory_path;
 }
 
 int
 AndroidSystem::setenv (const char *name, const char *value, [[maybe_unused]] int overwrite) noexcept
 {
-	wchar_t *wname  = utils.utf8_to_utf16 (name);
-	wchar_t *wvalue = utils.utf8_to_utf16 (value);
+	wchar_t *wname  = Util::utf8_to_utf16 (name);
+	wchar_t *wvalue = Util::utf8_to_utf16 (value);
 
 	BOOL result = SetEnvironmentVariableW (wname, wvalue);
 	free (wname);
@@ -803,7 +802,7 @@ AndroidSystem::setenv (const char *name, const char *value, [[maybe_unused]] int
 int
 AndroidSystem::symlink (const char *target, const char *linkpath) noexcept
 {
-	return utils.file_copy (target, linkpath);
+	return Util::file_copy (target, linkpath);
 }
 #else
 #endif

@@ -10,6 +10,9 @@
 
 #include "globals.hh"
 #include "xa-internal-api-impl.hh"
+#include "osbridge.hh"
+#include "monodroid-glue-internal.hh"
+#include "embedded-assemblies.hh"
 
 #if defined (WINDOWS)
 #define WINDOWS_UNUSED_ARG [[maybe_unused]]
@@ -136,55 +139,55 @@ MonoAndroidInternalCalls_Impl::monodroid_max_gref_get ()
 int
 MonoAndroidInternalCalls_Impl::monodroid_gref_get ()
 {
-	return osBridge.get_gc_gref_count ();
+	return OSBridge::get_gc_gref_count ();
 }
 
 int
 MonoAndroidInternalCalls_Impl::monodroid_weak_gref_get ()
 {
-	return osBridge.get_gc_weak_gref_count ();
+	return OSBridge::get_gc_weak_gref_count ();
 }
 
 void
 MonoAndroidInternalCalls_Impl::monodroid_gref_log (const char *message)
 {
-	osBridge._monodroid_gref_log (message);
+	OSBridge::_monodroid_gref_log (message);
 }
 
 int
 MonoAndroidInternalCalls_Impl::monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	return osBridge._monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+	return OSBridge::_monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
 }
 
 void
 MonoAndroidInternalCalls_Impl::monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	osBridge._monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
 }
 
 void
 MonoAndroidInternalCalls_Impl::monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	osBridge._monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
 }
 
 void
 MonoAndroidInternalCalls_Impl::monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	osBridge._monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
 }
 
 void
 MonoAndroidInternalCalls_Impl::monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	osBridge._monodroid_lref_log_new (lrefc, handle, type, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_lref_log_new (lrefc, handle, type, threadName, threadId, from, from_writable);
 }
 
 void
 MonoAndroidInternalCalls_Impl::monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	osBridge._monodroid_lref_log_delete (lrefc, handle, type, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_lref_log_delete (lrefc, handle, type, threadName, threadId, from, from_writable);
 }
 
 void
@@ -215,7 +218,7 @@ MonoAndroidInternalCalls_Impl::monodroid_get_identity_hash_code (JNIEnv *env, vo
 void*
 MonoAndroidInternalCalls_Impl::monodroid_timezone_get_default_id ()
 {
-	JNIEnv *env          = osBridge.ensure_jnienv ();
+	JNIEnv *env          = OSBridge::ensure_jnienv ();
 	jmethodID getDefault = env->GetStaticMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
 	jmethodID getID      = env->GetMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getID",      "()Ljava/lang/String;");
 	jobject d            = env->CallStaticObjectMethod (MonodroidRuntime::get_java_class_TimeZone (), getDefault);
@@ -239,17 +242,18 @@ MonoAndroidInternalCalls_Impl::dump_counters (const char *format, va_list args)
 int
 MonoAndroidInternalCalls_Impl::monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix)
 {
-	embeddedAssemblies.set_assemblies_prefix (prefix);
+	EmbeddedAssemblies::set_assemblies_prefix (prefix);
 	return 0;
 }
 
 managed_timing_sequence*
 MonoAndroidInternalCalls_Impl::monodroid_timing_start (const char *message)
 {
-	if (timing == nullptr)
+	if (!MonodroidRuntime::managed_timing_available ()) {
 		return nullptr;
+	}
 
-	managed_timing_sequence *ret = timing->get_available_sequence ();
+	managed_timing_sequence *ret = MonodroidRuntime::managed_timing ()->get_available_sequence ();
 	if (message != nullptr) {
 		log_write (LOG_TIMING, LogLevel::Info, message);
 	}
@@ -263,18 +267,19 @@ MonoAndroidInternalCalls_Impl::monodroid_timing_stop (managed_timing_sequence *s
 {
 	static constexpr const char DEFAULT_MESSAGE[] = "Managed Timing";
 
-	if (sequence == nullptr)
+	if (sequence == nullptr || !MonodroidRuntime::managed_timing_available ()) {
 		return;
+	}
 
 	sequence->period.mark_end ();
 	Timing::info (sequence->period, message == nullptr ? DEFAULT_MESSAGE : message);
-	timing->release_sequence (sequence);
+	MonodroidRuntime::managed_timing ()->release_sequence (sequence);
 }
 
 char*
 MonoAndroidInternalCalls_Impl::monodroid_strdup_printf (const char *format, va_list args)
 {
-	return utils.monodroid_strdup_vprintf (format, args);
+	return Util::monodroid_strdup_vprintf (format, args);
 }
 
 char*
@@ -286,7 +291,7 @@ MonoAndroidInternalCalls_Impl::monodroid_TypeManager_get_java_class_name (jclass
 void
 MonoAndroidInternalCalls_Impl::monodroid_store_package_name (const char *name)
 {
-	utils.monodroid_store_package_name (name);
+	Util::monodroid_store_package_name (name);
 }
 
 int
@@ -298,7 +303,7 @@ MonoAndroidInternalCalls_Impl::monodroid_get_namespaced_system_property (const c
 FILE*
 MonoAndroidInternalCalls_Impl::monodroid_fopen (const char* filename, const char* mode)
 {
-	return utils.monodroid_fopen (filename, mode);
+	return Util::monodroid_fopen (filename, mode);
 }
 
 int
@@ -306,7 +311,7 @@ MonoAndroidInternalCalls_Impl::send_uninterrupted (int fd, void *buf, int len)
 {
 	if (len < 0)
 		len = 0;
-	return utils.send_uninterrupted (fd, buf, static_cast<size_t>(len));
+	return Util::send_uninterrupted (fd, buf, static_cast<size_t>(len));
 }
 
 int
@@ -314,24 +319,24 @@ MonoAndroidInternalCalls_Impl::recv_uninterrupted (int fd, void *buf, int len)
 {
 	if (len < 0)
 		len = 0;
-	return static_cast<int>(utils.recv_uninterrupted (fd, buf, static_cast<size_t>(len)));
+	return static_cast<int>(Util::recv_uninterrupted (fd, buf, static_cast<size_t>(len)));
 }
 
 void
 MonoAndroidInternalCalls_Impl::set_world_accessable (const char *path)
 {
-	utils.set_world_accessable (path);
+	Util::set_world_accessable (path);
 }
 
 void
 MonoAndroidInternalCalls_Impl::create_public_directory (const char *dir)
 {
-	utils.create_public_directory (dir);
+	Util::create_public_directory (dir);
 }
 
 char*
 MonoAndroidInternalCalls_Impl::path_combine (const char *path1, const char *path2)
 {
-	return utils.path_combine (path1, path2);
+	return Util::path_combine (path1, path2);
 }
 #endif // ndef NET

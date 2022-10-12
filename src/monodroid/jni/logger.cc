@@ -89,17 +89,17 @@ open_file (LogCategories category, const char *path, const char *override_dir, c
 	}
 
 	if (!path) {
-		utils.create_public_directory (override_dir);
-		p     = utils.path_combine (override_dir, filename);
+		Util::create_public_directory (override_dir);
+		p     = Util::path_combine (override_dir, filename);
 		path  = p;
 	}
 
 	unlink (path);
 
-	f = utils.monodroid_fopen (path, "a");
+	f = Util::monodroid_fopen (path, "a");
 
 	if (f) {
-		utils.set_world_accessable (path);
+		Util::set_world_accessable (path);
 	} else {
 		log_warn (category, "Could not open path '%s' for logging: %s",
 				path, strerror (errno));
@@ -216,7 +216,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 		constexpr char CAT_GREF_EQUALS[] = "gref=";
 		constexpr size_t CAT_GREF_EQUALS_LEN = sizeof(CAT_GREF_EQUALS) - 1;
 		if (set_category (CAT_GREF_EQUALS, param, LOG_GREF, true /* arg_starts_with_name */)) {
-			gref_file = utils.strdup_new (param, CAT_GREF_EQUALS_LEN);
+			gref_file = Util::strdup_new (param, CAT_GREF_EQUALS_LEN);
 			continue;
 		}
 
@@ -233,7 +233,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 		constexpr char CAT_LREF_EQUALS[] = "lref=";
 		constexpr size_t CAT_LREF_EQUALS_LEN = sizeof(CAT_LREF_EQUALS) - 1;
 		if (set_category (CAT_LREF_EQUALS, param, LOG_LREF, true /* arg_starts_with_name */)) {
-			lref_file = utils.strdup_new (param, CAT_LREF_EQUALS_LEN);
+			lref_file = Util::strdup_new (param, CAT_LREF_EQUALS_LEN);
 			continue;
 		}
 
@@ -262,14 +262,14 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 		constexpr char MONO_LOG_MASK_ARG[] = "mono_log_mask=";
 		constexpr size_t MONO_LOG_MASK_ARG_LEN = sizeof(MONO_LOG_MASK_ARG) - 1;
 		if (param.starts_with (MONO_LOG_MASK_ARG)) {
-			mono_log_mask = utils.strdup_new (param, MONO_LOG_MASK_ARG_LEN);
+			mono_log_mask = Util::strdup_new (param, MONO_LOG_MASK_ARG_LEN);
 			continue;
 		}
 
 		constexpr char MONO_LOG_LEVEL_ARG[] = "mono_log_level=";
 		constexpr size_t MONO_LOG_LEVEL_ARG_LEN = sizeof(MONO_LOG_LEVEL_ARG) - 1;
 		if (param.starts_with (MONO_LOG_LEVEL_ARG)) {
-			mono_log_level = utils.strdup_new (param, MONO_LOG_LEVEL_ARG_LEN);
+			mono_log_level = Util::strdup_new (param, MONO_LOG_LEVEL_ARG_LEN);
 			continue;
 		}
 
@@ -279,7 +279,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 		if (param.starts_with (DEBUGGER_LOG_LEVEL)) {
 			dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> level;
 			level.assign (param.start () + DEBUGGER_LOG_LEVEL_LEN, param.length () - DEBUGGER_LOG_LEVEL_LEN);
-			debug.set_debugger_log_level (level.get ());
+			Debug::set_debugger_log_level (level.get ());
 		}
 #endif
 	}
