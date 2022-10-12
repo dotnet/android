@@ -234,7 +234,9 @@ namespace Xamarin.Android.Net
 		/// If <c>true</c> then the server requested authorization and the application must use information
 		/// found in <see cref="RequestedAuthentication"/> to set the value of <see cref="PreAuthenticationData"/>
 		/// </summary>
+#if NETCOREAPP
 		[MemberNotNullWhen(true, nameof(RequestedAuthentication))]
+#endif
 		public bool RequestNeedsAuthorization {
 			get { return RequestedAuthentication?.Count > 0; }
 		}
