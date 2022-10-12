@@ -42,17 +42,24 @@ Create a new project and run it:
 
 ```bash
 $ mkdir foo && cd foo
-$ ../bin/dotnet/dotnet new maui
-$ ../bin/dotnet/dotnet build -c Release -t:Run -f net6.0-android
+$ ../bin/dotnet/dotnet new android
+$ ../bin/dotnet/dotnet build -c Release -t:Run
 ```
 
 Run the app a few times and make sure you get good launch times:
 
 ```bash
 $ adb logcat -d | grep Displayed
-02-22 15:50:50.502  1802  1962 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +477ms
-02-22 15:50:51.703  1802  1962 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +477ms
-02-22 15:50:52.926  1802  1962 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +477ms
+10-11 10:35:35.178  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +173ms
+10-11 10:35:36.540  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +165ms
+10-11 10:35:37.865  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +157ms
+10-11 10:35:39.201  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +175ms
+10-11 10:35:40.568  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +152ms
+10-11 10:35:41.920  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +159ms
+10-11 10:35:43.261  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +170ms
+10-11 10:35:44.641  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +183ms
+10-11 10:35:45.986  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +168ms
+10-11 10:35:47.333  2092  2370 I ActivityTaskManager: Displayed com.companyname.foo/crc64808a40cc7e533249.MainActivity: +160ms
 ```
 
 To verify what methods are AOT'd, clear the log and enable AOT logging:
