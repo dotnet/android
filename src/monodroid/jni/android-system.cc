@@ -4,7 +4,6 @@
 #include <cerrno>
 #include <cctype>
 #include <fcntl.h>
-#include <concepts>
 #include <type_traits>
 
 #if defined (WINDOWS)
