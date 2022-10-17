@@ -216,8 +216,8 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 }
 #endif
 
-#if !defined(_WIN32)
-// Disable inlining for MinGW, which (at least on our CI bots) removes the method causing linking errors later on
+#if !defined(_WIN32) || __GNUC__ >= 11
+// Disable inlining for MinGW and G++ < 11, which (at least on our CI bots) remove the method causing linking errors later on
 inline
 #endif
 int
