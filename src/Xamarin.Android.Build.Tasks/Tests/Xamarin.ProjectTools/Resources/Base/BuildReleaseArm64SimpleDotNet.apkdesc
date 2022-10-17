@@ -5,13 +5,13 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 59187
+      "Size": 59193
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 88390
+      "Size": 87985
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5776
+      "Size": 5775
     },
     "assemblies/rc.bin": {
       "Size": 1182
@@ -50,13 +50,13 @@
       "Size": 62998
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3559
+      "Size": 3560
     },
     "classes.dex": {
-      "Size": 18612
+      "Size": 18968
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 433600
+      "Size": 519848
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3073392
@@ -107,5 +107,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2730619
+  "PackageSize": 2751099
 }
