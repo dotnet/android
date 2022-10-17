@@ -33,7 +33,7 @@ namespace xamarin::android::internal
 			return CPU_KIND_UNKNOWN;
 #endif
 		}
-#elif defined (__APPLE)
+#elif defined (__APPLE__)
 		constexpr static uint16_t __get_cpu () noexcept
 		{
 #if __x86_64__

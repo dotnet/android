@@ -454,7 +454,7 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, ZipEntryLoadState &state) no
 		return false;
 	}
 
-	state.data_offset = static_cast<uint32_t>(state.local_header_offset) + file_name_length.value () + extra_field_length.value () + local_header.size ();
+	state.data_offset = static_cast<uint32_t>(state.local_header_offset) + *file_name_length + *extra_field_length + local_header.size ();
 
 	return true;
 }
@@ -474,21 +474,21 @@ EmbeddedAssemblies::zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'total number of entries' field");
 		return false;
 	}
-	cd_entries = field_value_u16.value ();
+	cd_entries = *field_value_u16;
 
 	std::optional<uint32_t> field_value_u32 = zip_read_field_u32 (buf, EOCD_CD_START_OFFSET);
 	if (!field_value_u32) {
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'central directory size' field");
 		return false;
 	}
-	cd_offset = field_value_u32.value ();
+	cd_offset = *field_value_u32;
 
 	field_value_u32 = zip_read_field_u32 (buf, EOCD_CD_SIZE_OFFSET);
 	if (!field_value_u32) {
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'central directory offset' field");
 		return false;
 	}
-	cd_size = field_value_u32.value ();
+	cd_size = *field_value_u32;
 
 	return true;
 }
@@ -586,7 +586,7 @@ EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynami
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'compression method' field");
 		return false;
 	}
-	state.compression_method = compression_method.value ();
+	state.compression_method = *compression_method;
 
 	index = state.buf_offset + CD_UNCOMPRESSED_SIZE_OFFSET;;
 	std::optional<uint32_t> field_value_u32 = zip_read_field_u32 (buf, index);
@@ -594,7 +594,7 @@ EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynami
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'uncompressed size' field");
 		return false;
 	}
-	state.file_size = field_value_u32.value ();
+	state.file_size = *field_value_u32;
 
 	index = state.buf_offset + CD_FILENAME_LENGTH_OFFSET;
 	std::optional<uint16_t> file_name_length = zip_read_field_u16 (buf, index);
@@ -623,16 +623,16 @@ EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynami
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'relative offset of local header' field");
 		return false;
 	}
-	state.local_header_offset = field_value_u32.value ();
+	state.local_header_offset = *field_value_u32;
 	index += sizeof(state.local_header_offset);
 
 	if (file_name_length == 0) {
 		file_name.clear ();
-	} else if (!zip_read_field (buf, index, file_name_length.value (), file_name)) {
+	} else if (!zip_read_field (buf, index, *file_name_length, file_name)) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file name' field");
 		return false;
 	}
 
-	state.buf_offset += ZIP_CENTRAL_LEN + file_name_length.value () + extra_field_length.value () + comment_length.value ();
+	state.buf_offset += ZIP_CENTRAL_LEN + *file_name_length + *extra_field_length + *comment_length;
 	return true;
 }
