@@ -216,7 +216,11 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 }
 #endif
 
-inline int
+#if !defined(_WIN32)
+// Disable inlining for MinGW, which (at least on our CI bots) removes the method causing linking errors later on
+inline
+#endif
+int
 AndroidSystem::fetch_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept
 {
 	int len = _monodroid__system_property_get (name, value.get (), value.size ());
@@ -233,12 +237,6 @@ AndroidSystem::fetch_system_property (const char *name, dynamic_local_string<PRO
 
 	value.assign (v, plen);
 	return ADD_WITH_OVERFLOW_CHECK (int, plen, 0);
-}
-
-int
-AndroidSystem::monodroid_get_system_property_impl (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept
-{
-	return fetch_system_property (name, value);
 }
 
 int

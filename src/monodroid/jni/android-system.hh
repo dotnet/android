@@ -189,7 +189,6 @@ namespace xamarin::android::internal
 		static bool get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept;
 
 		static int fetch_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept;
-		static int monodroid_get_system_property_impl (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept;
 		static bool monodroid_system_property_exists_impl (const char *name) noexcept;
 #if defined (WINDOWS)
 		static struct _wdirent* readdir_windows (_WDIR *dirp) noexcept;
