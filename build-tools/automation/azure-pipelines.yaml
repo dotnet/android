@@ -14,7 +14,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/nuget-msi-arm64
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
