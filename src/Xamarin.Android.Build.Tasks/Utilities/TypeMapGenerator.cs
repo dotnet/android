@@ -142,7 +142,7 @@ namespace Xamarin.Android.Tasks
 				return GenerateDebug (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, cache, typemapsOutputDirectory, generateNativeAssembly, appConfState);
 			}
 
-			return GenerateRelease (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, typemapsOutputDirectory, appConfState);
+			return GenerateRelease (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, cache, typemapsOutputDirectory, appConfState);
 		}
 
 		bool GenerateDebug (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, bool generateNativeAssembly, ApplicationConfigTaskState appConfState)
@@ -186,7 +186,7 @@ namespace Xamarin.Android.Tasks
 					modules.Add (moduleName, module);
 				}
 
-				TypeMapDebugEntry entry = GetDebugEntry (td);
+				TypeMapDebugEntry entry = GetDebugEntry (td, cache);
 				HandleDebugDuplicates (javaDuplicates, entry, td, cache);
 				if (entry.JavaName.Length > module.JavaNameWidth)
 					module.JavaNameWidth = (uint)entry.JavaName.Length + 1;
@@ -227,7 +227,7 @@ namespace Xamarin.Android.Tasks
 			foreach (TypeDefinition td in javaTypes) {
 				UpdateApplicationConfig (td, appConfState);
 
-				TypeMapDebugEntry entry = GetDebugEntry (td);
+				TypeMapDebugEntry entry = GetDebugEntry (td, cache);
 				HandleDebugDuplicates (javaDuplicates, entry, td, cache);
 
 				javaToManaged.Add (entry);
@@ -300,10 +300,10 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		TypeMapDebugEntry GetDebugEntry (TypeDefinition td)
+		TypeMapDebugEntry GetDebugEntry (TypeDefinition td, TypeDefinitionCache cache)
 		{
 			return new TypeMapDebugEntry {
-				JavaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td),
+				JavaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td, cache),
 				ManagedName = GetManagedTypeName (td),
 				TypeDefinition = td,
 				SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
@@ -330,7 +330,7 @@ namespace Xamarin.Android.Tasks
 			return $"{managedTypeName}, {td.Module.Assembly.Name.Name}";
 		}
 
-		bool GenerateRelease (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, ApplicationConfigTaskState appConfState)
+		bool GenerateRelease (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
 		{
 			int assemblyId = 0;
 			var knownAssemblies = new Dictionary<string, int> (StringComparer.Ordinal);
@@ -373,7 +373,7 @@ namespace Xamarin.Android.Tasks
 					tempModules.Add (moduleUUID, moduleData);
 				}
 
-				string javaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td);
+				string javaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td, cache);
 				// We will ignore generic types and interfaces when generating the Java to Managed map, but we must not
 				// omit them from the table we output - we need the same number of entries in both java-to-managed and
 				// managed-to-java tables.  `SkipInJavaToManaged` set to `true` will cause the native assembly generator
