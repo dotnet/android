@@ -217,7 +217,6 @@ namespace Xamarin.Android.Tasks
 				if ((!useMarshalMethods && !userAssemblies.ContainsKey (td.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache)) {
 					continue;
 				}
-
 				javaTypes.Add (td);
 			}
 
@@ -272,6 +271,7 @@ namespace Xamarin.Android.Tasks
 
 			using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				foreach (TypeDefinition type in javaTypes) {
+					string mvid = type.Module.Mvid.ToString ();
 					string managedKey = type.FullName.Replace ('/', '.');
 					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 
@@ -283,16 +283,20 @@ namespace Xamarin.Android.Tasks
 					TypeDefinition conflict;
 					bool hasConflict = false;
 					if (managed.TryGetValue (managedKey, out conflict)) {
-						if (!managedConflicts.TryGetValue (managedKey, out var list))
-							managedConflicts.Add (managedKey, list = new List<string> { conflict.GetPartialAssemblyName (cache) });
-						list.Add (type.GetPartialAssemblyName (cache));
+						if (!conflict.Module.Mvid.Equals(mvid)) {
+							if (!managedConflicts.TryGetValue (managedKey, out var list))
+								managedConflicts.Add (managedKey, list = new List<string> { conflict.GetPartialAssemblyName (cache) });
+							list.Add (type.GetPartialAssemblyName (cache));
+						}
 						hasConflict = true;
 					}
 					if (java.TryGetValue (javaKey, out conflict)) {
-						if (!javaConflicts.TryGetValue (javaKey, out var list))
-							javaConflicts.Add (javaKey, list = new List<string> { conflict.GetAssemblyQualifiedName (cache) });
-						list.Add (type.GetAssemblyQualifiedName (cache));
-						success = false;
+						if (!conflict.Module.Mvid.Equals(mvid)) {
+							if (!javaConflicts.TryGetValue (javaKey, out var list))
+								javaConflicts.Add (javaKey, list = new List<string> { conflict.GetAssemblyQualifiedName (cache) });
+							list.Add (type.GetAssemblyQualifiedName (cache));
+							success = false;
+						}
 						hasConflict = true;
 					}
 					if (!hasConflict) {
