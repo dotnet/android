@@ -31,6 +31,7 @@ namespace generator.SourceWriters
 			if (field.IsEnumified)
 				Attributes.Add (new GeneratedEnumAttr ());
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, field, opt);
 			SourceWriterExtensions.AddObsolete (Attributes, field.DeprecatedComment, opt, field.IsDeprecated, isError: field.IsDeprecatedError, deprecatedSince: field.DeprecatedSince);
 
 			if (field.Annotation.HasValue ())

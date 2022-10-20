@@ -736,6 +736,24 @@ namespace generatortests
 
 			StringAssert.Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
 		}
+
+		[Test]
+		public void SupportedOSPlatformConstFields ()
+		{
+			// Ensure we write [SupportedOSPlatform] for const fields
+			var klass = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var field = new TestField ("java.lang.String", "bar").SetConstant ("MY_VALUE");
+
+			field.ApiAvailableSince = 30;
+
+			klass.Fields.Add (field);
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			StringAssert.Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
+		}
 	}
 
 	[TestFixture]
