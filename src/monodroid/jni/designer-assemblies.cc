@@ -23,22 +23,39 @@ DesignerAssemblies::add_or_update_from_java (MonoDomain *domain, JNIEnv *env, js
 MonoAssembly*
 DesignerAssemblies::try_load_assembly (MonoDomain *domain, MonoAssemblyName *name)
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	int domain_id = mono_domain_get_id (domain);
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	DesignerAssemblyEntry *entry = find_entry (domain_id);
-	if (entry == nullptr)
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+	if (entry == nullptr) {
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+		log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
 		return nullptr;
+	}
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 
 	const char *asm_name = mono_assembly_name_get_name (name);
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	unsigned int asm_count = entry->assemblies_count;
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 
 	for (unsigned int i = 0; i < asm_count; i++) {
+		log_info (LOG_DEFAULT, "Location: %s:%u (i == %u)", __FILE__, __LINE__, i);
 		const char *entry_name = entry->names[i];
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		const char *entry_bytes = entry->assemblies_bytes[i];
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		const unsigned int entry_bytes_len = entry->assemblies_bytes_len[i];
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		const char *entry_path = entry->assemblies_paths[i];
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 
-		if (strcmp (asm_name, entry_name) != 0)
+		if (strcmp (asm_name, entry_name) != 0) {
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			continue;
+		}
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 
 		/* We use the managed assembly loading API as there is unfortunately no public unmanaged API
 		 * to select the loading context to use (it would require access to the MonoAssemblyLoadRequest API)
@@ -47,6 +64,7 @@ DesignerAssemblies::try_load_assembly (MonoDomain *domain, MonoAssemblyName *nam
 		MonoClass *assembly_klass = Util::monodroid_get_class_from_name (domain, "mscorlib", "System.Reflection", "Assembly");
 
 		if (entry_bytes_len > 0) {
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			MonoClass *byte_klass = mono_get_byte_class ();
 			// Use the variant with 3 parameters so that we always get the first argument being a byte[]
 			// (the two last don't matter since we pass null anyway)
@@ -59,18 +77,25 @@ DesignerAssemblies::try_load_assembly (MonoDomain *domain, MonoAssemblyName *nam
 			args[1] = nullptr;
 			args[2] = nullptr;
 			MonoReflectionAssembly *res = (MonoReflectionAssembly *)Util::monodroid_runtime_invoke (domain, assembly_load_method, nullptr, args, nullptr);
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+			log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
 			return mono_reflection_assembly_get_assembly (res);
 		} else if (entry_path != nullptr && Util::file_exists (entry_path)) {
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			MonoMethod *assembly_load_method = mono_class_get_method_from_name (assembly_klass, "LoadFrom", 1);
 			MonoString *asm_path = mono_string_new (domain, entry_path);
 
 			void *args[1];
 			args[0] = asm_path;
 			MonoReflectionAssembly *res = (MonoReflectionAssembly *)Util::monodroid_runtime_invoke (domain, assembly_load_method, nullptr, args, nullptr);
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+			log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
 			return mono_reflection_assembly_get_assembly (res);
 		}
 	}
 
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
 	return nullptr;
 }
 
