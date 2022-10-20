@@ -255,6 +255,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var toolchainPath = toolPrefix.Substring (0, toolPrefix.LastIndexOf (Path.DirectorySeparatorChar));
 			var ldFlags = new StringBuilder ();
+			var libs = new List<string> ();
 			if (UseAndroidNdk && EnableLLVM) {
 				string androidLibPath = string.Empty;
 				try {
@@ -273,7 +274,6 @@ namespace Xamarin.Android.Tasks
 				} else
 					toolchainLibDir = GetNdkToolchainLibraryDir (ndk, toolchainPath);
 
-				var libs = new List<string> ();
 				if (ndk.UsesClang) {
 					if (!String.IsNullOrEmpty (toolchainLibDir)) {
 						libs.Add ($"-L{toolchainLibDir.TrimEnd ('\\')}");
@@ -292,24 +292,37 @@ namespace Xamarin.Android.Tasks
 				}
 				libs.Add (Path.Combine (androidLibPath, "libc.so"));
 				libs.Add (Path.Combine (androidLibPath, "libm.so"));
-
-				ldFlags.Append ($"\\\"{string.Join ("\\\";\\\"", libs)}\\\"");
 			} else {
 				if (ldFlags.Length > 0) {
 					ldFlags.Append (' ');
 				}
 
-				//
-				// This flag is needed for Mono AOT to work correctly with the LLVM 14 `lld` linker due to the following change:
-				//
-				//   The AArch64 port now supports adrp+ldr and adrp+add optimizations. --no-relax can suppress the optimization.
-				//
-				// Without the flag, `lld` will modify AOT-generated code in a way that the Mono runtime doesn't support. Until
-				// the runtime issue is fixed, we need to pass this flag then.
-				//
 				if (!UseAndroidNdk) {
+					//
+					// This flag is needed for Mono AOT to work correctly with the LLVM 14 `lld` linker due to the following change:
+					//
+					//   The AArch64 port now supports adrp+ldr and adrp+add optimizations. --no-relax can suppress the optimization.
+					//
+					// Without the flag, `lld` will modify AOT-generated code in a way that the Mono runtime doesn't support. Until
+					// the runtime issue is fixed, we need to pass this flag then.
+					//
 					ldFlags.Append ("--no-relax");
+
+					// We need to link against libc and libm, but since NDK is not in use, the linker won't be able to find the actual Android libraries.
+					// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
+					string libstubsPath = Path.Combine (AndroidBinUtilsDirectory, "..", "..", "..", "libstubs", ArchToRid (arch));
+
+					libs.Add (Path.Combine (libstubsPath, "libc.so"));
+					libs.Add (Path.Combine (libstubsPath, "libm.so"));
 				}
+			}
+
+			if (ldFlags.Length > 0) {
+				ldFlags.Append (' ');
+			}
+
+			if (libs.Count > 0) {
+				ldFlags.Append ($"\\\"{string.Join ("\\\";\\\"", libs)}\\\"");
 			}
 
 			if (StripLibraries) {
@@ -320,6 +333,26 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return ldFlags.ToString ();
+
+			string ArchToRid (AndroidTargetArch arch)
+			{
+				switch (arch) {
+					case AndroidTargetArch.Arm64:
+						return "android-arm64";
+
+					case AndroidTargetArch.Arm:
+						return "android-arm";
+
+					case AndroidTargetArch.X86:
+						return "android-x86";
+
+					case AndroidTargetArch.X86_64:
+						return "android-x64";
+
+					default:
+						throw new InvalidOperationException ($"Internal error: unsupported ABI '{arch}'");
+				}
+			}
 		}
 
 		static string GetNdkToolchainLibraryDir (NdkTools ndk, string binDir, string archDir = null)
