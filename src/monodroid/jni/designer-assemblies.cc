@@ -15,9 +15,13 @@ using namespace xamarin::android::internal;
 void
 DesignerAssemblies::add_or_update_from_java (MonoDomain *domain, JNIEnv *env, jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths)
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	abort_if_invalid_pointer_argument (assembliesBytes);
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	DesignerAssemblyEntry *new_entry = new DesignerAssemblyEntry (domain, env, assemblies, assembliesBytes, assembliesPaths);
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	add_or_replace_entry (new_entry);
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 }
 
 MonoAssembly*
@@ -30,7 +34,7 @@ DesignerAssemblies::try_load_assembly (MonoDomain *domain, MonoAssemblyName *nam
 	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	if (entry == nullptr) {
 		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
-		log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+		log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 		return nullptr;
 	}
 	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
@@ -102,68 +106,94 @@ DesignerAssemblies::try_load_assembly (MonoDomain *domain, MonoAssemblyName *nam
 void
 DesignerAssemblies::clear_for_domain (MonoDomain *domain)
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	int domain_id = mono_domain_get_id (domain);
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	DesignerAssemblyEntry *entry = remove_entry (domain_id);
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	delete entry;
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 }
 
 DesignerAssemblies::DesignerAssemblyEntry*
 DesignerAssemblies::find_entry (int domain_id)
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	for (unsigned int i = 0; i < length; i++) {
 		auto entry = entries[i];
-		if (entry->domain_id == domain_id)
+		if (entry->domain_id == domain_id) {
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			return entry;
+		}
 	}
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	return nullptr;
 }
 
 void
 DesignerAssemblies::add_or_replace_entry (DesignerAssemblies::DesignerAssemblyEntry *new_entry)
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	for (unsigned int i = 0; i < length; i++) {
 		auto entry = entries[i];
 		if (entry->domain_id == new_entry->domain_id) {
 			entries[i] = new_entry;
 			delete entry;
+			log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 			return;
 		}
 	}
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	add_entry (new_entry);
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 }
 
 void
 DesignerAssemblies::add_entry (DesignerAssemblies::DesignerAssemblyEntry *entry)
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	if (length >= capacity) {
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		capacity = MULTIPLY_WITH_OVERFLOW_CHECK(unsigned int, capacity, 2);
 		DesignerAssemblyEntry **new_entries = new DesignerAssemblyEntry*[capacity];
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		memcpy (new_entries, entries, MULTIPLY_WITH_OVERFLOW_CHECK(size_t, sizeof(void*), length));
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		DesignerAssemblyEntry **old_entries = entries;
 		entries = new_entries;
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		delete[] old_entries;
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	}
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	entries[length++] = entry;
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 }
 
 DesignerAssemblies::DesignerAssemblyEntry*
 DesignerAssemblies::remove_entry (int domain_id)
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	for (unsigned int i = 0; i < length; i++) {
 		DesignerAssemblyEntry *entry = entries[i];
 		if (entry->domain_id == domain_id) {
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			for (unsigned int j = i; j < length - 1; j++)
 				entries[j] = entries[j + 1];
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			length--;
 			entries[length] = nullptr;
+			log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 			return entry;
 		}
 	}
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 	return nullptr;
 }
 
 DesignerAssemblies::DesignerAssemblyEntry::DesignerAssemblyEntry (MonoDomain *domain, JNIEnv *env, jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths)
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	this->domain_id = mono_domain_get_id (domain);
 	this->assemblies_count = static_cast<unsigned int> (assemblies.get_length ());
 	this->names = new char*[assemblies_count];
@@ -171,6 +201,7 @@ DesignerAssemblies::DesignerAssemblyEntry::DesignerAssemblyEntry (MonoDomain *do
 	this->assemblies_paths = new char*[assemblies_count];
 	this->assemblies_bytes_len = new unsigned int[assemblies_count];
 
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	for (unsigned int index = 0; index < assemblies_count; index++) {
 		jstring_wrapper &assembly = assemblies [index];
 		names[index] = Util::strdup_new (assembly.get_cstr ());
@@ -179,33 +210,43 @@ DesignerAssemblies::DesignerAssemblyEntry::DesignerAssemblyEntry (MonoDomain *do
 		jboolean is_copy;
 		jbyteArray assembly_byte_array = reinterpret_cast <jbyteArray> (env->GetObjectArrayElement (assembliesBytes, static_cast<jsize> (index)));
 		if (assembly_byte_array != nullptr) {
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			unsigned int bytes_len = static_cast<unsigned int> (env->GetArrayLength (assembly_byte_array));
 			jbyte *bytes = env->GetByteArrayElements (assembly_byte_array, &is_copy);
 			assemblies_bytes_len[index] = bytes_len;
 			assemblies_bytes[index] = new char[bytes_len];
 			memcpy (assemblies_bytes[index], bytes, bytes_len);
 			env->ReleaseByteArrayElements (assembly_byte_array, bytes, JNI_ABORT);
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		} else {
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			assemblies_bytes_len[index] = 0;
 			assemblies_bytes[index] = nullptr;
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		}
 
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		// Copy path to the specific assembly if any
 		jstring_wrapper &assembly_path = assembliesPaths [index];
 		assemblies_paths[index] = assembly_path.hasValue () ? Util::strdup_new (assembly_path.get_cstr ()) : nullptr;
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	}
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 }
 
 DesignerAssemblies::DesignerAssemblyEntry::~DesignerAssemblyEntry ()
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	for (unsigned int i = 0; i < assemblies_count; ++i) {
 		delete[] names [i];
 		delete[] assemblies_bytes [i];
 		delete[] assemblies_paths [i];
 	}
+	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	delete[] names;
 	delete[] assemblies_bytes;
 	delete[] assemblies_paths;
 	delete[] assemblies_bytes_len;
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 }
 #endif // ndef ANDROID

@@ -893,6 +893,7 @@ MonodroidRuntime::cleanup_runtime_config (MonovmRuntimeConfigArguments *args, [[
 MonoDomain*
 MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks) noexcept
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	size_t user_assemblies_count   = 0;
 #if defined (NET)
 	constexpr bool have_mono_mkbundle_init = false;
@@ -955,29 +956,41 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 #endif // ndef NET
 
 	if constexpr (is_running_on_desktop) {
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		if (is_root_domain) {
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			c_unique_ptr<char> corlib_error_message_guard {const_cast<char*>(mono_check_corlib_version ())};
 			gsl::owner<char*> corlib_error_message = corlib_error_message_guard.get ();
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 
 			if (corlib_error_message == nullptr) {
+				log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 				if (!AndroidSystem::monodroid_get_system_property ("xamarin.studio.fakefaultycorliberrormessage", &corlib_error_message)) {
+					log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 					corlib_error_message = nullptr;
+					log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 				}
 			}
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			if (corlib_error_message != nullptr) {
+				log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 				jclass ex_klass = env->FindClass ("mono/android/MonoRuntimeException");
 				env->ThrowNew (ex_klass, corlib_error_message);
+				log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 				return nullptr;
 			}
 
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			// Load a basic environment for the RootDomain if run on desktop so that we can unload
 			// and reload most assemblies including Mono.Android itself
 			MonoAssemblyName *aname = mono_assembly_name_new ("System");
 			mono_assembly_load_full (aname, nullptr, nullptr, 0);
 			mono_assembly_name_free (aname);
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		}
 	}
 
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 	return domain;
 }
 
@@ -1053,6 +1066,7 @@ MonodroidRuntime::init_android_runtime (
 #endif // ndef NET
 	JNIEnv *env, jclass runtimeClass, jobject loader) noexcept
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	constexpr char icall_typemap_java_to_managed[] = "Java.Interop.TypeManager::monodroid_typemap_java_to_managed";
 	constexpr char icall_typemap_managed_to_java[] = "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java";
 
@@ -1123,12 +1137,14 @@ MonodroidRuntime::init_android_runtime (
 	MonoMethod *method;
 
 	if constexpr (is_running_on_desktop) {
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 #if defined (NET)
 		runtime = mono_class_from_name (mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 #else
 		runtime = Util::monodroid_get_class_from_image (domain, mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
 #endif // def NET
 		method = mono_class_get_method_from_name (runtime, "Initialize", 1);
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	} else {
 		runtime = mono_class_get (mono_android_assembly_image, application_config.android_runtime_jnienv_class_token);
 		method = mono_get_method (mono_android_assembly_image, application_config.jnienv_initialize_method_token, runtime);
@@ -1162,7 +1178,9 @@ MonodroidRuntime::init_android_runtime (
 	 */
 	if (registerType == nullptr || is_running_on_desktop) {
 		if constexpr (is_running_on_desktop) {
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 			registerType = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
+			log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		} else {
 			registerType = mono_get_method (mono_android_assembly_image, application_config.jnienv_registerjninatives_method_token, runtime);
 #if defined (NET) && defined (ANDROID)
@@ -1213,6 +1231,7 @@ MonodroidRuntime::init_android_runtime (
 		internal_timing->end_event (native_to_managed_index);
 		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 }
 
 #if defined (NET)
@@ -1975,13 +1994,17 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
                                                 [[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, bool is_root_domain,
                                                 bool force_preload_assemblies, bool have_split_apks) noexcept
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if constexpr (is_running_on_desktop) {
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		if (is_root_domain) {
+			log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 			return domain;
 		}
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	}
 
 #if defined (NET)
@@ -2007,6 +2030,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 #endif // ndef NET
 	OSBridge::add_monodroid_domain (domain);
 
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 	return domain;
 }
 
@@ -2166,6 +2190,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
                                                           jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
                                                           jboolean haveSplitApks) noexcept
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level_raw = nullptr;
 
@@ -2387,8 +2412,10 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	// Install our dummy exception handler on Desktop
 	if constexpr (is_running_on_desktop) {
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		mono_add_internal_call ("System.Diagnostics.Debugger::Mono_UnhandledException_internal(System.Exception)",
 		                                 reinterpret_cast<const void*> (monodroid_Mono_UnhandledException_internal));
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	}
 
 	if (XA_UNLIKELY (Util::should_log (LOG_DEFAULT))) {
@@ -2422,6 +2449,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	xamarin_app_init (get_function_pointer_at_runtime);
 #endif // def RELEASE && def ANDROID && def NET
 	startup_in_progress = false;
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 }
 
 #if !defined (NET)
@@ -2505,6 +2533,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 force_inline void
 MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
 {
+	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
 	size_t total_time_index;
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
@@ -2534,8 +2563,11 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 	domain = mono_domain_get ();
 
 	if constexpr (is_running_on_desktop) {
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		MonoClass *runtime = Util::monodroid_get_class_from_name (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		register_jni_natives = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
+		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 	}
 
 	Util::monodroid_runtime_invoke (domain, register_jni_natives, nullptr, args, nullptr);
@@ -2567,6 +2599,7 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 		dump_counters ("## Runtime.register: type=%s\n", type.get ());
 #endif
 	}
+	log_info (LOG_DEFAULT, "%s LEAVE at %s:%u", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 }
 
 JNIEXPORT void
