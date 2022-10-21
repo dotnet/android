@@ -308,7 +308,7 @@ namespace Xamarin.Android.Tasks
 					// Without the flag, `lld` will modify AOT-generated code in a way that the Mono runtime doesn't support. Until
 					// the runtime issue is fixed, we need to pass this flag then.
 					//
-					ldFlags.Append ("--no-relax");
+					ldFlags.Append ("--no-relax ");
 
 					// We need to link against libc and libm, but since NDK is not in use, the linker won't be able to find the actual Android libraries.
 					// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
