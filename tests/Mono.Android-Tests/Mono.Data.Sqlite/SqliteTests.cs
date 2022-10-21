@@ -41,7 +41,7 @@ namespace Mono.Data.Sqlite.Tests
 
 			ItemsDb ()
 			{
-				dbPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.Personal), fileName);
+				dbPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), fileName);
 			}
 
 			SqliteConnection GetConnection ()
