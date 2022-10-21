@@ -10,14 +10,15 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "gitsubmodule"
-    directory: "/external/android-api-docs"
+    directory: "/"
     schedule:
       interval: "daily"
-  - package-ecosystem: "gitsubmodule"
-    directory: "/external/Java.Interop"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "gitsubmodule"
-    directory: "/external/xamarin-android-tools"
-    schedule:
-      interval: "daily"
+    ignore:
+      - dependency-name: "apksig"
+      - dependency-name: "debugger-libs"
+      - dependency-name: "lz4"
+      - dependency-name: "mman-win32"
+      - dependency-name: "nrefactory"
+      - dependency-name: "opentk"
+      - dependency-name: "robin-map"
+      - dependency-name: "sqlite"
