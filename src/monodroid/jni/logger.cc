@@ -155,7 +155,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 	mono_log_level = nullptr;
 
 #if !ANDROID
-	log_categories = LOG_DEFAULT;
+	log_categories = LOG_DEFAULT | LOG_ASSEMBLY;
 #endif
 	log_timing_categories = LOG_TIMING_DEFAULT;
 

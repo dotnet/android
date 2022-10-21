@@ -65,9 +65,11 @@ inline void
 MonodroidRuntime::Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint contextID) noexcept
 {
 	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	log_info (LOG_DEFAULT, "  env == %p; contextID == %u", env, contextID);
 	log_info (LOG_DEFAULT, "SWITCHING CONTEXT");
 	MonoDomain *domain = mono_domain_get_by_id ((int)contextID);
 	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+	log_info (LOG_DEFAULT, "  domain == %p; current_context_id == %u", domain, current_context_id);
 	if (current_context_id != (int)contextID) {
 		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
 		mono_domain_set (domain, TRUE);

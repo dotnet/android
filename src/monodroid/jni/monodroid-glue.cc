@@ -283,12 +283,12 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		MonoDomain *domain = mono_domain_get ();
 		result = designerAssemblies.try_load_assembly (domain, aname);
 		if (result != nullptr) {
-			log_debug (LOG_ASSEMBLY, "Loaded assembly %s from memory in domain %d", mono_assembly_name_get_name (aname), mono_domain_get_id (domain));
+			log_info (LOG_ASSEMBLY, "Loaded assembly %s from memory in domain %d", mono_assembly_name_get_name (aname), mono_domain_get_id (domain));
 			return result;
 		}
-		log_debug (LOG_ASSEMBLY, "No in-memory data found for assembly %s", mono_assembly_name_get_name (aname));
+		log_info (LOG_ASSEMBLY, "No in-memory data found for assembly %s", mono_assembly_name_get_name (aname));
 	} else {
-		log_debug (LOG_ASSEMBLY, "No in-memory assemblies detected", mono_assembly_name_get_name (aname));
+		log_info (LOG_ASSEMBLY, "No in-memory assemblies detected", mono_assembly_name_get_name (aname));
 	}
 #endif
 	bool found = false;
@@ -1199,7 +1199,7 @@ MonodroidRuntime::init_android_runtime (
 
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
 
-	log_debug (LOG_DEFAULT, "Calling into managed runtime init");
+	log_info (LOG_DEFAULT, "Calling into managed runtime init");
 
 	size_t native_to_managed_index;
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
@@ -1317,7 +1317,7 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 	// not a very likely scenario.
 	//
 	if (handle == api_dso_handle) {
-		log_debug (LOG_DEFAULT, "Internal API library already loaded, initialization not necessary");
+		log_info (LOG_DEFAULT, "Internal API library already loaded, initialization not necessary");
 		return;
 	}
 
@@ -1341,7 +1341,7 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
 	}
 
-	log_debug (LOG_DEFAULT, "Initializing Internal API library %p", handle);
+	log_info (LOG_DEFAULT, "Initializing Internal API library %p", handle);
 	if (!api_init (api)) {
 		log_fatal (LOG_DEFAULT, "Failed to initialize Internal API library");
 		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
@@ -1445,9 +1445,9 @@ force_inline void*
 MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noexcept
 {
 	hash_t name_hash = xxhash::hash (name, strlen (name));
-	log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '%s' is 0x%zx", name, name_hash);
+	log_info (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '%s' is 0x%zx", name, name_hash);
 	DSOCacheEntry *dso = find_dso_cache_entry (name_hash);
-	log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match %sfound, DSO name is '%s'", dso == nullptr ? "not " : "", dso == nullptr ? "<unknown>" : dso->name);
+	log_info (LOG_ASSEMBLY, "monodroid_dlopen: hash match %sfound, DSO name is '%s'", dso == nullptr ? "not " : "", dso == nullptr ? "<unknown>" : dso->name);
 
 	if (dso == nullptr) {
 		// DSO not known at build time, try to load it
@@ -1652,7 +1652,7 @@ MonodroidRuntime::set_debug_env_vars () noexcept
 		return;
 
 	auto log_envvar = [](const char *name, const char *v) {
-		log_debug (LOG_DEFAULT, "Env variable '%s' set to '%s'.", name, v);
+		log_info (LOG_DEFAULT, "Env variable '%s' set to '%s'.", name, v);
 	};
 
 	string_segment arg_token;
@@ -1918,7 +1918,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly) 
 
 #ifndef ANDROID
 	if (designerAssemblies.has_assemblies () && designerAssemblies.try_load_assembly (domain, aname) != nullptr) {
-		log_debug (LOG_ASSEMBLY, "Dynamically opened assembly %s", mono_assembly_name_get_name (aname));
+		log_info (LOG_ASSEMBLY, "Dynamically opened assembly %s", mono_assembly_name_get_name (aname));
 	} else
 #endif
 	{
@@ -2012,7 +2012,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
 
 	EmbeddedAssemblies::install_preload_hooks_for_alc ();
-	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
+	log_info (LOG_ASSEMBLY, "ALC hooks installed");
 #endif // def NET
 
 #ifndef ANDROID

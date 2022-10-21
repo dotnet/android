@@ -244,7 +244,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 	bool common_assembly_store_found = false;
 	bool arch_assembly_store_found = false;
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK (common: '%s'; arch-specific: '%s')", assembly_store_common_file_name.data (), assembly_store_arch_file_name.data ());
+	log_info (LOG_ASSEMBLY, "Looking for assembly stores in APK (common: '%s'; arch-specific: '%s')", assembly_store_common_file_name.data (), assembly_store_arch_file_name.data ());
 	for (size_t i = 0; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -280,7 +280,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		abort ();
 	}
 
-	log_debug (LOG_ASSEMBLY, "Central directory info: offset == %u; size == %u; entries == %u", cd_offset, cd_size, cd_entries);
+	log_info (LOG_ASSEMBLY, "Central directory info: offset == %u; size == %u; entries == %u", cd_offset, cd_size, cd_entries);
 
 	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
 	if (retval < 0) {
