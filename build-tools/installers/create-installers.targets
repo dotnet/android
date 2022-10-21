@@ -325,6 +325,14 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)K4os.Hash.xxHash.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ELFSharp.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ManifestOverlays\Timing.xml" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libc.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libm.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libc.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libm.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libc.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libm.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libc.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libm.so" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />

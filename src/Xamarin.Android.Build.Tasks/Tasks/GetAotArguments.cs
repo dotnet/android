@@ -292,6 +292,8 @@ namespace Xamarin.Android.Tasks
 				}
 				libs.Add (Path.Combine (androidLibPath, "libc.so"));
 				libs.Add (Path.Combine (androidLibPath, "libm.so"));
+
+				ldFlags.Append ($"\\\"{string.Join ("\\\";\\\"", libs)}\\\"");
 			} else {
 				if (ldFlags.Length > 0) {
 					ldFlags.Append (' ');
@@ -312,17 +314,13 @@ namespace Xamarin.Android.Tasks
 					// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
 					string libstubsPath = Path.Combine (AndroidBinUtilsDirectory, "..", "..", "..", "libstubs", ArchToRid (arch)).Replace (" ", "\\ ");
 
-					libs.Add (Path.Combine (libstubsPath, "libc.so"));
-					libs.Add (Path.Combine (libstubsPath, "libm.so"));
+					ldFlags.Append (Path.Combine (libstubsPath, "libc.so"));
+					ldFlags.Append (Path.Combine (libstubsPath, "libm.so"));
 				}
 			}
 
 			if (ldFlags.Length > 0) {
 				ldFlags.Append (' ');
-			}
-
-			if (libs.Count > 0) {
-				ldFlags.Append ($"\\\"{string.Join ("\\\";\\\"", libs)}\\\"");
 			}
 
 			if (StripLibraries) {

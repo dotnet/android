@@ -24,15 +24,6 @@
     <_BinUtilsFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\bin\x86_64-linux-android-ld" />
     <_BinUtilsFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\bin\x86_64-linux-android-strip" />
 
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)\libstubs\android-arm64\libc.so" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)\libstubs\android-arm64\libm.so" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)\libstubs\android-arm\libc.so" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)\libstubs\android-arm\libm.so" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)\libstubs\android-x64\libc.so" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)\libstubs\android-x64\libm.so" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)\libstubs\android-x86\libc.so" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)\libstubs\android-x86\libm.so" />
-
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\liblldCOFF.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\liblldCommon.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\liblldELF.$(_LlvmLibExtension)" />

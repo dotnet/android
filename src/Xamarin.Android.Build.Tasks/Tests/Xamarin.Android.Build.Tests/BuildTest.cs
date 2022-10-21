@@ -97,11 +97,11 @@ namespace Xamarin.Android.Build.Tests
 
 			var libPaths = new List<string> ();
 			if (Builder.UseDotNet) {
-				libPaths.Add (Path.Combine ("aot", "arm64-v8a", "libaot-Mono.Android.dll.so"));
-				libPaths.Add (Path.Combine ("aot", "x86_64", "libaot-Mono.Android.dll.so"));
-			} else {
 				libPaths.Add (Path.Combine ("android-arm64", "aot", "Mono.Android.dll.so"));
 				libPaths.Add (Path.Combine ("android-x64", "aot", "Mono.Android.dll.so"));
+			} else {
+				libPaths.Add (Path.Combine ("aot", "arm64-v8a", "libaot-Mono.Android.dll.so"));
+				libPaths.Add (Path.Combine ("aot", "x86_64", "libaot-Mono.Android.dll.so"));
 			}
 
 			using (var b = CreateApkBuilder ()) {
