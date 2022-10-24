@@ -41,7 +41,7 @@ namespace MonoDroid.Generation
 					sw.WriteLine ("#if !NET");
 					sw.WriteLine ("namespace System.Runtime.Versioning {");
 					sw.WriteLine ("    [System.Diagnostics.Conditional(\"NEVER\")]");
-					sw.WriteLine ("    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Event | AttributeTargets.Method | AttributeTargets.Module | AttributeTargets.Property | AttributeTargets.Struct, AllowMultiple = true, Inherited = false)]");
+					sw.WriteLine ("    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Enum | AttributeTargets.Event | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Module | AttributeTargets.Property | AttributeTargets.Struct, AllowMultiple = true, Inherited = false)]");
 					sw.WriteLine ("    internal sealed class SupportedOSPlatformAttribute : Attribute {");
 					sw.WriteLine ("        public SupportedOSPlatformAttribute (string platformName) { }");
 					sw.WriteLine ("    }");
