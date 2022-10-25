@@ -12,7 +12,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	private static Delegate GetDoDefaultHandler ()
 	{
 		if (cb_DoDefault == null)
-			cb_DoDefault = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_DoDefault);
+			cb_DoDefault = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoDefault));
 		return cb_DoDefault;
 	}
 
@@ -96,7 +96,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static Delegate GetDoDeclarationHandler ()
 	{
 		if (cb_DoDeclaration == null)
-			cb_DoDeclaration = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_DoDeclaration);
+			cb_DoDeclaration = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoDeclaration));
 		return cb_DoDeclaration;
 	}
 

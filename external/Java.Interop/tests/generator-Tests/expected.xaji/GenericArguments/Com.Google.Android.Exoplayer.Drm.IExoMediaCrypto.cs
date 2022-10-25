@@ -74,7 +74,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		static Delegate GetRequiresSecureDecoderComponent_Ljava_lang_String_Handler ()
 		{
 			if (cb_requiresSecureDecoderComponent_Ljava_lang_String_ == null)
-				cb_requiresSecureDecoderComponent_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_Z) n_RequiresSecureDecoderComponent_Ljava_lang_String_);
+				cb_requiresSecureDecoderComponent_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_Z (n_RequiresSecureDecoderComponent_Ljava_lang_String_));
 			return cb_requiresSecureDecoderComponent_Ljava_lang_String_;
 		}
 

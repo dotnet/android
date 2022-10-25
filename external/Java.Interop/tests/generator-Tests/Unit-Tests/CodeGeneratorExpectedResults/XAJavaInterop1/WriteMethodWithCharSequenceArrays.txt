@@ -34,7 +34,7 @@ public partial class MyClass : Java.Lang.Object {
 	static Delegate GetEcho_arrayLjava_lang_CharSequence_Handler ()
 	{
 		if (cb_echo_arrayLjava_lang_CharSequence_ == null)
-			cb_echo_arrayLjava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_L) n_Echo_arrayLjava_lang_CharSequence_);
+			cb_echo_arrayLjava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_L (n_Echo_arrayLjava_lang_CharSequence_));
 		return cb_echo_arrayLjava_lang_CharSequence_;
 	}
 

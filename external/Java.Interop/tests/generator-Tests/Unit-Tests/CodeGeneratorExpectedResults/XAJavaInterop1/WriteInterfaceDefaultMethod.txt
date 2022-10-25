@@ -8,7 +8,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	private static Delegate GetDoSomethingHandler ()
 	{
 		if (cb_DoSomething == null)
-			cb_DoSomething = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_DoSomething);
+			cb_DoSomething = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoSomething));
 		return cb_DoSomething;
 	}
 

@@ -67,7 +67,7 @@ internal partial class IMyInterface2Invoker : global::Java.Lang.Object, IMyInter
 	static Delegate GetDoSomethingHandler ()
 	{
 		if (cb_DoSomething == null)
-			cb_DoSomething = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_DoSomething);
+			cb_DoSomething = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoSomething));
 		return cb_DoSomething;
 	}
 

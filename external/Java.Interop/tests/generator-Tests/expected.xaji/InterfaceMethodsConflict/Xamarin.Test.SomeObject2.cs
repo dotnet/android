@@ -51,7 +51,7 @@ namespace Xamarin.Test {
 		static Delegate GetIrrelevantHandler ()
 		{
 			if (cb_irrelevant == null)
-				cb_irrelevant = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Irrelevant);
+				cb_irrelevant = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Irrelevant));
 			return cb_irrelevant;
 		}
 
@@ -78,7 +78,7 @@ namespace Xamarin.Test {
 		static Delegate GetCloseHandler ()
 		{
 			if (cb_close == null)
-				cb_close = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Close);
+				cb_close = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Close));
 			return cb_close;
 		}
 

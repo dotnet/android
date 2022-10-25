@@ -52,7 +52,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetA_Ljava_lang_Object_Handler ()
 		{
 			if (cb_setA_Ljava_lang_Object_ == null)
-				cb_setA_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetA_Ljava_lang_Object_);
+				cb_setA_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetA_Ljava_lang_Object_));
 			return cb_setA_Ljava_lang_Object_;
 		}
 
@@ -85,7 +85,7 @@ namespace Xamarin.Test {
 		static Delegate GetListTest_Ljava_util_List_Handler ()
 		{
 			if (cb_listTest_Ljava_util_List_ == null)
-				cb_listTest_Ljava_util_List_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_ListTest_Ljava_util_List_);
+				cb_listTest_Ljava_util_List_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_ListTest_Ljava_util_List_));
 			return cb_listTest_Ljava_util_List_;
 		}
 

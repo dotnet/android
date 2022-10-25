@@ -52,7 +52,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetCustomDimension_IHandler ()
 		{
 			if (cb_setCustomDimension_I == null)
-				cb_setCustomDimension_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_L) n_SetCustomDimension_I);
+				cb_setCustomDimension_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_SetCustomDimension_I));
 			return cb_setCustomDimension_I;
 		}
 

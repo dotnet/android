@@ -8,7 +8,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	private static Delegate Getget_ValueHandler ()
 	{
 		if (cb_get_Value == null)
-			cb_get_Value = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_get_Value);
+			cb_get_Value = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_get_Value));
 		return cb_get_Value;
 	}
 

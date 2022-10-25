@@ -51,7 +51,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetAdapterHandler ()
 		{
 			if (cb_getAdapter == null)
-				cb_getAdapter = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GetAdapter);
+				cb_getAdapter = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetAdapter));
 			return cb_getAdapter;
 		}
 
@@ -67,7 +67,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetAdapter_Lxamarin_test_SpinnerAdapter_Handler ()
 		{
 			if (cb_setAdapter_Lxamarin_test_SpinnerAdapter_ == null)
-				cb_setAdapter_Lxamarin_test_SpinnerAdapter_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetAdapter_Lxamarin_test_SpinnerAdapter_);
+				cb_setAdapter_Lxamarin_test_SpinnerAdapter_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetAdapter_Lxamarin_test_SpinnerAdapter_));
 			return cb_setAdapter_Lxamarin_test_SpinnerAdapter_;
 		}
 

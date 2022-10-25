@@ -78,7 +78,7 @@ namespace Xamarin.Test {
 		static Delegate GetExtendedMethodHandler ()
 		{
 			if (cb_extendedMethod == null)
-				cb_extendedMethod = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_ExtendedMethod);
+				cb_extendedMethod = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_ExtendedMethod));
 			return cb_extendedMethod;
 		}
 
@@ -102,7 +102,7 @@ namespace Xamarin.Test {
 		static Delegate GetBaseMethodHandler ()
 		{
 			if (cb_baseMethod == null)
-				cb_baseMethod = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_BaseMethod);
+				cb_baseMethod = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_BaseMethod));
 			return cb_baseMethod;
 		}
 

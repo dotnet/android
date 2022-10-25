@@ -145,7 +145,7 @@ namespace generator.SourceWriters
 			var callback_name = method.EscapedCallbackName;
 
 			writer.WriteLine ($"if ({callback_name} == null)");
-			writer.WriteLine ($"\t{callback_name} = JNINativeWrapper.CreateDelegate (({method.GetDelegateType (opt)}) n_{method.Name + method.IDSignature});");
+			writer.WriteLine ($"\t{callback_name} = JNINativeWrapper.CreateDelegate (new {method.GetDelegateType (opt)} (n_{method.Name + method.IDSignature}));");
 			writer.WriteLine ($"return {callback_name};");
 		}
 	}

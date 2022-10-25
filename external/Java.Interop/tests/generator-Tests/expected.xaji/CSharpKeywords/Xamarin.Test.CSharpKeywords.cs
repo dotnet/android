@@ -51,7 +51,7 @@ namespace Xamarin.Test {
 		static Delegate GetUsePartial_IHandler ()
 		{
 			if (cb_usePartial_I == null)
-				cb_usePartial_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_L) n_UsePartial_I);
+				cb_usePartial_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_UsePartial_I));
 			return cb_usePartial_I;
 		}
 

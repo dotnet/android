@@ -68,7 +68,7 @@ namespace Java.IO {
 		static Delegate GetCloseHandler ()
 		{
 			if (cb_close == null)
-				cb_close = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Close);
+				cb_close = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Close));
 			return cb_close;
 		}
 
@@ -95,7 +95,7 @@ namespace Java.IO {
 		static Delegate GetFlushHandler ()
 		{
 			if (cb_flush == null)
-				cb_flush = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Flush);
+				cb_flush = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Flush));
 			return cb_flush;
 		}
 
@@ -122,7 +122,7 @@ namespace Java.IO {
 		static Delegate GetWrite_arrayBHandler ()
 		{
 			if (cb_write_arrayB == null)
-				cb_write_arrayB = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_Write_arrayB);
+				cb_write_arrayB = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_Write_arrayB));
 			return cb_write_arrayB;
 		}
 
@@ -160,7 +160,7 @@ namespace Java.IO {
 		static Delegate GetWrite_arrayBIIHandler ()
 		{
 			if (cb_write_arrayBII == null)
-				cb_write_arrayBII = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPLII_V) n_Write_arrayBII);
+				cb_write_arrayBII = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPLII_V (n_Write_arrayBII));
 			return cb_write_arrayBII;
 		}
 
@@ -200,7 +200,7 @@ namespace Java.IO {
 		static Delegate GetWrite_IHandler ()
 		{
 			if (cb_write_I == null)
-				cb_write_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_Write_I);
+				cb_write_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_Write_I));
 			return cb_write_I;
 		}
 

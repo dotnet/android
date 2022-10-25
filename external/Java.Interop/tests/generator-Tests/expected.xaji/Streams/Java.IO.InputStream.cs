@@ -68,7 +68,7 @@ namespace Java.IO {
 		static Delegate GetAvailableHandler ()
 		{
 			if (cb_available == null)
-				cb_available = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_Available);
+				cb_available = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_Available));
 			return cb_available;
 		}
 
@@ -96,7 +96,7 @@ namespace Java.IO {
 		static Delegate GetCloseHandler ()
 		{
 			if (cb_close == null)
-				cb_close = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Close);
+				cb_close = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Close));
 			return cb_close;
 		}
 
@@ -123,7 +123,7 @@ namespace Java.IO {
 		static Delegate GetMark_IHandler ()
 		{
 			if (cb_mark_I == null)
-				cb_mark_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_Mark_I);
+				cb_mark_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_Mark_I));
 			return cb_mark_I;
 		}
 
@@ -152,7 +152,7 @@ namespace Java.IO {
 		static Delegate GetMarkSupportedHandler ()
 		{
 			if (cb_markSupported == null)
-				cb_markSupported = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_Z) n_MarkSupported);
+				cb_markSupported = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_Z (n_MarkSupported));
 			return cb_markSupported;
 		}
 
@@ -180,7 +180,7 @@ namespace Java.IO {
 		static Delegate GetReadHandler ()
 		{
 			if (cb_read == null)
-				cb_read = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_Read);
+				cb_read = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_Read));
 			return cb_read;
 		}
 
@@ -200,7 +200,7 @@ namespace Java.IO {
 		static Delegate GetRead_arrayBHandler ()
 		{
 			if (cb_read_arrayB == null)
-				cb_read_arrayB = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_I) n_Read_arrayB);
+				cb_read_arrayB = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_Read_arrayB));
 			return cb_read_arrayB;
 		}
 
@@ -240,7 +240,7 @@ namespace Java.IO {
 		static Delegate GetRead_arrayBIIHandler ()
 		{
 			if (cb_read_arrayBII == null)
-				cb_read_arrayBII = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPLII_I) n_Read_arrayBII);
+				cb_read_arrayBII = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPLII_I (n_Read_arrayBII));
 			return cb_read_arrayBII;
 		}
 
@@ -282,7 +282,7 @@ namespace Java.IO {
 		static Delegate GetResetHandler ()
 		{
 			if (cb_reset == null)
-				cb_reset = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Reset);
+				cb_reset = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Reset));
 			return cb_reset;
 		}
 
@@ -309,7 +309,7 @@ namespace Java.IO {
 		static Delegate GetSkip_JHandler ()
 		{
 			if (cb_skip_J == null)
-				cb_skip_J = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPJ_J) n_Skip_J);
+				cb_skip_J = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPJ_J (n_Skip_J));
 			return cb_skip_J;
 		}
 

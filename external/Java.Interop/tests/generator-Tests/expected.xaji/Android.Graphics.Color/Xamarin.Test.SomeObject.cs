@@ -71,7 +71,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetSomeColorHandler ()
 		{
 			if (cb_getSomeColor == null)
-				cb_getSomeColor = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_GetSomeColor);
+				cb_getSomeColor = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_GetSomeColor));
 			return cb_getSomeColor;
 		}
 
@@ -87,7 +87,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetSomeColor_IHandler ()
 		{
 			if (cb_setSomeColor_I == null)
-				cb_setSomeColor_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_SetSomeColor_I);
+				cb_setSomeColor_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_SetSomeColor_I));
 			return cb_setSomeColor_I;
 		}
 

@@ -87,7 +87,7 @@ namespace Xamarin.Test {
 			static Delegate GetFooHandler ()
 			{
 				if (cb_foo == null)
-					cb_foo = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Foo);
+					cb_foo = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
 				return cb_foo;
 			}
 
@@ -158,7 +158,7 @@ namespace Xamarin.Test {
 		static Delegate GetFooHandler ()
 		{
 			if (cb_foo == null)
-				cb_foo = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Foo);
+				cb_foo = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
 			return cb_foo;
 		}
 

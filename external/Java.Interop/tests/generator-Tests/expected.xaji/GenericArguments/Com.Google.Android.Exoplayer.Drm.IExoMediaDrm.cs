@@ -75,7 +75,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		static Delegate GetOnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayBHandler ()
 		{
 			if (cb_onEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB == null)
-				cb_onEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPLLIIL_V) n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB);
+				cb_onEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPLLIIL_V (n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB));
 			return cb_onEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB;
 		}
 
@@ -261,7 +261,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		static Delegate GetSetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_Handler ()
 		{
 			if (cb_setOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ == null)
-				cb_setOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_);
+				cb_setOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_));
 			return cb_setOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_;
 		}
 
