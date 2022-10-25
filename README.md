@@ -1,14 +1,14 @@
-<img src="Documentation/images/banner.png" alt="Android for .NET banner" height="145" >
+<img src="Documentation/images/banner.png" alt=".NET Android banner" height="145" >
 
-Android for .NET
+.NET Android
 ===============
 
-`Android for .NET` provides open-source bindings of the Android SDK and tooling for use with
+`.NET Android` provides open-source bindings of the Android SDK and tooling for use with
 .NET managed languages such as C#. This ships as an optional [.NET workload][net-workload] for .NET 6+ that can 
 be updated independently from .NET in order to respond to external dependency updates like new Android
 platform and tooling.
 
-While `Android for .NET` is an essential part of [MAUI][maui-intro], it is still fully supported to be 
+While `.NET Android` is an essential part of [MAUI][maui-intro], it is still fully supported to be 
 used independently for "native" .NET Android development.
 
 This repository is also home to the classic `Xamarin.Android` product.
@@ -18,7 +18,7 @@ This repository is also home to the classic `Xamarin.Android` product.
 
 # Support
 
-`Android for .NET` is now part of .NET 6+ and follows the same lifecycle as the [MAUI Support Lifecycle][maui-support-lifecycle].
+`.NET Android` is now part of .NET 6+ and follows the same lifecycle as the [MAUI Support Lifecycle][maui-support-lifecycle].
 
 Classic `Xamarin.Android` support will end on `May 1, 2024` per the [Xamarin Support Policy][xamarin-support-policy]:
 
@@ -43,7 +43,7 @@ Classic `Xamarin.Android` support will end on `May 1, 2024` per the [Xamarin Sup
 
 ## Current
 
-`Android for .NET` ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
+`.NET Android` ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
 the [workload documentation][workload-documentation] for installation commands.
 
 [dotnet-download]: https://dotnet.microsoft.com/en-us/download
