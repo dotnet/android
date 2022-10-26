@@ -232,7 +232,7 @@ namespace Xamarin.Android.Prepare
 		public static partial class Paths
 		{
 			// Global, compile-time locations
-			public static readonly string HomeDir                          = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+			public static readonly string HomeDir                          = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
 			public static readonly string BootstrapResourcesDir            = Path.Combine (BuildPaths.XAPrepareSourceDir, "Resources");
 			public static readonly string BuildToolsDir                    = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools");
 			public static readonly string BuildToolsScriptsDir             = Path.Combine (BuildToolsDir, "scripts");
