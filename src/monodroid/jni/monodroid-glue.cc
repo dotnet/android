@@ -2281,6 +2281,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #if defined (NET)
 	install_logging_handlers ();
 #endif // def NET
+#else
+	mono_trace_set_level_string ("debug");
+	mono_trace_set_mask_string ("all");
 #endif
 
 	if (runtimeNativeLibDir != nullptr) {
