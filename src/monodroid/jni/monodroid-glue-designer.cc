@@ -13,37 +13,42 @@ using namespace xamarin::android::internal;
 force_inline static void
 reinitialize_android_runtime_type_manager (JNIEnv *env)
 {
-	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	LOG_FUNC_ENTER ();
+
 	jclass typeManager = env->FindClass ("mono/android/TypeManager");
-	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+	LOG_LOCATION ();
 	env->UnregisterNatives (typeManager);
-	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+	LOG_LOCATION ();
 
 	jmethodID resetRegistration = env->GetStaticMethodID (typeManager, "resetRegistration", "()V");
-	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+	LOG_LOCATION ();
 	env->CallStaticVoidMethod (typeManager, resetRegistration);
-	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+	LOG_LOCATION ();
 
 	env->DeleteLocalRef (typeManager);
-	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+
+	LOG_FUNC_LEAVE ();
 }
 
 inline void
 MonodroidRuntime::shutdown_android_runtime (MonoDomain *domain) noexcept
 {
-	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	LOG_FUNC_ENTER ();
+
 	MonoClass *runtime = get_android_runtime_class (domain);
 	MonoMethod *method = mono_class_get_method_from_name (runtime, "Exit", 0);
 
 	Util::monodroid_runtime_invoke (domain, method, nullptr, nullptr, nullptr);
-	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+
+	LOG_FUNC_LEAVE ();
 }
 
 inline jint
 MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
                                                                       jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies) noexcept
 {
-	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	LOG_FUNC_ENTER ();
+
 	log_info (LOG_DEFAULT, "CREATING NEW CONTEXT");
 	reinitialize_android_runtime_type_manager (env);
 	MonoDomain *root_domain = mono_get_root_domain ();
@@ -57,36 +62,40 @@ MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (JNIEnv *en
 	int domain_id = mono_domain_get_id (domain);
 	current_context_id = domain_id;
 	log_info (LOG_DEFAULT, "Created new context with id %d\n", domain_id);
-	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+
+	LOG_FUNC_LEAVE ();
 	return domain_id;
 }
 
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint contextID) noexcept
 {
-	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	LOG_FUNC_ENTER ();
+
 	log_info (LOG_DEFAULT, "  env == %p; contextID == %u", env, contextID);
 	log_info (LOG_DEFAULT, "SWITCHING CONTEXT");
 	MonoDomain *domain = mono_domain_get_by_id ((int)contextID);
-	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+	LOG_LOCATION ();
 	log_info (LOG_DEFAULT, "  domain == %p; current_context_id == %u", domain, current_context_id);
 	if (current_context_id != (int)contextID) {
-		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+		LOG_LOCATION ();
 		mono_domain_set (domain, TRUE);
-		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+		LOG_LOCATION ();
 		// Reinitialize TypeManager so that its JNI handle goes into the right domain
 		reinitialize_android_runtime_type_manager (env);
-		log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+		LOG_LOCATION ();
 	}
-	log_info (LOG_DEFAULT, "Location: %s:%u", __FILE__, __LINE__);
+	LOG_LOCATION ();
 	current_context_id = (int)contextID;
-	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+
+	LOG_FUNC_LEAVE ();
 }
 
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintArray array) noexcept
 {
-	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	LOG_FUNC_ENTER ();
+
 	MonoDomain *root_domain = mono_get_root_domain ();
 	mono_jit_thread_attach (root_domain);
 	current_context_id = -1;
@@ -122,13 +131,15 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintAr
 	reinitialize_android_runtime_type_manager (env);
 
 	log_info (LOG_DEFAULT, "All domain cleaned up");
-	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+
+	LOG_FUNC_LEAVE ();
 }
 
 JNIEXPORT jint
 JNICALL Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava, jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies)
 {
-	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	LOG_FUNC_ENTER ();
+
 	jint ret = MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (
 		env,
 		klass,
@@ -139,7 +150,8 @@ JNICALL Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass 
 		loader,
 		force_preload_assemblies
 	);
-	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+
+	LOG_FUNC_LEAVE ();
 	return ret;
 }
 
@@ -147,7 +159,8 @@ JNICALL Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass 
 JNIEXPORT jint
 JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava, jobject loader)
 {
-	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	LOG_FUNC_ENTER ();
+
 	jint ret = MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (
 		env,
 		klass,
@@ -158,23 +171,28 @@ JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, j
 		loader,
 		false    // force_preload_assemblies
 	);
-	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+
+	LOG_FUNC_LEAVE ();
 	return ret;
 }
 
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_switchToContext (JNIEnv *env, [[maybe_unused]] jclass klass, jint contextID)
 {
-	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	LOG_FUNC_ENTER ();
+
 	MonodroidRuntime::Java_mono_android_Runtime_switchToContext (env, contextID);
-	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+
+	LOG_FUNC_LEAVE ();
 }
 
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, [[maybe_unused]] jclass klass, jintArray array)
 {
-	log_info (LOG_DEFAULT, "%s ENTER", __PRETTY_FUNCTION__);
+	LOG_FUNC_ENTER ();
+
 	MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (env, array);
-	log_info (LOG_DEFAULT, "%s LEAVE", __PRETTY_FUNCTION__);
+
+	LOG_FUNC_LEAVE ();
 }
 #endif // ndef ANDROID

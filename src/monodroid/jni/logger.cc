@@ -16,7 +16,7 @@
 #include "monodroid-glue.hh"
 #include "debug.hh"
 #include "util.hh"
-#include "globals.hh"
+#include "strings.hh"
 
 #undef DO_LOG
 #define DO_LOG(_level_,_category_,_format_,_args_)						                        \
@@ -366,4 +366,41 @@ log_write (LogCategories category, LogLevel level, const char *message) noexcept
 	}
 
 	__android_log_write (priority, CATEGORY_NAME (category), message);
+}
+
+void
+Log::init () noexcept
+{
+	const char *envvar = getenv (LOG_LEVEL_ENVVAR);
+	if (envvar == nullptr) {
+		return;
+	}
+
+	dynamic_local_string<SharedConstants::SENSIBLE_LOG_LEVEL_ENVVAR_SIZE> level;
+	level.assign_c (envvar);
+
+	// TODO: switch to https://github.com/Neargye/magic_enum in a separate PR
+	constexpr char LEVEL_VERBOSE[] = "verbose";
+	constexpr char LEVEL_DEBUG[] = "debug";
+	constexpr char LEVEL_INFO[] = "info";
+	constexpr char LEVEL_WARN[] = "warn";
+	constexpr char LEVEL_ERROR[] = "error";
+	constexpr char LEVEL_FATAL[] = "fatal";
+	constexpr char LEVEL_SILENT[] = "silent";
+
+	if (level.equals (LEVEL_VERBOSE)) {
+		_log_level = LogLevel::Verbose;
+	} else if (level.equals (LEVEL_DEBUG)) {
+		_log_level = LogLevel::Debug;
+	} else if (level.equals (LEVEL_INFO)) {
+		_log_level = LogLevel::Info;
+	} else if (level.equals (LEVEL_WARN)) {
+		_log_level = LogLevel::Warn;
+	} else if (level.equals (LEVEL_ERROR)) {
+		_log_level = LogLevel::Error;
+	} else if (level.equals (LEVEL_FATAL)) {
+		_log_level = LogLevel::Fatal;
+	} else if (level.equals (LEVEL_SILENT)) {
+		_log_level = LogLevel::Silent;
+	}
 }

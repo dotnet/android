@@ -236,12 +236,16 @@ EmbeddedAssemblies::load_bundled_assembly (
 	TLoaderData loader_data,
 	bool ref_only) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	if (assembly.name == nullptr || assembly.name[0] == '\0') {
+		LOG_FUNC_LEAVE ();
 		return nullptr;
 	}
 
 	if (strcmp (assembly.name, name.get ()) != 0) {
 		if (strcmp (assembly.name, abi_name.get ()) != 0) {
+			LOG_FUNC_LEAVE ();
 			return nullptr;
 		} else {
 			log_debug (LOG_ASSEMBLY, "open_from_bundles: found architecture-specific: '%s'", abi_name.get ());
@@ -258,6 +262,7 @@ EmbeddedAssemblies::load_bundled_assembly (
 	get_assembly_data (assembly, assembly_data, assembly_data_size);
 	MonoImage *image = MonoImageLoader::load (name, loader_data, assembly_data, assembly_data_size);
 	if (image == nullptr) {
+		LOG_FUNC_LEAVE ();
 		return nullptr;
 	}
 
@@ -291,6 +296,7 @@ EmbeddedAssemblies::load_bundled_assembly (
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
 	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
 		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
+		LOG_FUNC_LEAVE ();
 		return nullptr;
 	}
 
@@ -298,6 +304,8 @@ EmbeddedAssemblies::load_bundled_assembly (
 	// In dotnet the call is a no-op
 	mono_config_for_assembly (image);
 #endif
+
+	LOG_FUNC_LEAVE ();
 	return a;
 }
 
@@ -305,6 +313,8 @@ template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	if (!Util::ends_with (name, SharedConstants::DLL_EXTENSION)) {
 		name.append (SharedConstants::DLL_EXTENSION);
 	}
@@ -322,6 +332,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 	for (size_t i = 0; i < application_config.number_of_assemblies_in_apk; i++) {
 		a = load_bundled_assembly (bundled_assemblies [i], name, abi_name, loader_data, ref_only);
 		if (a != nullptr) {
+			LOG_FUNC_LEAVE ();
 			return a;
 		}
 	}
@@ -330,11 +341,13 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 		for (XamarinAndroidBundledAssembly& assembly : *extra_bundled_assemblies) {
 			a = load_bundled_assembly (assembly, name, abi_name, loader_data, ref_only);
 			if (a != nullptr) {
+				LOG_FUNC_LEAVE ();
 				return a;
 			}
 		}
 	}
 
+	LOG_FUNC_LEAVE ();
 	return nullptr;
 }
 
@@ -372,6 +385,8 @@ template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	size_t len = name.length ();
 	bool have_dll_ext = Util::ends_with (name, SharedConstants::DLL_EXTENSION);
 
@@ -388,6 +403,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	const AssemblyStoreHashEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, application_config.number_of_assemblies_in_apk);
 	if (hash_entry == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
+		LOG_FUNC_LEAVE ();
 		return nullptr;
 	}
 
@@ -458,6 +474,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	MonoImage *image = MonoImageLoader::load (name, loader_data, name_hash, assembly_data, assembly_data_size);
 	if (image == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Failed to load MonoImage of '%s'", name.get ());
+		LOG_FUNC_LEAVE ();
 		return nullptr;
 	}
 
@@ -470,12 +487,15 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
 	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
 		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
+		LOG_FUNC_LEAVE ();
 		return nullptr;
 	}
 
 #if !defined (NET)
 	mono_config_for_assembly (image);
 #endif
+
+	LOG_FUNC_LEAVE ();
 	return a;
 }
 
@@ -486,6 +506,8 @@ template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, bool ref_only) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
 
@@ -507,6 +529,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData load
 		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
 	}
 
+	LOG_FUNC_LEAVE ();
 	return a;
 }
 
@@ -514,7 +537,11 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData load
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data, MonoError *error)
 {
+	LOG_FUNC_ENTER ();
+
 	constexpr bool ref_only = false;
+
+	LOG_FUNC_LEAVE ();
 	return open_from_bundles (aname, alc_gchandle, error, ref_only);
 }
 #else // def NET
@@ -525,8 +552,10 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchan
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
+	LOG_FUNC_ENTER ();
 	constexpr bool ref_only = true;
 
+	LOG_FUNC_LEAVE ();
 	return open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
 #endif // ndef NET
@@ -534,8 +563,11 @@ EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
+	LOG_FUNC_ENTER ();
+
 	constexpr bool ref_only = false;
 
+	LOG_FUNC_LEAVE ();
 	return open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
 

@@ -607,6 +607,16 @@ namespace xamarin::android::internal
 			return -1;
 		}
 
+		template<size_t Size>
+		force_inline bool equals (const char (&candidate)[Size]) const noexcept
+		{
+			if (Size > buffer.size () || Size != length ()) {
+				return false;
+			}
+
+			return memcmp (buffer.get (), candidate, Size) == 0;
+		}
+
 		force_inline bool starts_with (const TChar *s, size_t s_length) const noexcept
 		{
 			if (s == nullptr || s_length == 0 || s_length > buffer.size ())
