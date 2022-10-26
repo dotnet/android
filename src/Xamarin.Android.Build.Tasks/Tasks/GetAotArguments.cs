@@ -320,9 +320,13 @@ namespace Xamarin.Android.Tasks
 
 					string libstubsPath = Path.Combine (AndroidBinUtilsDirectory, relPath, "libstubs", ArchToRid (arch)).Replace (" ", "\\ ");
 
+					ldFlags.Append ("\\\"");
 					ldFlags.Append (Path.Combine (libstubsPath, "libc.so"));
-					ldFlags.Append (' ');
+					ldFlags.Append ("\\\"");
+					ldFlags.Append (" \\\"");
 					ldFlags.Append (Path.Combine (libstubsPath, "libm.so"));
+					ldFlags.Append ("\\\"");
+
 				}
 			}
 
