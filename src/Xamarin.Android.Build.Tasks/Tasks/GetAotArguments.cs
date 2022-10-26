@@ -292,46 +292,36 @@ namespace Xamarin.Android.Tasks
 				}
 				libs.Add (Path.Combine (androidLibPath, "libc.so"));
 				libs.Add (Path.Combine (androidLibPath, "libm.so"));
+			} else if (!UseAndroidNdk && EnableLLVM) {
+				// We need to link against libc and libm, but since NDK is not in use, the linker won't be able to find the actual Android libraries.
+				// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
+				string relPath = Path.Combine ("..", "..");
+				if (!OS.IsWindows) {
+					// the `binutils` directory is one level down (${OS}/binutils) than the Windows one
+					relPath = Path.Combine (relPath, "..");
+				}
+				string libstubsPath = Path.GetFullPath (Path.Combine (AndroidBinUtilsDirectory, relPath, "libstubs", ArchToRid (arch)).Replace (" ", "\\ "));
+				libs.Add (Path.Combine (libstubsPath, "libc.so"));
+				libs.Add (Path.Combine (libstubsPath, "libm.so"));
+			}
 
+			if (libs.Count > 0) {
 				ldFlags.Append ($"\\\"{string.Join ("\\\";\\\"", libs)}\\\"");
-			} else {
+			}
+
+			//
+			// This flag is needed for Mono AOT to work correctly with the LLVM 14 `lld` linker due to the following change:
+			//
+			//   The AArch64 port now supports adrp+ldr and adrp+add optimizations. --no-relax can suppress the optimization.
+			//
+			// Without the flag, `lld` will modify AOT-generated code in a way that the Mono runtime doesn't support. Until
+			// the runtime issue is fixed, we need to pass this flag then.
+			//
+			if (!UseAndroidNdk) {
 				if (ldFlags.Length > 0) {
 					ldFlags.Append (' ');
 				}
-
-				if (!UseAndroidNdk) {
-					//
-					// This flag is needed for Mono AOT to work correctly with the LLVM 14 `lld` linker due to the following change:
-					//
-					//   The AArch64 port now supports adrp+ldr and adrp+add optimizations. --no-relax can suppress the optimization.
-					//
-					// Without the flag, `lld` will modify AOT-generated code in a way that the Mono runtime doesn't support. Until
-					// the runtime issue is fixed, we need to pass this flag then.
-					//
-					ldFlags.Append ("--no-relax ");
-
-					// We need to link against libc and libm, but since NDK is not in use, the linker won't be able to find the actual Android libraries.
-					// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
-					string relPath = Path.Combine ("..", "..");
-					if (!OS.IsWindows) {
-						// the `binutils` directory is one level down (${OS}/binutils) than the Windows one
-						relPath = Path.Combine (relPath, "..");
-					}
-
-					string libstubsPath = Path.Combine (AndroidBinUtilsDirectory, relPath, "libstubs", ArchToRid (arch)).Replace (" ", "\\ ");
-
-					ldFlags.Append ("\\\"");
-					ldFlags.Append (Path.Combine (libstubsPath, "libc.so"));
-					ldFlags.Append ("\\\"");
-					ldFlags.Append (" \\\"");
-					ldFlags.Append (Path.Combine (libstubsPath, "libm.so"));
-					ldFlags.Append ("\\\"");
-
-				}
-			}
-
-			if (ldFlags.Length > 0) {
-				ldFlags.Append (' ');
+				ldFlags.Append ("--no-relax");
 			}
 
 			if (StripLibraries) {
