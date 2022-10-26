@@ -312,7 +312,13 @@ namespace Xamarin.Android.Tasks
 
 					// We need to link against libc and libm, but since NDK is not in use, the linker won't be able to find the actual Android libraries.
 					// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
-					string libstubsPath = Path.Combine (AndroidBinUtilsDirectory, "..", "..", "..", "libstubs", ArchToRid (arch)).Replace (" ", "\\ ");
+					string relPath = Path.Combine ("..", "..");
+					if (!OS.IsWindows) {
+						// the `binutils` directory is one level down (${OS}/binutils) than the Windows one
+						relPath = Path.Combine (relPath, "..");
+					}
+
+					string libstubsPath = Path.Combine (AndroidBinUtilsDirectory, relPath, "libstubs", ArchToRid (arch)).Replace (" ", "\\ ");
 
 					ldFlags.Append (Path.Combine (libstubsPath, "libc.so"));
 					ldFlags.Append (' ');

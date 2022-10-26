@@ -37,8 +37,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			IELF elf = ELFReader.Load (libraryPath);
-
-			// TODO: we need .dynstr
 			var dynstr = GetSection (elf, ".dynstr") as IStringTable;
 			if (dynstr == null) {
 				return false;
