@@ -170,7 +170,7 @@ namespace Xamarin.Android.Tasks
 						aotOptions.Add ($"ld-name={LdName}");
 					}
 					if (!string.IsNullOrEmpty (LdFlags)) {
-						aotOptions.Add ($"ld-flags={LdFlags}");
+						aotOptions.Add ($"ld-flags=\\\"{LdFlags}\\\"");
 					}
 
 					// We don't check whether any mode option was added via `AotAdditionalArguments`, the `AndroidAotMode` property should always win here.
