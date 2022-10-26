@@ -12,7 +12,7 @@ namespace LinkTestLib
 			try {
 				// Initialize the database name.
 				const string sqliteFilename = "TaskDB.db3";
-				string libraryPath = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+				string libraryPath = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
 				string path = Path.Combine (libraryPath, sqliteFilename);
 				var db = new SQLiteAsyncConnection (path);
 				db.CreateTableAsync<TodoTask> ().GetAwaiter ().GetResult ();
