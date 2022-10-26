@@ -3,24 +3,24 @@
 .NET Android
 ===============
 
-`.NET Android` provides open-source bindings of the Android SDK and tooling for use with
+.NET Android provides open-source bindings of the Android SDK and tooling for use with
 .NET managed languages such as C#. This ships as an optional [.NET workload][net-workload] for .NET 6+ that can 
 be updated independently from .NET in order to respond to external dependency updates like new Android
 platform and tooling.
 
-While `.NET Android` is an essential part of [MAUI][maui-intro], it is still fully supported to be 
-used independently for "native" .NET Android development.
+While .NET Android is an essential part of [MAUI][maui-intro], it is still fully supported to be 
+used independently for native Android development using .NET.
 
-This repository is also home to the classic `Xamarin.Android` product.
+This repository is also home to the classic Xamarin.Android product.
 
 [net-workload]: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-workload-install
 [maui-intro]: https://learn.microsoft.com/en-us/dotnet/maui/what-is-maui
 
 # Support
 
-`.NET Android` is now part of .NET 6+ and follows the same lifecycle as the [MAUI Support Lifecycle][maui-support-lifecycle].
+.NET Android is now part of .NET 6+ and follows the same support lifecycle as the [MAUI Support Lifecycle][maui-support-lifecycle].
 
-Classic `Xamarin.Android` support will end on `May 1, 2024` per the [Xamarin Support Policy][xamarin-support-policy]:
+Support for classic Xamarin.Android will end on **May 1, 2024** as per the [Xamarin Support Policy][xamarin-support-policy]:
 
 > Xamarin support will end on May 1, 2024 for all classic Xamarin SDKs. Android 13 will be the final version classic Xamarin.Android will target.
 
@@ -43,13 +43,13 @@ Classic `Xamarin.Android` support will end on `May 1, 2024` per the [Xamarin Sup
 
 ## Current
 
-`.NET Android` ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
+.NET Android ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
 the [workload documentation][workload-documentation] for installation commands.
 
 [dotnet-download]: https://dotnet.microsoft.com/en-us/download
 [workload-documentation]: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-workload-install
 
-Classic `Xamarin.Android` installers are available here:
+Classic Xamarin.Android installers are available here:
 
 | Platform        | Link   |
 |-----------------|--------|
