@@ -4,6 +4,7 @@
     "android": {
       "description": ".NET SDK Workload for building Android applications.",
       "packs": [
+        "Microsoft.Android.Sdk.net8",
         "Microsoft.Android.Sdk.net7",
         "Microsoft.Android.Sdk.net6",
         "Microsoft.Android.Ref.33",
@@ -23,9 +24,21 @@
     }
   },
   "packs": {
-    "Microsoft.Android.Sdk.net7": {
+    "Microsoft.Android.Sdk.net8": {
       "kind": "sdk",
       "version": "@WORKLOAD_VERSION@",
+      "alias-to": {
+        "osx-x64": "Microsoft.Android.Sdk.Darwin",
+        "osx-arm64": "Microsoft.Android.Sdk.Darwin",
+        "win-x86": "Microsoft.Android.Sdk.Windows",
+        "win-x64": "Microsoft.Android.Sdk.Windows",
+        "win-arm64": "Microsoft.Android.Sdk.Windows",
+        "linux-x64": "Microsoft.Android.Sdk.Linux"
+      }
+    },
+    "Microsoft.Android.Sdk.net7": {
+      "kind": "sdk",
+      "version": "@NET7_VERSION@",
       "alias-to": {
         "osx-x64": "Microsoft.Android.Sdk.Darwin",
         "osx-arm64": "Microsoft.Android.Sdk.Darwin",
