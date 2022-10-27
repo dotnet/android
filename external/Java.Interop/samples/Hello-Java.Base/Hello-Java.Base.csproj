@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
+    <StartupObject>Hello.App</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
