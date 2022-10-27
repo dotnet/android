@@ -4,6 +4,8 @@
 #include "java-interop-logger.h"
 
 #include <cstdint>
+#include <memory>
+#include <type_traits>
 
 #define ENABLE_FUNC_ENTER_LEAVE_TRACING
 
@@ -94,16 +96,47 @@ namespace xamarin::android
 	private:
 		static inline LogLevel _log_level = LogLevel::Info;
 	};
+
+	template<typename RetType, std::enable_if_t<!std::is_trivially_copyable_v<RetType>, bool> = true>
+	static inline RetType& __log_return_from_function (RetType& retval, const char *func_name, const char *file, int line) noexcept
+	{
+		xamarin::android::Log::trace_func_leave (LOG_DEFAULT, func_name, file, line);
+		return retval;
+	}
+
+	template<typename RetType>
+	static inline RetType* __log_return_from_function (RetType* retval, const char *func_name, const char *file, int line) noexcept
+	{
+		xamarin::android::Log::trace_func_leave (LOG_DEFAULT, func_name, file, line);
+		return retval;
+	}
+
+	template<typename RetType, std::enable_if_t<std::is_trivially_copyable_v<RetType>, bool> = true>
+	static inline RetType __log_return_from_function (RetType retval, const char *func_name, const char *file, int line) noexcept
+	{
+		xamarin::android::Log::trace_func_leave (LOG_DEFAULT, func_name, file, line);
+		return retval;
+	}
+
+	static inline std::nullptr_t __log_return_from_function (std::nullptr_t retval, const char *func_name, const char *file, int line) noexcept
+	{
+		xamarin::android::Log::trace_func_leave (LOG_DEFAULT, func_name, file, line);
+		return retval;
+	}
 }
 
 #if defined (ENABLE_FUNC_ENTER_LEAVE_TRACING)
 #define LOG_FUNC_ENTER() xamarin::android::Log::trace_func_enter (LOG_DEFAULT, __PRETTY_FUNCTION__)
 #define LOG_FUNC_LEAVE() xamarin::android::Log::trace_func_leave (LOG_DEFAULT, __PRETTY_FUNCTION__, __FILE__, __LINE__)
 #define LOG_LOCATION() xamarin::android::Log::trace_location (LOG_DEFAULT, __PRETTY_FUNCTION__, __FILE__, __LINE__)
+
+#define LOG_FUNC_LEAVE_RETURN(__expr__) xamarin::android::__log_return_from_function ((__expr__), __PRETTY_FUNCTION__, __FILE__, __LINE__)
+
 #else
 #define LOG_FUNC_ENTER()
 #define LOG_FUNC_LEAVE()
 #define LOG_LOCATION()
+#define LOG_FUNC_LEAVE_RETURN(__expr__) (__expr__)
 #endif
 
 #endif

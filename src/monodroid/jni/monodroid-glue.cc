@@ -329,8 +329,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		LOG_LOCATION ();
 		if (result != nullptr) {
 			log_info (LOG_ASSEMBLY, "Loaded assembly %s from memory in domain %d", mono_assembly_name_get_name (aname), mono_domain_get_id (domain));
-			LOG_FUNC_LEAVE ();
-			return result;
+			return LOG_FUNC_LEAVE_RETURN (result);
 		}
 		log_info (LOG_ASSEMBLY, "No in-memory data found for assembly %s", mono_assembly_name_get_name (aname));
 	} else {
@@ -347,8 +346,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		}
 	}
 	if (!found) {
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	const char *culture = reinterpret_cast<const char*> (mono_assembly_name_get_culture (aname));
@@ -399,8 +397,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		log_info_nocheck (LOG_ASSEMBLY, "open_from_update_dir: loaded assembly: %p\n", result);
 	}
 
-	LOG_FUNC_LEAVE ();
-	return result;
+	return LOG_FUNC_LEAVE_RETURN (result);
 }
 #endif
 
@@ -411,8 +408,7 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename) n
 
 #ifndef RELEASE
 	if (filename == nullptr) {
-		LOG_FUNC_LEAVE ();
-		return true;
+		return LOG_FUNC_LEAVE_RETURN (true);
 	}
 
 	size_t filename_len = strlen (filename) + 1; // includes space for path separator
@@ -427,14 +423,12 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename) n
 
 		if (exists) {
 			log_info (LOG_ASSEMBLY, "should not register '%s' as it exists in the override directory '%s'", filename, odir);
-			LOG_FUNC_LEAVE ();
-			return !exists;
+			return LOG_FUNC_LEAVE_RETURN (!exists);
 		}
 	}
 #endif
 
-	LOG_FUNC_LEAVE ();
-	return true;
+	return LOG_FUNC_LEAVE_RETURN (true);
 }
 
 inline void
@@ -526,8 +520,7 @@ MonodroidRuntime::monodroid_debug_connect (int sock, struct sockaddr_in addr) no
 				break;
 			}
 		} else {
-			LOG_FUNC_LEAVE ();
-			return -2;
+			return LOG_FUNC_LEAVE_RETURN (-2);
 		}
 	}
 
@@ -535,8 +528,7 @@ MonodroidRuntime::monodroid_debug_connect (int sock, struct sockaddr_in addr) no
 	flags &= (~O_NONBLOCK);
 	fcntl (sock, F_SETFL, flags);
 
-	LOG_FUNC_LEAVE ();
-	return 1;
+	return LOG_FUNC_LEAVE_RETURN (1);
 }
 
 int
@@ -546,20 +538,17 @@ MonodroidRuntime::monodroid_debug_accept (int sock, struct sockaddr_in addr) noe
 
 	ssize_t res = bind (sock, (struct sockaddr *) &addr, sizeof (addr));
 	if (res < 0) {
-		LOG_FUNC_LEAVE ();
-		return -1;
+		return LOG_FUNC_LEAVE_RETURN (-1);
 	}
 
 	res = listen (sock, 1);
 	if (res < 0) {
-		LOG_FUNC_LEAVE ();
-		return -2;
+		return LOG_FUNC_LEAVE_RETURN (-2);
 	}
 
 	int accepted = accept (sock, nullptr, nullptr);
 	if (accepted < 0) {
-		LOG_FUNC_LEAVE ();
-		return -3;
+		return LOG_FUNC_LEAVE_RETURN (-3);
 	}
 
 	constexpr const char handshake_msg [] = "MonoDroid-Handshake\n";
@@ -569,12 +558,10 @@ MonodroidRuntime::monodroid_debug_accept (int sock, struct sockaddr_in addr) noe
 		res = send (accepted, handshake_msg, handshake_length, 0);
 	} while (res == -1 && errno == EINTR);
 	if (res < 0) {
-		LOG_FUNC_LEAVE ();
-		return -4;
+		return LOG_FUNC_LEAVE_RETURN (-4);
 	}
 
-	LOG_FUNC_LEAVE ();
-	return accepted;
+	return LOG_FUNC_LEAVE_RETURN (accepted);
 }
 #endif
 
@@ -591,8 +578,7 @@ MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) 
 	vm->GetEnv (reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
 	OSBridge::initialize_on_onload (vm, env);
 
-	LOG_FUNC_LEAVE ();
-	return JNI_VERSION_1_6;
+	return LOG_FUNC_LEAVE_RETURN (JNI_VERSION_1_6);
 }
 
 void
@@ -643,8 +629,7 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 
 	if (runtime_args.length () == 0) {
 		log_warn (LOG_DEFAULT, "runtime args empty");
-		LOG_FUNC_LEAVE ();
-		return true;
+		return LOG_FUNC_LEAVE_RETURN (true);
 	}
 
 	constexpr char   ARG_DEBUG[]                   = "debug";
@@ -740,8 +725,7 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 		}
 	}
 
-	LOG_FUNC_LEAVE ();
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 #endif  // def DEBUG && !WINDOWS
 
@@ -1076,8 +1060,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 				LOG_LOCATION ();
 				jclass ex_klass = env->FindClass ("mono/android/MonoRuntimeException");
 				env->ThrowNew (ex_klass, corlib_error_message);
-				LOG_FUNC_LEAVE ();
-				return nullptr;
+				return LOG_FUNC_LEAVE_RETURN (nullptr);
 			}
 
 			LOG_LOCATION ();
@@ -1090,8 +1073,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		}
 	}
 
-	LOG_FUNC_LEAVE ();
-	return domain;
+	return LOG_FUNC_LEAVE_RETURN (domain);
 }
 
 inline int
@@ -1101,15 +1083,13 @@ MonodroidRuntime::LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int ve
 	if (version < 14) {
 		java_System = nullptr;
 		java_System_identityHashCode = nullptr;
-		LOG_FUNC_LEAVE ();
-		return 0;
+		return LOG_FUNC_LEAVE_RETURN (0);
 	}
 
 	java_System = Util::get_class_from_runtime_field(env, runtimeClass, "java_lang_System", true);
 	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
 
-	LOG_FUNC_LEAVE ();
-	return 1;
+	return LOG_FUNC_LEAVE_RETURN (1);
 }
 
 force_inline void
@@ -1367,8 +1347,7 @@ MonodroidRuntime::get_android_runtime_class () noexcept
 	MonoAssembly *assm = Util::monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 	MonoImage *image   = mono_assembly_get_image (assm);
 
-	LOG_FUNC_LEAVE ();
-	return mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+	return LOG_FUNC_LEAVE_RETURN (mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME));
 }
 #else // def NET
 MonoClass*
@@ -1379,8 +1358,7 @@ MonodroidRuntime::get_android_runtime_class (MonoDomain *domain) noexcept
 	MonoAssembly *assm = Util::monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
 	MonoImage *image   = mono_assembly_get_image (assm);
 
-	LOG_FUNC_LEAVE ();
-	return Util::monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+	return LOG_FUNC_LEAVE_RETURN (Util::monodroid_get_class_from_image (domain, image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME));
 }
 #endif // ndef NET
 
@@ -1439,8 +1417,7 @@ MonodroidRuntime::convert_dl_flags (int flags) noexcept
 		? JAVA_INTEROP_LIB_LOAD_LOCALLY
 		: JAVA_INTEROP_LIB_LOAD_GLOBALLY;
 
-	LOG_FUNC_LEAVE ();
-	return lflags;
+	return LOG_FUNC_LEAVE_RETURN (lflags);
 }
 
 #if !defined (NET)
@@ -1520,14 +1497,12 @@ MonodroidRuntime::find_dso_cache_entry ([[maybe_unused]] hash_t hash) noexcept
 			entries = ret + 1;
 			entry_count -= entry_count / 2 + 1;
 		} else {
-			LOG_FUNC_LEAVE ();
-			return ret;
+			return LOG_FUNC_LEAVE_RETURN (ret);
 		}
 	}
 #endif // ndef MINGW32 || def MINGW32 && GNUC >= 10
 
-	LOG_FUNC_LEAVE ();
-	return nullptr;
+	return LOG_FUNC_LEAVE_RETURN (nullptr);
 }
 
 force_inline void*
@@ -1549,8 +1524,7 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 	init_internal_api_dso (handle);
 #endif // ndef NET
 
-	LOG_FUNC_LEAVE ();
-	return handle;
+	return LOG_FUNC_LEAVE_RETURN (handle);
 }
 
 force_inline void*
@@ -1562,12 +1536,10 @@ MonodroidRuntime::monodroid_dlopen_ignore_component_or_load ([[maybe_unused]] ha
 		auto ignore_component = [&](const char *label, MonoComponent component) -> bool {
 			if ((application_config.mono_components_mask & component) != component) {
 				log_info (LOG_ASSEMBLY, "Mono '%s' component requested but not packaged, ignoring", label);
-				LOG_FUNC_LEAVE ();
-				return true;
+				return LOG_FUNC_LEAVE_RETURN (true);
 			}
 
-			LOG_FUNC_LEAVE ();
-			return false;
+			return LOG_FUNC_LEAVE_RETURN (false);
 		};
 
 		switch (name_hash) {
@@ -1594,13 +1566,12 @@ MonodroidRuntime::monodroid_dlopen_ignore_component_or_load ([[maybe_unused]] ha
 	unsigned int dl_flags = MonodroidRuntime::convert_dl_flags (flags);
 	void * handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
 	if (handle != nullptr) {
-		return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
+		return LOG_FUNC_LEAVE_RETURN (monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */));
 	}
 
 	handle = AndroidSystem::load_dso (name, dl_flags, false /* skip_existing_check */);
 
-	LOG_FUNC_LEAVE ();
-	return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
+	return LOG_FUNC_LEAVE_RETURN (monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */));
 }
 
 force_inline void*
@@ -1615,17 +1586,14 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noe
 
 	if (dso == nullptr) {
 		// DSO not known at build time, try to load it
-		LOG_FUNC_LEAVE ();
-		return monodroid_dlopen_ignore_component_or_load (name_hash, name, flags, err);
+		return LOG_FUNC_LEAVE_RETURN (monodroid_dlopen_ignore_component_or_load (name_hash, name, flags, err));
 	} else if (dso->handle != nullptr) {
-		LOG_FUNC_LEAVE ();
-		return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
+		return LOG_FUNC_LEAVE_RETURN (monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */));
 	}
 
 	if (dso->ignore) {
 		log_info (LOG_ASSEMBLY, "Request to load '%s' ignored, it is known not to exist", dso->name);
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	StartupAwareLock lock (dso_handle_write_lock);
@@ -1633,14 +1601,12 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noe
 
 	dso->handle = AndroidSystem::load_dso_from_any_directories (dso->name, dl_flags);
 	if (dso->handle != nullptr) {
-		LOG_FUNC_LEAVE ();
-		return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
+		return LOG_FUNC_LEAVE_RETURN (monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */));
 	}
 
 	dso->handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
 
-	LOG_FUNC_LEAVE ();
-	return monodroid_dlopen_log_and_return (dso->handle, err, name, false /* name_needs_free */);
+	return LOG_FUNC_LEAVE_RETURN (monodroid_dlopen_log_and_return (dso->handle, err, name, false /* name_needs_free */));
 }
 
 void*
@@ -1653,8 +1619,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 #if defined (NET)
 	if (name == nullptr) {
 		log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET+");
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 #else // def NET
 	unsigned int dl_flags = MonodroidRuntime::convert_dl_flags (flags);
@@ -1669,8 +1634,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 
 		auto probe_dll_at = [&](const char *the_path) -> bool {
 			if (the_path == nullptr) {
-				LOG_FUNC_LEAVE ();
-				return false;
+				return LOG_FUNC_LEAVE_RETURN (false);
 			}
 
 			const char *last_sep = strrchr (the_path, MONODROID_PATH_SEPARATOR_CHAR);
@@ -1681,17 +1645,13 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 				if (!Util::file_exists (tmp_name)) {
 					delete[] tmp_name;
 					tmp_name = nullptr;
-
-					LOG_FUNC_LEAVE ();
-					return false;
+					return LOG_FUNC_LEAVE_RETURN (false);
 				}
 
-				LOG_FUNC_LEAVE ();
-				return true;
+				return LOG_FUNC_LEAVE_RETURN (true);
 			}
 
-			LOG_FUNC_LEAVE ();
-			return false;
+			return LOG_FUNC_LEAVE_RETURN (false);
 		};
 
 		//
@@ -1730,14 +1690,12 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 		// h = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
 		h = monodroid_dlopen (name, flags, err);
 		if (h != nullptr) {
-			LOG_FUNC_LEAVE ();
-			return h; // already logged by monodroid_dlopen
+			return LOG_FUNC_LEAVE_RETURN (h); // already logged by monodroid_dlopen
 		}
 	}
 
 	if (h != nullptr) {
-		LOG_FUNC_LEAVE ();
-		return monodroid_dlopen_log_and_return (h, err, name, name_needs_free, libmonodroid_fallback);
+		return LOG_FUNC_LEAVE_RETURN (monodroid_dlopen_log_and_return (h, err, name, name_needs_free, libmonodroid_fallback));
 	}
 
 	if (libmonodroid_fallback) {
@@ -1753,8 +1711,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 		}
 		h = AndroidSystem::load_dso (full_name, dl_flags, false);
 
-		LOG_FUNC_LEAVE ();
-		return monodroid_dlopen_log_and_return (h, err, full_name, name_needs_free, true);
+		return LOG_FUNC_LEAVE_RETURN (monodroid_dlopen_log_and_return (h, err, full_name, name_needs_free, true));
 	}
 #endif // ndef NET
 
@@ -1765,8 +1722,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 	}
 #endif // ndef NET
 
-	LOG_FUNC_LEAVE ();
-	return h;
+	return LOG_FUNC_LEAVE_RETURN (h);
 }
 
 void*
@@ -1786,8 +1742,7 @@ MonodroidRuntime::monodroid_dlsym (void *handle, const char *name, char **err, [
 		java_interop_free (e);
 	}
 
-	LOG_FUNC_LEAVE ();
-	return s;
+	return LOG_FUNC_LEAVE_RETURN (s);
 }
 
 inline void
@@ -2247,8 +2202,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	if constexpr (is_running_on_desktop) {
 		LOG_LOCATION ();
 		if (is_root_domain) {
-			LOG_FUNC_LEAVE ();
-			return domain;
+			return LOG_FUNC_LEAVE_RETURN (domain);
 		}
 		LOG_LOCATION ();
 	}
@@ -2276,8 +2230,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 #endif // ndef NET
 	OSBridge::add_monodroid_domain (domain);
 
-	LOG_FUNC_LEAVE ();
-	return domain;
+	return LOG_FUNC_LEAVE_RETURN (domain);
 }
 
 #if defined (NET)
@@ -2297,18 +2250,14 @@ MonoReflectionType*
 MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name) noexcept
 {
 	LOG_FUNC_ENTER ();
-	MonoReflectionType *ret = EmbeddedAssemblies::typemap_java_to_managed (java_type_name);
-	LOG_FUNC_LEAVE ();
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (EmbeddedAssemblies::typemap_java_to_managed (java_type_name));
 }
 
 const char*
 MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept
 {
 	LOG_FUNC_ENTER ();
-	const char *ret = EmbeddedAssemblies::typemap_managed_to_java (type, mvid);
-	LOG_FUNC_LEAVE ();
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (EmbeddedAssemblies::typemap_managed_to_java (type, mvid));
 }
 #endif // !def RELEASE || !def ANDROID
 
@@ -2324,23 +2273,20 @@ MonodroidRuntime::get_my_location (bool remove_file_name)
 	if (GetModuleHandleExW (handle_flags, (LPCWSTR) &get_xamarin_android_msbuild_path, &hm) == 0) {
 		int ret = GetLastError ();
 		log_warn (LOG_DEFAULT, "Unable to get HANDLE to `libmono-android.debug.dll`; GetModuleHandleExW returned %d\n", ret);
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	WCHAR path[MAX_PATH * 2];
 	if (GetModuleFileNameW (hm, path, sizeof(path)) == 0) {
 		int ret = GetLastError ();
 		log_warn (LOG_DEFAULT, "Unable to get filename to `libmono-android.debug.dll`; GetModuleFileNameW returned %d\n", ret);
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	if (remove_file_name)
 		PathRemoveFileSpecW (path);
 
-	LOG_FUNC_LEAVE ();
-	return Util::utf16_to_utf8 (path);
+	return LOG_FUNC_LEAVE_RETURN (Util::utf16_to_utf8 (path));
 }
 #elif defined (APPLE_OS_X)
 const char*
@@ -2351,17 +2297,14 @@ MonodroidRuntime::get_my_location (bool remove_file_name)
 	Dl_info info;
 	if (dladdr (reinterpret_cast<const void*>(&MonodroidRuntime::get_my_location), &info) == 0) {
 		log_warn (LOG_DEFAULT, "Could not lookup library containing `MonodroidRuntime::get_my_location()`; dladdr failed: %s", dlerror ());
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	if (remove_file_name) {
-		LOG_FUNC_LEAVE ();
-		return Util::strdup_new (dirname (const_cast<char*>(info.dli_fname)));
+		return LOG_FUNC_LEAVE_RETURN (Util::strdup_new (dirname (const_cast<char*>(info.dli_fname))));
 	}
 
-	LOG_FUNC_LEAVE ();
-	return Util::strdup_new (info.dli_fname);
+	return LOG_FUNC_LEAVE_RETURN (Util::strdup_new (info.dli_fname));
 }
 #endif  // defined(WINDOWS)
 
@@ -2784,9 +2727,7 @@ JNIEXPORT jint JNICALL
 JNI_OnLoad (JavaVM *vm, void *reserved)
 {
 	LOG_FUNC_ENTER ();
-
-	LOG_FUNC_LEAVE ();
-	return MonodroidRuntime::Java_JNI_OnLoad (vm, reserved);
+	return LOG_FUNC_LEAVE_RETURN (MonodroidRuntime::Java_JNI_OnLoad (vm, reserved));
 }
 
 /* !DO NOT REMOVE! Used by the Android Designer */
@@ -2947,26 +2888,21 @@ MonodroidRuntime::get_java_class_name_for_TypeManager (jclass klass) noexcept
 	LOG_FUNC_ENTER ();
 
 	if (klass == nullptr || Class_getName == nullptr) {
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	auto name = reinterpret_cast<jstring> (env->CallObjectMethod (klass, Class_getName));
 	if (name == nullptr) {
 		log_error (LOG_DEFAULT, "Failed to obtain Java class name for object at %p", klass);
-
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	const char *mutf8 = env->GetStringUTFChars (name, nullptr);
 	if (mutf8 == nullptr) {
 		log_error (LOG_DEFAULT, "Failed to convert Java class name to UTF8 (out of memory?)");
 		env->DeleteLocalRef (name);
-
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 	char *ret = strdup (mutf8);
 
@@ -2979,17 +2915,14 @@ MonodroidRuntime::get_java_class_name_for_TypeManager (jclass klass) noexcept
 		dot = strchr (dot + 1, '.');
 	}
 
-	LOG_FUNC_LEAVE ();
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 
 JNIEnv*
 get_jnienv ()
 {
 	LOG_FUNC_ENTER ();
-
-	LOG_FUNC_LEAVE ();
-	return OSBridge::ensure_jnienv ();
+	return LOG_FUNC_LEAVE_RETURN (OSBridge::ensure_jnienv ());
 }
 
 JNIEXPORT void

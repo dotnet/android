@@ -74,14 +74,20 @@ private:
 
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	if (assemblies_prefix_override != nullptr)
 		delete[] assemblies_prefix_override;
 	assemblies_prefix_override = prefix != nullptr ? Util::strdup_new (prefix) : nullptr;
+
+	LOG_FUNC_LEAVE ();
 }
 
 force_inline void
 EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[maybe_unused]] const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 #if defined (ANDROID) && defined (HAVE_LZ4) && defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
@@ -145,24 +151,36 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 		assembly_data = data;
 		assembly_data_size = data_size;
 	}
+
+	LOG_FUNC_LEAVE ();
 }
 
 force_inline void
 EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	get_assembly_data (e.data, e.data_size, e.name, assembly_data, assembly_data_size);
+
+	LOG_FUNC_LEAVE ();
 }
 
 force_inline void
 EmbeddedAssemblies::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	get_assembly_data (e.image_data, e.descriptor->data_size, "<assembly_store>", assembly_data, assembly_data_size);
+
+	LOG_FUNC_LEAVE ();
 }
 
 template<bool LogMapping>
 force_inline void
 EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	md_mmap_info map_info = md_mmap_apk_file (file.apk_fd, file.data_offset, file.data_size, file.name);
 	if (MonodroidRuntime::is_startup_in_progress ()) {
 		file.data = static_cast<uint8_t*>(map_info.area);
@@ -213,18 +231,28 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 			                  (int) file.data_offset, file.data, file.data + file.data_size, (int) file.data_size, file.name, file.name, header.data ());
 		}
 	}
+
+	LOG_FUNC_LEAVE ();
 }
 
 force_inline void
 EmbeddedAssemblies::map_assembly (XamarinAndroidBundledAssembly& file) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	map_runtime_file<true> (file);
+
+	LOG_FUNC_LEAVE ();
 }
 
 force_inline void
 EmbeddedAssemblies::map_debug_data (XamarinAndroidBundledAssembly& file) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	map_runtime_file<false> (file);
+
+	LOG_FUNC_LEAVE ();
 }
 
 template<LoaderData TLoaderData>
@@ -239,14 +267,12 @@ EmbeddedAssemblies::load_bundled_assembly (
 	LOG_FUNC_ENTER ();
 
 	if (assembly.name == nullptr || assembly.name[0] == '\0') {
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	if (strcmp (assembly.name, name.get ()) != 0) {
 		if (strcmp (assembly.name, abi_name.get ()) != 0) {
-			LOG_FUNC_LEAVE ();
-			return nullptr;
+			return LOG_FUNC_LEAVE_RETURN (nullptr);
 		} else {
 			log_debug (LOG_ASSEMBLY, "open_from_bundles: found architecture-specific: '%s'", abi_name.get ());
 		}
@@ -262,8 +288,7 @@ EmbeddedAssemblies::load_bundled_assembly (
 	get_assembly_data (assembly, assembly_data, assembly_data_size);
 	MonoImage *image = MonoImageLoader::load (name, loader_data, assembly_data, assembly_data_size);
 	if (image == nullptr) {
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	if (have_and_want_debug_symbols) {
@@ -296,8 +321,8 @@ EmbeddedAssemblies::load_bundled_assembly (
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
 	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
 		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 #if !defined (NET)
@@ -305,8 +330,7 @@ EmbeddedAssemblies::load_bundled_assembly (
 	mono_config_for_assembly (image);
 #endif
 
-	LOG_FUNC_LEAVE ();
-	return a;
+	return LOG_FUNC_LEAVE_RETURN (a);
 }
 
 template<LoaderData TLoaderData>
@@ -341,19 +365,19 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 		for (XamarinAndroidBundledAssembly& assembly : *extra_bundled_assemblies) {
 			a = load_bundled_assembly (assembly, name, abi_name, loader_data, ref_only);
 			if (a != nullptr) {
-				LOG_FUNC_LEAVE ();
-				return a;
+				return LOG_FUNC_LEAVE_RETURN (a);
 			}
 		}
 	}
 
-	LOG_FUNC_LEAVE ();
-	return nullptr;
+	return LOG_FUNC_LEAVE_RETURN (nullptr);
 }
 
 force_inline const AssemblyStoreHashEntry*
 EmbeddedAssemblies::find_assembly_store_entry ([[maybe_unused]] hash_t hash, [[maybe_unused]] const AssemblyStoreHashEntry *entries, [[maybe_unused]] size_t entry_count) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 #if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
 	hash_t entry_hash;
 	const AssemblyStoreHashEntry *ret = nullptr;
@@ -373,12 +397,12 @@ EmbeddedAssemblies::find_assembly_store_entry ([[maybe_unused]] hash_t hash, [[m
 			entries = ret + 1;
 			entry_count -= entry_count / 2 + 1;
 		} else {
-			return ret;
+			return LOG_FUNC_LEAVE_RETURN (ret);
 		}
 	}
 #endif // ndef __MINGW32__ || (def __MINGW32__ && __GNUC__ >= 10)
 
-	return nullptr;
+	return LOG_FUNC_LEAVE_RETURN (nullptr);
 }
 
 template<LoaderData TLoaderData>
@@ -403,8 +427,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	const AssemblyStoreHashEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, application_config.number_of_assemblies_in_apk);
 	if (hash_entry == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	if (hash_entry->mapping_index >= application_config.number_of_assemblies_in_apk) {
@@ -474,8 +497,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	MonoImage *image = MonoImageLoader::load (name, loader_data, name_hash, assembly_data, assembly_data_size);
 	if (image == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Failed to load MonoImage of '%s'", name.get ());
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	if (have_and_want_debug_symbols && assembly_runtime_info.debug_info_data != nullptr) {
@@ -487,16 +509,15 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
 	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
 		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
-		LOG_FUNC_LEAVE ();
-		return nullptr;
+
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 #if !defined (NET)
 	mono_config_for_assembly (image);
 #endif
 
-	LOG_FUNC_LEAVE ();
-	return a;
+	return LOG_FUNC_LEAVE_RETURN (a);
 }
 
 // TODO: need to forbid loading assemblies into non-default ALC if they contain marshal method callbacks.
@@ -529,8 +550,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData load
 		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
 	}
 
-	LOG_FUNC_LEAVE ();
-	return a;
+	return LOG_FUNC_LEAVE_RETURN (a);
 }
 
 #if defined (NET)
@@ -541,8 +561,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchan
 
 	constexpr bool ref_only = false;
 
-	LOG_FUNC_LEAVE ();
-	return open_from_bundles (aname, alc_gchandle, error, ref_only);
+	return LOG_FUNC_LEAVE_RETURN (open_from_bundles (aname, alc_gchandle, error, ref_only));
 }
 #else // def NET
 
@@ -555,8 +574,7 @@ EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_
 	LOG_FUNC_ENTER ();
 	constexpr bool ref_only = true;
 
-	LOG_FUNC_LEAVE ();
-	return open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
+	return LOG_FUNC_LEAVE_RETURN (open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only));
 }
 #endif // ndef NET
 
@@ -567,28 +585,35 @@ EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unu
 
 	constexpr bool ref_only = false;
 
-	LOG_FUNC_LEAVE ();
-	return open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
+	return LOG_FUNC_LEAVE_RETURN (open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only));
 }
 
 void
 EmbeddedAssemblies::install_preload_hooks_for_appdomains () noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	mono_install_assembly_preload_hook (open_from_bundles_full, nullptr);
 #if !defined (NET)
 	mono_install_assembly_refonly_preload_hook (open_from_bundles_refonly, nullptr);
 #endif // ndef NET
+
+	LOG_FUNC_LEAVE ();
 }
 
 #if defined (NET)
 void
 EmbeddedAssemblies::install_preload_hooks_for_alc () noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	mono_install_assembly_preload_hook_v3 (
 		open_from_bundles,
 		nullptr /* user_data */,
 		0 /* append */
 	);
+
+	LOG_FUNC_LEAVE ();
 }
 #endif // def NET
 
@@ -596,12 +621,15 @@ template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*),
 force_inline const Entry*
 EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nmemb, [[maybe_unused]] size_t precalculated_size) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	static_assert (compare != nullptr, "compare is a required template parameter");
 
 	// This comes from the user code, so let's be civil
 	if (key == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Key passed to binary_search must not be nullptr");
-		return nullptr;
+
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	// This is a coding error on our part, crash!
@@ -637,17 +665,19 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 			}
 			nmemb -= nmemb / 2 + 1;
 		} else {
-			return ret;
+			return LOG_FUNC_LEAVE_RETURN (ret);
 		}
 	}
 
-	return nullptr;
+	return LOG_FUNC_LEAVE_RETURN (nullptr);
 }
 
 #if defined (RELEASE) && defined (ANDROID)
 force_inline const TypeMapModuleEntry*
 EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	ssize_t left = -1;
 	auto right = static_cast<ssize_t>(n);
 	ssize_t middle;
@@ -661,7 +691,7 @@ EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, 
 		}
 	}
 
-	return arr[right].type_token_id == key ? &arr[right] : nullptr;
+	return LOG_FUNC_LEAVE_RETURN (arr[right].type_token_id == key ? &arr[right] : nullptr);
 }
 #endif // def RELEASE && def ANDROID
 
@@ -669,15 +699,19 @@ EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, 
 force_inline int
 EmbeddedAssemblies::compare_type_name (const char *type_name, const TypeMapEntry *entry) noexcept
 {
-	if (entry == nullptr)
-		return 1;
+	LOG_FUNC_ENTER ();
+	if (entry == nullptr) {
+		return LOG_FUNC_LEAVE_RETURN (1);
+	}
 
-	return strcmp (type_name, entry->from);
+	return LOG_FUNC_LEAVE_RETURN (strcmp (type_name, entry->from));
 }
 
 force_inline MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const MonoString *java_type) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	c_unique_ptr<char> java_type_name {mono_string_to_utf8 (const_cast<MonoString*>(java_type))};
 	const TypeMapEntry *entry = nullptr;
 
@@ -695,34 +729,36 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
 
 	if (XA_UNLIKELY (entry == nullptr)) {
 		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name.get ());
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	const char *managed_type_name = entry->to;
 	if (managed_type_name == nullptr) {
 		log_debug (LOG_ASSEMBLY, "typemap: Java type '%s' maps either to an open generic type or an interface type.", java_type_name.get ());
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
  	log_debug (LOG_DEFAULT, "typemap: Java type '%s' corresponds to managed type '%s'", java_type_name.get (), managed_type_name);
 
 	MonoType *type = mono_reflection_type_from_name (const_cast<char*>(managed_type_name), nullptr);
 	if (XA_UNLIKELY (type == nullptr)) {
 		log_info (LOG_ASSEMBLY, "typemap: managed type '%s' (mapped from Java type '%s') could not be loaded", managed_type_name, java_type_name.get ());
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	MonoReflectionType *ret = mono_type_get_object (Util::get_current_domain (), type);
 	if (XA_UNLIKELY (ret == nullptr)) {
 		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type '%s'", managed_type_name);
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 #else
 force_inline MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	// In microbrenchmarks, `binary_search_branchless` is faster than `binary_search` but in "real" application tests,
 	// the simple version appears to yield faster startup... Leaving both for now, for further investigation and
 	// potential optimizations
@@ -737,20 +773,20 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 		} else {
 			log_warn (LOG_ASSEMBLY, "typemap: mapping from Java type '%s' to managed type has invalid module index %u", to_utf8 (java_type_name).get (), java_entry->module_index);
 		}
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	const TypeMapModuleEntry *entry = binary_search (java_entry->type_token_id, module->map, module->entry_count);
 	if (entry == nullptr) {
 		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping from Java type '%s' to managed type with token ID %u in module [%s]", to_utf8 (java_type_name).get (), java_entry->type_token_id, MonoGuidString (module->module_uuid).get ());
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	if (module->image == nullptr) {
 		module->image = mono_image_loaded (module->assembly_name);
 		if (module->image == nullptr) {
 			log_error (LOG_ASSEMBLY, "typemap: unable to load assembly '%s' when looking up managed type corresponding to Java type '%s'", module->assembly_name, to_utf8 (java_type_name).get ());
-			return nullptr;
+			return LOG_FUNC_LEAVE_RETURN (nullptr);
 		}
 	}
 
@@ -758,7 +794,7 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 	MonoClass *klass = mono_class_get (module->image, java_entry->type_token_id);
 	if (klass == nullptr) [[unlikely]] {
 		log_error (LOG_ASSEMBLY, "typemap: unable to find managed type with token ID %u in assembly '%s', corresponding to Java type '%s'", java_entry->type_token_id, module->assembly_name, to_utf8 (java_type_name).get ());
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 #if defined (NET)
@@ -772,16 +808,18 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 	MonoReflectionType *ret = mono_type_get_object (domain, mono_class_get_type (klass));
 	if (ret == nullptr) {
 		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type with token ID %u in assembly '%s', corresponding to Java type '%s'", java_entry->type_token_id, module->assembly_name, to_utf8 (java_type_name).get ());
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 #endif
 
 MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	size_t total_time_index;
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		MonodroidRuntime::init_managed_timing ();
@@ -790,7 +828,7 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 
 	if (XA_UNLIKELY (java_type == nullptr)) {
 		log_warn (LOG_ASSEMBLY, "typemap: null 'java_type' passed to 'typemap_java_to_managed'");
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	// We need to generate hash for all the bytes, and since MonoString is Unicode, we double the length to get the
@@ -798,7 +836,7 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 	int name_len = mono_string_length (java_type) << 1;
 	if (XA_UNLIKELY (name_len <= 0)) {
 		log_warn (LOG_ASSEMBLY, "typemap: empty 'java_type' passed to 'typemap_java_to_managed'");
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	const mono_unichar2 *type_chars = mono_string_chars (java_type);
@@ -811,13 +849,15 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
 
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
 force_inline const TypeMapEntry*
 EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	const TypeMapEntry *entry = nullptr;
 
 	if (application_config.instant_run_enabled) {
@@ -832,12 +872,14 @@ EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name) noex
 		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
 	}
 
-	return entry;
+	return LOG_FUNC_LEAVE_RETURN (entry);
 }
 
 force_inline const char*
 EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, [[maybe_unused]] const uint8_t *mvid) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	c_unique_ptr<char> type_name {mono_type_get_name_full (type, MONO_TYPE_NAME_FORMAT_FULL_NAME)};
 	MonoImage *image = mono_class_get_image (klass);
 	const char *image_name = mono_image_get_name (image);
@@ -853,21 +895,26 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 	const TypeMapEntry *entry = typemap_managed_to_java (full_name.get ());
 	if (XA_UNLIKELY (entry == nullptr)) {
 		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a Java type from managed type '%s'", full_name.get ());
+
+		LOG_FUNC_LEAVE ();
 		return nullptr;
 	}
 
-	return entry->to;
+	return LOG_FUNC_LEAVE_RETURN (entry->to);
 }
 #else
 force_inline int
 EmbeddedAssemblies::compare_mvid (const uint8_t *mvid, const TypeMapModule *module) noexcept
 {
-	return memcmp (mvid, module->module_uuid, sizeof(module->module_uuid));
+	LOG_FUNC_ENTER ();
+	return LOG_FUNC_LEAVE_RETURN (memcmp (mvid, module->module_uuid, sizeof(module->module_uuid)));
 }
 
 force_inline const char*
 EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	const TypeMapModule *match = mvid != nullptr ? binary_search<uint8_t, TypeMapModule, compare_mvid> (mvid, map_modules, map_module_count) : nullptr;
 	if (match == nullptr) {
 		if (mvid == nullptr) {
@@ -875,7 +922,7 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		} else {
 			log_info (LOG_ASSEMBLY, "typemap: module matching MVID [%s] not found.", MonoGuidString (mvid).get ());
 		}
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	uint32_t token = mono_class_get_type_token (klass);
@@ -885,7 +932,7 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 	if (entry == nullptr) {
 		if (match->map == nullptr) {
 			log_warn (LOG_ASSEMBLY, "typemap: module with mvid [%s] has no associated type map.", MonoGuidString (mvid).get ());
-			return nullptr;
+			return LOG_FUNC_LEAVE_RETURN (nullptr);
 		}
 
 		if (match->duplicate_count > 0 && match->duplicate_map != nullptr) {
@@ -895,19 +942,19 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 
 		if (entry == nullptr) {
 			log_info (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) not found.", token, token, MonoGuidString (mvid).get (), match->assembly_name);
-			return nullptr;
+			return LOG_FUNC_LEAVE_RETURN (nullptr);
 		}
 	}
 
 	if (XA_UNLIKELY (entry->java_map_index >= java_type_count)) {
 		log_warn (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) has invalid Java type index %u", token, token, MonoGuidString (mvid).get (), match->assembly_name, entry->java_map_index);
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	TypeMapJava const& java_entry = map_java[entry->java_map_index];
 	if (XA_UNLIKELY (java_entry.java_name_index >= java_type_count)) {
 		log_warn (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) points to invalid Java type at index %u (invalid type name index %u)", token, token, MonoGuidString (mvid).get (), match->assembly_name, entry->java_map_index, java_entry.java_name_index);
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 	const char *ret = java_type_names[java_entry.java_name_index];
 
@@ -925,13 +972,15 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		ret
 	);
 
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 #endif
 
 const char*
 EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type, const uint8_t *mvid) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	size_t total_time_index;
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		MonodroidRuntime::init_managed_timing ();
@@ -941,7 +990,7 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 	MonoType *type = mono_reflection_type_get_type (reflection_type);
 	if (type == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Failed to map reflection type to MonoType");
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	const char *ret = typemap_managed_to_java (type, mono_class_from_mono_type (type), mvid);
@@ -952,12 +1001,14 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 		DEAR_GCC_THIS_VARIABLE_IS_INITIALIZED_END
 	}
 
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 
 EmbeddedAssemblies::md_mmap_info
 EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename)
 {
+	LOG_FUNC_ENTER ();
+
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;
 
@@ -981,12 +1032,14 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 	          mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, mmap_info.size,
 	          file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, file_info.size, fd, filename);
 
-	return file_info;
+	return LOG_FUNC_LEAVE_RETURN (file_info);
 }
 
 void
 EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	constexpr int OPEN_FLAGS =
 		          O_RDONLY
 #if !defined (WINDOWS)
@@ -1002,11 +1055,15 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 	log_info (LOG_ASSEMBLY, "APK %s FD: %d", apk, fd);
 
 	zip_load_entries (fd, apk, should_register);
+
+	LOG_FUNC_LEAVE ();
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
 ssize_t EmbeddedAssemblies::do_read (int fd, void *buf, size_t count) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	ssize_t ret;
 	do {
 		ret = ::read (
@@ -1020,13 +1077,15 @@ ssize_t EmbeddedAssemblies::do_read (int fd, void *buf, size_t count) noexcept
 		);
 	} while (ret < 0 && errno == EINTR);
 
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 
 template<typename H>
 bool
 EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char *file_type, const char *dir_path, const char *file_path, uint32_t expected_magic, H &header, size_t &file_size, int &fd) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	struct stat sbuf;
 	int res;
 
@@ -1038,13 +1097,13 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 #endif
 	if (res < 0) {
 		log_error (LOG_ASSEMBLY, "typemap: failed to stat %s file '%s/%s': %s", file_type, dir_path, file_path, strerror (errno));
-		return false;
+		return LOG_FUNC_LEAVE_RETURN (false);
 	}
 
 	file_size = static_cast<size_t>(sbuf.st_size);
 	if (file_size < sizeof (header)) {
 		log_error (LOG_ASSEMBLY, "typemap: %s file '%s/%s' is too small (must be at least %u bytes)", file_type, dir_path, file_path, sizeof (header));
-		return false;
+		return LOG_FUNC_LEAVE_RETURN (false);
 	}
 
 #if __ANDROID_API__ < 21
@@ -1054,7 +1113,7 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 #endif
 	if (fd < 0) {
 		log_error (LOG_ASSEMBLY, "typemap: failed to open %s file %s/%s for reading: %s", file_type, dir_path, file_path, strerror (errno));
-		return false;
+		return LOG_FUNC_LEAVE_RETURN (false);
 	}
 
 	ssize_t nread = do_read (fd, &header, sizeof (header));
@@ -1065,37 +1124,39 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 			log_error (LOG_ASSEMBLY, "typemap: end of file while reading %s file header from '%s/%s'", file_type, dir_path, file_path);
 		}
 
-		return false;
+		return LOG_FUNC_LEAVE_RETURN (false);
 	}
 
 	if (header.magic != expected_magic) {
 		log_error (LOG_ASSEMBLY, "typemap: invalid magic value in the %s file header from '%s/%s': expected 0x%X, got 0x%X", file_type, dir_path, file_path, expected_magic, header.magic);
-		return false;
+		return LOG_FUNC_LEAVE_RETURN (false);
 	}
 
 	if (header.version != MODULE_FORMAT_VERSION) {
 		log_error (LOG_ASSEMBLY, "typemap: incompatible %s format version. This build supports only version %u, file '%s/%s' uses version %u", file_type, MODULE_FORMAT_VERSION, dir_path, file_path, header.version);
-		return false;
+		return LOG_FUNC_LEAVE_RETURN (false);
 	}
 
-	return true;
+	return LOG_FUNC_LEAVE_RETURN (true);
 }
 
 std::unique_ptr<uint8_t[]>
 EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_size, int index_fd) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	size_t entry_size = header.module_file_name_width;
 	size_t data_size = entry_size * type_map_count;
 	if (sizeof(header) + data_size > file_size) {
 		log_error (LOG_ASSEMBLY, "typemap: index file is too small, expected %u, found %u bytes", data_size + sizeof(header), file_size);
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	auto data = std::make_unique<uint8_t[]> (data_size);
 	ssize_t nread = do_read (index_fd, data.get (), data_size);
 	if (nread != static_cast<ssize_t>(data_size)) {
 		log_error (LOG_ASSEMBLY, "typemap: failed to read %u bytes from index file. %s", data_size, strerror (errno));
-		return nullptr;
+		return LOG_FUNC_LEAVE_RETURN (nullptr);
 	}
 
 	uint8_t *p = data.get ();
@@ -1103,13 +1164,13 @@ EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_
 		type_maps[i].assembly_name = reinterpret_cast<char*>(p);
 		p += entry_size;
 	}
-
-	return data;
+	return std::move (LOG_FUNC_LEAVE_RETURN (data));
 }
 
 std::unique_ptr<uint8_t[]>
 EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const char *index_path) noexcept
 {
+	LOG_FUNC_ENTER ();
 	log_debug (LOG_ASSEMBLY, "typemap: loading TypeMap index file '%s/%s'", dir_path, index_path);
 
 	TypeMapIndexHeader header;
@@ -1126,19 +1187,21 @@ EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const 
 	if (fd >= 0)
 		close (fd);
 
-	return data;
+	return std::move (LOG_FUNC_LEAVE_RETURN (data));
 }
 
 bool
 EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, header.assembly_name_length, 1);
 	module.assembly_name = new char[alloc_size];
 
 	ssize_t nread = do_read (file_fd, module.assembly_name, header.assembly_name_length);
 	if (nread != static_cast<ssize_t>(header.assembly_name_length)) {
 		log_error (LOG_ASSEMBLY, "tyemap: failed to read map assembly name from '%s/%s': %s", dir_path, file_path, strerror (errno));
-		return false;
+		return LOG_FUNC_LEAVE_RETURN (false);
 	}
 
 	module.assembly_name [header.assembly_name_length] = 0;
@@ -1163,7 +1226,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 	nread = do_read (file_fd, module.data, data_size);
 	if (nread != static_cast<ssize_t>(data_size)) {
 		log_error (LOG_ASSEMBLY, "tyemap: failed to read map data from '%s/%s': %s", dir_path, file_path, strerror (errno));
-		return false;
+		return LOG_FUNC_LEAVE_RETURN (false);
 	}
 
 	module.java_to_managed = new TypeMapEntry [module.entry_count];
@@ -1200,12 +1263,13 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 		managed_pos += managed_entry_size;
 	}
 
-	return true;
+	return LOG_FUNC_LEAVE_RETURN (true);
 }
 
 bool
 EmbeddedAssemblies::typemap_load_file (int dir_fd, const char *dir_path, const char *file_path, TypeMap &module) noexcept
 {
+	LOG_FUNC_ENTER ();
 	log_debug (LOG_ASSEMBLY, "typemap: loading TypeMap file '%s/%s'", dir_path, file_path);
 
 	bool ret = true;
@@ -1234,14 +1298,18 @@ EmbeddedAssemblies::typemap_load_file (int dir_fd, const char *dir_path, const c
 		module.managed_to_java = nullptr;
 	}
 
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 
 void
 EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	if (!application_config.instant_run_enabled) {
 		log_info (LOG_ASSEMBLY, "typemap: instant run disabled, not loading type maps from storage");
+
+		LOG_FUNC_LEAVE ();
 		return;
 	}
 
@@ -1249,6 +1317,8 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path) noexcept
 	monodroid_dir_t *dir;
 	if ((dir = Util::monodroid_opendir (dir_path.get ())) == nullptr) {
 		log_warn (LOG_ASSEMBLY, "typemap: could not open directory: `%s`", dir_path.get ());
+
+		LOG_FUNC_LEAVE ();
 		return;
 	}
 
@@ -1277,17 +1347,21 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path) noexcept
 	}
 
 	Util::monodroid_closedir (dir);
+
+	LOG_FUNC_LEAVE ();
 }
 #endif
 
 size_t
 EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register) noexcept
 {
+	LOG_FUNC_ENTER ();
+
 	size_t prev  = number_of_found_assemblies;
 
 	gather_bundled_assemblies_from_apk (apk_file, should_register);
 
 	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, number_of_found_assemblies - prev);
 
-	return number_of_found_assemblies;
+	return LOG_FUNC_LEAVE_RETURN (number_of_found_assemblies);
 }

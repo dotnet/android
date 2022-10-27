@@ -63,8 +63,7 @@ MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (JNIEnv *en
 	current_context_id = domain_id;
 	log_info (LOG_DEFAULT, "Created new context with id %d\n", domain_id);
 
-	LOG_FUNC_LEAVE ();
-	return domain_id;
+	return LOG_FUNC_LEAVE_RETURN (domain_id);
 }
 
 inline void
@@ -151,8 +150,7 @@ JNICALL Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass 
 		force_preload_assemblies
 	);
 
-	LOG_FUNC_LEAVE ();
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 
 /* !DO NOT REMOVE! Used by older versions of the Android Designer (pre-16.4) */
@@ -172,8 +170,7 @@ JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, j
 		false    // force_preload_assemblies
 	);
 
-	LOG_FUNC_LEAVE ();
-	return ret;
+	return LOG_FUNC_LEAVE_RETURN (ret);
 }
 
 JNIEXPORT void

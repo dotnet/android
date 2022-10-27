@@ -134,18 +134,27 @@ namespace xamarin::android::internal {
 		template<bool (*should_register_fn)(const char*)>
 		static size_t register_from (const char *apk_file) noexcept
 		{
+			LOG_FUNC_ENTER ();
+
 			static_assert (should_register_fn != nullptr, "should_register_fn is a required template parameter");
-			return register_from (apk_file, should_register_fn);
+
+			return LOG_FUNC_LEAVE_RETURN (register_from (apk_file, should_register_fn));
 		}
 
 		static bool get_register_debug_symbols () noexcept
 		{
-			return register_debug_symbols;
+			LOG_FUNC_ENTER ();
+
+			return LOG_FUNC_LEAVE_RETURN (register_debug_symbols);
 		}
 
 		static void set_register_debug_symbols (bool value) noexcept
 		{
+			LOG_FUNC_ENTER ();
+
 			register_debug_symbols = value;
+
+			LOG_FUNC_LEAVE ();
 		}
 
 		static void set_assemblies_prefix (const char *prefix) noexcept;
