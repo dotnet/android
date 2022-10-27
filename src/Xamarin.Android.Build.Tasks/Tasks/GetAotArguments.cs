@@ -300,7 +300,7 @@ namespace Xamarin.Android.Tasks
 					// the `binutils` directory is one level down (${OS}/binutils) than the Windows one
 					relPath = Path.Combine (relPath, "..");
 				}
-				string libstubsPath = Path.GetFullPath (Path.Combine (AndroidBinUtilsDirectory, relPath, "libstubs", ArchToRid (arch));
+				string libstubsPath = Path.GetFullPath (Path.Combine (AndroidBinUtilsDirectory, relPath, "libstubs", ArchToRid (arch)));
 				libs.Add (Path.Combine (libstubsPath, "libc.so"));
 				libs.Add (Path.Combine (libstubsPath, "libm.so"));
 			}
