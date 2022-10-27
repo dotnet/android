@@ -18,9 +18,7 @@ variables:
 - name: NUnit.NumberOfTestWorkers
   value: 4
 - name: DotNetSdkVersion
-  value: 7.0.1xx
-- name: DotNetSdkQuality
-  value: preview
+  value: 6.0.300
 - name: GitHub.Token
   value: $(github--pat--vs-mobiletools-engineering-service2)
 - name: HostedMacImage
@@ -34,9 +32,9 @@ variables:
 - name: TeamName
   value: XamarinAndroid
 - name: DotNetTargetFramework
-  value: net8.0
-- name: DotNetStableTargetFramework
   value: net7.0
+- name: DotNetStableTargetFramework
+  value: net6.0
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false

@@ -1,20 +1,11 @@
 <Project>
   <ImportGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' ">
-    <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk.net8"
-        Condition=" $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) " />
     <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk.net7"
         Condition=" $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) " />
     <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk.net6"
         Condition=" $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0')) " />
   </ImportGroup>
 
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) ">
-    <KnownFrameworkReference
-        Update="Microsoft.Android"
-        LatestRuntimeFrameworkVersion="@NET7_VERSION@"
-        TargetingPackVersion="@NET7_VERSION@"
-    />
-  </ItemGroup>
   <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0')) ">
     <KnownFrameworkReference
         Update="Microsoft.Android"

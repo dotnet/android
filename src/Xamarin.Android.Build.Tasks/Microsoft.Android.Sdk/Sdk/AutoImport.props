@@ -16,13 +16,13 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
 -->
 <Project>
 
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) and ('$(ImplicitUsings)' == 'true' or '$(ImplicitUsings)' == 'enable') ">
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) and ('$(ImplicitUsings)' == 'true' or '$(ImplicitUsings)' == 'enable') ">
     <Using Include="Android.App" Platform="Android" />
     <Using Include="Android.Widget" Platform="Android" />
     <Using Include="Android.OS.Bundle" Alias="Bundle" Platform="Android" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) ">
+  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) ">
     <!-- Default Resource file inclusion -->
     <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.xml" />

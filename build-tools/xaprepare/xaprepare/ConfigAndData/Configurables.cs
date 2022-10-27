@@ -329,7 +329,7 @@ namespace Xamarin.Android.Prepare
 
 			public static string MicrosoftNETWorkloadMonoPackageDir => Path.Combine (
 				XAPackagesDir,
-				$"microsoft.net.workload.mono.toolchain{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand)}",
+				$"microsoft.net.workload.mono.toolchain.{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand)}",
 				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion)
 			);
 
@@ -337,7 +337,7 @@ namespace Xamarin.Android.Prepare
 
 			public static string MicrosoftNETWorkloadEmscriptenPackageDir => Path.Combine (
 				XAPackagesDir,
-				$"microsoft.net.workload.emscripten{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand)}",
+				$"microsoft.net.workload.emscripten.{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand)}",
 				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenPackageVersion)
 			);
 

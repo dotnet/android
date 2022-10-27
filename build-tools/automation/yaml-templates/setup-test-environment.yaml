@@ -36,15 +36,9 @@ steps:
   displayName: set JI_JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-# Install .NET 6 for legacy tests
 - template: use-dot-net.yaml
   parameters:
-    version: 6.0
-    quality: GA
     remove_dotnet: ${{ parameters.remove_dotnet }}
-
-# Install latest .NET
-- template: use-dot-net.yaml
 
 - task: DotNetCoreCLI@2
   displayName: shut down existing build daemons

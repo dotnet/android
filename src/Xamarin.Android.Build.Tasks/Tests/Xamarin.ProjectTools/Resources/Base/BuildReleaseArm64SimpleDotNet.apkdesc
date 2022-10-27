@@ -5,64 +5,82 @@
       "Size": 3032
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 58990
+      "Size": 59187
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 87490
+      "Size": 88390
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5860
+      "Size": 5776
     },
     "assemblies/rc.bin": {
       "Size": 1182
     },
     "assemblies/System.Console.dll": {
-      "Size": 6627
+      "Size": 6408
+    },
+    "assemblies/System.Diagnostics.Tracing.dll": {
+      "Size": 2089
     },
     "assemblies/System.Linq.dll": {
-      "Size": 9252
+      "Size": 9096
+    },
+    "assemblies/System.Memory.dll": {
+      "Size": 3388
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 470830
+      "Size": 533617
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2626
+      "Size": 3655
     },
     "assemblies/System.Runtime.InteropServices.dll": {
-      "Size": 2267
+      "Size": 3770
+    },
+    "assemblies/System.Threading.dll": {
+      "Size": 5486
+    },
+    "assemblies/System.Threading.Thread.dll": {
+      "Size": 1978
+    },
+    "assemblies/System.Threading.ThreadPool.dll": {
+      "Size": 2008
+    },
+    "assemblies/System.Transactions.Local.dll": {
+      "Size": 62998
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3629
+      "Size": 3559
     },
     "classes.dex": {
-      "Size": 18968
+      "Size": 18612
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 434632
+      "Size": 433600
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3076080
+      "Size": 3073392
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723840
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 94136
+      "Size": 93032
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 149552
+      "Size": 148696
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 16128
+      "Size": 16896
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 2794
+      "Size": 3446
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2667
+      "Size": 3319
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 4762
@@ -89,5 +107,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2590859
+  "PackageSize": 2730619
 }

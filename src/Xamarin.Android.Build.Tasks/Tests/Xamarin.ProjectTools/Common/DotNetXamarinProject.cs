@@ -26,7 +26,7 @@ namespace Xamarin.ProjectTools
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
 
 			if (Builder.UseDotNet) {
-				SetProperty ("TargetFramework", "net8.0-android");
+				SetProperty ("TargetFramework", "net7.0-android");
 				SetProperty ("EnableDefaultItems", "false");
 				SetProperty ("AppendTargetFrameworkToOutputPath", "false");
 			} else {
