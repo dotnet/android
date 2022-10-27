@@ -2524,6 +2524,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #else
 	mono_trace_set_level_string ("debug");
 	mono_trace_set_mask_string ("all");
+	std::array<char*, 1> trace_options { "--trace" };
+	mono_jit_parse_options (trace_options.size (), trace_options.data ());
 #endif
 
 	if (runtimeNativeLibDir != nullptr) {
