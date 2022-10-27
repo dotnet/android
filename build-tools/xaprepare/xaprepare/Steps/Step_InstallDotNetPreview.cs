@@ -49,15 +49,18 @@ namespace Xamarin.Android.Prepare
 			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests", context.Properties.GetRequiredValue (KnownProperties.DotNetSdkManifestsFolder));
 
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.* listed in package-download.proj
-			var dotnets = new [] { "net6", "net7" };
+			// NOTE: the packages that actually *exist* in .NET 8 are mismatched right now...
+			var dotnets = new [] { ".net6", ".net7", "" };
 			foreach (var dotnet in dotnets) {
-				var destination = Path.Combine (sdk_manifests, $"microsoft.net.workload.mono.toolchain.{dotnet}");
+				var destination = Path.Combine (sdk_manifests, $"microsoft.net.workload.mono.toolchain{dotnet}");
 				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "WorkloadManifest.*")) {
 					Utilities.CopyFileToDir (file, destination);
 				}
-				destination = Path.Combine (sdk_manifests, $"microsoft.net.workload.emscripten.{dotnet}");
-				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, dotnet), "WorkloadManifest.*")) {
-					Utilities.CopyFileToDir (file, destination);
+				if (dotnet != "") {
+					destination = Path.Combine (sdk_manifests, $"microsoft.net.workload.emscripten{dotnet}");
+					foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, dotnet), "WorkloadManifest.*")) {
+						Utilities.CopyFileToDir (file, destination);
+					}
 				}
 			}
 
