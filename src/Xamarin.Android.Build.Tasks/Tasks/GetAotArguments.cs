@@ -292,7 +292,7 @@ namespace Xamarin.Android.Tasks
 				}
 				libs.Add (Path.Combine (androidLibPath, "libc.so"));
 				libs.Add (Path.Combine (androidLibPath, "libm.so"));
-			} else if (!UseAndroidNdk) {
+			} else if (!UseAndroidNdk && EnableLLVM) {
 				// We need to link against libc and libm, but since NDK is not in use, the linker won't be able to find the actual Android libraries.
 				// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
 				string relPath = Path.Combine ("..", "..");

@@ -91,6 +91,7 @@ namespace Xamarin.Android.Build.Tests
 				EmbedAssembliesIntoApk = true,
 				AotAssemblies = true,
 			};
+			proj.SetProperty ("EnableLLVM", "True");
 
 			var abis = new [] { "arm64-v8a", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
