@@ -1843,12 +1843,19 @@ a nice and smart library installs a ton of signal handlers and don't chain at al
 
 This is a hack to set llvm::DisablePrettyStackTrace to true and avoid this source of signal handlers.
 
+As of Android 5.0 (API 21) the symbol no longer exists in libLLVM.so and stack pretty printing is an opt-in
+instead of an opt-out feature. LLVM change which removed the symbol is at
+
+https://github.com/llvm/llvm-project/commit/c10ca903243f97cbc8014f20c64f1318a57a2936
+
 */
 void
 MonodroidRuntime::disable_external_signal_handlers (void)
 {
-	if (!androidSystem.is_mono_llvm_enabled ())
+#if !defined (NET)
+	if (android_api_level >= 21) {
 		return;
+	}
 
 	void *llvm  = androidSystem.load_dso ("libLLVM.so", JAVA_INTEROP_LIB_LOAD_GLOBALLY, TRUE);
 	if (llvm) {
@@ -1859,6 +1866,7 @@ MonodroidRuntime::disable_external_signal_handlers (void)
 		}
 		//MUST NOT dlclose to ensure we don't lose the hack
 	}
+#endif // ndef NET
 }
 
 #if defined (NET)
