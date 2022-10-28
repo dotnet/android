@@ -46,14 +46,16 @@ extern "C" MonoGCBridgeObjectKind
 gc_bridge_class_kind_cb (MonoClass* klass)
 {
 	LOG_FUNC_ENTER ();
-	return LOG_FUNC_LEAVE_RETURN (OSBridge::gc_bridge_class_kind (klass));
+	LOG_FUNC_LEAVE ();
+	return OSBridge::gc_bridge_class_kind (klass);
 }
 
 extern "C" mono_bool
 gc_is_bridge_object_cb (MonoObject* object)
 {
 	LOG_FUNC_ENTER ();
-	return LOG_FUNC_LEAVE_RETURN (OSBridge::gc_is_bridge_object (object));
+	LOG_FUNC_LEAVE ();
+	return OSBridge::gc_is_bridge_object (object);
 }
 
 extern "C" void
@@ -78,13 +80,17 @@ static tid_type gettid ()
 	LOG_FUNC_ENTER ();
 
 #ifdef WINDOWS
-	return LOG_FUNC_LEAVE_RETURN (GetCurrentThreadId ());
+	LOG_FUNC_LEAVE ();
+	return GetCurrentThreadId ();
 #elif defined (__linux__) || defined (__linux)
-	return LOG_FUNC_LEAVE_RETURN (static_cast<tid_type>(syscall (SYS_gettid)));
+	LOG_FUNC_LEAVE ();
+	return static_cast<tid_type>(syscall (SYS_gettid));
 #else
 	uint64_t tid;
 	pthread_threadid_np (nullptr, &tid);
-	return LOG_FUNC_LEAVE_RETURN (static_cast<tid_type>(tid));
+
+	LOG_FUNC_LEAVE ();
+	return static_cast<tid_type>(tid);
 #endif
 }
 #endif // ANDROID
@@ -121,14 +127,16 @@ OSBridge::get_gc_bridge_index (MonoClass *klass) noexcept
 			continue;
 		}
 
-		if (klass == k || mono_class_is_subclass_of (klass, k, 0))
-			return LOG_FUNC_LEAVE_RETURN (static_cast<int>(i));
+		if (klass == k || mono_class_is_subclass_of (klass, k, 0)) {
+			LOG_FUNC_LEAVE ();
+			return static_cast<int>(i);
+		}
 	}
 
-	return LOG_FUNC_LEAVE_RETURN (f == NUM_GC_BRIDGE_TYPES
+	LOG_FUNC_LEAVE ();
+	return f == NUM_GC_BRIDGE_TYPES
 		? static_cast<int>(-NUM_GC_BRIDGE_TYPES)
-	    : -1
-	);
+	    : -1;
 }
 
 OSBridge::MonoJavaGCBridgeInfo *
@@ -137,15 +145,18 @@ OSBridge::get_gc_bridge_info_for_class (MonoClass *klass) noexcept
 	LOG_FUNC_ENTER ();
 
 	if (klass == nullptr) {
-		return LOG_FUNC_LEAVE_RETURN (nullptr);
+		LOG_FUNC_LEAVE ();
+		return nullptr;
 	}
 
 	int i   = get_gc_bridge_index (klass);
 	if (i < 0) {
-		return LOG_FUNC_LEAVE_RETURN (nullptr);
+		LOG_FUNC_LEAVE ();
+		return nullptr;
 	}
 
-	return LOG_FUNC_LEAVE_RETURN (&mono_java_gc_bridge_info [static_cast<size_t>(i)]);
+	LOG_FUNC_LEAVE ();
+	return &mono_java_gc_bridge_info [static_cast<size_t>(i)];
 }
 
 OSBridge::MonoJavaGCBridgeInfo *
@@ -153,9 +164,11 @@ OSBridge::get_gc_bridge_info_for_object (MonoObject *object) noexcept
 {
 	LOG_FUNC_ENTER ();
 
-	if (object == nullptr)
-		return LOG_FUNC_LEAVE_RETURN (nullptr);
-	return LOG_FUNC_LEAVE_RETURN (get_gc_bridge_info_for_class (mono_object_get_class (object)));
+	if (object == nullptr) {
+		LOG_FUNC_LEAVE ();
+		return nullptr;
+	}
+	return get_gc_bridge_info_for_class (mono_object_get_class (object));
 }
 
 jobject
@@ -164,11 +177,15 @@ OSBridge::lref_to_gref (JNIEnv *env, jobject lref) noexcept
 	LOG_FUNC_ENTER ();
 
 	jobject g;
-	if (lref == nullptr)
-		return LOG_FUNC_LEAVE_RETURN (nullptr);
+	if (lref == nullptr) {
+		LOG_FUNC_LEAVE ();
+		return nullptr;
+	}
 	g = env->NewGlobalRef (lref);
 	env->DeleteLocalRef (lref);
-	return LOG_FUNC_LEAVE_RETURN (g);
+
+	LOG_FUNC_LEAVE ();
+	return g;
 }
 
 char
@@ -177,15 +194,17 @@ OSBridge::get_object_ref_type (JNIEnv *env, void *handle) noexcept
 	LOG_FUNC_ENTER ();
 
 	jobjectRefType value;
-	if (handle == nullptr)
-		return LOG_FUNC_LEAVE_RETURN ('I');
+	if (handle == nullptr) {
+		LOG_FUNC_LEAVE ();
+		return 'I';
+	}
 	value = env->GetObjectRefType (reinterpret_cast<jobject> (handle));
 	switch (value) {
-		case JNIInvalidRefType:     return LOG_FUNC_LEAVE_RETURN ('I');
-		case JNILocalRefType:       return LOG_FUNC_LEAVE_RETURN ('L');
-		case JNIGlobalRefType:      return LOG_FUNC_LEAVE_RETURN ('G');
-		case JNIWeakGlobalRefType:  return LOG_FUNC_LEAVE_RETURN ('W');
-		default:                    return LOG_FUNC_LEAVE_RETURN ('*');
+		case JNIInvalidRefType:     return 'I';
+		case JNILocalRefType:       return 'L';
+		case JNIGlobalRefType:      return 'G';
+		case JNIWeakGlobalRefType:  return 'W';
+		default:                    return '*';
 	}
 }
 
@@ -193,9 +212,12 @@ char*
 OSBridge::_get_stack_trace_line_end (char *m) noexcept
 {
 	LOG_FUNC_ENTER ();
+
 	while (*m && *m != '\n')
 		m++;
-	return LOG_FUNC_LEAVE_RETURN (m);
+
+	LOG_FUNC_LEAVE ();
+	return m;
 }
 
 void
@@ -252,8 +274,10 @@ OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newH
 	LOG_FUNC_ENTER ();
 
 	int c = _monodroid_gref_inc ();
-	if ((log_categories & LOG_GREF) == 0)
-		return LOG_FUNC_LEAVE_RETURN (c);
+	if ((log_categories & LOG_GREF) == 0) {
+		LOG_FUNC_LEAVE ();
+		return c;
+	}
 	log_info (LOG_GREF, "+g+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)",
 	          c,
 	          gc_weak_gref_count,
@@ -270,8 +294,10 @@ OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newH
 			log_info (LOG_GREF, "%s", from);
 		}
 	}
-	if (!gref_log)
-		return LOG_FUNC_LEAVE_RETURN (c);
+	if (!gref_log) {
+		LOG_FUNC_LEAVE ();
+		return c;
+	}
 	fprintf (gref_log, "+g+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)\n",
 	         c,
 	         gc_weak_gref_count,
@@ -288,7 +314,8 @@ OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newH
 
 	fflush (gref_log);
 
-	return LOG_FUNC_LEAVE_RETURN (c);
+	LOG_FUNC_LEAVE ();
+	return c;
 }
 
 void
@@ -523,8 +550,10 @@ OSBridge::take_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj) noexcept
 	int type = JNIGlobalRefType;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == nullptr)
-		return LOG_FUNC_LEAVE_RETURN (0);
+	if (bridge_info == nullptr) {
+		LOG_FUNC_LEAVE ();
+		return 0;
+	}
 
 	mono_field_get_value (obj, bridge_info->weak_handle, &weak);
 	handle = env->CallObjectMethod (weak, weakrefGet);
@@ -546,7 +575,9 @@ OSBridge::take_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj) noexcept
 
 	mono_field_set_value (obj, bridge_info->handle, &handle);
 	mono_field_set_value (obj, bridge_info->handle_type, &type);
-	return LOG_FUNC_LEAVE_RETURN (handle != nullptr);
+
+	LOG_FUNC_LEAVE ();
+	return handle != nullptr;
 }
 
 mono_bool
@@ -558,8 +589,10 @@ OSBridge::take_weak_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj) noexcep
 	jobject handle, weakglobal;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == nullptr)
-		return LOG_FUNC_LEAVE_RETURN (0);
+	if (bridge_info == nullptr) {
+		LOG_FUNC_LEAVE ();
+		return 0;
+	}
 
 	mono_field_get_value (obj, bridge_info->handle, &handle);
 	weaklocal = env->NewObject (weakrefClass, weakrefCtor, handle);
@@ -576,7 +609,9 @@ OSBridge::take_weak_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj) noexcep
 
 	env->DeleteGlobalRef (handle);
 	mono_field_set_value (obj, bridge_info->weak_handle, &weakglobal);
-	return LOG_FUNC_LEAVE_RETURN (1);
+
+	LOG_FUNC_LEAVE ();
+	return 1;
 }
 
 mono_bool
@@ -588,8 +623,10 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj) noexcept
 	int type = JNIGlobalRefType;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == nullptr)
-		return LOG_FUNC_LEAVE_RETURN (0);
+	if (bridge_info == nullptr) {
+		LOG_FUNC_LEAVE ();
+		return 0;
+	}
 
 	mono_field_get_value (obj, bridge_info->handle, &weak);
 	handle = env->NewGlobalRef (weak);
@@ -613,7 +650,9 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj) noexcept
 	}
 	mono_field_set_value (obj, bridge_info->handle, &handle);
 	mono_field_set_value (obj, bridge_info->handle_type, &type);
-	return LOG_FUNC_LEAVE_RETURN (handle != nullptr);
+
+	LOG_FUNC_LEAVE ();
+	return handle != nullptr;
 }
 
 mono_bool
@@ -625,8 +664,10 @@ OSBridge::take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj) noexcept
 	int type = JNIWeakGlobalRefType;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == nullptr)
-		return LOG_FUNC_LEAVE_RETURN (0);
+	if (bridge_info == nullptr) {
+		LOG_FUNC_LEAVE ();
+		return 0;
+	}
 
 	mono_field_get_value (obj, bridge_info->handle, &handle);
 	if (gref_log) {
@@ -644,7 +685,9 @@ OSBridge::take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj) noexcept
 	env->DeleteGlobalRef (handle);
 	mono_field_set_value (obj, bridge_info->handle, &weak);
 	mono_field_set_value (obj, bridge_info->handle_type, &type);
-	return LOG_FUNC_LEAVE_RETURN (1);
+
+	LOG_FUNC_LEAVE ();
+	return 1;
 }
 
 MonoGCBridgeObjectKind
@@ -652,22 +695,28 @@ OSBridge::gc_bridge_class_kind (MonoClass *klass) noexcept
 {
 	LOG_FUNC_ENTER ();
 
-	if (gc_disabled)
-		return LOG_FUNC_LEAVE_RETURN (MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS);
+	if (gc_disabled) {
+		LOG_FUNC_LEAVE ();
+		return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS;
+	}
 
 	int i = get_gc_bridge_index (klass);
 	if (i == static_cast<int> (-NUM_GC_BRIDGE_TYPES)) {
 		log_info (LOG_GC, "asked if a class %s.%s is a bridge before we inited java.lang.Object",
 			mono_class_get_namespace (klass),
 			mono_class_get_name (klass));
-		return LOG_FUNC_LEAVE_RETURN (MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS);
+
+		LOG_FUNC_LEAVE ();
+		return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS;
 	}
 
 	if (i >= 0) {
-		return LOG_FUNC_LEAVE_RETURN (MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_BRIDGE_CLASS);
+		LOG_FUNC_LEAVE ();
+		return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_BRIDGE_CLASS;
 	}
 
-	return LOG_FUNC_LEAVE_RETURN (MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS);
+	LOG_FUNC_LEAVE ();
+	return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS;
 }
 
 mono_bool
@@ -678,8 +727,10 @@ OSBridge::gc_is_bridge_object (MonoObject *object) noexcept
 	void *handle;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (object);
-	if (bridge_info == nullptr)
-		return LOG_FUNC_LEAVE_RETURN (0);
+	if (bridge_info == nullptr) {
+		LOG_FUNC_LEAVE ();
+		return 0;
+	}
 
 	mono_field_get_value (object, bridge_info->handle, &handle);
 	if (handle == nullptr) {
@@ -689,10 +740,12 @@ OSBridge::gc_is_bridge_object (MonoObject *object) noexcept
 				mono_class_get_namespace (mclass),
 				mono_class_get_name (mclass));
 #endif
-		return LOG_FUNC_LEAVE_RETURN (0);
+		LOG_FUNC_LEAVE ();
+		return 0;
 	}
 
-	return LOG_FUNC_LEAVE_RETURN (1);
+	LOG_FUNC_LEAVE ();
+	return 1;
 }
 
 // Add a reference from an IGCUserPeer jobject to another jobject
@@ -710,12 +763,15 @@ OSBridge::add_reference_jobject (JNIEnv *env, jobject handle, jobject reffed_han
 		env->CallVoidMethod (handle, add_method_id, reffed_handle);
 		env->DeleteLocalRef (java_class);
 
-		return LOG_FUNC_LEAVE_RETURN (1);
+		LOG_FUNC_LEAVE ();
+		return 1;
 	}
 
 	env->ExceptionClear ();
 	env->DeleteLocalRef (java_class);
-	return LOG_FUNC_LEAVE_RETURN (0);
+
+	LOG_FUNC_LEAVE ();
+	return 0;
 }
 
 // Given a target, extract the bridge_info (if a mono object) and handle. Return success.
@@ -726,13 +782,17 @@ OSBridge::load_reference_target (OSBridge::AddReferenceTarget target, OSBridge::
 
 	if (target.is_mono_object) {
 		*bridge_info = get_gc_bridge_info_for_object (target.obj);
-		if (!*bridge_info)
-			return LOG_FUNC_LEAVE_RETURN (FALSE);
+		if (!*bridge_info) {
+			LOG_FUNC_LEAVE ();
+			return FALSE;
+		}
 		mono_field_get_value (target.obj, (*bridge_info)->handle, handle);
 	} else {
 		*handle = target.jobj;
 	}
-	return LOG_FUNC_LEAVE_RETURN (TRUE);
+
+	LOG_FUNC_LEAVE ();
+	return TRUE;
 }
 
 #if DEBUG
@@ -744,13 +804,15 @@ OSBridge::describe_target (OSBridge::AddReferenceTarget target) noexcept
 
 	if (target.is_mono_object) {
 		MonoClass *klass = mono_object_get_class (target.obj);
-		return LOG_FUNC_LEAVE_RETURN (Util::monodroid_strdup_printf ("object of class %s.%s",
+
+		LOG_FUNC_LEAVE ();
+		return Util::monodroid_strdup_printf ("object of class %s.%s",
 			mono_class_get_namespace (klass),
-			mono_class_get_name (klass))
-		);
+			mono_class_get_name (klass));
+	} else {
+		LOG_FUNC_LEAVE ();
+		return Util::monodroid_strdup_printf ("<temporary object %p>", target.jobj);
 	}
-	else
-		return LOG_FUNC_LEAVE_RETURN (Util::monodroid_strdup_printf ("<temporary object %p>", target.jobj));
 }
 #endif
 
@@ -763,11 +825,15 @@ OSBridge::add_reference (JNIEnv *env, OSBridge::AddReferenceTarget target, OSBri
 	MonoJavaGCBridgeInfo *bridge_info = nullptr, *reffed_bridge_info = nullptr;
 	jobject handle, reffed_handle;
 
-	if (!load_reference_target (target, &bridge_info, &handle))
-		return LOG_FUNC_LEAVE_RETURN (FALSE);
+	if (!load_reference_target (target, &bridge_info, &handle)) {
+		LOG_FUNC_LEAVE ();
+		return FALSE;
+	}
 
-	if (!load_reference_target (reffed_target, &reffed_bridge_info, &reffed_handle))
-		return LOG_FUNC_LEAVE_RETURN (FALSE);
+	if (!load_reference_target (reffed_target, &reffed_bridge_info, &reffed_handle)) {
+		LOG_FUNC_LEAVE ();
+		return FALSE;
+	}
 
 	mono_bool success = add_reference_jobject (env, handle, reffed_handle);
 
@@ -793,7 +859,8 @@ OSBridge::add_reference (JNIEnv *env, OSBridge::AddReferenceTarget target, OSBri
 	}
 #endif
 
-	return LOG_FUNC_LEAVE_RETURN (success);
+	LOG_FUNC_LEAVE ();
+	return success;
 }
 
 // Create a target
@@ -805,7 +872,9 @@ OSBridge::target_from_mono_object (MonoObject *obj) noexcept
 	OSBridge::AddReferenceTarget result;
 	result.is_mono_object = TRUE;
 	result.obj = obj;
-	return LOG_FUNC_LEAVE_RETURN (result);
+
+	LOG_FUNC_LEAVE ();
+	return result;
 }
 
 // Create a target
@@ -817,7 +886,9 @@ OSBridge::target_from_jobject (jobject jobj) noexcept
 	OSBridge::AddReferenceTarget result;
 	result.is_mono_object = FALSE;
 	result.jobj = jobj;
-	return LOG_FUNC_LEAVE_RETURN (result);
+
+	LOG_FUNC_LEAVE ();
+	return result;
 }
 
 /* During the xref phase of gc_prepare_for_java_collection, we need to be able to map bridgeless
@@ -833,7 +904,8 @@ OSBridge::scc_get_stashed_index (MonoGCBridgeSCC *scc) noexcept
 	abort_if_invalid_pointer_argument (scc);
 	abort_unless (scc->num_objs < 0, "Attempted to load stashed index from an object which does not contain one.");
 
-	return LOG_FUNC_LEAVE_RETURN (-scc->num_objs - 1);
+	LOG_FUNC_LEAVE ();
+	return -scc->num_objs - 1;
 }
 
 void
@@ -853,11 +925,15 @@ OSBridge::target_from_scc (MonoGCBridgeSCC **sccs, int idx, JNIEnv *env, jobject
 	LOG_FUNC_ENTER ();
 
 	MonoGCBridgeSCC *scc = sccs [idx];
-	if (scc->num_objs > 0)
-		return LOG_FUNC_LEAVE_RETURN (target_from_mono_object (scc->objs [0]));
+	if (scc->num_objs > 0) {
+		LOG_FUNC_LEAVE ();
+		return target_from_mono_object (scc->objs [0]);
+	}
 
 	jobject jobj = env->CallObjectMethod (temporary_peers, ArrayList_get, scc_get_stashed_index (scc));
-	return LOG_FUNC_LEAVE_RETURN (target_from_jobject (jobj));
+
+	LOG_FUNC_LEAVE ();
+	return target_from_jobject (jobj);
 }
 
 // Must call this on any AddReferenceTarget returned by target_from_scc once done with it
@@ -877,7 +953,8 @@ mono_bool
 OSBridge::add_reference_mono_object (JNIEnv *env, MonoObject *obj, MonoObject *reffed_obj) noexcept
 {
 	LOG_FUNC_ENTER ();
-	return LOG_FUNC_LEAVE_RETURN (add_reference (env, target_from_mono_object (obj), target_from_mono_object (reffed_obj)));
+	LOG_FUNC_LEAVE ();
+	return add_reference (env, target_from_mono_object (obj), target_from_mono_object (reffed_obj));
 }
 
 void
@@ -1143,11 +1220,14 @@ OSBridge::platform_supports_weak_refs () noexcept
 					"The GC may be compromised.",
 					api_level);
 
-		if (use_weak_refs >= 0)
-			return LOG_FUNC_LEAVE_RETURN (use_weak_refs);
+		if (use_weak_refs >= 0) {
+			LOG_FUNC_LEAVE ();
+			return use_weak_refs;
+		}
 	}
 
-	return LOG_FUNC_LEAVE_RETURN (1);
+	LOG_FUNC_LEAVE ();
+	return 1;
 }
 
 void
@@ -1187,7 +1267,9 @@ OSBridge::ensure_jnienv () noexcept
 		mono_thread_attach (Util::get_current_domain (/* attach_thread_if_needed */ false));
 		jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	}
-	return LOG_FUNC_LEAVE_RETURN (env);
+
+	LOG_FUNC_LEAVE ();
+	return env;
 }
 
 void

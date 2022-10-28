@@ -104,15 +104,19 @@ gsl::owner<char*>
 BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home) noexcept
 {
 	LOG_FUNC_ENTER ();
-	return LOG_FUNC_LEAVE_RETURN (Util::path_combine (home.get_cstr (), ".__override__"));
+	LOG_FUNC_LEAVE ();
+	return Util::path_combine (home.get_cstr (), ".__override__");
 }
 
 const char*
 BasicAndroidSystem::get_built_for_abi_name ()
 {
 	LOG_FUNC_ENTER ();
+
 	if (_built_for_abi_name == nullptr) {
 		_built_for_abi_name = android_abi_names [BuiltForCpu::cpu ()];
 	}
-	return LOG_FUNC_LEAVE_RETURN (_built_for_abi_name);
+
+	LOG_FUNC_LEAVE ();
+	return _built_for_abi_name;
 }

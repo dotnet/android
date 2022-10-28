@@ -161,17 +161,20 @@ namespace xamarin::android::internal
 			LOG_FUNC_ENTER ();
 
 			if (dso_name == nullptr) {
-				return LOG_FUNC_LEAVE_RETURN (nullptr);
+				LOG_FUNC_LEAVE ();
+				return nullptr;
 			}
 
 			for (auto const& dir : directories) {
 				void *handle = load_dso_from_directory (dir, dso_name, dl_flags);
 				if (handle != nullptr) {
-					return LOG_FUNC_LEAVE_RETURN (handle);
+					LOG_FUNC_LEAVE ();
+					return handle;
 				}
 			}
 
-			return LOG_FUNC_LEAVE_RETURN (nullptr);
+			LOG_FUNC_LEAVE ();
+			return nullptr;
 		}
 
 		static void* load_dso_from_specified_dirs (std::vector<char*> const& directories, const char *dso_name, unsigned int dl_flags) noexcept
