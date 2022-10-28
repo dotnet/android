@@ -158,18 +158,20 @@ namespace xamarin::android::internal
 		force_inline
 		static void* load_dso_from_dirs (Container const& directories, const char *dso_name, unsigned int dl_flags) noexcept
 		{
+			LOG_FUNC_ENTER ();
+
 			if (dso_name == nullptr) {
-				return nullptr;
+				return LOG_FUNC_LEAVE_RETURN (nullptr);
 			}
 
 			for (auto const& dir : directories) {
 				void *handle = load_dso_from_directory (dir, dso_name, dl_flags);
 				if (handle != nullptr) {
-					return handle;
+					return LOG_FUNC_LEAVE_RETURN (handle);
 				}
 			}
 
-			return nullptr;
+			return LOG_FUNC_LEAVE_RETURN (nullptr);
 		}
 
 		static void* load_dso_from_specified_dirs (std::vector<char*> const& directories, const char *dso_name, unsigned int dl_flags) noexcept
