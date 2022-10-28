@@ -740,6 +740,7 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
 	const TypeMapEntry *entry = nullptr;
 
 	if (application_config.instant_run_enabled) {
+		LOG_LOCATION ();
 		TypeMap *module;
 		for (size_t i = 0; i < type_map_count; i++) {
 			module = &type_maps[i];
@@ -748,6 +749,7 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
 				break;
 		}
 	} else {
+		LOG_LOCATION ();
 		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name.get (), type_map.java_to_managed, type_map.entry_count);
 	}
 

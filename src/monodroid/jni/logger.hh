@@ -9,7 +9,7 @@
 #include <memory>
 #include <type_traits>
 
-#define ENABLE_FUNC_ENTER_LEAVE_TRACING
+//#define ENABLE_FUNC_ENTER_LEAVE_TRACING
 
 #ifndef ANDROID
 typedef enum android_LogPriority {
