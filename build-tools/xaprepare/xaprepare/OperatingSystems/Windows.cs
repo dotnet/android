@@ -39,7 +39,7 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
-			vsInstance = MSBuildLocator.QueryLatest ();
+			vsInstance = MSBuildLocator.QueryLatest (includePreRelease: true);
 			Log.DebugLine ($"Visual Studio detected in {vsInstance.VisualStudioRootPath}");
 			Log.DebugLine ($"MSBuild detected at {vsInstance.MSBuildPath}");
 

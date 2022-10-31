@@ -146,7 +146,7 @@ namespace Xamarin.Android.Build
 			string dotnetRootSdkDir   = DOTNET_ROOT == null ? null : Path.Combine (DOTNET_ROOT, "sdk");
 
 			if (IsWindows) {
-				var instance = MSBuildLocator.QueryLatest ();
+				var instance = MSBuildLocator.QueryLatest (includePreRelease: true);
 				VsInstallRoot = instance.VisualStudioRootPath;
 
 				MSBuildPath              = Path.Combine (VsInstallRoot, "MSBuild");
