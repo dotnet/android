@@ -58,7 +58,7 @@ namespace Xamarin.ProjectTools
 			if (visualStudioInstance != null && !string.IsNullOrEmpty (visualStudioInstance.VisualStudioRootPath))
 				return visualStudioInstance;
 
-			return visualStudioInstance = MSBuildLocator.QueryLatest (includePreRelease: true);
+			return visualStudioInstance = MSBuildLocator.QueryLatest ();
 		}
 
 		/// <summary>

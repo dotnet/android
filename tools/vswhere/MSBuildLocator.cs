@@ -16,17 +16,20 @@ namespace Xamarin.Android.Tools.VSWhere
 			Path.Combine ("MSBuild", "15.0", "Bin", "MSBuild.exe"),
 		};
 
-		public static VisualStudioInstance QueryLatest (bool includePreRelease = false)
+		public static VisualStudioInstance QueryLatest ()
 		{
 			var instance = new VisualStudioInstance ();
 			var vsInstallDir = Environment.GetEnvironmentVariable ("VSINSTALLDIR");
 			if (string.IsNullOrEmpty (vsInstallDir)) {
 				var programFiles = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 				var vswhere = Path.Combine (programFiles, "Microsoft Visual Studio", "Installer", "vswhere.exe");
-				string extraArgs = includePreRelease ? "-prerelease" : "";
+				// If your environment only has Pre Release Visual Studio, set the INCLUDEPRERELEASEVS to 1 to get
+				// xaprepare to detect it.
+				string allowPreRelease = Environment.GetEnvironmentVariable ("INCLUDEPRERELEASEVS");
+				string preReleaseSwitch = string.IsNullOrEmpty (allowPreRelease) ? "" : "-prerelease";
 				if (!File.Exists (vswhere))
 					throw new FileNotFoundException ("Cannot find vswhere.exe!", vswhere);
-				instance.VisualStudioRootPath = Exec (vswhere, $"{extraArgs} -latest -products * -requires Microsoft.Component.MSBuild -property installationPath");
+				instance.VisualStudioRootPath = Exec (vswhere, $"{preReleaseSwitch} -latest -products * -requires Microsoft.Component.MSBuild -property installationPath");
 				if (!Directory.Exists (instance.VisualStudioRootPath)) {
 					throw new DirectoryNotFoundException ($"vswhere.exe result returned a directory that did not exist: {instance.VisualStudioRootPath}");
 				}

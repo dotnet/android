@@ -126,7 +126,7 @@ namespace Xamarin.Android.Build
 
 		/// <summary>
 		/// The directory containing Microsoft.CSharp.Core.Targets
-		/// 
+		///
 		/// In VS 2017 and 2019, this would be: %VsInstallDir%\MSBuild\15.0\Bin\Roslyn
 		/// </summary>
 		public string RoslynTargetsPath { get; private set; }
@@ -146,7 +146,7 @@ namespace Xamarin.Android.Build
 			string dotnetRootSdkDir   = DOTNET_ROOT == null ? null : Path.Combine (DOTNET_ROOT, "sdk");
 
 			if (IsWindows) {
-				var instance = MSBuildLocator.QueryLatest (includePreRelease: true);
+				var instance = MSBuildLocator.QueryLatest ();
 				VsInstallRoot = instance.VisualStudioRootPath;
 
 				MSBuildPath              = Path.Combine (VsInstallRoot, "MSBuild");
@@ -308,7 +308,7 @@ namespace Xamarin.Android.Build
 					if (!Directory.Exists (sdksDir))
 						sdksDir = Path.Combine (dir, "bin", "Sdks");
 					if (version != null && version > latest) {
-						// Mono does not yet support MSBuild 16.8 and .NET 5+.  If we want xabuild to be aware of .NET 5+ in the future, 
+						// Mono does not yet support MSBuild 16.8 and .NET 5+.  If we want xabuild to be aware of .NET 5+ in the future,
 						// we will need to workaround the fact that the .NET 5 targets now require a version of `NuGet.Frameworks.dll` next to `MSBuildExeTempPath`:
 						// https://github.com/dotnet/msbuild/blob/755d4d1e3d2a89f72f659fc3d7d2933cab619828/src/Build/Utilities/NuGetFrameworkWrapper.cs#L32
 						if (version >= new Version (5, 0, 100)) {
