@@ -271,7 +271,6 @@ namespace Xamarin.Android.Tasks
 
 			using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				foreach (TypeDefinition type in javaTypes) {
-					string mvid = type.Module.Mvid.ToString ();
 					string managedKey = type.FullName.Replace ('/', '.');
 					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 
@@ -283,7 +282,7 @@ namespace Xamarin.Android.Tasks
 					TypeDefinition conflict;
 					bool hasConflict = false;
 					if (managed.TryGetValue (managedKey, out conflict)) {
-						if (!conflict.Module.Mvid.Equals(mvid)) {
+						if (!conflict.Module.Mvid.Equals(type.Module.Mvid)) {
 							if (!managedConflicts.TryGetValue (managedKey, out var list))
 								managedConflicts.Add (managedKey, list = new List<string> { conflict.GetPartialAssemblyName (cache) });
 							list.Add (type.GetPartialAssemblyName (cache));
@@ -291,7 +290,7 @@ namespace Xamarin.Android.Tasks
 						hasConflict = true;
 					}
 					if (java.TryGetValue (javaKey, out conflict)) {
-						if (!conflict.Module.Mvid.Equals(mvid)) {
+						if (!conflict.Module.Mvid.Equals(type.Module.Mvid)) {
 							if (!javaConflicts.TryGetValue (javaKey, out var list))
 								javaConflicts.Add (javaKey, list = new List<string> { conflict.GetAssemblyQualifiedName (cache) });
 							list.Add (type.GetAssemblyQualifiedName (cache));
