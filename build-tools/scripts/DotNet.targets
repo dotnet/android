@@ -5,7 +5,7 @@
   </PropertyGroup>
   <Target Name="BuildExternal">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir) -p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild\Novell -v:n"
+        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir) -p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild/Novell -v:n"
         WorkingDirectory="$(_Root)external\monodroid"
     />
   </Target>
