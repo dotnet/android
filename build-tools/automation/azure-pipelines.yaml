@@ -102,6 +102,8 @@ stages:
         demands: macOS.Name -equals Monterey
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
+    variables:
+      Codeql.Enabled: true
     workspace:
       clean: all
     steps:

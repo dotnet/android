@@ -41,6 +41,9 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: delete legacy xamarin-android submodule
 
+- task: CodeQL3000Init@0
+  displayName: 'CodeQL 3000 Init'
+
 - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-external-git-dependencies
@@ -139,6 +142,9 @@ steps:
   inputs:
     artifactName: $(InstallerArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+
+- task: CodeQL3000Finalize@0
+  displayName: 'CodeQL 3000 Finalize'
 
 # Upload test assemblies
 - script: >
