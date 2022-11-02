@@ -4,14 +4,14 @@
     <_BinlogDateTime>$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogDateTime>
   </PropertyGroup>
   <Target Name="BuildExternal">
-    <MSBuild
-        Projects="$(_Root)\external\monodroid\monodroid.proj"
-        Properties="DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir);CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild\Novell"
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir) -p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild\Novell -v:n"
+        WorkingDirectory="$(_Root)external\monodroid"
     />
   </Target>
   <Target Name="PrepareJavaInterop">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_Root)bin/Build$(Configuration)/msbuild-$(_BinlogDateTime)-prepare-java-interop.binlog"
+        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -v:n"
         WorkingDirectory="$(_Root)external\Java.Interop"
     />
   </Target>
