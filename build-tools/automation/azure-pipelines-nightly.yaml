@@ -212,4 +212,12 @@ stages:
     parameters:
       node_id: 10
 
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 11
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 12
+
   - template: yaml-templates/run-systemapp-tests.yaml

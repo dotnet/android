@@ -307,7 +307,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		private const int LOCALIZATION_NODE_COUNT = 10;
+		private const int LOCALIZATION_NODE_COUNT = 12;
 
 		static object [] GetLocalizationTestCases (int node)
 		{
