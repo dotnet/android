@@ -12,6 +12,8 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.SetupNativeCodeProfiling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ProfileNativeCode" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <Target Name="StartAndroidActivity"
       DependsOnTargets="_ResolveMonoAndroidSdks;_GetAndroidPackageName">
     <GetAndroidActivityName
@@ -51,5 +53,44 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
       DependsOnTargets="_ResolveSdks;_ResolveMonoAndroidSdks">
     <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) forward tcp:$(AndroidAotProfilerPort) tcp:$(AndroidAotProfilerPort)" />
     <Exec Command="&quot;$(AProfUtilToolPath)aprofutil&quot; $(AProfUtilExtraOptions) -s -v -p $(AndroidAotProfilerPort) -o &quot;$(AndroidAotCustomProfilePath)&quot;" />
+  </Target>
+
+  <PropertyGroup>
+    <_AndroidEnableNativeCodeProfiling>False</_AndroidEnableNativeCodeProfiling>
+    <ProfileNativeCodeDependsOnTargets>
+      _ResolveMonoAndroidSdks;
+      _SetupNativeCodeProfiling;
+      Build;
+      Install;
+    </ProfileNativeCodeDependsOnTargets>
+  </PropertyGroup>
+
+  <Target Name="_SetupNativeCodeProfiling">
+    <CreateProperty Value="True">
+      <Output TaskParameter="Value" PropertyName="_AndroidEnableNativeCodeProfiling" />
+    </CreateProperty>
+
+    <SetupNativeCodeProfiling
+        TargetDeviceName="$(AdbTarget)"
+        AdbPath="$(AdbToolPath)adb"
+        AndroidNdkPath="$(_AndroidNdkDirectory)">
+      <Output TaskParameter="DeviceIsEmulator" PropertyName="_AndroidDeviceIsEmulator" />
+      <Output TaskParameter="DevicePrimaryABI" PropertyName="_AndroidDevicePrimaryABI" />
+      <Output TaskParameter="DeviceSdkVersion" PropertyName="_AndroidDeviceSdkVersion" />
+      <Output TaskParameter="DeviceSupportedAbis" PropertyName="_AndroidDeviceSupportedAbis" />
+      <Output TaskParameter="NdkPythonDirectory" PropertyName="_AndrodidNdkPythonDirectory" />
+      <Output TaskParameter="SimplePerfDirectory" PropertyName="_AndroidSimplePerfDirectory" />
+    </SetupNativeCodeProfiling>
+  </Target>
+
+  <Target Name="ProfileNativeCode"
+          DependsOnTargets="$(ProfileNativeCodeDependsOnTargets)">
+    <ProfileNativeCode
+        DeviceSdkVersion="$(_AndroidDeviceSdkVersion)"
+        DeviceIsEmulator="$(_AndroidDeviceIsEmulator)"
+        DeviceSupportedAbis="$(_AndroidDeviceSupportedAbis)"
+        DevicePrimaryABI="$(_AndroidDevicePrimaryABI)"
+        SimplePerfDirectory="$(_AndroidSimplePerfDirectory)"
+        NdkPythonDirectory="$(_AndroidNdkPythonDirectory)" />
   </Target>
 </Project>

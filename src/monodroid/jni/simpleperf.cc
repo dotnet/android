@@ -24,6 +24,7 @@
 #include <sys/wait.h>
 
 #include "android-system.hh"
+#include "globals.hh"
 #include "logger.hh"
 #include "simpleperf.hh"
 #include "strings.hh"
@@ -278,14 +279,14 @@ ProfileSession::check_if_perf_enabled () noexcept
 {
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> prop;
 
-	if (AndroidSystem::monodroid_get_system_property ("persist.simpleperf.profile_app_uid", prop) <= 0) {
+	if (androidSystem.monodroid_get_system_property ("persist.simpleperf.profile_app_uid", prop) <= 0) {
 		return false;
 	}
 
 	if (prop.get () == std::to_string (getuid ())) {
 		prop.clear ();
 
-		AndroidSystem::monodroid_get_system_property ("persist.simpleperf.profile_app_expiration_time", prop);
+		androidSystem.monodroid_get_system_property ("persist.simpleperf.profile_app_expiration_time", prop);
 		if (!prop.empty ()) {
 			errno = 0;
 			long expiration_time = strtol (prop.get (), nullptr, 10);
@@ -295,7 +296,7 @@ ProfileSession::check_if_perf_enabled () noexcept
 		}
 	}
 
-	if (AndroidSystem::monodroid_get_system_property ("security.perf_harden", prop) <= 0 || prop.empty ()) {
+	if (androidSystem.monodroid_get_system_property ("security.perf_harden", prop) <= 0 || prop.empty ()) {
 		return true;
 	}
 
