@@ -2,7 +2,6 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using System.IO;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -10,17 +9,16 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("DotNetIgnore"), Category ("Node-1")] // .csproj files are legacy projects that won't build under dotnet
 	public class DeleteBinObjTest : DeviceTest
 	{
-		const string BaseUrl = "https://xamjenkinsartifact.azureedge.net/mono-jenkins/xamarin-android-test/";
+		const string BaseUrl = "https://github.com/dellis1972/xamarin-android-unittest-files/blob/main/";
 		readonly DownloadedCache Cache = new DownloadedCache ();
 
 		string HostOS => IsWindows ? "Windows" : "Darwin";
-
 		void RunTest (string name, string sln, string csproj, string version, string revision, string packageName, string javaPackageName, bool isRelease)
 		{
 			var configuration = isRelease ? "Release" : "Debug";
-			var zipPath = Cache.GetAsFile ($"{BaseUrl}{name}-{version}-{HostOS}-{revision}.zip");
+			var zipPath = Cache.GetAsFile ($"{BaseUrl}{name}-{version}-{HostOS}-{revision}.7z?raw=true");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName)))
-			using (var zip = ZipArchive.Open (zipPath, FileMode.Open)) {
+			using (var zip = SevenZipHelper.Open (zipPath, FileMode.Open)) {
 				builder.AutomaticNuGetRestore = false;
 
 				if (!builder.TargetFrameworkExists ("v9.0")) {
