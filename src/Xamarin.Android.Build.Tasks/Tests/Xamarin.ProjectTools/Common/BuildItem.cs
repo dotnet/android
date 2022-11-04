@@ -133,11 +133,11 @@ namespace Xamarin.ProjectTools
 		}
 
 		/// <summary>
-		/// NOTE: downloads a file from our https://xamjenkinsartifact.azureedge.net/ Azure Storage Account
+		/// NOTE: downloads a file from our https://github.com/dellis1972/xamarin-android-unittest-files repo
 		/// </summary>
 		public string WebContentFileNameFromAzure {
 			get { throw new NotSupportedException (); }
-			set { WebContent = $"https://xamjenkinsartifact.azureedge.net/mono-jenkins/xamarin-android-test/{value}"; }
+			set { WebContent = $"https://github.com/dellis1972/xamarin-android-unittest-files/blob/main/{value}?raw=true"; }
 		}
 
 		public string MetadataValues {

@@ -24,11 +24,11 @@ namespace Xamarin.ProjectTools
 
 		public string CacheDirectory { get; private set; }
 
-		public string GetAsFile (string url)
+		public string GetAsFile (string url, string filename = "")
 		{
 			Directory.CreateDirectory (CacheDirectory);
 
-			var filename = Path.Combine (CacheDirectory, Path.GetFileName (new Uri (url).LocalPath));
+			filename = Path.Combine (CacheDirectory, string.IsNullOrEmpty (filename) ? Path.GetFileName (new Uri (url).LocalPath) : filename);
 			lock (locks.GetOrAdd (filename, _ => new object ())) {
 				if (File.Exists (filename))
 					return filename;
