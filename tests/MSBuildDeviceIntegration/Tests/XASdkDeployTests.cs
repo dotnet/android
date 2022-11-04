@@ -72,6 +72,9 @@ namespace Xamarin.Android.Build.Tests
 		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, string targetFramework)
 		{
 			AssertHasDevices ();
+			if (!targetFramework.Contains ("net8.0")) {
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/77385");
+			}
 
 			XASdkProject proj;
 			if (xamarinForms) {
@@ -157,10 +160,13 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("Debugger"), Category ("Node-4")]
-		public void DotNetDebug ([Values("net6.0-android", "net7.0-android")] string targetFramework)
+		public void DotNetDebug ([Values("net6.0-android", "net7.0-android", "net8.0-android")] string targetFramework)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
+			if (!targetFramework.Contains ("net8.0")) {
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/77385");
+			}
 
 			var proj = new XASdkProject ();
 			proj.TargetFramework = targetFramework;

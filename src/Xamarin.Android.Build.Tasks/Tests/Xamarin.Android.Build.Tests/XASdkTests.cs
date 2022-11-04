@@ -843,6 +843,9 @@ public class JavaSourceTest {
 			var dotnetVersion = (string)data[0];
 			var platform = (string)data[1];
 			var apiLevel = (int)data[2];
+			if (dotnetVersion != "net8.0") {
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/77385");
+			}
 
 			if (string.IsNullOrEmpty (platform))
 				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
