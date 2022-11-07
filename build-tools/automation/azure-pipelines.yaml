@@ -1451,7 +1451,7 @@ stages:
   # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
   - template: nuget-msi-convert/job/v3.yml@xamarin-templates
     parameters:
-      yamlResourceName: yaml
+      yamlResourceName: xamarin-templates
       dependsOn: sign_net_mac_win
       artifactName: nuget-signed
       artifactPatterns: |
@@ -1526,7 +1526,7 @@ stages:
         blobName: $(NupkgCommitStatusName)
         packagePrefix: xamarin-android
         artifactsPath: $(Build.StagingDirectory)\nuget-signed
-        yamlResourceName: yaml
+        yamlResourceName: xamarin-templates
 
     - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
       parameters:
@@ -1535,7 +1535,7 @@ stages:
         blobName: $(VSDropCommitStatusName)
         packagePrefix: xamarin-android
         artifactsPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
-        yamlResourceName: yaml
+        yamlResourceName: xamarin-templates
         downloadSteps:
         - task: DownloadPipelineArtifact@2
           inputs:
@@ -1549,7 +1549,7 @@ stages:
         blobName: $(MultiTargetVSDropCommitStatusName)
         packagePrefix: xamarin-android
         artifactsPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
-        yamlResourceName: yaml
+        yamlResourceName: xamarin-templates
         downloadSteps:
         - task: DownloadPipelineArtifact@2
           inputs:
