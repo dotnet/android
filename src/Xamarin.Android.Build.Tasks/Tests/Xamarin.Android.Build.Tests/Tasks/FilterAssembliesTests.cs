@@ -30,13 +30,13 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (tempDirectory, recursive: true);
 		}
 
-		Task<string> DownloadFromNuGet (string url) =>
-			Task.Factory.StartNew (() => new DownloadedCache ().GetAsFile (url));
+		Task<string> DownloadFromNuGet (string url, string filename = "") =>
+			Task.Factory.StartNew (() => new DownloadedCache ().GetAsFile (url, filename));
 
-		async Task<string []> GetAssembliesFromNuGet (string url, string path)
+		async Task<string []> GetAssembliesFromNuGet (string url, string filename, string path)
 		{
 			var assemblies = new List<string> ();
-			var nuget = await DownloadFromNuGet (url);
+			var nuget = await DownloadFromNuGet (url, filename);
 			using (var zip = ZipArchive.Open (nuget, FileMode.Open)) {
 				foreach (var entry in zip) {
 					if (entry.FullName.StartsWith (path, StringComparison.OrdinalIgnoreCase) &&
@@ -67,6 +67,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var assemblies = await GetAssembliesFromNuGet (
 				"https://www.nuget.org/api/v2/package/Refractored.Controls.CircleImageView/1.0.1",
+				"Refractored.Controls.CircleImageView.1.0.1.nupkg",
 				"lib/MonoAndroid10/");
 			var actual = Run (assemblies);
 			var expected = new [] { "Refractored.Controls.CircleImageView.dll" };
@@ -78,6 +79,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var assemblies = await GetAssembliesFromNuGet (
 				"https://www.nuget.org/api/v2/package/Xamarin.Forms/3.6.0.220655",
+				"Xamarin.Forms.3.6.0.220655.nupkg",
 				"lib/MonoAndroid90/");
 			var actual = Run (assemblies);
 			var expected = new [] {
@@ -93,6 +95,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var assemblies = await GetAssembliesFromNuGet (
 				"https://www.nuget.org/api/v2/package/Xamarin.Google.Guava.ListenableFuture/1.0.0",
+				"Xamarin.Google.Guava.ListenableFuture.1.0.0.nupkg",
 				"lib/MonoAndroid50/");
 			var actual = Run (assemblies);
 			var expected = new [] { "Xamarin.Google.Guava.ListenableFuture.dll" };
