@@ -145,6 +145,7 @@ steps:
 
 - task: CodeQL3000Finalize@0
   displayName: 'CodeQL 3000 Finalize'
+  condition: succeededOrFailed()
 
 # Upload test assemblies
 - script: >
