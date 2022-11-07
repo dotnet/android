@@ -11,7 +11,7 @@ trigger:
 # External sources, scripts, tests, and yaml template files.
 resources:
   repositories:
-  - repository: yaml
+  - repository: xamarin-templates
     type: github
     name: xamarin/yaml-templates
     ref: refs/heads/main
@@ -1246,11 +1246,11 @@ stages:
         jdkTestFolder: $(JAVA_HOME_8_X64)
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
-    - template: designer/android-designer-build-mac.yaml@yaml
+    - template: designer/android-designer-build-mac.yaml@xamarin-templates
       parameters:
         designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/Designer
 
-    - template: designer/android-designer-tests.yaml@yaml
+    - template: designer/android-designer-tests.yaml@xamarin-templates
       parameters:
         designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/Designer
         runAddinTests: false
@@ -1428,7 +1428,7 @@ stages:
   condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
   jobs:
   # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
-  - template: sign-artifacts/jobs/v2.yml@yaml
+  - template: sign-artifacts/jobs/v2.yml@xamarin-templates
     parameters:
       name: sign_net_mac_win
       poolName: $(VSEngMicroBuildPool)
@@ -1438,7 +1438,7 @@ stages:
       usePipelineArtifactTasks: true
 
   # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
-  - template: sign-artifacts/jobs/v2.yml@yaml
+  - template: sign-artifacts/jobs/v2.yml@xamarin-templates
     parameters:
       name: sign_net_linux
       displayName: Sign Linux Archive
@@ -1449,7 +1449,7 @@ stages:
       usePipelineArtifactTasks: true
 
   # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-  - template: nuget-msi-convert/job/v3.yml@yaml
+  - template: nuget-msi-convert/job/v3.yml@xamarin-templates
     parameters:
       yamlResourceName: yaml
       dependsOn: sign_net_mac_win
@@ -1584,7 +1584,7 @@ stages:
 # .NET 6 VS Insertion Stage
 # Check - "Xamarin.Android (VS Insertion - Wait For Approval)"
 # Check - "Xamarin.Android (VS Insertion - Create VS Drop and Open PR)"
-- template: vs-insertion/stage/v1.yml@yaml
+- template: vs-insertion/stage/v1.yml@xamarin-templates
   parameters:
     dependsOn: dotnet_prepare_release
     symbolArtifactName: nuget-signed
@@ -1820,7 +1820,7 @@ stages:
     - script: xcrun stapler validate $(XA.Unsigned.Pkg)
       displayName: validate notarized pkg
 
-    - template: upload-to-storage.yml@yaml
+    - template: upload-to-storage.yml@xamarin-templates
       parameters:
         BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
         AzureContainerName: $(Azure.Container.Name)
@@ -1842,7 +1842,7 @@ stages:
   - finalize_installers
   condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
   jobs:
-  - template: compliance/sbom/job.v1.yml@yaml
+  - template: compliance/sbom/job.v1.yml@xamarin-templates
     parameters:
       artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
       statusContexts: [ 'vsts-devdiv artifacts' ]
@@ -1865,11 +1865,11 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - template: security\credscan\v2.yml@yaml
+    - template: security\credscan\v2.yml@xamarin-templates
       parameters:
         suppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
 
-    - template: security\policheck\v1.yml@yaml
+    - template: security\policheck\v1.yml@xamarin-templates
       parameters:
         exclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
         pE: 1|2|3|4

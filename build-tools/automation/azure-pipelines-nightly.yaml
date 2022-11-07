@@ -11,7 +11,7 @@ pr:
 # External sources, scripts, tests, and yaml template files.
 resources:
   repositories:
-  - repository: yaml
+  - repository: xamarin-templates
     type: github
     name: xamarin/yaml-templates
     ref: refs/heads/main
