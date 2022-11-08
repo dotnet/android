@@ -87,7 +87,7 @@ jobs:
   variables:
     VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\
     Codeql.Enabled: true
-  timeoutInMinutes: 20
+  timeoutInMinutes: 60
   workspace:
     clean: all
   steps:
