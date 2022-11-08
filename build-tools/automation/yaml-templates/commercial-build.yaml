@@ -3,6 +3,7 @@ parameters:
   makeMSBuildArgs: ''
   provisionatorChannel: latest
   signClassicPkgContent: true
+  runCodeQL: false
 
 steps:
 - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-11"
@@ -42,7 +43,8 @@ steps:
   displayName: delete legacy xamarin-android submodule
 
 - task: CodeQL3000Init@0
-  displayName: 'CodeQL 3000 Init'
+  displayName: CodeQL 3000 Init
+  condition: and(succeeded(), eq('${{ parameters.runCodeQL }}', 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
 - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
@@ -52,6 +54,10 @@ steps:
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
+
+- task: CodeQL3000Finalize@0
+  displayName: CodeQL 3000 Finalize
+  condition: and(succeededOrFailed(), eq('${{ parameters.runCodeQL }}', 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
 # Build test assemblies
 - script: make all-tests CONFIGURATION=$(XA.Build.Configuration)
@@ -142,10 +148,6 @@ steps:
   inputs:
     artifactName: $(InstallerArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-
-- task: CodeQL3000Finalize@0
-  displayName: 'CodeQL 3000 Finalize'
-  condition: succeededOrFailed()
 
 # Upload test assemblies
 - script: >

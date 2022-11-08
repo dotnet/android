@@ -50,6 +50,7 @@ stages:
     - template: yaml-templates/commercial-build.yaml
       parameters:
         makeMSBuildArgs: /p:EnableRoslynAnalyzers=true /p:EnableNativeAnalyzers=true
+        runCodeQL: true
 
     - template: yaml-templates/upload-results.yaml
       parameters:
