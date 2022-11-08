@@ -43,6 +43,8 @@ stages:
       - group: Xamarin-Secrets
       - group: Xamarin Signing
       - group: xamops-azdev-secrets
+      - name: Codeql.Enabled
+        value: true
     steps:
     - checkout: self
       submodules: recursive
@@ -50,7 +52,6 @@ stages:
     - template: yaml-templates/commercial-build.yaml
       parameters:
         makeMSBuildArgs: /p:EnableRoslynAnalyzers=true /p:EnableNativeAnalyzers=true
-        runCodeQL: true
 
     - template: yaml-templates/upload-results.yaml
       parameters:
