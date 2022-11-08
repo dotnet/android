@@ -1,17 +1,17 @@
 <Project>
   <PropertyGroup>
     <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
-    <_BinlogDateTime>$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogDateTime>
+    <_BinlogPathPrefix>$(_Root)bin/Build$(Configuration)/msbuild-$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogPathPrefix>
   </PropertyGroup>
   <Target Name="BuildExternal">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir) -p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild/Novell -v:n"
+        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir) -p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild/Novell -bl:$(_BinlogPathPrefix)-build-monodroid.binlog"
         WorkingDirectory="$(_Root)external\monodroid"
     />
   </Target>
   <Target Name="PrepareJavaInterop">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -v:n"
+        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_BinlogPathPrefix)-prepare-java-interop.binlog"
         WorkingDirectory="$(_Root)external\Java.Interop"
     />
   </Target>
