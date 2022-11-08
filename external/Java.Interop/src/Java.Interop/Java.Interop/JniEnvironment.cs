@@ -170,14 +170,34 @@ namespace Java.Interop {
 		}
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
 		partial class References {
-			internal static int GetJavaVM (IntPtr jnienv, out IntPtr vm)
+
+			internal static unsafe int GetJavaVM (IntPtr jnienv, out IntPtr vm)
 			{
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
 				return NativeMethods.java_interop_jnienv_get_java_vm (jnienv, out vm);
+#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+				IntPtr _vm;
+				int r       = JniNativeMethods.GetJavaVM (jnienv, &_vm);
+				vm          = _vm;
+				return r;
+#else
+				Invoker     = CreateInvoker (environmentPointer);
+				var r       = Invoker.GetJavaVM (EnvironmentPointer, out vm);
+				return r;
+#endif
+			}
+
+			internal static void RawDeleteLocalRef (IntPtr env, IntPtr localRef)
+			{
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
+				NativeMethods.java_interop_jnienv_delete_local_ref (env, localRef);
+#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+				JniNativeMethods.DeleteLocalRef (env, localRef);
+#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			}
 		}
-#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+
 	}
 
 	sealed class JniEnvironmentInfo : IDisposable {
@@ -206,13 +226,7 @@ namespace Java.Interop {
 
 				environmentPointer  = value;
 				IntPtr  vmh = IntPtr.Zero;
-				int     r   = 0;
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-				r           = JniEnvironment.References.GetJavaVM (EnvironmentPointer, out vmh);
-#else
-				Invoker     = CreateInvoker (environmentPointer);
-				r           = Invoker.GetJavaVM (EnvironmentPointer, out vmh);
-#endif  // #if !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+				int     r   = JniEnvironment.References.GetJavaVM (EnvironmentPointer, out vmh);
 				if (r < 0)
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r.ToString ());
 
@@ -285,7 +299,7 @@ namespace Java.Interop {
 		};
 #endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES
 
-#if !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+#if !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 		internal    JniEnvironmentInvoker   Invoker                 {get; private set;}
 
 		static unsafe JniEnvironmentInvoker CreateInvoker (IntPtr handle)

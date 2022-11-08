@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -78,13 +79,6 @@ namespace Java.Interop
 		}
 	}
 
-	partial class NativeMethods {
-		const string JavaInteropLibrary = "java-interop";
-
-		[DllImport (JavaInteropLibrary, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern int java_interop_jvm_list ([Out] IntPtr[]? handles, int bufLen, out int nVMs);
-	}
-
 	public partial class JniRuntime : IDisposable
 	{
 		const   int     JNI_OK          = 0;
@@ -107,22 +101,14 @@ namespace Java.Interop
 			}
 		}
 
-		internal static int GetCreatedJavaVMs (IntPtr[]? handles, int bufLen, out int nVMs)
-		{
-			return NativeMethods.java_interop_jvm_list (handles, bufLen, out nVMs);
-		}
-
+		[Obsolete ("Not sensible/usable at this level, and cannot work on e.g. Android.  " +
+				"Try Java.Interop.JreRuntime.GetAvailableInvocationPointers() in Java.Runtime.Environment.dll, " +
+				"or rethink your structure.", error: true)]
+		[SuppressMessage ("Design", "CA1024:Use properties where appropriate",
+				Justification = "ABI compatibility")]
 		public static IEnumerable<IntPtr> GetAvailableInvocationPointers ()
 		{
-			int nVMs;
-			int r = GetCreatedJavaVMs (null, 0, out nVMs);
-			if (r != 0)
-				throw new NotSupportedException ("JNI_GetCreatedJavaVMs() returned: " + r.ToString ());
-			var handles = new IntPtr [nVMs];
-			r = GetCreatedJavaVMs (handles, handles.Length, out nVMs);
-			if (r != 0)
-				throw new InvalidOperationException ("JNI_GetCreatedJavaVMs() [take 2!] returned: " + r.ToString ());
-			return handles;
+			throw new NotSupportedException ();
 		}
 
 		static JniRuntime? current;
@@ -143,17 +129,9 @@ namespace Java.Interop
 					return c!;
 				}
 				if (count > 1)
-					throw new NotSupportedException (string.Format ("Found {0} Java Runtimes. Don't know which to use. Use JniRuntime.SetCurrent().", count));
+					throw new NotSupportedException (string.Format ("Found {0} known Java Runtime instances. Don't know which to use. Use JniRuntime.SetCurrent().", count));
 				Debug.Assert (count == 0);
-				var available   = GetAvailableInvocationPointers ().FirstOrDefault ();
-				if (available == IntPtr.Zero)
-					throw new NotSupportedException ("No available Java runtime to attach to. Please create one.");
-				var options     = new CreationOptions () {
-					DestroyRuntimeOnDispose = false,
-					InvocationPointer       = available,
-				};
-				// Sets `current`
-				return new JniRuntime (options);
+				throw new NotSupportedException ("No available Java runtime to attach to. Please create one.");
 			}
 		}
 

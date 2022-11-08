@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
+using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
@@ -44,22 +45,13 @@ namespace Java.Interop
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 
 				var info    = JniEnvironment.CurrentInfo;
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-				IntPtr thrown;
-				var c   = NativeMethods.java_interop_jnienv_find_class (info.EnvironmentPointer, out thrown, classname);
-				if (thrown == IntPtr.Zero) {
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+				if (TryRawFindClass (info.EnvironmentPointer, classname, out var c, out var thrown)) {
 					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
 					JniEnvironment.LogCreateLocalRef (r);
 					return r;
 				}
-
-				// If the Java-side exception stack trace is *lost* a'la 89a5a229,
-				// change `false` to `true` and rebuild+re-run.
-#if false
-				NativeMethods.java_interop_jnienv_exception_describe (info.EnvironmentPointer);
-#endif
-
-				NativeMethods.java_interop_jnienv_exception_clear (info.EnvironmentPointer);
+				RawExceptionClear (info.EnvironmentPointer);
 
 				var findClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
 				LogCreateLocalRef (findClassThrown);
@@ -70,7 +62,7 @@ namespace Java.Interop
 					var __args  = stackalloc JniArgumentValue [1];
 					__args [0]  = new JniArgumentValue (java);
 
-					c = NativeMethods.java_interop_jnienv_call_object_method_a (info.EnvironmentPointer, out thrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, (IntPtr) __args);
+					c = RawCallObjectMethodA (info.EnvironmentPointer, out thrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, (IntPtr) __args);
 					JniObjectReference.Dispose (ref java);
 					if (thrown == IntPtr.Zero) {
 						(pendingException as IJavaPeerable)?.Dispose ();
@@ -78,10 +70,10 @@ namespace Java.Interop
 						JniEnvironment.LogCreateLocalRef (r);
 						return r;
 					}
-					NativeMethods.java_interop_jnienv_exception_clear (info.EnvironmentPointer);
+					RawExceptionClear (info.EnvironmentPointer);
 
 					if (pendingException != null) {
-						NativeMethods.java_interop_jnienv_delete_local_ref (info.EnvironmentPointer, thrown);
+						JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, thrown);
 					}
 					else {
 						var loadClassThrown = new JniObjectReference (thrown, JniObjectReferenceType.Local);
@@ -95,7 +87,7 @@ namespace Java.Interop
 					return default;
 				}
 				throw pendingException!;
-#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+#endif  // !(FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS)
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				var c       = info.Invoker.FindClass (info.EnvironmentPointer, classname);
 				var thrown  = info.Invoker.ExceptionOccurred (info.EnvironmentPointer);
@@ -135,6 +127,59 @@ namespace Java.Interop
 				}
 				throw pendingException!;
 #endif  // !FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+			}
+
+			static bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
+			{
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
+				klass = NativeMethods.java_interop_jnienv_find_class (env, out thrown, classname);
+				if (thrown == IntPtr.Zero) {
+					return true;
+				}
+#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+				var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
+				klass   = JniNativeMethods.FindClass (env, _classname_ptr);
+				thrown  = JniNativeMethods.ExceptionOccurred (env);
+				Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
+				if (thrown == IntPtr.Zero) {
+					return true;
+				}
+#endif  // !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+				return false;
+			}
+
+			static void RawExceptionClear (IntPtr env)
+			{
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
+				// If the Java-side exception stack trace is *lost* a'la 89a5a229,
+				// change `false` to `true` and rebuild+re-run.
+#if false
+				NativeMethods.java_interop_jnienv_exception_describe (env);
+#endif  // FEATURE_JNIENVIRONMENT_JI_PINVOKES
+
+				NativeMethods.java_interop_jnienv_exception_clear (env);
+#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+				// If the Java-side exception stack trace is *lost* a'la 89a5a229,
+				// change `false` to `true` and rebuild+re-run.
+#if false
+				JniNativeMethods.ExceptionDescribe (env);
+#endif
+				JniNativeMethods.ExceptionClear (env);
+#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+			}
+
+			static IntPtr RawCallObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr instance, IntPtr jmethodID, IntPtr args)
+			{
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
+				return NativeMethods.java_interop_jnienv_call_object_method_a (env, out thrown, instance, jmethodID, args);
+#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+				var r   = JniNativeMethods.CallObjectMethodA (env, instance, jmethodID, args);
+				thrown  = JniNativeMethods.ExceptionOccurred (env);
+				return r;
+#else   // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+				return IntPtr.Zero;
+#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			}
 
 #if NET

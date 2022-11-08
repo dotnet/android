@@ -470,6 +470,11 @@ class App {
 
 	public static void Main ()
 	{
+		var path = Environment.GetEnvironmentVariable ("JI_JVM_PATH");
+		if (string.IsNullOrEmpty (path)) {
+			Console.Error.WriteLine ($"error: must set `JI_JVM_PATH` environment variable to path of JVM library to use.");
+			return;
+		}
 		var runtimeOptions  = new JreRuntimeOptions (){
 			JvmLibraryPath          = Environment.GetEnvironmentVariable ("JI_JVM_PATH"),
 		};

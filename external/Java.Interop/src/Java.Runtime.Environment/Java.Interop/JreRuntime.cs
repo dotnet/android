@@ -34,6 +34,8 @@ namespace Java.Interop {
 		public  TextWriter? JniGlobalReferenceLogWriter {get; set;}
 		public  TextWriter? JniLocalReferenceLogWriter  {get; set;}
 
+		internal    JvmLibraryHandler?  LibraryHandler  {get; set;}
+
 		public JreRuntimeOptions ()
 		{
 			JniVersion  = JniVersion.v1_2;
@@ -72,22 +74,16 @@ namespace Java.Interop {
 	{
 		static JreRuntime ()
 		{
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				var baseDir = Path.GetDirectoryName (typeof (JreRuntime).Assembly.Location) ?? throw new NotSupportedException ();
-				var newDir  = Path.Combine (baseDir, Environment.Is64BitProcess ? "win-x64" : "win-x86");
-				NativeMethods.AddDllDirectory (newDir);
-			}
-		}
-
-		static int CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args)
-		{
-			return NativeMethods.java_interop_jvm_create (out javavm, out jnienv, ref args);
 		}
 
 		static unsafe JreRuntimeOptions CreateJreVM (JreRuntimeOptions builder)
 		{
 			if (builder == null)
 				throw new ArgumentNullException ("builder");
+			if (string.IsNullOrEmpty (builder.JvmLibraryPath))
+				throw new InvalidOperationException ($"Member `{nameof (JreRuntimeOptions)}.{nameof (JreRuntimeOptions.JvmLibraryPath)}` must be set.");
+
+			builder.LibraryHandler  = JvmLibraryHandler.Create ();
 
 #if NET
 			builder.TypeManager     ??= new JreTypeManager ();
@@ -106,15 +102,7 @@ namespace Java.Interop {
 			if (builder.InvocationPointer != IntPtr.Zero)
 				return builder;
 
-			if (!string.IsNullOrEmpty (builder.JvmLibraryPath)) {
-				IntPtr errorPtr = IntPtr.Zero;
-				int r = NativeMethods.java_interop_jvm_load_with_error_message (builder.JvmLibraryPath!, out errorPtr);
-				if (r != 0) {
-					string? error = Marshal.PtrToStringAnsi (errorPtr);
-					NativeMethods.java_interop_free (errorPtr);
-					throw new Exception ($"Could not load JVM path `{builder.JvmLibraryPath}`: {error} ({r})!");
-				}
-			}
+			builder.LibraryHandler.LoadJvmLibrary (builder.JvmLibraryPath!);
 
 			var args = new JavaVMInitArgs () {
 				version             = builder.JniVersion,
@@ -131,7 +119,7 @@ namespace Java.Interop {
 					args.options = (IntPtr) popts;
 					IntPtr      javavm;
 					IntPtr      jnienv;
-					int r = CreateJavaVM (out javavm, out jnienv, ref args);
+					int r = builder.LibraryHandler.CreateJavaVM (out javavm, out jnienv, ref args);
 					if (r != 0) {
 						var message = string.Format (
 								"The JDK supports creating at most one JVM per process, ever; " +
@@ -150,9 +138,12 @@ namespace Java.Interop {
 			}
 		}
 
+		JvmLibraryHandler LibraryHandler;
+
 		internal protected JreRuntime (JreRuntimeOptions builder)
 			: base (CreateJreVM (builder))
 		{
+			LibraryHandler  = builder.LibraryHandler!;
 		}
 
 		public override string? GetCurrentManagedThreadName ()
@@ -169,10 +160,165 @@ namespace Java.Interop {
 		protected override void Dispose (bool disposing)
 		{
 			base.Dispose (disposing);
+			LibraryHandler?.Dispose ();
+			LibraryHandler = null!;
+		}
+
+		public new IEnumerable<IntPtr> GetAvailableInvocationPointers ()
+		{
+			return LibraryHandler.GetAvailableInvocationPointers ();
+		}
+	}
+
+	internal abstract partial class JvmLibraryHandler : IDisposable {
+		public  abstract    void                LoadJvmLibrary (string path);
+		public  abstract    int                 CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
+		public  abstract    IEnumerable<IntPtr> GetAvailableInvocationPointers ();
+
+		public  abstract    void                Dispose ();
+
+		public static JvmLibraryHandler Create ()
+		{
+			var handler = Environment.GetEnvironmentVariable ("JI_LOADER_TYPE");
+			switch (handler?.ToLowerInvariant ()) {
+			case "":
+			case null:
+			case "java-interop":
+				return new JavaInteropLibJvmLibraryHandler ();
+#if NET
+			case "native-library":
+				return new NativeLibraryJvmLibraryHandler ();
+#endif  // NET
+			default:
+				Console.Error.WriteLine ($"Unsupported JI_LOADER_TYPE value of `{handler}`.");
+				throw new NotSupportedException ();
+			}
+		}
+	}
+
+#if NET
+
+	class NativeLibraryJvmLibraryHandler : JvmLibraryHandler {
+		IntPtr  handle;
+
+		IntPtr _Create;
+		IntPtr _GetCreated;
+
+		public override void LoadJvmLibrary (string path)
+		{
+			handle = NativeLibrary.Load (path);
+			Console.Error.WriteLine ($"# jonp: LoadJvmLibrary({path})={handle}");
+
+			IntPtr create, getCreated;
+			if (!NativeLibrary.TryGetExport (handle, "JNI_CreateJavaVM", out create) ||
+					!NativeLibrary.TryGetExport (handle, "JNI_GetCreatedJavaVMs", out getCreated)) {
+				NativeLibrary.Free (handle);
+				handle = IntPtr.Zero;
+				throw new NotSupportedException ("Library `{path}` does not export the required symbols `JNI_CreateJavaVM` or `JNI_GetCreatedJavaVMs`!");
+			}
+
+			Console.Error.WriteLine ($"# jonp: JNI_CreateJavaVM={create}; JNI_GetCreatedJavaVMs={getCreated}");
+			_Create     = create;
+			_GetCreated = getCreated;
+		}
+
+		public unsafe override int CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args)
+		{
+			Console.Error.WriteLine ($"# jonp: executing JNI_CreateJavaVM={_Create.ToString("x")}");
+			// jint JNI_CreateJavaVM(JavaVM **p_vm, void **p_env, void *vm_args);
+
+			var create = (delegate* unmanaged<out IntPtr, out IntPtr, ref Java.Interop.JavaVMInitArgs, int>) _Create;
+			var r = create (out javavm, out jnienv, ref args);
+			Console.Error.WriteLine ($"# jonp: r={r} javavm={javavm.ToString("x")} jnienv={jnienv.ToString ("x")}");
+			return r;
+		}
+
+		public unsafe override IEnumerable<IntPtr> GetAvailableInvocationPointers ()
+		{
+			Console.Error.WriteLine ($"# jonp: executing _GetCreated fnptr={_GetCreated.ToString("x")}");
+			var getCreated = (delegate* unmanaged<IntPtr*, int, out int, int>) _GetCreated;
+			int nVMs;
+			int r = getCreated (null, 0, out nVMs);
+			if (r != 0) {
+				throw new NotSupportedException ("JNI_GetCreatedJavaVMs() returned: " + r.ToString ());
+			}
+			var handles = new IntPtr [nVMs];
+			fixed (IntPtr* h = handles) {
+				r = getCreated (h, handles.Length, out nVMs);
+			}
+			if (r != 0)
+				throw new InvalidOperationException ("JNI_GetCreatedJavaVMs() [take 2!] returned: " + r.ToString ());
+			return handles;
+		}
+
+		public override void Dispose ()
+		{
+			NativeLibrary.Free (handle);
+			handle      = IntPtr.Zero;
+			_Create     = IntPtr.Zero;
+			_GetCreated = IntPtr.Zero;
+		}
+	}
+
+#endif  // NET
+
+	class JavaInteropLibJvmLibraryHandler : JvmLibraryHandler {
+
+		static JavaInteropLibJvmLibraryHandler ()
+		{
+		}
+
+		const int JAVA_INTEROP_JVM_FAILED_ALREADY_LOADED = -1001;
+
+		public override void LoadJvmLibrary (string path)
+		{
+			IntPtr errorPtr = IntPtr.Zero;
+			int r = NativeMethods.java_interop_jvm_load_with_error_message (path, out errorPtr);
+			if (r != 0) {
+				string? error = Marshal.PtrToStringAnsi (errorPtr);
+				NativeMethods.java_interop_free (errorPtr);
+				if (r == JAVA_INTEROP_JVM_FAILED_ALREADY_LOADED) {
+					return;
+				}
+				throw new NotSupportedException ($"Could not load JVM path `{path}`: {error} ({r})!");
+			}
+		}
+
+		public override int CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args)
+		{
+			return NativeMethods.java_interop_jvm_create (out javavm, out jnienv, ref args);
+		}
+
+		public override IEnumerable<IntPtr> GetAvailableInvocationPointers ()
+		{
+			int nVMs;
+			int r = NativeMethods.java_interop_jvm_list (null, 0, out nVMs);
+			if (r != 0)
+				throw new NotSupportedException ("JNI_GetCreatedJavaVMs() returned: " + r.ToString ());
+			var handles = new IntPtr [nVMs];
+			r = NativeMethods.java_interop_jvm_list (handles, handles.Length, out nVMs);
+			if (r != 0)
+				throw new InvalidOperationException ("JNI_GetCreatedJavaVMs() [take 2!] returned: " + r.ToString ());
+			return handles;
+		}
+
+		public override void Dispose ()
+		{
 		}
 	}
 
 	partial class NativeMethods {
+
+		static NativeMethods ()
+		{
+			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
+				var baseDir = Path.GetDirectoryName (typeof (JreRuntime).Assembly.Location) ?? throw new NotSupportedException ();
+				var newDir  = Path.Combine (baseDir, Environment.Is64BitProcess ? "win-x64" : "win-x86");
+				NativeMethods.AddDllDirectory (newDir);
+			}
+		}
+
+
 		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern void java_interop_free (IntPtr p);
 
@@ -181,6 +327,9 @@ namespace Java.Interop {
 
 		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_jvm_create (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
+
+		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
+		internal static extern int java_interop_jvm_list ([Out] IntPtr[]? handles, int bufLen, out int nVMs);
 
 		[DllImport ("kernel32", CharSet=CharSet.Unicode)]
 		internal static extern int AddDllDirectory (string NewDirectory);

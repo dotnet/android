@@ -25,7 +25,9 @@ namespace Java.InteropTests
 		public void JDK_OnlySupportsOneVM ()
 		{
 			try {
-				var second = new JreRuntimeOptions ().CreateJreVM ();
+				var second = new JreRuntimeOptions () {
+					JvmLibraryPath  = TestJVM.GetJvmLibraryPath (),
+				}.CreateJreVM ();
 				// If we reach here, we're in a JVM that supports > 1 VM
 				second.Dispose ();
 				Assert.Ignore ();

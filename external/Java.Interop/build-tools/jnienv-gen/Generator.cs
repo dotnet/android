@@ -87,8 +87,8 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("//");
 			o.WriteLine ("// To make changes, edit monodroid/tools/jnienv-gen-interop and rerun");
 			o.WriteLine ();
-			o.WriteLine ("#if !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS");
-			o.WriteLine ("#define FEATURE_JNIENVIRONMENT_SAFEHANDLES");
+			o.WriteLine ("#if !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS");
+			o.WriteLine ("#define FEATURE_JNIENVIRONMENT_JI_PINVOKES");
 			o.WriteLine ("#endif  // !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS");
 			o.WriteLine ();
 			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_INTPTRS");
@@ -315,6 +315,9 @@ namespace Xamarin.Java.Interop
 			if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {
 				GenerateNativeMethods (o, style);
 			}
+			if (style == HandleStyle.JIFunctionPtrWithErrors) {
+				GenerateJniNativeMethods (o, style);
+			}
 
 			var visibilities = new Dictionary<string, string> {
 				{ ArrayOperationsCategory,      "public" },
@@ -362,6 +365,46 @@ namespace Xamarin.Java.Interop
 					entry.Throws ? ", out IntPtr thrown" : "",
 					entry.Parameters.Length != 0 ? ", " : "",
 					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.GetMarshalType (style, isReturn: false, isPinvoke: true), Escape (p.Name)))));
+			}
+			o.WriteLine ("\t}");
+			o.WriteLine ();
+		}
+
+		static void GenerateJniNativeMethods (TextWriter o, HandleStyle style)
+		{
+			o.WriteLine ("\tstatic partial class JniNativeMethods {");
+			o.WriteLine ();
+			foreach (var entry in JNIEnvEntries) {
+				if (entry.Parameters == null)
+					continue;
+				if (entry.IsPrivate || entry.CustomWrapper)
+					continue;
+
+				var returnType = entry.ReturnType.GetMarshalType (HandleStyle.JIFunctionPtrWithErrors, isReturn: true, isPinvoke: true);
+
+				o.WriteLine ();
+				o.WriteLine ("\t\t[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+				o.Write ("\t\tinternal static unsafe ");
+				o.Write (entry.ReturnType.GetMarshalType (HandleStyle.JIFunctionPtrWithErrors, isReturn: true, isPinvoke: true));
+				o.Write ($" {entry.Name} (IntPtr env");
+				foreach (var p in entry.Parameters) {
+					o.Write (", ");
+					o.Write (p.Type.GetMarshalType (HandleStyle.JIFunctionPtrWithErrors, isReturn: false, isPinvoke: true));
+					o.Write ($" {Escape (p.Name)}");
+				}
+				o.WriteLine (")");
+				o.WriteLine ("\t\t{");
+				o.Write ("\t\t\t");
+				if (returnType != "void") {
+					o.Write ("return ");
+				}
+				o.Write ($"(*((JNIEnv**)env))->{entry.Name} (env");
+				foreach (var p in entry.Parameters) {
+					o.Write (", ");
+					o.Write (Escape (p.Name));
+				}
+				o.WriteLine (");");
+				o.WriteLine ("\t\t}");
 			}
 			o.WriteLine ("\t}");
 			o.WriteLine ();
@@ -427,7 +470,7 @@ namespace Xamarin.Java.Interop
 								GetPinvokeName (entry.Name),
 								entry.Throws ? ", out thrown" : "");
 					} else if (style == HandleStyle.JIFunctionPtrWithErrors) {
-						o.Write ($"(*((JNIEnv**)__env))->{entry.Name} (__env");
+						o.Write ($"JniNativeMethods.{entry.Name} (__env");
 					} else {
 						o.Write ("__info.Invoker.{0} (__info.EnvironmentPointer", entry.Name);
 					}
@@ -444,7 +487,7 @@ namespace Xamarin.Java.Interop
 					}
 					o.WriteLine (");");
 					if (style == HandleStyle.JIFunctionPtrWithErrors && entry.Throws) {
-						o.WriteLine ("\t\t\tIntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);");
+						o.WriteLine ("\t\t\tIntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);");
 					}
 					CleanupParameters (o, entry.Parameters, style);
 					RaiseException (o, entry, style);

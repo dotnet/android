@@ -2,8 +2,8 @@
 //
 // To make changes, edit monodroid/tools/jnienv-gen-interop and rerun
 
-#if !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS
-#define FEATURE_JNIENVIRONMENT_SAFEHANDLES
+#if !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+#define FEATURE_JNIENVIRONMENT_JI_PINVOKES
 #endif  // !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS
 
 #if FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_INTPTRS
@@ -17891,6 +17891,1138 @@ namespace
 #endif
 {
 
+	static partial class JniNativeMethods {
+
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int GetVersion (IntPtr env)
+		{
+			return (*((JNIEnv**)env))->GetVersion (env);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject DefineClass (IntPtr env, IntPtr name, jobject loader, IntPtr buffer, int bufferLength)
+		{
+			return (*((JNIEnv**)env))->DefineClass (env, name, loader, buffer, bufferLength);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject FindClass (IntPtr env, IntPtr classname)
+		{
+			return (*((JNIEnv**)env))->FindClass (env, classname);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject ToReflectedMethod (IntPtr env, jobject type, IntPtr method, byte isStatic)
+		{
+			return (*((JNIEnv**)env))->ToReflectedMethod (env, type, method, isStatic);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject GetSuperclass (IntPtr env, jobject type)
+		{
+			return (*((JNIEnv**)env))->GetSuperclass (env, type);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte IsAssignableFrom (IntPtr env, jobject class1, jobject class2)
+		{
+			return (*((JNIEnv**)env))->IsAssignableFrom (env, class1, class2);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject ToReflectedField (IntPtr env, jobject type, IntPtr field, byte isStatic)
+		{
+			return (*((JNIEnv**)env))->ToReflectedField (env, type, field, isStatic);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int Throw (IntPtr env, jobject toThrow)
+		{
+			return (*((JNIEnv**)env))->Throw (env, toThrow);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int ThrowNew (IntPtr env, jobject type, IntPtr message)
+		{
+			return (*((JNIEnv**)env))->ThrowNew (env, type, message);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject ExceptionOccurred (IntPtr env)
+		{
+			return (*((JNIEnv**)env))->ExceptionOccurred (env);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ExceptionDescribe (IntPtr env)
+		{
+			(*((JNIEnv**)env))->ExceptionDescribe (env);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ExceptionClear (IntPtr env)
+		{
+			(*((JNIEnv**)env))->ExceptionClear (env);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void FatalError (IntPtr env, IntPtr message)
+		{
+			(*((JNIEnv**)env))->FatalError (env, message);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int PushLocalFrame (IntPtr env, int capacity)
+		{
+			return (*((JNIEnv**)env))->PushLocalFrame (env, capacity);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject PopLocalFrame (IntPtr env, jobject result)
+		{
+			return (*((JNIEnv**)env))->PopLocalFrame (env, result);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewGlobalRef (IntPtr env, jobject instance)
+		{
+			return (*((JNIEnv**)env))->NewGlobalRef (env, instance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void DeleteGlobalRef (IntPtr env, IntPtr instance)
+		{
+			(*((JNIEnv**)env))->DeleteGlobalRef (env, instance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void DeleteLocalRef (IntPtr env, IntPtr instance)
+		{
+			(*((JNIEnv**)env))->DeleteLocalRef (env, instance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte IsSameObject (IntPtr env, jobject object1, jobject object2)
+		{
+			return (*((JNIEnv**)env))->IsSameObject (env, object1, object2);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewLocalRef (IntPtr env, jobject instance)
+		{
+			return (*((JNIEnv**)env))->NewLocalRef (env, instance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int EnsureLocalCapacity (IntPtr env, int capacity)
+		{
+			return (*((JNIEnv**)env))->EnsureLocalCapacity (env, capacity);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject AllocObject (IntPtr env, jobject type)
+		{
+			return (*((JNIEnv**)env))->AllocObject (env, type);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewObject (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->NewObject (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewObjectA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->NewObjectA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject GetObjectClass (IntPtr env, jobject instance)
+		{
+			return (*((JNIEnv**)env))->GetObjectClass (env, instance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte IsInstanceOf (IntPtr env, jobject instance, jobject type)
+		{
+			return (*((JNIEnv**)env))->IsInstanceOf (env, instance, type);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe IntPtr GetMethodID (IntPtr env, jobject type, IntPtr name, IntPtr signature)
+		{
+			return (*((JNIEnv**)env))->GetMethodID (env, type, name, signature);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject CallObjectMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallObjectMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject CallObjectMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallObjectMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte CallBooleanMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallBooleanMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte CallBooleanMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallBooleanMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe sbyte CallByteMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallByteMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe sbyte CallByteMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallByteMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char CallCharMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallCharMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char CallCharMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallCharMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe short CallShortMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallShortMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe short CallShortMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallShortMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int CallIntMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallIntMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int CallIntMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallIntMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long CallLongMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallLongMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long CallLongMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallLongMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe float CallFloatMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallFloatMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe float CallFloatMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallFloatMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe double CallDoubleMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallDoubleMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe double CallDoubleMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallDoubleMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void CallVoidMethod (IntPtr env, jobject instance, IntPtr method)
+		{
+			(*((JNIEnv**)env))->CallVoidMethod (env, instance, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void CallVoidMethodA (IntPtr env, jobject instance, IntPtr method, IntPtr args)
+		{
+			(*((JNIEnv**)env))->CallVoidMethodA (env, instance, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject CallNonvirtualObjectMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualObjectMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject CallNonvirtualObjectMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualObjectMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte CallNonvirtualBooleanMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualBooleanMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte CallNonvirtualBooleanMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualBooleanMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe sbyte CallNonvirtualByteMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualByteMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe sbyte CallNonvirtualByteMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualByteMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char CallNonvirtualCharMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualCharMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char CallNonvirtualCharMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualCharMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe short CallNonvirtualShortMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualShortMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe short CallNonvirtualShortMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualShortMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int CallNonvirtualIntMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualIntMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int CallNonvirtualIntMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualIntMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long CallNonvirtualLongMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualLongMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long CallNonvirtualLongMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualLongMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe float CallNonvirtualFloatMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualFloatMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe float CallNonvirtualFloatMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualFloatMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe double CallNonvirtualDoubleMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualDoubleMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe double CallNonvirtualDoubleMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallNonvirtualDoubleMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void CallNonvirtualVoidMethod (IntPtr env, jobject instance, jobject type, IntPtr method)
+		{
+			(*((JNIEnv**)env))->CallNonvirtualVoidMethod (env, instance, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void CallNonvirtualVoidMethodA (IntPtr env, jobject instance, jobject type, IntPtr method, IntPtr args)
+		{
+			(*((JNIEnv**)env))->CallNonvirtualVoidMethodA (env, instance, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe IntPtr GetFieldID (IntPtr env, jobject type, IntPtr name, IntPtr signature)
+		{
+			return (*((JNIEnv**)env))->GetFieldID (env, type, name, signature);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject GetObjectField (IntPtr env, jobject instance, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetObjectField (env, instance, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte GetBooleanField (IntPtr env, jobject instance, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetBooleanField (env, instance, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe sbyte GetByteField (IntPtr env, jobject instance, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetByteField (env, instance, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char GetCharField (IntPtr env, jobject instance, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetCharField (env, instance, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe short GetShortField (IntPtr env, jobject instance, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetShortField (env, instance, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int GetIntField (IntPtr env, jobject instance, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetIntField (env, instance, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long GetLongField (IntPtr env, jobject instance, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetLongField (env, instance, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe float GetFloatField (IntPtr env, jobject instance, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetFloatField (env, instance, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe double GetDoubleField (IntPtr env, jobject instance, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetDoubleField (env, instance, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetObjectField (IntPtr env, jobject instance, IntPtr field, jobject value)
+		{
+			(*((JNIEnv**)env))->SetObjectField (env, instance, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetBooleanField (IntPtr env, jobject instance, IntPtr field, byte value)
+		{
+			(*((JNIEnv**)env))->SetBooleanField (env, instance, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetByteField (IntPtr env, jobject instance, IntPtr field, sbyte value)
+		{
+			(*((JNIEnv**)env))->SetByteField (env, instance, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetCharField (IntPtr env, jobject instance, IntPtr field, char value)
+		{
+			(*((JNIEnv**)env))->SetCharField (env, instance, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetShortField (IntPtr env, jobject instance, IntPtr field, short value)
+		{
+			(*((JNIEnv**)env))->SetShortField (env, instance, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetIntField (IntPtr env, jobject instance, IntPtr field, int value)
+		{
+			(*((JNIEnv**)env))->SetIntField (env, instance, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetLongField (IntPtr env, jobject instance, IntPtr field, long value)
+		{
+			(*((JNIEnv**)env))->SetLongField (env, instance, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetFloatField (IntPtr env, jobject instance, IntPtr field, float value)
+		{
+			(*((JNIEnv**)env))->SetFloatField (env, instance, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetDoubleField (IntPtr env, jobject instance, IntPtr field, double value)
+		{
+			(*((JNIEnv**)env))->SetDoubleField (env, instance, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe IntPtr GetStaticMethodID (IntPtr env, jobject type, IntPtr name, IntPtr signature)
+		{
+			return (*((JNIEnv**)env))->GetStaticMethodID (env, type, name, signature);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject CallStaticObjectMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallStaticObjectMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject CallStaticObjectMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallStaticObjectMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte CallStaticBooleanMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallStaticBooleanMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte CallStaticBooleanMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallStaticBooleanMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe sbyte CallStaticByteMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallStaticByteMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe sbyte CallStaticByteMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallStaticByteMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char CallStaticCharMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallStaticCharMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char CallStaticCharMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallStaticCharMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe short CallStaticShortMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallStaticShortMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe short CallStaticShortMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallStaticShortMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int CallStaticIntMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallStaticIntMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int CallStaticIntMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallStaticIntMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long CallStaticLongMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallStaticLongMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long CallStaticLongMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallStaticLongMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe float CallStaticFloatMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallStaticFloatMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe float CallStaticFloatMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallStaticFloatMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe double CallStaticDoubleMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			return (*((JNIEnv**)env))->CallStaticDoubleMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe double CallStaticDoubleMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			return (*((JNIEnv**)env))->CallStaticDoubleMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void CallStaticVoidMethod (IntPtr env, jobject type, IntPtr method)
+		{
+			(*((JNIEnv**)env))->CallStaticVoidMethod (env, type, method);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void CallStaticVoidMethodA (IntPtr env, jobject type, IntPtr method, IntPtr args)
+		{
+			(*((JNIEnv**)env))->CallStaticVoidMethodA (env, type, method, args);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe IntPtr GetStaticFieldID (IntPtr env, jobject type, IntPtr name, IntPtr signature)
+		{
+			return (*((JNIEnv**)env))->GetStaticFieldID (env, type, name, signature);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject GetStaticObjectField (IntPtr env, jobject type, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetStaticObjectField (env, type, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte GetStaticBooleanField (IntPtr env, jobject type, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetStaticBooleanField (env, type, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe sbyte GetStaticByteField (IntPtr env, jobject type, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetStaticByteField (env, type, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char GetStaticCharField (IntPtr env, jobject type, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetStaticCharField (env, type, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe short GetStaticShortField (IntPtr env, jobject type, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetStaticShortField (env, type, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int GetStaticIntField (IntPtr env, jobject type, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetStaticIntField (env, type, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long GetStaticLongField (IntPtr env, jobject type, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetStaticLongField (env, type, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe float GetStaticFloatField (IntPtr env, jobject type, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetStaticFloatField (env, type, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe double GetStaticDoubleField (IntPtr env, jobject type, IntPtr field)
+		{
+			return (*((JNIEnv**)env))->GetStaticDoubleField (env, type, field);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetStaticObjectField (IntPtr env, jobject type, IntPtr field, jobject value)
+		{
+			(*((JNIEnv**)env))->SetStaticObjectField (env, type, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetStaticBooleanField (IntPtr env, jobject type, IntPtr field, byte value)
+		{
+			(*((JNIEnv**)env))->SetStaticBooleanField (env, type, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetStaticByteField (IntPtr env, jobject type, IntPtr field, sbyte value)
+		{
+			(*((JNIEnv**)env))->SetStaticByteField (env, type, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetStaticCharField (IntPtr env, jobject type, IntPtr field, char value)
+		{
+			(*((JNIEnv**)env))->SetStaticCharField (env, type, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetStaticShortField (IntPtr env, jobject type, IntPtr field, short value)
+		{
+			(*((JNIEnv**)env))->SetStaticShortField (env, type, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetStaticIntField (IntPtr env, jobject type, IntPtr field, int value)
+		{
+			(*((JNIEnv**)env))->SetStaticIntField (env, type, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetStaticLongField (IntPtr env, jobject type, IntPtr field, long value)
+		{
+			(*((JNIEnv**)env))->SetStaticLongField (env, type, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetStaticFloatField (IntPtr env, jobject type, IntPtr field, float value)
+		{
+			(*((JNIEnv**)env))->SetStaticFloatField (env, type, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetStaticDoubleField (IntPtr env, jobject type, IntPtr field, double value)
+		{
+			(*((JNIEnv**)env))->SetStaticDoubleField (env, type, field, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewString (IntPtr env, char* unicodeChars, int length)
+		{
+			return (*((JNIEnv**)env))->NewString (env, unicodeChars, length);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int GetStringLength (IntPtr env, jobject stringInstance)
+		{
+			return (*((JNIEnv**)env))->GetStringLength (env, stringInstance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char* GetStringChars (IntPtr env, jobject stringInstance, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetStringChars (env, stringInstance, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleaseStringChars (IntPtr env, jobject stringInstance, char* chars)
+		{
+			(*((JNIEnv**)env))->ReleaseStringChars (env, stringInstance, chars);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int GetArrayLength (IntPtr env, jobject array)
+		{
+			return (*((JNIEnv**)env))->GetArrayLength (env, array);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewObjectArray (IntPtr env, int length, jobject elementClass, jobject initialElement)
+		{
+			return (*((JNIEnv**)env))->NewObjectArray (env, length, elementClass, initialElement);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject GetObjectArrayElement (IntPtr env, jobject array, int index)
+		{
+			return (*((JNIEnv**)env))->GetObjectArrayElement (env, array, index);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetObjectArrayElement (IntPtr env, jobject array, int index, jobject value)
+		{
+			(*((JNIEnv**)env))->SetObjectArrayElement (env, array, index, value);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewBooleanArray (IntPtr env, int length)
+		{
+			return (*((JNIEnv**)env))->NewBooleanArray (env, length);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewByteArray (IntPtr env, int length)
+		{
+			return (*((JNIEnv**)env))->NewByteArray (env, length);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewCharArray (IntPtr env, int length)
+		{
+			return (*((JNIEnv**)env))->NewCharArray (env, length);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewShortArray (IntPtr env, int length)
+		{
+			return (*((JNIEnv**)env))->NewShortArray (env, length);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewIntArray (IntPtr env, int length)
+		{
+			return (*((JNIEnv**)env))->NewIntArray (env, length);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewLongArray (IntPtr env, int length)
+		{
+			return (*((JNIEnv**)env))->NewLongArray (env, length);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewFloatArray (IntPtr env, int length)
+		{
+			return (*((JNIEnv**)env))->NewFloatArray (env, length);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewDoubleArray (IntPtr env, int length)
+		{
+			return (*((JNIEnv**)env))->NewDoubleArray (env, length);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe bool* GetBooleanArrayElements (IntPtr env, jobject array, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetBooleanArrayElements (env, array, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe sbyte* GetByteArrayElements (IntPtr env, jobject array, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetByteArrayElements (env, array, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe char* GetCharArrayElements (IntPtr env, jobject array, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetCharArrayElements (env, array, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe short* GetShortArrayElements (IntPtr env, jobject array, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetShortArrayElements (env, array, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int* GetIntArrayElements (IntPtr env, jobject array, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetIntArrayElements (env, array, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long* GetLongArrayElements (IntPtr env, jobject array, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetLongArrayElements (env, array, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe float* GetFloatArrayElements (IntPtr env, jobject array, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetFloatArrayElements (env, array, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe double* GetDoubleArrayElements (IntPtr env, jobject array, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetDoubleArrayElements (env, array, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleaseBooleanArrayElements (IntPtr env, jobject array, bool* elements, int mode)
+		{
+			(*((JNIEnv**)env))->ReleaseBooleanArrayElements (env, array, elements, mode);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleaseByteArrayElements (IntPtr env, jobject array, sbyte* elements, int mode)
+		{
+			(*((JNIEnv**)env))->ReleaseByteArrayElements (env, array, elements, mode);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleaseCharArrayElements (IntPtr env, jobject array, char* elements, int mode)
+		{
+			(*((JNIEnv**)env))->ReleaseCharArrayElements (env, array, elements, mode);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleaseShortArrayElements (IntPtr env, jobject array, short* elements, int mode)
+		{
+			(*((JNIEnv**)env))->ReleaseShortArrayElements (env, array, elements, mode);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleaseIntArrayElements (IntPtr env, jobject array, int* elements, int mode)
+		{
+			(*((JNIEnv**)env))->ReleaseIntArrayElements (env, array, elements, mode);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleaseLongArrayElements (IntPtr env, jobject array, long* elements, int mode)
+		{
+			(*((JNIEnv**)env))->ReleaseLongArrayElements (env, array, elements, mode);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleaseFloatArrayElements (IntPtr env, jobject array, float* elements, int mode)
+		{
+			(*((JNIEnv**)env))->ReleaseFloatArrayElements (env, array, elements, mode);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleaseDoubleArrayElements (IntPtr env, jobject array, double* elements, int mode)
+		{
+			(*((JNIEnv**)env))->ReleaseDoubleArrayElements (env, array, elements, mode);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void GetBooleanArrayRegion (IntPtr env, jobject array, int start, int length, bool* buffer)
+		{
+			(*((JNIEnv**)env))->GetBooleanArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void GetByteArrayRegion (IntPtr env, jobject array, int start, int length, sbyte* buffer)
+		{
+			(*((JNIEnv**)env))->GetByteArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void GetCharArrayRegion (IntPtr env, jobject array, int start, int length, char* buffer)
+		{
+			(*((JNIEnv**)env))->GetCharArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void GetShortArrayRegion (IntPtr env, jobject array, int start, int length, short* buffer)
+		{
+			(*((JNIEnv**)env))->GetShortArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void GetIntArrayRegion (IntPtr env, jobject array, int start, int length, int* buffer)
+		{
+			(*((JNIEnv**)env))->GetIntArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void GetLongArrayRegion (IntPtr env, jobject array, int start, int length, long* buffer)
+		{
+			(*((JNIEnv**)env))->GetLongArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void GetFloatArrayRegion (IntPtr env, jobject array, int start, int length, float* buffer)
+		{
+			(*((JNIEnv**)env))->GetFloatArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void GetDoubleArrayRegion (IntPtr env, jobject array, int start, int length, double* buffer)
+		{
+			(*((JNIEnv**)env))->GetDoubleArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetBooleanArrayRegion (IntPtr env, jobject array, int start, int length, bool* buffer)
+		{
+			(*((JNIEnv**)env))->SetBooleanArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetByteArrayRegion (IntPtr env, jobject array, int start, int length, sbyte* buffer)
+		{
+			(*((JNIEnv**)env))->SetByteArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetCharArrayRegion (IntPtr env, jobject array, int start, int length, char* buffer)
+		{
+			(*((JNIEnv**)env))->SetCharArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetShortArrayRegion (IntPtr env, jobject array, int start, int length, short* buffer)
+		{
+			(*((JNIEnv**)env))->SetShortArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetIntArrayRegion (IntPtr env, jobject array, int start, int length, int* buffer)
+		{
+			(*((JNIEnv**)env))->SetIntArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetLongArrayRegion (IntPtr env, jobject array, int start, int length, long* buffer)
+		{
+			(*((JNIEnv**)env))->SetLongArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetFloatArrayRegion (IntPtr env, jobject array, int start, int length, float* buffer)
+		{
+			(*((JNIEnv**)env))->SetFloatArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void SetDoubleArrayRegion (IntPtr env, jobject array, int start, int length, double* buffer)
+		{
+			(*((JNIEnv**)env))->SetDoubleArrayRegion (env, array, start, length, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int RegisterNatives (IntPtr env, jobject type, JniNativeMethodRegistration [] methods, int numMethods)
+		{
+			return (*((JNIEnv**)env))->RegisterNatives (env, type, methods, numMethods);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int UnregisterNatives (IntPtr env, jobject type)
+		{
+			return (*((JNIEnv**)env))->UnregisterNatives (env, type);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int MonitorEnter (IntPtr env, jobject instance)
+		{
+			return (*((JNIEnv**)env))->MonitorEnter (env, instance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int MonitorExit (IntPtr env, jobject instance)
+		{
+			return (*((JNIEnv**)env))->MonitorExit (env, instance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int GetJavaVM (IntPtr env, IntPtr* vm)
+		{
+			return (*((JNIEnv**)env))->GetJavaVM (env, vm);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe IntPtr GetPrimitiveArrayCritical (IntPtr env, jobject array, bool* isCopy)
+		{
+			return (*((JNIEnv**)env))->GetPrimitiveArrayCritical (env, array, isCopy);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void ReleasePrimitiveArrayCritical (IntPtr env, jobject array, IntPtr carray, int mode)
+		{
+			(*((JNIEnv**)env))->ReleasePrimitiveArrayCritical (env, array, carray, mode);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewWeakGlobalRef (IntPtr env, jobject instance)
+		{
+			return (*((JNIEnv**)env))->NewWeakGlobalRef (env, instance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void DeleteWeakGlobalRef (IntPtr env, IntPtr instance)
+		{
+			(*((JNIEnv**)env))->DeleteWeakGlobalRef (env, instance);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe byte ExceptionCheck (IntPtr env)
+		{
+			return (*((JNIEnv**)env))->ExceptionCheck (env);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe jobject NewDirectByteBuffer (IntPtr env, IntPtr address, long capacity)
+		{
+			return (*((JNIEnv**)env))->NewDirectByteBuffer (env, address, capacity);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe IntPtr GetDirectBufferAddress (IntPtr env, jobject buffer)
+		{
+			return (*((JNIEnv**)env))->GetDirectBufferAddress (env, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe long GetDirectBufferCapacity (IntPtr env, jobject buffer)
+		{
+			return (*((JNIEnv**)env))->GetDirectBufferCapacity (env, buffer);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static unsafe JniObjectReferenceType GetObjectRefType (IntPtr env, jobject instance)
+		{
+			return (*((JNIEnv**)env))->GetObjectRefType (env, instance);
+		}
+	}
+
 	partial class JniEnvironment {
 
 	public static partial class Arrays {
@@ -17901,7 +19033,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetArrayLength (__env, array.Handle);
+			var tmp = JniNativeMethods.GetArrayLength (__env, array.Handle);
 			return tmp;
 		}
 
@@ -17911,8 +19043,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "elementClass");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewObjectArray (__env, length, elementClass.Handle, initialElement.Handle);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.NewObjectArray (__env, length, elementClass.Handle, initialElement.Handle);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -17928,8 +19060,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetObjectArrayElement (__env, array.Handle, index);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.GetObjectArrayElement (__env, array.Handle, index);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -17945,8 +19077,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetObjectArrayElement (__env, array.Handle, index, value.Handle);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.SetObjectArrayElement (__env, array.Handle, index, value.Handle);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -17957,7 +19089,7 @@ namespace
 		public static unsafe JniObjectReference NewBooleanArray (int length)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewBooleanArray (__env, length);
+			var tmp = JniNativeMethods.NewBooleanArray (__env, length);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -17965,7 +19097,7 @@ namespace
 		public static unsafe JniObjectReference NewByteArray (int length)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewByteArray (__env, length);
+			var tmp = JniNativeMethods.NewByteArray (__env, length);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -17973,7 +19105,7 @@ namespace
 		public static unsafe JniObjectReference NewCharArray (int length)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewCharArray (__env, length);
+			var tmp = JniNativeMethods.NewCharArray (__env, length);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -17981,7 +19113,7 @@ namespace
 		public static unsafe JniObjectReference NewShortArray (int length)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewShortArray (__env, length);
+			var tmp = JniNativeMethods.NewShortArray (__env, length);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -17989,7 +19121,7 @@ namespace
 		public static unsafe JniObjectReference NewIntArray (int length)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewIntArray (__env, length);
+			var tmp = JniNativeMethods.NewIntArray (__env, length);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -17997,7 +19129,7 @@ namespace
 		public static unsafe JniObjectReference NewLongArray (int length)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewLongArray (__env, length);
+			var tmp = JniNativeMethods.NewLongArray (__env, length);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -18005,7 +19137,7 @@ namespace
 		public static unsafe JniObjectReference NewFloatArray (int length)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewFloatArray (__env, length);
+			var tmp = JniNativeMethods.NewFloatArray (__env, length);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -18013,7 +19145,7 @@ namespace
 		public static unsafe JniObjectReference NewDoubleArray (int length)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewDoubleArray (__env, length);
+			var tmp = JniNativeMethods.NewDoubleArray (__env, length);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -18024,7 +19156,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetBooleanArrayElements (__env, array.Handle, isCopy);
+			var tmp = JniNativeMethods.GetBooleanArrayElements (__env, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -18034,7 +19166,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetByteArrayElements (__env, array.Handle, isCopy);
+			var tmp = JniNativeMethods.GetByteArrayElements (__env, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -18044,7 +19176,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetCharArrayElements (__env, array.Handle, isCopy);
+			var tmp = JniNativeMethods.GetCharArrayElements (__env, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -18054,7 +19186,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetShortArrayElements (__env, array.Handle, isCopy);
+			var tmp = JniNativeMethods.GetShortArrayElements (__env, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -18064,7 +19196,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetIntArrayElements (__env, array.Handle, isCopy);
+			var tmp = JniNativeMethods.GetIntArrayElements (__env, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -18074,7 +19206,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetLongArrayElements (__env, array.Handle, isCopy);
+			var tmp = JniNativeMethods.GetLongArrayElements (__env, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -18084,7 +19216,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetFloatArrayElements (__env, array.Handle, isCopy);
+			var tmp = JniNativeMethods.GetFloatArrayElements (__env, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -18094,7 +19226,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetDoubleArrayElements (__env, array.Handle, isCopy);
+			var tmp = JniNativeMethods.GetDoubleArrayElements (__env, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -18104,7 +19236,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleaseBooleanArrayElements (__env, array.Handle, elements, ((int) mode));
+			JniNativeMethods.ReleaseBooleanArrayElements (__env, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, JniReleaseArrayElementsMode mode)
@@ -18113,7 +19245,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleaseByteArrayElements (__env, array.Handle, elements, ((int) mode));
+			JniNativeMethods.ReleaseByteArrayElements (__env, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, JniReleaseArrayElementsMode mode)
@@ -18122,7 +19254,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleaseCharArrayElements (__env, array.Handle, elements, ((int) mode));
+			JniNativeMethods.ReleaseCharArrayElements (__env, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, JniReleaseArrayElementsMode mode)
@@ -18131,7 +19263,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleaseShortArrayElements (__env, array.Handle, elements, ((int) mode));
+			JniNativeMethods.ReleaseShortArrayElements (__env, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, JniReleaseArrayElementsMode mode)
@@ -18140,7 +19272,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleaseIntArrayElements (__env, array.Handle, elements, ((int) mode));
+			JniNativeMethods.ReleaseIntArrayElements (__env, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, JniReleaseArrayElementsMode mode)
@@ -18149,7 +19281,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleaseLongArrayElements (__env, array.Handle, elements, ((int) mode));
+			JniNativeMethods.ReleaseLongArrayElements (__env, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, JniReleaseArrayElementsMode mode)
@@ -18158,7 +19290,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleaseFloatArrayElements (__env, array.Handle, elements, ((int) mode));
+			JniNativeMethods.ReleaseFloatArrayElements (__env, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, JniReleaseArrayElementsMode mode)
@@ -18167,7 +19299,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleaseDoubleArrayElements (__env, array.Handle, elements, ((int) mode));
+			JniNativeMethods.ReleaseDoubleArrayElements (__env, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
@@ -18176,8 +19308,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->GetBooleanArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.GetBooleanArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18191,8 +19323,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->GetByteArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.GetByteArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18206,8 +19338,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->GetCharArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.GetCharArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18221,8 +19353,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->GetShortArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.GetShortArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18236,8 +19368,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->GetIntArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.GetIntArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18251,8 +19383,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->GetLongArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.GetLongArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18266,8 +19398,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->GetFloatArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.GetFloatArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18281,8 +19413,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->GetDoubleArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.GetDoubleArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18296,8 +19428,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetBooleanArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.SetBooleanArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18311,8 +19443,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetByteArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.SetByteArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18326,8 +19458,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetCharArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.SetCharArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18341,8 +19473,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetShortArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.SetShortArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18356,8 +19488,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetIntArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.SetIntArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18371,8 +19503,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetLongArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.SetLongArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18386,8 +19518,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetFloatArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.SetFloatArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18401,8 +19533,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetDoubleArrayRegion (__env, array.Handle, start, length, buffer);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.SetDoubleArrayRegion (__env, array.Handle, start, length, buffer);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18416,7 +19548,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "array");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetPrimitiveArrayCritical (__env, array.Handle, isCopy);
+			var tmp = JniNativeMethods.GetPrimitiveArrayCritical (__env, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -18428,7 +19560,7 @@ namespace
 				throw new ArgumentException ("'carray' must not be IntPtr.Zero.", "carray");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleasePrimitiveArrayCritical (__env, array.Handle, carray, ((int) mode));
+			JniNativeMethods.ReleasePrimitiveArrayCritical (__env, array.Handle, carray, ((int) mode));
 		}
 	}
 
@@ -18440,7 +19572,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "toThrow");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->Throw (__env, toThrow.Handle);
+			var tmp = JniNativeMethods.Throw (__env, toThrow.Handle);
 			return tmp;
 		}
 
@@ -18454,7 +19586,7 @@ namespace
 			var _message_ptr = Marshal.StringToCoTaskMemUTF8 (message);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->ThrowNew (__env, type.Handle, _message_ptr);
+			var tmp = JniNativeMethods.ThrowNew (__env, type.Handle, _message_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_message_ptr);
 			return tmp;
 		}
@@ -18462,20 +19594,20 @@ namespace
 		public static unsafe JniObjectReference ExceptionOccurred ()
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.ExceptionOccurred (__env);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe void ExceptionDescribe ()
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ExceptionDescribe (__env);
+			JniNativeMethods.ExceptionDescribe (__env);
 		}
 
 		public static unsafe void ExceptionClear ()
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ExceptionClear (__env);
+			JniNativeMethods.ExceptionClear (__env);
 		}
 
 		public static unsafe void FatalError (string message)
@@ -18486,14 +19618,14 @@ namespace
 			var _message_ptr = Marshal.StringToCoTaskMemUTF8 (message);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->FatalError (__env, _message_ptr);
+			JniNativeMethods.FatalError (__env, _message_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_message_ptr);
 		}
 
 		public static unsafe bool ExceptionCheck ()
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->ExceptionCheck (__env);
+			var tmp = JniNativeMethods.ExceptionCheck (__env);
 			return (tmp != 0) ? true : false;
 		}
 	}
@@ -18513,8 +19645,8 @@ namespace
 			var _signature_ptr = Marshal.StringToCoTaskMemUTF8 (signature);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetFieldID (__env, type.Handle, _name_ptr, _signature_ptr);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.GetFieldID (__env, type.Handle, _name_ptr, _signature_ptr);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
 
@@ -18538,7 +19670,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetObjectField (__env, instance.Handle, field.ID);
+			var tmp = JniNativeMethods.GetObjectField (__env, instance.Handle, field.ID);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -18554,7 +19686,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetBooleanField (__env, instance.Handle, field.ID);
+			var tmp = JniNativeMethods.GetBooleanField (__env, instance.Handle, field.ID);
 			return (tmp != 0) ? true : false;
 		}
 
@@ -18569,7 +19701,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetByteField (__env, instance.Handle, field.ID);
+			var tmp = JniNativeMethods.GetByteField (__env, instance.Handle, field.ID);
 			return tmp;
 		}
 
@@ -18584,7 +19716,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetCharField (__env, instance.Handle, field.ID);
+			var tmp = JniNativeMethods.GetCharField (__env, instance.Handle, field.ID);
 			return tmp;
 		}
 
@@ -18599,7 +19731,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetShortField (__env, instance.Handle, field.ID);
+			var tmp = JniNativeMethods.GetShortField (__env, instance.Handle, field.ID);
 			return tmp;
 		}
 
@@ -18614,7 +19746,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetIntField (__env, instance.Handle, field.ID);
+			var tmp = JniNativeMethods.GetIntField (__env, instance.Handle, field.ID);
 			return tmp;
 		}
 
@@ -18629,7 +19761,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetLongField (__env, instance.Handle, field.ID);
+			var tmp = JniNativeMethods.GetLongField (__env, instance.Handle, field.ID);
 			return tmp;
 		}
 
@@ -18644,7 +19776,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetFloatField (__env, instance.Handle, field.ID);
+			var tmp = JniNativeMethods.GetFloatField (__env, instance.Handle, field.ID);
 			return tmp;
 		}
 
@@ -18659,7 +19791,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetDoubleField (__env, instance.Handle, field.ID);
+			var tmp = JniNativeMethods.GetDoubleField (__env, instance.Handle, field.ID);
 			return tmp;
 		}
 
@@ -18674,7 +19806,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetObjectField (__env, instance.Handle, field.ID, value.Handle);
+			JniNativeMethods.SetObjectField (__env, instance.Handle, field.ID, value.Handle);
 		}
 
 		public static unsafe void SetBooleanField (JniObjectReference instance, JniFieldInfo field, bool value)
@@ -18688,7 +19820,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetBooleanField (__env, instance.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
+			JniNativeMethods.SetBooleanField (__env, instance.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
 		}
 
 		public static unsafe void SetByteField (JniObjectReference instance, JniFieldInfo field, sbyte value)
@@ -18702,7 +19834,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetByteField (__env, instance.Handle, field.ID, value);
+			JniNativeMethods.SetByteField (__env, instance.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetCharField (JniObjectReference instance, JniFieldInfo field, char value)
@@ -18716,7 +19848,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetCharField (__env, instance.Handle, field.ID, value);
+			JniNativeMethods.SetCharField (__env, instance.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetShortField (JniObjectReference instance, JniFieldInfo field, short value)
@@ -18730,7 +19862,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetShortField (__env, instance.Handle, field.ID, value);
+			JniNativeMethods.SetShortField (__env, instance.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetIntField (JniObjectReference instance, JniFieldInfo field, int value)
@@ -18744,7 +19876,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetIntField (__env, instance.Handle, field.ID, value);
+			JniNativeMethods.SetIntField (__env, instance.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetLongField (JniObjectReference instance, JniFieldInfo field, long value)
@@ -18758,7 +19890,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetLongField (__env, instance.Handle, field.ID, value);
+			JniNativeMethods.SetLongField (__env, instance.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetFloatField (JniObjectReference instance, JniFieldInfo field, float value)
@@ -18772,7 +19904,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetFloatField (__env, instance.Handle, field.ID, value);
+			JniNativeMethods.SetFloatField (__env, instance.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetDoubleField (JniObjectReference instance, JniFieldInfo field, double value)
@@ -18786,7 +19918,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetDoubleField (__env, instance.Handle, field.ID, value);
+			JniNativeMethods.SetDoubleField (__env, instance.Handle, field.ID, value);
 		}
 	}
 
@@ -18805,8 +19937,8 @@ namespace
 			var _signature_ptr = Marshal.StringToCoTaskMemUTF8 (signature);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetMethodID (__env, type.Handle, _name_ptr, _signature_ptr);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.GetMethodID (__env, type.Handle, _name_ptr, _signature_ptr);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
 
@@ -18830,8 +19962,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallObjectMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallObjectMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18852,8 +19984,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallObjectMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallObjectMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18874,8 +20006,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallBooleanMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallBooleanMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18895,8 +20027,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallBooleanMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallBooleanMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18916,8 +20048,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallByteMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallByteMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18937,8 +20069,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallByteMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallByteMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18958,8 +20090,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallCharMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallCharMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -18979,8 +20111,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallCharMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallCharMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19000,8 +20132,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallShortMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallShortMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19021,8 +20153,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallShortMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallShortMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19042,8 +20174,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallIntMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallIntMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19063,8 +20195,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallIntMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallIntMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19084,8 +20216,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallLongMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallLongMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19105,8 +20237,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallLongMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallLongMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19126,8 +20258,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallFloatMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallFloatMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19147,8 +20279,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallFloatMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallFloatMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19168,8 +20300,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallDoubleMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallDoubleMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19189,8 +20321,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallDoubleMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallDoubleMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19210,8 +20342,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->CallVoidMethod (__env, instance.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.CallVoidMethod (__env, instance.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19230,8 +20362,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->CallVoidMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.CallVoidMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19252,8 +20384,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualObjectMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualObjectMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19276,8 +20408,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualObjectMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualObjectMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19300,8 +20432,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualBooleanMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualBooleanMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19323,8 +20455,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualBooleanMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualBooleanMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19346,8 +20478,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualByteMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualByteMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19369,8 +20501,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualByteMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualByteMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19392,8 +20524,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualCharMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualCharMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19415,8 +20547,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualCharMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualCharMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19438,8 +20570,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualShortMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualShortMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19461,8 +20593,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualShortMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualShortMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19484,8 +20616,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualIntMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualIntMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19507,8 +20639,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualIntMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualIntMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19530,8 +20662,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualLongMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualLongMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19553,8 +20685,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualLongMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualLongMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19576,8 +20708,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualFloatMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualFloatMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19599,8 +20731,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualFloatMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualFloatMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19622,8 +20754,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualDoubleMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualDoubleMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19645,8 +20777,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallNonvirtualDoubleMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallNonvirtualDoubleMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19668,8 +20800,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->CallNonvirtualVoidMethod (__env, instance.Handle, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.CallNonvirtualVoidMethod (__env, instance.Handle, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19690,8 +20822,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->CallNonvirtualVoidMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.CallNonvirtualVoidMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19708,8 +20840,8 @@ namespace
 				throw new ArgumentException ("'address' must not be IntPtr.Zero.", "address");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewDirectByteBuffer (__env, address, capacity);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.NewDirectByteBuffer (__env, address, capacity);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19725,7 +20857,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "buffer");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetDirectBufferAddress (__env, buffer.Handle);
+			var tmp = JniNativeMethods.GetDirectBufferAddress (__env, buffer.Handle);
 			return tmp;
 		}
 
@@ -19735,7 +20867,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "buffer");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetDirectBufferCapacity (__env, buffer.Handle);
+			var tmp = JniNativeMethods.GetDirectBufferCapacity (__env, buffer.Handle);
 			return tmp;
 		}
 	}
@@ -19748,7 +20880,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "instance");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->MonitorEnter (__env, instance.Handle);
+			var tmp = JniNativeMethods.MonitorEnter (__env, instance.Handle);
 			return tmp;
 		}
 
@@ -19758,7 +20890,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "instance");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->MonitorExit (__env, instance.Handle);
+			var tmp = JniNativeMethods.MonitorExit (__env, instance.Handle);
 			return tmp;
 		}
 	}
@@ -19771,8 +20903,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "type");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->AllocObject (__env, type.Handle);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.AllocObject (__env, type.Handle);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19793,8 +20925,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewObject (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.NewObject (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19815,8 +20947,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewObjectA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.NewObjectA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19832,14 +20964,14 @@ namespace
 		internal static unsafe int _PushLocalFrame (int capacity)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->PushLocalFrame (__env, capacity);
+			var tmp = JniNativeMethods.PushLocalFrame (__env, capacity);
 			return tmp;
 		}
 
 		public static unsafe JniObjectReference PopLocalFrame (JniObjectReference result)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->PopLocalFrame (__env, result.Handle);
+			var tmp = JniNativeMethods.PopLocalFrame (__env, result.Handle);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -19847,33 +20979,33 @@ namespace
 		internal static unsafe JniObjectReference NewGlobalRef (JniObjectReference instance)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewGlobalRef (__env, instance.Handle);
+			var tmp = JniNativeMethods.NewGlobalRef (__env, instance.Handle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Global);
 		}
 
 		internal static unsafe void DeleteGlobalRef (IntPtr instance)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->DeleteGlobalRef (__env, instance);
+			JniNativeMethods.DeleteGlobalRef (__env, instance);
 		}
 
 		internal static unsafe void DeleteLocalRef (IntPtr instance)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->DeleteLocalRef (__env, instance);
+			JniNativeMethods.DeleteLocalRef (__env, instance);
 		}
 
 		internal static unsafe JniObjectReference NewLocalRef (JniObjectReference instance)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewLocalRef (__env, instance.Handle);
+			var tmp = JniNativeMethods.NewLocalRef (__env, instance.Handle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		internal static unsafe int _EnsureLocalCapacity (int capacity)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->EnsureLocalCapacity (__env, capacity);
+			var tmp = JniNativeMethods.EnsureLocalCapacity (__env, capacity);
 			return tmp;
 		}
 
@@ -19882,7 +21014,7 @@ namespace
 			IntPtr _vm_ptr = IntPtr.Zero;
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetJavaVM (__env, &_vm_ptr);
+			var tmp = JniNativeMethods.GetJavaVM (__env, &_vm_ptr);
 			vm = _vm_ptr;
 			return tmp;
 		}
@@ -19890,14 +21022,14 @@ namespace
 		internal static unsafe JniObjectReference NewWeakGlobalRef (JniObjectReference instance)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewWeakGlobalRef (__env, instance.Handle);
+			var tmp = JniNativeMethods.NewWeakGlobalRef (__env, instance.Handle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.WeakGlobal);
 		}
 
 		internal static unsafe void DeleteWeakGlobalRef (IntPtr instance)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->DeleteWeakGlobalRef (__env, instance);
+			JniNativeMethods.DeleteWeakGlobalRef (__env, instance);
 		}
 
 		internal static unsafe JniObjectReferenceType GetObjectRefType (JniObjectReference instance)
@@ -19906,7 +21038,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "instance");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetObjectRefType (__env, instance.Handle);
+			var tmp = JniNativeMethods.GetObjectRefType (__env, instance.Handle);
 			return tmp;
 		}
 	}
@@ -19924,8 +21056,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->ToReflectedMethod (__env, type.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.ToReflectedMethod (__env, type.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19946,8 +21078,8 @@ namespace
 			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->ToReflectedField (__env, type.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.ToReflectedField (__env, type.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -19973,8 +21105,8 @@ namespace
 			var _signature_ptr = Marshal.StringToCoTaskMemUTF8 (signature);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticFieldID (__env, type.Handle, _name_ptr, _signature_ptr);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.GetStaticFieldID (__env, type.Handle, _name_ptr, _signature_ptr);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
 
@@ -19998,7 +21130,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticObjectField (__env, type.Handle, field.ID);
+			var tmp = JniNativeMethods.GetStaticObjectField (__env, type.Handle, field.ID);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -20014,7 +21146,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticBooleanField (__env, type.Handle, field.ID);
+			var tmp = JniNativeMethods.GetStaticBooleanField (__env, type.Handle, field.ID);
 			return (tmp != 0) ? true : false;
 		}
 
@@ -20029,7 +21161,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticByteField (__env, type.Handle, field.ID);
+			var tmp = JniNativeMethods.GetStaticByteField (__env, type.Handle, field.ID);
 			return tmp;
 		}
 
@@ -20044,7 +21176,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticCharField (__env, type.Handle, field.ID);
+			var tmp = JniNativeMethods.GetStaticCharField (__env, type.Handle, field.ID);
 			return tmp;
 		}
 
@@ -20059,7 +21191,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticShortField (__env, type.Handle, field.ID);
+			var tmp = JniNativeMethods.GetStaticShortField (__env, type.Handle, field.ID);
 			return tmp;
 		}
 
@@ -20074,7 +21206,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticIntField (__env, type.Handle, field.ID);
+			var tmp = JniNativeMethods.GetStaticIntField (__env, type.Handle, field.ID);
 			return tmp;
 		}
 
@@ -20089,7 +21221,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticLongField (__env, type.Handle, field.ID);
+			var tmp = JniNativeMethods.GetStaticLongField (__env, type.Handle, field.ID);
 			return tmp;
 		}
 
@@ -20104,7 +21236,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticFloatField (__env, type.Handle, field.ID);
+			var tmp = JniNativeMethods.GetStaticFloatField (__env, type.Handle, field.ID);
 			return tmp;
 		}
 
@@ -20119,7 +21251,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticDoubleField (__env, type.Handle, field.ID);
+			var tmp = JniNativeMethods.GetStaticDoubleField (__env, type.Handle, field.ID);
 			return tmp;
 		}
 
@@ -20134,7 +21266,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetStaticObjectField (__env, type.Handle, field.ID, value.Handle);
+			JniNativeMethods.SetStaticObjectField (__env, type.Handle, field.ID, value.Handle);
 		}
 
 		public static unsafe void SetStaticBooleanField (JniObjectReference type, JniFieldInfo field, bool value)
@@ -20148,7 +21280,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetStaticBooleanField (__env, type.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
+			JniNativeMethods.SetStaticBooleanField (__env, type.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
 		}
 
 		public static unsafe void SetStaticByteField (JniObjectReference type, JniFieldInfo field, sbyte value)
@@ -20162,7 +21294,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetStaticByteField (__env, type.Handle, field.ID, value);
+			JniNativeMethods.SetStaticByteField (__env, type.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetStaticCharField (JniObjectReference type, JniFieldInfo field, char value)
@@ -20176,7 +21308,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetStaticCharField (__env, type.Handle, field.ID, value);
+			JniNativeMethods.SetStaticCharField (__env, type.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetStaticShortField (JniObjectReference type, JniFieldInfo field, short value)
@@ -20190,7 +21322,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetStaticShortField (__env, type.Handle, field.ID, value);
+			JniNativeMethods.SetStaticShortField (__env, type.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetStaticIntField (JniObjectReference type, JniFieldInfo field, int value)
@@ -20204,7 +21336,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetStaticIntField (__env, type.Handle, field.ID, value);
+			JniNativeMethods.SetStaticIntField (__env, type.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetStaticLongField (JniObjectReference type, JniFieldInfo field, long value)
@@ -20218,7 +21350,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetStaticLongField (__env, type.Handle, field.ID, value);
+			JniNativeMethods.SetStaticLongField (__env, type.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetStaticFloatField (JniObjectReference type, JniFieldInfo field, float value)
@@ -20232,7 +21364,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetStaticFloatField (__env, type.Handle, field.ID, value);
+			JniNativeMethods.SetStaticFloatField (__env, type.Handle, field.ID, value);
 		}
 
 		public static unsafe void SetStaticDoubleField (JniObjectReference type, JniFieldInfo field, double value)
@@ -20246,7 +21378,7 @@ namespace
 			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->SetStaticDoubleField (__env, type.Handle, field.ID, value);
+			JniNativeMethods.SetStaticDoubleField (__env, type.Handle, field.ID, value);
 		}
 	}
 
@@ -20265,8 +21397,8 @@ namespace
 			var _signature_ptr = Marshal.StringToCoTaskMemUTF8 (signature);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStaticMethodID (__env, type.Handle, _name_ptr, _signature_ptr);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.GetStaticMethodID (__env, type.Handle, _name_ptr, _signature_ptr);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
 
@@ -20290,8 +21422,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticObjectMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticObjectMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20312,8 +21444,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticObjectMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticObjectMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20334,8 +21466,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticBooleanMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticBooleanMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20355,8 +21487,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticBooleanMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticBooleanMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20376,8 +21508,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticByteMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticByteMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20397,8 +21529,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticByteMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticByteMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20418,8 +21550,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticCharMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticCharMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20439,8 +21571,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticCharMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticCharMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20460,8 +21592,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticShortMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticShortMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20481,8 +21613,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticShortMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticShortMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20502,8 +21634,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticIntMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticIntMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20523,8 +21655,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticIntMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticIntMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20544,8 +21676,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticLongMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticLongMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20565,8 +21697,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticLongMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticLongMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20586,8 +21718,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticFloatMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticFloatMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20607,8 +21739,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticFloatMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticFloatMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20628,8 +21760,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticDoubleMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticDoubleMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20649,8 +21781,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->CallStaticDoubleMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.CallStaticDoubleMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20670,8 +21802,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->CallStaticVoidMethod (__env, type.Handle, method.ID);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.CallStaticVoidMethod (__env, type.Handle, method.ID);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20690,8 +21822,8 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->CallStaticVoidMethodA (__env, type.Handle, method.ID, (IntPtr) args);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			JniNativeMethods.CallStaticVoidMethodA (__env, type.Handle, method.ID, (IntPtr) args);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20705,8 +21837,8 @@ namespace
 		public static unsafe JniObjectReference NewString (char* unicodeChars, int length)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->NewString (__env, unicodeChars, length);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.NewString (__env, unicodeChars, length);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20722,7 +21854,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "stringInstance");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStringLength (__env, stringInstance.Handle);
+			var tmp = JniNativeMethods.GetStringLength (__env, stringInstance.Handle);
 			return tmp;
 		}
 
@@ -20732,7 +21864,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "stringInstance");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetStringChars (__env, stringInstance.Handle, isCopy);
+			var tmp = JniNativeMethods.GetStringChars (__env, stringInstance.Handle, isCopy);
 			return tmp;
 		}
 
@@ -20742,7 +21874,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "stringInstance");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			(*((JNIEnv**)__env))->ReleaseStringChars (__env, stringInstance.Handle, chars);
+			JniNativeMethods.ReleaseStringChars (__env, stringInstance.Handle, chars);
 		}
 	}
 
@@ -20760,8 +21892,8 @@ namespace
 			var _name_ptr = Marshal.StringToCoTaskMemUTF8 (name);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->DefineClass (__env, _name_ptr, loader.Handle, buffer, bufferLength);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.DefineClass (__env, _name_ptr, loader.Handle, buffer, bufferLength);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
@@ -20780,8 +21912,8 @@ namespace
 			var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->FindClass (__env, _classname_ptr);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.FindClass (__env, _classname_ptr);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
@@ -20798,7 +21930,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "type");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetSuperclass (__env, type.Handle);
+			var tmp = JniNativeMethods.GetSuperclass (__env, type.Handle);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -20811,14 +21943,14 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "class2");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->IsAssignableFrom (__env, class1.Handle, class2.Handle);
+			var tmp = JniNativeMethods.IsAssignableFrom (__env, class1.Handle, class2.Handle);
 			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool IsSameObject (JniObjectReference object1, JniObjectReference object2)
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->IsSameObject (__env, object1.Handle, object2.Handle);
+			var tmp = JniNativeMethods.IsSameObject (__env, object1.Handle, object2.Handle);
 			return (tmp != 0) ? true : false;
 		}
 
@@ -20828,7 +21960,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "instance");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetObjectClass (__env, instance.Handle);
+			var tmp = JniNativeMethods.GetObjectClass (__env, instance.Handle);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -20841,7 +21973,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "type");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->IsInstanceOf (__env, instance.Handle, type.Handle);
+			var tmp = JniNativeMethods.IsInstanceOf (__env, instance.Handle, type.Handle);
 			return (tmp != 0) ? true : false;
 		}
 
@@ -20851,8 +21983,8 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "type");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->RegisterNatives (__env, type.Handle, methods, numMethods);
-			IntPtr thrown = (*((JNIEnv**)__env))->ExceptionOccurred (__env);
+			var tmp = JniNativeMethods.RegisterNatives (__env, type.Handle, methods, numMethods);
+			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -20867,7 +21999,7 @@ namespace
 				throw new ArgumentException ("Handle must be valid.", "type");
 
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->UnregisterNatives (__env, type.Handle);
+			var tmp = JniNativeMethods.UnregisterNatives (__env, type.Handle);
 			return tmp;
 		}
 	}
@@ -20877,7 +22009,7 @@ namespace
 		internal static unsafe int GetVersion ()
 		{
 			IntPtr __env = JniEnvironment.EnvironmentPointer;
-			var tmp = (*((JNIEnv**)__env))->GetVersion (__env);
+			var tmp = JniNativeMethods.GetVersion (__env);
 			return tmp;
 		}
 	}

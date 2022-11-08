@@ -1,11 +1,13 @@
 #nullable enable
 
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 using Java.Interop;
@@ -255,18 +257,41 @@ namespace Java.Interop {
 
 			IntPtr thrown;
 			method  = null;
-			var id  = NativeMethods.java_interop_jnienv_get_method_id (JniEnvironment.EnvironmentPointer, out thrown, PeerReference.Handle, name, signature);
+			var env = JniEnvironment.EnvironmentPointer;
+			var id  = RawGetMethodID (env, name, signature, out thrown);
 			if (thrown != IntPtr.Zero) {
 				JniEnvironment.Exceptions.ExceptionClear ();
-				NativeMethods.java_interop_jnienv_delete_local_ref (JniEnvironment.EnvironmentPointer, thrown);
+				JniEnvironment.References.RawDeleteLocalRef (env, thrown);
 				return false;
 			}
+			Debug.Assert (id != IntPtr.Zero);
 			if (id == IntPtr.Zero) {
 				// …huh?  Should only happen if `thrown != IntPtr.Zero`, handled above.
 				return false;
 			}
 			method  = new JniMethodInfo (name, signature, id, isStatic: false);
 			return true;
+		}
+
+		IntPtr RawGetMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
+		{
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
+			return NativeMethods.java_interop_jnienv_get_method_id (env, out thrown, PeerReference.Handle, name, signature);
+#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+			var _name = Marshal.StringToCoTaskMemUTF8 (name);
+			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
+			try {
+				var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, _name, _sig);
+				thrown      = JniNativeMethods.ExceptionOccurred (env);
+				return id;
+			}
+			finally {
+				Marshal.ZeroFreeCoTaskMemUTF8 (_name);
+				Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+			}
+#else
+#error  Unsupported backend
+#endif
 		}
 #endif  // NET
 
@@ -297,18 +322,41 @@ namespace Java.Interop {
 
 			IntPtr thrown;
 			method  = null;
-			var id  = NativeMethods.java_interop_jnienv_get_static_method_id (JniEnvironment.EnvironmentPointer, out thrown, PeerReference.Handle, name, signature);
+			var env = JniEnvironment.EnvironmentPointer;
+			var id  = RawGetStaticMethodID (env, name, signature, out thrown);
 			if (thrown != IntPtr.Zero) {
 				JniEnvironment.Exceptions.ExceptionClear ();
-				NativeMethods.java_interop_jnienv_delete_local_ref (JniEnvironment.EnvironmentPointer, thrown);
+				JniEnvironment.References.RawDeleteLocalRef (env, thrown);
 				return false;
 			}
+			Debug.Assert (id != IntPtr.Zero);
 			if (id == IntPtr.Zero) {
 				// …huh?  Should only happen if `thrown != IntPtr.Zero`, handled above.
 				return false;
 			}
 			method  = new JniMethodInfo (name, signature, id, isStatic: true);
 			return true;
+		}
+
+		IntPtr RawGetStaticMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
+		{
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
+			return NativeMethods.java_interop_jnienv_get_static_method_id (env, out thrown, PeerReference.Handle, name, signature);
+#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+			var _name = Marshal.StringToCoTaskMemUTF8 (name);
+			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
+			try {
+				var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, _name, _sig);
+				thrown      = JniNativeMethods.ExceptionOccurred (env);
+				return id;
+			}
+			finally {
+				Marshal.ZeroFreeCoTaskMemUTF8 (_name);
+				Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+			}
+#else
+#error  Unsupported backend
+#endif
 		}
 #endif  // NET
 

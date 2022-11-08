@@ -105,12 +105,12 @@ namespace Hello
 				t.Start ();
 				waitForCreation.Wait ();
 				*/
-				foreach (var h in JniRuntime.GetAvailableInvocationPointers ()) {
+				foreach (var h in vm.GetAvailableInvocationPointers ()) {
 					Console.WriteLine ("WITHIN: GetCreatedJavaVMs: {0}", h);
 				}
 				// exitThread.Signal ();
 			}
-			foreach (var h in JniRuntime.GetAvailableInvocationPointers ()) {
+			foreach (var h in JniRuntime.GetRegisteredRuntimes ()) {
 				Console.WriteLine ("POST: GetCreatedJavaVMs: {0}", h);
 			}
 		}
