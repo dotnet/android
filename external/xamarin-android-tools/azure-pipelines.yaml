@@ -12,7 +12,10 @@ pr:
 
 # Global variables
 variables:
-  DotNetCoreVersion: 6.0.x
+  - name: DotNetCoreVersion
+    value: 6.0.x
+  - name: Codeql.Enabled
+    value: True
 
 jobs:
 - job: build
