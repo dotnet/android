@@ -27,6 +27,10 @@ namespace Xamarin.Android.Tools.VSWhere
 					throw new FileNotFoundException ("Cannot find vswhere.exe!", vswhere);
 				instance.VisualStudioRootPath = Exec (vswhere, "-latest -products * -requires Microsoft.Component.MSBuild -property installationPath");
 				if (!Directory.Exists (instance.VisualStudioRootPath)) {
+					// try -prerelease
+					instance.VisualStudioRootPath = Exec (vswhere, "-prerelease -latest -products * -requires Microsoft.Component.MSBuild -property installationPath");
+				}
+				if (!Directory.Exists (instance.VisualStudioRootPath)) {
 					throw new DirectoryNotFoundException ($"vswhere.exe result returned a directory that did not exist: {instance.VisualStudioRootPath}");
 				}
 			} else {
