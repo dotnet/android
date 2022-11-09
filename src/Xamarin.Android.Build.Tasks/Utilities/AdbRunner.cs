@@ -26,12 +26,34 @@ namespace Xamarin.Android.Tasks
 
 		string[]? initialParams;
 
+		public int ExitCode { get; private set; }
+
 		public AdbRunner (TaskLoggingHelper logger, string adbPath, string? deviceSerial = null)
 			: base (logger, adbPath)
 		{
 			if (!String.IsNullOrEmpty (deviceSerial)) {
 				initialParams = new string[] { "-s", deviceSerial };
 			}
+		}
+
+		public async Task<(bool success, string output)> GetAppDataDirectory (string packageName)
+		{
+			return await Shell ("run-as", packageName, "/system/bin/sh", "-c", "pwd", "2>/dev/null");
+		}
+
+		public async Task<(bool success, string output)> Shell (string command, params string[] args)
+		{
+			var runner = CreateAdbRunner ();
+
+			runner.AddArgument ("shell");
+			runner.AddArgument (command);
+			if (args != null && args.Length > 0) {
+				foreach (string arg in args) {
+					runner.AddArgument (arg);
+				}
+			}
+
+			return await CaptureAdbOutput (runner);
 		}
 
 		public async Task<(bool success, string output)> GetPropertyValue (string propertyName)
@@ -44,11 +66,7 @@ namespace Xamarin.Android.Tasks
 		{
 			runner.ClearArguments ();
 			runner.ClearOutputSinks ();
-			runner.AddArgument ("shell");
-			runner.AddArgument ("getprop");
-			runner.AddArgument (propertyName);
-
-			return await CaptureAdbOutput (runner);
+			return await Shell ("getprop", propertyName);
 		}
 
 		async Task<(bool success, string output)> CaptureAdbOutput (ProcessRunner runner, bool firstLineOnly = false)
@@ -94,7 +112,12 @@ namespace Xamarin.Android.Tasks
 					}
 
 					try {
-						return runner.Run ();
+						bool ret = runner.Run ();
+						ExitCode = runner.ExitCode;
+						return ret;
+					} catch {
+						ExitCode = -0xDEAD;
+						throw;
 					} finally {
 						sink?.Dispose ();
 					}

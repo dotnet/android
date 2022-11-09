@@ -3,7 +3,6 @@ using System.IO;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -54,16 +53,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogError ($"Simpleperf directory '{simplePerfPath}' not found");
 			}
 
-			string os;
-			if (OS.IsWindows) {
-				os = "windows";
-			} else if (OS.IsMac) {
-				os = "darwin";
-			} else {
-				os = "linux";
-			}
-
-			string ndkPythonPath = Path.Combine (AndroidNdkPath, "toolchains", "llvm", "prebuilt", $"{os}-x86_64", "python3");
+			string ndkPythonPath = Path.Combine (AndroidNdkPath, "toolchains", "llvm", "prebuilt", NdkHelper.ToolchainHostName, "python3");
 			if (Directory.Exists (ndkPythonPath)) {
 				NdkPythonDirectory = ndkPythonPath;
 			} else {
