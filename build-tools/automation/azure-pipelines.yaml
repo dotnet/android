@@ -87,4 +87,4 @@ variables:
     value: ''
 
 stages:
-- template: yaml-templates/main-stage.yml
+- template: yaml-templates/main-stage.yaml
