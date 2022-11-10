@@ -69,11 +69,11 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-32_r01",   apiLevel: "32", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-33_r01",   apiLevel: "33", pkgRevision: "1"),
 
-				new AndroidToolchainComponent ("sources-31_r01",
-					destDir: Path.Combine ("platforms", $"android-31", "src"),
+				new AndroidToolchainComponent ("sources-33_r01",
+					destDir: Path.Combine ("sources", "android-33"),
 					pkgRevision: "1",
 					dependencyType: AndroidToolchainComponentType.BuildDependency,
-					buildToolVersion: "31.1"
+					buildToolVersion: "33.1"
 				),
 				new AndroidToolchainComponent ("docs-24_r01",
 					destDir: "docs",
