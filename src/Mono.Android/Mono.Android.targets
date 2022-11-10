@@ -76,7 +76,7 @@
   <!-- Pulls documentation from JavaDoc -->
   <PropertyGroup>
     <_JavaSourceUtilsJar>$(MicrosoftAndroidSdkOutDir)java-source-utils.jar</_JavaSourceUtilsJar>
-    <_AndroidSrcDir>$(AndroidSdkDirectory)\platforms\android-$(AndroidApiLevel)\src</_AndroidSrcDir>
+    <_AndroidSrcDir>$(AndroidSdkDirectory)\sources\android-$(AndroidApiLevel)</_AndroidSrcDir>
     <_AndroidJavadocXml>..\..\bin\Build$(Configuration)\android-javadoc.xml</_AndroidJavadocXml>
   </PropertyGroup>
   
@@ -290,9 +290,10 @@
 
   <PropertyGroup>
     <!-- Override these properties to generate docs against a specific API level -->
-    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">31</DocsApiLevel>
-    <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">31</DocsPlatformId>
-    <DocsFxVersion Condition=" '$(DocsFxVersion)' == '' ">v12.0</DocsFxVersion>
+    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">33</DocsApiLevel>
+    <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">33</DocsPlatformId>
+    <DocsFxVersion Condition=" '$(DocsFxVersion)' == '' ">v13.0</DocsFxVersion>
+    <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">xamarin-android-sdk-13</DocsFxMoniker>
     <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
   </PropertyGroup>
 
@@ -335,7 +336,6 @@
       <_JIAssembly>$(XAInstallPrefix)xbuild-frameworks/MonoAndroid/v1.0/Java.Interop.dll</_JIAssembly>
       <_Output>-o "$(MSBuildThisFileDirectory)../../external/android-api-docs/docs/Mono.Android/en"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
-      <_FxMoniker>xamarin-android-sdk-12</_FxMoniker>
       <_RootFxDir>$(BaseIntermediateOutputPath)docs-gen-temp/</_RootFxDir>
       <_FxConfig>-fx "$(_RootFxDir)"</_FxConfig>
       <_Lang>--lang fsharp</_Lang>
@@ -344,7 +344,7 @@
       <FrameworksXmlContent>
 <![CDATA[
 <Frameworks>
-  <Framework Name="$(_FxMoniker)" Source="$(_FxMoniker)" />
+  <Framework Name="$(DocsFxMoniker)" Source="$(DocsFxMoniker)" />
 </Frameworks>
 ]]>
       </FrameworksXmlContent>
@@ -353,10 +353,10 @@
          Copy Mono.Android.dll and Java.Interop.dll to the %(Source) path described in frameworks.xml (e.g. xamarin-android-sdk-12) -->
     <RemoveDir Directories="$(_RootFxDir)" />
     <MakeDir Directories="$(_RootFxDir)" />
-    <MakeDir Directories="$(_RootFxDir)$(_FxMoniker)" />
+    <MakeDir Directories="$(_RootFxDir)$(DocsFxMoniker)" />
     <Copy
         SourceFiles="$(_Assembly);$(_JIAssembly)"
-        DestinationFolder="$(_RootFxDir)$(_FxMoniker)"
+        DestinationFolder="$(_RootFxDir)$(DocsFxMoniker)"
     />
     <WriteLinesToFile
         File="$(_RootFxDir)frameworks.xml"
