@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -17,7 +18,12 @@ namespace Xamarin.Android.Tasks
 			public int apiLevel;
 			public string abi;
 			public string arch;
+			public bool appIs64Bit;
 			public string appDataDir;
+			public string debugServerPath;
+			public string outputDir;
+			public string appLibrariesDir;
+			public List<string>? nativeLibraries;
 		}
 
 		// We want the shell/batch scripts first, since they set up Python environment for the debugger
@@ -37,21 +43,30 @@ namespace Xamarin.Android.Tasks
 			"ro.product.cpu.abi2",
 		};
 
+		static readonly string[] deviceLibraries = {
+			"libc.so",
+			"libm.so",
+			"libdl.so",
+		};
+
 		TaskLoggingHelper log;
 		string packageName;
 		string lldbPath;
 		string adbPath;
+		string outputDir;
 		Dictionary<string, string> hostLldbServerPaths;
 		string[] supportedAbis;
 
 		public string? AdbDeviceTarget { get; set; }
+		public IDictionary<string, List<string>>? NativeLibrariesPerABI { get; set; }
 
-		public NativeDebugger (TaskLoggingHelper logger, string adbPath, string ndkRootPath, string packageName, string[] supportedAbis)
+		public NativeDebugger (TaskLoggingHelper logger, string adbPath, string ndkRootPath, string outputDirRoot, string packageName, string[] supportedAbis)
 		{
 			this.log = logger;
 			this.packageName = packageName;
 			this.adbPath = adbPath;
 			this.supportedAbis = supportedAbis;
+			outputDir = Path.Combine (outputDirRoot, "native-debug");
 
 			FindTools (ndkRootPath, supportedAbis);
 		}
@@ -65,16 +80,21 @@ namespace Xamarin.Android.Tasks
 		}
 
 		/// <summary>
-		/// Launch the application under control of the debugger. If <paramref name="activityName"/> is provided,
-		/// it will be launched instead of the default launcher activity.
+		/// Launch the application under control of the debugger.
 		/// </summary>
-		public void Launch (string? activityName)
+		public void Launch (string activityName)
 		{
+			if (String.IsNullOrEmpty (activityName)) {
+				throw new ArgumentException ("must not be null or empty", nameof (activityName));
+			}
+
 			Context context = Init ();
 		}
 
 		Context Init ()
 		{
+			LogLine ();
+
 			var context = new Context {
 				adb = new AdbRunner (log, adbPath)
 			};
@@ -100,16 +120,10 @@ namespace Xamarin.Android.Tasks
 				LogLine ();
 			}
 
-			DetermineABI (context);
-			context.arch = context.abi switch {
-				"armeabi" => "arm",
-				"armeabi-v7a" => "arm",
-				"arm64-v8a" => "arm64",
-				_ => context.abi,
-			};
-
+			DetermineArchitectureAndABI (context);
 			DetermineAppDataDirectory (context);
-			LogLine ($"Application data directory: {context.appDataDir}");
+			PushDebugServer (context);
+			CopyLibraries (context);
 
 			return context;
 
@@ -127,6 +141,127 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		void CopyLibraries (Context context)
+		{
+			LogLine ("Populating local native library cache");
+			context.appLibrariesDir = Path.Combine (context.outputDir, "app", "lib");
+			if (!Directory.Exists (context.appLibrariesDir)) {
+				Directory.CreateDirectory (context.appLibrariesDir);
+			}
+
+			if (context.nativeLibraries != null) {
+				LogLine ("  Copying application native libraries");
+				foreach (string library in context.nativeLibraries) {
+					LogLine ($"    {library}");
+
+					string fileName = Path.GetFileName (library);
+					if (fileName.StartsWith ("libmono-android.")) {
+						fileName = "libmonodroid.so";
+					}
+					File.Copy (library, Path.Combine (context.appLibrariesDir, fileName), true);
+				}
+			}
+
+			var requiredFiles = new List<string> ();
+			var libraries = new List<string> ();
+			string libraryPath;
+
+			if (context.appIs64Bit) {
+				libraryPath = "/system/lib64";
+				requiredFiles.Add ("/system/bin/app_process64");
+				requiredFiles.Add ("/system/bin/linker64");
+			} else {
+				libraryPath = "/system/lib";
+				requiredFiles.Add ("/system/bin/linker");
+			}
+
+			foreach (string lib in deviceLibraries) {
+				requiredFiles.Add ($"{libraryPath}/{lib}");
+			}
+
+			LogLine ("  Copying binaries from device");
+			bool isWindows = OS.IsWindows;
+			foreach (string file in requiredFiles) {
+				string filePath = ToLocalPathFormat (file);
+				string localPath = $"{context.outputDir}{filePath}";
+				string localDir = Path.GetDirectoryName (localPath);
+
+				if (!Directory.Exists (localDir)) {
+					Directory.CreateDirectory (localDir);
+				}
+
+				Log ($"    From '{file}' to '{localPath}' ");
+				if (!context.adb.Pull (file, localPath).Result) {
+					LogLine ("[FAILED]");
+				} else {
+					LogLine ("[SUCCESS]");
+				}
+			}
+
+			if (context.appIs64Bit) {
+				return;
+			}
+
+			// /system/bin/app_process is 32-bit on 32-bit devices, but a symlink to
+			// # app_process64 on 64-bit. If we need the 32-bit version, try to pull
+			// # app_process32, and if that fails, pull app_process.
+			string destination = $"{context.outputDir}{ToLocalPathFormat ("/system/bin/app_process")}";
+			string? source = "/system/bin/app_process32";
+
+			if (!context.adb.Pull (source, destination).Result) {
+				source = "/system/bin/app_process";
+				if (!context.adb.Pull (source, destination).Result) {
+					source = null;
+				}
+			}
+
+			if (String.IsNullOrEmpty (source)) {
+				LogLine ("    Failed to copy 32-bit app_process");
+			} else {
+				Log ($"    From '{source}' to '{destination}' ");
+			}
+
+			string ToLocalPathFormat (string path) => isWindows ? path.Replace ("/", "\\") : path;
+		}
+
+		void PushDebugServer (Context context)
+		{
+			if (!hostLldbServerPaths.TryGetValue (context.abi, out string debugServerPath)) {
+				throw new InvalidOperationException ($"Debug server for abi '{context.abi}' not found.");
+			}
+
+			string serverName = $"{context.arch}-{Path.GetFileName (debugServerPath)}";
+			string deviceServerPath = Path.Combine (context.appDataDir, serverName);
+
+			// Always push the server binary, as we don't know what version might already be there
+			LogLine ($"Uploading {debugServerPath} to device");
+
+			// First upload to temporary path, as it's writable for everyone
+			string remotePath = $"/data/local/tmp/{serverName}";
+			if (!context.adb.Push (debugServerPath, remotePath).Result) {
+				throw new InvalidOperationException ($"Failed to upload debug server {debugServerPath} to device path {remotePath}");
+			}
+
+			// Next, copy it to the app dir, with run-as
+			(bool success, string output) = context.adb.Shell (
+				"cat", remotePath, "|",
+				"run-as", packageName,
+				"sh", "-c", $"'cat > {deviceServerPath}'"
+			).Result;
+
+			if (!success) {
+				throw new InvalidOperationException ($"Failed to copy debug server on device, from {remotePath} to {deviceServerPath}");
+			}
+
+			(success, output) = context.adb.RunAs (packageName, "chmod", "700", deviceServerPath).Result;
+			if (!success) {
+				throw new InvalidOperationException ($"Failed to make debug server executable on device, at {deviceServerPath}");
+			}
+
+			context.debugServerPath = deviceServerPath;
+			LogLine ($"Debug server path on device: {context.debugServerPath}");
+		}
+
 		void DetermineAppDataDirectory (Context context)
 		{
 			(bool success, string output) = context.adb.GetAppDataDirectory (packageName).Result;
@@ -135,20 +270,21 @@ namespace Xamarin.Android.Tasks
 			}
 
 			context.appDataDir = output.Trim ();
+			LogLine ($"Application data directory on device: {context.appDataDir}");
 
 			// Applications with minSdkVersion >= 24 will have their data directories
 			// created with rwx------ permissions, preventing adbd from forwarding to
 			// the gdbserver socket. To be safe, if we're on a device >= 24, always
 			// chmod the directory.
 			if (context.apiLevel >= 24) {
-				(success, output) = context.adb.Shell ("/system/bin/chmod", "a+x", context.appDataDir).Result;
+				(success, output) = context.adb.RunAs (packageName, "/system/bin/chmod", "a+x", context.appDataDir).Result;
 				if (!success) {
 					throw new InvalidOperationException ("Failed to make application data directory world executable");
 				}
 			}
 		}
 
-		void DetermineABI (Context context)
+		void DetermineArchitectureAndABI (Context context)
 		{
 			string[]? deviceABIs = null;
 
@@ -159,24 +295,46 @@ namespace Xamarin.Android.Tasks
 				}
 
 				deviceABIs = value.Split (',');
+				break;
 			}
 
 			if (deviceABIs == null || deviceABIs.Length == 0) {
 				throw new InvalidOperationException ("Unable to determine device ABI");
 			}
 
-			LogLine ($"Application ABIs: {String.Join ("", "", supportedAbis)}");
-			LogLine ($"Device ABIs: {String.Join ("", "", deviceABIs)}");
+			LogABIs ("Application", supportedAbis);
+			LogABIs ("     Device", deviceABIs);
+
 			foreach (string deviceABI in deviceABIs) {
 				foreach (string appABI in supportedAbis) {
 					if (String.Compare (appABI, deviceABI, StringComparison.OrdinalIgnoreCase) == 0) {
 						context.abi = deviceABI;
+						context.arch = context.abi switch {
+							"armeabi" => "arm",
+							"armeabi-v7a" => "arm",
+							"arm64-v8a" => "arm64",
+							_ => context.abi,
+						};
+
+						LogLine ($"    Selected ABI: {context.abi} (architecture: {context.arch})");
+
+						context.appIs64Bit = context.abi.IndexOf ("64", StringComparison.Ordinal) >= 0;
+						context.outputDir = Path.Combine (outputDir, context.abi);
+						if (NativeLibrariesPerABI != null && NativeLibrariesPerABI.TryGetValue (context.abi, out List<string> abiLibraries)) {
+							context.nativeLibraries = abiLibraries;
+						}
 						return;
 					}
 				}
 			}
 
 			throw new InvalidOperationException ($"Application cannot run on the selected device: no matching ABI found");
+
+			void LogABIs (string which, string[] abis)
+			{
+				string list = String.Join (", ", abis);
+				LogLine ($"{which} ABIs: {list}");
+			}
 		}
 
 		string GetLlvmVersion (string toolchainDir)
@@ -217,7 +375,7 @@ namespace Xamarin.Android.Tasks
 			string llvmVersion = GetLlvmVersion (toolchainDir);
 			foreach (string abi in supportedAbis) {
 				string llvmAbi = NdkHelper.TranslateAbiToLLVM (abi);
-				path = Path.Combine (ndkRootPath, NdkHelper.RelativeToolchainDir, "lib64", "clang", llvmVersion, "lib", "linux", abi, "lldb-server");
+				path = Path.Combine (ndkRootPath, NdkHelper.RelativeToolchainDir, "lib64", "clang", llvmVersion, "lib", "linux", llvmAbi, "lldb-server");
 				if (!File.Exists (path)) {
 					throw new InvalidOperationException ($"LLVM lldb server component for ABI '{abi}' not found at '{path}'");
 				}
@@ -242,7 +400,11 @@ namespace Xamarin.Android.Tasks
 			message = message ?? String.Empty;
 			writer.Write (message);
 			if (!String.IsNullOrEmpty (message)) {
-				log.LogError (message);
+				if (isError) {
+					log.LogError (message);
+				} else {
+					log.LogMessage (message);
+				}
 			}
 		}
 	}

@@ -95,6 +95,8 @@ namespace Xamarin.Android.Tasks
 		public bool NativeCodeProfilingEnabled { get; set; }
 		public string DeviceSdkVersion { get; set; }
 
+		public bool NativeDebuggingEnabled { get; set; }
+
 		[Output]
 		public string [] GeneratedBinaryTypeMaps { get; set; }
 
@@ -359,14 +361,14 @@ namespace Xamarin.Android.Tasks
 			manifest.Assemblies.AddRange (userAssemblies.Values);
 
 			bool checkedBuild = !String.IsNullOrWhiteSpace (CheckedBuild);
-			if (NativeCodeProfilingEnabled || checkedBuild) {
+			if (NativeCodeProfilingEnabled || NativeDebuggingEnabled || checkedBuild) {
 				// We don't validate CheckedBuild value here, this will be done in BuildApk. We just know that if it's
 				// on then we need android:debuggable=true and android:extractNativeLibs=true
 				//
 				// For profiling we only need android:debuggable=true
 				//
 				manifest.ForceDebuggable = true;
-				if (checkedBuild) {
+				if (checkedBuild || NativeDebuggingEnabled) {
 					manifest.ForceExtractNativeLibs = true;
 				}
 

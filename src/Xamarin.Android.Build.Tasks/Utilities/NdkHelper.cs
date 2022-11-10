@@ -35,10 +35,21 @@ namespace Xamarin.Android.Tasks
 		{
 			return xaAbi switch {
 				"armeabi-v7a" => "arm",
-					"arm64-v8a" => "aarch64",
-					"x86" => "i386",
-					"x86_64" => "x86_64",
-					_ => throw new InvalidOperationException ($"Unknown ABI '{xaAbi}'")
+				"arm64-v8a" => "aarch64",
+				"x86" => "i386",
+				"x86_64" => "x86_64",
+				_ => throw new InvalidOperationException ($"Unknown ABI '{xaAbi}'"),
+			};
+		}
+
+		public static string RIDToABI (string rid)
+		{
+			return rid switch {
+				"android-arm" => "armeabi-v7a",
+				"android-arm64" => "arm64-v8a",
+				"android-x86" => "x86",
+				"android-x64" => "x86_64",
+				_ => throw new InvalidOperationException ($"Unknown RID '{rid}'")
 			};
 		}
 	}

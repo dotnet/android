@@ -36,21 +36,63 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		public async Task<bool> Pull (string remotePath, string localPath)
+		{
+			var runner = CreateAdbRunner ();
+			runner.AddArgument ("pull");
+			runner.AddArgument (remotePath);
+			runner.AddArgument (localPath);
+
+			return await RunAdb (runner);
+		}
+
+		public async Task<bool> Push (string localPath, string remotePath)
+		{
+			var runner = CreateAdbRunner ();
+			runner.AddArgument ("push");
+			runner.AddArgument (localPath);
+			runner.AddArgument (remotePath);
+
+			return await RunAdb (runner);
+		}
+
+		public async Task<(bool success, string output)> RunAs (string packageName, string command, params string[] args)
+		{
+			var shellArgs = new List<string> {
+				packageName,
+				command,
+			};
+
+			if (args != null && args.Length > 0) {
+				shellArgs.AddRange (args);
+			}
+
+			return await Shell ("run-as", (IEnumerable<string>)shellArgs);
+		}
+
 		public async Task<(bool success, string output)> GetAppDataDirectory (string packageName)
 		{
-			return await Shell ("run-as", packageName, "/system/bin/sh", "-c", "pwd", "2>/dev/null");
+			return await RunAs (packageName, "/system/bin/sh", "-c", "pwd", "2>/dev/null");
+		}
+
+		public async Task<(bool success, string output)> Shell (string command, List<string> args)
+		{
+			return await Shell (command, (IEnumerable<string>)args);
 		}
 
 		public async Task<(bool success, string output)> Shell (string command, params string[] args)
+		{
+			return await Shell (command, (IEnumerable<string>)args);
+		}
+
+		async Task<(bool success, string output)> Shell (string command, IEnumerable<string> args)
 		{
 			var runner = CreateAdbRunner ();
 
 			runner.AddArgument ("shell");
 			runner.AddArgument (command);
-			if (args != null && args.Length > 0) {
-				foreach (string arg in args) {
-					runner.AddArgument (arg);
-				}
+			foreach (string arg in args) {
+				runner.AddArgument (arg);
 			}
 
 			return await CaptureAdbOutput (runner);
