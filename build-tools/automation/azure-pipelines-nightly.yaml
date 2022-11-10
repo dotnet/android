@@ -35,7 +35,7 @@ stages:
     pool:
       name: VSEng-Xamarin-RedmondMac-Android-Untrusted
       demands: macOS.Name -equals Monterey
-    timeoutInMinutes: 360
+    timeoutInMinutes: 420
     workspace:
       clean: all
     variables:
