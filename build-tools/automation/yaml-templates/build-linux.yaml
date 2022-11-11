@@ -1,0 +1,81 @@
+parameters:
+  buildPool: android-devdiv-ubuntu-vmss
+  dependsOn: []
+  jobName: linux_build_create_sdk_pack
+  jobDisplayName: Linux > Build
+  repoAlias: self
+  stageName: linux_build
+  stageDisplayName: Linux
+
+stages:
+- stage: ${{ parameters.stageName }}
+  displayName: ${{ parameters.stageDisplayName }}
+  dependsOn: ${{ parameters.dependsOn }}
+  jobs:
+  - job: ${{ parameters.jobName }}
+    displayName: ${{ parameters.jobDisplayName }}
+    pool: ${{ parameters.buildPool }}
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    variables:
+      CXX: g++-10
+      CC: gcc-10
+    steps:
+    - checkout: ${{ parameters.repoAlias }}
+      clean: true
+      submodules: recursive
+      path: s/xamarin-android
+
+    - checkout: monodroid
+      clean: true
+      submodules: recursive
+      path: s/xamarin-android/external/monodroid
+      persistCredentials: true
+
+    - script: rm -rf external/monodroid/external/xamarin-android
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: delete external xamarin-android submodule
+
+    - template: setup-ubuntu.yaml
+
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
+    - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: make prepare-external-git-dependencies
+
+    - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: make jenkins
+
+    - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: make create-nupkgs
+
+    - script: >
+        df -h &&
+        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
+        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/Microsoft.Android.Sdk.Linux*.nupkg
+        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
+        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/SignList.xml
+        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: copy linux sdk
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload linux sdk
+      inputs:
+        artifactName: $(LinuxNuGetArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
+
+    - template: upload-results.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        artifactName: Build Results - Linux
+        includeBuildResults: true
+
+    - template: fail-on-issue.yaml
