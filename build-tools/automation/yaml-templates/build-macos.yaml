@@ -21,7 +21,7 @@ stages:
     pool:
       name: ${{ parameters.buildPoolName }}
       vmImage: ${{ parameters.buildPoolImage }}
-      ${{ if eq(parameters.buildPoolName, 'VSEng-Xamarin-RedmondMac-Android-Untrusted') }}:
+      ${{ if eq(variables['MacBuildPoolName'], 'VSEng-Xamarin-RedmondMac-Android-Untrusted') }}:
         demands: macOS.Name -equals Monterey
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
