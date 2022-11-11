@@ -85,8 +85,6 @@ variables:
 stages:
 - template: yaml-templates/build-macos.yaml
   parameters:
-    buildPoolName: $(MacBuildPoolName)
-    buildPoolImage: $(MacBuildPoolImage)
     provisionatorChannel: ${{ parameters.provisionatorChannel }}
     signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
 
