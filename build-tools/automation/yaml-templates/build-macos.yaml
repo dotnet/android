@@ -1,0 +1,73 @@
+parameters:
+  buildPoolName: $(MacBuildPoolName)
+  buildPoolImage: $(MacBuildPoolImage)
+  dependsOn: []
+  jobName: mac_build_create_installers
+  jobDisplayName: macOS > Build
+  provisionatorChannel: latest
+  repoAlias: self
+  signClassicPkgContent: false
+  stageName: mac_build
+  stageDisplayName: Mac
+
+stages:
+- stage: ${{ parameters.stageName }}
+  displayName: ${{ parameters.stageDisplayName }}
+  dependsOn: ${{ parameters.dependsOn }}
+  jobs:
+  # Check - "Xamarin.Android (macOS > Build)"
+  - job: ${{ parameters.jobName }}
+    displayName: ${{ parameters.jobDisplayName }}
+    pool:
+      name: ${{ parameters.buildPoolName }}
+      vmImage: ${{ parameters.buildPoolImage }}
+      ${{ if eq(parameters.buildPoolName, 'VSEng-Xamarin-RedmondMac-Android-Untrusted') }}:
+        demands: macOS.Name -equals Monterey
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - checkout: ${{ parameters.repoAlias }}
+      submodules: recursive
+      path: s/xamarin-android
+
+    - template: install-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - template: commercial-build.yaml
+      parameters:
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
+
+    - template: remove-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - script: >
+        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
+        cd $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/windows-toolchain-pdb &&
+        zip -r $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/windows-toolchain-pdb.zip .
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: zip Windows toolchain pdb files
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload Windows toolchain pdb files
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+
+    - template: upload-results.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        artifactName: Build Results - macOS
+        includeBuildResults: true
+
+    - template: run-xaprepare.yaml
+      parameters:
+        arguments: --s=DetermineApplicableTests
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        displayName: determine which test stages to run
+        name: TestConditions
+        condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
