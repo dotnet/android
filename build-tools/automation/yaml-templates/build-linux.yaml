@@ -1,6 +1,7 @@
 parameters:
   buildPool: android-devdiv-ubuntu-vmss
-  dependsOn: []
+  dependsOn: ''
+  dependsOnResult: ''
   jobName: linux_build_create_sdk_pack
   jobDisplayName: Linux > Build
   repoAlias: self
@@ -11,6 +12,8 @@ stages:
 - stage: ${{ parameters.stageName }}
   displayName: ${{ parameters.stageDisplayName }}
   dependsOn: ${{ parameters.dependsOn }}
+  ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
+    condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}

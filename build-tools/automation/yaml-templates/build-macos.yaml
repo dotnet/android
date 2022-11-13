@@ -1,7 +1,8 @@
 parameters:
   buildPoolName: $(MacBuildPoolName)
   buildPoolImage: $(MacBuildPoolImage)
-  dependsOn: []
+  dependsOn: ''
+  dependsOnResult: ''
   jobName: mac_build_create_installers
   jobDisplayName: macOS > Build
   provisionatorChannel: latest
@@ -14,6 +15,8 @@ stages:
 - stage: ${{ parameters.stageName }}
   displayName: ${{ parameters.stageDisplayName }}
   dependsOn: ${{ parameters.dependsOn }}
+  ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
+    condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
   # Check - "Xamarin.Android (macOS > Build)"
   - job: ${{ parameters.jobName }}
