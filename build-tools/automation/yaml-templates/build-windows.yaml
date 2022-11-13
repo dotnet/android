@@ -1,6 +1,7 @@
 parameters:
   buildPool: $(1ESWindowsPool)
-  dependsOn: []
+  dependsOn: ''
+  dependsOnResult: ''
   jobName: win_build_test
   jobDisplayName: Windows > Build & Smoke Test
   repoAlias: self
@@ -12,6 +13,8 @@ stages:
 - stage: ${{ parameters.stageName }}
   displayName: ${{ parameters.stageDisplayName }}
   dependsOn: ${{ parameters.dependsOn }}
+  ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
+    condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
   # Check - "Xamarin.Android (Windows > Build & Smoke Test)"
   - job: ${{ parameters.jobName }}
