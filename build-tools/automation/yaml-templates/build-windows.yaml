@@ -1,10 +1,13 @@
 parameters:
   buildPool: $(1ESWindowsPool)
+  checkoutCommit: ''
+  checkoutPath: ''
+  checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
   jobName: win_build_test
   jobDisplayName: Windows > Build & Smoke Test
-  repoAlias: self
+  repositoryAlias: self
   stageName: win_build_test
   stageDisplayName: Windows
 
@@ -22,8 +25,12 @@ stages:
     pool: ${{ parameters.buildPool }}
     timeoutInMinutes: 360
     steps:
-    - checkout: ${{ parameters.repoAlias }}
-      submodules: recursive
+    - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
+      parameters:
+        resource: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.checkoutCommit }}
+        path: ${{ parameters.checkoutPath }}
+        persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
     - template: kill-processes.yaml
 
