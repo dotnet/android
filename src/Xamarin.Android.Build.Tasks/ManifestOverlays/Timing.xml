@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
   <application>
-    <receiver android:name="mono.android.app.DumpTimingData" tools:node="replace">
+    <receiver android:name="mono.android.app.DumpTimingData" tools:node="replace" android:exported="true">
         <intent-filter>
           <action android:name="mono.android.app.DUMP_TIMING_DATA"/>
         </intent-filter>
