@@ -1,10 +1,13 @@
 parameters:
   buildPool: android-devdiv-ubuntu-vmss
+  checkoutCommit: ''
+  checkoutPath: 's/xamarin-android'
+  checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
   jobName: linux_build_create_sdk_pack
   jobDisplayName: Linux > Build
-  repoAlias: self
+  repositoryAlias: self
   stageName: linux_build
   stageDisplayName: Linux
 
@@ -25,10 +28,12 @@ stages:
       CXX: g++-10
       CC: gcc-10
     steps:
-    - checkout: ${{ parameters.repoAlias }}
-      clean: true
-      submodules: recursive
-      path: s/xamarin-android
+    - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
+      parameters:
+        resource: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.checkoutCommit }}
+        path: ${{ parameters.checkoutPath }}
+        persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
     - checkout: monodroid
       clean: true

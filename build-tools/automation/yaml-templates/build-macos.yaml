@@ -1,12 +1,15 @@
 parameters:
   buildPoolName: $(MacBuildPoolName)
   buildPoolImage: $(MacBuildPoolImage)
+  checkoutCommit: ''
+  checkoutPath: 's/xamarin-android'
+  checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
   jobName: mac_build_create_installers
   jobDisplayName: macOS > Build
   provisionatorChannel: latest
-  repoAlias: self
+  repositoryAlias: self
   signClassicPkgContent: false
   stageName: mac_build
   stageDisplayName: Mac
@@ -31,9 +34,12 @@ stages:
     workspace:
       clean: all
     steps:
-    - checkout: ${{ parameters.repoAlias }}
-      submodules: recursive
-      path: s/xamarin-android
+    - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
+      parameters:
+        resource: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.checkoutCommit }}
+        path: ${{ parameters.checkoutPath }}
+        persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
     - template: install-microbuild-tooling.yaml
       parameters:
