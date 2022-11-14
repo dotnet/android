@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
+
+using TPL = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -12,6 +15,23 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	class NativeDebugger
 	{
+		const ConsoleColor ErrorColor   = ConsoleColor.Red;
+                const ConsoleColor DebugColor   = ConsoleColor.DarkGray;
+                const ConsoleColor InfoColor    = ConsoleColor.Green;
+                const ConsoleColor MessageColor = ConsoleColor.Gray;
+                const ConsoleColor WarningColor = ConsoleColor.Yellow;
+		const ConsoleColor StatusLabel  = ConsoleColor.Cyan;
+		const ConsoleColor StatusText   = ConsoleColor.White;
+
+		enum LogLevel
+		{
+			Error,
+			Warning,
+			Info,
+			Message,
+			Debug
+		}
+
 		sealed class Context
 		{
 			public AdbRunner adb;
@@ -23,14 +43,15 @@ namespace Xamarin.Android.Tasks
 			public string debugServerPath;
 			public string outputDir;
 			public string appLibrariesDir;
+			public uint applicationPID;
 			public List<string>? nativeLibraries;
 		}
 
 		// We want the shell/batch scripts first, since they set up Python environment for the debugger
 		static readonly string[] lldbNames = {
 			"lldb.sh",
-			"lldb.cmd",
 			"lldb",
+			"lldb.cmd",
 			"lldb.exe",
 		};
 
@@ -48,6 +69,14 @@ namespace Xamarin.Android.Tasks
 			"libm.so",
 			"libdl.so",
 		};
+
+		static HashSet<string> xaLibraries = new HashSet<string> (StringComparer.Ordinal) {
+			"libmonodroid.so",
+			"libxamarin-app.so",
+			"libxamarin-debug-app-helper.so",
+		};
+
+		static readonly object consoleLock = new object ();
 
 		TaskLoggingHelper log;
 		string packageName;
@@ -68,30 +97,72 @@ namespace Xamarin.Android.Tasks
 			this.supportedAbis = supportedAbis;
 			outputDir = Path.Combine (outputDirRoot, "native-debug");
 
-			FindTools (ndkRootPath, supportedAbis);
+			if (!FindTools (ndkRootPath, supportedAbis)) {
+				throw new InvalidOperationException ("Failed to find all the required tools and utilities");
+			}
 		}
 
 		/// <summary>
 		/// Detect PID of the running application and attach the debugger to it
 		/// </summary>
-		public void Attach ()
+		public bool Attach ()
 		{
-			Context context = Init ();
+			Context? context = Init ();
+
+			return context != null;
 		}
 
 		/// <summary>
 		/// Launch the application under control of the debugger.
 		/// </summary>
-		public void Launch (string activityName)
+		public bool Launch (string activityName)
 		{
 			if (String.IsNullOrEmpty (activityName)) {
 				throw new ArgumentException ("must not be null or empty", nameof (activityName));
 			}
 
-			Context context = Init ();
+			Context? context = Init ();
+			if (context == null) {
+				return false;
+			}
+
+			// Start the app, tell it to wait for debugger to attach and to kill any running instance
+			// We tell `am` to wait ('-W') for the app to start, so that `pidof` then can find the process
+			string launchName = $"{packageName}/{activityName}";
+			LogLine ();
+			LogStatusLine ("Launching activity", launchName);
+			Log ("Waiting for the activity to start...");
+			(bool success, string output) = context.adb.Shell ("am", "start", "-D", "-S", "-W", launchName).Result;
+			if (!success) {
+				LogErrorLine ("Failed to launch the activity");
+				return false;
+			}
+
+			(success, output) = context.adb.Shell ("pidof", packageName).Result;
+			if (!success) {
+				LogErrorLine ("Failed to obtain PID of the running application");
+				LogErrorLine (output);
+				return false;
+			}
+
+			output = output.Trim ();
+			if (!UInt32.TryParse (output, out context.applicationPID)) {
+				LogErrorLine ($"Unable to parse string '{output}' as the package's PID");
+				return false;
+			}
+
+			LogStatusLine ("Application PID", output);
+
+			TPL.Task<bool> debugServerTask = StartDebugServer (context);
+			return true;
 		}
 
-		Context Init ()
+		TPL.Task<bool> StartDebugServer (Context context)
+		{
+			return null;
+		}
+
+		Context? Init ()
 		{
 			LogLine ();
 
@@ -101,7 +172,8 @@ namespace Xamarin.Android.Tasks
 
 			(bool success, string output) = context.adb.GetPropertyValue ("ro.build.version.sdk").Result;
 			if (!success || String.IsNullOrEmpty (output) || !Int32.TryParse (output, out int apiLevel)) {
-				throw new InvalidOperationException ("Unable to determine connected device's API level");
+				LogErrorLine ("Unable to determine connected device's API level");
+				return null;
 			}
 			context.apiLevel = apiLevel;
 
@@ -110,19 +182,28 @@ namespace Xamarin.Android.Tasks
 			(success, output) = context.adb.Shell ("cat", "/proc/sys/kernel/yama/ptrace_scope", "2>/dev/null").Result;
 			if (success &&
 			    YamaOK (output.Trim ()) &&
-			    PropertyHasValue (context.adb.GetPropertyValue ("ro.build.product").Result, "dragon") &&
-			    PropertyHasValue (context.adb.GetPropertyValue ("ro.product.name").Result, "ryu")
+			    PropertyIsEqualTo (context.adb.GetPropertyValue ("ro.build.product").Result, "dragon") &&
+			    PropertyIsEqualTo (context.adb.GetPropertyValue ("ro.product.name").Result, "ryu")
 			) {
-				LogLine ("WARNING: The device uses Yama ptrace_scope to restrict debugging. ndk-gdb will");
-				LogLine ("    likely be unable to attach to a process. With root access, the restriction");
-				LogLine ("    can be lifted by writing 0 to /proc/sys/kernel/yama/ptrace_scope. Consider");
-				LogLine ("    upgrading your Pixel C to MXC89L or newer, where Yama is disabled.");
+				LogWarningLine ("WARNING: The device uses Yama ptrace_scope to restrict debugging. ndk-gdb will");
+				LogWarningLine ("    likely be unable to attach to a process. With root access, the restriction");
+				LogWarningLine ("    can be lifted by writing 0 to /proc/sys/kernel/yama/ptrace_scope. Consider");
+				LogWarningLine ("    upgrading your Pixel C to MXC89L or newer, where Yama is disabled.");
 				LogLine ();
 			}
 
-			DetermineArchitectureAndABI (context);
-			DetermineAppDataDirectory (context);
-			PushDebugServer (context);
+			if (!DetermineArchitectureAndABI (context)) {
+				return null;
+			}
+
+			if (!DetermineAppDataDirectory (context)) {
+				return null;
+			}
+
+			if (!PushDebugServer (context)) {
+				return null;
+			}
+
 			CopyLibraries (context);
 
 			return context;
@@ -132,7 +213,7 @@ namespace Xamarin.Android.Tasks
 				return !String.IsNullOrEmpty (output) && String.Compare ("0", output, StringComparison.Ordinal) != 0;
 			}
 
-			bool PropertyHasValue ((bool haveProperty, string value) result, string expected)
+			bool PropertyIsEqualTo ((bool haveProperty, string value) result, string expected)
 			{
 				return
 					result.haveProperty &&
@@ -141,16 +222,61 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		bool EnsureSharedLibraryHasSymboles (string libraryPath, DotnetSymbolRunner? dotnetSymbol)
+		{
+			bool tryToFetchSymbols = false;
+			bool hasSymbols = ELFHelper.HasDebugSymbols (log, libraryPath, out bool usesDebugLink);
+			string libName = Path.GetFileName (libraryPath);
+
+			if (!xaLibraries.Contains (libName)) {
+				if (ELFHelper.IsAOTLibrary (log, libraryPath)) {
+					return true; // We don't are about symbols, AOT libraries are only data
+				}
+
+				// It might be a framework shared library, we'll try to fetch symbols if necessary and possible
+				tryToFetchSymbols = !hasSymbols && usesDebugLink;
+			}
+
+			if (tryToFetchSymbols && dotnetSymbol != null) {
+				LogInfoLine ($"      Attempting to download debug symbols from symbol server");
+				if (!dotnetSymbol.Fetch (libraryPath).Result) {
+					LogWarningLine ($"      Warning: failed to download debug symbols for {libraryPath}");
+				} else {
+					LogLine ();
+				}
+			}
+
+			hasSymbols = ELFHelper.HasDebugSymbols (log, libraryPath);
+			return hasSymbols;
+		}
+
+		DotnetSymbolRunner? GetDotnetSymbolRunner ()
+		{
+			string dotnetSymbolPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), ".dotnet", "tools", "dotnet-symbol");
+			if (OS.IsWindows) {
+				dotnetSymbolPath = $"{dotnetSymbolPath}.exe";
+			}
+
+			if (!File.Exists (dotnetSymbolPath)) {
+				return null;
+			}
+
+			return new DotnetSymbolRunner (log, dotnetSymbolPath);
+		}
+
 		void CopyLibraries (Context context)
 		{
-			LogLine ("Populating local native library cache");
+			LogInfoLine ("Populating local native library cache");
 			context.appLibrariesDir = Path.Combine (context.outputDir, "app", "lib");
 			if (!Directory.Exists (context.appLibrariesDir)) {
 				Directory.CreateDirectory (context.appLibrariesDir);
 			}
 
 			if (context.nativeLibraries != null) {
-				LogLine ("  Copying application native libraries");
+				LogInfoLine ("  Copying application native libraries");
+				bool haveLibsWithoutSymbols = false;
+				DotnetSymbolRunner? dotnetSymbol = GetDotnetSymbolRunner ();
+
 				foreach (string library in context.nativeLibraries) {
 					LogLine ($"    {library}");
 
@@ -158,7 +284,19 @@ namespace Xamarin.Android.Tasks
 					if (fileName.StartsWith ("libmono-android.")) {
 						fileName = "libmonodroid.so";
 					}
-					File.Copy (library, Path.Combine (context.appLibrariesDir, fileName), true);
+					string destPath = Path.Combine (context.appLibrariesDir, fileName);
+					File.Copy (library, destPath, true);
+
+					if (!EnsureSharedLibraryHasSymboles (destPath, dotnetSymbol)) {
+						haveLibsWithoutSymbols = true;
+					}
+				}
+
+				if (haveLibsWithoutSymbols) {
+					LogWarningLine ($"One or more native libraries have no debug symbols.");
+					if (dotnetSymbol == null) {
+						LogWarningLine ($"The dotnet-symbol tool was not found. It can be installed using: dotnet tool install -g dotnet-symbol");
+					}
 				}
 			}
 
@@ -179,7 +317,8 @@ namespace Xamarin.Android.Tasks
 				requiredFiles.Add ($"{libraryPath}/{lib}");
 			}
 
-			LogLine ("  Copying binaries from device");
+			LogLine ();
+			LogInfoLine ("  Copying binaries from device");
 			bool isWindows = OS.IsWindows;
 			foreach (string file in requiredFiles) {
 				string filePath = ToLocalPathFormat (file);
@@ -216,30 +355,32 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (String.IsNullOrEmpty (source)) {
-				LogLine ("    Failed to copy 32-bit app_process");
+				LogWarningLine ("    Failed to copy 32-bit app_process");
 			} else {
-				Log ($"    From '{source}' to '{destination}' ");
+				LogLine ($"    From '{source}' to '{destination}' ");
 			}
 
 			string ToLocalPathFormat (string path) => isWindows ? path.Replace ("/", "\\") : path;
 		}
 
-		void PushDebugServer (Context context)
+		bool PushDebugServer (Context context)
 		{
 			if (!hostLldbServerPaths.TryGetValue (context.abi, out string debugServerPath)) {
-				throw new InvalidOperationException ($"Debug server for abi '{context.abi}' not found.");
+				LogErrorLine ($"Debug server for abi '{context.abi}' not found.");
+				return false;
 			}
 
 			string serverName = $"{context.arch}-{Path.GetFileName (debugServerPath)}";
 			string deviceServerPath = Path.Combine (context.appDataDir, serverName);
 
 			// Always push the server binary, as we don't know what version might already be there
-			LogLine ($"Uploading {debugServerPath} to device");
+			LogDebugLine ($"Uploading {debugServerPath} to device");
 
 			// First upload to temporary path, as it's writable for everyone
 			string remotePath = $"/data/local/tmp/{serverName}";
 			if (!context.adb.Push (debugServerPath, remotePath).Result) {
-				throw new InvalidOperationException ($"Failed to upload debug server {debugServerPath} to device path {remotePath}");
+				LogErrorLine ($"Failed to upload debug server {debugServerPath} to device path {remotePath}");
+				return false;
 			}
 
 			// Next, copy it to the app dir, with run-as
@@ -250,27 +391,34 @@ namespace Xamarin.Android.Tasks
 			).Result;
 
 			if (!success) {
-				throw new InvalidOperationException ($"Failed to copy debug server on device, from {remotePath} to {deviceServerPath}");
+				LogErrorLine ($"Failed to copy debug server on device, from {remotePath} to {deviceServerPath}");
+				return false;
 			}
 
 			(success, output) = context.adb.RunAs (packageName, "chmod", "700", deviceServerPath).Result;
 			if (!success) {
-				throw new InvalidOperationException ($"Failed to make debug server executable on device, at {deviceServerPath}");
+				LogErrorLine ($"Failed to make debug server executable on device, at {deviceServerPath}");
+				return false;
 			}
 
 			context.debugServerPath = deviceServerPath;
-			LogLine ($"Debug server path on device: {context.debugServerPath}");
+			LogStatusLine ("Debug server path on device", context.debugServerPath);
+			LogLine ();
+
+			return true;
 		}
 
-		void DetermineAppDataDirectory (Context context)
+		bool DetermineAppDataDirectory (Context context)
 		{
 			(bool success, string output) = context.adb.GetAppDataDirectory (packageName).Result;
 			if (!success) {
-				throw new InvalidOperationException ($"Unable to determine data directory for package '{packageName}'");
+				LogErrorLine ($"Unable to determine data directory for package '{packageName}'");
+				return false;
 			}
 
 			context.appDataDir = output.Trim ();
-			LogLine ($"Application data directory on device: {context.appDataDir}");
+			LogStatusLine ($"Application data directory on device", context.appDataDir);
+			LogLine ();
 
 			// Applications with minSdkVersion >= 24 will have their data directories
 			// created with rwx------ permissions, preventing adbd from forwarding to
@@ -279,12 +427,15 @@ namespace Xamarin.Android.Tasks
 			if (context.apiLevel >= 24) {
 				(success, output) = context.adb.RunAs (packageName, "/system/bin/chmod", "a+x", context.appDataDir).Result;
 				if (!success) {
-					throw new InvalidOperationException ("Failed to make application data directory world executable");
+					LogErrorLine ("Failed to make application data directory world executable");
+					return false;
 				}
 			}
+
+			return true;
 		}
 
-		void DetermineArchitectureAndABI (Context context)
+		bool DetermineArchitectureAndABI (Context context)
 		{
 			string[]? deviceABIs = null;
 
@@ -299,7 +450,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (deviceABIs == null || deviceABIs.Length == 0) {
-				throw new InvalidOperationException ("Unable to determine device ABI");
+				LogErrorLine ("Unable to determine device ABI");
+				return false;
 			}
 
 			LogABIs ("Application", supportedAbis);
@@ -316,24 +468,24 @@ namespace Xamarin.Android.Tasks
 							_ => context.abi,
 						};
 
-						LogLine ($"    Selected ABI: {context.abi} (architecture: {context.arch})");
+						LogStatusLine ($"    Selected ABI", $"{context.abi} (architecture: {context.arch})");
 
 						context.appIs64Bit = context.abi.IndexOf ("64", StringComparison.Ordinal) >= 0;
 						context.outputDir = Path.Combine (outputDir, context.abi);
 						if (NativeLibrariesPerABI != null && NativeLibrariesPerABI.TryGetValue (context.abi, out List<string> abiLibraries)) {
 							context.nativeLibraries = abiLibraries;
 						}
-						return;
+						return true;
 					}
 				}
 			}
 
-			throw new InvalidOperationException ($"Application cannot run on the selected device: no matching ABI found");
+			LogErrorLine ($"Application cannot run on the selected device: no matching ABI found");
+			return false;
 
 			void LogABIs (string which, string[] abis)
 			{
-				string list = String.Join (", ", abis);
-				LogLine ($"{which} ABIs: {list}");
+				LogStatusLine ($"{which} ABIs", String.Join (", ", abis));
 			}
 		}
 
@@ -353,7 +505,7 @@ namespace Xamarin.Android.Tasks
 			return line;
 		}
 
-		void FindTools (string ndkRootPath, string[] supportedAbis)
+		bool FindTools (string ndkRootPath, string[] supportedAbis)
 		{
 			string toolchainDir = Path.Combine (ndkRootPath, NdkHelper.RelativeToolchainDir);
 			string toolchainBinDir = Path.Combine (toolchainDir, "bin");
@@ -367,7 +519,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (String.IsNullOrEmpty (path)) {
-				throw new InvalidOperationException ($"Unable to locate lldb executable in '{toolchainBinDir}'");
+				LogErrorLine ($"Unable to locate lldb executable in '{toolchainBinDir}'");
+				return false;
 			}
 			lldbPath = path;
 
@@ -377,35 +530,129 @@ namespace Xamarin.Android.Tasks
 				string llvmAbi = NdkHelper.TranslateAbiToLLVM (abi);
 				path = Path.Combine (ndkRootPath, NdkHelper.RelativeToolchainDir, "lib64", "clang", llvmVersion, "lib", "linux", llvmAbi, "lldb-server");
 				if (!File.Exists (path)) {
-					throw new InvalidOperationException ($"LLVM lldb server component for ABI '{abi}' not found at '{path}'");
+					LogErrorLine ($"LLVM lldb server component for ABI '{abi}' not found at '{path}'");
+					return false;
 				}
 
 				hostLldbServerPaths.Add (abi, path);
 			}
 
 			if (hostLldbServerPaths.Count == 0) {
-				throw new InvalidOperationException ("Unable to find any lldb-server executables, debugging not possible");
+				LogErrorLine ("Unable to find any lldb-server executables, debugging not possible");
+				return false;
 			}
+
+			return true;
 		}
 
-		void LogLine (string? message = null, bool isError = false)
+		void Log (string? message)
 		{
-			Log (message, isError);
-			Log (Environment.NewLine, isError);
+			Log (LogLevel.Message, message);
 		}
 
-		void Log (string? message = null, bool isError = false)
+		void LogLine (string? message = null)
 		{
-			TextWriter writer = isError ? Console.Error : Console.Out;
+			Log ($"{message}{Environment.NewLine}");
+		}
+
+		void LogWarning (string? message)
+		{
+			Log (LogLevel.Warning, message);
+		}
+
+		void LogWarningLine (string? message)
+		{
+			LogWarning ($"{message}{Environment.NewLine}");
+		}
+
+		void LogError (string? message)
+		{
+			Log (LogLevel.Error, message);
+		}
+
+		void LogErrorLine (string? message)
+		{
+			LogError ($"{message}{Environment.NewLine}");
+		}
+
+		void LogInfo (string? message)
+		{
+			Log (LogLevel.Info, message);
+		}
+
+		void LogInfoLine (string? message)
+		{
+			LogInfo ($"{message}{Environment.NewLine}");
+		}
+
+		void LogDebug (string? message)
+		{
+			Log (LogLevel.Debug, message);
+		}
+
+		void LogDebugLine (string? message)
+		{
+			LogDebug ($"{message}{Environment.NewLine}");
+		}
+
+		void LogStatusLine (string label, string text)
+		{
+			Log (LogLevel.Info, $"{label}: ", StatusLabel);
+			Log (LogLevel.Info, $"{text}{Environment.NewLine}", StatusText);
+		}
+
+		void Log (LogLevel level, string? message)
+		{
+			Log (level, message, ForegroundColor (level));
+		}
+
+		void Log (LogLevel level, string? message, ConsoleColor color)
+		{
+			TextWriter writer = level == LogLevel.Error ? Console.Error : Console.Out;
 			message = message ?? String.Empty;
-			writer.Write (message);
+
+			ConsoleColor fg = ConsoleColor.Gray;
+			try {
+				lock (consoleLock) {
+					fg = Console.ForegroundColor;
+					Console.ForegroundColor = color;
+				}
+
+				writer.Write (message);
+			} finally {
+				Console.ForegroundColor = fg;
+			}
+
 			if (!String.IsNullOrEmpty (message)) {
-				if (isError) {
-					log.LogError (message);
-				} else {
-					log.LogMessage (message);
+				switch (level) {
+					case LogLevel.Error:
+						log.LogError (message);
+						break;
+
+					case LogLevel.Warning:
+						log.LogWarning (message);
+						break;
+
+					default:
+					case LogLevel.Message:
+					case LogLevel.Info:
+						log.LogMessage (message);
+						break;
+
+					case LogLevel.Debug:
+						log.LogDebugMessage (message);
+						break;
 				}
 			}
 		}
+
+		ConsoleColor ForegroundColor (LogLevel level) => level switch {
+			LogLevel.Error => ErrorColor,
+			LogLevel.Warning => WarningColor,
+			LogLevel.Info => InfoColor,
+			LogLevel.Debug => DebugColor,
+			LogLevel.Message => MessageColor,
+			_ => MessageColor,
+		};
 	}
 }
