@@ -23,6 +23,9 @@ namespace Xamarin.Android.Tasks
 		const ConsoleColor StatusLabel  = ConsoleColor.Cyan;
 		const ConsoleColor StatusText   = ConsoleColor.White;
 
+
+		const int DefaultHostDebugPort = 5039;
+
 		enum LogLevel
 		{
 			Error,
@@ -41,6 +44,7 @@ namespace Xamarin.Android.Tasks
 			public bool appIs64Bit;
 			public string appDataDir;
 			public string debugServerPath;
+			public string debugSocketPath;
 			public string outputDir;
 			public string appLibrariesDir;
 			public uint applicationPID;
@@ -87,6 +91,7 @@ namespace Xamarin.Android.Tasks
 		string[] supportedAbis;
 
 		public string? AdbDeviceTarget { get; set; }
+		public int HostDebugPort { get; set; } = -1;
 		public IDictionary<string, List<string>>? NativeLibrariesPerABI { get; set; }
 
 		public NativeDebugger (TaskLoggingHelper logger, string adbPath, string ndkRootPath, string outputDirRoot, string packageName, string[] supportedAbis)
@@ -153,21 +158,39 @@ namespace Xamarin.Android.Tasks
 
 			LogStatusLine ("Application PID", output);
 
-			TPL.Task<bool> debugServerTask = StartDebugServer (context);
+			(AdbRunner? debugServerRunner, TPL.Task<(bool success, string output)>? debugServerTask) = StartDebugServer (context);
+			if (debugServerRunner == null || debugServerTask == null) {
+				return false;
+			}
+
 			return true;
 		}
 
-		TPL.Task<bool> StartDebugServer (Context context)
+		(AdbRunner? runner, TPL.Task<(bool success, string output)>? task) StartDebugServer (Context context)
 		{
-			return null;
+			var runner = CreateAdbRunner ();
+			TPL.Task<(bool success, string output)> task = runner.RunAs (packageName, context.debugServerPath, "gdbserver", $"unix://{context.debugSocketPath}");
+
+			int port = HostDebugPort <= 0 ? DefaultHostDebugPort : HostDebugPort;
+			(bool success, string output) = context.adb.Forward ($"tcp:{port}", $"localfilesystem:{context.debugSocketPath}").Result;
+
+			if (!success) {
+				LogErrorLine ("Failed to forward remote device socket to a local port");
+				// TODO: kill the process and wait for the task to complete
+				return (null, null);
+			}
+
+			return (runner, task);
 		}
+
+		AdbRunner CreateAdbRunner () => new AdbRunner (log, adbPath, AdbDeviceTarget);
 
 		Context? Init ()
 		{
 			LogLine ();
 
 			var context = new Context {
-				adb = new AdbRunner (log, adbPath)
+				adb = CreateAdbRunner ()
 			};
 
 			(bool success, string output) = context.adb.GetPropertyValue ("ro.build.version.sdk").Result;
@@ -205,6 +228,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			CopyLibraries (context);
+			context.debugSocketPath = $"{context.appDataDir}/debug_socket";
 
 			return context;
 

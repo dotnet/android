@@ -36,6 +36,16 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		public async Task<(bool success, string output)> Forward (string local, string remote)
+		{
+			var runner = CreateAdbRunner ();
+			runner.AddArgument ("forward");
+			runner.AddArgument (local);
+			runner.AddArgument (remote);
+
+			return await CaptureAdbOutput (runner);
+		}
+
 		public async Task<bool> Pull (string remotePath, string localPath)
 		{
 			var runner = CreateAdbRunner ();
