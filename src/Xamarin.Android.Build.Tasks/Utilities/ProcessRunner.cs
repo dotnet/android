@@ -246,6 +246,12 @@ namespace Xamarin.Android.Tasks
 				RedirectStandardOutput = stdout_done != null,
 			};
 
+			if (Environment.Count > 0) {
+				foreach (var kvp in Environment) {
+					psi.Environment.Add (kvp.Key, kvp.Value);
+				}
+			}
+
 			if (arguments != null) {
 				psi.Arguments = String.Join (" ", arguments);
 			}
@@ -306,7 +312,8 @@ namespace Xamarin.Android.Tasks
 				process.BeginOutputReadLine ();
 			}
 
-			bool exited = process.WaitForExit ((int)ProcessTimeout.TotalMilliseconds);
+			int timeout = ProcessTimeout == TimeSpan.MaxValue ? -1 : (int)ProcessTimeout.TotalMilliseconds;
+			bool exited = process.WaitForExit (timeout);
 			if (!exited) {
 				log.LogError ($"Process '{FullCommandLine}' timed out after {ProcessTimeout}");
 				ErrorReason = ErrorReasonCode.ExecutionTimedOut;

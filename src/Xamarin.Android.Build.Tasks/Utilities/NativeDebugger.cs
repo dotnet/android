@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
@@ -48,7 +50,11 @@ namespace Xamarin.Android.Tasks
 			public string outputDir;
 			public string appLibrariesDir;
 			public uint applicationPID;
+			public string lldbScriptPath;
+			public string zygotePath;
+			public int debugServerPort;
 			public List<string>? nativeLibraries;
+			public List<string> deviceBinaryDirs;
 		}
 
 		// We want the shell/batch scripts first, since they set up Python environment for the debugger
@@ -92,6 +98,9 @@ namespace Xamarin.Android.Tasks
 
 		public string? AdbDeviceTarget { get; set; }
 		public int HostDebugPort { get; set; } = -1;
+		public bool UseLldbGUI { get; set; } = true;
+		public string? CustomLldbCommandsFilePath { get; set; }
+
 		public IDictionary<string, List<string>>? NativeLibrariesPerABI { get; set; }
 
 		public NativeDebugger (TaskLoggingHelper logger, string adbPath, string ndkRootPath, string outputDirRoot, string packageName, string[] supportedAbis)
@@ -136,43 +145,103 @@ namespace Xamarin.Android.Tasks
 			string launchName = $"{packageName}/{activityName}";
 			LogLine ();
 			LogStatusLine ("Launching activity", launchName);
-			Log ("Waiting for the activity to start...");
-			(bool success, string output) = context.adb.Shell ("am", "start", "-D", "-S", "-W", launchName).Result;
+			LogLine ("Waiting for the activity to start...");
+			(bool success, string output) = context.adb.Shell ("am", "start", "-S", "-W", launchName).Result;
 			if (!success) {
 				LogErrorLine ("Failed to launch the activity");
 				return false;
 			}
 
-			(success, output) = context.adb.Shell ("pidof", packageName).Result;
-			if (!success) {
+			long appPID = GetDeviceProcessID (context, packageName);
+			if (appPID <= 0) {
 				LogErrorLine ("Failed to obtain PID of the running application");
 				LogErrorLine (output);
 				return false;
 			}
+			context.applicationPID = (uint)appPID;
 
-			output = output.Trim ();
-			if (!UInt32.TryParse (output, out context.applicationPID)) {
-				LogErrorLine ($"Unable to parse string '{output}' as the package's PID");
-				return false;
-			}
-
-			LogStatusLine ("Application PID", output);
+			LogStatusLine ("Application PID", $"{context.applicationPID}");
 
 			(AdbRunner? debugServerRunner, TPL.Task<(bool success, string output)>? debugServerTask) = StartDebugServer (context);
 			if (debugServerRunner == null || debugServerTask == null) {
 				return false;
 			}
 
+			GenerateLldbScript (context);
+
+			LogDebugLine ($"Starting LLDB: {lldbPath}");
+			var lldb = new LldbRunner (log, lldbPath, context.lldbScriptPath);
+			if (lldb.Run ()) {
+				LogWarning ("LLDB failed?");
+			}
+
+			KillDebugServer (context);
+			LogDebugLine ("Waiting on the debug server process to quit");
+			(success, output) = debugServerTask.Result;
+
 			return true;
+		}
+
+		void GenerateLldbScript (Context context)
+		{
+			context.lldbScriptPath = Path.Combine (context.outputDir, $"{context.arch}-lldb-script.txt");
+
+			using (var f = File.OpenWrite (context.lldbScriptPath)) {
+				using (var sw = new StreamWriter (f, new UTF8Encoding (false))) {
+					string systemPaths = String.Join (" ", context.deviceBinaryDirs.Select (d => $"'{Path.GetFullPath(d)}'" ));
+					sw.WriteLine ($"settings append target.exec-search-paths '{Path.GetFullPath (context.appLibrariesDir)}' {systemPaths}");
+					sw.WriteLine ($"target create '{Path.GetFullPath (context.zygotePath)}'");
+					sw.WriteLine ($"target modules search-paths add / '{Path.GetFullPath (outputDir)}/'");
+					sw.WriteLine ($"gdb-remote {context.debugServerPort}");
+
+					if (UseLldbGUI) {
+						sw.WriteLine ($"gui");
+					}
+
+					if (!String.IsNullOrEmpty (CustomLldbCommandsFilePath)) {
+						sw.WriteLine ();
+						sw.Write (File.ReadAllText (CustomLldbCommandsFilePath));
+						sw.WriteLine ();
+					}
+
+					sw.Flush ();
+				}
+			}
+		}
+
+		bool KillDebugServer (Context context)
+		{
+			long serverPID = GetDeviceProcessID (context, context.debugServerPath, quiet: true);
+			if (serverPID <= 0) {
+				return true;
+			}
+
+			LogDebugLine ("Killing previous instance of the debug server");
+			(bool success, string _) = context.adb.RunAs (packageName, "kill", "-9", $"{serverPID}").Result;
+			return success;
 		}
 
 		(AdbRunner? runner, TPL.Task<(bool success, string output)>? task) StartDebugServer (Context context)
 		{
+			LogDebugLine ($"Starting debug server on device: {context.debugServerPath}");
+
+			(bool success, string output) = context.adb.RunAs (packageName, "rm", "-f", context.debugSocketPath).Result;
+			if (!success) {
+				LogWarningLine ($"Failed to remove debug socket on device, {context.debugSocketPath}");
+				LogWarningLine (output);
+			}
+
+			if (!KillDebugServer (context)) {
+				LogWarningLine ("Failed to kill previous instance of the debug server");
+			}
+
 			var runner = CreateAdbRunner ();
+			runner.ProcessTimeout = TimeSpan.MaxValue;
+
 			TPL.Task<(bool success, string output)> task = runner.RunAs (packageName, context.debugServerPath, "gdbserver", $"unix://{context.debugSocketPath}");
 
-			int port = HostDebugPort <= 0 ? DefaultHostDebugPort : HostDebugPort;
-			(bool success, string output) = context.adb.Forward ($"tcp:{port}", $"localfilesystem:{context.debugSocketPath}").Result;
+			context.debugServerPort = HostDebugPort <= 0 ? DefaultHostDebugPort : HostDebugPort;
+			(success, output) = context.adb.Forward ($"tcp:{context.debugServerPort}", $"localfilesystem:{context.debugSocketPath}").Result;
 
 			if (!success) {
 				LogErrorLine ("Failed to forward remote device socket to a local port");
@@ -181,6 +250,28 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return (runner, task);
+		}
+
+		long GetDeviceProcessID (Context context, string processName, bool quiet = false)
+		{
+			(bool success, string output) = context.adb.Shell ("pidof", processName).Result;
+			if (!success) {
+				if (!quiet) {
+					LogErrorLine ($"Failed to obtain PID of process '{processName}'");
+					LogErrorLine (output);
+				}
+				return -1;
+			}
+
+			output = output.Trim ();
+			if (!UInt32.TryParse (output, out uint pid)) {
+				if (!quiet) {
+					LogErrorLine ($"Unable to parse string '{output}' as the package's PID");
+				}
+				return -1;
+			}
+
+			return pid;
 		}
 
 		AdbRunner CreateAdbRunner () => new AdbRunner (log, adbPath, AdbDeviceTarget);
@@ -227,7 +318,10 @@ namespace Xamarin.Android.Tasks
 				return null;
 			}
 
-			CopyLibraries (context);
+			if (!CopyLibraries (context)) {
+				return null;
+			}
+
 			context.debugSocketPath = $"{context.appDataDir}/debug_socket";
 
 			return context;
@@ -288,7 +382,7 @@ namespace Xamarin.Android.Tasks
 			return new DotnetSymbolRunner (log, dotnetSymbolPath);
 		}
 
-		void CopyLibraries (Context context)
+		bool CopyLibraries (Context context)
 		{
 			LogInfoLine ("Populating local native library cache");
 			context.appLibrariesDir = Path.Combine (context.outputDir, "app", "lib");
@@ -330,7 +424,10 @@ namespace Xamarin.Android.Tasks
 
 			if (context.appIs64Bit) {
 				libraryPath = "/system/lib64";
-				requiredFiles.Add ("/system/bin/app_process64");
+
+				string zygotePath = "/system/bin/app_process64";
+				requiredFiles.Add (zygotePath);
+				context.zygotePath = $"{context.outputDir}{ToLocalPathFormat (zygotePath)}";
 				requiredFiles.Add ("/system/bin/linker64");
 			} else {
 				libraryPath = "/system/lib";
@@ -343,7 +440,8 @@ namespace Xamarin.Android.Tasks
 
 			LogLine ();
 			LogInfoLine ("  Copying binaries from device");
-			bool isWindows = OS.IsWindows;
+			var dirs = new HashSet<string> (StringComparer.Ordinal);
+
 			foreach (string file in requiredFiles) {
 				string filePath = ToLocalPathFormat (file);
 				string localPath = $"{context.outputDir}{filePath}";
@@ -351,6 +449,9 @@ namespace Xamarin.Android.Tasks
 
 				if (!Directory.Exists (localDir)) {
 					Directory.CreateDirectory (localDir);
+					if (!dirs.Contains (localDir)) {
+						dirs.Add (localDir);
+					}
 				}
 
 				Log ($"    From '{file}' to '{localPath}' ");
@@ -361,8 +462,9 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			context.deviceBinaryDirs = new List<string> (dirs);
 			if (context.appIs64Bit) {
-				return;
+				return true;
 			}
 
 			// /system/bin/app_process is 32-bit on 32-bit devices, but a symlink to
@@ -379,12 +481,15 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (String.IsNullOrEmpty (source)) {
-				LogWarningLine ("    Failed to copy 32-bit app_process");
-			} else {
-				LogLine ($"    From '{source}' to '{destination}' ");
+				LogErrorLine ("Failed to copy 32-bit app_process");
+				return false;
 			}
+			LogLine ($"    From '{source}' to '{destination}' ");
+			context.zygotePath = destination;
 
-			string ToLocalPathFormat (string path) => isWindows ? path.Replace ("/", "\\") : path;
+			return true;
+
+			string ToLocalPathFormat (string path) => OS.IsWindows ? path.Replace ("/", "\\") : path;
 		}
 
 		bool PushDebugServer (Context context)
@@ -395,7 +500,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			string serverName = $"{context.arch}-{Path.GetFileName (debugServerPath)}";
-			string deviceServerPath = Path.Combine (context.appDataDir, serverName);
+			context.debugServerPath = Path.Combine (context.appDataDir, serverName);
+
+			KillDebugServer (context);
 
 			// Always push the server binary, as we don't know what version might already be there
 			LogDebugLine ($"Uploading {debugServerPath} to device");
@@ -411,21 +518,20 @@ namespace Xamarin.Android.Tasks
 			(bool success, string output) = context.adb.Shell (
 				"cat", remotePath, "|",
 				"run-as", packageName,
-				"sh", "-c", $"'cat > {deviceServerPath}'"
+				"sh", "-c", $"'cat > {context.debugServerPath}'"
 			).Result;
 
 			if (!success) {
-				LogErrorLine ($"Failed to copy debug server on device, from {remotePath} to {deviceServerPath}");
+				LogErrorLine ($"Failed to copy debug server on device, from {remotePath} to {context.debugServerPath}");
 				return false;
 			}
 
-			(success, output) = context.adb.RunAs (packageName, "chmod", "700", deviceServerPath).Result;
+			(success, output) = context.adb.RunAs (packageName, "chmod", "700", context.debugServerPath).Result;
 			if (!success) {
-				LogErrorLine ($"Failed to make debug server executable on device, at {deviceServerPath}");
+				LogErrorLine ($"Failed to make debug server executable on device, at {context.debugServerPath}");
 				return false;
 			}
 
-			context.debugServerPath = deviceServerPath;
 			LogStatusLine ("Debug server path on device", context.debugServerPath);
 			LogLine ();
 
