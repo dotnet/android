@@ -35,14 +35,15 @@ stages:
     pool:
       name: VSEng-Xamarin-RedmondMac-Android-Untrusted
       demands: macOS.Name -equals Monterey
-    timeoutInMinutes: 240
-    cancelTimeoutInMinutes: 5
+    timeoutInMinutes: 420
     workspace:
       clean: all
     variables:
       - group: Xamarin-Secrets
       - group: Xamarin Signing
       - group: xamops-azdev-secrets
+      - name: Codeql.Enabled
+        value: true
     steps:
     - checkout: self
       submodules: recursive
@@ -67,7 +68,6 @@ stages:
   - job: emulator_tests
     displayName: macOS > Tests > APKs (Emulator)
     timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 2
     strategy:
       matrix:
         Android21-x86:
