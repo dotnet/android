@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Construction;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Xamarin.ProjectTools
 {
@@ -20,29 +17,16 @@ namespace Xamarin.ProjectTools
 
 		BuildItem.Source resourceDesigner;
 
-		static byte [] ScaleIcon (Image image, IImageFormat format, int width, int height)
-		{
-			float scale = Math.Min (width / image.Width, height / image.Height);
-			using (var ms = new MemoryStream ()) {
-				var clone = image.Clone (i => i.Resize (width, height));
-				clone.Save (ms, format);
-				return ms.ToArray ();
-			}
-		}
-
 		static XamarinAndroidCommonProject ()
 		{
 			var stream = typeof(XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png");
 			icon_binary_mdpi = new byte [stream.Length];
 			stream.Read (icon_binary_mdpi, 0, (int) stream.Length);
 
-			stream.Position = 0;
-			using (var icon = Image.Load (stream, out var format)) {
-				icon_binary_hdpi = ScaleIcon (icon, format, 72, 72);
-				icon_binary_xhdpi = ScaleIcon (icon, format, 96, 96);
-				icon_binary_xxhdpi = ScaleIcon (icon, format, 144, 144);
-				icon_binary_xxxhdpi = ScaleIcon (icon, format, 192, 192);
-			}
+			icon_binary_hdpi    = icon_binary_mdpi;
+			icon_binary_xhdpi   = icon_binary_mdpi;
+			icon_binary_xxhdpi  = icon_binary_mdpi;
+			icon_binary_xxxhdpi = icon_binary_mdpi;
 		}
 
 		protected XamarinAndroidCommonProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
