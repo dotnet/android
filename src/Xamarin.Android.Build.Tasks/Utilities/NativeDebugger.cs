@@ -12,6 +12,8 @@ using TPL = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
+	// Starting LLDB server: /data/data/net.twistedcode.myapplication/lldb/bin/start_lldb_server.sh /data/data/net.twistedcode.myapplication/lldb unix-abstract /net.twistedcode.myapplication-0 platform-1668626161269.sock "lldb process:gdb-remote packets"
+
 	/// <summary>
 	/// Interface to lldb, the NDK native code debugger.
 	/// </summary>
@@ -25,8 +27,7 @@ namespace Xamarin.Android.Tasks
 		const ConsoleColor StatusLabel  = ConsoleColor.Cyan;
 		const ConsoleColor StatusText   = ConsoleColor.White;
 
-
-		const int DefaultHostDebugPort = 5039;
+		const string ServerLauncherScriptName = "xa_start_lldb_server.sh";
 
 		enum LogLevel
 		{
@@ -46,13 +47,19 @@ namespace Xamarin.Android.Tasks
 			public bool appIs64Bit;
 			public string appDataDir;
 			public string debugServerPath;
+			public string debugServerScriptPath;
 			public string debugSocketPath;
 			public string outputDir;
 			public string appLibrariesDir;
+			public string appLldbBaseDir;
+			public string appLldbBinDir;
+			public string appLldbLogDir;
 			public uint applicationPID;
 			public string lldbScriptPath;
 			public string zygotePath;
 			public int debugServerPort;
+			public string domainSocketDir;
+			public string platformSocketName;
 			public List<string>? nativeLibraries;
 			public List<string> deviceBinaryDirs;
 		}
@@ -87,6 +94,7 @@ namespace Xamarin.Android.Tasks
 		};
 
 		static readonly object consoleLock = new object ();
+		static readonly UTF8Encoding UTF8NoBOM = new UTF8Encoding (false);
 
 		TaskLoggingHelper log;
 		string packageName;
@@ -97,7 +105,6 @@ namespace Xamarin.Android.Tasks
 		string[] supportedAbis;
 
 		public string? AdbDeviceTarget { get; set; }
-		public int HostDebugPort { get; set; } = -1;
 		public bool UseLldbGUI { get; set; } = true;
 		public string? CustomLldbCommandsFilePath { get; set; }
 
@@ -162,22 +169,22 @@ namespace Xamarin.Android.Tasks
 
 			LogStatusLine ("Application PID", $"{context.applicationPID}");
 
-			(AdbRunner? debugServerRunner, TPL.Task<(bool success, string output)>? debugServerTask) = StartDebugServer (context);
-			if (debugServerRunner == null || debugServerTask == null) {
-				return false;
-			}
+			// (AdbRunner? debugServerRunner, TPL.Task<(bool success, string output)>? debugServerTask) = StartDebugServer (context);
+			// if (debugServerRunner == null || debugServerTask == null) {
+			// 	return false;
+			// }
 
-			GenerateLldbScript (context);
+			// GenerateLldbScript (context);
 
-			LogDebugLine ($"Starting LLDB: {lldbPath}");
-			var lldb = new LldbRunner (log, lldbPath, context.lldbScriptPath);
-			if (lldb.Run ()) {
-				LogWarning ("LLDB failed?");
-			}
+			// LogDebugLine ($"Starting LLDB: {lldbPath}");
+			// var lldb = new LldbRunner (log, lldbPath, context.lldbScriptPath);
+			// if (lldb.Run ()) {
+			// 	LogWarning ("LLDB failed?");
+			// }
 
-			KillDebugServer (context);
-			LogDebugLine ("Waiting on the debug server process to quit");
-			(success, output) = debugServerTask.Result;
+			// KillDebugServer (context);
+			// LogDebugLine ("Waiting on the debug server process to quit");
+			// (success, output) = debugServerTask.Result;
 
 			return true;
 		}
@@ -187,7 +194,7 @@ namespace Xamarin.Android.Tasks
 			context.lldbScriptPath = Path.Combine (context.outputDir, $"{context.arch}-lldb-script.txt");
 
 			using (var f = File.OpenWrite (context.lldbScriptPath)) {
-				using (var sw = new StreamWriter (f, new UTF8Encoding (false))) {
+				using (var sw = new StreamWriter (f, UTF8NoBOM)) {
 					string systemPaths = String.Join (" ", context.deviceBinaryDirs.Select (d => $"'{Path.GetFullPath(d)}'" ));
 					sw.WriteLine ($"settings append target.exec-search-paths '{Path.GetFullPath (context.appLibrariesDir)}' {systemPaths}");
 					sw.WriteLine ($"target create '{Path.GetFullPath (context.zygotePath)}'");
@@ -223,31 +230,30 @@ namespace Xamarin.Android.Tasks
 
 		(AdbRunner? runner, TPL.Task<(bool success, string output)>? task) StartDebugServer (Context context)
 		{
-			LogDebugLine ($"Starting debug server on device: {context.debugServerPath}");
-
-			(bool success, string output) = context.adb.RunAs (packageName, "rm", "-f", context.debugSocketPath).Result;
-			if (!success) {
-				LogWarningLine ($"Failed to remove debug socket on device, {context.debugSocketPath}");
-				LogWarningLine (output);
-			}
+			LogDebugLine ($"Starting debug server on device: {context.debugServerScriptPath}");
 
 			if (!KillDebugServer (context)) {
 				LogWarningLine ("Failed to kill previous instance of the debug server");
 			}
 
+			context.domainSocketDir = $"xa-{packageName}-0";
+
+			var rnd = new Random ();
+			context.platformSocketName = $"xa-platform-{rnd.Next ()}.sock";
+
 			var runner = CreateAdbRunner ();
 			runner.ProcessTimeout = TimeSpan.MaxValue;
 
-			TPL.Task<(bool success, string output)> task = runner.RunAs (packageName, context.debugServerPath, "gdbserver", $"unix://{context.debugSocketPath}");
-
-			context.debugServerPort = HostDebugPort <= 0 ? DefaultHostDebugPort : HostDebugPort;
-			(success, output) = context.adb.Forward ($"tcp:{context.debugServerPort}", $"localfilesystem:{context.debugSocketPath}").Result;
-
-			if (!success) {
-				LogErrorLine ("Failed to forward remote device socket to a local port");
-				// TODO: kill the process and wait for the task to complete
-				return (null, null);
-			}
+			TPL.Task<(bool success, string output)> task = runner.RunAs (
+				packageName,
+				context.debugServerScriptPath,
+				context.appLldbBaseDir, // LLDB directory
+				"unix-abstract", // Listener socket scheme (unix-abstract: virtual, not on the filesystem)
+				context.domainSocketDir, // Directory where listener socket will be created
+				context.platformSocketName, // name of the socket to create
+				"'lldb process:gdb-remote packets'", // LLDB log channels
+				context.arch // LLDB architecture
+			);
 
 			return (runner, task);
 		}
@@ -499,18 +505,53 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			string serverName = $"{context.arch}-{Path.GetFileName (debugServerPath)}";
-			context.debugServerPath = Path.Combine (context.appDataDir, serverName);
+			debugServerPath = "/tmp/lldb-server";
+			if (!context.adb.CreateDirectoryAs (packageName, context.appLldbBinDir).Result.success) {
+				LogErrorLine ($"Failed to create debug server destination directory on device, {context.appLldbBinDir}");
+				return false;
+			}
+
+			string serverName = $"xa-{context.arch}-{Path.GetFileName (debugServerPath)}";
+			context.debugServerPath = $"{context.appLldbBinDir}/{serverName}";
 
 			KillDebugServer (context);
 
 			// Always push the server binary, as we don't know what version might already be there
-			LogDebugLine ($"Uploading {debugServerPath} to device");
+			if (!PushServerExecutable (context, debugServerPath, context.debugServerPath)) {
+				return false;
+			}
+			LogStatusLine ("Debug server path on device", context.debugServerPath);
+
+			string? launcherScript = MonoAndroidHelper.ReadManifestResource (log, ServerLauncherScriptName);
+			if (String.IsNullOrEmpty (launcherScript)) {
+				return false;
+			}
+
+			string launcherScriptPath = Path.Combine (context.outputDir, ServerLauncherScriptName);
+			Directory.CreateDirectory (Path.GetDirectoryName (launcherScriptPath));
+			File.WriteAllText (launcherScriptPath, launcherScript, UTF8NoBOM);
+
+			context.debugServerScriptPath = $"{context.appLldbBinDir}/{Path.GetFileName (launcherScriptPath)}";
+			if (!PushServerExecutable (context, launcherScriptPath, context.debugServerScriptPath)) {
+				return false;
+			}
+			LogStatusLine ("Debug server launcher script path on device", context.debugServerScriptPath);
+			LogLine ();
+
+			return true;
+		}
+
+		bool PushServerExecutable (Context context, string hostSource, string deviceDestination)
+		{
+			string executableName = Path.GetFileName (deviceDestination);
+
+			// Always push the executable, as we don't know what version might already be there
+			LogDebugLine ($"Uploading {hostSource} to device");
 
 			// First upload to temporary path, as it's writable for everyone
-			string remotePath = $"/data/local/tmp/{serverName}";
-			if (!context.adb.Push (debugServerPath, remotePath).Result) {
-				LogErrorLine ($"Failed to upload debug server {debugServerPath} to device path {remotePath}");
+			string remotePath = $"/data/local/tmp/{executableName}";
+			if (!context.adb.Push (hostSource, remotePath).Result) {
+				LogErrorLine ($"Failed to upload debug server {hostSource} to device path {remotePath}");
 				return false;
 			}
 
@@ -518,22 +559,19 @@ namespace Xamarin.Android.Tasks
 			(bool success, string output) = context.adb.Shell (
 				"cat", remotePath, "|",
 				"run-as", packageName,
-				"sh", "-c", $"'cat > {context.debugServerPath}'"
+				"sh", "-c", $"'cat > {deviceDestination}'"
 			).Result;
 
 			if (!success) {
-				LogErrorLine ($"Failed to copy debug server on device, from {remotePath} to {context.debugServerPath}");
+				LogErrorLine ($"Failed to copy debug executable to device, from {hostSource} to {deviceDestination}");
 				return false;
 			}
 
-			(success, output) = context.adb.RunAs (packageName, "chmod", "700", context.debugServerPath).Result;
+			(success, output) = context.adb.RunAs (packageName, "chmod", "700", deviceDestination).Result;
 			if (!success) {
-				LogErrorLine ($"Failed to make debug server executable on device, at {context.debugServerPath}");
+				LogErrorLine ($"Failed to make debug server executable on device, at {deviceDestination}");
 				return false;
 			}
-
-			LogStatusLine ("Debug server path on device", context.debugServerPath);
-			LogLine ();
 
 			return true;
 		}
@@ -549,6 +587,10 @@ namespace Xamarin.Android.Tasks
 			context.appDataDir = output.Trim ();
 			LogStatusLine ($"Application data directory on device", context.appDataDir);
 			LogLine ();
+
+			context.appLldbBaseDir = $"{context.appDataDir}/lldb";
+			context.appLldbBinDir = $"{context.appLldbBaseDir}/bin";
+			context.appLldbLogDir = $"{context.appLldbBaseDir}/log";
 
 			// Applications with minSdkVersion >= 24 will have their data directories
 			// created with rwx------ permissions, preventing adbd from forwarding to

@@ -66,6 +66,11 @@ namespace Xamarin.Android.Tasks
 			return await RunAdb (runner);
 		}
 
+		public async Task<(bool success, string output)> CreateDirectoryAs (string packageName, string directoryPath)
+		{
+			return await RunAs (packageName, "mkdir", "-p", directoryPath);
+		}
+
 		public async Task<(bool success, string output)> RunAs (string packageName, string command, params string[] args)
 		{
 			var shellArgs = new List<string> {
