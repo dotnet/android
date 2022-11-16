@@ -47,7 +47,7 @@ namespace Xamarin.ProjectTools
 		}
 		public TimeSpan LastBuildTime { get; protected set; }
 		public string BuildLogFile { get; set; }
-		public bool ThrowOnBuildFailure { get; set; } = true;
+		public bool ThrowOnBuildFailure { get; set; }
 		/// <summary>
 		/// True if NuGet restore occurs automatically (default)
 		/// </summary>
