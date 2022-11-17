@@ -154,7 +154,7 @@ _call_cb_from_new_thread (void *cb)
 	}
 
 	/* 5: Execution of T enters managed code... */
-	jobject instance = _create_java_instance (env. "java/lang/Object");
+	jobject instance = _create_java_instance (env, "java/lang/Object");
 	_cb (env, instance);
 
 	return NULL;
