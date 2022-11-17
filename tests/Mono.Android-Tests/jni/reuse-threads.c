@@ -113,9 +113,9 @@ _get_env (const char *where)
 }
 
 static jobject
-_create_java_instance (JNIEnv *env)
+_create_java_instance (JNIEnv *env, const char *class_name)
 {
-	jclass    Object_class  = (*env)->FindClass (env, "java/lang/Object");
+	jclass    Object_class  = (*env)->FindClass (env, class_name);
 	jmethodID Object_ctor   = (*env)->GetMethodID (env, Object_class, "<init>", "()V");
 
 	jobject   instance      = (*env)->NewObject (env, Object_class, Object_ctor);
@@ -154,7 +154,7 @@ _call_cb_from_new_thread (void *cb)
 	}
 
 	/* 5: Execution of T enters managed code... */
-	jobject instance = _create_java_instance (env);
+	jobject instance = _create_java_instance (env. "java/lang/Object");
 	_cb (env, instance);
 
 	return NULL;
@@ -200,3 +200,43 @@ rt_invoke_callback_on_new_thread (CB cb)
 	return 0;
 }
 
+static void*
+_register_type_from_new_thread (const char *java_type_name)
+{
+	JNIEnv *env = _get_env ("_register_type_from_new_thread");
+	jobject instance = _create_java_instance (env, java_type_name);
+
+	if (instance == NULL) {
+		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: instance of class '%s' wasn't created!", java_type_name);
+	}
+
+	return NULL;
+}
+
+JNIEXPORT int JNICALL
+rt_register_type_on_new_thread (const char *java_type_name)
+{
+	JNIEnv *env = _get_env ("rt_register_type_on_new_thread");
+	pthread_t t;
+
+	/* 1: Create a thread... */
+	int r = pthread_create (&t, NULL, _register_type_from_new_thread, java_type_name);
+
+	if (r) {
+		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "RegisterOnNewThread: pthread_create() failed! %i: %s", r, strerror (r));
+		return -1;
+	}
+
+	/* 3(b): Ensure Dalvik gets a chance to cleanup the old JNIEnv* */
+	sem_wait (&start_gc_on_main);
+	_gc (env);
+	_gc (env);  /* for good measure... */
+
+	/* Allow (4) to execute... */
+	sem_post (&finished_gc_on_main);
+
+	void *tr;
+	pthread_join (t, &tr);
+
+	return 0;
+}

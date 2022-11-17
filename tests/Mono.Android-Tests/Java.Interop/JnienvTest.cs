@@ -32,10 +32,20 @@ namespace Java.InteropTests
 			}
 		}
 
+		[DllImport ("reuse-threads")]
+		static extern int rt_register_type_on_new_thread (string java_type_name);
+
 		delegate void CB (IntPtr jnienv, IntPtr java_instance);
 
 		[DllImport ("reuse-threads")]
 		static extern int rt_invoke_callback_on_new_thread (CB cb);
+
+		[Test]
+		public void RegisterTypeOnNewThread ()
+		{
+			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
+			rt_register_type_on_new_thread ("from/NewThread");
+		}
 
 		[Test]
 		public void ThreadReuse ()
@@ -433,6 +443,10 @@ namespace Java.InteropTests
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#4");
 		}
 	}
+
+	[Register ("from/NewThread")]
+	class RegisterMeOnNewThread : Java.Lang.Object
+	{}
 
 	class MyCb : Java.Lang.Object, Java.Lang.IRunnable {
 		public void Run ()
