@@ -21,8 +21,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
-		public bool IsLinkerEnabled { get; set; }
-
 		public override bool RunTask ()
 		{
 			string[] types = ClientHandlerType.Split (',');
@@ -65,10 +63,6 @@ namespace Xamarin.Android.Tasks
 						break;
 				}
 				if (handlerType == null) {
-					if (IsLinkerEnabled) {
-						Log.LogDebugMessage ("Could not resolve '{type}' from '{assembly}'. It was probably linked out during the build.");
-						return true;
-					}
 					Log.LogCodedError ("XA1032", Xamarin.Android.Tasks.Properties.Resources.XA1032, type, assembly);
 					return false;
 				}

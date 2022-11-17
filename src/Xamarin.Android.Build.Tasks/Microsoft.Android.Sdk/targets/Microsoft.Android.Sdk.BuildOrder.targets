@@ -28,7 +28,6 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CollectJavaSourceForBinding;
       _CompileBindingJava;
       $(BuildDependsOn);
-      _CheckAndroidHttpClientHandlerType;
       _CompileDex;
       $(_AfterCompileDex);
     </BuildDependsOn>
@@ -136,10 +135,11 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _IncludeLayoutBindingSources;
       AddLibraryJarsToBind;
       $(CompileDependsOn);
+      _CheckAndroidHttpClientHandlerType;
     </CompileDependsOn>
     <CoreCompileDependsOn>
       UpdateGeneratedFiles;
-      $(CoreCompileDependsOn)
+      $(CoreCompileDependsOn);
     </CoreCompileDependsOn>
     <DeferredBuildDependsOn>
       $(DeferredBuildDependsOn);
