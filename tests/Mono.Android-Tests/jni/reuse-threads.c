@@ -227,14 +227,6 @@ rt_register_type_on_new_thread (const char *java_type_name)
 		return -1;
 	}
 
-	/* 3(b): Ensure Dalvik gets a chance to cleanup the old JNIEnv* */
-	sem_wait (&start_gc_on_main);
-	_gc (env);
-	_gc (env);  /* for good measure... */
-
-	/* Allow (4) to execute... */
-	sem_post (&finished_gc_on_main);
-
 	void *tr;
 	pthread_join (t, &tr);
 
