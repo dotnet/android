@@ -26,7 +26,7 @@ namespace System.Drawing {
 		{
 			var typeConverter = TypeDescriptor.GetConverter (typeof (Rectangle));
 			var rect = (Rectangle)typeConverter.ConvertFromString ("10, 20, 30, 40");
-
+			Assert.Fail();
 			Assert.AreEqual (10, rect.X, "X");
 			Assert.AreEqual (20, rect.Y, "Y");
 			Assert.AreEqual (30, rect.Width, "Width");

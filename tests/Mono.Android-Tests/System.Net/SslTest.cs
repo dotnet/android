@@ -34,6 +34,7 @@ namespace System.NetTests {
 					Console.WriteLine ("# ServerCertificateValidationCallback");
 					return true;
 			};
+			Assert.Fail();
 
 			TaskStatus status     = 0;
 			Exception  exception  = null;
