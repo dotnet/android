@@ -538,12 +538,10 @@ public class Library1 : Java.Lang.Object {
 				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
 
 
-			using (var lb = CreateDllBuilder (Path.Combine (path, "Lib1"))) {
-				using (var b = CreateApkBuilder (Path.Combine (path, "App1"))) {
-					Assert.IsTrue (lb.Build (lib), "build should have succeeded.");
-					Assert.IsTrue (b.Build (proj), "build should have succeeded.");
-				}
-			}
+			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));
+			using var b = CreateApkBuilder (Path.Combine (path, "App1"));
+			Assert.IsTrue (lb.Build (lib), "build should have succeeded.");
+			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 		}
 	}
 }
