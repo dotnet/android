@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Output]
 		public                  ITaskItem[]         CreatedFiles                { get; set; }
 
+		string LogcatPath { get; set; }
+
 		public override bool Execute ()
 		{
 			var createdFiles    = new List<ITaskItem> ();
@@ -36,6 +38,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				: $" / {Configuration}";
 			var dest            = GetFixedUpPath (SourceFile, testNameSuffix);
 			var fixedUp         = false;
+
+			var suiteName = Path.GetFileNameWithoutExtension (SourceFile);
+			if (suiteName.StartsWith ("TestResult-", StringComparison.Ordinal))
+				suiteName = suiteName.Substring ("TestResult-".Length);
+			LogcatPath = Path.GetFullPath (Path.Combine (DestinationFolder, "bin", $"Test{Configuration}", $"logcat-{Configuration}{TestsFlavor}-{suiteName}.txt"));
 
 			try {
 				FixupTestResultFile (SourceFile, dest, testNameSuffix);
@@ -95,6 +102,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		void FixupNUnit2Results (XDocument doc, string testNameSuffix)
 		{
 			foreach (var e in doc.Descendants ("test-case")) {
+				// Add logcat file path as a test attachment
+				var result = (string) e.Attribute ("result");
+				if (File.Exists (LogcatPath) && (result == "Failed" || result == "Failure" || result == "Error" || result == "Cancelled")) {
+					e.Add (new XElement ("attachments", new XElement ("attachment", new XElement ("filePath", LogcatPath))));
+				}
+
 				var name = (string) e.Attribute ("name");
 				if (name.EndsWith (testNameSuffix, StringComparison.OrdinalIgnoreCase))
 					continue;
