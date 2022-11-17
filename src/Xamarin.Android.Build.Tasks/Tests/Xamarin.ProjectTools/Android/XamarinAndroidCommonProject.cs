@@ -19,14 +19,26 @@ namespace Xamarin.ProjectTools
 
 		static XamarinAndroidCommonProject ()
 		{
-			var stream = typeof(XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png");
-			icon_binary_mdpi = new byte [stream.Length];
-			stream.Read (icon_binary_mdpi, 0, (int) stream.Length);
+			icon_binary_mdpi    = GetResourceContents ("mipmap-mdpi/appicon.png");
+			icon_binary_hdpi    = GetResourceContents ("mipmap-hdpi/appicon.png");
+			icon_binary_xhdpi   = GetResourceContents ("mipmap-xhdpi/appicon.png");
+			icon_binary_xxhdpi  = GetResourceContents ("mipmap-xxhdpi/appicon.png");
+			icon_binary_xxxhdpi = GetResourceContents ("mipmap-xxxhdpi/appicon.png");
+		}
 
-			icon_binary_hdpi    = icon_binary_mdpi;
-			icon_binary_xhdpi   = icon_binary_mdpi;
-			icon_binary_xxhdpi  = icon_binary_mdpi;
-			icon_binary_xxxhdpi = icon_binary_mdpi;
+		static byte[] GetResourceContents (string resourceName)
+		{
+			var assembly    = typeof (XamarinAndroidCommonProject).Assembly;
+			var stream      = assembly.GetManifestResourceStream (resourceName) ??
+				assembly.GetManifestResourceStream (resourceName.Replace ('/', Path.DirectorySeparatorChar));
+			if (stream == null) {
+				return Array.Empty<byte>();
+			}
+			using (stream) {
+				var contents    = new byte [stream.Length];
+				stream.Read (contents, 0, (int) stream.Length);
+				return contents;
+			}
 		}
 
 		protected XamarinAndroidCommonProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
