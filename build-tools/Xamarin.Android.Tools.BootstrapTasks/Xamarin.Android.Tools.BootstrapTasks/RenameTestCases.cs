@@ -101,13 +101,20 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		void FixupNUnit2Results (XDocument doc, string testNameSuffix)
 		{
-			foreach (var e in doc.Descendants ("test-case")) {
-				// Add logcat file path as a test attachment
-				var result = (string) e.Attribute ("result");
+			var topLevelSuite = doc.Descendants ("test-suite").FirstOrDefault ();
+			if (topLevelSuite != null) {
+				var name = (string) topLevelSuite.Attribute ("name");
+				var result = (string) topLevelSuite.Attribute ("result");
 				if (File.Exists (LogcatPath) && (result == "Failed" || result == "Failure" || result == "Error" || result == "Cancelled")) {
-					e.Add (new XElement ("attachments", new XElement ("attachment", new XElement ("filePath", LogcatPath))));
+					topLevelSuite.Add (new XElement ("attachments",
+						new XElement ("attachment",
+						new XElement ("filePath", LogcatPath),
+						new XElement ("description", new XCData(name))
+					)));
 				}
+			}
 
+			foreach (var e in doc.Descendants ("test-case")) {
 				var name = (string) e.Attribute ("name");
 				if (name.EndsWith (testNameSuffix, StringComparison.OrdinalIgnoreCase))
 					continue;
