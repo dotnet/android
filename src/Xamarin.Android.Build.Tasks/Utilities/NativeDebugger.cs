@@ -169,10 +169,7 @@ namespace Xamarin.Android.Tasks
 
 			LogStatusLine ("Application PID", $"{context.applicationPID}");
 
-			// (AdbRunner? debugServerRunner, TPL.Task<(bool success, string output)>? debugServerTask) = StartDebugServer (context);
-			// if (debugServerRunner == null || debugServerTask == null) {
-			// 	return false;
-			// }
+			StartDebugServer (context);
 
 			// GenerateLldbScript (context);
 
@@ -236,26 +233,42 @@ namespace Xamarin.Android.Tasks
 				LogWarningLine ("Failed to kill previous instance of the debug server");
 			}
 
-			context.domainSocketDir = $"xa-{packageName}-0";
+			context.domainSocketDir = $"/xa-{packageName}-0";
 
 			var rnd = new Random ();
 			context.platformSocketName = $"xa-platform-{rnd.Next ()}.sock";
 
-			var runner = CreateAdbRunner ();
-			runner.ProcessTimeout = TimeSpan.MaxValue;
-
-			TPL.Task<(bool success, string output)> task = runner.RunAs (
+			var args = new List<string> {
+				"shell",
+				"run-as",
 				packageName,
 				context.debugServerScriptPath,
 				context.appLldbBaseDir, // LLDB directory
 				"unix-abstract", // Listener socket scheme (unix-abstract: virtual, not on the filesystem)
 				context.domainSocketDir, // Directory where listener socket will be created
 				context.platformSocketName, // name of the socket to create
-				"'lldb process:gdb-remote packets'", // LLDB log channels
-				context.arch // LLDB architecture
-			);
+				"'\"lldb process:gdb-remote packets\"'", // LLDB log channels
+				context.arch
+			};
 
-			return (runner, task);
+			string command = String.Join (" ", args);
+			LogDebugLine ($"Launch command: adb {command}");
+
+			var runner = CreateAdbRunner ();
+			runner.ProcessTimeout = TimeSpan.MaxValue;
+
+			// TPL.Task<(bool success, string output)> task = runner.RunAs (
+			// 	packageName,
+			// 	context.debugServerScriptPath,
+			// 	context.appLldbBaseDir, // LLDB directory
+			// 	"unix-abstract", // Listener socket scheme (unix-abstract: virtual, not on the filesystem)
+			// 	context.domainSocketDir, // Directory where listener socket will be created
+			// 	context.platformSocketName, // name of the socket to create
+			// 	"'\"lldb process:gdb-remote packets\"'", // LLDB log channels
+			// 	context.arch // LLDB architecture
+			// );
+
+			return (runner, null);
 		}
 
 		long GetDeviceProcessID (Context context, string processName, bool quiet = false)
@@ -505,13 +518,13 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			debugServerPath = "/tmp/lldb-server";
 			if (!context.adb.CreateDirectoryAs (packageName, context.appLldbBinDir).Result.success) {
 				LogErrorLine ($"Failed to create debug server destination directory on device, {context.appLldbBinDir}");
 				return false;
 			}
 
-			string serverName = $"xa-{context.arch}-{Path.GetFileName (debugServerPath)}";
+			//string serverName = $"xa-{context.arch}-{Path.GetFileName (debugServerPath)}";
+			string serverName = Path.GetFileName (debugServerPath);
 			context.debugServerPath = $"{context.appLldbBinDir}/{serverName}";
 
 			KillDebugServer (context);
