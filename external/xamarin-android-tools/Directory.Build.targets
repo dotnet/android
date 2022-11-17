@@ -19,8 +19,13 @@
       Condition=" Exists('$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory))).override.targets') "
   />
 
+  <!-- NuGet Dependencies -->
   <ItemGroup>
-    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.1.1" />
+    <PackageReference Update="Microsoft.NET.Test.Sdk"                       Version="17.5.0-preview-20221003-04" />
+    <PackageReference Update="Microsoft.SourceLink.GitHub"                  Version="1.1.1" />
+    <PackageReference Update="Microsoft.VisualStudioEng.MicroBuild.Core"    Version="1.0.0" />
+    <PackageReference Update="nunit"                                        Version="3.13.2" />
+    <PackageReference Update="NUnit3TestAdapter"                            Version="4.0.0" />
   </ItemGroup>
 
 </Project>
