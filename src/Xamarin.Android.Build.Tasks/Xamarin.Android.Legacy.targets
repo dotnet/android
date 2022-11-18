@@ -94,6 +94,7 @@ projects. .NET 5 projects will not import this file.
       _AddAndroidDefines;
       _IncludeLayoutBindingSources;
       $(CompileDependsOn);
+      _CheckAndroidHttpClientHandlerType;
     </CompileDependsOn>
     <CoreCompileDependsOn>
       UpdateGeneratedFiles;
@@ -184,7 +185,6 @@ projects. .NET 5 projects will not import this file.
       _SetupDesignTimeBuildForCompile;
       AddLibraryJarsToBind;
       $(CompileDependsOn);
-      _CheckAndroidHttpClientHandlerType;
     </CompileDependsOn>
 
     <ResolveReferencesDependsOn>
