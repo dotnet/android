@@ -200,6 +200,8 @@ rt_invoke_callback_on_new_thread (CB cb)
 	return 0;
 }
 
+/* We return -2 for errors, because -1 is reserved for the pthreads PTHREAD_CANCELED special value, indicating that the
+ * thread was canceled. */
 static int
 _register_type_from_new_thread (const char *java_type_name, jobject class_loader)
 {
@@ -209,16 +211,18 @@ _register_type_from_new_thread (const char *java_type_name, jobject class_loader
 	jobject loaded_class     = (*env)->CallObjectMethod (env, class_loader, loadClass, java_type_name);
 
 	if ((*env)->ExceptionOccurred (env) != NULL) {
+		(*env)->ExceptionClear (env);
 		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: class '%s' cannot be loaded, Java exception thrown!", java_type_name);
-		return -1;
+		return -2;
 	}
 
 	jmethodID Object_ctor    = (*env)->GetMethodID (env, loaded_class, "<init>", "()V");
 	jobject   instance       = (*env)->NewObject (env, loaded_class, Object_ctor);
 
 	if ((*env)->ExceptionOccurred (env) != NULL || instance == NULL) {
+		(*env)->ExceptionClear (env);
 		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: instance of class '%s' wasn't created!", java_type_name);
-		return -1;
+		return -2;
 	}
 
 	return 0;
@@ -239,7 +243,15 @@ rt_register_type_on_new_thread (const char *java_type_name)
 	}
 
 	void *tr;
-	pthread_join (t, &tr);
+	if (pthread_join (t, &tr) != 0) {
+		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "RegisterOnNewThread: pthread_join() failed! %i: %s", r, strerror (r));
+		return -1;
+	}
 
-	return 0;
+	if ((int)tr == -1 /* PTHREAD_CANCELED - not defined in bionic */) {
+		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "RegisterOnNewThread: worker thread was canceled");
+		return -1;
+	}
+
+	return (int)tr;
 }
