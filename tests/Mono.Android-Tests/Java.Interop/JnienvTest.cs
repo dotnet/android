@@ -33,7 +33,7 @@ namespace Java.InteropTests
 		}
 
 		[DllImport ("reuse-threads")]
-		static extern int rt_register_type_on_new_thread (string java_type_name);
+		static extern int rt_register_type_on_new_thread (string java_type_namem, IntPtr class_loader);
 
 		delegate void CB (IntPtr jnienv, IntPtr java_instance);
 
@@ -44,7 +44,8 @@ namespace Java.InteropTests
 		public void RegisterTypeOnNewThread ()
 		{
 			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
-			rt_register_type_on_new_thread ("from/NewThread");
+			int ret = rt_register_type_on_new_thread ("from/NewThread", Application.Context.ClassLoader.Handle);
+			Assert.AreEqual (0, ret, "Java type registration on a new thread failed");
 		}
 
 		[Test]
