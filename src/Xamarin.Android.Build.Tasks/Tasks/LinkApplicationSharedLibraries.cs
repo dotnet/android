@@ -67,18 +67,24 @@ namespace Xamarin.Android.Tasks
 
 			string linkerName = Path.GetFileName (config.LinkerPath);
 			LogDebugMessage ($"[Native Linker] {psi.FileName} {psi.Arguments}");
+
+			var stdoutLines = new List<string> ();
+			var stderrLines = new List<string> ();
+
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (s, e) => {
-					if (e.Data != null)
+					if (e.Data != null) {
 						OnOutputData (linkerName, s, e);
-					else
+						stdoutLines.Add (e.Data);
+					} else
 						stdout_completed.Set ();
 				};
 
 				proc.ErrorDataReceived += (s, e) => {
-					if (e.Data != null)
+					if (e.Data != null) {
 						OnErrorData (linkerName, s, e);
-					else
+						stderrLines.Add (e.Data);
+					} else
 						stderr_completed.Set ();
 				};
 
@@ -97,7 +103,20 @@ namespace Xamarin.Android.Tasks
 
 				if (proc.ExitCode != 0) {
 					LogCodedError ("XA3007", Properties.Resources.XA3007, Path.GetFileName (config.OutputSharedLibrary));
+					LogErrors ("stdout", stdoutLines);
+					LogErrors ("stderr", stderrLines);
 					Cancel ();
+				}
+			}
+
+			void LogErrors (string prefix, List<string> lines)
+			{
+				if (lines.Count == 0) {
+					return;
+				}
+
+				foreach (string line in lines) {
+					Log.LogError ($"{prefix} | {line}");
 				}
 			}
 		}
