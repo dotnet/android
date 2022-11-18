@@ -234,7 +234,6 @@ rt_register_type_on_new_thread (const char *java_type_name)
 	JNIEnv *env = _get_env ("rt_register_type_on_new_thread");
 	pthread_t t;
 
-	/* 1: Create a thread... */
 	int r = pthread_create (&t, NULL, _register_type_from_new_thread, java_type_name);
 
 	if (r) {
