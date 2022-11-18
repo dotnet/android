@@ -11,7 +11,7 @@
     <Reference Include="Xamarin.Android.Cecil">
       <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
     </Reference>
-    <PackageReference Include="Irony" Version="1.1.0" />
-    <PackageReference Include="System.CodeDom" Version="4.7.0" />
+    <PackageReference Include="Irony" />
+    <PackageReference Include="System.CodeDom" />
   </ItemGroup>
 </Project>
