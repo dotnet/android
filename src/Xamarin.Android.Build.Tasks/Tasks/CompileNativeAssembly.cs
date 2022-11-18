@@ -93,21 +93,9 @@ namespace Xamarin.Android.Tasks
 					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 
 				if (proc.ExitCode != 0) {
-					LogCodedError ("XA3006", Properties.Resources.XA3006, Path.GetFileName (config.InputSource));
-					LogErrors ("stdout", stdoutLines);
-					LogErrors ("stderr", stderrLines);
+					var sb = MonoAndroidHelper.MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
+					LogCodedError ("XA3006", Properties.Resources.XA3006, Path.GetFileName (config.InputSource), sb.ToString ());
 					Cancel ();
-				}
-			}
-
-			void LogErrors (string prefix, List<string> lines)
-			{
-				if (lines.Count == 0) {
-					return;
-				}
-
-				foreach (string line in lines) {
-					Log.LogError ($"{prefix} | {line}");
 				}
 			}
 		}

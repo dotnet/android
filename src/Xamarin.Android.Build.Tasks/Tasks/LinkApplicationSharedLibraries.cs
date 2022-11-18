@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 using Microsoft.Build.Framework;
@@ -102,21 +103,9 @@ namespace Xamarin.Android.Tasks
 					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 
 				if (proc.ExitCode != 0) {
-					LogCodedError ("XA3007", Properties.Resources.XA3007, Path.GetFileName (config.OutputSharedLibrary));
-					LogErrors ("stdout", stdoutLines);
-					LogErrors ("stderr", stderrLines);
+					var sb = MonoAndroidHelper.MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
+					LogCodedError ("XA3007", Properties.Resources.XA3007, Path.GetFileName (config.OutputSharedLibrary), sb.ToString ());
 					Cancel ();
-				}
-			}
-
-			void LogErrors (string prefix, List<string> lines)
-			{
-				if (lines.Count == 0) {
-					return;
-				}
-
-				foreach (string line in lines) {
-					Log.LogError ($"{prefix} | {line}");
 				}
 			}
 		}

@@ -27,6 +27,30 @@ namespace Xamarin.Android.Tasks
 		public static AndroidVersions   SupportedVersions;
 		public static AndroidSdkInfo    AndroidSdk;
 
+		public static StringBuilder MergeStdoutAndStderrMessages (List<string> stdout, List<string> stderr)
+		{
+			var sb = new StringBuilder ();
+
+			sb.AppendLine ();
+			AppendLines ("stdout", stdout, sb);
+			sb.AppendLine ();
+			AppendLines ("stderr", stderr, sb);
+			sb.AppendLine ();
+
+			return sb;
+
+			void AppendLines (string prefix, List<string> lines, StringBuilder sb)
+			{
+				if (lines == null || lines.Count == 0) {
+					return;
+				}
+
+				foreach (string line in lines) {
+					sb.AppendLine ($"{prefix} | {line}");
+				}
+			}
+		}
+
 		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
 		{
 			var psi = new ProcessStartInfo (name, args) {
