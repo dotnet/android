@@ -110,7 +110,7 @@ the trace smaller and easier to understand:
   telemetry in the trace.
 * Profile a single `.csproj` build, not a `.sln`. This keeps
   the build in-process.
-* Always `restore` in a seperate step and use `--no-restore` when you
+* Always `restore` in a separate step and use `--no-restore` when you
   trace. This avoids NuGet logic in the trace.
 * Save a `.binlog`, so you can review that the build actually did what
   you expected. `dotnet trace` tends to hide all the console output.
