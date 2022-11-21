@@ -97,3 +97,41 @@ Writing:	hellomaui-app-trace.speedscope.json
 And the output files should be found in the current directory. You can
 use the `-o` switch if you would prefer to output them to a specific
 directory.
+
+## How to `dotnet trace` our build?
+
+Setting this up is easy, the main issue is there end up being
+potentially *a lot* of threads (30-40) depending on the build.
+
+Before getting started, I would recommend doing these things to make
+the trace smaller and easier to understand:
+
+* Set `$DOTNET_CLI_TELEMETRY_OPTOUT` to `1`, to avoid any dotnet CLI
+  telemetry in the trace.
+* Profile a single `.csproj` build, not a `.sln`. This keeps
+  the build in-process.
+* Always `restore` in a seperate step and use `--no-restore` when you
+  trace. This avoids NuGet logic in the trace.
+* Save a `.binlog`, so you can review that the build actually did what
+  you expected. `dotnet trace` tends to hide all the console output.
+
+So, for example, to profile a build:
+
+```dotnetcli
+dotnet restore foo.csproj
+dotnet trace collect --format speedscope -- dotnet build -bl --no-restore foo.csproj
+```
+
+This should result in `.speedscope` and `.nettrace` files in the
+current directory.
+
+If you wanted to profile deploy & app launch, do a build first:
+
+```dotnetcli
+dotnet build foo.csproj
+dotnet trace collect --format speedscope -- dotnet build "-t:Run" -bl --no-restore foo.csproj
+```
+
+I found that `"` is necessary when `:` characters are present in the
+command. This appears to be some kind of argument parsing issue with
+`dotnet trace`.
