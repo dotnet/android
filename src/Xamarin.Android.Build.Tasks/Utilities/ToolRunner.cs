@@ -3,7 +3,11 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.Build.Utilities;
+#if NO_MSBUILD
+using LoggerType = Xamarin.Android.Utilities.XamarinLoggingHelper;
+#else // def NO_MSBUILD
+using LoggerType = Microsoft.Build.Utilities.TaskLoggingHelper;
+#endif // ndef NO_MSBUILD
 
 using TPLTask = System.Threading.Tasks.Task;
 
@@ -13,11 +17,11 @@ namespace Xamarin.Android.Tasks
 	{
 		protected abstract class ToolOutputSink : TextWriter
 		{
-			TaskLoggingHelper log;
+			LoggerType log;
 
 			public override Encoding Encoding => Encoding.Default;
 
-			protected ToolOutputSink (TaskLoggingHelper logger)
+			protected ToolOutputSink (LoggerType logger)
 			{
 				log = logger;
 			}
@@ -30,15 +34,14 @@ namespace Xamarin.Android.Tasks
 
 		static readonly TimeSpan DefaultProcessTimeout = TimeSpan.FromMinutes (15);
 
-		protected TaskLoggingHelper Logger { get; }
-
+		protected LoggerType Logger            { get; }
 		public string ToolPath                 { get; }
 		public bool EchoCmdAndArguments        { get; set; } = true;
 		public bool EchoStandardError          { get; set; } = true;
 		public bool EchoStandardOutput         { get; set; }
 		public virtual TimeSpan ProcessTimeout { get; set; } = DefaultProcessTimeout;
 
-		protected ToolRunner (TaskLoggingHelper logger, string toolPath)
+		protected ToolRunner (LoggerType logger, string toolPath)
 		{
 			if (String.IsNullOrEmpty (toolPath)) {
 				throw new ArgumentException ("must not be null or empty", nameof (toolPath));
@@ -48,7 +51,7 @@ namespace Xamarin.Android.Tasks
 			ToolPath = toolPath;
 		}
 
-                protected virtual ProcessRunner CreateProcessRunner (params string[] initialParams)
+                protected virtual ProcessRunner CreateProcessRunner (params string?[]? initialParams)
                 {
 	                var runner = new ProcessRunner (Logger, ToolPath) {
                                 ProcessTimeout = ProcessTimeout,
@@ -78,7 +81,7 @@ namespace Xamarin.Android.Tasks
                         return ret;
                 }
 
-		protected virtual TextWriter CreateLogSink (TaskLoggingHelper logger)
+		protected virtual TextWriter CreateLogSink (LoggerType logger)
 		{
 			throw new NotSupportedException ("Child class must implement this method if it uses output sinks");
 		}

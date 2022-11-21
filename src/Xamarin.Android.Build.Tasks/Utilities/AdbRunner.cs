@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-using Microsoft.Build.Utilities;
+#if NO_MSBUILD
+using LoggerType = Xamarin.Android.Utilities.XamarinLoggingHelper;
+#else // def NO_MSBUILD
+using LoggerType = Microsoft.Build.Utilities.TaskLoggingHelper;
+#endif // ndef NO_MSBUILD
 
 namespace Xamarin.Android.Tasks
 {
@@ -13,7 +17,7 @@ namespace Xamarin.Android.Tasks
 		{
 			public Action<string>? LineCallback { get; set; }
 
-			public AdbOutputSink (TaskLoggingHelper logger)
+			public AdbOutputSink (LoggerType logger)
 				: base (logger)
 			{}
 
@@ -28,7 +32,7 @@ namespace Xamarin.Android.Tasks
 
 		public int ExitCode { get; private set; }
 
-		public AdbRunner (TaskLoggingHelper logger, string adbPath, string? deviceSerial = null)
+		public AdbRunner (LoggerType logger, string adbPath, string? deviceSerial = null)
 			: base (logger, adbPath)
 		{
 			if (!String.IsNullOrEmpty (deviceSerial)) {
@@ -184,7 +188,7 @@ namespace Xamarin.Android.Tasks
 
 		ProcessRunner CreateAdbRunner () => CreateProcessRunner (initialParams);
 
-		protected override TextWriter CreateLogSink (TaskLoggingHelper logger)
+		protected override TextWriter CreateLogSink (LoggerType logger)
 		{
 			return new AdbOutputSink (logger);
 		}

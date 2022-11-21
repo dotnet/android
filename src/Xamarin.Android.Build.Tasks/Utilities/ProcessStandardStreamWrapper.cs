@@ -2,8 +2,14 @@ using System;
 using System.IO;
 using System.Text;
 
+#if NO_MSBUILD
+using LoggerType = Xamarin.Android.Utilities.XamarinLoggingHelper;
+#else
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
+
+using LoggerType = Microsoft.Build.Utilities.TaskLoggingHelper;
+#endif
 
 namespace Xamarin.Android.Tasks
 {
@@ -18,14 +24,14 @@ namespace Xamarin.Android.Tasks
 			Debug,
 		}
 
-		TaskLoggingHelper log;
+		LoggerType log;
 
 		public LogLevel LoggingLevel { get; set; } = LogLevel.Debug;
 		public string?  LogPrefix    { get; set; }
 
 		public override Encoding Encoding => Encoding.Default;
 
-		public ProcessStandardStreamWrapper (TaskLoggingHelper logger)
+		public ProcessStandardStreamWrapper (LoggerType logger)
 		{
 			log = logger;
 		}

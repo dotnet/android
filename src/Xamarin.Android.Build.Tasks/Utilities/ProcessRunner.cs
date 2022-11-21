@@ -5,8 +5,14 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
+#if NO_MSBUILD
+using LoggerType = Xamarin.Android.Utilities.XamarinLoggingHelper;
+#else
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
+
+using LoggerType = Microsoft.Build.Utilities.TaskLoggingHelper;
+#endif
 
 namespace Xamarin.Android.Tasks
 {
@@ -45,7 +51,7 @@ namespace Xamarin.Android.Tasks
 		Dictionary<TextWriter, WriterGuard>? guardCache;
 		bool defaultStdoutEchoWrapperAdded;
 		ProcessStandardStreamWrapper? defaultStderrEchoWrapper;
-		TaskLoggingHelper log;
+		LoggerType log;
 
 		public string Command => command;
 
@@ -84,11 +90,11 @@ namespace Xamarin.Android.Tasks
 		public string? WorkingDirectory                                      { get; set; }
 		public Action<ProcessStartInfo>? StartInfoCallback                   { get; set; }
 
-		public ProcessRunner (TaskLoggingHelper logger, string command, params string?[] arguments)
+		public ProcessRunner (LoggerType logger, string command, params string?[] arguments)
 			: this (logger, command, false, arguments)
 		{}
 
-		public ProcessRunner (TaskLoggingHelper logger, string command, bool ignoreEmptyArguments, params string?[] arguments)
+		public ProcessRunner (LoggerType logger, string command, bool ignoreEmptyArguments, params string?[] arguments)
 		{
 			if (String.IsNullOrEmpty (command)) {
 				throw new ArgumentException ("must not be null or empty", nameof (command));
@@ -112,20 +118,20 @@ namespace Xamarin.Android.Tasks
 			return this;
 		}
 
-		public ProcessRunner AddArguments (params string?[] arguments)
+		public ProcessRunner AddArguments (params string?[]? arguments)
 		{
 			return AddArguments (true, arguments);
 		}
 
-		public ProcessRunner AddArguments (bool ignoreEmptyArguments, params string?[] arguments)
+		public ProcessRunner AddArguments (bool ignoreEmptyArguments, params string?[]? arguments)
 		{
 			AddArgumentsInternal (ignoreEmptyArguments, arguments);
 			return this;
 		}
 
-		void AddArgumentsInternal (bool ignoreEmptyArguments, params string?[] arguments)
+		void AddArgumentsInternal (bool ignoreEmptyArguments, params string?[]? arguments)
 		{
-			if (arguments == null) {
+			if (arguments == null || arguments.Length == 0) {
 				return;
 			}
 

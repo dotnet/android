@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>debug_session_prep</RootNamespace>
+    <Nullable>enable</Nullable>
+    <DefineConstants>NO_MSBUILD</DefineConstants>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+
+  <ItemGroup>
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ToolRunner.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ProcessRunner.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ProcessStandardStreamWrapper.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\AdbRunner.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
+  </ItemGroup>
+</Project>
