@@ -81,6 +81,12 @@
 #include <android/log.h>
 #include <jni.h>
 
+typedef struct
+{
+	const char *java_type_name;
+	jobject class_loader;
+} RegisterFromThreadContext;
+
 typedef void (*CB)(JNIEnv *env, jobject self);
 
 static JavaVM *gvm;
@@ -203,17 +209,23 @@ rt_invoke_callback_on_new_thread (CB cb)
 /* We return -2 for errors, because -1 is reserved for the pthreads PTHREAD_CANCELED special value, indicating that the
  * thread was canceled. */
 static int
-_register_type_from_new_thread (const char *java_type_name, jobject class_loader)
+_register_type_from_new_thread (void *data)
 {
+	RegisterFromThreadContext *context = (RegisterFromThreadContext*)data;
+
+	if (context == NULL) {
+		return -100;
+	}
+
 	JNIEnv *env              = _get_env ("_register_type_from_new_thread");
 	jclass ClassLoader_class = (*env)->FindClass (env, "java/lang/ClassLoader");
 	jmethodID loadClass      = (*env)->GetMethodID (env, ClassLoader_class, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-	jobject loaded_class     = (*env)->CallObjectMethod (env, class_loader, loadClass, java_type_name);
+	jobject loaded_class     = (*env)->CallObjectMethod (env, context->class_loader, loadClass, context->java_type_name);
 
 	if ((*env)->ExceptionOccurred (env) != NULL) {
 		(*env)->ExceptionClear (env);
-		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: class '%s' cannot be loaded, Java exception thrown!", java_type_name);
-		return -100;
+		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: class '%s' cannot be loaded, Java exception thrown!", context->java_type_name);
+		return -101;
 	}
 
 	jmethodID Object_ctor    = (*env)->GetMethodID (env, loaded_class, "<init>", "()V");
@@ -221,20 +233,24 @@ _register_type_from_new_thread (const char *java_type_name, jobject class_loader
 
 	if ((*env)->ExceptionOccurred (env) != NULL || instance == NULL) {
 		(*env)->ExceptionClear (env);
-		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: instance of class '%s' wasn't created!", java_type_name);
-		return -101;
+		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: instance of class '%s' wasn't created!", context->java_type_name);
+		return -102;
 	}
 
 	return 0;
 }
 
 JNIEXPORT int JNICALL
-rt_register_type_on_new_thread (const char *java_type_name)
+rt_register_type_on_new_thread (const char *java_type_name, jobject class_loader)
 {
 	JNIEnv *env = _get_env ("rt_register_type_on_new_thread");
 	pthread_t t;
+	RegisterFromThreadContext context = {
+		java_type_name,
+		class_loader,
+	};
 
-	int r = pthread_create (&t, NULL, _register_type_from_new_thread, java_type_name);
+	int r = pthread_create (&t, NULL, _register_type_from_new_thread, &context);
 
 	if (r) {
 		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "RegisterOnNewThread: pthread_create() failed! %i: %s", r, strerror (r));
