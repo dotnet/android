@@ -85,6 +85,9 @@ namespace System.NetTests
 
 			bool HardwareAddressesAreEqual (byte[] one, byte[] two)
 			{
+				// Under API 33 .Net doesn't return the hardware address. So we need to ignore it
+				if (Android.OS.Build.VERSION.SdkInt == Android.OS.BuildVersionCodes.Tiramisu)
+					return true;
 				if (one == two)
 					return true;
 				if (one == null || two == null)
@@ -184,6 +187,7 @@ namespace System.NetTests
 			// if all the bytes are zero return null like Java does.
 			if (bytes.All (x => x == 0))
 				return null;
+
 			return bytes;
 		}
 
