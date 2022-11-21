@@ -217,26 +217,35 @@ _register_type_from_new_thread (void *data)
 		return -100;
 	}
 
+	int ret                  = 0;
 	JNIEnv *env              = _get_env ("_register_type_from_new_thread");
 	jclass ClassLoader_class = (*env)->FindClass (env, "java/lang/ClassLoader");
 	jmethodID loadClass      = (*env)->GetMethodID (env, ClassLoader_class, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
 	jobject loaded_class     = (*env)->CallObjectMethod (env, context->class_loader, loadClass, context->java_type_name);
+	jobject instance         = NULL;
 
 	if ((*env)->ExceptionOccurred (env) != NULL) {
 		(*env)->ExceptionClear (env);
 		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: class '%s' cannot be loaded, Java exception thrown!", context->java_type_name);
-		return -101;
+		(*env)->ExceptionDescribe (env);
+		ret = -101;
+		goto cleanup;
 	}
 
-	jmethodID Object_ctor    = (*env)->GetMethodID (env, loaded_class, "<init>", "()V");
-	jobject   instance       = (*env)->NewObject (env, loaded_class, Object_ctor);
+	jmethodID Object_ctor = (*env)->GetMethodID (env, loaded_class, "<init>", "()V");
+	instance = (*env)->NewObject (env, loaded_class, Object_ctor);
 
 	if ((*env)->ExceptionOccurred (env) != NULL || instance == NULL) {
 		(*env)->ExceptionClear (env);
 		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: instance of class '%s' wasn't created!", context->java_type_name);
-		return -102;
+		(*env)->ExceptionDescribe (env);
+		ret = -102;
 	}
 
+  cleanup:
+	(*env)->DeleteLocalRef (env, ClassLoader_class);
+	(*env)->DeleteLocalRef (env, loaded_class);
+	(*env)->DeleteLocalRef (env, instance);
 	return 0;
 }
 
