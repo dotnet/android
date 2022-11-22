@@ -27,7 +27,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
-			proj.SetProperty ("AndroidHttpClientHandlerType", handler);
+			proj.PackageReferences.Add (new Package() { Id = "System.Net.Http", Version = "*" });
 			using (var b = CreateApkBuilder (path)) {
 				b.ThrowOnBuildFailure = false;
 				b.Build (proj); // we don't care it might error.
@@ -64,7 +64,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
-			proj.SetProperty ("AndroidHttpClientHandlerType", handler);
+			proj.PackageReferences.Add (new Package() { Id = "System.Net.Http", Version = "*" });
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				b.Build (proj);
