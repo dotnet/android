@@ -180,8 +180,6 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidClientHandler", "",
 					"temp/PreserveAndroidHttpClientHandler", "android/assets/Mono.Android.dll");
-				PreserveCustomHttpClientHandler ("System.Net.Http.MonoWebRequestHandler", "System.Net.Http",
-					"temp/PreserveMonoWebRequestHandler", "android/assets/System.Net.Http.dll");
 			}
 		}
 
