@@ -41,11 +41,20 @@ namespace Java.InteropTests
 		static extern int rt_invoke_callback_on_new_thread (CB cb);
 
 		[Test]
-		public void RegisterTypeOnNewThread ()
+		public void RegisterTypeOnNewNativeThread ()
 		{
 			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
-			int ret = rt_register_type_on_new_thread ("from.NewThread", Application.Context.ClassLoader.Handle);
+			int ret = rt_register_type_on_new_thread ("from.NewThreadOne", Application.Context.ClassLoader.Handle);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
+		}
+
+		[Test]
+		public void RegisterTypeOnNewJavaThread ()
+		{
+			var thread = new MyRegistrationThread ();
+			thread.Start ();
+			thread.Join (5000);
+			Assert.AreNotEqual (null, thread.Instance, "Failed to register instance of a class on new thread");
 		}
 
 		[Test]
@@ -445,9 +454,23 @@ namespace Java.InteropTests
 		}
 	}
 
-	[Register ("from/NewThread")]
-	class RegisterMeOnNewThread : Java.Lang.Object
+	[Register ("from/NewThreadOne")]
+	class RegisterMeOnNewThreadOne : Java.Lang.Object
 	{}
+
+	[Register ("from/NewThreadTwo")]
+	class RegisterMeOnNewThreadTwo : Java.Lang.Object
+	{}
+
+	class MyRegistrationThread : Java.Lang.Thread
+	{
+		public RegisterMeOnNewThreadTwo Instance { get; private set; }
+
+		public override void Run ()
+		{
+			Instance = new RegisterMeOnNewThreadTwo ();
+		}
+	}
 
 	class MyCb : Java.Lang.Object, Java.Lang.IRunnable {
 		public void Run ()
