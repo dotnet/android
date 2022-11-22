@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 using Microsoft.Build.Framework;
@@ -67,18 +68,24 @@ namespace Xamarin.Android.Tasks
 
 			string linkerName = Path.GetFileName (config.LinkerPath);
 			LogDebugMessage ($"[Native Linker] {psi.FileName} {psi.Arguments}");
+
+			var stdoutLines = new List<string> ();
+			var stderrLines = new List<string> ();
+
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (s, e) => {
-					if (e.Data != null)
+					if (e.Data != null) {
 						OnOutputData (linkerName, s, e);
-					else
+						stdoutLines.Add (e.Data);
+					} else
 						stdout_completed.Set ();
 				};
 
 				proc.ErrorDataReceived += (s, e) => {
-					if (e.Data != null)
+					if (e.Data != null) {
 						OnErrorData (linkerName, s, e);
-					else
+						stderrLines.Add (e.Data);
+					} else
 						stderr_completed.Set ();
 				};
 
@@ -96,7 +103,8 @@ namespace Xamarin.Android.Tasks
 					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 
 				if (proc.ExitCode != 0) {
-					LogCodedError ("XA3007", Properties.Resources.XA3007, Path.GetFileName (config.OutputSharedLibrary));
+					var sb = MonoAndroidHelper.MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
+					LogCodedError ("XA3007", Properties.Resources.XA3007, Path.GetFileName (config.OutputSharedLibrary), sb.ToString ());
 					Cancel ();
 				}
 			}
