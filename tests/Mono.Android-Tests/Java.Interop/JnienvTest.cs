@@ -45,7 +45,7 @@ namespace Java.InteropTests
 		{
 			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
 			int ret = rt_register_type_on_new_thread ("from.NewThread", Application.Context.ClassLoader.Handle);
-			Assert.AreEqual (0, ret, "Java type registration on a new thread failed");
+			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
 
 		[Test]
