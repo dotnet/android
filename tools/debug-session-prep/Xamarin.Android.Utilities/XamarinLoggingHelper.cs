@@ -24,6 +24,8 @@ class XamarinLoggingHelper
 	public const ConsoleColor StatusLabel  = ConsoleColor.Cyan;
 	public const ConsoleColor StatusText   = ConsoleColor.White;
 
+	public bool Verbose { get; set; }
+
 	public void Message (string? message)
 	{
 		Log (LogLevel.Message, message);
@@ -82,11 +84,19 @@ class XamarinLoggingHelper
 
 	public void Log (LogLevel level, string? message)
 	{
+		if (!Verbose && level == LogLevel.Debug) {
+			return;
+		}
+
 		Log (level, message, ForegroundColor (level));
 	}
 
 	public void Log (LogLevel level, string? message, ConsoleColor color)
 	{
+		if (!Verbose && level == LogLevel.Debug) {
+			return;
+		}
+
 		TextWriter writer = level == LogLevel.Error ? Console.Error : Console.Out;
 		message = message ?? String.Empty;
 

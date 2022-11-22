@@ -19,7 +19,9 @@ namespace Xamarin.Android.Tasks
 
 			public AdbOutputSink (LoggerType logger)
 				: base (logger)
-			{}
+			{
+				LogLinePrefix = "adb";
+			}
 
 			public override void WriteLine (string? value)
 			{

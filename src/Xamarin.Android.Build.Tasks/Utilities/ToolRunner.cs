@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 #if NO_MSBUILD
 using LoggerType = Xamarin.Android.Utilities.XamarinLoggingHelper;
 #else // def NO_MSBUILD
+using Microsoft.Android.Build.Tasks;
+
 using LoggerType = Microsoft.Build.Utilities.TaskLoggingHelper;
 #endif // ndef NO_MSBUILD
 
@@ -17,6 +19,8 @@ namespace Xamarin.Android.Tasks
 	{
 		protected abstract class ToolOutputSink : TextWriter
 		{
+			protected string LogLinePrefix { get; set; } = String.Empty;
+
 			LoggerType log;
 
 			public override Encoding Encoding => Encoding.Default;
@@ -28,7 +32,15 @@ namespace Xamarin.Android.Tasks
 
 			public override void WriteLine (string? value)
 			{
-				log.LogMessage (value ?? String.Empty);
+				string message;
+
+				if (!String.IsNullOrEmpty (LogLinePrefix)) {
+					message = $"{LogLinePrefix}> {value ?? String.Empty}";
+				} else {
+					message = value ?? String.Empty;
+				}
+
+				log.LogDebugMessage (message);
 			}
 		}
 

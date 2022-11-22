@@ -16,6 +16,11 @@ class AndroidDevice
 		"ro.product.cpu.abi2",
 	};
 
+	static readonly string[] serialNumberProperties = {
+		"ro.serialno",
+		"ro.boot.serialno",
+	};
+
 	string packageName;
 	string adbPath;
 	string[] supportedAbis;
@@ -26,6 +31,7 @@ class AndroidDevice
 	string? appLldbLogDir;
 	string? abi;
 	string? arch;
+	string? serialNumber;
 	bool appIs64Bit;
 
 	XamarinLoggingHelper log;
@@ -72,6 +78,13 @@ class AndroidDevice
 			return false;
 		}
 
+		serialNumber = GetFirstFoundPropertyValue (serialNumberProperties);
+		if (String.IsNullOrEmpty (serialNumber)) {
+			log.WarningLine ("Unable to determine device serial number");
+		} else {
+			log.StatusLine ($"Device serial number", serialNumber);
+		}
+
 		return true;
 
 		bool YamaOK (string output)
@@ -98,7 +111,6 @@ class AndroidDevice
 
 		appDataDir = output.Trim ();
 		log.StatusLine ($"Application data directory on device", appDataDir);
-		log.MessageLine ();
 
 		appLldbBaseDir = $"{appDataDir}/lldb";
 		appLldbBinDir = $"{appLldbBaseDir}/bin";
@@ -121,17 +133,8 @@ class AndroidDevice
 
 	bool DetermineArchitectureAndABI ()
 	{
-		string[]? deviceABIs = null;
-
-		foreach (string prop in abiProperties) {
-			(bool success, string value) = adb.GetPropertyValue (prop).Result;
-			if (!success) {
-				continue;
-			}
-
-			deviceABIs = value.Split (',');
-			break;
-		}
+		string? propValue = GetFirstFoundPropertyValue (abiProperties);
+		string[]? deviceABIs = propValue?.Split (',');
 
 		if (deviceABIs == null || deviceABIs.Length == 0) {
 			log.ErrorLine ("Unable to determine device ABI");
@@ -167,5 +170,19 @@ class AndroidDevice
 		{
 			log.StatusLine ($"{which} ABIs", String.Join (", ", abis));
 		}
+	}
+
+	string? GetFirstFoundPropertyValue (string[] propertyNames)
+	{
+		foreach (string prop in propertyNames) {
+			(bool success, string value) = adb.GetPropertyValue (prop).Result;
+			if (!success) {
+				continue;
+			}
+
+			return value;
+		}
+
+		return null;
 	}
 }
