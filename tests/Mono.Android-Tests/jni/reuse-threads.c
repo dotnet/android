@@ -219,18 +219,18 @@ _register_type_from_new_thread (void *data)
 
 	JNIEnv *env = _get_env ("_register_type_from_new_thread");
 
-	if ((*env)->PushLocalFrame (env, 3) < 0) {
+	if ((*env)->PushLocalFrame (env, 4) < 0) {
 		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: unable to create a local reference frame!");
 
 		if ((*env)->ExceptionOccurred (env)) {
-			(*env)->ExceptionClear (env);
 			(*env)->ExceptionDescribe (env);
+			(*env)->ExceptionClear (env);
 		}
 
 		return -101;
 	}
 
-	int ret                  = 0;
+	int ret = 0;
 	jclass ClassLoader_class = (*env)->FindClass (env, "java/lang/ClassLoader");
 	if (ClassLoader_class == NULL) {
 		ret = -102;
@@ -245,12 +245,13 @@ _register_type_from_new_thread (void *data)
 		goto cleanup;
 	}
 
-	jobject loaded_class = (*env)->CallObjectMethod (env, context->class_loader, loadClass, context->java_type_name);
+	jstring klass_name = (*env)->NewStringUTF (env, context->java_type_name);
+	jobject loaded_class = (*env)->CallObjectMethod (env, context->class_loader, loadClass, klass_name);
 
 	if ((*env)->ExceptionOccurred (env) != NULL) {
-		(*env)->ExceptionClear (env);
 		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: class '%s' cannot be loaded, Java exception thrown!", context->java_type_name);
 		(*env)->ExceptionDescribe (env);
+		(*env)->ExceptionClear (env);
 		ret = -104;
 		goto cleanup;
 	}
@@ -271,9 +272,9 @@ _register_type_from_new_thread (void *data)
 	jobject instance = (*env)->NewObject (env, loaded_class, Object_ctor);
 
 	if ((*env)->ExceptionOccurred (env) != NULL || instance == NULL) {
-		(*env)->ExceptionClear (env);
 		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "FAILURE: instance of class '%s' wasn't created!", context->java_type_name);
 		(*env)->ExceptionDescribe (env);
+		(*env)->ExceptionClear (env);
 		ret = -107;
 	}
 
