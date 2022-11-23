@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Text;
 
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Utilities;
@@ -7,6 +9,8 @@ namespace Xamarin.Debug.Session.Prep;
 
 class AndroidDevice
 {
+	const string ServerLauncherScriptName = "xa_start_lldb_server.sh";
+
 	static readonly string[] abiProperties = {
 		// new properties
 		"ro.product.cpu.abilist",
@@ -21,6 +25,8 @@ class AndroidDevice
 		"ro.boot.serialno",
 	};
 
+	static readonly UTF8Encoding UTF8NoBOM = new UTF8Encoding (false);
+
 	string packageName;
 	string adbPath;
 	string[] supportedAbis;
@@ -33,20 +39,29 @@ class AndroidDevice
 	string? arch;
 	string? serialNumber;
 	bool appIs64Bit;
+	string? deviceLdd;
+	string? deviceDebugServerPath;
+	string? deviceDebugServerScriptPath;
+	string outputDir;
 
 	XamarinLoggingHelper log;
 	AdbRunner adb;
+	AndroidNdk ndk;
 
-	public AndroidDevice (XamarinLoggingHelper log, string adbPath, string packageName, string[] supportedAbis, string? adbTargetDevice = null)
+	public AndroidDevice (XamarinLoggingHelper log, AndroidNdk ndk, string outputDir, string adbPath, string packageName, string[] supportedAbis, string? adbTargetDevice = null)
 	{
 		this.adbPath = adbPath;
 		this.log = log;
 		this.packageName = packageName;
 		this.supportedAbis = supportedAbis;
+		this.ndk = ndk;
+		this.outputDir = outputDir;
 
 		adb = new AdbRunner (log, adbPath, adbTargetDevice);
 	}
 
+	// TODO: implement manual error checking on API 21, since `adb` won't ever return any error code other than 0 - we need to look at the output of any command to determine
+	// whether or not it was successful. Ugh.
 	public bool GatherInfo ()
 	{
 		(bool success, string output) = adb.GetPropertyValue ("ro.build.version.sdk").Result;
@@ -85,6 +100,14 @@ class AndroidDevice
 			log.StatusLine ($"Device serial number", serialNumber);
 		}
 
+		if (!DetectTools ()) {
+			return false;
+		}
+
+		if (!PushDebugServer ()) {
+			return false;
+		}
+
 		return true;
 
 		bool YamaOK (string output)
@@ -101,10 +124,143 @@ class AndroidDevice
 		}
 	}
 
+	bool PushDebugServer ()
+	{
+		string? debugServerPath = ndk.GetDebugServerPath (abi!);
+		if (String.IsNullOrEmpty (debugServerPath)) {
+			return false;
+		}
+
+		if (!adb.CreateDirectoryAs (packageName, appLldbBinDir!).Result.success) {
+			log.ErrorLine ($"Failed to create debug server destination directory on device, {appLldbBinDir}");
+			return false;
+		}
+
+		//string serverName = $"xa-{context.arch}-{Path.GetFileName (debugServerPath)}";
+		string serverName = Path.GetFileName (debugServerPath);
+		deviceDebugServerPath = $"{appLldbBinDir}/{serverName}";
+
+		KillDebugServer (deviceDebugServerPath);
+
+		// Always push the server binary, as we don't know what version might already be there
+		if (!PushServerExecutable (debugServerPath, deviceDebugServerPath)) {
+			return false;
+		}
+		log.StatusLine ("Debug server path on device", deviceDebugServerPath);
+
+		string? launcherScript = Utilities.ReadManifestResource (log, ServerLauncherScriptName);
+		if (String.IsNullOrEmpty (launcherScript)) {
+			return false;
+		}
+
+		string launcherScriptPath = Path.Combine (outputDir, ServerLauncherScriptName);
+		Directory.CreateDirectory (Path.GetDirectoryName (launcherScriptPath)!);
+		File.WriteAllText (launcherScriptPath, launcherScript, UTF8NoBOM);
+
+		deviceDebugServerScriptPath = $"{appLldbBinDir}/{Path.GetFileName (launcherScriptPath)}";
+		if (!PushServerExecutable (launcherScriptPath, deviceDebugServerScriptPath)) {
+			return false;
+		}
+		log.StatusLine ("Debug server launcher script path on device", deviceDebugServerScriptPath);
+		log.MessageLine ();
+
+		return true;
+	}
+
+	bool PushServerExecutable (string hostSource, string deviceDestination)
+	{
+		string executableName = Path.GetFileName (deviceDestination);
+
+		// Always push the executable, as we don't know what version might already be there
+		log.DebugLine ($"Uploading {hostSource} to device");
+
+		// First upload to temporary path, as it's writable for everyone
+		string remotePath = $"/data/local/tmp/{executableName}";
+		if (!adb.Push (hostSource, remotePath).Result) {
+			log.ErrorLine ($"Failed to upload debug server {hostSource} to device path {remotePath}");
+			return false;
+		}
+
+		// Next, copy it to the app dir, with run-as
+		(bool success, string output) = adb.Shell (
+			"cat", remotePath, "|",
+			"run-as", packageName,
+			"sh", "-c", $"'cat > {deviceDestination}'"
+		).Result;
+
+		if (!success) {
+			log.ErrorLine ($"Failed to copy debug executable to device, from {hostSource} to {deviceDestination}");
+			return false;
+		}
+
+		(success, output) = adb.RunAs (packageName, "chmod", "700", deviceDestination).Result;
+		if (!success) {
+			log.ErrorLine ($"Failed to make debug server executable on device, at {deviceDestination}");
+			return false;
+		}
+
+		return true;
+	}
+
+	bool KillDebugServer (string debugServerPath)
+	{
+		long serverPID = GetDeviceProcessID (debugServerPath, quiet: true);
+		if (serverPID <= 0) {
+			return true;
+		}
+
+		log.DebugLine ("Killing previous instance of the debug server");
+		(bool success, string _) = adb.RunAs (packageName, "kill", "-9", $"{serverPID}").Result;
+		return success;
+	}
+
+	long GetDeviceProcessID (string processName, bool quiet = false)
+	{
+		(bool success, string output) = adb.Shell ("pidof", processName).Result;
+		if (!success) {
+			if (!quiet) {
+				log.ErrorLine ($"Failed to obtain PID of process '{processName}'");
+				log.ErrorLine (output);
+			}
+			return -1;
+		}
+
+		output = output.Trim ();
+		if (!UInt32.TryParse (output, out uint pid)) {
+			if (!quiet) {
+				log.ErrorLine ($"Unable to parse string '{output}' as the package's PID");
+			}
+			return -1;
+		}
+
+		return pid;
+	}
+
+	bool DetectTools ()
+	{
+		// Not all versions of Android have the `which` utility, all of them have `whence`
+		// Also, API 21 adbd will not return an error code to us... But since we know that 21
+		// doesn't have LDD, we'll cheat
+		deviceLdd = null;
+		if (apiLevel > 21) {
+			(bool success, string output) = adb.Shell ("whence", "ldd").Result;
+			if (success) {
+				log.DebugLine ($"Found `ldd` on device at '{output}'");
+				deviceLdd = output;
+			}
+		}
+
+		if (String.IsNullOrEmpty (deviceLdd)) {
+			log.DebugLine ("`ldd` not found on device");
+		}
+
+		return true;
+	}
+
 	bool DetermineAppDataDirectory ()
 	{
 		(bool success, string output) = adb.GetAppDataDirectory (packageName).Result;
-		if (!success) {
+		if (!AppDataDirFound (success, output)) {
 			log.ErrorLine ($"Unable to determine data directory for package '{packageName}'");
 			return false;
 		}
@@ -129,6 +285,21 @@ class AndroidDevice
 		}
 
 		return true;
+
+		bool AppDataDirFound (bool success, string output)
+		{
+			if (apiLevel > 21) {
+				return success;
+			}
+
+			if (output.IndexOf ("run-as: Package", StringComparison.OrdinalIgnoreCase) >= 0 &&
+			    output.IndexOf ("is unknown", StringComparison.OrdinalIgnoreCase) >= 0)
+			{
+				return false;
+			}
+
+			return true;
+		}
 	}
 
 	bool DetermineArchitectureAndABI ()

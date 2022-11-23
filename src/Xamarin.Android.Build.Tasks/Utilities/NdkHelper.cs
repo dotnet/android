@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-using Xamarin.Android.Tools;
+using System.Runtime.InteropServices;
 
 namespace Xamarin.Android.Tasks
 {
@@ -16,12 +16,14 @@ namespace Xamarin.Android.Tasks
 		static NdkHelper ()
 		{
 			string os;
-			if (OS.IsWindows) {
+			if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) {
 				os = "windows";
-			} else if (OS.IsMac) {
+			} else if (RuntimeInformation.IsOSPlatform (OSPlatform.OSX)) {
 				os = "darwin";
-			} else {
+			} else if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux)) {
 				os = "linux";
+			} else {
+				throw new InvalidOperationException ($"Unsupported OS {RuntimeInformation.OSDescription}");
 			}
 
 			// We care only about the latest NDK versions, they have only x86_64 versions. We'll need to revisit the code once

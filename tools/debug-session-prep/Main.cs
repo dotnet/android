@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Mono.Options;
 using Xamarin.Android.Utilities;
@@ -10,6 +11,17 @@ class App
 {
 	const string DefaultAdbPath = "adb";
 
+	static readonly Dictionary<string, string> SupportedAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+		{"arm32",       "armeabi-v7a"},
+		{"arm64",       "arm64-v8a"},
+		{"arm64-v8a",   "arm64-v8a"},
+		{"armeabi",     "armeabi-v7a"},
+		{"armeabi-v7a", "armeabi-v7a"},
+		{"x86",         "x86"},
+		{"x86_64",      "x86_64"},
+		{"x64",         "x86_64"}
+	};
+
 	sealed class ParsedOptions
 	{
 		public string?   AdbPath;
@@ -18,13 +30,18 @@ class App
 		public string?   TargetDevice;
 		public bool      ShowHelp;
 		public bool      Verbose = true; // TODO: remove the default once development is done
+		public string?   AppNativeLibrariesDir;
+		public string?   NdkDirPath;
+		public string?   OutputDirPath;
 	}
 
 	static int Main (string[] args)
 	{
 		bool haveOptionErrors = false;
-		var log = new XamarinLoggingHelper ();
 		var parsedOptions = new ParsedOptions ();
+		var log = new XamarinLoggingHelper {
+			Verbose = parsedOptions.Verbose,
+		};
 
 		var opts = new OptionSet {
 			"Usage: debug-session-prep [REQUIRED_OPTIONS] [OPTIONS]",
@@ -32,6 +49,9 @@ class App
 			"REQUIRED_OPTIONS are:",
 			{ "p|package-name=", "name of the application package", v => parsedOptions.PackageName = EnsureNonEmptyString (log, "-p|--package-name", v, ref haveOptionErrors) },
 			{ "s|supported-abis=", "comma-separated list of ABIs the application supports", v => parsedOptions.SupportedABIs = EnsureSupportedABIs (log, "-s|--supported-abis", v, ref haveOptionErrors) },
+			{ "l|lib-dir=", "{PATH} to the directory where application native libraries were copied", v => parsedOptions.AppNativeLibrariesDir = v },
+			{ "n|ndk-dir=", "{PATH} to to the Android NDK root directory", v => parsedOptions.NdkDirPath = v },
+			{ "o|output-dir=", "{PATH} to directory which will contain various generated files (logs, scripts etc)", v => parsedOptions.OutputDirPath = v },
 			"",
 			"OPTIONS are:",
 			{ "a|adb=", "{PATH} to adb to use for this session", v => parsedOptions.AdbPath = EnsureNonEmptyString (log, "-a|--adb", v, ref haveOptionErrors) },
@@ -39,9 +59,13 @@ class App
 			"",
 			{ "v|verbose", "Show debug messages", v => parsedOptions.Verbose = true },
 			{ "h|help|?", "Show this help screen", v => parsedOptions.ShowHelp = true },
+			"",
+			$"Supported ABI names are: {GetSupportedAbiNames ()}",
+			"",
 		};
 
 		List<string> rest = opts.Parse (args);
+		log.Verbose = parsedOptions.Verbose;
 
 		if (parsedOptions.ShowHelp) {
 			opts.WriteOptionDescriptions (Console.Out);
@@ -63,11 +87,36 @@ class App
 			missingRequiredOptions = true;
 		}
 
+		if (String.IsNullOrEmpty (parsedOptions.NdkDirPath)) {
+			log.ErrorLine ("The '-n|--ndk-dir' option must be used to specify the directory where Android NDK is installed");
+			missingRequiredOptions = true;
+		}
+
+		if (String.IsNullOrEmpty (parsedOptions.OutputDirPath)) {
+			log.ErrorLine ("The '-o|--output-dir' option must be used to specify the directory where generated files will be placed");
+			missingRequiredOptions = true;
+		}
+
+		if (String.IsNullOrEmpty (parsedOptions.AppNativeLibrariesDir)) {
+			log.ErrorLine ("The '-l|--lib-dir' option must be used to specify the directory where application shared libraries were copied");
+			// missingRequiredOptions = true;
+		}
+
 		if (missingRequiredOptions) {
 			return 1;
 		}
 
-		var device = new AndroidDevice (log, parsedOptions.AdbPath ?? DefaultAdbPath, parsedOptions.PackageName!, parsedOptions.SupportedABIs!, parsedOptions.TargetDevice);
+		var ndk = new AndroidNdk (log, parsedOptions.NdkDirPath!, parsedOptions.SupportedABIs!);
+		var device = new AndroidDevice (
+			log,
+			ndk,
+			parsedOptions.OutputDirPath!,
+			parsedOptions.AdbPath ?? DefaultAdbPath,
+			parsedOptions.PackageName!,
+			parsedOptions.SupportedABIs!,
+			parsedOptions.TargetDevice
+		);
+
 		if (!device.GatherInfo ()) {
 			return 1;
 		}
@@ -82,6 +131,7 @@ class App
 			return null;
 		}
 
+		bool haveInvalidAbis = false;
 		var list = new List<string> ();
 		foreach (string s in abis.Split (',')) {
 			string? abi = s?.Trim ();
@@ -89,7 +139,16 @@ class App
 				continue;
 			}
 
-			list.Add (abi);
+			if (!SupportedAbiMap.TryGetValue (abi, out string? mappedAbi) || String.IsNullOrEmpty (mappedAbi)) {
+				log.ErrorLine ($"Unsupported ABI: {abi}");
+				haveInvalidAbis = true;
+			}
+
+			list.Add (mappedAbi!);
+		}
+
+		if (haveInvalidAbis) {
+			return null;
 		}
 
 		return list.ToArray ();
@@ -105,4 +164,6 @@ class App
 
 		return value;
 	}
+
+	static string GetSupportedAbiNames () => String.Join (", ", SupportedAbiMap.Keys);
 }

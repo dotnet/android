@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tasks
 
 		public async Task<(bool success, string output)> GetAppDataDirectory (string packageName)
 		{
-			return await RunAs (packageName, "/system/bin/sh", "-c", "pwd", "2>/dev/null");
+			return await RunAs (packageName, "/system/bin/sh", "-c", "pwd");
 		}
 
 		public async Task<(bool success, string output)> Shell (string command, List<string> args)

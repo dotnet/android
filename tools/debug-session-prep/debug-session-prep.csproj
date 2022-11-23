@@ -10,10 +10,20 @@
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ToolRunner.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\AdbRunner.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\NdkHelper.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ProcessRunner.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ProcessStandardStreamWrapper.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\AdbRunner.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ToolRunner.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\xa_start_lldb_server.sh">
+      <LogicalName>xa_start_lldb_server.sh</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\lldb-debug-session.sh">
+      <LogicalName>lldb-debug-session.sh</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
