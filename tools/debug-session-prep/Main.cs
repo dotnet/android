@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using Mono.Options;
 using Xamarin.Android.Utilities;
@@ -118,6 +117,11 @@ class App
 		);
 
 		if (!device.GatherInfo ()) {
+			return 1;
+		}
+
+		if (device.ApiLevel < 21) {
+			log.ErrorLine ($"Only Android API level 21 and newer are supported");
 			return 1;
 		}
 

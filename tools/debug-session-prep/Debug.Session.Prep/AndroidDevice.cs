@@ -48,6 +48,8 @@ class AndroidDevice
 	AdbRunner adb;
 	AndroidNdk ndk;
 
+	public int ApiLevel => apiLevel;
+
 	public AndroidDevice (XamarinLoggingHelper log, AndroidNdk ndk, string outputDir, string adbPath, string packageName, string[] supportedAbis, string? adbTargetDevice = null)
 	{
 		this.adbPath = adbPath;
@@ -108,6 +110,10 @@ class AndroidDevice
 			return false;
 		}
 
+		if (!PullLibraries ()) {
+			return false;
+		}
+
 		return true;
 
 		bool YamaOK (string output)
@@ -122,6 +128,31 @@ class AndroidDevice
 				!String.IsNullOrEmpty (result.value) &&
 				String.Compare (result.value, expected, StringComparison.Ordinal) == 0;
 		}
+	}
+
+	bool PullLibraries ()
+	{
+		DeviceLibraryCopier copier;
+
+		if (String.IsNullOrEmpty (deviceLdd)) {
+			copier = new NoLddDeviceLibraryCopier (
+				log,
+				adb,
+				appIs64Bit,
+				outputDir,
+				apiLevel
+			);
+		} else {
+			copier = new LddDeviceLibraryCopier (
+				log,
+				adb,
+				appIs64Bit,
+				outputDir,
+				apiLevel
+			);
+		}
+
+		return copier.Copy ();
 	}
 
 	bool PushDebugServer ()

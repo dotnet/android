@@ -1,5 +1,7 @@
+using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 using Xamarin.Android.Utilities;
 
@@ -7,6 +9,35 @@ namespace Xamarin.Debug.Session.Prep;
 
 static class Utilities
 {
+	public static bool IsMacOS   { get; private set; }
+	public static bool IsLinux   { get; private set; }
+	public static bool IsWindows { get; private set; }
+
+	static Utilities ()
+	{
+		if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) {
+			IsWindows = true;
+		} else if (RuntimeInformation.IsOSPlatform (OSPlatform.OSX)) {
+			IsMacOS = true;
+		} else if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux)) {
+			IsLinux = true;
+		}
+	}
+
+	public static void MakeFileDirectory (string filePath)
+	{
+		if (String.IsNullOrEmpty (filePath)) {
+			return;
+		}
+
+		string? dirName = Path.GetDirectoryName (filePath);
+		if (String.IsNullOrEmpty (dirName)) {
+			return;
+		}
+
+		Directory.CreateDirectory (dirName);
+	}
+
 	public static string? ReadManifestResource (XamarinLoggingHelper log, string resourceName)
 	{
 		using (var from = Assembly.GetExecutingAssembly ().GetManifestResourceStream (resourceName)) {
