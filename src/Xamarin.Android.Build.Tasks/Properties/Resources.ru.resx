@@ -530,11 +530,11 @@ In this message, the term "binding" means a piece of generated code that makes i
 "r10d" is the version of the NDK.</comment>
   </data>
   <data name="XA3006" xml:space="preserve">
-    <value>Could not compile native assembly file: {0}{1}</value>
+    <value>Не удалось скомпилировать платформенный файл сборки: {0}{1}</value>
     <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces). The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3007" xml:space="preserve">
-    <value>Could not link native shared library: {0}{1}</value>
+    <value>Не удалось связать платформенную общую библиотеку: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
