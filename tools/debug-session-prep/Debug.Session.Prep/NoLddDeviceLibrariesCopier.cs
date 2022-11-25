@@ -35,7 +35,6 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 		"/system/vendor/@LIB@/mediadrm",
 	};
 
-
 	public NoLddDeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner adb, bool appIs64Bit, string localDestinationDir, int deviceApiLevel)
 		: base (log, adb, appIs64Bit, localDestinationDir, deviceApiLevel)
 	{}
@@ -48,18 +47,97 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 			return false;
 		}
 
-		throw new NotImplementedException();
+		(List<string> searchPaths, HashSet<string> permittedPaths) = GetLibraryPaths ();
+
+		// Collect file listings for all the search directories
+		var sharedLibraries = new List<string> ();
+		foreach (string path in searchPaths) {
+			AddSharedLibraries (sharedLibraries, path, permittedPaths);
+		}
+
+		return true;
 	}
 
-	List<string> GetLibraryDirectories ()
+	void AddSharedLibraries (List<string> sharedLibraries, string deviceDirPath, HashSet<string> permittedPaths)
 	{
+		(bool success, string output) = Adb.Shell ("ls", "-l", deviceDirPath).Result;
+		if (!success) {
+			// We can't rely on `success` because `ls -l` will return an error code if the directory exists but has any entries access to whose is not permitted
+			if (output.IndexOf ("No such file or directory") >= 0) {
+				Log.DebugLine ($"Shared libraries directory {deviceDirPath} not found on device");
+				return;
+			}
+		}
+
+		Log.DebugLine ($"Adding shared libraries from {deviceDirPath}");
+		foreach (string l in output.Split ('\n')) {
+			string line = l.Trim ();
+			if (line.Length == 0) {
+				continue;
+			}
+
+			// `ls -l` output has 8 columns for filesystem entries
+			string[] parts = line.Split (' ', 8, StringSplitOptions.RemoveEmptyEntries);
+			if (parts.Length != 8) {
+				continue;
+			}
+
+			string permissions = parts[0].Trim ();
+			string name = parts[7].Trim ();
+
+			// First column, permissions: `drwxr-xr-x`, `-rw-r--r--` etc
+			if (permissions[0] == 'd') {
+				// Directory
+				string nestedDirPath = $"{deviceDirPath}{name}/";
+				if (permittedPaths.Count > 0 && !permittedPaths.Contains (nestedDirPath)) {
+					Log.DebugLine ($"Directory '{nestedDirPath}' is not in the list of permitted directories, ignoring");
+					continue;
+				}
+
+				AddSharedLibraries (sharedLibraries, nestedDirPath, permittedPaths);
+				continue;
+			}
+
+			// Ignore entries that aren't regular .so files or symlinks
+			if ((permissions[0] != '-' && permissions[0] != 'l') || !name.EndsWith (".so", StringComparison.Ordinal)) {
+				continue;
+			}
+
+			string libPath;
+			if (permissions[0] == 'l') {
+				// Let's hope there are no libraries with -> in their name :P (if there are, we should use `readlink`)
+				const string SymlinkArrow = "->";
+
+				// Symlink, we'll add the target library instead
+				int idx = name.IndexOf (SymlinkArrow);
+				if (idx > 0) {
+					libPath = name.Substring (idx + SymlinkArrow.Length).Trim ();
+				} else {
+					Log.WarningLine ($"'ls -l' output line contains a symbolic link, but I can't determine the target:");
+					Log.WarningLine ($"  '{line}'");
+					Log.WarningLine ("Ignoring this entry");
+					continue;
+				}
+			} else {
+				libPath = $"{deviceDirPath}{name}";
+			}
+
+			Log.DebugLine ($"  {libPath}");
+			sharedLibraries.Add (libPath);
+		}
+	}
+
+	(List<string> searchPaths, HashSet<string> permittedPaths) GetLibraryPaths ()
+	{
+		string lib = AppIs64Bit ? "lib64" : "lib";
+
 		if (DeviceApiLevel == 21) {
 			// API21 devices (at least emulators) don't return adb error codes, so to avoid awkward error message parsing, we're going to just skip detection since we
 			// know what API21 has and doesn't have
-			return GetFallbackDirs ();
+			return (GetFallbackDirs (), new HashSet<string> ());
 		}
 
-		string localLdConfigPath = Path.Combine (LocalDestinationDir, ToLocalPathFormat (LdConfigPath));
+		string localLdConfigPath = $"{LocalDestinationDir}{ToLocalPathFormat (LdConfigPath)}";
 		Utilities.MakeFileDirectory (localLdConfigPath);
 
 		string deviceLdConfigPath;
@@ -74,19 +152,24 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 
 		if (!Adb.Pull (deviceLdConfigPath, localLdConfigPath).Result) {
 			Log.DebugLine ($"Device doesn't have {LdConfigPath}");
-			return GetFallbackDirs ();
+			return (GetFallbackDirs (), new HashSet<string> ());
+		} else {
+			Log.DebugLine ($"Downloaded {deviceLdConfigPath} to {localLdConfigPath}");
 		}
 
-		var ret = new List<string> ();
+		var parser = new LdConfigParser (Log);
 
-		// TODO: parse ldconfig
-		// TODO: must check if device has APEX mountpoints nad include dirs from them as well
-		return ret;
+		// The app executables (app_process and app_process32) are both in /system/bin, so we can limit our
+		// library search paths to this location.
+		(List<string> searchPaths, HashSet<string> permittedPaths) = parser.Parse (localLdConfigPath, "/system/bin", lib);
+		if (searchPaths.Count == 0) {
+			searchPaths = GetFallbackDirs ();
+		}
+
+		return (searchPaths, permittedPaths);
 
 		List<string> GetFallbackDirs ()
 		{
-			string lib = AppIs64Bit ? "lib64" : "lib";
-
 			Log.DebugLine ("Using fallback library directories for this device");
 			return FallbackLibraryDirectories.Select (l => l.Replace ("@LIB@", lib)).ToList ();
 		}

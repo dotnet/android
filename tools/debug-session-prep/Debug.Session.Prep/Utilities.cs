@@ -51,4 +51,13 @@ static class Utilities
 			}
 		}
 	}
+
+	public static string NormalizeDirectoryPath (string dirPath)
+	{
+		if (dirPath.EndsWith ('/')) {
+			return dirPath;
+		}
+
+		return $"{dirPath}/";
+	}
 }

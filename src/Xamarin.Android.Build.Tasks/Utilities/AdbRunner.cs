@@ -154,7 +154,7 @@ namespace Xamarin.Android.Tasks
                                 };
 
                                 if (!await RunAdb (runner, setupOutputSink: false)) {
-                                        return (false, String.Empty);
+	                                return (false, FormatOutputWithLines (lines));
                                 }
                         }
 
@@ -162,7 +162,9 @@ namespace Xamarin.Android.Tasks
                                 return (true, outputLine ?? String.Empty);
                         }
 
-                        return (true, lines != null ? String.Join (Environment.NewLine, lines) : String.Empty);
+                        return (true, FormatOutputWithLines (lines));
+
+                        string FormatOutputWithLines (List<string>? lines) => lines != null ? String.Join (Environment.NewLine, lines) : String.Empty;
                 }
 
 		async Task<bool> RunAdb (ProcessRunner runner, bool setupOutputSink = true, bool ignoreStderr = true)
