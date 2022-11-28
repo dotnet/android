@@ -2537,7 +2537,7 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 
 	utils.monodroid_runtime_invoke (domain, register_jni_natives, nullptr, args, nullptr);
 #else // ndef NET
-//	mono_jit_thread_attach (nullptr); // There's just one domain in .net
+	mono_jit_thread_attach (nullptr); // There's just one domain in .net
 
 #if !defined (ANDROID)
 	mono_runtime_invoke (register_jni_natives, nullptr, args, nullptr);
