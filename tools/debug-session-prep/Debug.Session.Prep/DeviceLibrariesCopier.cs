@@ -11,15 +11,15 @@ abstract class DeviceLibraryCopier
 	protected bool AppIs64Bit            { get; }
 	protected string LocalDestinationDir { get; }
 	protected AdbRunner Adb              { get; }
-	protected int DeviceApiLevel         { get; }
+	protected AndroidDevice Device       { get; }
 
-	protected DeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner adb, bool appIs64Bit, string localDestinationDir, int deviceApiLevel)
+	protected DeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner adb, bool appIs64Bit, string localDestinationDir, AndroidDevice device)
 	{
 		Log = log;
 		Adb = adb;
 		AppIs64Bit = appIs64Bit;
 		LocalDestinationDir = localDestinationDir;
-		DeviceApiLevel = deviceApiLevel;
+		Device = device;
 	}
 
 	protected string? FetchZygote ()
@@ -29,7 +29,7 @@ abstract class DeviceLibraryCopier
 
 		if (AppIs64Bit) {
 			zygotePath = "/system/bin/app_process64";
-			destination = $"{LocalDestinationDir}{ToLocalPathFormat (zygotePath)}";
+			destination = Utilities.MakeLocalPath (LocalDestinationDir, zygotePath);
 
 			Utilities.MakeFileDirectory (destination);
 			if (!Adb.Pull (zygotePath, destination).Result) {
@@ -40,7 +40,7 @@ abstract class DeviceLibraryCopier
 			// /system/bin/app_process is 32-bit on 32-bit devices, but a symlink to
                         // app_process64 on 64-bit. If we need the 32-bit version, try to pull
                         // app_process32, and if that fails, pull app_process.
-                        destination = $"{LocalDestinationDir}{ToLocalPathFormat ("/system/bin/app_process")}";
+			destination = Utilities.MakeLocalPath (LocalDestinationDir, "/system/bin/app_process");
                         string? source = "/system/bin/app_process32";
 
                         Utilities.MakeFileDirectory (destination);
@@ -61,8 +61,6 @@ abstract class DeviceLibraryCopier
 
 		return zygotePath;
 	}
-
-	protected string ToLocalPathFormat (string path) => Utilities.IsWindows ? path.Replace ("/", "\\") : path;
 
 	public abstract bool Copy ();
 }

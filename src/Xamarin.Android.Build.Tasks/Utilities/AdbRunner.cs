@@ -13,20 +13,53 @@ namespace Xamarin.Android.Tasks
 {
 	class AdbRunner : ToolRunner
 	{
+		public delegate bool OutputLineFilter (bool isStdErr, string line);
+
 		class AdbOutputSink : ToolOutputSink
 		{
-			public Action<string>? LineCallback { get; set; }
+			bool isStdError;
+			OutputLineFilter? lineFilter;
 
-			public AdbOutputSink (LoggerType logger)
+			public Action<bool, string>? LineCallback { get; set; }
+
+			public AdbOutputSink (LoggerType logger, bool isStdError, OutputLineFilter? lineFilter)
 				: base (logger)
 			{
+				this.isStdError = isStdError;
+				this.lineFilter = lineFilter;
+
 				LogLinePrefix = "adb";
 			}
 
 			public override void WriteLine (string? value)
 			{
+				if (lineFilter != null && lineFilter (isStdError, value ?? String.Empty)) {
+					return;
+				}
+
 				base.WriteLine (value);
-				LineCallback?.Invoke (value ?? String.Empty);
+				LineCallback?.Invoke (isStdError, value ?? String.Empty);
+			}
+		}
+
+		class AdbStdErrorWrapper : ProcessStandardStreamWrapper
+		{
+			OutputLineFilter? lineFilter;
+
+			public AdbStdErrorWrapper (LoggerType logger, OutputLineFilter? lineFilter)
+				: base (logger)
+			{
+				this.lineFilter = lineFilter;
+			}
+
+			protected override string? PreprocessMessage (string? message, out bool ignoreLine)
+			{
+				if (lineFilter == null) {
+					return base.PreprocessMessage (message, out ignoreLine);
+				}
+
+				ignoreLine = lineFilter (isStdErr: true, line: message ?? String.Empty);
+				return message;
 			}
 		}
 
@@ -88,7 +121,7 @@ namespace Xamarin.Android.Tasks
 				shellArgs.AddRange (args);
 			}
 
-			return await Shell ("run-as", (IEnumerable<string>)shellArgs);
+			return await Shell ("run-as", (IEnumerable<string>)shellArgs, lineFilter: null);
 		}
 
 		public async Task<(bool success, string output)> GetAppDataDirectory (string packageName)
@@ -96,27 +129,34 @@ namespace Xamarin.Android.Tasks
 			return await RunAs (packageName, "/system/bin/sh", "-c", "pwd");
 		}
 
-		public async Task<(bool success, string output)> Shell (string command, List<string> args)
+		public async Task<(bool success, string output)> Shell (string command, List<string> args, OutputLineFilter? lineFilter = null)
 		{
-			return await Shell (command, (IEnumerable<string>)args);
+			return await Shell (command, (IEnumerable<string>)args, lineFilter: null);
 		}
 
 		public async Task<(bool success, string output)> Shell (string command, params string[] args)
 		{
-			return await Shell (command, (IEnumerable<string>)args);
+			return await Shell (command, (IEnumerable<string>)args, lineFilter: null);
 		}
 
-		async Task<(bool success, string output)> Shell (string command, IEnumerable<string> args)
+		public async Task<(bool success, string output)> Shell (OutputLineFilter lineFilter, string command, params string[] args)
+		{
+			return await Shell (command, (IEnumerable<string>)args, lineFilter);
+		}
+
+		async Task<(bool success, string output)> Shell (string command, IEnumerable<string>? args, OutputLineFilter? lineFilter)
 		{
 			var runner = CreateAdbRunner ();
 
 			runner.AddArgument ("shell");
 			runner.AddArgument (command);
-			foreach (string arg in args) {
-				runner.AddArgument (arg);
+			if (args != null) {
+				foreach (string arg in args) {
+					runner.AddArgument (arg);
+				}
 			}
 
-			return await CaptureAdbOutput (runner);
+			return await CaptureAdbOutput (runner, lineFilter);
 		}
 
 		public async Task<(bool success, string output)> GetPropertyValue (string propertyName)
@@ -132,30 +172,40 @@ namespace Xamarin.Android.Tasks
 			return await Shell ("getprop", propertyName);
 		}
 
-		async Task<(bool success, string output)> CaptureAdbOutput (ProcessRunner runner, bool firstLineOnly = false)
+		async Task<(bool success, string output)> CaptureAdbOutput (ProcessRunner runner, OutputLineFilter? lineFilter = null, bool firstLineOnly = false)
                 {
                         string? outputLine = null;
                         List<string>? lines = null;
 
-                        using (var outputSink = (AdbOutputSink)SetupOutputSink (runner, ignoreStderr: true)) {
-                                outputSink.LineCallback = (string line) => {
-                                        if (firstLineOnly) {
-	                                        if (outputLine != null) {
-                                                        return;
-	                                        }
-                                                outputLine = line.Trim ();
-                                                return;
-                                        }
+                        using AdbOutputSink? stderrSink = lineFilter != null ? new AdbOutputSink (Logger, isStdError: true, lineFilter: lineFilter) : null;
+                        using var stdoutSink = new AdbOutputSink (Logger, isStdError: false, lineFilter: lineFilter);
 
-                                        if (lines == null) {
-                                                lines = new List<string> ();
-                                        }
-                                        lines.Add (line.Trim ());
-                                };
+                        SetupOutputSinks (runner, stdoutSink, stderrSink, ignoreStderr: stderrSink == null);
+                        stdoutSink.LineCallback = (bool isStdErr, string line) => {
+	                        if (firstLineOnly) {
+		                        if (outputLine != null) {
+			                        return;
+		                        }
+		                        outputLine = line.Trim ();
+		                        return;
+	                        }
 
-                                if (!await RunAdb (runner, setupOutputSink: false)) {
-	                                return (false, FormatOutputWithLines (lines));
-                                }
+	                        if (lines == null) {
+		                        lines = new List<string> ();
+	                        }
+	                        lines.Add (line.Trim ());
+                        };
+
+                        ProcessStandardStreamWrapper? origStderrWrapper = runner.StandardErrorEchoWrapper;
+                        using AdbStdErrorWrapper? stderrWrapper = lineFilter != null ? new AdbStdErrorWrapper (Logger, lineFilter) : null;
+
+                        try {
+	                        runner.StandardErrorEchoWrapper = stderrWrapper;
+	                        if (!await RunAdb (runner, setupOutputSink: false)) {
+		                        return (false, FormatOutputWithLines (lines));
+	                        }
+                        } finally {
+	                        runner.StandardErrorEchoWrapper = origStderrWrapper;
                         }
 
                         if (firstLineOnly) {
@@ -171,9 +221,15 @@ namespace Xamarin.Android.Tasks
 		{
 			return await RunTool (
 				() => {
-					TextWriter? sink = null;
+					TextWriter? stdoutSink = null;
+					TextWriter? stderrSink = null;
 					if (setupOutputSink) {
-						sink = SetupOutputSink (runner, ignoreStderr: ignoreStderr);
+						stdoutSink = new AdbOutputSink (Logger, isStdError: false, lineFilter: null);
+						if (!ignoreStderr) {
+							stderrSink = new AdbOutputSink (Logger, isStdError: true, lineFilter: null);
+						}
+
+						SetupOutputSinks (runner, stdoutSink, stderrSink, ignoreStderr);
 					}
 
 					try {
@@ -184,17 +240,13 @@ namespace Xamarin.Android.Tasks
 						ExitCode = -0xDEAD;
 						throw;
 					} finally {
-						sink?.Dispose ();
+						stdoutSink?.Dispose ();
+						stderrSink?.Dispose ();
 					}
 				}
 			);
 		}
 
 		ProcessRunner CreateAdbRunner () => CreateProcessRunner (initialParams);
-
-		protected override TextWriter CreateLogSink (LoggerType logger)
-		{
-			return new AdbOutputSink (logger);
-		}
 	}
 }

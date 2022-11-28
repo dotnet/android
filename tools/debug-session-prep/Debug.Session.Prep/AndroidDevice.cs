@@ -49,6 +49,8 @@ class AndroidDevice
 	AndroidNdk ndk;
 
 	public int ApiLevel => apiLevel;
+	public string SerialNumber => serialNumber ?? String.Empty;
+	public AdbRunner AdbRunner => adb;
 
 	public AndroidDevice (XamarinLoggingHelper log, AndroidNdk ndk, string outputDir, string adbPath, string packageName, string[] supportedAbis, string? adbTargetDevice = null)
 	{
@@ -140,7 +142,7 @@ class AndroidDevice
 				adb,
 				appIs64Bit,
 				outputDir,
-				apiLevel
+				this
 			);
 		} else {
 			copier = new LddDeviceLibraryCopier (
@@ -148,7 +150,7 @@ class AndroidDevice
 				adb,
 				appIs64Bit,
 				outputDir,
-				apiLevel
+				this
 			);
 		}
 

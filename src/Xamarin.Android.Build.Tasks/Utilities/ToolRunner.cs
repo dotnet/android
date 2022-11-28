@@ -81,21 +81,12 @@ namespace Xamarin.Android.Tasks
 			return await TPLTask.Run (runner);
 		}
 
-		protected TextWriter SetupOutputSink (ProcessRunner runner, bool ignoreStderr = false)
+		protected void SetupOutputSinks (ProcessRunner runner, TextWriter stdoutSink, TextWriter? stderrSink = null, bool ignoreStderr = false)
                 {
-                        TextWriter ret = CreateLogSink (Logger);
-
                         if (!ignoreStderr) {
-                                runner.AddStandardErrorSink (ret);
+                                runner.AddStandardErrorSink (stderrSink ?? stdoutSink);
                         }
-                        runner.AddStandardOutputSink (ret);
-
-                        return ret;
+                        runner.AddStandardOutputSink (stdoutSink);
                 }
-
-		protected virtual TextWriter CreateLogSink (LoggerType logger)
-		{
-			throw new NotSupportedException ("Child class must implement this method if it uses output sinks");
-		}
 	}
 }

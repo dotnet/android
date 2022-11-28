@@ -28,5 +28,6 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
+    <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
   </ItemGroup>
 </Project>

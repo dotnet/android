@@ -76,10 +76,16 @@ class XamarinLoggingHelper
 		Debug ($"{message ?? String.Empty}{Environment.NewLine}");
 	}
 
-	public void StatusLine (string label, string text)
+	public void Status (string label, string text)
 	{
 		Log (LogLevel.Info, $"{label}: ", StatusLabel);
-		Log (LogLevel.Info, $"{text}{Environment.NewLine}", StatusText);
+		Log (LogLevel.Info, $"{text}", StatusText);
+	}
+
+	public void StatusLine (string label, string text)
+	{
+		Status (label, text);
+		Log (LogLevel.Info, Environment.NewLine);
 	}
 
 	public void Log (LogLevel level, string? message)
@@ -89,6 +95,12 @@ class XamarinLoggingHelper
 		}
 
 		Log (level, message, ForegroundColor (level));
+	}
+
+	public void LogLine (LogLevel level, string? message, ConsoleColor color)
+	{
+		Log (level, message, color);
+		Log (level, Environment.NewLine, color);
 	}
 
 	public void Log (LogLevel level, string? message, ConsoleColor color)

@@ -60,4 +60,16 @@ static class Utilities
 
 		return $"{dirPath}/";
 	}
+
+	public static string ToLocalPathFormat (string path) => IsWindows ? path.Replace ("/", "\\") : path;
+
+	public static string MakeLocalPath (string localDirectory, string remotePath)
+	{
+		string remotePathLocalFormat = ToLocalPathFormat (remotePath);
+		if (remotePath[0] == '/') {
+			return $"{localDirectory}{remotePathLocalFormat}";
+		}
+
+		return Path.Combine (localDirectory, remotePathLocalFormat);
+	}
 }

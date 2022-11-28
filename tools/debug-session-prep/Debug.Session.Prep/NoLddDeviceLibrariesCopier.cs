@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+
+using ELFSharp.ELF;
 
 using Xamarin.Android.Utilities;
 using Xamarin.Android.Tasks;
@@ -35,8 +36,8 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 		"/system/vendor/@LIB@/mediadrm",
 	};
 
-	public NoLddDeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner adb, bool appIs64Bit, string localDestinationDir, int deviceApiLevel)
-		: base (log, adb, appIs64Bit, localDestinationDir, deviceApiLevel)
+	public NoLddDeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner adb, bool appIs64Bit, string localDestinationDir, AndroidDevice device)
+		: base (log, adb, appIs64Bit, localDestinationDir, device)
 	{}
 
 	public override bool Copy ()
@@ -55,12 +56,26 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 			AddSharedLibraries (sharedLibraries, path, permittedPaths);
 		}
 
+		var moduleCache = new NoLddLldbModuleCache (Log, Device, sharedLibraries);
+		moduleCache.Populate (zygotePath);
+
 		return true;
 	}
 
 	void AddSharedLibraries (List<string> sharedLibraries, string deviceDirPath, HashSet<string> permittedPaths)
 	{
-		(bool success, string output) = Adb.Shell ("ls", "-l", deviceDirPath).Result;
+		AdbRunner.OutputLineFilter filterOutErrors = (bool isStdError, string line) => {
+			if (!isStdError) {
+				return false; // don't suppress any lines on stdout
+			}
+
+			// Ignore these, since we don't really care and there's no point in spamming the output with red
+			return
+				line.IndexOf ("Permission denied", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				line.IndexOf ("No such file or directory", StringComparison.OrdinalIgnoreCase) >= 0;
+		};
+
+		(bool success, string output) = Adb.Shell (filterOutErrors, "ls", "-l", deviceDirPath).Result;
 		if (!success) {
 			// We can't rely on `success` because `ls -l` will return an error code if the directory exists but has any entries access to whose is not permitted
 			if (output.IndexOf ("No such file or directory") >= 0) {
@@ -131,20 +146,20 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 	{
 		string lib = AppIs64Bit ? "lib64" : "lib";
 
-		if (DeviceApiLevel == 21) {
+		if (Device.ApiLevel == 21) {
 			// API21 devices (at least emulators) don't return adb error codes, so to avoid awkward error message parsing, we're going to just skip detection since we
 			// know what API21 has and doesn't have
 			return (GetFallbackDirs (), new HashSet<string> ());
 		}
 
-		string localLdConfigPath = $"{LocalDestinationDir}{ToLocalPathFormat (LdConfigPath)}";
+		string localLdConfigPath = Utilities.MakeLocalPath (LocalDestinationDir, LdConfigPath);
 		Utilities.MakeFileDirectory (localLdConfigPath);
 
 		string deviceLdConfigPath;
 
-		if (DeviceApiLevel == 28) {
+		if (Device.ApiLevel == 28) {
 			deviceLdConfigPath = LdConfigPath28;
-		} else if (DeviceApiLevel == 29) {
+		} else if (Device.ApiLevel == 29) {
 			deviceLdConfigPath = LdConfigPath29;
 		} else {
 			deviceLdConfigPath = LdConfigPath;
