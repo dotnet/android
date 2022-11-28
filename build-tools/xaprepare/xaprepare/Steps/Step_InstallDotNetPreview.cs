@@ -41,7 +41,12 @@ namespace Xamarin.Android.Prepare
 			// Install runtime packs associated with the SDK previously installed.
 			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
 			var logPath = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs.binlog");
-			if (!Utilities.RunCommand (Configurables.Paths.DotNetPreviewTool, new string [] { "restore", ProcessRunner.QuoteArgument (packageDownloadProj), ProcessRunner.QuoteArgument ($"-bl:{logPath}") })) {
+			var restoreArgs = new string [] { "restore",
+				ProcessRunner.QuoteArgument (packageDownloadProj),
+				"--configfile", Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "NuGet.config"),
+				ProcessRunner.QuoteArgument ($"-bl:{logPath}"),
+			};
+			if (!Utilities.RunCommand (Configurables.Paths.DotNetPreviewTool, restoreArgs)) {
 				Log.ErrorLine ($"dotnet restore {packageDownloadProj} failed.");
 				return false;
 			}
