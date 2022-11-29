@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
@@ -79,8 +80,8 @@ namespace Xamarin.Android.Tasks {
 
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		List<string> tempFiles = new List<string> ();
+		SortedSet<string> rulesFiles = new SortedSet<string> ();
 		Dictionary<string, long> apks = new Dictionary<string, long> ();
-		string proguardRuleOutputTemp;
 
 		protected override int GetRequiredDaemonInstances ()
 		{
@@ -91,8 +92,6 @@ namespace Xamarin.Android.Tasks {
 		{
 			try {
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
-
-				proguardRuleOutputTemp = GetTempFile ();
 
 				await this.WhenAll (ManifestFiles, ProcessManifest);
 
@@ -120,8 +119,21 @@ namespace Xamarin.Android.Tasks {
 						}
 					}
 				}
-				if (!string.IsNullOrEmpty (ProguardRuleOutput))
-					Files.CopyIfChanged (proguardRuleOutputTemp, ProguardRuleOutput);
+				if (!string.IsNullOrEmpty (ProguardRuleOutput)) {
+					// combine the "proguard" temp files into one file.
+					var sb = new StringBuilder ();
+					HashSet<string> output = new HashSet<string> ();
+					output.Add ("#Auto Generated file. Do not Edit.");
+					lock (rulesFiles) {
+						foreach (var file in rulesFiles) {
+							var lines = File.ReadAllLines (file);
+							output.UnionWith (lines);
+						}
+					}
+					foreach (var line in output)
+						sb.AppendLine (line);
+					Files.CopyIfStringChanged (sb.ToString (), ProguardRuleOutput);
+				}
 			} finally {
 				lock (tempFiles) {
 					foreach (var temp in tempFiles) {
@@ -285,7 +297,7 @@ namespace Xamarin.Android.Tasks {
 
 			if (!string.IsNullOrEmpty (ProguardRuleOutput)) {
 				cmd.Add ("--proguard");
-				cmd.Add (GetFullPath (proguardRuleOutputTemp));
+				cmd.Add (GetFullPath (GetManifestRulesFile (manifestDir)));
 			}
 			cmd.Add ("-o");
 			cmd.Add (GetFullPath (currentResourceOutputFile));
@@ -339,6 +351,14 @@ namespace Xamarin.Android.Tasks {
 					Cancel ();
 				}
 			}
+		}
+
+		string GetManifestRulesFile (string manifestDir)
+		{
+			string rulesFile = Path.Combine (manifestDir, "aapt_rules.txt");
+			lock (rulesFiles)
+				rulesFiles.Add (rulesFile);
+			return rulesFile;
 		}
 
 		string GetTempFile ()
