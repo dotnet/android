@@ -200,7 +200,6 @@ namespace Xamarin.Android.Tasks
 				if (!userAssemblies.ContainsKey (td.Module.Assembly.Name.Name) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache)) {
 					continue;
 				}
-
 				javaTypes.Add (td);
 			}
 
@@ -251,16 +250,20 @@ namespace Xamarin.Android.Tasks
 					TypeDefinition conflict;
 					bool hasConflict = false;
 					if (managed.TryGetValue (managedKey, out conflict)) {
-						if (!managedConflicts.TryGetValue (managedKey, out var list))
-							managedConflicts.Add (managedKey, list = new List<string> { conflict.GetPartialAssemblyName (cache) });
-						list.Add (type.GetPartialAssemblyName (cache));
+						if (!conflict.Module.Name.Equals (type.Module.Name)) {
+							if (!managedConflicts.TryGetValue (managedKey, out var list))
+								managedConflicts.Add (managedKey, list = new List<string> { conflict.GetPartialAssemblyName (cache) });
+							list.Add (type.GetPartialAssemblyName (cache));
+						}
 						hasConflict = true;
 					}
 					if (java.TryGetValue (javaKey, out conflict)) {
-						if (!javaConflicts.TryGetValue (javaKey, out var list))
-							javaConflicts.Add (javaKey, list = new List<string> { conflict.GetAssemblyQualifiedName (cache) });
-						list.Add (type.GetAssemblyQualifiedName (cache));
-						success = false;
+						if (!conflict.Module.Name.Equals (type.Module.Name)) {
+							if (!javaConflicts.TryGetValue (javaKey, out var list))
+								javaConflicts.Add (javaKey, list = new List<string> { conflict.GetAssemblyQualifiedName (cache) });
+							list.Add (type.GetAssemblyQualifiedName (cache));
+							success = false;
+						}
 						hasConflict = true;
 					}
 					if (!hasConflict) {
