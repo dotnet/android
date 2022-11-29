@@ -269,6 +269,16 @@ namespace Xamarin.Android.Build.Tests
 				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
+			new object[] {
+				"net8.0",
+				"android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+			new object[] {
+				"net8.0",
+				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
 		};
 
 		[Test]
@@ -303,12 +313,8 @@ public class JavaSourceTest {
 }",
 					},
 				},
-				ExtraNuGetConfigSources = {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				},
 			};
+			proj.AddNuGetSourcesForOlderTargetFrameworks ();
 			if (IsPreviewFrameworkVersion (targetFramework)) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
@@ -801,20 +807,25 @@ public class JavaSourceTest {
 				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
+			new object[] {
+				"net8.0",
+				"android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
 
 			new object[] {
-				"net7.0",
+				"net8.0",
 				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 
 			new object[] {
-				"net7.0",
+				"net8.0",
 				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}.0",
 				XABuildConfig.AndroidLatestStableApiLevel,
 			},
 			new object[] {
-				"net7.0",
+				"net8.0",
 				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}.0",
 				XABuildConfig.AndroidLatestUnstableApiLevel,
 			},
@@ -841,12 +852,8 @@ public class JavaSourceTest {
 			var proj = new XASdkProject {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
-				ExtraNuGetConfigSources = {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				},
 			};
+			proj.AddNuGetSourcesForOlderTargetFrameworks ();
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
@@ -858,10 +865,13 @@ public class JavaSourceTest {
 			Assert.IsTrue (dotnet.Publish (), "first `dotnet publish` should succeed");
 			// NOTE: Preview API levels emit XA4211
 			if (!preview) {
-				dotnet.AssertHasNoWarnings ();
+				// TODO: disabled in .NET 7 due to: https://github.com/dotnet/runtime/issues/77385
+				if (dotnetVersion != "net7.0")
+					dotnet.AssertHasNoWarnings ();
 			}
 
-			if (dotnetVersion != "net6.0") {
+			// Only check latest TFM, as previous will come from NuGet
+			if (dotnetVersion == "net8.0") {
 				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
 				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
 				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
@@ -927,7 +937,7 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void XamarinLegacySdk ([Values ("net6.0-android32.0", "net7.0-android33.0")] string dotnetTargetFramework)
+		public void XamarinLegacySdk ([Values ("net6.0-android32.0", "net7.0-android33.0", "net8.0-android33.0")] string dotnetTargetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha2",
@@ -935,13 +945,9 @@ public class JavaSourceTest {
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 					}
-				},
-				ExtraNuGetConfigSources = {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				},
+				}
 			};
+			proj.AddNuGetSourcesForOlderTargetFrameworks ();
 
 			using var b = new Builder ();
 			var legacyTargetFrameworkVersion = "13.0";
@@ -969,12 +975,8 @@ public class JavaSourceTest {
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
-				ExtraNuGetConfigSources = {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				},
 			};
+			library.AddNuGetSourcesForOlderTargetFrameworks ();
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
 			if (preview) {

@@ -68,6 +68,27 @@ Default Android related file globbing behavior is defined in [AutoImport.props][
 This behavior can be disabled for Android items by setting `$(EnableDefaultAndroidItems)` to `false`, or
 all default item inclusion behavior can be disabled by setting `$(EnableDefaultItems)` to `false`.
 
+Undesired `.jar` or `.aar` files could be included with the default
+wildcards. In one case a `AndroidStudio\gradle\wrapper\gradle-wrapper.jar`
+file was unintentionally being bound, yielding C# compiler errors:
+
+    Org.Gradle.Cli.AbstractCommandLineConverter.cs(11,89): error CS0535: 'Download' does not implement interface member 'IDownload.Download(URI, File)'
+    Org.Gradle.Wrapper.Download.cs(10,60): error CS0535: 'AbstractCommandLineConverter' does not implement interface member 'ICommandLineConverter.Convert(ParsedCommandLine, Object)'
+
+To solve this issue, you can either remove the specific file in your `.csproj`:
+
+```xml
+<ItemGroup>
+  <AndroidLibrary Remove="AndroidStudio\gradle\wrapper\gradle-wrapper.jar" />
+</ItemGroup>
+```
+
+Or exclude *all* files within that folder:
+
+```xml
+<AndroidLibrary Remove="AndroidStudio\**\*" />
+```
+
 [default-items]: https://github.com/xamarin/xamarin-android/blob/main/src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/Sdk/AutoImport.props
 
 ## Migration Considerations

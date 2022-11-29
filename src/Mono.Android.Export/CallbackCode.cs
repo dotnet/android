@@ -637,7 +637,7 @@ namespace Java.Interop
 			paramTypes.AddRange (parameter_type_infos.ConvertAll<Type> (p => p.NativeType).ToArray ());
 			var m = GenerateNativeCallbackDelegate (name);
 			//Console.WriteLine (m.PrintCode ());
-			var dm = new DynamicMethod (name, System.Reflection.MethodAttributes.Static, CallingConventions.Standard,
+			var dm = new DynamicMethod (name, System.Reflection.MethodAttributes.Static | System.Reflection.MethodAttributes.Public, CallingConventions.Standard,
 				return_type_info.NativeType, paramTypes.ToArray (), DynamicCallbackFactory.Module, true);
 			m.Generate (dm.GetILGenerator ());
 			result = dm.CreateDelegate (GetDelegateType ());

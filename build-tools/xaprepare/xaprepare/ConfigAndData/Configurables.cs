@@ -15,7 +15,7 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string BinutilsVersion                = "L_14.0.1-4.1.0";
+		const string BinutilsVersion                = "L_15.0.3-5.0.2";
 
 		const string MicrosoftOpenJDK11Version      = "11.0.16";
 		const string MicrosoftOpenJDK11Release      = "8.1";
@@ -232,7 +232,7 @@ namespace Xamarin.Android.Prepare
 		public static partial class Paths
 		{
 			// Global, compile-time locations
-			public static readonly string HomeDir                          = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+			public static readonly string HomeDir                          = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
 			public static readonly string BootstrapResourcesDir            = Path.Combine (BuildPaths.XAPrepareSourceDir, "Resources");
 			public static readonly string BuildToolsDir                    = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools");
 			public static readonly string BuildToolsScriptsDir             = Path.Combine (BuildToolsDir, "scripts");
@@ -329,7 +329,7 @@ namespace Xamarin.Android.Prepare
 
 			public static string MicrosoftNETWorkloadMonoPackageDir => Path.Combine (
 				XAPackagesDir,
-				$"microsoft.net.workload.mono.toolchain.{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand)}",
+				$"microsoft.net.workload.mono.toolchain{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand)}",
 				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion)
 			);
 
@@ -337,7 +337,7 @@ namespace Xamarin.Android.Prepare
 
 			public static string MicrosoftNETWorkloadEmscriptenPackageDir => Path.Combine (
 				XAPackagesDir,
-				$"microsoft.net.workload.emscripten.{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand)}",
+				$"microsoft.net.workload.emscripten{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand)}",
 				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenPackageVersion)
 			);
 

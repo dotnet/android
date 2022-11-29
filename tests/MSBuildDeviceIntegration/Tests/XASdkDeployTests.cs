@@ -23,12 +23,27 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				/* isRelease */      false,
 				/* xamarinForms */   false,
-				/* targetFramework*/ "net7.0-android",
+				/* targetFramework*/ "net8.0-android",
 			},
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   false,
-				/* targetFramework*/ "net7.0-android",
+				/* targetFramework*/ "net8.0-android",
+			},
+			new object[] {
+				/* isRelease */      false,
+				/* xamarinForms */   true,
+				/* targetFramework*/ "net8.0-android",
+			},
+			new object[] {
+				/* isRelease */      true,
+				/* xamarinForms */   true,
+				/* targetFramework*/ "net8.0-android",
+			},
+			new object[] {
+				/* isRelease */      true,
+				/* xamarinForms */   false,
+				/* targetFramework*/ "net8.0-android",
 			},
 			new object[] {
 				/* isRelease */      false,
@@ -38,11 +53,6 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   true,
-				/* targetFramework*/ "net7.0-android",
-			},
-			new object[] {
-				/* isRelease */      true,
-				/* xamarinForms */   false,
 				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
@@ -74,13 +84,7 @@ namespace Xamarin.Android.Build.Tests
 				};
 			}
 			proj.TargetFramework = targetFramework;
-			if (targetFramework.Contains ("net6.0")) {
-				proj.ExtraNuGetConfigSources = new List<string> () {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org or dotnet6
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				};
-			}
+			proj.AddNuGetSourcesForOlderTargetFrameworks ();
 			proj.SetRuntimeIdentifier (DeviceAbi);
 
 			var relativeProjDir = Path.Combine ("temp", TestName);
@@ -160,13 +164,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XASdkProject ();
 			proj.TargetFramework = targetFramework;
-			if (targetFramework.Contains ("net6.0")) {
-				proj.ExtraNuGetConfigSources = new List<string> () {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org or dotnet6
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				};
-			}
+			proj.AddNuGetSourcesForOlderTargetFrameworks ();
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 

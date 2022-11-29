@@ -12,6 +12,6 @@ steps:
     provisioning_extra_args: -vv
   condition: ${{ parameters.condition }}
 
-- template: environment/win/vs-msbuild.v1.yml@yaml   # Display (in log) VS installation(s) including installation status with associated MSBuild location(s)
+- template: environment/win/vs-msbuild.v1.yml@yaml-templates # Display (in log) VS installation(s) including installation status with associated MSBuild location(s)
   parameters:
     condition: ${{ parameters.condition }}

@@ -39,7 +39,7 @@
 
   <ItemGroup>
     <PackageReference Include="ILRepack" Version="2.0.18" />
-    <PackageReference Include="Irony" Version="1.1.0" />
+    <PackageReference Include="Irony" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
     <PackageReference Include="NuGet.Common" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="NuGet.Configuration" Version="$(NuGetApiPackageVersion)" />
@@ -51,8 +51,8 @@
     <PackageReference Include="NuGet.ProjectModel" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="NuGet.Protocol" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="System.CodeDom" Version="4.7.0" />
-    <PackageReference Include="System.Reflection.Metadata" Version="1.8.0" />
+    <PackageReference Include="System.CodeDom" />
+    <PackageReference Include="System.Reflection.Metadata" Version="6.0.1" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="K4os.Hash.xxHash" Version="1.0.6" />

@@ -1,11 +1,31 @@
-<img src="Documentation/images/banner.png" alt="Xamarin.Android banner" height="145" >
+<img src="Documentation/images/banner.png" alt=".NET Android banner" height="145" >
 
-Android for .NET
+.NET Android
 ===============
 
-`Android for .NET` provides open-source bindings of the Android SDK and tooling for use with
-.NET managed languages such as C#. This repository is also home to the classic `Xamarin.Android`
-product.
+.NET Android provides open-source bindings of the Android SDK and tooling for use with
+.NET managed languages such as C#. This ships as an optional [.NET workload][net-workload] for .NET 6+ that can 
+be updated independently from .NET in order to respond to external dependency updates like new Android
+platform and tooling.
+
+While .NET Android is an essential part of [MAUI][maui-intro], it is still fully supported to be 
+used independently for native Android development using .NET.
+
+This repository is also home to the classic Xamarin.Android product.
+
+[net-workload]: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-workload-install
+[maui-intro]: https://learn.microsoft.com/en-us/dotnet/maui/what-is-maui
+
+# Support
+
+.NET Android is now part of .NET 6+ and follows the same support lifecycle as the [MAUI Support Lifecycle][maui-support-lifecycle].
+
+Support for classic Xamarin.Android will end on **May 1, 2024** as per the [Xamarin Support Policy][xamarin-support-policy]:
+
+> Xamarin support will end on May 1, 2024 for all classic Xamarin SDKs. Android 13 will be the final version classic Xamarin.Android will target.
+
+[maui-support-lifecycle]: https://dotnet.microsoft.com/en-us/platform/support/policy/maui
+[xamarin-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/xamarin
 
 # Build Status
 
@@ -23,26 +43,26 @@ product.
 
 ## Current
 
-`Android for .NET` ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
+.NET Android ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
 the [workload documentation][workload-documentation] for installation commands.
 
 [dotnet-download]: https://dotnet.microsoft.com/en-us/download
 [workload-documentation]: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-workload-install
 
-Classic `Xamarin.Android` installers are available here:
+Classic Xamarin.Android installers are available here:
 
 | Platform        | Link   |
 |-----------------|--------|
-| **Commercial Xamarin.Android 13.0 (d17-3)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-3-Windows-x86_64] |
-| **Commercial Xamarin.Android 13.0 (d17-3)** for macOS                                       | [Download][commercial-d17-3-macOS-x86_64]   |
+| **Commercial Xamarin.Android 13.1 (d17-4)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-4-Windows-x86_64] |
+| **Commercial Xamarin.Android 13.1 (d17-4)** for macOS                                       | [Download][commercial-d17-4-macOS-x86_64]   |
 | **OSS Xamarin.Android (main)** for Ubuntu\*                                                 | [![OSS Linux/Ubuntu x86_64][oss-ubuntu-x86_64-icon]][oss-ubuntu-x86_64-status] |
 
 *\* Please note that the OSS installer packages are not digitally signed.*
 
 [Previous Releases](Documentation/previous-releases.md) are also available for download.
 
-[commercial-d17-3-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-3-windows
-[commercial-d17-3-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-3-macos
+[commercial-d17-4-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-4-windows
+[commercial-d17-4-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-4-macos
 
 # Contributing
 

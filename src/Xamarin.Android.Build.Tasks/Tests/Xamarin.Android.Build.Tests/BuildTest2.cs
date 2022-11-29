@@ -118,6 +118,39 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		[Category ("SmokeTests")]
+		public void BuildBasicApplicationThenMoveIt ([Values (true, false)] bool isRelease)
+		{
+			string path = Path.Combine (Root, "temp", TestName, "App1");
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				IsRelease = isRelease,
+			};
+			using (var b = CreateApkBuilder (path)) {
+				b.Target = "Build";
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				b.Target = "SignAndroidPackage";
+				Assert.IsTrue (b.Build (proj), "SignAndroidPackage should have succeeded.");
+
+
+				string path2 = Path.Combine (Root, "temp", TestName, "App2");
+				if (Directory.Exists (path2))
+					Directory.Delete (path2, recursive: true);
+				Directory.Move (path, path2);
+				b.ProjectDirectory = path2;
+				foreach (var r in proj.AndroidResources)
+					r.Timestamp = DateTime.UtcNow;
+				b.Target = "Build";
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Build should have succeeded.");
+				Assert.IsTrue (!b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "_CleanIntermediateIfNeeded should be built.");
+				Assert.IsTrue (!b.Output.IsTargetSkipped ("_CompileResources"), "_CompileResources Should have built.");
+				b.Target = "SignAndroidPackage";
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "SignAndroidPackage should have succeeded.");
+
+			}
+		}
+
 		public static string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
 		{
 			return Builder.UseDotNet && isRelease ?

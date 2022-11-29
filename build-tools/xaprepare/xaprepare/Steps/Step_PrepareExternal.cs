@@ -25,8 +25,9 @@ namespace Xamarin.Android.Prepare
 				return false;
 
 			return await msbuild.Restore (
-				projectPath: Path.Combine (Configurables.Paths.ExternalXamarinAndroidToolsSln),
+				projectPath: Configurables.Paths.ExternalXamarinAndroidToolsSln,
 				logTag: "xat-restore",
+				arguments: new List<string> () { "--configfile", Path.Combine (Configurables.Paths.ExternalDir, "xamarin-android-tools", "NuGet.config") },
 				binlogName: "prepare-xat-restore"
 			);
 		}

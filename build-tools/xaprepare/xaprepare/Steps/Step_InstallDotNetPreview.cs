@@ -41,23 +41,31 @@ namespace Xamarin.Android.Prepare
 			// Install runtime packs associated with the SDK previously installed.
 			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
 			var logPath = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs.binlog");
-			if (!Utilities.RunCommand (Configurables.Paths.DotNetPreviewTool, new string [] { "restore", ProcessRunner.QuoteArgument (packageDownloadProj), ProcessRunner.QuoteArgument ($"-bl:{logPath}") })) {
+			var restoreArgs = new string [] { "restore",
+				ProcessRunner.QuoteArgument (packageDownloadProj),
+				"--configfile", Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "NuGet.config"),
+				ProcessRunner.QuoteArgument ($"-bl:{logPath}"),
+			};
+			if (!Utilities.RunCommand (Configurables.Paths.DotNetPreviewTool, restoreArgs)) {
 				Log.ErrorLine ($"dotnet restore {packageDownloadProj} failed.");
 				return false;
 			}
 
-			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests", context.Properties.GetRequiredValue (KnownProperties.DotNetSdkManifestsFolder));
+			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests");
 
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.* listed in package-download.proj
-			var dotnets = new [] { "net6", "net7" };
+			// NOTE: the packages that actually *exist* in .NET 8 are mismatched right now...
+			var dotnets = new [] { ".net6", ".net7", "" };
 			foreach (var dotnet in dotnets) {
-				var destination = Path.Combine (sdk_manifests, $"microsoft.net.workload.mono.toolchain.{dotnet}");
+				var destination = Path.Combine (sdk_manifests, context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand), $"microsoft.net.workload.mono.toolchain{dotnet}");
 				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "WorkloadManifest.*")) {
 					Utilities.CopyFileToDir (file, destination);
 				}
-				destination = Path.Combine (sdk_manifests, $"microsoft.net.workload.emscripten.{dotnet}");
-				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, dotnet), "WorkloadManifest.*")) {
-					Utilities.CopyFileToDir (file, destination);
+				if (dotnet != "") {
+					destination = Path.Combine (sdk_manifests, context.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand), $"microsoft.net.workload.emscripten{dotnet}");
+					foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, dotnet), "WorkloadManifest.*")) {
+						Utilities.CopyFileToDir (file, destination);
+					}
 				}
 			}
 
