@@ -145,8 +145,12 @@ namespace Java.Interop.Tools.JavaSource {
 					if (!grammar.ShouldImport (ImportJavadoc.ReturnTag)) {
 						return;
 					}
-					// When encountering multiple @return keys in a line, append subsequent @return key content to the original <returns> element.
 					var jdi = FinishParse (context, parseNode);
+					// If we have no return value, continue
+					if (parseNode.ChildNodes.Count < 2) {
+						return;
+					}
+					// When encountering multiple @return keys in a line, append subsequent @return key content to the original <returns> element.
 					if (jdi.Returns.Count == 0) {
 						var r = new XElement ("returns",
 							AstNodeToXmlContent (parseNode.ChildNodes [1]));

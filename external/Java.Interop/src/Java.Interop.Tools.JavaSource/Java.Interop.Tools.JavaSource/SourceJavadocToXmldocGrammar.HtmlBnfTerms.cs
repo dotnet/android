@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Xml;
 using System.Xml.Linq;
 
 using Irony.Ast;
@@ -111,20 +113,17 @@ namespace Java.Interop.Tools.JavaSource {
 						}
 					}
 
-					XNode astNodeElement = new XText (unparsedAElementValue);
-					try {
-						var seeElement = XElement.Parse ($"<see href={unparsedAElementValue}</see>");
-						var hrefValue = seeElement.Attribute ("href")?.Value ?? string.Empty;
-						if (!string.IsNullOrEmpty (hrefValue) &&
+					var seeElement = TryParseHRef (unparsedAElementValue);
+					if (seeElement == null)
+						seeElement = TryParseHRef (WebUtility.HtmlDecode (unparsedAElementValue), logError: true);
+
+					var hrefValue = seeElement?.Attribute ("href")?.Value ?? string.Empty;
+					if (!string.IsNullOrEmpty (hrefValue) &&
 							(hrefValue.StartsWith ("http", StringComparison.OrdinalIgnoreCase) || hrefValue.StartsWith ("www", StringComparison.OrdinalIgnoreCase))) {
-							parseNode.AstNode = seeElement;
-						} else {
-							// TODO: Need to convert relative paths or code references to appropriate CREF value.
-							parseNode.AstNode = astNodeElement;
-						}
-					} catch (Exception) {
-						Console.Error.WriteLine ($"# Unable to parse HTML element: <see href={unparsedAElementValue}</see>");
-						parseNode.AstNode = astNodeElement;
+						parseNode.AstNode = seeElement;
+					} else {
+						// TODO: Need to convert relative paths or code references to appropriate CREF value.
+						parseNode.AstNode = new XText (unparsedAElementValue);
 					}
 				};
 
@@ -182,6 +181,17 @@ namespace Java.Interop.Tools.JavaSource {
 				}
 				if (items.Count > 0) {
 					yield return new XElement ("para", items.Select (v => ToXmlContent (v)));
+				}
+			}
+
+			static XElement? TryParseHRef (string unparsedAElementValue, bool logError = false)
+			{
+				try {
+					return XElement.Parse ($"<see href={unparsedAElementValue}</see>");
+				} catch (Exception x) {
+					if (logError)
+						Console.Error.WriteLine ($"## Unable to parse HTML element: <see href={unparsedAElementValue}</see>\n{x.GetType ()}: {x.Message}");
+					return null;
 				}
 			}
 
@@ -387,7 +397,7 @@ namespace Java.Interop.Tools.JavaSource {
 			source.PreviewPosition += 1;
 			int start = source.Location.Position;
 			int stop  = start;
-			while (source.Text [stop] != '>' && stop < source.Text.Length)
+			while (stop < source.Text.Length && source.Text [stop] != '>' )
 				stop++;
 			if (addingRemarks) {
 				Console.Error.WriteLine ($"# Unsupported HTML element: {source.Text.Substring (start, stop - start)}");

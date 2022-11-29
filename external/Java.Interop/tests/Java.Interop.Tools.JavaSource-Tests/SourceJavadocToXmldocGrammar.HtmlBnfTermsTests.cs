@@ -62,6 +62,11 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<see href=\"https://developer.android.com/guide/topics/manifest/application-element.html\">application</see>",
 					r.Root.AstNode.ToString ());
 
+			r = p.Parse ("<a href=\"http://www.ietf.org/rfc/rfc2396.txt\">RFC&nbsp;2396: Uniform Resource Identifiers (URI): Generic Syntax</a>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("<see href=\"http://www.ietf.org/rfc/rfc2396.txt\">RFC 2396: Uniform Resource Identifiers (URI): Generic Syntax</see>",
+					r.Root.AstNode.ToString ());
+
 			r = p.Parse ("<a href=\"AutofillService.html#FieldClassification\">field classification</a>");
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
 			Assert.AreEqual ("\"AutofillService.html#FieldClassification\"&gt;field classification",
