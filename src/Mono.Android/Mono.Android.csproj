@@ -43,6 +43,10 @@
     <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(_EnableCodeAnalyzerPlatformWarnings)' == '' ">
+    <NoWarn>$(NoWarn);CA1422;CA1416</NoWarn>
+  </PropertyGroup>
+
   <PropertyGroup>
     <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
   </PropertyGroup>
