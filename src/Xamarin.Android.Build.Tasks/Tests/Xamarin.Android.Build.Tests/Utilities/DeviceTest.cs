@@ -66,6 +66,7 @@ namespace Xamarin.Android.Build.Tests
 			if (!HasDevices) {
 				// something went wrong with the emulator.
 				// lets restart it.
+				TestContext.Out.WriteLine ($"{nameof(CheckDevice)} is restarting the emulator.");
 				RestartDevice (Path.Combine (Root, "Emulator.csproj"));
 			}
 		}
