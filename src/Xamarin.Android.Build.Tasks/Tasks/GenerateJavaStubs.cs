@@ -282,7 +282,7 @@ namespace Xamarin.Android.Tasks
 					TypeDefinition conflict;
 					bool hasConflict = false;
 					if (managed.TryGetValue (managedKey, out conflict)) {
-						if (!conflict.Module.Name.Equals(type.Module.Name)) {
+						if (!conflict.Module.Name.Equals (type.Module.Name)) {
 							if (!managedConflicts.TryGetValue (managedKey, out var list))
 								managedConflicts.Add (managedKey, list = new List<string> { conflict.GetPartialAssemblyName (cache) });
 							list.Add (type.GetPartialAssemblyName (cache));
@@ -290,7 +290,7 @@ namespace Xamarin.Android.Tasks
 						hasConflict = true;
 					}
 					if (java.TryGetValue (javaKey, out conflict)) {
-						if (!conflict.Module.Name.Equals(type.Module.Name)) {
+						if (!conflict.Module.Name.Equals (type.Module.Name)) {
 							if (!javaConflicts.TryGetValue (javaKey, out var list))
 								javaConflicts.Add (javaKey, list = new List<string> { conflict.GetAssemblyQualifiedName (cache) });
 							list.Add (type.GetAssemblyQualifiedName (cache));
