@@ -32,10 +32,30 @@ namespace Java.InteropTests
 			}
 		}
 
+		[DllImport ("reuse-threads")]
+		static extern int rt_register_type_on_new_thread (string java_type_namem, IntPtr class_loader);
+
 		delegate void CB (IntPtr jnienv, IntPtr java_instance);
 
 		[DllImport ("reuse-threads")]
 		static extern int rt_invoke_callback_on_new_thread (CB cb);
+
+		[Test]
+		public void RegisterTypeOnNewNativeThread ()
+		{
+			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
+			int ret = rt_register_type_on_new_thread ("from.NewThreadOne", Application.Context.ClassLoader.Handle);
+			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
+		}
+
+		[Test]
+		public void RegisterTypeOnNewJavaThread ()
+		{
+			var thread = new MyRegistrationThread ();
+			thread.Start ();
+			thread.Join (5000);
+			Assert.AreNotEqual (null, thread.Instance, "Failed to register instance of a class on new thread");
+		}
 
 		[Test]
 		public void ThreadReuse ()
@@ -431,6 +451,24 @@ namespace Java.InteropTests
 			surfaced  = Runtime.GetSurfacedObjects ();
 			Assert.AreEqual (startCount, surfaced.Count, "#3");
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#4");
+		}
+	}
+
+	[Register ("from/NewThreadOne")]
+	class RegisterMeOnNewThreadOne : Java.Lang.Object
+	{}
+
+	[Register ("from/NewThreadTwo")]
+	class RegisterMeOnNewThreadTwo : Java.Lang.Object
+	{}
+
+	class MyRegistrationThread : Java.Lang.Thread
+	{
+		public RegisterMeOnNewThreadTwo Instance { get; private set; }
+
+		public override void Run ()
+		{
+			Instance = new RegisterMeOnNewThreadTwo ();
 		}
 	}
 
