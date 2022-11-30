@@ -112,7 +112,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		const int WaitTimeout = 5000;
+		const int WaitTimeout = 10000;
 
 		string port, TestHost, LocalServer;
 

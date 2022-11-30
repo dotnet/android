@@ -509,5 +509,39 @@ namespace UnnamedProject {
 				}
 			}
 		}
+
+		[Test]
+		public void DoNotErrorOnPerArchJavaTypeDuplicates ()
+		{
+			if (!Builder.UseDotNet)
+				Assert.Ignore ("Test only valid on .NET");
+
+			var path = Path.Combine (Root, "temp", TestName);
+			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
+			lib.SetProperty ("IsTrimmable", "true");
+			lib.Sources.Add (new BuildItem.Source ("Library1.cs") {
+				TextContent = () => @"
+namespace Lib1;
+public class Library1 : Java.Lang.Object {
+	private static bool Is64Bits = IntPtr.Size >= 8;
+
+	public static bool Is64 () {
+		return Is64Bits;
+	}
+}",
+			});
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true, ProjectName = "App1" };
+			proj.References.Add(new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1"));
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"base.OnCreate (bundle);\n" +
+				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
+
+
+			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));
+			using var b = CreateApkBuilder (Path.Combine (path, "App1"));
+			Assert.IsTrue (lb.Build (lib), "build should have succeeded.");
+			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+		}
 	}
 }
