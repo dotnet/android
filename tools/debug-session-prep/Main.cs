@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 using Mono.Options;
 using Xamarin.Android.Utilities;
@@ -32,6 +34,8 @@ class App
 		public string?   AppNativeLibrariesDir;
 		public string?   NdkDirPath;
 		public string?   OutputDirPath;
+		public string?   ConfigScriptName;
+		public string?   LldbScriptName;
 	}
 
 	static int Main (string[] args)
@@ -48,9 +52,11 @@ class App
 			"REQUIRED_OPTIONS are:",
 			{ "p|package-name=", "name of the application package", v => parsedOptions.PackageName = EnsureNonEmptyString (log, "-p|--package-name", v, ref haveOptionErrors) },
 			{ "s|supported-abis=", "comma-separated list of ABIs the application supports", v => parsedOptions.SupportedABIs = EnsureSupportedABIs (log, "-s|--supported-abis", v, ref haveOptionErrors) },
-			{ "l|lib-dir=", "{PATH} to the directory where application native libraries were copied", v => parsedOptions.AppNativeLibrariesDir = v },
+			{ "l|lib-dir=", "{PATH} to the directory where application native libraries were copied (relative to output directory, below)", v => parsedOptions.AppNativeLibrariesDir = v },
 			{ "n|ndk-dir=", "{PATH} to to the Android NDK root directory", v => parsedOptions.NdkDirPath = v },
 			{ "o|output-dir=", "{PATH} to directory which will contain various generated files (logs, scripts etc)", v => parsedOptions.OutputDirPath = v },
+			{ "c|config-script=", "{NAME} of the launcher configuration script which will be created in the output directory", v => parsedOptions.ConfigScriptName = v },
+			{ "g|lldb-script=", "{NAME} of the LLDB script which will be created in the output directory", v => parsedOptions.LldbScriptName = v },
 			"",
 			"OPTIONS are:",
 			{ "a|adb=", "{PATH} to adb to use for this session", v => parsedOptions.AdbPath = EnsureNonEmptyString (log, "-a|--adb", v, ref haveOptionErrors) },
@@ -98,7 +104,17 @@ class App
 
 		if (String.IsNullOrEmpty (parsedOptions.AppNativeLibrariesDir)) {
 			log.ErrorLine ("The '-l|--lib-dir' option must be used to specify the directory where application shared libraries were copied");
-			// missingRequiredOptions = true;
+			missingRequiredOptions = true;
+		}
+
+		if (String.IsNullOrEmpty (parsedOptions.ConfigScriptName)) {
+			log.ErrorLine ("The '-c|--config-script' option must be used to specify name of the launcher configuration script");
+			missingRequiredOptions = true;
+		}
+
+		if (String.IsNullOrEmpty (parsedOptions.LldbScriptName)) {
+			log.ErrorLine ("The '-g|--lldb-script' option must be used to specify name of the LLDB script");
+			missingRequiredOptions = true;
 		}
 
 		if (missingRequiredOptions) {
@@ -125,7 +141,91 @@ class App
 			return 1;
 		}
 
+		if (!device.Prepare ()) {
+			log.ErrorLine ("Failed to prepare for debugging session");
+			return 1;
+		}
+
+		string socketScheme = "unix-abstract";
+		string socketDir = $"/xa-{parsedOptions.PackageName}";
+
+		var rnd = new Random ();
+		string socketName = $"xa-platform-{rnd.NextInt64 ()}.sock";
+
+		WriteConfigScript (parsedOptions, device, ndk, socketScheme, socketDir, socketName);
+		WriteLldbScript (parsedOptions, socketScheme, socketDir, socketName);
+
 		return 0;
+	}
+
+	static FileStream OpenScriptStream (string path)
+	{
+		return File.Open (path, FileMode.Create, FileAccess.Write, FileShare.Read);
+	}
+
+	static StreamWriter OpenScriptWriter (FileStream fs)
+	{
+		return new StreamWriter (fs, Utilities.UTF8NoBOM);
+	}
+
+	static void WriteLldbScript (ParsedOptions parsedOptions, string socketScheme, string socketDir, string socketName)
+	{
+		string outputFile = Path.Combine (parsedOptions.OutputDirPath!, parsedOptions.LldbScriptName!);
+		string fullLibsDir = Path.GetFullPath (Path.Combine (parsedOptions.OutputDirPath!, parsedOptions.AppNativeLibrariesDir!));
+		using FileStream fs = OpenScriptStream (outputFile);
+		using StreamWriter sw = OpenScriptWriter (fs);
+
+		// TODO: add support for appending user commands
+		sw.WriteLine ($"settings append target.exec-search-paths \"{fullLibsDir}\"");
+		sw.WriteLine ("platform remote-android");
+		sw.WriteLine ($"platform connect {socketScheme}-connect:///{socketDir}/{socketName}");
+		sw.WriteLine ("gui"); // TODO: make it optional
+		sw.Flush ();
+	}
+
+	static void WriteConfigScript (ParsedOptions parsedOptions, AndroidDevice device, AndroidNdk ndk, string socketScheme, string socketDir, string socketName)
+	{
+		bool powershell = Utilities.IsWindows;
+		string outputFile = Path.Combine (parsedOptions.OutputDirPath!, parsedOptions.ConfigScriptName!);
+		using FileStream fs = OpenScriptStream (outputFile);
+		using StreamWriter sw = OpenScriptWriter (fs);
+
+		sw.WriteLine ($"DEVICE_SERIAL=\"{device.SerialNumber}\"");
+		sw.WriteLine ($"DEVICE_API_LEVEL={device.ApiLevel}");
+		sw.WriteLine ($"DEVICE_MAIN_ABI={device.MainAbi}");
+		sw.WriteLine ($"DEVICE_MAIN_ARCH={device.MainArch}");
+		sw.WriteLine ($"DEVICE_AVAILABLE_ABIS={FormatArray (device.AvailableAbis)}");
+		sw.WriteLine ($"DEVICE_AVAILABLE_ARCHES={FormatArray (device.AvailableArches)}");
+		sw.WriteLine ($"SOCKET_SCHEME={socketScheme}");
+		sw.WriteLine ($"SOCKET_DIR={socketDir}");
+		sw.WriteLine ($"SOCKET_NAME={socketName}");
+		sw.WriteLine ($"LLDB_PATH=\"{ndk.LldbPath}\"");
+		sw.Flush ();
+
+		string FormatArray (string[] values)
+		{
+			var sb = new StringBuilder ();
+			if (powershell) {
+				sb.Append ('@');
+			}
+			sb.Append ('(');
+
+			bool first = true;
+			foreach (string v in values) {
+				if (first) {
+					first = false;
+				} else {
+					sb.Append (powershell ? ", " : " ");
+				}
+				sb.Append ('"');
+				sb.Append (v);
+				sb.Append ('"');
+			}
+
+			sb.Append (')');
+
+			return sb.ToString ();
+		}
 	}
 
 	static string[]? EnsureSupportedABIs (XamarinLoggingHelper log, string paramName, string? value, ref bool haveOptionErrors)

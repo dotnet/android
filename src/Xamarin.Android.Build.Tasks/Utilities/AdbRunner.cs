@@ -247,6 +247,13 @@ namespace Xamarin.Android.Tasks
 			);
 		}
 
-		ProcessRunner CreateAdbRunner () => CreateProcessRunner (initialParams);
+		ProcessRunner CreateAdbRunner ()
+		{
+			ProcessRunner ret = CreateProcessRunner (initialParams);
+
+			// Let's make sure all the messages we get are in English, since we need to parse some of them to detect problems
+			ret.Environment["LANG"] = "C";
+			return ret;
+		}
 	}
 }

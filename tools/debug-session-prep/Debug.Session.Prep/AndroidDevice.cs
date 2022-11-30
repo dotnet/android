@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Utilities;
@@ -25,8 +25,6 @@ class AndroidDevice
 		"ro.boot.serialno",
 	};
 
-	static readonly UTF8Encoding UTF8NoBOM = new UTF8Encoding (false);
-
 	string packageName;
 	string adbPath;
 	string[] supportedAbis;
@@ -35,8 +33,10 @@ class AndroidDevice
 	string? appLldbBaseDir;
 	string? appLldbBinDir;
 	string? appLldbLogDir;
-	string? abi;
-	string? arch;
+	string? mainAbi;
+	string? mainArch;
+	string[]? availableAbis;
+	string[]? availableArches;
 	string? serialNumber;
 	bool appIs64Bit;
 	string? deviceLdd;
@@ -49,6 +49,10 @@ class AndroidDevice
 	AndroidNdk ndk;
 
 	public int ApiLevel => apiLevel;
+	public string[] AvailableAbis => availableAbis ?? new string[] {};
+	public string[] AvailableArches => availableArches ?? new string[] {};
+	public string MainArch => mainArch ?? String.Empty;
+	public string MainAbi => mainAbi ?? String.Empty;
 	public string SerialNumber => serialNumber ?? String.Empty;
 	public AdbRunner AdbRunner => adb;
 
@@ -104,18 +108,6 @@ class AndroidDevice
 			log.StatusLine ($"Device serial number", serialNumber);
 		}
 
-		if (!DetectTools ()) {
-			return false;
-		}
-
-		if (!PushDebugServer ()) {
-			return false;
-		}
-
-		if (!PullLibraries ()) {
-			return false;
-		}
-
 		return true;
 
 		bool YamaOK (string output)
@@ -130,6 +122,23 @@ class AndroidDevice
 				!String.IsNullOrEmpty (result.value) &&
 				String.Compare (result.value, expected, StringComparison.Ordinal) == 0;
 		}
+	}
+
+	public bool Prepare ()
+	{
+		if (!DetectTools ()) {
+			return false;
+		}
+
+		if (!PushDebugServer ()) {
+			return false;
+		}
+
+		if (!PullLibraries ()) {
+			return false;
+		}
+
+		return true;
 	}
 
 	bool PullLibraries ()
@@ -159,7 +168,7 @@ class AndroidDevice
 
 	bool PushDebugServer ()
 	{
-		string? debugServerPath = ndk.GetDebugServerPath (abi!);
+		string? debugServerPath = ndk.GetDebugServerPath (mainAbi!);
 		if (String.IsNullOrEmpty (debugServerPath)) {
 			return false;
 		}
@@ -188,7 +197,7 @@ class AndroidDevice
 
 		string launcherScriptPath = Path.Combine (outputDir, ServerLauncherScriptName);
 		Directory.CreateDirectory (Path.GetDirectoryName (launcherScriptPath)!);
-		File.WriteAllText (launcherScriptPath, launcherScript, UTF8NoBOM);
+		File.WriteAllText (launcherScriptPath, launcherScript, Utilities.UTF8NoBOM);
 
 		deviceDebugServerScriptPath = $"{appLldbBinDir}/{Path.GetFileName (launcherScriptPath)}";
 		if (!PushServerExecutable (launcherScriptPath, deviceDebugServerScriptPath)) {
@@ -348,32 +357,50 @@ class AndroidDevice
 		LogABIs ("Application", supportedAbis);
 		LogABIs ("     Device", deviceABIs);
 
+		bool gotValidAbi = false;
+		var possibleAbis = new List<string> ();
+		var possibleArches = new List<string> ();
+
 		foreach (string deviceABI in deviceABIs) {
 			foreach (string appABI in supportedAbis) {
 				if (String.Compare (appABI, deviceABI, StringComparison.OrdinalIgnoreCase) == 0) {
-					abi = deviceABI;
-					arch = abi switch {
-						"armeabi" => "arm",
-						"armeabi-v7a" => "arm",
-						"arm64-v8a" => "arm64",
-						_ => abi,
-					};
+					string arch = AbiToArch (deviceABI);
 
-					log.StatusLine ($"    Selected ABI", $"{abi} (architecture: {arch})");
+					if (!gotValidAbi) {
+						mainAbi = deviceABI;
+						mainArch = arch;
 
-					appIs64Bit = abi.IndexOf ("64", StringComparison.Ordinal) >= 0;
-					return true;
+						log.StatusLine ($"    Selected ABI", $"{mainAbi} (architecture: {mainArch})");
+
+						appIs64Bit = mainAbi.IndexOf ("64", StringComparison.Ordinal) >= 0;
+						gotValidAbi = true;
+					}
+
+					possibleAbis.Add (deviceABI);
+					possibleArches.Add (arch);
 				}
 			}
 		}
 
-		log.ErrorLine ($"Application cannot run on the selected device: no matching ABI found");
-		return false;
+		if (!gotValidAbi) {
+			log.ErrorLine ($"Application cannot run on the selected device: no matching ABI found");
+		}
+
+		availableAbis = possibleAbis.ToArray ();
+		availableArches = possibleArches.ToArray ();
+		return gotValidAbi;
 
 		void LogABIs (string which, string[] abis)
 		{
 			log.StatusLine ($"{which} ABIs", String.Join (", ", abis));
 		}
+
+		string AbiToArch (string abi) => abi switch {
+			"armeabi" => "arm",
+			"armeabi-v7a" => "arm",
+			"arm64-v8a" => "arm64",
+			_ => abi,
+		};
 	}
 
 	string? GetFirstFoundPropertyValue (string[] propertyNames)

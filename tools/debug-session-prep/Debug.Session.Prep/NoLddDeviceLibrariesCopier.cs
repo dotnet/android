@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using ELFSharp.ELF;
-
 using Xamarin.Android.Utilities;
 using Xamarin.Android.Tasks;
 

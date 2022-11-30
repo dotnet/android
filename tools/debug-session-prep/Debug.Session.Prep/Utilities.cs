@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 
 using Xamarin.Android.Utilities;
 
@@ -9,6 +10,8 @@ namespace Xamarin.Debug.Session.Prep;
 
 static class Utilities
 {
+	public static readonly UTF8Encoding UTF8NoBOM = new UTF8Encoding (false);
+
 	public static bool IsMacOS   { get; private set; }
 	public static bool IsLinux   { get; private set; }
 	public static bool IsWindows { get; private set; }

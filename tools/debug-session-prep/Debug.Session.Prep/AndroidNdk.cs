@@ -21,6 +21,8 @@ class AndroidNdk
 	XamarinLoggingHelper log;
 	string? lldbPath;
 
+	public string LldbPath => lldbPath ?? String.Empty;
+
 	public AndroidNdk (XamarinLoggingHelper log, string ndkRootPath, string[] supportedAbis)
 	{
 		this.log = log;
