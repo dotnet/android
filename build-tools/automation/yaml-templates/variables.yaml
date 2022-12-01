@@ -41,5 +41,3 @@ variables:
 # Workaround: https://github.com/dotnet/linker/issues/3012
 - name: DOTNET_gcServer
   value: 0
-- name: DotNetReleaseBranchPrefix
-  value: refs/heads/release/
