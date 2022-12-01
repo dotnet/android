@@ -20,10 +20,10 @@ namespace Xamarin.Android.Tasks
 	class NativeDebugger
 	{
 		const ConsoleColor ErrorColor   = ConsoleColor.Red;
-                const ConsoleColor DebugColor   = ConsoleColor.DarkGray;
-                const ConsoleColor InfoColor    = ConsoleColor.Green;
-                const ConsoleColor MessageColor = ConsoleColor.Gray;
-                const ConsoleColor WarningColor = ConsoleColor.Yellow;
+        const ConsoleColor DebugColor   = ConsoleColor.DarkGray;
+        const ConsoleColor InfoColor    = ConsoleColor.Green;
+        const ConsoleColor MessageColor = ConsoleColor.Gray;
+        const ConsoleColor WarningColor = ConsoleColor.Yellow;
 		const ConsoleColor StatusLabel  = ConsoleColor.Cyan;
 		const ConsoleColor StatusText   = ConsoleColor.White;
 

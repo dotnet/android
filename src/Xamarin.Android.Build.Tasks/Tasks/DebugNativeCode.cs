@@ -61,20 +61,17 @@ namespace Xamarin.Android.Tasks
 				abiLibs.Add (item.ItemSpec);
 			}
 
-			var debugger = new NativeDebugger (
-				Log,
+			var prep = new NativeDebugPrep (Log);
+			prep.Prepare (
 				AdbPath,
 				AndroidNdkPath,
+				String.IsNullOrEmpty (ActivityName) ? MainActivityName : ActivityName,
 				IntermediateOutputDir,
 				PackageName,
-				SupportedAbis
-			) {
-				AdbDeviceTarget = TargetDeviceName,
-				NativeLibrariesPerABI = nativeLibs,
-			};
-
-			string activity = String.IsNullOrEmpty (ActivityName) ? MainActivityName : ActivityName;
-			debugger.Launch (activity);
+				SupportedAbis,
+				nativeLibs,
+				TargetDeviceName
+			);
 		}
 	}
 }

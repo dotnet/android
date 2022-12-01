@@ -1,13 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <TargetFramework>net7.0</TargetFramework>
     <RootNamespace>debug_session_prep</RootNamespace>
     <Nullable>enable</Nullable>
     <DefineConstants>NO_MSBUILD</DefineConstants>
   </PropertyGroup>
-
-  <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\AdbRunner.cs" />
@@ -23,12 +25,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\lldb-debug-session.sh">
       <LogicalName>lldb-debug-session.sh</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\debug-app.sh">
-      <LogicalName>debug-app.sh</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\debug-app.ps1">
-      <LogicalName>debug-app.ps1</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

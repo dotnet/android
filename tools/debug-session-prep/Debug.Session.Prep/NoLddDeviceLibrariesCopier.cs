@@ -76,7 +76,7 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 		(bool success, string output) = Adb.Shell (filterOutErrors, "ls", "-l", deviceDirPath).Result;
 		if (!success) {
 			// We can't rely on `success` because `ls -l` will return an error code if the directory exists but has any entries access to whose is not permitted
-			if (output.IndexOf ("No such file or directory") >= 0) {
+			if (output.IndexOf ("No such file or directory", StringComparison.OrdinalIgnoreCase) >= 0) {
 				Log.DebugLine ($"Shared libraries directory {deviceDirPath} not found on device");
 				return;
 			}
@@ -122,7 +122,7 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 				const string SymlinkArrow = "->";
 
 				// Symlink, we'll add the target library instead
-				int idx = name.IndexOf (SymlinkArrow);
+				int idx = name.IndexOf (SymlinkArrow, StringComparison.Ordinal);
 				if (idx > 0) {
 					libPath = name.Substring (idx + SymlinkArrow.Length).Trim ();
 				} else {
