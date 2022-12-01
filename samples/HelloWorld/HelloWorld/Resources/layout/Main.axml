@@ -7,4 +7,10 @@
 		android:layout_height="wrap_content"
 		android:src="@drawable/Case_Check"
 	/>
+	<ImageView
+		android:id="@+id/webp_image_view"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:src="@drawable/MyImage"
+	/>
 </LinearLayout>
