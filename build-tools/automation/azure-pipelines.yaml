@@ -56,6 +56,8 @@ variables:
   value: $[and(ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
 - name: RunAllTests
   value: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
+- name: IsRelOrTargetingRel
+  value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
 - name: DotNetNUnitCategories
   value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != SystemApplication'
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
@@ -344,7 +346,7 @@ stages:
   - job: mac_apk_tests_legacy
     displayName: macOS > Tests > APKs Classic
     # Disabled on .NET release branches
-    condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
+    condition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 180
@@ -864,7 +866,7 @@ stages:
   displayName: Legacy Tests
   dependsOn: mac_build
   # Disabled on .NET release branches
-  condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
+  condition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
   jobs:
   # Xamarin.Android (Test MSBuild Legacy - macOS)
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -1040,7 +1042,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
-      jobCondition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
+      jobCondition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
@@ -1049,7 +1051,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
-      jobCondition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
+      jobCondition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
@@ -1058,7 +1060,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
-      jobCondition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
+      jobCondition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
@@ -1068,7 +1070,7 @@ stages:
       jdkTestFolder: $(XA.Jdk11.Folder)
       nunit_categories: '&& cat == Debugger'
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
-      jobCondition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')))
+      jobCondition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
 
   # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator One .NET #N)"
   - template: yaml-templates/run-msbuild-device-tests.yaml
@@ -1351,7 +1353,7 @@ stages:
   displayName: BCL Emulator Tests
   dependsOn: mac_build
   # Disabled on .NET release branches
-  condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], '$(DotNetReleaseBranchPrefix)')), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'BCL')))
+  condition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'BCL')))
   jobs:
   # Check - "Xamarin.Android (macOS > Tests > BCL (Emulator))"
   - job: mac_bcl_tests
