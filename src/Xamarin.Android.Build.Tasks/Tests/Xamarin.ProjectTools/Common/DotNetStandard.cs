@@ -40,12 +40,17 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public void AddNuGetSourcesForOlderTargetFrameworks ()
 		{
-			if (TargetFramework.IndexOf ("net6.0", StringComparison.OrdinalIgnoreCase) != -1) {
+			var targetFramework = TargetFramework;
+			if (string.IsNullOrEmpty (targetFramework)) {
+				targetFramework = GetProperty ("TargetFrameworks");
+			}
+
+			if (targetFramework.IndexOf ("net6.0", StringComparison.OrdinalIgnoreCase) != -1) {
 				ExtraNuGetConfigSources = new List<string> {
 					"https://api.nuget.org/v3/index.json",
 					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
 				};
-			} else if (TargetFramework.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1) {
+			} else if (targetFramework.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1) {
 				ExtraNuGetConfigSources = new List<string> {
 					"https://api.nuget.org/v3/index.json",
 					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json",
