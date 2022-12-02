@@ -62,5 +62,5 @@ abstract class DeviceLibraryCopier
 		return zygotePath;
 	}
 
-	public abstract bool Copy ();
+	public abstract bool Copy (out string? zygotePath);
 }

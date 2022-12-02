@@ -38,9 +38,9 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 		: base (log, adb, appIs64Bit, localDestinationDir, device)
 	{}
 
-	public override bool Copy ()
+	public override bool Copy (out string? zygotePath)
 	{
-		string? zygotePath = FetchZygote ();
+		zygotePath = FetchZygote ();
 		if (String.IsNullOrEmpty (zygotePath)) {
 			Log.ErrorLine ("Unable to determine path of the zygote process on device");
 			return false;

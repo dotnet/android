@@ -33,6 +33,7 @@ class AndroidDevice
 	string? appLldbBaseDir;
 	string? appLldbBinDir;
 	string? appLldbLogDir;
+	string? appLldbTmpDir;
 	string? mainAbi;
 	string? mainArch;
 	string[]? availableAbis;
@@ -54,6 +55,8 @@ class AndroidDevice
 	public string MainArch => mainArch ?? String.Empty;
 	public string MainAbi => mainAbi ?? String.Empty;
 	public string SerialNumber => serialNumber ?? String.Empty;
+	public string DebugServerLauncherScriptPath => deviceDebugServerScriptPath;
+	public string LldbBaseDir => appLldbBaseDir;
 	public AdbRunner AdbRunner => adb;
 
 	public AndroidDevice (XamarinLoggingHelper log, AndroidNdk ndk, string outputDir, string adbPath, string packageName, string[] supportedAbis, string? adbTargetDevice = null)
@@ -124,8 +127,9 @@ class AndroidDevice
 		}
 	}
 
-	public bool Prepare ()
+	public bool Prepare (out string? mainProcessPath)
 	{
+		mainProcessPath = null;
 		if (!DetectTools ()) {
 			return false;
 		}
@@ -134,15 +138,16 @@ class AndroidDevice
 			return false;
 		}
 
-		if (!PullLibraries ()) {
+		if (!PullLibraries (out mainProcessPath)) {
 			return false;
 		}
 
 		return true;
 	}
 
-	bool PullLibraries ()
+	bool PullLibraries (out string? mainProcessPath)
 	{
+		mainProcessPath = null;
 		DeviceLibraryCopier copier;
 
 		if (String.IsNullOrEmpty (deviceLdd)) {
@@ -163,7 +168,7 @@ class AndroidDevice
 			);
 		}
 
-		return copier.Copy ();
+		return copier.Copy (out mainProcessPath);
 	}
 
 	bool PushDebugServer ()
@@ -173,8 +178,7 @@ class AndroidDevice
 			return false;
 		}
 
-		if (!adb.CreateDirectoryAs (packageName, appLldbBinDir!).Result.success) {
-			log.ErrorLine ($"Failed to create debug server destination directory on device, {appLldbBinDir}");
+		if (!CreateLldbDir (appLldbBinDir!) || !CreateLldbDir (appLldbLogDir) || !CreateLldbDir (appLldbTmpDir)) {
 			return false;
 		}
 
@@ -207,6 +211,16 @@ class AndroidDevice
 		log.MessageLine ();
 
 		return true;
+
+		bool CreateLldbDir (string dir)
+		{
+			if (!adb.CreateDirectoryAs (packageName, dir).Result.success) {
+				log.ErrorLine ($"Failed to create debug server destination directory on device, {dir}");
+				return false;
+			}
+
+			return true;
+		}
 	}
 
 	bool PushServerExecutable (string hostSource, string deviceDestination)
@@ -244,9 +258,10 @@ class AndroidDevice
 		return true;
 	}
 
+	// TODO: handle multiple pids
 	bool KillDebugServer (string debugServerPath)
 	{
-		long serverPID = GetDeviceProcessID (debugServerPath, quiet: true);
+		long serverPID = GetDeviceProcessID (debugServerPath, quiet: false);
 		if (serverPID <= 0) {
 			return true;
 		}
@@ -258,7 +273,7 @@ class AndroidDevice
 
 	long GetDeviceProcessID (string processName, bool quiet = false)
 	{
-		(bool success, string output) = adb.Shell ("pidof", processName).Result;
+		(bool success, string output) = adb.Shell ("pidof", Path.GetFileName (processName)).Result;
 		if (!success) {
 			if (!quiet) {
 				log.ErrorLine ($"Failed to obtain PID of process '{processName}'");
@@ -313,6 +328,7 @@ class AndroidDevice
 		appLldbBaseDir = $"{appDataDir}/lldb";
 		appLldbBinDir = $"{appLldbBaseDir}/bin";
 		appLldbLogDir = $"{appLldbBaseDir}/log";
+		appLldbTmpDir = $"{appLldbBaseDir}/tmp";
 
 		// Applications with minSdkVersion >= 24 will have their data directories
 		// created with rwx------ permissions, preventing adbd from forwarding to

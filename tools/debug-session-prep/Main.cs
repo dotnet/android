@@ -141,7 +141,7 @@ class App
 			return 1;
 		}
 
-		if (!device.Prepare ()) {
+		if (!device.Prepare (out string? mainProcessPath) || String.IsNullOrEmpty (mainProcessPath)) {
 			log.ErrorLine ("Failed to prepare for debugging session");
 			return 1;
 		}
@@ -153,7 +153,7 @@ class App
 		string socketName = $"xa-platform-{rnd.NextInt64 ()}.sock";
 
 		WriteConfigScript (parsedOptions, device, ndk, socketScheme, socketDir, socketName);
-		WriteLldbScript (parsedOptions, socketScheme, socketDir, socketName);
+		WriteLldbScript (parsedOptions, device, socketScheme, socketDir, socketName, mainProcessPath);
 
 		return 0;
 	}
@@ -168,7 +168,7 @@ class App
 		return new StreamWriter (fs, Utilities.UTF8NoBOM);
 	}
 
-	static void WriteLldbScript (ParsedOptions parsedOptions, string socketScheme, string socketDir, string socketName)
+	static void WriteLldbScript (ParsedOptions parsedOptions, AndroidDevice device, string socketScheme, string socketDir, string socketName, string mainProcessPath)
 	{
 		string outputFile = Path.Combine (parsedOptions.OutputDirPath!, parsedOptions.LldbScriptName!);
 		string fullLibsDir = Path.GetFullPath (Path.Combine (parsedOptions.OutputDirPath!, parsedOptions.AppNativeLibrariesDir!));
@@ -176,10 +176,24 @@ class App
 		using StreamWriter sw = OpenScriptWriter (fs);
 
 		// TODO: add support for appending user commands
-		sw.WriteLine ($"settings append target.exec-search-paths \"{fullLibsDir}\"");
-		sw.WriteLine ("platform remote-android");
-		sw.WriteLine ($"platform connect {socketScheme}-connect:///{socketDir}/{socketName}");
-		sw.WriteLine ("gui"); // TODO: make it optional
+		var searchPathsList = new List<string> {
+			$"\"{Path.Combine (fullLibsDir, device.MainAbi)}\""
+		};
+
+		foreach (string abi in device.AvailableAbis) {
+			if (String.Compare (abi, device.MainAbi, StringComparison.Ordinal) == 0) {
+				continue;
+			}
+
+			searchPathsList.Add ($"\"{Path.Combine (fullLibsDir, abi)}\"");
+		}
+
+		string searchPaths = String.Join (" ", searchPathsList);
+		sw.WriteLine ($"settings append target.exec-search-paths {searchPaths}");
+		sw.WriteLine ("platform select remote-android");
+		sw.WriteLine ($"platform connect {socketScheme}-connect://{socketDir}/{socketName}");
+		sw.WriteLine ($"file \"{mainProcessPath}\"");
+
 		sw.Flush ();
 	}
 
@@ -190,16 +204,19 @@ class App
 		using FileStream fs = OpenScriptStream (outputFile);
 		using StreamWriter sw = OpenScriptWriter (fs);
 
-		sw.WriteLine ($"DEVICE_SERIAL=\"{device.SerialNumber}\"");
 		sw.WriteLine ($"DEVICE_API_LEVEL={device.ApiLevel}");
-		sw.WriteLine ($"DEVICE_MAIN_ABI={device.MainAbi}");
-		sw.WriteLine ($"DEVICE_MAIN_ARCH={device.MainArch}");
 		sw.WriteLine ($"DEVICE_AVAILABLE_ABIS={FormatArray (device.AvailableAbis)}");
 		sw.WriteLine ($"DEVICE_AVAILABLE_ARCHES={FormatArray (device.AvailableArches)}");
-		sw.WriteLine ($"SOCKET_SCHEME={socketScheme}");
+		sw.WriteLine ($"DEVICE_DEBUG_SERVER_LAUNCHER=\"{device.DebugServerLauncherScriptPath}\"");
+		sw.WriteLine ($"DEVICE_LLDB_DIR=\"{device.LldbBaseDir}\"");
+		sw.WriteLine ($"DEVICE_MAIN_ABI={device.MainAbi}");
+		sw.WriteLine ($"DEVICE_MAIN_ARCH={device.MainArch}");
+		sw.WriteLine ($"DEVICE_SERIAL=\"{device.SerialNumber}\"");
+		sw.WriteLine ($"LLDB_PATH=\"{ndk.LldbPath}\"");
 		sw.WriteLine ($"SOCKET_DIR={socketDir}");
 		sw.WriteLine ($"SOCKET_NAME={socketName}");
-		sw.WriteLine ($"LLDB_PATH=\"{ndk.LldbPath}\"");
+		sw.WriteLine ($"SOCKET_SCHEME={socketScheme}");
+
 		sw.Flush ();
 
 		string FormatArray (string[] values)

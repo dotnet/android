@@ -11,7 +11,7 @@ class LddDeviceLibraryCopier : DeviceLibraryCopier
 		: base (log, adb, appIs64Bit, localDestinationDir, device)
 	{}
 
-	public override bool Copy ()
+	public override bool Copy (out string? zygotePath)
 	{
 		throw new NotImplementedException();
 	}

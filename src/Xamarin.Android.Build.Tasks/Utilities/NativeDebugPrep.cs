@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 				return null;
 			}
 
-			string appLibsRoot = Path.Combine (outputDirRoot, "app", "lib");
+			string appLibsRoot = Path.Combine (outputDirRoot, "lldb", "lib");
 			log.LogDebugMessage ($"Copying application native libararies to {appLibsRoot}");
 
 			DotnetSymbolRunner? dotnetSymbol = GetDotnetSymbolRunner ();
