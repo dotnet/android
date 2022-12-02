@@ -38,13 +38,9 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// Projects targeting net6.0/net7.0 require ref/runtime packs on NuGet.org or dotnet6/dotnet7
 		/// </summary>
-		public void AddNuGetSourcesForOlderTargetFrameworks ()
+		public void AddNuGetSourcesForOlderTargetFrameworks (string targetFramework = null)
 		{
-			var targetFramework = TargetFramework;
-			if (string.IsNullOrEmpty (targetFramework)) {
-				targetFramework = GetProperty ("TargetFrameworks");
-			}
-
+			var targetFramework = targetFramework ?? TargetFramework;
 			if (targetFramework.IndexOf ("net6.0", StringComparison.OrdinalIgnoreCase) != -1) {
 				ExtraNuGetConfigSources = new List<string> {
 					"https://api.nuget.org/v3/index.json",
