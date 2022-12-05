@@ -947,7 +947,7 @@ public class JavaSourceTest {
 					}
 				}
 			};
-			proj.AddNuGetSourcesForOlderTargetFrameworks ();
+			proj.AddNuGetSourcesForOlderTargetFrameworks (dotnetTargetFramework);
 
 			using var b = new Builder ();
 			var legacyTargetFrameworkVersion = "13.0";
