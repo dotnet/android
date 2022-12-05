@@ -18,6 +18,8 @@ class XADebug
 		public string? PackageName;
 	}
 
+	const string AndroidManifestZipPath = "AndroidManifest.xml";
+
 	static XamarinLoggingHelper log = new XamarinLoggingHelper ();
 
 	static int Main (string[] args)
@@ -55,21 +57,24 @@ class XADebug
 			return 1;
 		}
 
+		string aPath = rest[0];
 		string? apkFilePath = null;
 		ZipArchive? apk = null;
 
-		if (Directory.Exists (rest[0])) {
-			// TODO: build app in this directory and set apkFilePath appropriately
-			throw new NotImplementedException ("Building the application is not implemented yet");
-		} else if (File.Exists (rest[0])) {
-			if (!IsAndroidPackageFile (rest[0], out apk)) {
-				log.ErrorLine ($"File '{rest[0]}' is not an Android APK package");
-				log.ErrorLine ();
+		if (Directory.Exists (aPath)) {
+			apkFilePath = BuildApp (aPath);
+		} else if (File.Exists (aPath)) {
+			if (String.Compare (".csproj", Path.GetExtension (aPath), StringComparison.OrdinalIgnoreCase) == 0) {
+				// Let's see if we can trust the file name...
+				apkFilePath = BuildApp (aPath);
+			} else if (IsAndroidPackageFile (aPath, out apk)) {
+				apkFilePath = aPath;
 			} else {
-				apkFilePath = rest[0];
+				log.ErrorLine ($"File '{aPath}' is not an Android APK package");
+				log.ErrorLine ();
 			}
 		} else {
-			log.ErrorLine ($"Neither directory nor file '{rest[0]}' exist");
+			log.ErrorLine ($"Neither directory nor file '{aPath}' exist");
 			log.ErrorLine ();
 		}
 
@@ -77,7 +82,28 @@ class XADebug
 			return 1;
 		}
 
+		if (apk == null) {
+			apk = OpenApk (apkFilePath);
+		}
+
+		// Extract app information fromn the embedded manifest
+		ApplicationInfo appInfo = ReadManifest (apk);
+
 		return 0;
+	}
+
+	static ApplicationInfo ReadManifest (ZipArchive apk)
+	{
+		ZipEntry entry = apk.ReadEntry (AndroidManifestZipPath);
+
+		using var manifest = new MemoryStream ();
+		entry.Extract (manifest);
+		manifest.Seek (0, SeekOrigin.Begin);
+
+		var axml = new AXMLParser (manifest, log);
+		string packageName = String.Empty;
+
+		return new ApplicationInfo (packageName);
 	}
 
 	static string? EnsureNonEmptyString (XamarinLoggingHelper log, string paramName, string? value, ref bool haveOptionErrors)
@@ -91,16 +117,23 @@ class XADebug
 		return value;
 	}
 
+	static ZipArchive OpenApk (string filePath) => ZipArchive.Open (filePath, FileMode.Open);
+
 	static bool IsAndroidPackageFile (string filePath, out ZipArchive? apk)
 	{
 		try {
-			apk = ZipArchive.Open (filePath, FileMode.Open);
+			apk = OpenApk (filePath);
 		} catch (ZipIOException ex) {
 			log.DebugLine ($"Failed to open '{filePath}' as ZIP archive: {ex.Message}");
 			apk = null;
 			return false;
 		}
 
-		return apk.ContainsEntry ("AndroidManifest.xml");
+		return apk.ContainsEntry (AndroidManifestZipPath);
+	}
+
+	static string BuildApp (string projectPath)
+	{
+		throw new NotImplementedException ("Building the application is not implemented yet");
 	}
 }
