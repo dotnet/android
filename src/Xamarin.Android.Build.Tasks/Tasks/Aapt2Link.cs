@@ -122,8 +122,8 @@ namespace Xamarin.Android.Tasks {
 				if (!string.IsNullOrEmpty (ProguardRuleOutput)) {
 					// combine the "proguard" temp files into one file.
 					var sb = new StringBuilder ();
+					sb.AppendLine ("#Auto Generated file. Do not Edit.");
 					HashSet<string> output = new HashSet<string> ();
-					output.Add ("#Auto Generated file. Do not Edit.");
 					lock (rulesFiles) {
 						foreach (var file in rulesFiles) {
 							var lines = File.ReadAllLines (file);
