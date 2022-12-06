@@ -561,7 +561,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 						continue;
 					}
 					needCtor = true;
-					writer.WriteLine ("\tstatic final String __md_{0}_methods;", i + 1);
+					writer.Write ("\tstatic final String __md_");
+					writer.Write (i + 1);
+					writer.WriteLine ("_methods;");
 				}
 			}
 
@@ -574,8 +576,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 				if (children != null) {
 					for (int i = 0; i < children.Count; ++i) {
-						string methods = string.Format ("__md_{0}_methods", i + 1);
-						GenerateRegisterType (writer, children [i], methods);
+						GenerateRegisterType (writer, children [i], $"__md_{i + 1}_methods");
 					}
 				}
 				writer.WriteLine ("\t}");
@@ -613,7 +614,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				var catype = ca.AttributeType.Resolve ();
 				var tca = catype.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "Android.Runtime.AnnotationAttribute");
 				if (tca != null) {
-					sw.Write ("{0}@{1}", indent, tca.ConstructorArguments [0].Value);
+					sw.Write (indent);
+					sw.Write ('@');
+					sw.Write (tca.ConstructorArguments [0].Value);
 					if (ca.Properties.Count > 0) {
 						sw.WriteLine ("(");
 						bool wrote = false;
@@ -622,7 +625,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 								sw.WriteLine (',');
 							var pd = catype.Properties.FirstOrDefault (pp => pp.Name == p.Name);
 							var reg = pd != null ? pd.CustomAttributes.FirstOrDefault (pdca => pdca.AttributeType.FullName == "Android.Runtime.RegisterAttribute") : null;
-							sw.Write ("{0} = {1}", reg != null ? reg.ConstructorArguments [0].Value : p.Name, ManagedValueToJavaSource (p.Argument.Value));
+							sw.Write (reg != null ? reg.ConstructorArguments [0].Value : p.Name);
+							sw.Write (" = ");
+							sw.Write (ManagedValueToJavaSource (p.Argument.Value));
 							wrote = true;
 						}
 						sw.Write (")");
@@ -674,7 +679,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			if (ifaces.Any ()) {
 				foreach (TypeDefinition iface in ifaces) {
 					sw.WriteLine (",");
-					sw.Write ("\t\t{0}", GetJavaTypeName (iface, cache));
+					sw.Write ("\t\t");
+					sw.Write (GetJavaTypeName (iface, cache));
 				}
 			}
 			sw.WriteLine ();
@@ -699,12 +705,20 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsApplication (type, cache) && !methods.Any (m => m.Name == "onCreate"))
 				WriteApplicationOnCreate (sw, w => {
-						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetPartialAssemblyQualifiedName (cache), name);
+						w.Write ("\t\tmono.android.Runtime.register (\"");
+						w.Write (type.GetPartialAssemblyQualifiedName (cache));
+						w.Write ("\", ");
+						w.Write (name);
+						w.WriteLine (".class, __md_methods);");
 						w.WriteLine ("\t\tsuper.onCreate ();");
 				});
 			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsInstrumentation (type, cache) && !methods.Any (m => m.Name == "onCreate"))
 				WriteInstrumentationOnCreate (sw, w => {
-						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetPartialAssemblyQualifiedName (cache), name);
+						w.Write ("\t\tmono.android.Runtime.register (\"");
+						w.Write (type.GetPartialAssemblyQualifiedName (cache));
+						w.Write ("\", ");
+						w.Write (name);
+						w.WriteLine (".class, __md_methods);");
 						w.WriteLine ("\t\tsuper.onCreate (arguments);");
 				});
 
@@ -737,29 +751,43 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				return;
 			}
 
-			sw.WriteLine ("\t\t{0} = ", field);
+			sw.Write ("\t\t");
+			sw.Write (field);
+			sw.WriteLine (" = ");
 			string managedTypeName = self.type.GetPartialAssemblyQualifiedName (cache);
 			string javaTypeName = $"{package}.{name}";
 
 			foreach (Signature method in self.methods) {
 				if (method.IsDynamicallyRegistered) {
-					sw.WriteLine ("\t\t\t\"{0}\\n\" +", method.Method);
+					sw.Write ("\t\t\t\"", method.Method);
+					sw.Write (method.Method);
+					sw.WriteLine ("\\n\" +");
 				}
 			}
 			sw.WriteLine ("\t\t\t\"\";");
 			if (CannotRegisterInStaticConstructor (self.type))
 				return;
-			string? format = null;
+			sw.Write ("\t\t");
 			switch (CodeGenerationTarget) {
 				case JavaPeerStyle.JavaInterop1:
-					format = "com.xamarin.java_interop.ManagedPeer.registerNativeMembers ({1}.class, \"{0}\", {2});";
+					sw.Write ("com.xamarin.java_interop.ManagedPeer.registerNativeMembers (");
+					sw.Write (self.name);
+					sw.Write (".class, \"");
+					sw.Write (managedTypeName);
+					sw.Write ("\", ");
+					sw.Write (field);
+					sw.WriteLine (");");
 					break;
 				default:
-					format = "mono.android.Runtime.register (\"{0}\", {1}.class, {2});";
+					sw.Write ("mono.android.Runtime.register (\"");
+					sw.Write (managedTypeName);
+					sw.Write ("\", ");
+					sw.Write (self.name);
+					sw.Write (".class, ");
+					sw.Write (field);
+					sw.WriteLine (");");
 					break;
 			}
-			sw.Write ("\t\t");
-			sw.WriteLine (format, managedTypeName, self.name, field);
 		}
 
 		void GenerateFooter (TextWriter sw)
@@ -922,25 +950,44 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ();
 			if (ctor.Annotations != null)
 				sw.WriteLine (ctor.Annotations);
-			sw.WriteLine ("\tpublic {0} ({1}){2}", name, ctor.Params, ctor.ThrowsDeclaration);
+			sw.Write ("\tpublic ");
+			sw.Write (name);
+			sw.Write (" (");
+			sw.Write (ctor.Params);
+			sw.Write (')');
+			sw.WriteLine (ctor.ThrowsDeclaration);
 			sw.WriteLine ("\t{");
-			sw.WriteLine ("\t\tsuper ({0});", ctor.SuperCall);
+			sw.Write ("\t\tsuper (");
+			sw.Write (ctor.SuperCall);
+			sw.WriteLine (");");
 #if MONODROID_TIMING
 			sw.WriteLine ("\t\tandroid.util.Log.i(\"MonoDroid-Timing\", \"{0}..ctor({1}): time: \"+java.lang.System.currentTimeMillis());", name, ctor.Params);
 #endif
 			if (!CannotRegisterInStaticConstructor (type)) {
-				string? format = null;
+				sw.Write ("\t\tif (getClass () == ");
+				sw.Write (name);
+				sw.WriteLine (".class) {");
+				sw.Write ("\t\t\t");
 				switch (CodeGenerationTarget) {
 					case JavaPeerStyle.JavaInterop1:
-						format = "com.xamarin.java_interop.ManagedPeer.construct (this, \"{0}\", \"{1}\", new java.lang.Object[] {{ {2} }});";
+						sw.Write ("com.xamarin.java_interop.ManagedPeer.construct (this, \"");
+						sw.Write (type.GetPartialAssemblyQualifiedName (cache));
+						sw.Write ("\", \"");
+						sw.Write (ctor.ManagedParameters);
+						sw.Write ("\", new java.lang.Object[] { ");
+						sw.Write (ctor.ActivateCall);
+						sw.WriteLine (" });");
 						break;
 					default:
-						format = "mono.android.TypeManager.Activate (\"{0}\", \"{1}\", this, new java.lang.Object[] {{ {2} }});";
+						sw.Write ("mono.android.TypeManager.Activate (\"");
+						sw.Write (type.GetPartialAssemblyQualifiedName (cache));
+						sw.Write ("\", \"");
+						sw.Write (ctor.ManagedParameters);
+						sw.Write ("\", this, new java.lang.Object[] { ");
+						sw.Write (ctor.ActivateCall);
+						sw.WriteLine (" });");
 						break;
 				}
-				sw.WriteLine ("\t\tif (getClass () == {0}.class) {{", name);
-				sw.Write ("\t\t\t");
-				sw.WriteLine (format, type.GetPartialAssemblyQualifiedName (cache), ctor.ManagedParameters, ctor.ActivateCall);
 				sw.WriteLine ("\t\t}");
 			}
 			sw.WriteLine ("\t}");
@@ -953,7 +1000,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			}
 
 			sw.WriteLine ();
-			sw.WriteLine ("\tpublic {0} ()", name);
+			sw.Write ("\tpublic ");
+			sw.Write (name);
+			sw.WriteLine (" ()");
 			sw.WriteLine ("\t{");
 			sw.WriteLine ("\t\tmono.MonoPackageManager.setContext (this);");
 			sw.WriteLine ("\t}");
@@ -964,7 +1013,17 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ();
 			if (field.Annotations != null)
 				sw.WriteLine (field.Annotations);
-			sw.WriteLine ("\t{0} {1}{2} {3} = {4} ();", field.GetJavaAccess (), field.IsStatic ? "static " : null, field.TypeName, field.FieldName, field.InitializerName);
+			sw.Write ("\t");
+			sw.Write (field.GetJavaAccess ());
+			sw.Write (' ');
+			if (field.IsStatic)
+				sw.Write ("static ");
+			sw.Write (field.TypeName);
+			sw.Write (' ');
+			sw.Write (field.FieldName);
+			sw.Write (" = ");
+			sw.Write (field.InitializerName);
+			sw.WriteLine (" ();");
 		}
 
 		void GenerateMethod (Signature method, TextWriter sw)
@@ -972,16 +1031,42 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ();
 			if (method.Annotations != null)
 				sw.WriteLine (method.Annotations);
-			sw.WriteLine ("\t{0} {1}{2} {3} ({4}){5}", method.IsExport ? method.JavaAccess : "public", method.IsStatic ? "static " : null, method.Retval, method.JavaName, method.Params, method.ThrowsDeclaration);
+			sw.Write ("\t");
+			sw.Write (method.IsExport ? method.JavaAccess : "public");
+			sw.Write (' ');
+			if (method.IsStatic)
+				sw.Write ("static ");
+			sw.Write (method.Retval);
+			sw.Write (' ');
+			sw.Write (method.JavaName);
+			sw.Write (" (");
+			sw.Write (method.Params);
+			sw.Write (')');
+			sw.WriteLine (method.ThrowsDeclaration);
 			sw.WriteLine ("\t{");
 #if MONODROID_TIMING
 			sw.WriteLine ("\t\tandroid.util.Log.i(\"MonoDroid-Timing\", \"{0}.{1}: time: \"+java.lang.System.currentTimeMillis());", name, method.Name);
 #endif
-			sw.WriteLine ("\t\t{0}n_{1} ({2});", method.Retval == "void" ? String.Empty : "return ", method.Name, method.ActivateCall);
+			sw.Write ("\t\t");
+			sw.Write (method.Retval == "void" ? String.Empty : "return ");
+			sw.Write ("n_");
+			sw.Write (method.Name);
+			sw.Write (" (");
+			sw.Write (method.ActivateCall);
+			sw.WriteLine (");");
 
 			sw.WriteLine ("\t}");
 			sw.WriteLine ();
-			sw.WriteLine ("\tprivate {0}native {1} n_{2} ({3});", method.IsStatic ? "static " : null, method.Retval, method.Name, method.Params);
+			sw.Write ("\tprivate ");
+			if (method.IsStatic)
+				sw.Write ("static ");
+			sw.Write ("native ");
+			sw.Write (method.Retval);
+			sw.Write (" n_");
+			sw.Write (method.Name);
+			sw.Write (" (");
+			sw.Write (method.Params);
+			sw.WriteLine (");");
 		}
 
 		void WriteApplicationOnCreate (TextWriter sw, Action<TextWriter> extra)
