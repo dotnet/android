@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
 
 using Mono.Options;
 using Xamarin.Android.Utilities;
@@ -96,11 +97,15 @@ class XADebug
 	{
 		ZipEntry entry = apk.ReadEntry (AndroidManifestZipPath);
 
-		using var manifest = new MemoryStream ();
-		entry.Extract (manifest);
-		manifest.Seek (0, SeekOrigin.Begin);
+		using var manifestData = new MemoryStream ();
+		entry.Extract (manifestData);
+		manifestData.Seek (0, SeekOrigin.Begin);
 
-		var axml = new AXMLParser (manifest, log);
+		// TODO: make provisions for plain XML AndroidManifest.xml, perhaps? Although not sure if it's really necesary these days anymore as the APKs should all have the
+		// binary version of the manifest.
+		var axml = new AXMLParser (manifestData, log);
+		XmlDocument? manifest = axml.Parse ();
+
 		string packageName = String.Empty;
 
 		return new ApplicationInfo (packageName);
