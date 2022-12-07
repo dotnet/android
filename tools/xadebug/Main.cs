@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Xml;
 
 using Mono.Options;
@@ -17,9 +18,11 @@ class XADebug
 		public bool Verbose = true; // TODO: remove the default once development is done
 		public string Configuration = "Debug";
 		public string? PackageName;
+		public string? Activity;
 	}
 
 	const string AndroidManifestZipPath = "AndroidManifest.xml";
+	const string DefaultMinSdkVersion = "21";
 
 	static XamarinLoggingHelper log = new XamarinLoggingHelper ();
 
@@ -34,6 +37,7 @@ class XADebug
 			"",
 			{ "p|package-name=", "name of the application package", v => parsedOptions.PackageName = EnsureNonEmptyString (log, "-p|--package-name", v, ref haveOptionErrors) },
 			{ "c|configuration=", "{CONFIGURATION} in which to build the application. Ignored when running in APK-only mode", v => parsedOptions.Configuration = v },
+			{ "a|activity=", "Name of the {ACTIVITY} to start the application. The default is determined from AndroidManifest.xml", v => parsedOptions.Activity = v },
 			"",
 			{ "v|verbose", "Show debug messages", v => parsedOptions.Verbose = true },
 			{ "h|help|?", "Show this help screen", v => parsedOptions.ShowHelp = true },
@@ -88,12 +92,15 @@ class XADebug
 		}
 
 		// Extract app information fromn the embedded manifest
-		ApplicationInfo appInfo = ReadManifest (apk);
+		ApplicationInfo? appInfo = ReadManifest (apk, parsedOptions);
+		if (appInfo == null) {
+			return 1;
+		}
 
 		return 0;
 	}
 
-	static ApplicationInfo ReadManifest (ZipArchive apk)
+	static ApplicationInfo? ReadManifest (ZipArchive apk, ParsedOptions parsedOptions)
 	{
 		ZipEntry entry = apk.ReadEntry (AndroidManifestZipPath);
 
@@ -105,10 +112,108 @@ class XADebug
 		// binary version of the manifest.
 		var axml = new AXMLParser (manifestData, log);
 		XmlDocument? manifest = axml.Parse ();
+		if (manifest == null) {
+			log.ErrorLine ("Unable to parse Android manifest from the apk");
+			return null;
+		}
 
-		string packageName = String.Empty;
+		var writerSettings = new XmlWriterSettings {
+			Encoding = new UTF8Encoding (false),
+			Indent = true,
+			IndentChars = "\t",
+			NewLineOnAttributes = false,
+			OmitXmlDeclaration = false,
+			WriteEndDocumentOnClose = true,
+		};
 
-		return new ApplicationInfo (packageName);
+		var manifestXml = new StringBuilder ();
+		using var writer = XmlWriter.Create (manifestXml, writerSettings);
+		manifest.WriteTo (writer);
+		writer.Flush ();
+		log.DebugLine ("Android manifest from the apk: START");
+		log.DebugLine (manifestXml.ToString ());
+		log.DebugLine ("Android manifest from the apk: END");
+
+		string? packageName = null;
+		XmlNode? node;
+
+		node = manifest.SelectSingleNode ("//manifest");
+		if (node == null) {
+			log.ErrorLine ("Unable to find root element 'manifest' of AndroidManifest.xml");
+			return null;
+		}
+
+		var nsManager = new XmlNamespaceManager (manifest.NameTable);
+		if (node.Attributes != null) {
+			const string nsPrefix = "xmlns:";
+
+			foreach (XmlAttribute attr in node.Attributes) {
+				if (!attr.Name.StartsWith (nsPrefix, StringComparison.Ordinal)) {
+					continue;
+				}
+
+				nsManager.AddNamespace (attr.Name.Substring (nsPrefix.Length), attr.Value);
+			}
+		}
+
+		if (String.IsNullOrEmpty (parsedOptions.PackageName)) {
+			packageName = GetAttributeValue (node, "package");
+		} else {
+			packageName = parsedOptions.PackageName;
+		}
+
+		if (String.IsNullOrEmpty (packageName)) {
+			log.ErrorLine ("Unable to determine the package name");
+			return null;
+		}
+
+		node = manifest.SelectSingleNode ("//manifest/uses-sdk");
+		string? minSdkVersion = GetAttributeValue (node, "android:minSdkVersion");
+		if (String.IsNullOrEmpty (minSdkVersion)) {
+			log.WarningLine ($"Android manifest doesn't specify the minimum SDK version supported by the application, assuming the default of {DefaultMinSdkVersion}");
+			minSdkVersion = DefaultMinSdkVersion;
+		}
+
+		ApplicationInfo? ret;
+		try {
+			ret = new ApplicationInfo (packageName, minSdkVersion);
+		} catch (Exception ex) {
+			log.ErrorLine ($"Exception {ex.GetType ()} thrown while constructing application info: {ex.Message}");
+			return null;
+		}
+
+		if (String.IsNullOrEmpty (parsedOptions.Activity)) {
+			node = manifest.SelectSingleNode ("//manifest/application");
+			string? debuggable = GetAttributeValue (node, "android:debuggable");
+			if (!String.IsNullOrEmpty (debuggable)) {
+				ret.Debuggable = String.Compare ("true", debuggable, StringComparison.OrdinalIgnoreCase) == 0;
+			}
+
+			node = manifest.SelectSingleNode ("//manifest/application/activity[./intent-filter/action[@android:name='android.intent.action.MAIN']]", nsManager);
+			if (node != null) {
+				ret.Activity = GetAttributeValue (node, "android:name");
+				log.DebugLine ($"Detected main activity: {ret.Activity}");
+			}
+		} else {
+			ret.Activity = parsedOptions.Activity;
+		}
+
+		return ret;
+	}
+
+	static string? GetAttributeValue (XmlNode? node, string prefixedAttributeName)
+	{
+		if (node?.Attributes == null) {
+			return null;
+		}
+
+		foreach (XmlAttribute attr in node.Attributes) {
+			if (String.Compare (prefixedAttributeName, attr.Name, StringComparison.Ordinal) == 0) {
+				return attr.Value;
+			}
+		}
+
+		return null;
 	}
 
 	static string? EnsureNonEmptyString (XamarinLoggingHelper log, string paramName, string? value, ref bool haveOptionErrors)

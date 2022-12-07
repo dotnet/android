@@ -30,20 +30,62 @@ enum ChunkType : ushort
 	TableLibrary      = 0x0203,
 }
 
+enum AttributeType : uint
+{
+	// The 'data' field is either 0 or 1, specifying this resource is either undefined or empty, respectively.
+	Null = 0x00,
+
+	// The 'data' field holds a ResTable_ref, a reference to another resource
+	Reference = 0x01,
+
+	// The 'data' field holds an attribute resource identifier.
+	Attribute = 0x02,
+
+	// The 'data' field holds an index into the containing resource table's global value string pool.
+	String = 0x03,
+
+	// The 'data' field holds a single-precision floating point number.
+	Float = 0x04,
+
+	// The 'data' holds a complex number encoding a dimension value such as "100in".
+	Dimension = 0x05,
+
+	// The 'data' holds a complex number encoding a fraction of a container.
+	Fraction = 0x06,
+
+	// The 'data' holds a dynamic ResTable_ref, which needs to be resolved before it can be used like a Reference
+	DynamicReference = 0x07,
+
+	// The 'data' holds an attribute resource identifier, which needs to be resolved before it can be used like a Attribute.
+	DynamicAttribute = 0x08,
+
+	// The 'data' is a raw integer value of the form n..n.
+	IntDec = 0x10,
+
+	// The 'data' is a raw integer value of the form 0xn..n.
+	IntHex = 0x11,
+
+	// The 'data' is either 0 or 1, for input "false" or "true" respectively.
+	IntBoolean = 0x12,
+
+	// The 'data' is a raw integer value of the form #aarrggbb.
+	IntColorARGB8 = 0x1c,
+
+	// The 'data' is a raw integer value of the form #rrggbb.
+	IntColorRGB8 = 0x1d,
+
+	// The 'data' is a raw integer value of the form #argb.
+	IntColorARGB4 = 0x1e,
+
+	// The 'data' is a raw integer value of the form #rgb.
+	IntColorRGB4 = 0x1f,
+}
+
 //
 // Based on https://github.com/androguard/androguard/tree/832104db3eb5dc3cc66b30883fa8ce8712dfa200/androguard/core/axml
 //
 class AXMLParser
 {
-	enum ParsingState
-	{
-		StartDocument = 0,
-		EndDocument   = 1,
-		StartTag      = 2,
-		EndTag        = 3,
-		Text          = 4,
-	}
-
 	// Position of fields inside an attribute
 	const int ATTRIBUTE_IX_NAMESPACE_URI = 0;
 	const int ATTRIBUTE_IX_NAME          = 1;
@@ -54,6 +96,29 @@ class AXMLParser
 
 	const long MinimumDataSize           = 8;
 	const long MaximumDataSize           = (long)UInt32.MaxValue;
+
+	const uint ComplexUnitMask           = 0x0f;
+
+	static readonly float[] RadixMultipliers = {
+		0.00390625f,
+		3.051758E-005f,
+		1.192093E-007f,
+		4.656613E-010f,
+	};
+
+	static readonly string[] DimensionUnits = {
+		"px",
+		"dip",
+		"sp",
+		"pt",
+		"in",
+		"mm",
+	};
+
+	static readonly string[] FractionUnits = {
+		"%",
+		"%p",
+	};
 
 	readonly XamarinLoggingHelper log;
 
@@ -133,6 +198,13 @@ class AXMLParser
 
 		using var reader = new BinaryReader (data, Encoding.UTF8, leaveOpen: true);
 		ARSCHeader? header;
+		string? nsPrefix = null;
+		string? nsUri = null;
+		uint prefixIndex = 0;
+		uint uriIndex = 0;
+		var nsUriToPrefix = new Dictionary<string, string> (StringComparer.Ordinal);
+		XmlNode? currentNode = ret.DocumentElement;
+
 		while (data.Position < dataSize) {
 			header = new ARSCHeader (data);
 
@@ -171,21 +243,202 @@ class AXMLParser
 				log.WarningLine ($"Unhandled Comment at namespace chunk: {commentIndex}");
 			}
 
-			uint prefixIndex;
-			uint uriIndex;
-
 			if (header.Type == ChunkType.XmlStartNamespace) {
 				prefixIndex = reader.ReadUInt32 ();
 				uriIndex = reader.ReadUInt32 ();
 
-				string? prefix = stringPool.GetString (prefixIndex);
-				string? uri = stringPool.GetString (uriIndex);
+				nsPrefix = stringPool.GetString (prefixIndex);
+				nsUri = stringPool.GetString (uriIndex);
+
+				if (!String.IsNullOrEmpty (nsUri)) {
+					nsUriToPrefix[nsUri] = nsPrefix ?? String.Empty;
+				}
+
+				log.DebugLine ($"Start of Namespace mapping: prefix {prefixIndex}: '{nsPrefix}' --> uri {uriIndex}: '{nsUri}'");
+
+				if (String.IsNullOrEmpty (nsUri)) {
+					log.WarningLine ($"Namespace prefix '{nsPrefix}' resolves to empty URI.");
+				}
 
 				continue;
 			}
+
+			if (header.Type == ChunkType.XmlEndNamespace) {
+				// Namespace handling is **really** simplified, since we expect to deal only with AndroidManifest.xml which should have just one namespace.
+				// There should be no problems with that. Famous last words.
+				uint endPrefixIndex = reader.ReadUInt32 ();
+				uint endUriIndex = reader.ReadUInt32 ();
+
+				log.DebugLine ($"End of Namespace mapping: prefix {endPrefixIndex}, uri {endUriIndex}");
+				if (endPrefixIndex != prefixIndex) {
+					log.WarningLine ($"Prefix index of Namespace end doesn't match the last Namespace prefix index: {prefixIndex} != {endPrefixIndex}");
+				}
+
+				if (endUriIndex != uriIndex) {
+					log.WarningLine ($"URI index of Namespace end doesn't match the last Namespace URI index: {uriIndex} != {endUriIndex}");
+				}
+
+				string? endUri = stringPool.GetString (endUriIndex);
+				if (!String.IsNullOrEmpty (endUri) && nsUriToPrefix.ContainsKey (endUri)) {
+					nsUriToPrefix.Remove (endUri);
+				}
+
+				nsPrefix = null;
+				nsUri = null;
+				prefixIndex = 0;
+				uriIndex = 0;
+
+				continue;
+			}
+
+			uint tagNsUriIndex;
+			uint tagNameIndex;
+			string? tagName;
+			string? tagNs; // TODO: implement
+
+			if (header.Type == ChunkType.XmlStartElement) {
+				// The TAG consists of some fields:
+				// * (chunk_size, line_number, comment_index - we read before)
+				// * namespace_uri
+				// * name
+				// * flags
+				// * attribute_count
+				// * class_attribute
+				// After that, there are two lists of attributes, 20 bytes each
+				tagNsUriIndex = reader.ReadUInt32 ();
+				tagNameIndex = reader.ReadUInt32 ();
+				uint tagFlags = reader.ReadUInt32 ();
+				uint attributeCount = reader.ReadUInt32 () & 0xffff;
+				uint classAttribute = reader.ReadUInt32 ();
+
+				// Tag name is, of course, required but instead of throwing an exception should we find none, we use a fake name in hope that we can still salvage
+				// the document.
+				tagName = stringPool.GetString (tagNameIndex) ?? "unnamedTag";
+				log.DebugLine ($"Start of tag '{tagName}', NS URI index {tagNsUriIndex}");
+				log.DebugLine ($"Reading tag attributes ({attributeCount}):");
+
+				string? tagNsUri = tagNsUriIndex != 0xffffffff ? stringPool.GetString (tagNsUriIndex) : null;
+				string? tagNsPrefix;
+
+				if (String.IsNullOrEmpty (tagNsUri) || !nsUriToPrefix.TryGetValue (tagNsUri, out tagNsPrefix)) {
+					tagNsPrefix = null;
+				}
+
+				XmlElement element = ret.CreateElement (tagNsPrefix, tagName, tagNsUri);
+				if (currentNode == null) {
+					ret.AppendChild (element);
+					if (!String.IsNullOrEmpty (nsPrefix) && !String.IsNullOrEmpty (nsUri)) {
+						ret.DocumentElement!.SetAttribute ($"xmlns:{nsPrefix}", nsUri);
+					}
+				} else {
+					currentNode.AppendChild (element);
+				}
+				currentNode = element;
+
+				for (uint i = 0; i < attributeCount; i++) {
+					uint attrNsIdx = reader.ReadUInt32 (); // string index
+					uint attrNameIdx = reader.ReadUInt32 (); // string index
+					uint attrValue = reader.ReadUInt32 ();
+					uint attrType = reader.ReadUInt32 () >> 24;
+					uint attrData = reader.ReadUInt32 ();
+
+					string? attrNs = attrNsIdx != 0xffffffff ? stringPool.GetString (attrNsIdx) : String.Empty;
+					string? attrName = stringPool.GetString (attrNameIdx);
+
+					if (String.IsNullOrEmpty (attrName)) {
+						log.WarningLine ($"Attribute without name, ignoring. Offset: {data.Position}");
+						continue;
+					}
+
+					log.DebugLine ($"  '{attrName}': ns == '{attrNs}'; value == 0x{attrValue:x}; type == 0x{attrType:x}; data == 0x{attrData:x}");
+					XmlAttribute attr;
+
+					if (!String.IsNullOrEmpty (attrNs)) {
+						attr = ret.CreateAttribute (nsUriToPrefix[attrNs], attrName, attrNs);
+					} else {
+						attr = ret.CreateAttribute (attrName!);
+					}
+					attr.Value = GetAttributeValue (attrValue, attrType, attrData);
+					element.SetAttributeNode (attr);
+				}
+				continue;
+			}
+
+			if (header.Type == ChunkType.XmlEndElement) {
+				tagNsUriIndex = reader.ReadUInt32 ();
+				tagNameIndex = reader.ReadUInt32 ();
+
+				tagName = stringPool.GetString (tagNameIndex);
+				log.DebugLine ($"End of tag '{tagName}', NS URI index {tagNsUriIndex}");
+				currentNode = currentNode.ParentNode!;
+				continue;
+			}
+
+			// TODO: add support for CDATA
 		}
 
 		return ret;
+	}
+
+	string GetAttributeValue (uint attrValue, uint attrType, uint attrData)
+	{
+		if (!Enum.IsDefined (typeof(AttributeType), attrType)) {
+			log.WarningLine ($"Unknown attribute type value 0x{attrType:x}, returning empty attribute value (data == 0x{attrData:x}). Offset: {data.Position}");
+			return String.Empty;
+		}
+
+		switch ((AttributeType)attrType) {
+			case AttributeType.Null:
+				return attrData == 0 ? "?NULL?" : String.Empty;
+
+			case AttributeType.Reference:
+				return $"@{MaybePrefix()}{attrData:x08}";
+
+			case AttributeType.Attribute:
+				return $"?{MaybePrefix()}{attrData:x08}";
+
+			case AttributeType.String:
+				return stringPool.GetString (attrData) ?? String.Empty;
+
+			case AttributeType.Float:
+				return $"{(float)attrData}";
+
+			case AttributeType.Dimension:
+				return $"{ComplexToFloat(attrData)}{DimensionUnits[attrData & ComplexUnitMask]}";
+
+			case AttributeType.Fraction:
+				return $"{ComplexToFloat(attrData) * 100.0f}{FractionUnits[attrData & ComplexUnitMask]}";
+
+			case AttributeType.IntDec:
+				return attrData.ToString ();
+
+			case AttributeType.IntHex:
+				return $"0x{attrData:X08}";
+
+			case AttributeType.IntBoolean:
+				return attrData == 0 ? "false" : "true";
+
+			case AttributeType.IntColorARGB8:
+			case AttributeType.IntColorRGB8:
+			case AttributeType.IntColorARGB4:
+			case AttributeType.IntColorRGB4:
+				return $"#{attrData:X08}";
+		}
+
+		return String.Empty;
+
+		string MaybePrefix ()
+		{
+			if (attrData >> 24 == 1) {
+				return "android:";
+			}
+			return String.Empty;
+		}
+
+		float ComplexToFloat (uint value)
+		{
+			return (float)(value & 0xffffff00) * RadixMultipliers[(value >> 4) & 3];
+		}
 	}
 
 	bool SkipOverResourceMap (ARSCHeader header, BinaryReader reader)
