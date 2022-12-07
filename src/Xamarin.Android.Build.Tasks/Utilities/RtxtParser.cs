@@ -142,7 +142,7 @@ namespace Xamarin.Android.Tasks
 							});
 							break;
 					}
-
+					continue;
 				}
 				result.Add (new R () {
 					ResourceTypeName = items[1],
