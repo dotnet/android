@@ -123,15 +123,13 @@ namespace Xamarin.Android.Tasks {
 					// combine the "proguard" temp files into one file.
 					var sb = new StringBuilder ();
 					sb.AppendLine ("#Auto Generated file. Do not Edit.");
-					HashSet<string> output = new HashSet<string> ();
 					lock (rulesFiles) {
 						foreach (var file in rulesFiles) {
-							var lines = File.ReadAllLines (file);
-							output.UnionWith (lines);
+							sb.AppendLine ($"# Data from {file}");
+							foreach (var line in File.ReadLines (file))
+								sb.AppendLine (line);
 						}
 					}
-					foreach (var line in output)
-						sb.AppendLine (line);
 					Files.CopyIfStringChanged (sb.ToString (), ProguardRuleOutput);
 				}
 			} finally {
