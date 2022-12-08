@@ -567,25 +567,47 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		static string? ToJniNameFromAttributesForAndroid (TypeDefinition type, IMetadataResolver? resolver)
 		{
-			#region CustomAttribute alternate name support
-			var attrs = type.CustomAttributes.Where (a => Resolve (resolver, a.AttributeType).Interfaces.Any (it => it.InterfaceType.FullName == typeof (IJniNameProviderAttribute).FullName));
-			return attrs.Select (attr => {
-				var ap = attr.Properties.FirstOrDefault (p => p.Name == "Name");
+			if (!type.HasCustomAttributes)
+				return null;
+			foreach (var attr in type.CustomAttributes) {
+				if (!IsIJniNameProviderAttribute (attr, resolver))
+					continue;
+				var ap = attr.HasProperties ? attr.Properties.FirstOrDefault (p => p.Name == "Name") : default;
 				string? name = null;
 				if (ap.Name == null) {
 					var ca = attr.ConstructorArguments.FirstOrDefault ();
 					if (ca.Type == null || ca.Type.FullName != "System.String")
-						return null;
+						continue;
 					name = (string) ca.Value;
 				} else
 					name = (string) ap.Argument.Value;
 				if (!string.IsNullOrEmpty (name))
 					return name.Replace ('.', '/');
-				else
-					return null;
-				})
-				.FirstOrDefault (s => s != null);
-			#endregion
+			}
+			return null;
+		}
+
+		static readonly HashSet<string> KnownIJniNameProviders = new HashSet<string> (StringComparer.Ordinal) {
+			"Android.App.ActivityAttribute",
+			"Android.App.ApplicationAttribute",
+			"Android.App.InstrumentationAttribute",
+			"Android.App.ServiceAttribute",
+			"Android.Content.BroadcastReceiverAttribute",
+			"Android.Content.ContentProviderAttribute",
+			"Android.Runtime.RegisterAttribute",
+		};
+
+		static bool IsIJniNameProviderAttribute (CustomAttribute attr, IMetadataResolver? resolver)
+		{
+			// Fast path for a list of known IJniNameProviderAttribute implementations
+			if (KnownIJniNameProviders.Contains (attr.AttributeType.FullName))
+				return true;
+
+			// Slow path resolves the type, looking for IJniNameProviderAttribute
+			var attributeType = Resolve (resolver, attr.AttributeType);
+			if (!attributeType.HasInterfaces)
+				return false;
+			return attributeType.Interfaces.Any (it => it.InterfaceType.FullName == typeof (IJniNameProviderAttribute).FullName);
 		}
 
 		static TypeDefinition Resolve (IMetadataResolver? resolver, TypeReference typeReference) =>
