@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Java.Interop.Tools.Generator.Enumification;
 using MonoDroid.Generation;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
@@ -69,13 +70,9 @@ namespace generatortests
 		KeyValuePair<string, EnumMappings.EnumDescription> CreateEnum ()
 		{
 			var enu = new EnumMappings.EnumDescription {
-				Members = new Dictionary<string, string> {
-					{ "WithExcluded", "1" },
-					{ "IgnoreUnavailable", "2" }
-				},
-				JniNames = new Dictionary<string, string> {
-					{ "WithExcluded", "android/app/ActivityManager.RECENT_IGNORE_UNAVAILABLE" },
-					{ "IgnoreUnavailable", "android/app/ActivityManager.RECENT_WITH_EXCLUDED" }
+				Members = new List<ConstantEntry> {
+					new ConstantEntry { EnumMember = "WithExcluded", Value = "1", JavaSignature = "android/app/ActivityManager.RECENT_IGNORE_UNAVAILABLE" },
+					new ConstantEntry { EnumMember = "IgnoreUnavailable", Value = "2", JavaSignature = "android/app/ActivityManager.RECENT_WITH_EXCLUDED" }
 				},
 				BitField = false,
 				FieldsRemoved = false

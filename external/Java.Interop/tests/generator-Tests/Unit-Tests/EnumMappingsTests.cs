@@ -29,7 +29,7 @@ namespace generatortests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", enums.Single ().Key);
 			Assert.AreEqual (false, enums.Single ().Value.BitField);
 			Assert.AreEqual (true, enums.Single ().Value.FieldsRemoved);
-			Assert.AreEqual ("[Cdsect, I:org/xmlpull/v1/XmlPullParser.CDSECT]", enums.First ().Value.JniNames.Single ().ToString ());
+			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", enums.First ().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
@@ -65,7 +65,7 @@ namespace generatortests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", enums.Single ().Key);
 			Assert.AreEqual (false, enums.Single ().Value.BitField);
 			Assert.AreEqual (true, enums.Single ().Value.FieldsRemoved);
-			Assert.AreEqual ("[Cdsect, ]", enums.First ().Value.JniNames.Single ().ToString ());
+			Assert.AreEqual ("", enums.First().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
@@ -128,7 +128,7 @@ namespace generatortests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", enums.Single ().Key);
 			Assert.AreEqual (false, enums.Single ().Value.BitField);
 			Assert.AreEqual (false, enums.Single ().Value.FieldsRemoved);
-			Assert.AreEqual ("[Cdsect, I:org/xmlpull/v1/XmlPullParser.CDSECT]", enums.First ().Value.JniNames.Single ().ToString ());
+			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", enums.First().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
@@ -164,7 +164,7 @@ namespace generatortests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", enums.Single ().Key);
 			Assert.AreEqual (false, enums.Single ().Value.BitField);
 			Assert.AreEqual (false, enums.Single ().Value.FieldsRemoved);
-			Assert.AreEqual ("[Cdsect, ]", enums.First ().Value.JniNames.Single ().ToString ());
+			Assert.AreEqual ("", enums.First ().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 		[Test]
@@ -183,7 +183,7 @@ namespace generatortests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", enums.Single ().Key);
 			Assert.AreEqual (false, enums.Single ().Value.BitField);
 			Assert.AreEqual (true, enums.Single ().Value.FieldsRemoved);
-			Assert.AreEqual ("[Cdsect, I:org/xmlpull/v1/XmlPullParser.CDSECT]", enums.First ().Value.JniNames.Single ().ToString ());
+			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", enums.First ().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
@@ -219,7 +219,7 @@ namespace generatortests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", enums.Single ().Key);
 			Assert.AreEqual (false, enums.Single ().Value.BitField);
 			Assert.AreEqual (true, enums.Single ().Value.FieldsRemoved);
-			Assert.AreEqual ("[Cdsect, ]", enums.First ().Value.JniNames.Single ().ToString ());
+			Assert.AreEqual ("", enums.First ().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
@@ -282,7 +282,7 @@ namespace generatortests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", enums.Single ().Key);
 			Assert.AreEqual (false, enums.Single ().Value.BitField);
 			Assert.AreEqual (false, enums.Single ().Value.FieldsRemoved);
-			Assert.AreEqual ("[Cdsect, I:org/xmlpull/v1/XmlPullParser.CDSECT]", enums.First ().Value.JniNames.Single ().ToString ());
+			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", enums.First ().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 

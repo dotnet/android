@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using generator.SourceWriters;
+using Java.Interop.Tools.Generator.Enumification;
+using Xamarin.SourceWriter;
 using static MonoDroid.Generation.EnumMappings;
 
 using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
@@ -19,30 +22,51 @@ namespace MonoDroid.Generation
 
 		public void WriteEnumeration (CodeGenerationOptions opt, KeyValuePair<string, EnumDescription> enu, GenBase [] gens)
 		{
-			string ns = enu.Key.Substring (0, enu.Key.LastIndexOf ('.')).Trim ();
-			string enoom = enu.Key.Substring (enu.Key.LastIndexOf ('.') + 1).Trim ();
+			var ns = enu.Key.Substring (0, enu.Key.LastIndexOf ('.')).Trim ();
+			var cw = new CodeWriter (sw);
 
-			sw.WriteLine ("namespace {0} {{", ns);
-			if (enu.Value.BitField)
-				sw.WriteLine ("\t[System.Flags]");
-			sw.WriteLine ("\tpublic enum {0} {{", enoom);
+			cw.WriteLine ($"namespace {ns}");
+			cw.WriteLine ("{");
 
-			foreach (var member in enu.Value.Members) {
-				var managedMember = FindManagedMember (enu.Value, member.Key, gens);
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
-					sw.WriteLine ("\t\t[global::Android.Runtime.IntDefinition (" + (managedMember != null ? "\"" + managedMember + "\"" : "null") + ", JniField = \"" + StripExtraInterfaceSpec (enu.Value.JniNames [member.Key]) + "\")]");
-				sw.WriteLine ("\t\t{0} = {1},", member.Key.Trim (), member.Value.Trim ());
-			}
-			sw.WriteLine ("\t}");
-			sw.WriteLine ("}");
+			var enoom = CreateWriter (opt, enu, gens);
+			enoom.Write (cw);
+
+			cw.WriteLine ("}");
 		}
 
-		string FindManagedMember (EnumDescription desc, string enumFieldName, IEnumerable<GenBase> gens)
+		EnumWriter CreateWriter (CodeGenerationOptions opt, KeyValuePair<string, EnumDescription> enu, GenBase [] gens)
+		{
+			var enoom = new EnumWriter {
+				Name = enu.Key.Substring (enu.Key.LastIndexOf ('.') + 1).Trim (),
+				IsPublic = true
+			};
+
+			if (enu.Value.BitField)
+				enoom.Attributes.Add (new FlagsAttr ());
+
+			foreach (var member in enu.Value.Members) {
+				var m = new EnumMemberWriter {
+					Name = member.EnumMember.Trim (),
+					Value = member.Value.Trim (),
+				};
+
+				var managedMember = FindManagedMember (enu.Value, member, gens);
+
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
+					m.Attributes.Add (new IntDefinitionAttr (managedMember, StripExtraInterfaceSpec (member.JavaSignature)));
+
+				enoom.Members.Add (m);
+			}
+
+			return enoom;
+		}
+
+		string FindManagedMember (EnumDescription desc, ConstantEntry member, IEnumerable<GenBase> gens)
 		{
 			if (desc.FieldsRemoved)
 				return null;
 
-			var jniMember = desc.JniNames [enumFieldName];
+			var jniMember = member.JavaSignature;
 			if (string.IsNullOrWhiteSpace (jniMember)) {
 				// enum values like "None" falls here.
 				return null;

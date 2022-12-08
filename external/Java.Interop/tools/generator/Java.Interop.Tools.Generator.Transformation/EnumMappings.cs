@@ -20,8 +20,7 @@ namespace MonoDroid.Generation {
 	partial class EnumMappings {
 
 		public class EnumDescription {
-			public Dictionary<string, string> Members = new Dictionary<string, string> ();
-			public Dictionary<string, string> JniNames = new Dictionary<string, string> ();
+			public List<ConstantEntry> Members = new List<ConstantEntry> ();
 			public bool BitField;
 			public bool FieldsRemoved;
 		}
@@ -69,10 +68,7 @@ namespace MonoDroid.Generation {
 					BitField = group.Any (c => c.IsFlags) || enumFlags?.Contains (group.Key) == true
 				};
 
-				foreach (var c in group) {
-					desc.Members.Add (c.EnumMember, c.Value);
-					desc.JniNames.Add (c.EnumMember, c.JavaSignature);
-				}
+				desc.Members.AddRange (group);
 
 				enums.Add (group.Key, desc);
 			}

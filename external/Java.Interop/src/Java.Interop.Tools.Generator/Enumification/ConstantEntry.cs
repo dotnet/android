@@ -163,6 +163,8 @@ namespace Java.Interop.Tools.Generator.Enumification
 			return entry;
 		}
 
+		public override string ToString () => $"[{EnumMember}, {Value}]";
+
 		public string ToVersion2String ()
 		{
 			var fields = new [] {
