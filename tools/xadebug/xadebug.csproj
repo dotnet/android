@@ -34,6 +34,7 @@
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
+    <PackageReference Include="MSBuild.StructuredLogger" Version="2.1.500" />
   </ItemGroup>
 
   <ItemGroup>
