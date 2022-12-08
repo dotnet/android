@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks
 				}
 				try {
 					ProcessAssembly (assemblyItem, output);
-				} catch (FileNotFoundException) {
+				} catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException) {
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyItem.ItemSpec}'.");
 				}
 				
