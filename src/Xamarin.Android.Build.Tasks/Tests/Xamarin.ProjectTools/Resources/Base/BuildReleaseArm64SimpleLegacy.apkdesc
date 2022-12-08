@@ -8,13 +8,13 @@
       "Size": 68923
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 265142
+      "Size": 265140
     },
     "assemblies/mscorlib.dll": {
-      "Size": 769035
+      "Size": 769036
     },
     "assemblies/System.Core.dll": {
-      "Size": 28216
+      "Size": 28215
     },
     "assemblies/System.dll": {
       "Size": 9191
@@ -41,7 +41,7 @@
       "Size": 66184
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 21248
+      "Size": 21264
     },
     "META-INF/ANDROIDD.RSA": {
       "Size": 1213
