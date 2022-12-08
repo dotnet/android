@@ -124,9 +124,6 @@ namespace Java.Interop.Tools.Cecil {
 
 		public virtual AssemblyDefinition? Load (string fileName, bool forceLoad = false)
 		{
-			if (!File.Exists (fileName))
-				return null;
-
 			AssemblyDefinition? assembly = null;
 			var name = Path.GetFileNameWithoutExtension (fileName);
 			if (!forceLoad && cache.TryGetValue (name, out assembly))
@@ -134,6 +131,9 @@ namespace Java.Interop.Tools.Cecil {
 
 			try {
 				assembly  = ReadAssembly (fileName);
+			} catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException) {
+				// These are ok, we can return null
+				return null;
 			} catch (Exception e) {
 				Diagnostic.Error (9, e, Localization.Resources.CecilResolver_XA0009, fileName);
 			}
@@ -144,8 +144,8 @@ namespace Java.Interop.Tools.Cecil {
 		protected virtual AssemblyDefinition ReadAssembly (string file)
 		{
 			bool haveDebugSymbols = loadDebugSymbols &&
-				(File.Exists (file + ".mdb") ||
-				 File.Exists (Path.ChangeExtension (file, ".pdb")));
+				(File.Exists (Path.ChangeExtension (file, ".pdb")) ||
+				 File.Exists (file + ".mdb"));
 			var reader_parameters = new ReaderParameters () {
 				ApplyWindowsRuntimeProjections  = loadReaderParameters.ApplyWindowsRuntimeProjections,
 				AssemblyResolver                = this,
