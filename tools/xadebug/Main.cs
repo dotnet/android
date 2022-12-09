@@ -11,21 +11,29 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Debug;
 
+sealed class ParsedOptions
+{
+	public bool ShowHelp;
+	public bool Verbose = true; // TODO: remove the default once development is done
+	public string Configuration = "Debug";
+	public string? PackageName;
+	public string? Activity;
+	public string DotNetCommand = "dotnet";
+	public string WorkDirectory = "xadebug-data";
+	public string AdbPath = "adb";
+	public string? TargetDevice;
+	public string? NdkDirPath;
+}
+
 class XADebug
 {
-	sealed class ParsedOptions
-	{
-		public bool ShowHelp;
-		public bool Verbose = true; // TODO: remove the default once development is done
-		public string Configuration = "Debug";
-		public string? PackageName;
-		public string? Activity;
-		public string DotNetCommand = "dotnet";
-		public string WorkDirectory = "xadebug-data";
-	}
-
 	const string AndroidManifestZipPath = "AndroidManifest.xml";
 	const string DefaultMinSdkVersion = "21";
+
+	static readonly string[] NdkEnvvars = {
+		"ANDROID_NDK_PATH",
+		"ANDROID_NDK_ROOT",
+	};
 
 	static XamarinLoggingHelper log = new XamarinLoggingHelper ();
 
@@ -43,6 +51,10 @@ class XADebug
 			{ "a|activity=", "Name of the {ACTIVITY} to start the application. Default: determined from AndroidManifest.xml inside the APK", v => parsedOptions.Activity = v },
 			{ "d|dotnet=", $"Name of the dotnet {{COMMAND}} to use when building a project. Defaults to {parsedOptions.DotNetCommand}", v => parsedOptions.DotNetCommand = v },
 			{ "w|work-dir=", $"{{DIRECTORY}} in which xadebug will store build and debug logs, as well as shared libraries with symbols. Default: {parsedOptions.WorkDirectory}", v => parsedOptions.WorkDirectory = v },
+			"",
+			{ "s|adb=", "{PATH} to adb to use for this session", v => parsedOptions.AdbPath = EnsureNonEmptyString (log, "-s|--adb", v, ref haveOptionErrors) },
+			{ "e|device=", "ID of {DEVICE} to target for this session", v => parsedOptions.TargetDevice = EnsureNonEmptyString (log, "-e|--device", v, ref haveOptionErrors) },
+			{ "n|ndk-dir=", "{PATH} to to the Android NDK root directory", v => parsedOptions.NdkDirPath = v },
 			"",
 			{ "v|verbose", "Show debug messages", v => parsedOptions.Verbose = true },
 			{ "h|help|?", "Show this help screen", v => parsedOptions.ShowHelp = true },
@@ -68,20 +80,48 @@ class XADebug
 			haveOptionErrors = true;
 		}
 
+		if (String.IsNullOrEmpty (parsedOptions.NdkDirPath)) {
+			string? ndk = null;
+
+			foreach (string envvar in NdkEnvvars) {
+				log.DebugLine ($"Trying to read NDK path environment variable '{envvar}'");
+				ndk = Environment.GetEnvironmentVariable (envvar);
+				if (!String.IsNullOrEmpty (ndk)) {
+					log.DebugLine ($"Potential NDK location: {ndk}");
+					break;
+				}
+			}
+
+			if (String.IsNullOrEmpty (ndk)) {
+				log.ErrorLine ("Unable to locate Android NDK from environment variables");
+				log.MessageLine ("Please provide path to the NDK using the '-n|--ndk' argument");
+				haveOptionErrors = true;
+			} else {
+				parsedOptions.NdkDirPath = ndk;
+			}
+		}
+
+		if (!Directory.Exists (parsedOptions.NdkDirPath)) {
+			log.ErrorLine ($"NDK directory '{parsedOptions.NdkDirPath}' does not exist");
+			return 1;
+		}
+
 		if (haveOptionErrors) {
 			return 1;
 		}
+
+		log.StatusLine ("Using NDK", parsedOptions.NdkDirPath);
 
 		string aPath = rest[0];
 		string? apkFilePath = null;
 		ZipArchive? apk = null;
 
 		if (Directory.Exists (aPath)) {
-			apkFilePath = BuildApp (aPath, parsedOptions);
+			apkFilePath = BuildApp (aPath, parsedOptions, projectPathIsDirectory: true);
 		} else if (File.Exists (aPath)) {
 			if (String.Compare (".csproj", Path.GetExtension (aPath), StringComparison.OrdinalIgnoreCase) == 0) {
 				// Let's see if we can trust the file name...
-				apkFilePath = BuildApp (aPath, parsedOptions);
+				apkFilePath = BuildApp (aPath, parsedOptions, projectPathIsDirectory: false);
 			} else if (IsAndroidPackageFile (aPath, out apk)) {
 				apkFilePath = aPath;
 			} else {
@@ -96,6 +136,8 @@ class XADebug
 		if (String.IsNullOrEmpty (apkFilePath)) {
 			return 1;
 		}
+
+		log.StatusLine ("Input APK", apkFilePath);
 
 		if (apk == null) {
 			apk = OpenApk (apkFilePath);
@@ -116,7 +158,8 @@ class XADebug
 			return 1;
 		}
 
-		return 0;
+		var debugSession = new DebugSession (log, apkFilePath, apk, parsedOptions);
+		return debugSession.Prepare () ? 0 : 1;
 	}
 
 	static ApplicationInfo? ReadManifest (ZipArchive apk, ParsedOptions parsedOptions)
@@ -235,12 +278,12 @@ class XADebug
 		return null;
 	}
 
-	static string? EnsureNonEmptyString (XamarinLoggingHelper log, string paramName, string? value, ref bool haveOptionErrors)
+	static string EnsureNonEmptyString (XamarinLoggingHelper log, string paramName, string? value, ref bool haveOptionErrors)
 	{
 		if (String.IsNullOrEmpty (value)) {
 			haveOptionErrors = true;
 			log.ErrorLine ($"Parameter '{paramName}' requires a non-empty string as its value");
-			return null;
+			return String.Empty;
 		}
 
 		return value;
@@ -261,7 +304,7 @@ class XADebug
 		return apk.ContainsEntry (AndroidManifestZipPath);
 	}
 
-	static string? BuildApp (string projectPath, ParsedOptions parsedOptions)
+	static string? BuildApp (string projectPath, ParsedOptions parsedOptions, bool projectPathIsDirectory)
 	{
 		var dotnet = new DotNetRunner (log, parsedOptions.DotNetCommand, parsedOptions.WorkDirectory);
 		string? logPath = dotnet.Build (
@@ -273,10 +316,17 @@ class XADebug
 			"-p:_AndroidEnableNativeDebugging=True",
 			"-p:_AndroidStripNativeLibraries=False"
 		).Result;
-		string? apkPath = FindApkPathFromLog (logPath);
+
+		if (String.IsNullOrEmpty (logPath)) {
+			return null;
+		}
+
+		string projectDir = projectPathIsDirectory ? projectPath : Path.GetDirectoryName (projectPath) ?? ".";
+		string? apkPath = FindApkPathFromLog (projectDir, logPath);
 
 		if (String.IsNullOrEmpty (apkPath)) {
-			apkPath = TryToGuessApkPath (projectPath, parsedOptions);
+			log.DebugLine ("Could not get APK path from build log, trying to guess");
+			apkPath = TryToGuessApkPath (projectDir, parsedOptions);
 		}
 
 		if (String.IsNullOrEmpty (apkPath)) {
@@ -287,19 +337,16 @@ class XADebug
 			return null;
 		}
 
+		if (!File.Exists (apkPath)) {
+			log.ErrorLine ($"APK file '{apkPath}' not found after build");
+			return null;
+		};
+
 		return apkPath;
 	}
 
-	static string? TryToGuessApkPath (string projectPath, ParsedOptions parsedOptions)
+	static string? TryToGuessApkPath (string projectDir, ParsedOptions parsedOptions)
 	{
-		string projectDir;
-
-		if (File.Exists (projectPath)) {
-			projectDir = Path.GetDirectoryName (projectPath) ?? ".";
-		} else {
-			projectDir = projectPath;
-		}
-
 		log.DebugLine ("Trying to find application APK in {projectDir}");
 
 		string binDir = Path.Combine (projectDir, "bin", parsedOptions.Configuration);
@@ -327,7 +374,7 @@ class XADebug
 			LogPotentialPath (apkPath);
 
 			if (File.Exists (apkPath)) {
-				return LogFoundAndReturn (apkPath);
+				return LogFoundApkPathAndReturn (apkPath);
 			}
 		}
 
@@ -356,7 +403,7 @@ class XADebug
 			selectedApkPath = apkFiles[0];
 		}
 
-		return LogFoundAndReturn (selectedApkPath);
+		return LogFoundApkPathAndReturn (selectedApkPath);
 
 		void AddApkIfExists (string apkPath, List<string> apkFiles)
 		{
@@ -371,23 +418,35 @@ class XADebug
 		{
 			log.DebugLine ($"Trying path: {path}");
 		}
-
-		string LogFoundAndReturn (string path)
-		{
-			log.DebugLine ($"Returning APK path: {path}");
-			return path;
-		}
 	}
 
-	static string? FindApkPathFromLog (string? logPath)
+	static string? FindApkPathFromLog (string projectDir, string? logPath)
 	{
 		if (String.IsNullOrEmpty (logPath)) {
 			return null;
 		}
 
+		log.DebugLine ($"Trying to find APK file path in the build log ('{logPath}')");
+
 		Build build = BinaryLog.ReadBuild (logPath);
-		// TODO: figure out how to find the `_Sign` target's Outputs...
+		foreach (Property prop in build.FindChildrenRecursive<Property> ()) {
+			if (String.Compare ("ApkFileSigned", prop.Name, StringComparison.Ordinal) != 0) {
+				continue;
+			}
+
+			if (Path.IsPathRooted (prop.Value)) {
+				return LogFoundApkPathAndReturn (prop.Value);
+			}
+
+			return LogFoundApkPathAndReturn (Path.Combine (projectDir, prop.Value));
+		}
 
 		return null;
+	}
+
+	static string LogFoundApkPathAndReturn (string path)
+	{
+		log.DebugLine ($"Returning APK path: {path}");
+		return path;
 	}
 }

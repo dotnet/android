@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Java.Interop.Tools.JavaCallableWrappers;
 using Xamarin.Android.Utilities;
 
 namespace Xamarin.Android.Debug;
@@ -74,5 +75,24 @@ static class Utilities
 		}
 
 		return Path.Combine (localDirectory, remotePathLocalFormat);
+	}
+
+	public static string StringHash (string input, Encoding? encoding = null)
+	{
+		if (encoding == null) {
+			encoding = UTF8NoBOM;
+		}
+
+		byte[] hash = Crc64Helper.Compute (encoding.GetBytes (input));
+		if (hash.Length == 0) {
+			return input.GetHashCode ().ToString ("x");
+		}
+
+		var sb = new StringBuilder ();
+		foreach (byte b in hash) {
+			sb.Append (b.ToString ("x02"));
+		}
+
+		return sb.ToString ();
 	}
 }

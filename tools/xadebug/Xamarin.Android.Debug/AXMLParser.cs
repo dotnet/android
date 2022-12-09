@@ -122,7 +122,6 @@ class AXMLParser
 
 	readonly XamarinLoggingHelper log;
 
-	bool axmlTampered;
 	Stream data;
 	long dataSize;
 	ARSCHeader axmlHeader;
@@ -168,12 +167,10 @@ class AXMLParser
 		}
 
 		if (fileSize < dataSize) {
-			axmlTampered = true;
 			log.WarningLine ($"Declared data size ({fileSize}) is smaller than total data size ({dataSize}). Was something appended to the file? Trying to parse it anyways.");
 		}
 
 		if (axmlHeader.Type != ChunkType.Xml) {
-			axmlTampered = true;
 			log.WarningLine ($"AXML file has an unusual resource type, trying to parse it anyways. Resource Type: 0x{(ushort)axmlHeader.Type:04x}");
 		}
 
@@ -294,7 +291,7 @@ class AXMLParser
 			uint tagNsUriIndex;
 			uint tagNameIndex;
 			string? tagName;
-			string? tagNs; // TODO: implement
+//			string? tagNs; // TODO: implement
 
 			if (header.Type == ChunkType.XmlStartElement) {
 				// The TAG consists of some fields:
@@ -370,7 +367,7 @@ class AXMLParser
 
 				tagName = stringPool.GetString (tagNameIndex);
 				log.DebugLine ($"End of tag '{tagName}', NS URI index {tagNsUriIndex}");
-				currentNode = currentNode.ParentNode!;
+				currentNode = currentNode?.ParentNode!;
 				continue;
 			}
 

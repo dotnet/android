@@ -7,6 +7,8 @@ using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Utilities;
 
+using Utils = Xamarin.Android.Debug.Utilities;
+
 class DotNetRunner : ToolRunner
 {
 	class StreamOutputSink : ToolOutputSink
@@ -39,8 +41,7 @@ class DotNetRunner : ToolRunner
 	/// </summary>
 	public async Task<string?> Build (string projectPath, string configuration, params string[] extraArgs)
 	{
-		// TODO: use CRC64 instead of GetHashCode(), as the latter is not deterministic in .NET6+
-		string projectWorkDir = Path.Combine (workDirectory, projectPath.GetHashCode ().ToString ("x"));
+		string projectWorkDir = Path.Combine (workDirectory, Utils.StringHash (projectPath));
 
 		Directory.CreateDirectory (projectWorkDir);
 		string binlogPath = Path.Combine (projectWorkDir, "build.binlog");
@@ -48,8 +49,14 @@ class DotNetRunner : ToolRunner
 		var runner = CreateProcessRunner ("build");
 		runner.
 			AddArgument ("-c").AddArgument (configuration).
-			AddArgument ($"-bl:\"{binlogPath}\"").
-			AddQuotedArgument (projectPath);
+			AddArgument ($"-bl:\"{binlogPath}\"");
+
+		if (extraArgs != null && extraArgs.Length > 0) {
+			foreach (string arg in extraArgs) {
+				runner.AddArgument (arg);
+			}
+		}
+		runner.AddQuotedArgument (projectPath);
 
 		if (!await RunDotNet (runner)) {
 			return null;
@@ -82,7 +89,7 @@ class DotNetRunner : ToolRunner
 
 		string logOutput = Path.ChangeExtension (binlogPath, ".txt");
 		using var fs = File.Open (logOutput, FileMode.Create);
-		using var sw = new StreamWriter (fs, Xamarin.Android.Debug.Utilities.UTF8NoBOM);
+		using var sw = new StreamWriter (fs, Utils.UTF8NoBOM);
 		using var sink = new StreamOutputSink (Logger, sw);
 
 		try {

@@ -7,6 +7,7 @@
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
     <DefineConstants>NO_MSBUILD</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <Authors>Marek Habersack</Authors>
     <Company>Microsoft Corporation</Company>
@@ -19,7 +20,6 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/xamarin/xamarin-android</RepositoryUrl>
     <RollForward>Major</RollForward>
-
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +28,16 @@
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ProcessRunner.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ProcessStandardStreamWrapper.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ToolRunner.cs" />
+
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
+      <Link>Crc64.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs">
+      <Link>Crc64Helper.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
+      <Link>Crc64.Table.cs</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
