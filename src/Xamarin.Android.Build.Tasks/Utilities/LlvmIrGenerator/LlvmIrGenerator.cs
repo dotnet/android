@@ -537,7 +537,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.Write (info.NativeTypeDesignator);
 			Output.Write ('.');
 			Output.Write (info.Name);
-
 			if (isArrayOfPointers)
 				Output.Write ('*');
 			Output.Write ("] zeroinitializer");
