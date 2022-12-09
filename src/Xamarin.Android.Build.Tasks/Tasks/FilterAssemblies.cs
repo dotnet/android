@@ -42,55 +42,60 @@ namespace Xamarin.Android.Tasks
 				if (frameworkReferenceName.StartsWith ("Microsoft.NETCore.", StringComparison.OrdinalIgnoreCase)) {
 					continue; // No need to process BCL assemblies
 				}
-				if (!File.Exists (assemblyItem.ItemSpec)) {
-					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyItem.ItemSpec}'.");
-					continue;
-				}
 				if (string.Equals (assemblyItem.GetMetadata ("TargetPlatformIdentifier"), "android", StringComparison.OrdinalIgnoreCase)) {
 					output.Add (assemblyItem);
 					continue;
 				}
-				using (var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec))) {
-					var reader = pe.GetMetadataReader ();
-					// Check in-memory cache
-					var module = reader.GetModuleDefinition ();
-					var key = (nameof (FilterAssemblies), reader.GetGuid (module.Mvid));
-					var value = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal (key, Lifetime);
-					if (value is bool isMonoAndroidAssembly) {
-						if (isMonoAndroidAssembly) {
-							Log.LogDebugMessage ($"Cached: {assemblyItem.ItemSpec}");
-							output.Add (assemblyItem);
-						}
-						continue;
-					}
-					// Check assembly definition
-					var assemblyDefinition = reader.GetAssemblyDefinition ();
-					if (IsAndroidAssembly (assemblyDefinition, reader)) {
-						output.Add (assemblyItem);
-						BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
-						continue;
-					}
-					// Fallback to looking for a Mono.Android reference
-					if (MonoAndroidHelper.HasMonoAndroidReference (reader)) {
-						Log.LogDebugMessage ($"Mono.Android reference found: {assemblyItem.ItemSpec}");
-						output.Add (assemblyItem);
-						BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
-						continue;
-					}
-					// Fallback to looking for *.jar or __Android EmbeddedResource files
-					if (HasEmbeddedResource (reader)) {
-						Log.LogDebugMessage ($"EmbeddedResource found: {assemblyItem.ItemSpec}");
-						output.Add (assemblyItem);
-						BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
-						continue;
-					}
-					// Not a MonoAndroid assembly, store false
-					BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: false, Lifetime);
+				try {
+					ProcessAssembly (assemblyItem, output);
+				} catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException) {
+					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyItem.ItemSpec}'.");
 				}
+				
 			}
 			OutputAssemblies = output.ToArray ();
 
 			return !Log.HasLoggedErrors;
+		}
+
+		void ProcessAssembly(ITaskItem assemblyItem, List<ITaskItem> output)
+		{
+			using var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec));
+			var reader = pe.GetMetadataReader ();
+			// Check in-memory cache
+			var module = reader.GetModuleDefinition ();
+			var key = (nameof (FilterAssemblies), reader.GetGuid (module.Mvid));
+			var value = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal (key, Lifetime);
+			if (value is bool isMonoAndroidAssembly) {
+				if (isMonoAndroidAssembly) {
+					Log.LogDebugMessage ($"Cached: {assemblyItem.ItemSpec}");
+					output.Add (assemblyItem);
+				}
+				return;
+			}
+			// Check assembly definition
+			var assemblyDefinition = reader.GetAssemblyDefinition ();
+			if (IsAndroidAssembly (assemblyDefinition, reader)) {
+				output.Add (assemblyItem);
+				BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
+				return;
+			}
+			// Fallback to looking for a Mono.Android reference
+			if (MonoAndroidHelper.HasMonoAndroidReference (reader)) {
+				Log.LogDebugMessage ($"Mono.Android reference found: {assemblyItem.ItemSpec}");
+				output.Add (assemblyItem);
+				BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
+				return;
+			}
+			// Fallback to looking for *.jar or __Android EmbeddedResource files
+			if (HasEmbeddedResource (reader)) {
+				Log.LogDebugMessage ($"EmbeddedResource found: {assemblyItem.ItemSpec}");
+				output.Add (assemblyItem);
+				BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
+				return;
+			}
+			// Not a MonoAndroid assembly, store false
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: false, Lifetime);
 		}
 
 		bool IsAndroidAssembly (AssemblyDefinition assembly, MetadataReader reader)
