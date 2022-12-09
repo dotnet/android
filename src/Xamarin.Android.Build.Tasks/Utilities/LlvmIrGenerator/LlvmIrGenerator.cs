@@ -477,12 +477,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			WriteGlobalSymbolStart (variableName, preAllocatedBufferVariableOptions, output);
 			ulong size = bufferSize * smi.BaseTypeSize;
+
+			// WriteLine $"[{bufferSize} x {irType}] zeroinitializer, align {GetAggregateAlignment ((int)smi.BaseTypeSize, size)}"
 			output.Write ('[');
 			output.Write (bufferSize);
 			output.Write (" x ");
 			output.Write (irType);
 			output.Write ("] zeroinitializer, align ");
 			output.WriteLine (GetAggregateAlignment ((int) smi.BaseTypeSize, size));
+
 			instance.AddPointerData (smi, variableName, size);
 			return true;
 		}
@@ -526,12 +529,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null, bool isArrayOfPointers = false)
 		{
 			bool named = WriteStructureArrayStart<T> (info, null, options, symbolName, initialComment);
+
+			// $"[{count} x %{info.NativeTypeDesignator}.{info.Name}{pointerAsterisk}] zeroinitializer"
 			Output.Write ('[');
 			Output.Write (count);
 			Output.Write (" x %");
 			Output.Write (info.NativeTypeDesignator);
 			Output.Write ('.');
 			Output.Write (info.Name);
+
 			if (isArrayOfPointers)
 				Output.Write ('*');
 			Output.Write ("] zeroinitializer");
@@ -559,6 +565,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			bool named = WriteStructureArrayStart<T> (info, instances, options, symbolName, initialComment, arrayOutput);
 			int count = instances != null ? instances.Count : 0;
 
+			// $"[{count} x %{info.NativeTypeDesignator}.{info.Name}] "
 			arrayOutput.Write ('[');
 			arrayOutput.Write (count);
 			arrayOutput.Write (" x %");
@@ -566,6 +573,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			arrayOutput.Write ('.');
 			arrayOutput.Write (info.Name);
 			arrayOutput.Write ("] ");
+
 			if (instances != null) {
 				var bodyWriterOptions = new StructureBodyWriterOptions (
 					writeFieldComment: true,
@@ -636,11 +644,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			WriteGlobalSymbolStart (symbolName, options);
 			string elementType = MapManagedTypeToIR (typeof (T), out ulong size);
+
+			// WriteLine $"[{values.Count} x {elementType}] ["
 			Output.Write ('[');
 			Output.Write (values.Count);
 			Output.Write (" x ");
 			Output.Write (elementType);
 			Output.WriteLine ("] [");
+
 			Output.Write (Indent);
 			for (int i = 0; i < values.Count; i++) {
 				if (i != 0) {
@@ -651,6 +662,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 							Output.Write (i - 8);
 							Output.Write ("..");
 							Output.WriteLine (i - 1);
+
 							Output.Write (Indent);
 						} else {
 							Output.Write (' ');
@@ -763,6 +775,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions options, Action<LlvmIrGenerator, StructureBodyWriterOptions, Type, object>? nestedStructureWriter = null)
 		{
 			TextWriter structureOutput = EnsureOutput (options.StructureOutput);
+
+			// $"{options.StructIndent}%{info.NativeTypeDesignator}.{info.Name} "
 			structureOutput.Write (options.StructIndent);
 			structureOutput.Write ('%');
 			structureOutput.Write (info.NativeTypeDesignator);
@@ -969,6 +983,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 							continue;
 						}
 
+						// $"<{{ {psm.ValueIRType}, {psm.PaddingIRType} }}>"
 						instanceType.Append ("<{ ");
 						instanceType.Append (psm.ValueIRType);
 						instanceType.Append (", ");
@@ -1002,6 +1017,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					if (!firstField && previousFieldWasPadded) {
 						structureBodyOutput.Write (", ");
 					}
+
+					// $"{bodyWriterOptions.FieldIndent}<{{ {psm.ValueIRType}, {psm.PaddingIRType} }}> <{{ {psm.ValueIRType} c{QuoteString ((byte[])psm.Value)}, {psm.PaddingIRType} zeroinitializer }}> "
 					structureBodyOutput.Write (bodyWriterOptions.FieldIndent);
 					structureBodyOutput.Write ("<{ ");
 					structureBodyOutput.Write (psm.ValueIRType);
@@ -1014,6 +1031,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					structureBodyOutput.Write (", ");
 					structureBodyOutput.Write (psm.PaddingIRType);
 					structureBodyOutput.Write (" zeroinitializer }> ");
+
 					MaybeWriteFieldComment (info, psm.MemberInfo, instance, bodyWriterOptions, value: null, output: structureBodyOutput);
 					previousFieldWasPadded = true;
 				}
@@ -1143,6 +1161,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					irBaseType = irType;
 				}
 
+				// $"{irType} getelementptr inbounds ([{size} x {irBaseType}], [{size} x {irBaseType}]* @{variableName}, i32 0, i32 0)"
 				output.Write (irType);
 				output.Write (" getelementptr inbounds ([");
 				output.Write (size);
@@ -1195,6 +1214,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		void WriteStringArray (string symbolName, LlvmIrVariableOptions options, List<StringSymbolInfo> strings)
 		{
 			WriteGlobalSymbolStart (symbolName, options);
+
+			// $"[{strings.Count} x i8*]"
 			Output.Write ('[');
 			Output.Write (strings.Count);
 			Output.Write (" x i8*]");
@@ -1324,6 +1345,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			// It might seem counter-intuitive that when we're requested to write a global string, here we generate a **local** one,
 			// but global strings are actually pointers to local storage.
 			WriteGlobalSymbolStart (strSymbolName, global ? LlvmIrVariableOptions.LocalConstexprString : options);
+
+			// WriteLine $"[{stringSize} x i8] c{quotedString}, align {GetAggregateAlignment (1, stringSize)}"
 			Output.Write ('[');
 			Output.Write (stringSize);
 			Output.Write (" x i8] c");
@@ -1337,6 +1360,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			string indexType = Is64Bit ? "i64" : "i32";
 			WriteGlobalSymbolStart (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer);
+
+			// WriteLine $"i8* getelementptr inbounds ([{stringSize} x i8], [{stringSize} x i8]* @{strSymbolName}, {indexType} 0, {indexType} 0), align {GetAggregateAlignment (PointerSize, stringSize)}"
 			Output.Write ("i8* getelementptr inbounds ([");
 			Output.Write (stringSize);
 			Output.Write (" x i8], [");
@@ -1422,11 +1447,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public void WriteStructureDeclarationStart (string typeDesignator, string name, bool forOpaqueType = false)
 		{
 			WriteEOL ();
+
+			// $"%{typeDesignator}.{name} = type "
 			Output.Write ('%');
 			Output.Write (typeDesignator);
 			Output.Write ('.');
 			Output.Write (name);
 			Output.Write (" = type ");
+
 			if (forOpaqueType) {
 				Output.WriteLine ("opaque");
 			} else {
