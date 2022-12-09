@@ -721,13 +721,8 @@ using System.Runtime.Serialization.Json;
 				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha2",
 				ProjectName = "Test.Nuget.Package",
 				IsRelease = true,
-				ExtraNuGetConfigSources = {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json",
-				},
 			};
+			nuget.AddNuGetSourcesForOlderTargetFrameworks ();
 			nuget.Sources.Clear ();
 			nuget.Sources.Add (new AndroidItem.AndroidResource ("Resources/values/Strings.xml") {
 						TextContent = () => @"<resources>
