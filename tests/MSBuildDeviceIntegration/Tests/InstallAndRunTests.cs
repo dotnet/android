@@ -707,7 +707,7 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void ResourceDesignerWithNuGetReference ([Values ("net6.0-android32.0", "net7.0-android33.0", "net8.0-android33.0")] string dotnetTargetFramework)
+		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android33.0")] string dotnetTargetFramework)
 		{
 			AssertHasDevices ();
 
