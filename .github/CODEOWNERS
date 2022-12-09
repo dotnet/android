@@ -34,7 +34,7 @@
 /src/Xamarin.Android.Build.Tasks/Linker @jonpryor
 /src/Xamarin.Android.Build.Tasks/Utilities/LlvmIrGenerator @grendello
 /src/Xamarin.Android.Build.Tasks/Utilities/TypeMap* @grendello
-/src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethods* @grendell
+/src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethods* @grendello
 /src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig* @grendello
 /src/Xamarin.Android.Build.Tasks/Utilities/*AssemblyStore* @grendello
 /src/Xamarin.Android.Build.Tasks/Utilities/AssemblyCompression* @grendello
