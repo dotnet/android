@@ -707,7 +707,7 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void ResourceDesignerWithNuGetReference ([Values ("net6.0-android32.0", "net7.0-android33.0")] string dotnetTargetFramework)
+		public void ResourceDesignerWithNuGetReference ([Values ("net6.0-android32.0", "net7.0-android33.0", "net8.0-android33.0")] string dotnetTargetFramework)
 		{
 			AssertHasDevices ();
 
@@ -725,6 +725,7 @@ using System.Runtime.Serialization.Json;
 					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
 					"https://api.nuget.org/v3/index.json",
 					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
+					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json",
 				},
 			};
 			nuget.Sources.Clear ();
