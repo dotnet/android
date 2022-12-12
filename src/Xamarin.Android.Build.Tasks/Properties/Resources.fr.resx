@@ -470,6 +470,24 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>La propriété MSBuild « RunAOTCompilation » n’est prise en charge que lorsque le découpage est activé. Modifiez le fichier projet dans un éditeur de texte pour définir « PublishTrimmed » sur « true » pour cette configuration de build.</value>
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
+  <data name="XA1031" xml:space="preserve">
+    <value>The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.
+Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
+{0} - The value of the property.
+{1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
+  </data>
+  <data name="XA1032" xml:space="preserve">
+    <value>Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
+{0} - The value of the property.
+{1} - The name of the assembly.</comment>
+  </data>
+  <data name="XA1033" xml:space="preserve">
+    <value>Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
+{0} - The value of the property.</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Utilisation de AppDomain.CreateDomain() détectée dans l'assembly : {0}. .NET 6 et les versions ultérieures prend uniquement en charge un seul AppDomain. Cette API ne sera donc plus disponible dans Xamarin.Android après la publication de .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
