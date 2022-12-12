@@ -135,10 +135,11 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _IncludeLayoutBindingSources;
       AddLibraryJarsToBind;
       $(CompileDependsOn);
+      _CheckAndroidHttpClientHandlerType;
     </CompileDependsOn>
     <CoreCompileDependsOn>
       UpdateGeneratedFiles;
-      $(CoreCompileDependsOn)
+      $(CoreCompileDependsOn);
     </CoreCompileDependsOn>
     <DeferredBuildDependsOn>
       $(DeferredBuildDependsOn);
