@@ -293,12 +293,14 @@ namespace generator.SourceWriters
 		}
 
 		public static void AddSupportedOSPlatform (List<AttributeWriter> attributes, ApiVersionsSupport.IApiAvailability member, CodeGenerationOptions opt)
+			=> AddSupportedOSPlatform (attributes, member.ApiAvailableSince, opt);
+
+		public static void AddSupportedOSPlatform (List<AttributeWriter> attributes, int since, CodeGenerationOptions opt)
 		{
 			// There's no sense in writing say 'android15' because we do not support older APIs,
 			// so those APIs will be available in all of our versions.
-			if (member.ApiAvailableSince > 21 && opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1)
-				attributes.Add (new SupportedOSPlatformAttr (member.ApiAvailableSince));
-
+			if (since > 21 && opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1)
+				attributes.Add (new SupportedOSPlatformAttr (since));
 		}
 
 		public static void AddObsolete (List<AttributeWriter> attributes, string message, CodeGenerationOptions opt, bool forceDeprecate = false, bool isError = false, int? deprecatedSince = null)

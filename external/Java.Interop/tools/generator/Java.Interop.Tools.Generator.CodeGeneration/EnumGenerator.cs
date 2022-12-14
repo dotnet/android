@@ -50,10 +50,20 @@ namespace MonoDroid.Generation
 					Value = member.Value.Trim (),
 				};
 
+				// Try to find the original field in our model
 				var managedMember = FindManagedMember (enu.Value, member, gens);
+				var managedMemberName = managedMember != null ? $"{managedMember.Value.Cls.FullName}.{managedMember.Value.Field.Name}" : null;
 
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
-					m.Attributes.Add (new IntDefinitionAttr (managedMember, StripExtraInterfaceSpec (member.JavaSignature)));
+					m.Attributes.Add (new IntDefinitionAttr (managedMemberName, StripExtraInterfaceSpec (member.JavaSignature)));
+
+				SourceWriterExtensions.AddSupportedOSPlatform (m.Attributes, member.ApiLevel, opt);
+
+				// Some of our source fields may have been marked with:
+				// "This constant will be removed in the future version. Use XXX enum directly instead of this field."
+				// We don't want this message to propogate to the enum.
+				if (managedMember != null && managedMember.Value.Field?.DeprecatedComment?.Contains ("enum directly instead of this field") == false)
+					SourceWriterExtensions.AddObsolete (m.Attributes, managedMember.Value.Field.DeprecatedComment, opt, deprecatedSince: managedMember.Value.Field.DeprecatedSince);
 
 				enoom.Members.Add (m);
 			}
@@ -61,25 +71,22 @@ namespace MonoDroid.Generation
 			return enoom;
 		}
 
-		string FindManagedMember (EnumDescription desc, ConstantEntry member, IEnumerable<GenBase> gens)
+		WeakReference cache_found_class;
+
+		(GenBase Cls, Field Field)? FindManagedMember (EnumDescription desc, ConstantEntry constant, IEnumerable<GenBase> gens)
 		{
 			if (desc.FieldsRemoved)
 				return null;
 
-			var jniMember = member.JavaSignature;
+			var jniMember = constant.JavaSignature;
+
 			if (string.IsNullOrWhiteSpace (jniMember)) {
 				// enum values like "None" falls here.
 				return null;
 			}
-			return FindManagedMember (jniMember, gens);
-		}
 
-		WeakReference cache_found_class;
+			ParseJniMember (jniMember, out var package, out var type, out var member);
 
-		string FindManagedMember (string jniMember, IEnumerable<GenBase> gens)
-		{
-			string package, type, member;
-			ParseJniMember (jniMember, out package, out type, out member);
 			var fullJavaType = (string.IsNullOrEmpty (package) ? "" : package + ".") + type;
 
 			var cls = cache_found_class != null ? cache_found_class.Target as GenBase : null;
@@ -96,7 +103,7 @@ namespace MonoDroid.Generation
 				// The field was not found e.g. removed by metadata fixup.
 				return null;
 			}
-			return cls.FullName + "." + fld.Name;
+			return (cls, fld);
 		}
 
 		internal void ParseJniMember (string jniMember, out string package, out string type, out string member)
