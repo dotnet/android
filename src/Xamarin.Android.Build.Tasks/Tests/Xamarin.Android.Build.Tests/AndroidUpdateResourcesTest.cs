@@ -651,7 +651,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckThatXA1031IsRaisedForInvalidConfiguration ([Values (true, false)] bool isRelease)
+		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([Values (true, false)] bool isRelease)
 		{
 			if (!Builder.UseDotNet)
 				Assert.Ignore ("Test uses designer assembly which does not work on Legacy projects.");
@@ -688,7 +688,7 @@ namespace Lib1 {
 				using (var pb = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
 					pb.ThrowOnBuildFailure = false;
 					Assert.IsFalse (pb.Build (proj), "Application project build should have failed.");
-					StringAssertEx.ContainsText (pb.LastBuildOutput, "XA1031: ");
+					StringAssertEx.ContainsText (pb.LastBuildOutput, "XA1034: ");
 					StringAssertEx.ContainsText (pb.LastBuildOutput, "1 Error(s)");
 				}
 			}

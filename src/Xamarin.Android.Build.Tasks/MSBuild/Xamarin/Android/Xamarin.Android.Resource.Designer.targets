@@ -153,8 +153,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <_ErrorItems Include="@(_MonoAndroidReferencePath)" Condition=" '%(_MonoAndroidReferencePath.HasResourceDesignerAssemblyReference)' == 'True' "/>
       <_ErrorItems Include="@(_MonoAndroidReferenceDependencyPaths)"  Condition=" '%(_MonoAndroidReferenceDependencyPaths.HasResourceDesignerAssemblyReference)' == 'True' "/>
     </ItemGroup>
-    <AndroidError Code="XA1031"
-        ResourceName="XA1031"
+    <AndroidError Code="XA1034"
+        ResourceName="XA1034"
         FormatArguments="%(_ErrorItems.FullPath)"
         Condition=" '@(_ErrorItems->Count())' != '0' "
     />

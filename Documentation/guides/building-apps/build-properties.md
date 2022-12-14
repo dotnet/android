@@ -1388,7 +1388,7 @@ net7.0-android have been deprecated.
 .NET 8 Projects which choose to turn this setting off will not be able to
 consume references which do use it. If you try to use an assembly
 which does have this feature enabled in a project that does not, you will
-get a `XA1031` build error.
+get a `XA1034` build error.
 
 Added in .NET 8.  Unsupported in Classic Xamarin.Android.
 
