@@ -60,5 +60,32 @@ namespace MonoDroid.Generation
 		}
 
 		public string ExplicitInterface => Getter?.ExplicitInterface ?? Setter?.ExplicitInterface;
+
+		public bool IsWholePropertyDeprecated {
+			get {
+				// If the getter isn't deprecated then the property isn't
+				if (Getter?.Deprecated is null)
+					return false;
+
+				// If the getter is deprecated and there is no setter then the property is deprecated
+				if (Setter is null)
+					return true;
+
+				// If the setter isn't deprecated then the property isn't
+				if (Setter.Deprecated is null)
+					return false;
+
+				// If the getter/setter deprecation messages differ, don't use whole property deprecation
+				if (Getter.Deprecated != Setter.Deprecated)
+					return false;
+
+				// If the getter/setter deprecation versions differ, don't use whole property deprecation
+				if (Getter.DeprecatedSince != Setter.DeprecatedSince)
+					return false;
+
+				// Getter/Setter deprecation is the same, use whole property deprecation
+				return true;
+			}
+		}
 	}
 }

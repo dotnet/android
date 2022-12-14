@@ -72,11 +72,18 @@ namespace generator.SourceWriters
 				IsOverride = false;
 			}
 
-			// Unlike [Register], [Obsolete] cannot be put on property accessors, so we can apply them only under limited condition...
-			if (property.Getter.Deprecated != null && (property.Setter == null || property.Setter.Deprecated != null)) {
-				var message = property.Getter.Deprecated.Trim () + (property.Setter != null && property.Setter.Deprecated != property.Getter.Deprecated ? " " + property.Setter.Deprecated.Trim () : null);
-				var since = property.Getter?.DeprecatedSince ?? property.Setter?.DeprecatedSince;
-				SourceWriterExtensions.AddObsolete (Attributes, message, opt, deprecatedSince: since);
+			// Add [Obsolete] or [ObsoletedOSPlatform]
+			if (property.IsWholePropertyDeprecated) {
+				// This case applies [Obsolete] to the entire property
+				SourceWriterExtensions.AddObsolete (Attributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter.DeprecatedSince);
+			} else {
+				// This case applies [Obsolete] to just the getter
+				if (property.Getter?.Deprecated != null)
+					SourceWriterExtensions.AddObsolete (GetterAttributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter?.DeprecatedSince);
+
+				// This case applies [Obsolete] to just the setter
+				if (property.Setter?.Deprecated != null)
+					SourceWriterExtensions.AddObsolete (SetterAttributes, property.Setter.Deprecated.Trim (), opt, deprecatedSince: property.Setter?.DeprecatedSince);
 			}
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);

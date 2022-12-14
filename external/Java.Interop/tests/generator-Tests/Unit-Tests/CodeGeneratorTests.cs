@@ -565,7 +565,8 @@ namespace generatortests
 			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a field deprecated since 25!\")]"), writer.ToString ());
 			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a constructor deprecated since 25!\")]"), writer.ToString ());
 			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a method deprecated since 25!\")]"), writer.ToString ());
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a property getter deprecated since 25! This is a property setter deprecated since 25!\")]"), writer.ToString ());
+			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a property getter deprecated since 25!\")]"), writer.ToString ());
+			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a property setter deprecated since 25!\")]"), writer.ToString ());
 		}
 
 		[Test]
@@ -611,7 +612,152 @@ namespace generatortests
 		}
 
 		[Test]
-		[NonParallelizable]	// We are setting a static property on Report
+		public void ObsoleteGetterOnlyProperty ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='deprecated' final='false' name='getCount' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This should use [Obsolete] on the entire property because the getter is obsolete and there is no setter
+			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual unsafe int Count".NormalizeLineEndings ()), writer.ToString ());
+
+			// Ensure we don't write getter attribute
+			Assert.False (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
+		}
+
+		[Test]
+		public void ObsoletePropertyGetter ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='deprecated' final='false' name='getCount' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='setCount' jni-signature='(I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				<parameter name='count' type='int' jni-type='I'></parameter>
+			      </method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This should use [Obsolete] on just the property getter since the setter is not obsolete
+			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
+		}
+
+		[Test]
+		public void ObsoletePropertySetter ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='getCount' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			      <method abstract='false' deprecated='deprecated' final='false' name='setCount' jni-signature='(I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				<parameter name='count' type='int' jni-type='I'></parameter>
+			      </method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This should use [Obsolete] on just the property setter since the getter is not obsolete
+			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]set"), writer.ToString ());
+		}
+
+		[Test]
+		public void ObsoleteBothPropertyMethods ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='getter_message' final='false' name='getCount' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			      <method abstract='false' deprecated='setter_message' final='false' name='setCount' jni-signature='(I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				<parameter name='count' type='int' jni-type='I'></parameter>
+			      </method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This should use [Obsolete] on both property methods because the deprecation messages are different
+			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"getter_message\")]get"), writer.ToString ());
+			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"setter_message\")]set"), writer.ToString ());
+		}
+
+		[Test]
+		public void ObsoleteEntireProperty ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='deprecated' final='false' name='getCount' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			      <method abstract='false' deprecated='deprecated' final='false' name='setCount' jni-signature='(I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				<parameter name='count' type='int' jni-type='I'></parameter>
+			      </method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This should use [Obsolete] on the entire property because the getter and setter are both obsoleted with the same message
+			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual unsafe int Count".NormalizeLineEndings ()), writer.ToString ());
+
+			// Ensure we don't write getter/setter attributes
+			Assert.False (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
+			Assert.False (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]set"), writer.ToString ());
+		}
+
+		[Test]
+		[NonParallelizable]     // We are setting a static property on Report
 		public void WarnIfTypeNameMatchesNamespace ()
 		{
 			var @class = new TestClass ("Object", "java.myclass.MyClass");
@@ -649,6 +795,20 @@ namespace generatortests
 
 			// The warning should not be raised if the nested type matches enclosing namespace
 			Assert.False (sb.ToString ().Contains ("warning BG8403"));
+		}
+
+		static string StripRegisterAttributes (string str)
+		{
+			// It is hard to test if the [Obsolete] is on the setter/etc due to the [Register], so remove all [Register]s
+			// [global::System.Obsolete (@"setter_message")]
+			// [Register ("setCount", "(I)V", "GetSetCount_IHandler")]
+			// set {
+			int index;
+
+			while ((index = str.IndexOf ("[Register", StringComparison.Ordinal)) > -1)
+				str = str.Substring (0, index) + str.Substring (str.IndexOf (']', index) + 1);
+
+			return str;
 		}
 	}
 
