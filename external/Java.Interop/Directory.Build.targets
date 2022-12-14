@@ -17,6 +17,7 @@
     <PackageReference Update="Microsoft.Build.Framework"                    Version="17.3.2" />
     <PackageReference Update="Microsoft.Build.Utilities.Core"               Version="17.3.2" />
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp"                Version="4.3.1" />
+    <PackageReference Update="Microsoft.CSharp"                             Version="4.7.0" />
     <PackageReference Update="Microsoft.DotNet.GenAPI"                      Version="7.0.0-beta.22103.1" />
     <PackageReference Update="Microsoft.NET.Test.Sdk"                       Version="17.5.0-preview-20221003-04" />
     <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies"   Version="1.0.3" />
