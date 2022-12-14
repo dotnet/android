@@ -191,6 +191,10 @@ namespace MonoDroid.Generation
 
 			ctor.Name = EnsureValidIdentifer (ctor.Name);
 
+			// If declaring type was deprecated earlier than member, use the type's deprecated-since
+			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince.Value < ctor.DeprecatedSince.GetValueOrDefault (0))
+				ctor.DeprecatedSince = declaringType.DeprecatedSince;
+
 			FillApiSince (ctor, elem);
 
 			return ctor;
@@ -229,6 +233,10 @@ namespace MonoDroid.Generation
 				field.Name = TypeNameUtilities.StudlyCase (char.IsLower (field.JavaName [0]) || field.JavaName.ToLowerInvariant ().ToUpperInvariant () != field.JavaName ? field.JavaName : field.JavaName.ToLowerInvariant ());
 				field.Name = EnsureValidIdentifer (field.Name);
 			}
+
+			// If declaring type was deprecated earlier than member, use the type's deprecated-since
+			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince.Value < field.DeprecatedSince.GetValueOrDefault (0))
+				field.DeprecatedSince = declaringType.DeprecatedSince;
 
 			FillApiSince (field, elem);
 			SetLineInfo (field, elem, options);
@@ -397,6 +405,10 @@ namespace MonoDroid.Generation
 			method.Name = EnsureValidIdentifer (method.Name);
 
 			method.FillReturnType ();
+
+			// If declaring type was deprecated earlier than member, use the type's deprecated-since
+			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince.Value < method.DeprecatedSince.GetValueOrDefault (0))
+				method.DeprecatedSince = declaringType.DeprecatedSince;
 
 			FillApiSince (method, elem);
 			SetLineInfo (method, elem, options);

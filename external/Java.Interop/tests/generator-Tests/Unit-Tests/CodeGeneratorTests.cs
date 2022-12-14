@@ -576,7 +576,7 @@ namespace generatortests
 			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
 			  </package>
 			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
-			    <class abstract='false' deprecated='This is a class deprecated since 19!' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;' deprecated-since='19'>
+			    <class abstract='false' deprecated='This is a class deprecated since 28!' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;' deprecated-since='28'>
 			      <field deprecated='This is a field deprecated since 0!' final='true' name='ACCEPT_HANDOVER' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;android.permission.ACCEPT_HANDOVER&quot;' visibility='public' volatile='false' deprecated-since='0'></field>
 			      <constructor deprecated='This is a constructor deprecated since empty string!' final='false' name='MyClass' jni-signature='()V' bridge='false' static='false' type='com.xamarin.android.MyClass' synthetic='false' visibility='public' deprecated-since=''></constructor>
 			      <method abstract='true' deprecated='deprecated' final='false' name='countAffectedRows' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' deprecated-since='25'></method>
@@ -599,7 +599,6 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// These should use [Obsolete] because they have always been obsolete in all currently supported versions (21+)
-			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a class deprecated since 19!\")]"), writer.ToString ());
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a field deprecated since 0!\")]"), writer.ToString ());
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a constructor deprecated since empty string!\")]"), writer.ToString ());
 

@@ -79,6 +79,15 @@ namespace generatortests
 		}
 
 		[Test]
+		public void CreateCtor_CorrectDeprecatedSinceFromClass ()
+		{
+			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' deprecated-since='7'><constructor name='ctor' deprecated-since='17' /></class></package>");
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
+
+			Assert.AreEqual (7, klass.Ctors [0].DeprecatedSince);
+		}
+
+		[Test]
 		public void CreateField_StudlyCaseName ()
 		{
 			var klass = new TestClass ("object", "MyNamespace.MyType");
@@ -136,6 +145,15 @@ namespace generatortests
 			var field = XmlApiImporter.CreateField (klass, xml.Root);
 
 			Assert.AreEqual (7, field.ApiAvailableSince);
+		}
+
+		[Test]
+		public void CreateField_CorrectDeprecatedSinceFromClass ()
+		{
+			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' deprecated-since='7'><field name='$3' deprecated-since='17' /></class></package>");
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
+
+			Assert.AreEqual (7, klass.Fields [0].DeprecatedSince);
 		}
 
 		[Test]
@@ -210,6 +228,15 @@ namespace generatortests
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
 			Assert.AreEqual (7, klass.Methods [0].ApiAvailableSince);
+		}
+
+		[Test]
+		public void CreateMethod_CorrectDeprecatedSinceFromClass ()
+		{
+			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' deprecated-since='7'><method name='-3' deprecated-since='17' /></class></package>");
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
+
+			Assert.AreEqual (7, klass.Methods [0].DeprecatedSince);
 		}
 
 		[Test]
