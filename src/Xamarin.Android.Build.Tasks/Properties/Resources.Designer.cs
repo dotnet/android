@@ -729,15 +729,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidEnableProguard&apos; MSBuild property is set to &apos;true&apos; and the &apos;AndroidLinkTool&apos; MSBuild property is empty, so &apos;AndroidLinkTool&apos; will default to &apos;proguard&apos;..
-        /// </summary>
-        public static string XA1031 {
-            get {
-                return ResourceManager.GetString("XA1031", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released..
         /// </summary>
         public static string XA2000 {
@@ -1474,6 +1465,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA1033 {
             get {
                 return ResourceManager.GetString("XA1033", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.
+        /// </summary>
+        public static string XA1034 {
+            get {
+                return ResourceManager.GetString("XA1034", resourceCulture);
             }
         }
     }
