@@ -1110,6 +1110,14 @@ or use `-p:AndroidCreateProguardMappingFile=False` on the command line.
 
 This property was added in Xamarin.Android 11.2.
 
+## AndroidD8IgnoreWarnings
+
+Specifies `--map-diagnostics warning info` to be passed to `d8`. The
+default value is `True`, but can be set to `False` to enforce more
+strict behavior. See the [D8 and R8 readme][r8-source] for details.
+
+Added in .NET 8.
+
 ## AndroidR8IgnoreWarnings
 
 Specifies
@@ -1118,7 +1126,12 @@ to continue with dex compilation even if certain warnings are
 encountered. The default value is `True`, but can be set to `False` to
 enforce more strict behavior. See the [ProGuard manual](https://www.guardsquare.com/manual/configuration/usage) for details.
 
+Starting in .NET 8, specifies `--map-diagnostics warning info`. See
+the [D8 and R8 readme][r8-source] for details.
+
 Added in Xamarin.Android 10.3.
+
+[r8-source]: https://r8.googlesource.com/r8/
 
 ## AndroidR8JarPath
 
