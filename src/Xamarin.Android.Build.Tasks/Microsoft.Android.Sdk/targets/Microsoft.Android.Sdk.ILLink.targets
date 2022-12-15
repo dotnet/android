@@ -94,6 +94,7 @@ This file contains the .NET 5-specific targets to customize ILLink
           Condition=" '@(ResolvedFileToPublish->Count())' != '0' and '%(Filename)' != '' "
           Include="@(_PreserveLists)" />
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
+      <TrimmerRootAssembly Update="@(TrimmerRootAssembly)" Condition=" '%(RootMode)' == 'EntryPoint' " RootMode="Library" />
     </ItemGroup>
   </Target>
 
