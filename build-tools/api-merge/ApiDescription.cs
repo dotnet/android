@@ -128,7 +128,6 @@ namespace Xamarin.Android.ApiMerge {
 							continue;
 						}
 
-						UpdateDeprecatedSince (smember, nmember, platform);
 						if (nmember.Name.LocalName == "field") {
 							// FIXME: enable this to get the latest field attributes precisely.
 							/*
@@ -140,6 +139,9 @@ namespace Xamarin.Android.ApiMerge {
 									sa.SetValue (a.Value);
 							}
 							*/
+
+							UpdateDeprecatedSince (smember, nmember, platform);
+
 #if KEEP_OLD_WRONG_COMPATIBILITY
 							var isDeprecatedS = smember.Attribute ("deprecated");
 							var isDeprecatedN = nmember.Attribute ("deprecated");
@@ -154,6 +156,9 @@ namespace Xamarin.Android.ApiMerge {
 								AddNewMember (stype, nmember, apiLocation, platform);
 								continue;
 							}
+
+							UpdateDeprecatedSince (smember, nmember, platform);
+
 							foreach (var a in nmember.Attributes ()) {
 								var sa = smember.Attribute (a.Name);
 								if (sa == null)
