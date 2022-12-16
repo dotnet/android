@@ -8,127 +8,127 @@
       "Size": 7314
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66843
+      "Size": 66797
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 444299
+      "Size": 444767
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5921
+      "Size": 5924
     },
     "assemblies/mscorlib.dll": {
-      "Size": 3860
+      "Size": 3856
     },
     "assemblies/netstandard.dll": {
-      "Size": 5576
+      "Size": 5572
     },
     "assemblies/rc.bin": {
       "Size": 1182
     },
     "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 10725
+      "Size": 10719
     },
     "assemblies/System.Collections.dll": {
-      "Size": 15465
+      "Size": 15457
     },
     "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 7638
+      "Size": 7629
     },
     "assemblies/System.ComponentModel.dll": {
-      "Size": 2158
+      "Size": 2154
     },
     "assemblies/System.ComponentModel.Primitives.dll": {
-      "Size": 2649
+      "Size": 2645
     },
     "assemblies/System.ComponentModel.TypeConverter.dll": {
-      "Size": 6206
+      "Size": 6202
     },
     "assemblies/System.Console.dll": {
-      "Size": 6760
+      "Size": 6758
     },
     "assemblies/System.Core.dll": {
-      "Size": 1988
+      "Size": 1984
     },
     "assemblies/System.Diagnostics.TraceSource.dll": {
-      "Size": 6745
+      "Size": 6741
     },
     "assemblies/System.dll": {
-      "Size": 2344
+      "Size": 2340
     },
     "assemblies/System.Drawing.dll": {
-      "Size": 2029
+      "Size": 2025
     },
     "assemblies/System.Drawing.Primitives.dll": {
-      "Size": 12160
+      "Size": 12089
     },
     "assemblies/System.IO.Compression.dll": {
-      "Size": 16797
+      "Size": 16979
     },
     "assemblies/System.IO.IsolatedStorage.dll": {
-      "Size": 10155
+      "Size": 10160
     },
     "assemblies/System.Linq.dll": {
-      "Size": 19493
+      "Size": 19598
     },
     "assemblies/System.Linq.Expressions.dll": {
-      "Size": 163967
+      "Size": 163934
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 67013
+      "Size": 66000
     },
     "assemblies/System.Net.Primitives.dll": {
-      "Size": 22021
+      "Size": 22209
     },
     "assemblies/System.Net.Requests.dll": {
-      "Size": 3745
+      "Size": 3741
     },
     "assemblies/System.ObjectModel.dll": {
-      "Size": 8173
+      "Size": 8168
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 775898
+      "Size": 794848
     },
     "assemblies/System.Private.DataContractSerialization.dll": {
-      "Size": 192465
+      "Size": 192421
     },
     "assemblies/System.Private.Uri.dll": {
-      "Size": 42550
+      "Size": 42530
     },
     "assemblies/System.Private.Xml.dll": {
-      "Size": 215747
+      "Size": 215888
     },
     "assemblies/System.Private.Xml.Linq.dll": {
-      "Size": 16813
+      "Size": 16805
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2794
+      "Size": 2791
     },
     "assemblies/System.Runtime.InteropServices.dll": {
-      "Size": 2273
+      "Size": 2269
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 1950
+      "Size": 1946
     },
     "assemblies/System.Runtime.Serialization.Formatters.dll": {
-      "Size": 2683
+      "Size": 2679
     },
     "assemblies/System.Runtime.Serialization.Primitives.dll": {
-      "Size": 3856
+      "Size": 3852
     },
     "assemblies/System.Security.Cryptography.dll": {
-      "Size": 7949
+      "Size": 7946
     },
     "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 154213
+      "Size": 155909
     },
     "assemblies/System.Xml.dll": {
-      "Size": 1837
+      "Size": 1834
     },
     "assemblies/System.Xml.Linq.dll": {
-      "Size": 1862
+      "Size": 1858
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 117372
+      "Size": 117399
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5872
@@ -199,23 +199,26 @@
     "classes.dex": {
       "Size": 3090508
     },
+    "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
+      "Size": 93552
+    },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 434632
+      "Size": 434704
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3078808
+      "Size": 3064488
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723840
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 94136
+      "Size": 94312
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 149552
+      "Size": 150584
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 333376
+      "Size": 333632
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -329,13 +332,13 @@
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 79083
+      "Size": 79203
     },
     "META-INF/com.google.android.material_material.version": {
       "Size": 10
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 78956
+      "Size": 79076
     },
     "META-INF/proguard/androidx-annotations.pro": {
       "Size": 339
@@ -782,7 +785,7 @@
       "Size": 470
     },
     "res/drawable-hdpi-v4/icon.png": {
-      "Size": 4762
+      "Size": 2178
     },
     "res/drawable-hdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 212
@@ -992,7 +995,7 @@
       "Size": 309
     },
     "res/drawable-mdpi-v4/icon.png": {
-      "Size": 2200
+      "Size": 1490
     },
     "res/drawable-mdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 215
@@ -1220,7 +1223,7 @@
       "Size": 593
     },
     "res/drawable-xhdpi-v4/icon.png": {
-      "Size": 7462
+      "Size": 3098
     },
     "res/drawable-xhdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 221
@@ -1385,7 +1388,7 @@
       "Size": 868
     },
     "res/drawable-xxhdpi-v4/icon.png": {
-      "Size": 13092
+      "Size": 4674
     },
     "res/drawable-xxxhdpi-v4/abc_btn_check_to_on_mtrl_000.png": {
       "Size": 275
@@ -1472,7 +1475,7 @@
       "Size": 1155
     },
     "res/drawable-xxxhdpi-v4/icon.png": {
-      "Size": 20118
+      "Size": 6832
     },
     "res/drawable/abc_btn_borderless_material.xml": {
       "Size": 588
@@ -1970,5 +1973,5 @@
       "Size": 341228
     }
   },
-  "PackageSize": 7971397
+  "PackageSize": 7991971
 }
