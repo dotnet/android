@@ -377,7 +377,7 @@ namespace Xamarin.Android.Tasks
 
 		CodeMemberField CreateIntField (CodeTypeDeclaration parentType, string name, int value = -1)
 		{
-			string mappedName = GetResourceName (parentType.Name, name, map);
+			string mappedName = ResourceIdentifier.GetResourceName (parentType.Name, name, map, Log);
 			CodeMemberField f = (CodeMemberField)parentType.Members.OfType<CodeTypeMember> ().FirstOrDefault (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0);
 			if (f != null)
 				return f;
@@ -397,7 +397,7 @@ namespace Xamarin.Android.Tasks
 
 		CodeMemberField CreateIntArrayField (CodeTypeDeclaration parentType, string name, int count, params int[] values)
 		{
-			string mappedName = GetResourceName (parentType.Name, name, map);
+			string mappedName = ResourceIdentifier.GetResourceName (parentType.Name, name, map, Log);
 			CodeMemberField f = (CodeMemberField)parentType.Members.OfType<CodeTypeMember> ().FirstOrDefault (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0);
 			if (f != null)
 				return f;

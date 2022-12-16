@@ -24,8 +24,6 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] InputAssemblies { get; set; }
 
-		public bool UseDesignerAssembly { get; set; }
-
 		[Output]
 		public ITaskItem [] OutputAssemblies { get; set; }
 
@@ -53,7 +51,7 @@ namespace Xamarin.Android.Tasks
 				} catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException) {
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyItem.ItemSpec}'.");
 				}
-				
+
 			}
 			OutputAssemblies = output.ToArray ();
 

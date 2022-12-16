@@ -11,10 +11,12 @@ namespace Xamarin.Android.Tasks
 		Integer,
 		Array,
 	}
+
 	public enum ResourceType {
 		System,
 		Custom,
 	}
+
 	public struct R : IComparable<R> {
 		public RType Type;
 		public int Id;

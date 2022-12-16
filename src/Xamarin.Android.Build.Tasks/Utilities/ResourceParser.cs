@@ -37,11 +37,5 @@ namespace Xamarin.Android.Tasks
 				default: return char.ToUpperInvariant (name[0]) + name.Substring (1);
 			}
 		}
-
-		internal string GetResourceName (string type, string name, Dictionary<string, string> map)
-		{
-			return ResourceIdentifier.GetResourceName (type, name, map, Log);
-		}
-
 	}
 }

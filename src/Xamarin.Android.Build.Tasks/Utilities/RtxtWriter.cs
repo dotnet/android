@@ -13,11 +13,11 @@ namespace Xamarin.Android.Tasks
 	public class RtxtWriter {
 		public void Write (string file, IList<R> items)
 		{
-			var sb = new StringBuilder ();
+			using var sw = MemoryStreamPool.Shared.CreateStreamWriter ();
 			foreach (var item in items) {
-				sb.AppendLine (item.ToString ());
+				sw .WriteLine (item.ToString ());
 			}
-			Files.CopyIfStringChanged (sb.ToString (), file);
+			Files.CopyIfStreamChanged (sw.BaseStream, file);
 		}
 	}
 }

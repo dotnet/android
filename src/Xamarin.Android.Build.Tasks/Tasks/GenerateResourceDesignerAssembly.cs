@@ -209,7 +209,7 @@ namespace Xamarin.Android.Tasks
 			TypeDefinition nestedType = CreateResourceClass (resourceDesigner, resourceClass, module, typeAttributes);
 			PropertyDefinition p = CreateProperty (propertyName, value, module, attributes);
 			nestedType.Properties.Add (p);
-			nestedType.Methods.Insert (Math.Max(0, nestedType.Methods.Count () -1), p.GetMethod);
+			nestedType.Methods.Insert (Math.Max(0, nestedType.Methods.Count () - 1), p.GetMethod);
 		}
 
 		void CreateIntField (string resourceClass, string fieldName, int value, TypeDefinition resourceDesigner, ModuleDefinition module,
@@ -226,7 +226,7 @@ namespace Xamarin.Android.Tasks
 			TypeDefinition nestedType = CreateResourceClass (resourceDesigner, resourceClass, module, typeAttributes);
 			PropertyDefinition p = CreateArrayProperty (propertyName, values, module, attributes);
 			nestedType.Properties.Add (p);
-			nestedType.Methods.Insert (Math.Max(0, nestedType.Methods.Count () -1), p.GetMethod);
+			nestedType.Methods.Insert (Math.Max(0, nestedType.Methods.Count () - 1), p.GetMethod);
 		}
 
 		void CreateIntArrayField (string resourceClass, string fieldName, int[] values, TypeDefinition resourceDesigner, ModuleDefinition module,

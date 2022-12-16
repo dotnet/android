@@ -91,13 +91,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     </ItemGroup>
 </Target>
 
-<!--
-    We only want to do this for non application projects unless the user has
-    specifically opted into the new system. This can be done by either
-    1. using `dotnet new android` and building a new project.
-    2. Add <AndroidUseDesignerAssembly>true</AndroidUseDesignerAssembly> to
-       the project.
- -->
 <Target Name="_GenerateResourceDesignerIntermediateClass"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
     Inputs="$(MSBuildProjectFullPath)"

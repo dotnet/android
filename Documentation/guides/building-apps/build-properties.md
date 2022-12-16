@@ -1376,7 +1376,8 @@ This setting is not backward compatible with Classic Xamarin.Android.
 As a Nuget Author it is recommended that you ship three versions of
 the assembly if you want to maintain backward compatibility.
 One for MonoAndroid, one for net6.0-android and
-one for net8.0-android. You can do this by using [Xamarin.Legacy.Sdk](https://www.nuget.org/packages/Xamarin.Legacy.Sdk).
+one for net8.0-android. You can do this by using [Xamarin.Legacy.Sdk](https://www.nuget.org/packages/Xamarin.Legacy.Sdk). This is only required if your Nuget Library
+project makes use of `AndroidResource` items in the project or via a dependency.
 
 ```
 <TargetFrameworks>monoandroid90;net6.0-android;net8.0-android</TargetFrameworks>

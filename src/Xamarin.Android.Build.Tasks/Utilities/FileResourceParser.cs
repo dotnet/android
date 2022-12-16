@@ -113,7 +113,7 @@ namespace Xamarin.Android.Tasks
 				if (!resources.ContainsKey(t)) {
 					continue;
 				}
-				if (resources[t].Count () == 0) {
+				if (resources[t].Count == 0) {
 					continue;
 				}
 				foreach (R r in resources[t].OrderBy(x => x.ToSortedString(), StringComparer.Ordinal)) {
