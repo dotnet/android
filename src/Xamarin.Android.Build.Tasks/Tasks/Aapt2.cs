@@ -216,9 +216,8 @@ namespace Xamarin.Android.Tasks {
 				case "APT2264":
 					sb.AppendLine (Xamarin.Android.Tasks.Properties.Resources.APT2264);
 				break;
-				default:
 			}
-			return sb;
+			return sb.ToString ();
 		}
 
 		static string GetErrorCode (string message)
