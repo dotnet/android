@@ -17,7 +17,7 @@
       "Size": 572670
     },
     "assemblies/Mono.Security.dll": {
-      "Size": 68450
+      "Size": 68449
     },
     "assemblies/mscorlib.dll": {
       "Size": 915425
@@ -32,7 +32,7 @@
       "Size": 12370
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 110718
+      "Size": 110717
     },
     "assemblies/System.Numerics.dll": {
       "Size": 15706
@@ -44,7 +44,7 @@
       "Size": 26604
     },
     "assemblies/System.Xml.dll": {
-      "Size": 395668
+      "Size": 395667
     },
     "assemblies/UnnamedProject.dll": {
       "Size": 116997
@@ -59,7 +59,7 @@
       "Size": 125346
     },
     "assemblies/Xamarin.AndroidX.CardView.dll": {
-      "Size": 7380
+      "Size": 7381
     },
     "assemblies/Xamarin.AndroidX.CoordinatorLayout.dll": {
       "Size": 18289
@@ -80,7 +80,7 @@
       "Size": 7078
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.Core.dll": {
-      "Size": 7207
+      "Size": 7208
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.ViewModel.dll": {
       "Size": 4886
