@@ -11,13 +11,13 @@
       "Size": 7314
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66797
+      "Size": 66801
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 444767
+      "Size": 444662
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5924
+      "Size": 5832
     },
     "assemblies/mscorlib.dll": {
       "Size": 3856
@@ -104,7 +104,7 @@
       "Size": 16805
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2791
+      "Size": 2756
     },
     "assemblies/System.Runtime.InteropServices.dll": {
       "Size": 2269
@@ -131,7 +131,7 @@
       "Size": 1858
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 117399
+      "Size": 5347
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5872
@@ -221,7 +221,7 @@
       "Size": 150584
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 333632
+      "Size": 333728
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -335,13 +335,13 @@
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 79203
+      "Size": 79326
     },
     "META-INF/com.google.android.material_material.version": {
       "Size": 10
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 79076
+      "Size": 79199
     },
     "META-INF/proguard/androidx-annotations.pro": {
       "Size": 339
@@ -1976,5 +1976,5 @@
       "Size": 341228
     }
   },
-  "PackageSize": 7991971
+  "PackageSize": 7803652
 }
