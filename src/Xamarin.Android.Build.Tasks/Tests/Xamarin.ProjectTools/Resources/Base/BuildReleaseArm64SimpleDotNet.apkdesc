@@ -14,7 +14,7 @@
       "Size": 87074
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5832
+      "Size": 5833
     },
     "assemblies/rc.bin": {
       "Size": 1182
@@ -35,7 +35,7 @@
       "Size": 2269
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3273
+      "Size": 3276
     },
     "classes.dex": {
       "Size": 19020
