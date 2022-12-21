@@ -498,6 +498,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <CheckClientHandlerType
     ClientHandlerType="$(AndroidHttpClientHandlerType)"
     ValidHandlerType="$(ValidAndroidHttpClientHandlerBaseType)"
+    UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
     ResolvedAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
   />
 </Target>
