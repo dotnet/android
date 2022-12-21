@@ -99,7 +99,7 @@ This file contains the .NET 5-specific targets to customize ILLink
 
   <Target Name="_FixRootAssembly" AfterTargets="PrepareForILLink">
     <ItemGroup>
-      <TrimmerRootAssembly Update="@(TrimmerRootAssembly)" Condition=" '%(RootMode)' == 'EntryPoint' " RootMode="Library" />
+      <TrimmerRootAssembly Update="@(TrimmerRootAssembly)" Condition=" '%(RootMode)' == 'EntryPoint' " RootMode="All" />
     </ItemGroup>
   </Target>
 
