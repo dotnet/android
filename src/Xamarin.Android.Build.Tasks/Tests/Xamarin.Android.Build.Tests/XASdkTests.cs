@@ -303,12 +303,8 @@ public class JavaSourceTest {
 }",
 					},
 				},
-				ExtraNuGetConfigSources = {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				},
 			};
+			proj.AddNuGetSourcesForOlderTargetFrameworks ();
 			if (IsPreviewFrameworkVersion (targetFramework)) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
@@ -841,12 +837,8 @@ public class JavaSourceTest {
 			var proj = new XASdkProject {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
-				ExtraNuGetConfigSources = {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				},
 			};
+			proj.AddNuGetSourcesForOlderTargetFrameworks ();
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
@@ -935,13 +927,9 @@ public class JavaSourceTest {
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 					}
-				},
-				ExtraNuGetConfigSources = {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				},
+				}
 			};
+			proj.AddNuGetSourcesForOlderTargetFrameworks (dotnetTargetFramework);
 
 			using var b = new Builder ();
 			var legacyTargetFrameworkVersion = "13.0";
@@ -969,12 +957,8 @@ public class JavaSourceTest {
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var library = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
-				ExtraNuGetConfigSources = {
-					// Projects targeting net6.0 require ref/runtime packs on NuGet.org
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-				},
 			};
+			library.AddNuGetSourcesForOlderTargetFrameworks ();
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
 			if (preview) {
