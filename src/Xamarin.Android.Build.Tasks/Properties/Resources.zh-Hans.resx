@@ -470,6 +470,24 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>仅当启用剪裁时，才支持 “RunAOTCompilation” MSBuild 属性。在文本编辑器中编辑项目文件，以将此生成配置的 “PublishTrimmed” 设置为 “true”。</value>
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
+  <data name="XA1031" xml:space="preserve">
+    <value>The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.
+Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
+{0} - The value of the property.
+{1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
+  </data>
+  <data name="XA1032" xml:space="preserve">
+    <value>Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
+{0} - The value of the property.
+{1} - The name of the assembly.</comment>
+  </data>
+  <data name="XA1033" xml:space="preserve">
+    <value>Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
+{0} - The value of the property.</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>在程序集 {0} 中检测到使用了 AppDomain.CreateDomain()。.NET 6 及更高版本将仅支持一个 AppDomain，因此 .NET 6 发布后，将无法再在 Xamarin.Android 中使用此 API。</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain

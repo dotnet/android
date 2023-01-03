@@ -1232,7 +1232,7 @@ stages:
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)/UITools/Designer/bot-provisioning/dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)/UITools/src/bot-provisioning/dependencies.csx
         provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
       env:
         PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
@@ -1245,17 +1245,17 @@ stages:
 
     - template: designer/android-designer-build-mac.yaml@yaml-templates
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/Designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/src
 
     - template: designer/android-designer-tests.yaml@yaml-templates
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/Designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/src
         runAddinTests: false
 
     - task: CopyFiles@2
       displayName: 'Copy binlogs'
       inputs:
-        sourceFolder: $(System.DefaultWorkingDirectory)/UITools/Designer/Xamarin.Designer.Android
+        sourceFolder: $(System.DefaultWorkingDirectory)/UITools/src/Xamarin.Designer.Android
         contents: '**/*.binlog'
         targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
         overWrite: true
@@ -1313,7 +1313,7 @@ stages:
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)\UITools\Designer\bot-provisioning\dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)\UITools\src\bot-provisioning\dependencies.csx
         provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
       env:
         PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
@@ -1327,7 +1327,7 @@ stages:
     - task: VSBuild@1
       displayName: Restore Xamarin.AndroidDesigner
       inputs:
-        solution: $(System.DefaultWorkingDirectory)\UITools\Designer\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
+        solution: $(System.DefaultWorkingDirectory)\UITools\src\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
         vsVersion: 17.0
         msbuildArgs: >-
           /t:Restore /p:RestoreDisableParallel=true
@@ -1339,7 +1339,7 @@ stages:
     - task: VSBuild@1
       displayName: Build Xamarin.AndroidDesigner
       inputs:
-        solution: $(System.DefaultWorkingDirectory)\UITools\Designer\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
+        solution: $(System.DefaultWorkingDirectory)\UITools\src\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
         vsVersion: 17.0
         msbuildArgs: /t:Build
         platform: Any CPU
@@ -1347,7 +1347,7 @@ stages:
 
     - template: yaml-templates/run-designer-tests.yml
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\Designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\src
 
 - stage: bcl_tests
   displayName: BCL Emulator Tests

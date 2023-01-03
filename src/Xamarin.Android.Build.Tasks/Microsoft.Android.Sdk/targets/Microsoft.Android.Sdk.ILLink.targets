@@ -97,6 +97,12 @@ This file contains the .NET 5-specific targets to customize ILLink
     </ItemGroup>
   </Target>
 
+  <Target Name="_FixRootAssembly" AfterTargets="PrepareForILLink">
+    <ItemGroup>
+      <TrimmerRootAssembly Update="@(TrimmerRootAssembly)" Condition=" '%(RootMode)' == 'EntryPoint' " RootMode="All" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_LinkAssemblies"
       DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_GenerateJniMarshalMethods;_LinkAssembliesNoShrink"
   />

@@ -1,6 +1,4 @@
 Compat issues with assembly Mono.Android:
-CannotSealType : Type 'Java.Interop.JavaTypeParametersAttribute' is actually (has the sealed modifier) sealed in the implementation but not sealed in the contract.
-MembersMustExist : Member 'public void Java.Interop.JavaTypeParametersAttribute.TypeParameters.set(System.String[])' does not exist in the implementation but it does exist in the contract.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.AccessibilityServices.AccessibilityService.OnGesture(System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.AccessibilityServices.AccessibilityService.MagnificationController.SetCenter(System.Single, System.Single, System.Boolean)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.AccessibilityServices.AccessibilityService.MagnificationController.SetScale(System.Single, System.Boolean)' in the contract but not the implementation.
@@ -10,11 +8,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Accounts.AccountAuthenticatorActivity.SetAccountAuthenticatorResult(Android.OS.Bundle)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Accounts.AccountManager.NewChooseAccountIntent(Android.Accounts.Account, System.Collections.Generic.IList<Android.Accounts.Account>, System.String[], System.Boolean, System.String, System.String, System.String[], Android.OS.Bundle)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Accounts.AccountManager.RemoveAccount(Android.Accounts.Account, Android.Accounts.IAccountManagerCallback, Android.OS.Handler)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ActionBar.IOnNavigationListener.OnNavigationItemSelected(System.Int32, System.Int64)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ActionBar.ITabListener.OnTabReselected(Android.App.ActionBar.Tab, Android.App.FragmentTransaction)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ActionBar.ITabListener.OnTabSelected(Android.App.ActionBar.Tab, Android.App.FragmentTransaction)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ActionBar.ITabListener.OnTabUnselected(Android.App.ActionBar.Tab, Android.App.FragmentTransaction)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ActionBar.Tab..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Activity.EnterPictureInPictureMode()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Activity.FinishActivityFromChild(Android.App.Activity, System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Activity.FinishFromChild(Android.App.Activity)' in the contract but not the implementation.
@@ -36,7 +29,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Activity.StartActivityFromChild(Android.App.Activity, Android.Content.Intent, System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Activity.StartActivityFromFragment(Android.App.Fragment, Android.Content.Intent, System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Activity.StartIntentSenderFromChild(Android.App.Activity, Android.Content.IntentSender, System.Int32, Android.Content.Intent, Android.Content.ActivityFlags, Android.Content.ActivityFlags, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ActivityGroup..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ActivityManager.GetRunningServices(System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ActivityManager.TaskDescription..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.AlertDialog.Builder.SetInverseBackgroundForced(System.Boolean)' in the contract but not the implementation.
@@ -135,16 +127,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Fragment.SavedState' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Fragment.SavedState.DescribeContents()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Fragment.SavedState.WriteToParcel(Android.OS.Parcel, Android.OS.ParcelableWriteFlags)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs..ctor(Android.Content.Context)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.OnBackStackChanged()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.OnLayout(System.Boolean, System.Int32, System.Int32, System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.SetActivity(Android.App.Activity)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.SetMaxVisible(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.SetOnBreadCrumbClickListener(Android.App.FragmentBreadCrumbs.IOnBreadCrumbClickListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.SetParentTitle(Java.Lang.ICharSequence, Java.Lang.ICharSequence, Android.Views.View.IOnClickListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.SetParentTitle(System.String, System.String, Android.Views.View.IOnClickListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.SetTitle(Java.Lang.ICharSequence, Java.Lang.ICharSequence)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.SetTitle(System.String, System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.IOnBreadCrumbClickListener' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentBreadCrumbs.IOnBreadCrumbClickListener.OnBreadCrumbClick(Android.App.FragmentManager.IBackStackEntry, Android.App.BreadCrumbClickFlags)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.FragmentContainer' in the contract but not the implementation.
@@ -238,8 +220,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.KeyguardManager.InKeyguardRestrictedInputMode()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.KeyguardManager.IOnKeyguardExitResult' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.KeyguardManager.IOnKeyguardExitResult.OnKeyguardExitResult(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.KeyguardManager.KeyguardLock.DisableKeyguard()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.KeyguardManager.KeyguardLock.ReenableKeyguard()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LauncherActivity' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LauncherActivity..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LauncherActivity.IntentForPosition(System.Int32)' in the contract but not the implementation.
@@ -271,17 +251,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LoaderManager.ILoaderCallbacks.OnCreateLoader(System.Int32, Android.OS.Bundle)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LoaderManager.ILoaderCallbacks.OnLoaderReset(Android.Content.Loader)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LoaderManager.ILoaderCallbacks.OnLoadFinished(Android.Content.Loader, Java.Lang.Object)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager..ctor(Android.App.Activity, System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.DestroyActivity(System.String, System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.DispatchCreate(Android.OS.Bundle)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.DispatchDestroy(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.DispatchPause(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.DispatchResume()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.DispatchStop()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.GetActivity(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.RemoveAllActivities()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.SaveInstanceState()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.LocalActivityManager.StartActivity(System.String, Android.Content.Intent)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Notification.Action..ctor(System.Int32, Java.Lang.ICharSequence, Android.App.PendingIntent)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Notification.Action.WearableExtender.SetCancelLabel(Java.Lang.ICharSequence)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Notification.Action.WearableExtender.SetCancelLabel(System.String)' in the contract but not the implementation.
@@ -331,8 +300,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ProgressDialog.Show(Android.Content.Context, Java.Lang.ICharSequence, Java.Lang.ICharSequence)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.ProgressDialog.Show(Android.Content.Context, System.String, System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Service.StopForeground(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.TabActivity..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.TabActivity.SetDefaultTab(System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.UiAutomation.ClearWindowAnimationFrameStats()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Admin.DeviceAdminReceiver.OnPasswordChanged(Android.Content.Context, Android.Content.Intent)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.App.Admin.DeviceAdminReceiver.OnPasswordExpiring(Android.Content.Context, Android.Content.Intent)' in the contract but not the implementation.
@@ -491,16 +458,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Content.Res.Resources.UpdateConfiguration(Android.Content.Res.Configuration, Android.Util.DisplayMetrics)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.CursorWrapper.Deactivate()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.CursorWrapper.Requery()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper..ctor(Android.Database.Sqlite.SQLiteDatabase, System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper.Bind(System.Int32, System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper.BindNull(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper.Close()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper.Execute()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper.GetColumnIndex(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper.Insert(Android.Content.ContentValues)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper.PrepareForInsert()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper.PrepareForReplace()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.DatabaseUtils.InsertHelper.Replace(Android.Content.ContentValues)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.Sqlite.SQLiteDatabase.OpenParams.Builder.SetIdleConnectionTimeout(System.Int64)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Database.Sqlite.SQLiteOpenHelper.SetIdleConnectionTimeout(System.Int64)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Drm.DrmConvertedStatus' in the contract but not the implementation.
@@ -596,72 +553,8 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Graphics.Movie.Width()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Graphics.Outline.SetConvexPath(Android.Graphics.Path)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Graphics.Shader..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Graphics.SurfaceTexture.OutOfResourcesException..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Graphics.Drawables.Drawable.SetDither(System.Boolean)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Graphics.Text.MeasuredText.Builder.SetComputeHyphenation(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.AddCallbackBuffer(System.Byte[])' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.AutoFocus(Android.Hardware.Camera.IAutoFocusCallback)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.CancelAutoFocus()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.EnableShutterSound(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.GetCameraInfo(System.Int32, Android.Hardware.Camera.CameraInfo)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.GetParameters()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Lock()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Open()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Reconnect()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Release()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetAutoFocusMoveCallback(Android.Hardware.Camera.IAutoFocusMoveCallback)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetDisplayOrientation(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetErrorCallback(Android.Hardware.Camera.IErrorCallback)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetFaceDetectionListener(Android.Hardware.Camera.IFaceDetectionListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetOneShotPreviewCallback(Android.Hardware.Camera.IPreviewCallback)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetParameters(Android.Hardware.Camera.Parameters)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetPreviewCallback(Android.Hardware.Camera.IPreviewCallback)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetPreviewCallbackWithBuffer(Android.Hardware.Camera.IPreviewCallback)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetPreviewDisplay(Android.Views.ISurfaceHolder)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetPreviewTexture(Android.Graphics.SurfaceTexture)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.SetZoomChangeListener(Android.Hardware.Camera.IOnZoomChangeListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.StartFaceDetection()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.StartPreview()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.StartSmoothZoom(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.StopFaceDetection()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.StopPreview()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.StopSmoothZoom()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.TakePicture(Android.Hardware.Camera.IShutterCallback, Android.Hardware.Camera.IPictureCallback, Android.Hardware.Camera.IPictureCallback)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Unlock()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Area..ctor(Android.Graphics.Rect, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.CameraInfo..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Face..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.IAutoFocusCallback.OnAutoFocus(System.Boolean, Android.Hardware.Camera)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.IAutoFocusMoveCallback.OnAutoFocusMoving(System.Boolean, Android.Hardware.Camera)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.IErrorCallback.OnError(Android.Hardware.CameraError, Android.Hardware.Camera)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.IFaceDetectionListener.OnFaceDetection(Android.Hardware.Camera.Face[], Android.Hardware.Camera)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.IOnZoomChangeListener.OnZoomChange(System.Int32, System.Boolean, Android.Hardware.Camera)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.IPictureCallback.OnPictureTaken(System.Byte[], Android.Hardware.Camera)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.IPreviewCallback.OnPreviewFrame(System.Byte[], Android.Hardware.Camera)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.IShutterCallback.OnShutter()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.Flatten()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.Get(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.GetFocusDistances(System.Single[])' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.GetInt(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.GetPreviewFpsRange(System.Int32[])' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.Remove(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.RemoveGpsData()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.Set(System.String, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetGpsAltitude(System.Double)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetGpsLatitude(System.Double)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetGpsLongitude(System.Double)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetGpsProcessingMethod(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetGpsTimestamp(System.Int64)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetJpegThumbnailSize(System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetPictureSize(System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetPreviewFpsRange(System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetPreviewSize(System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetRecordingHint(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.SetRotation(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Parameters.Unflatten(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Camera.Size..ctor(Android.Hardware.Camera, System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.ISensorListener.OnAccuracyChanged(Android.Hardware.SensorType, Android.Hardware.SensorStatus)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.ISensorListener.OnSensorChanged(Android.Hardware.SensorType, System.Single[])' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Biometrics.BiometricManager.CanAuthenticate()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Biometrics.BiometricPrompt.Builder.SetDeviceCredentialAllowed(System.Boolean)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Hardware.Biometrics.BiometricPrompt.CryptoObject..ctor(Android.Security.Identity.IdentityCredential)' in the contract but not the implementation.
@@ -791,41 +684,14 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaDrm.IHdcpLevel' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaDrm.ISecurityLevel' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaExtractor.SetMediaCas(Android.Media.MediaCas)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.AddEditableKey(Android.Media.MediaMetadataEditKey)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.Clear()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.GetBitmap(Android.Media.MediaMetadataEditKey, Android.Graphics.Bitmap)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.GetEditableKeys()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.GetLong(Android.Media.MediaMetadataEditKey, System.Int64)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.GetObject(Android.Media.MediaMetadataEditKey, Java.Lang.Object)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.GetString(Android.Media.MediaMetadataEditKey, System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.PutBitmap(Android.Media.MediaMetadataEditKey, Android.Graphics.Bitmap)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.PutLong(Android.Media.MediaMetadataEditKey, System.Int64)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.PutObject(Android.Media.MediaMetadataEditKey, Java.Lang.Object)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.PutString(Android.Media.MediaMetadataEditKey, System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaMetadataEditor.RemoveEditableKeys()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaPlayer.SetAudioStreamType(Android.Media.Stream)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.MediaRecorder..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient..ctor(Android.App.PendingIntent)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.EditMetadata(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.SetMetadataUpdateListener(Android.Media.RemoteControlClient.IOnMetadataUpdateListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.SetOnGetPlaybackPositionListener(Android.Media.RemoteControlClient.IOnGetPlaybackPositionListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.SetPlaybackPositionUpdateListener(Android.Media.RemoteControlClient.IOnPlaybackPositionUpdateListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.SetPlaybackState(Android.Media.RemoteControlPlayState)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.SetTransportControlFlags(Android.Media.RemoteControlFlags)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.IOnGetPlaybackPositionListener' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.IOnGetPlaybackPositionListener.OnGetPlaybackPosition()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.IOnMetadataUpdateListener' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.IOnMetadataUpdateListener.OnMetadataUpdate(Android.Media.MediaMetadataEditKey, Java.Lang.Object)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.IOnPlaybackPositionUpdateListener' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.IOnPlaybackPositionUpdateListener.OnPlaybackPositionUpdate(System.Int64)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteControlClient.MetadataEditor.Apply()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController..ctor(Android.Content.Context, Android.Media.RemoteController.IOnClientUpdateListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController.ClearArtworkConfiguration()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController.EditMetadata()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController.SeekTo(System.Int64)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController.SendMediaKeyEvent(Android.Views.KeyEvent)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController.SetArtworkConfiguration(System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController.SetSynchronizationMode(Android.Media.SynchronizationPosition)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController.IOnClientUpdateListener' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController.IOnClientUpdateListener.OnClientChange(System.Boolean)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Media.RemoteController.IOnClientUpdateListener.OnClientMetadataUpdate(Android.Media.RemoteController.MetadataEditor)' in the contract but not the implementation.
@@ -1279,7 +1145,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Preferences.TwoStatePreference.SetSummaryOn(System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Provider.ContactsContract.DataUsageFeedback' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Provider.ContactsContract.DataUsageFeedback..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Provider.ContactsContract.Presence..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Provider.FontRequest' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Provider.FontRequest..ctor(System.String, System.String, System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Provider.FontsContract' in the contract but not the implementation.
@@ -1913,7 +1778,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Service.Notification.ConditionProviderService.RequestUnbind()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Service.Voice.VoiceInteractionSession.OnHandleAssist(Android.OS.Bundle, Android.App.Assist.AssistStructure, Android.App.Assist.AssistContent)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Service.Voice.VoiceInteractionSession.OnHandleAssistSecondary(Android.OS.Bundle, Android.App.Assist.AssistStructure, Android.App.Assist.AssistContent, System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Speech.Tts.TextToSpeech.IOnUtteranceCompletedListener.OnUtteranceCompleted(System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Systems.Os.Setegid(System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Systems.Os.Seteuid(System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Systems.Os.Setgid(System.Int32)' in the contract but not the implementation.
@@ -2017,7 +1881,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Text.AndroidCharacter.GetEastAsianWidths(System.Char[], System.Int32, System.Int32, System.Byte[])' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Text.AndroidCharacter.GetMirror(System.Char)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Text.AndroidCharacter.Mirror(System.Char[], System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Text.ClipboardManager..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Text.DynamicLayout..ctor(Java.Lang.ICharSequence, Android.Text.TextPaint, System.Int32, Android.Text.Layout.Alignment, System.Single, System.Single, System.Boolean)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Text.Html.FromHtml(System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Text.Html.ToHtml(Android.Text.ISpanned)' in the contract but not the implementation.
@@ -2069,8 +1932,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Text.Method.DigitsKeyListener..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Text.Method.TimeKeyListener..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Transitions.TransitionValues..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Util.EventLogTags..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Util.EventLogTags.Get(System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Util.EventLogTags.Description' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Util.FloatMath' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Util.MutableBoolean' in the contract but not the implementation.
@@ -2103,12 +1964,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.DisplayCutout..ctor(Android.Graphics.Rect, System.Collections.Generic.IList<Android.Graphics.Rect>)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.IViewParent.InvalidateChild(Android.Views.View, Android.Graphics.Rect)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.IViewParent.InvalidateChildInParent(System.Int32[], Android.Graphics.Rect)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.KeyCharacterMap.KeyData..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.OrientationListener..ctor(Android.Content.Context)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.OrientationListener.Disable()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.OrientationListener.Enable()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.OrientationListener.OnAccuracyChanged(Android.Hardware.SensorType, Android.Hardware.SensorStatus)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.OrientationListener.OnSensorChanged(Android.Hardware.SensorType, System.Single[])' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.SurfaceControl.Transaction.SetGeometry(Android.Views.SurfaceControl, Android.Graphics.Rect, Android.Graphics.Rect, Android.Views.SurfaceOrientation)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.View.BuildDrawingCache()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.View.DestroyDrawingCache()' in the contract but not the implementation.
@@ -2168,15 +2023,10 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Views.TextService.SpellCheckerSubtype..ctor(System.Int32, System.String, System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.CookieManager..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.CookieManager.SetAcceptFileSchemeCookies(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.CookieSyncManager.CreateInstance(Android.Content.Context)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.CookieSyncManager.Run()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.RenderProcessGoneDetail..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.SafeBrowsingResponse..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.ServiceWorkerController..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.TracingController..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebIconDatabase..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebIconDatabase.IIconListener.OnReceivedIcon(System.String, Android.Graphics.Bitmap)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebStorage.IQuotaUpdater.UpdateQuota(System.Int64)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebView.FindAddress(System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebView.GetHttpAuthUsernamePassword(System.String, System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebView.OverlayHorizontalScrollbar()' in the contract but not the implementation.
@@ -2189,8 +2039,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebViewDatabase..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebViewFragment' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Webkit.WebViewFragment..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.AbsoluteLayout..ctor(Android.Content.Context)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.AbsoluteLayout.OnLayout(System.Boolean, System.Int32, System.Int32, System.Int32, System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.AbsoluteLayout.LayoutParams' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.AbsoluteLayout.LayoutParams..ctor(Android.Content.Context, Android.Util.IAttributeSet)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.AbsoluteLayout.LayoutParams.Debug(System.String)' in the contract but not the implementation.
@@ -2209,19 +2057,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.DialerFilter.SetDigitsWatcher(Android.Text.ITextWatcher)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.DialerFilter.SetFilterWatcher(Android.Text.ITextWatcher)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.DialerFilter.SetLettersWatcher(Android.Text.ITextWatcher)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.DigitalClock..ctor(Android.Content.Context)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery..ctor(Android.Content.Context)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.OnDown(Android.Views.MotionEvent)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.OnFling(Android.Views.MotionEvent, Android.Views.MotionEvent, System.Single, System.Single)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.OnLongPress(Android.Views.MotionEvent)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.OnScroll(Android.Views.MotionEvent, Android.Views.MotionEvent, System.Single, System.Single)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.OnShowPress(Android.Views.MotionEvent)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.OnSingleTapUp(Android.Views.MotionEvent)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.SetAnimationDuration(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.SetCallbackDuringFling(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.SetGravity(Android.Views.GravityFlags)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.SetSpacing(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.SetUnselectedAlpha(System.Single)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.LayoutParams' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Gallery.LayoutParams..ctor(Android.Content.Context, Android.Util.IAttributeSet)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.Magnifier..ctor(Android.Views.View)' in the contract but not the implementation.
@@ -2230,20 +2065,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.RemoteViews.OnLoadClass(Java.Lang.Class)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.RemoteViews.ShowNext(System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.RemoteViews.ShowPrevious(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer..ctor(Android.Content.Context, Android.Util.IAttributeSet)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.AnimateClose()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.AnimateOpen()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.AnimateToggle()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.Close()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.GetHandle()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.Lock()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.OnLayout(System.Boolean, System.Int32, System.Int32, System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.Open()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.SetOnDrawerCloseListener(Android.Widget.SlidingDrawer.IOnDrawerCloseListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.SetOnDrawerOpenListener(Android.Widget.SlidingDrawer.IOnDrawerOpenListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.SetOnDrawerScrollListener(Android.Widget.SlidingDrawer.IOnDrawerScrollListener)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.Toggle()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.Unlock()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.IOnDrawerCloseListener' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.IOnDrawerCloseListener.OnDrawerClosed()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.SlidingDrawer.IOnDrawerOpenListener' in the contract but not the implementation.
@@ -2277,7 +2098,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.TabWidget.SetLeftStripDrawable(Android.Graphics.Drawables.Drawable)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.TabWidget.SetRightStripDrawable(Android.Graphics.Drawables.Drawable)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.TextView.SetTextAppearance(Android.Content.Context, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.TwoLineListItem..ctor(Android.Content.Context)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.ZoomButton' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.ZoomButton..ctor(Android.Content.Context)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.ZoomButton.OnLongClick(Android.Views.View)' in the contract but not the implementation.
@@ -2301,10 +2121,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.ZoomControls.SetOnZoomOutClickListener(Android.Views.View.IOnClickListener)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.ZoomControls.SetZoomSpeed(System.Int64)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.ZoomControls.Show()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.Annotation.ITestTarget.ConceptName()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.Annotation.ITestTarget.MethodArgs()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.Annotation.ITestTarget.MethodName()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.Annotation.ITestTargetClass.Value()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.SystemInterop.DexFile' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.SystemInterop.DexFile..ctor(Java.IO.File)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.SystemInterop.DexFile.Close()' in the contract but not the implementation.
@@ -2312,9 +2128,8 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.S
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.SystemInterop.DexFile.IsDexOptNeeded(System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.SystemInterop.DexFile.LoadClass(System.String, Java.Lang.ClassLoader)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.SystemInterop.DexFile.LoadDex(System.String, System.String, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.IO.LineNumberInputStream..ctor(System.IO.Stream)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.IO.StringBufferInputStream..ctor(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.IO.StringBufferInputStream.Read()' in the contract but not the implementation.
+CannotSealType : Type 'Java.Interop.JavaTypeParametersAttribute' is actually (has the sealed modifier) sealed in the implementation but not sealed in the contract.
+MembersMustExist : Member 'public void Java.Interop.JavaTypeParametersAttribute.TypeParameters.set(System.String[])' does not exist in the implementation but it does exist in the contract.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Lang.Boolean..ctor(System.Boolean)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Lang.Byte..ctor(System.SByte)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Lang.Double..ctor(System.Double)' in the contract but not the implementation.
@@ -2330,19 +2145,6 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Lan
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Lang.Invoke.MethodHandleInfo.RefKindIsField(Java.Lang.Invoke.ReferenceKind)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Lang.Invoke.MethodHandleInfo.RefKindIsValid(Java.Lang.Invoke.ReferenceKind)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Lang.Invoke.MethodHandleInfo.RefKindName(Java.Lang.Invoke.ReferenceKind)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.ICertificate.Decode(System.IO.Stream)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.ICertificate.Encode(System.IO.Stream)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.ICertificate.ToString(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Identity..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Identity.AddCertificate(Java.Security.ICertificate)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Identity.Certificates()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Identity.Equals(Java.Lang.Object)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Identity.IdentityEquals(Java.Security.Identity)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Identity.RemoveCertificate(Java.Security.ICertificate)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Identity.ToString(System.Boolean)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.IdentityScope..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Signer..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Signer.SetKeyPair(Java.Security.KeyPair)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Acl.AclNotFoundException' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Acl.AclNotFoundException..ctor()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Security.Acl.IAcl' in the contract but not the implementation.
@@ -2814,44 +2616,3 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Apac
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Apache.Http.Util.ExceptionUtils' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Apache.Http.Util.LangUtils' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Apache.Http.Util.VersionInfo' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.Characters(System.Char[], System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.EndDocument()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.EndElement(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.Error(Org.Xml.Sax.SAXParseException)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.FatalError(Org.Xml.Sax.SAXParseException)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.IgnorableWhitespace(System.Char[], System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.NotationDecl(System.String, System.String, System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.ProcessingInstruction(System.String, System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.ResolveEntity(System.String, System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.SetDocumentLocator(Org.Xml.Sax.ILocator)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.StartDocument()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.StartElement(System.String, Org.Xml.Sax.IAttributeList)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.UnparsedEntityDecl(System.String, System.String, System.String, System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.HandlerBase.Warning(Org.Xml.Sax.SAXParseException)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IAttributeList.GetName(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IAttributeList.GetType(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IAttributeList.GetValue(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IDocumentHandler.Characters(System.Char[], System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IDocumentHandler.EndDocument()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IDocumentHandler.EndElement(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IDocumentHandler.IgnorableWhitespace(System.Char[], System.Int32, System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IDocumentHandler.ProcessingInstruction(System.String, System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IDocumentHandler.SetDocumentLocator(Org.Xml.Sax.ILocator)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IDocumentHandler.StartDocument()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IDocumentHandler.StartElement(System.String, Org.Xml.Sax.IAttributeList)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IParser.Parse(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IParser.SetDocumentHandler(Org.Xml.Sax.IDocumentHandler)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IParser.SetDTDHandler(Org.Xml.Sax.IDTDHandler)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IParser.SetEntityResolver(Org.Xml.Sax.IEntityResolver)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IParser.SetErrorHandler(Org.Xml.Sax.IErrorHandler)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.IParser.SetLocale(Java.Util.Locale)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.Helpers.AttributeListImpl..ctor()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.Helpers.AttributeListImpl.AddAttribute(System.String, System.String, System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.Helpers.AttributeListImpl.Clear()' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.Helpers.AttributeListImpl.GetName(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.Helpers.AttributeListImpl.GetType(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.Helpers.AttributeListImpl.GetValue(System.Int32)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.Helpers.AttributeListImpl.RemoveAttribute(System.String)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.Helpers.AttributeListImpl.SetAttributeList(Org.Xml.Sax.IAttributeList)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Xml.Sax.Helpers.ParserFactory.MakeParser()' in the contract but not the implementation.

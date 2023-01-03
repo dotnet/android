@@ -195,6 +195,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckForInvalidHttpClientHandlerType ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				proj.SetProperty ("AndroidHttpClientHandlerType", "Android.App.Application");
+				Assert.IsFalse (b.Build (proj), "Build should not have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "XA1031"), "Output should contain XA1031");
+			}
+		}
+
+		[Test]
 		public void CheckHttpClientHandlerType ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -203,8 +217,15 @@ namespace Xamarin.Android.Build.Tests
 			var httpClientHandlerVarName = "XA_HTTP_CLIENT_HANDLER_TYPE";
 			var expectedDefaultValue = "System.Net.Http.HttpClientHandler, System.Net.Http";
 			var expectedUpdatedValue = "Xamarin.Android.Net.AndroidClientHandler";
+			if (Builder.UseDotNet) {
+				expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
+				expectedUpdatedValue = "Xamarin.Android.Net.AndroidMessageHandler";
+			}
+
 			var supportedAbis = "armeabi-v7a;arm64-v8a";
 			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.PackageReferences.Add (new Package() { Id = "System.Net.Http", Version = "*" });
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "var _ = new System.Net.Http.HttpClient ();");
 
 			using (var b = CreateApkBuilder ()) {
 				proj.SetProperty ("AndroidHttpClientHandlerType", expectedDefaultValue);
