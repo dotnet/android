@@ -425,6 +425,7 @@ namespace Xamarin.Android.Net
 					if (redirectState.NewUrl == null)
 						throw new InvalidOperationException ("Request redirected but no new URI specified");
 					request.Method = redirectState.Method;
+					request.RequestUri = redirectState.NewUrl;
 				} catch (Java.Net.SocketTimeoutException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new WebException (ex.Message, ex, WebExceptionStatus.Timeout, null);
 				} catch (Java.Net.UnknownServiceException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
