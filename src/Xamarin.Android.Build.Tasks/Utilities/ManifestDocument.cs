@@ -336,9 +336,8 @@ namespace Xamarin.Android.Tasks {
 				if (PackageName == null)
 					PackageName = t.Namespace;
 
-				string name, compatName;
 				if (t.IsSubclassOf ("Android.App.Application", cache)) {
-					(name, compatName) = GetNames (t, cache);
+					(string name, string compatName) = GetNames (t, cache);
 					if (((string) app.Attribute (attName)) == compatName) {
 						app.SetAttributeValue (attName, name);
 					}
@@ -349,8 +348,8 @@ namespace Xamarin.Android.Tasks {
 				if (generator == null)
 					continue;
 
-				(name, compatName) = GetNames (t, cache);
 				try {
+					(string name, string compatName) = GetNames (t, cache);
 					// activity not present: create a launcher for it IFF it has attribute
 					if (!existingTypes.Contains (name) && !existingTypes.Contains (compatName)) {
 						XElement fromCode = generator (t, name, targetSdkVersionValue);
