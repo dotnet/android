@@ -29,7 +29,7 @@ class DebugSession
 		this.parsedOptions = parsedOptions;
 		this.apk = apk;
 		workDirectory = Path.Combine (parsedOptions.WorkDirectory, Utilities.StringHash (apkPath));
-	}
+    }
 
 	public bool Prepare ()
 	{
