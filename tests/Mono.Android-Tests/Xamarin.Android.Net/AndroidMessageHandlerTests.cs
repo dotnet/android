@@ -111,6 +111,26 @@ namespace Xamarin.Android.NetTests
 			Assert.AreEqual (SslPolicyErrors.RemoteCertificateNameMismatch, reportedErrors & SslPolicyErrors.RemoteCertificateNameMismatch);
 		}
 
+		[Test]
+		public async Task ServerCertificateCustomValidationCallback_Redirects ()
+		{
+			int callbackCounter = 0;
+
+			var handler = new AndroidMessageHandler {
+				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
+					callbackCounter++;
+					Assert.Contains (request.RequestUri.Host, cert.SubjectName.Name);
+					return errors == SslPolicyErrors.None;
+				}
+			};
+
+			var client = new HttpClient (handler);
+			var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://microsoft.com/");
+
+			Assert.AreEqual (3, callbackCounter); // httpbin.org, microsoft.com, www.microsoft.com
+			Assert.IsTrue (result.IsSuccessStatusCode);
+		}
+
 		private async Task AssertRejectsRemoteCertificate (Func<Task> makeRequest)
 		{
 			// there is a difference between the exception that's thrown in the .NET build and the legacy Xamarin
