@@ -613,6 +613,7 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
+        provisionClassic: false
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: yaml-templates/run-xaprepare.yaml
@@ -779,6 +780,7 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
+        provisionClassic: false
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: yaml-templates/run-xaprepare.yaml
