@@ -2,19 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using ELFSharp.ELF;
-using ELFSharp.ELF.Sections;
 using Xamarin.Android.Utilities;
 
 namespace Xamarin.Android.Debug;
 
 abstract class LldbModuleCache
 {
+	List<string> deviceSharedLibraries;
+	Dictionary<string, string?> libraryCache;
+
 	protected AndroidDevice Device     { get; }
 	protected string CacheDirPath      { get; }
 	protected XamarinLoggingHelper Log { get; }
 
-	protected LldbModuleCache (XamarinLoggingHelper log, AndroidDevice device)
+	protected LldbModuleCache (XamarinLoggingHelper log, AndroidDevice device, List<string> deviceSharedLibraries)
 	{
 		Device = device;
 		Log = log;
@@ -26,6 +27,9 @@ abstract class LldbModuleCache
 			"remote-android", // "platform" used by LLDB in our case
 			device.SerialNumber
 		);
+
+		this.deviceSharedLibraries = deviceSharedLibraries;
+		libraryCache = new Dictionary<string, string?> (StringComparer.Ordinal);
 	}
 
 	public void Populate (string zygotePath)
@@ -38,86 +42,41 @@ abstract class LldbModuleCache
 		}
 
 		var alreadyDownloaded = new HashSet<string> (StringComparer.Ordinal);
-		using IELF? elf = ReadElfFile (localPath);
-
-		FetchDependencies (elf, alreadyDownloaded, localPath);
+		FetchDependencies (alreadyDownloaded, localPath);
 	}
 
-	void FetchDependencies (IELF? elf, HashSet<string> alreadyDownloaded, string localPath)
+	protected abstract void FetchDependencies (HashSet<string> alreadyDownloaded, string localPath);
+
+	protected string? FetchLibrary (string lib, HashSet<string> alreadyDownloaded)
 	{
-		if (elf == null) {
-			Log.DebugLine ($"Failed to open '{localPath}' as an ELF file. Ignoring.");
-			return;
+		Log.Debug ($"  {lib}");
+		if (alreadyDownloaded.Contains (lib)) {
+			Log.DebugLine (" [already downloaded]");
+			return null;
 		}
 
-		var dynstr = GetSection (elf, ".dynstr") as IStringTable;
-		if (dynstr == null) {
-			Log.DebugLine ($"ELF binary {localPath} has no .dynstr section, unable to read referenced shared library names");
-			return;
+		string? deviceLibraryPath = GetSharedLibraryPath (lib);
+		if (String.IsNullOrEmpty (deviceLibraryPath)) {
+			Log.DebugLine (" [device path unknown]");
+			Log.WarningLine ($"Referenced libary '{lib}' not found on device");
+			return null;
 		}
 
-		var needed = new HashSet<string> (StringComparer.Ordinal);
-		foreach (IDynamicSection section in elf.GetSections<IDynamicSection> ()) {
-			foreach (IDynamicEntry entry in section.Entries) {
-				if (entry.Tag != DynamicTag.Needed) {
-					continue;
-				}
-
-				AddNeeded (dynstr, entry);
-			}
+		Log.DebugLine (" [downloading]");
+		Log.Status ("Downloading", deviceLibraryPath);
+		string? localLibraryPath = FetchFileFromDevice (deviceLibraryPath);
+		if (String.IsNullOrEmpty (localLibraryPath)) {
+			Log.Log (LogLevel.Info, " [FAILED]", XamarinLoggingHelper.ErrorColor);
+			return null;
 		}
+		Log.LogLine (LogLevel.Info, " [SUCCESS]", XamarinLoggingHelper.InfoColor);
 
-		Log.DebugLine ($"Binary {localPath} references the following libraries:");
-		foreach (string lib in needed) {
-			Log.Debug ($"  {lib}");
-			if (alreadyDownloaded.Contains (lib)) {
-				Log.DebugLine (" [already downloaded]");
-				continue;
-			}
+		alreadyDownloaded.Add (lib);
 
-			string? deviceLibraryPath = GetSharedLibraryPath (lib);
-			if (String.IsNullOrEmpty (deviceLibraryPath)) {
-				Log.DebugLine (" [device path unknown]");
-				Log.WarningLine ($"Referenced libary '{lib}' not found on device");
-				continue;
-			}
-
-			Log.DebugLine (" [downloading]");
-			Log.Status ("Downloading", deviceLibraryPath);
-			string? localLibraryPath = FetchFileFromDevice (deviceLibraryPath);
-			if (String.IsNullOrEmpty (localLibraryPath)) {
-				Log.Log (LogLevel.Info, " [FAILED]", XamarinLoggingHelper.ErrorColor);
-				continue;
-			}
-			Log.LogLine (LogLevel.Info, " [SUCCESS]", XamarinLoggingHelper.InfoColor);
-
-			alreadyDownloaded.Add (lib);
-			using IELF? libElf = ReadElfFile (localLibraryPath);
-			FetchDependencies (libElf, alreadyDownloaded, localLibraryPath);
-		}
-
-		void AddNeeded (IStringTable stringTable, IDynamicEntry entry)
-		{
-			ulong index;
-			if (entry is DynamicEntry<ulong> entry64) {
-				index = entry64.Value;
-			} else if (entry is DynamicEntry<uint> entry32) {
-				index = (ulong)entry32.Value;
-			} else {
-				Log.WarningLine ($"DynamicEntry neither 32 nor 64 bit? Weird");
-				return;
-			}
-
-			string name = stringTable[(long)index];
-			if (needed.Contains (name)) {
-				return;
-			}
-
-			needed.Add (name);
-		}
+		return localLibraryPath;
 	}
 
-	string? FetchFileFromDevice (string deviceFilePath)
+	protected string? FetchFileFromDevice (string deviceFilePath)
 	{
 		string localFilePath = Utilities.MakeLocalPath (CacheDirPath, deviceFilePath);
 		string localTempFilePath = $"{localFilePath}.tmp";
@@ -133,38 +92,23 @@ abstract class LldbModuleCache
 		return localFilePath;
 	}
 
-	protected string GetUnixFileName (string path)
+	string? GetSharedLibraryPath (string libraryName)
 	{
-		int idx = path.LastIndexOf ('/');
-		if (idx >= 0 && idx != path.Length - 1) {
-			return path.Substring (idx + 1);
+		if (libraryCache.TryGetValue (libraryName, out string? libraryPath)) {
+			return libraryPath;
 		}
 
-		return path;
-	}
+		foreach (string libPath in deviceSharedLibraries) {
+			string fileName = Utilities.GetZipEntryFileName (libPath);
 
-	protected abstract string? GetSharedLibraryPath (string libraryName);
-
-	IELF? ReadElfFile (string path)
-	{
-		try {
-			if (ELFReader.TryLoad (path, out IELF ret)) {
-				return ret;
+			if (String.Compare (libraryName, fileName, StringComparison.Ordinal) == 0) {
+				libraryCache.Add (libraryName, libPath);
+				return libPath;
 			}
-		} catch (Exception ex) {
-			Log.WarningLine ($"{path} may not be a valid ELF binary.");
-			Log.WarningLine (ex.ToString ());
 		}
 
+		// Cache misses, too, the list isn't going to change
+		libraryCache.Add (libraryName, null);
 		return null;
-	}
-
-	ISection? GetSection (IELF elf, string sectionName)
-	{
-		if (!elf.TryGetSection (sectionName, out ISection section)) {
-			return null;
-		}
-
-		return section;
 	}
 }

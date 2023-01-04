@@ -112,6 +112,10 @@ namespace Xamarin.Android.Tasks
 
 		public async Task<(bool success, string output)> RunAs (string packageName, string command, params string[] args)
 		{
+			if (String.IsNullOrEmpty (packageName)) {
+				throw new ArgumentException ("must not be null or empty", nameof (packageName));
+			}
+
 			var shellArgs = new List<string> {
 				packageName,
 				command,
@@ -146,6 +150,10 @@ namespace Xamarin.Android.Tasks
 
 		async Task<(bool success, string output)> Shell (string command, IEnumerable<string>? args, OutputLineFilter? lineFilter)
 		{
+			if (String.IsNullOrEmpty (command)) {
+				throw new ArgumentException ("must not be null or empty", nameof (command));
+			}
+
 			var runner = CreateAdbRunner ();
 
 			runner.AddArgument ("shell");

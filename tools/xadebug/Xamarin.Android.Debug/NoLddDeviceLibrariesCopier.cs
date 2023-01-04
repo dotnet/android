@@ -42,7 +42,6 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 	{
 		zygotePath = FetchZygote ();
 		if (String.IsNullOrEmpty (zygotePath)) {
-			Log.ErrorLine ("Unable to determine path of the zygote process on device");
 			return false;
 		}
 

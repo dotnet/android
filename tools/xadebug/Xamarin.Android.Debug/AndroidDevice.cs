@@ -36,6 +36,7 @@ class AndroidDevice
 	string? appLldbTmpDir;
 	string? mainAbi;
 	string? mainArch;
+	string[]? deviceABIs;
 	string[]? availableAbis;
 	string[]? availableArches;
 	string? serialNumber;
@@ -52,11 +53,15 @@ class AndroidDevice
 	public int ApiLevel => apiLevel;
 	public string[] AvailableAbis => availableAbis ?? new string[] {};
 	public string[] AvailableArches => availableArches ?? new string[] {};
+	public string[] DeviceAbis => deviceABIs ?? new string[] {};
 	public string MainArch => mainArch ?? String.Empty;
 	public string MainAbi => mainAbi ?? String.Empty;
 	public string SerialNumber => serialNumber ?? String.Empty;
 	public string DebugServerLauncherScriptPath => deviceDebugServerScriptPath ?? String.Empty;
+	public string DebugServerPath => deviceDebugServerPath ?? String.Empty;
 	public string LldbBaseDir => appLldbBaseDir ?? String.Empty;
+	public string AppDataDir => appDataDir ?? String.Empty;
+	public string? DeviceLddPath => deviceLdd;
 	public AdbRunner AdbRunner => adb;
 
 	public AndroidDevice (XamarinLoggingHelper log, AndroidNdk ndk, string outputDir, string adbPath, string packageName, List<string> supportedAbis, string? adbTargetDevice = null)
@@ -107,8 +112,6 @@ class AndroidDevice
 		serialNumber = GetFirstFoundPropertyValue (serialNumberProperties);
 		if (String.IsNullOrEmpty (serialNumber)) {
 			log.WarningLine ("Unable to determine device serial number");
-		} else {
-			log.StatusLine ($"Device serial number", serialNumber);
 		}
 
 		return true;
@@ -192,7 +195,6 @@ class AndroidDevice
 		if (!PushServerExecutable (debugServerPath, deviceDebugServerPath)) {
 			return false;
 		}
-		log.StatusLine ("Debug server path on device", deviceDebugServerPath);
 
 		string? launcherScript = Utilities.ReadManifestResource (log, ServerLauncherScriptName);
 		if (String.IsNullOrEmpty (launcherScript)) {
@@ -207,8 +209,6 @@ class AndroidDevice
 		if (!PushServerExecutable (launcherScriptPath, deviceDebugServerScriptPath)) {
 			return false;
 		}
-		log.StatusLine ("Debug server launcher script path on device", deviceDebugServerScriptPath);
-		log.MessageLine ();
 
 		return true;
 
@@ -327,7 +327,6 @@ class AndroidDevice
 		}
 
 		appDataDir = output.Trim ();
-		log.StatusLine ($"Application data directory on device", appDataDir);
 
 		appLldbBaseDir = $"{appDataDir}/lldb";
 		appLldbBinDir = $"{appLldbBaseDir}/bin";
@@ -367,15 +366,12 @@ class AndroidDevice
 	bool DetermineArchitectureAndABI ()
 	{
 		string? propValue = GetFirstFoundPropertyValue (abiProperties);
-		string[]? deviceABIs = propValue?.Split (',');
+		deviceABIs = propValue?.Split (',');
 
 		if (deviceABIs == null || deviceABIs.Length == 0) {
 			log.ErrorLine ("Unable to determine device ABI");
 			return false;
 		}
-
-		LogABIs ("Application", supportedAbis);
-		LogABIs ("     Device", deviceABIs);
 
 		bool gotValidAbi = false;
 		var possibleAbis = new List<string> ();
@@ -389,9 +385,6 @@ class AndroidDevice
 					if (!gotValidAbi) {
 						mainAbi = deviceABI;
 						mainArch = arch;
-
-						log.StatusLine ($"    Selected ABI", $"{mainAbi} (architecture: {mainArch})");
-
 						appIs64Bit = mainAbi.IndexOf ("64", StringComparison.Ordinal) >= 0;
 						gotValidAbi = true;
 					}
@@ -409,11 +402,6 @@ class AndroidDevice
 		availableAbis = possibleAbis.ToArray ();
 		availableArches = possibleArches.ToArray ();
 		return gotValidAbi;
-
-		void LogABIs (string which, IEnumerable<string> abis)
-		{
-			log.StatusLine ($"{which} ABIs", String.Join (", ", abis));
-		}
 
 		string AbiToArch (string abi) => abi switch {
 			"armeabi" => "arm",

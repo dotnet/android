@@ -95,4 +95,24 @@ static class Utilities
 
 		return sb.ToString ();
 	}
+
+	public static string GetZipEntryFileName (string zipEntryName)
+	{
+		int idx = zipEntryName.LastIndexOf ('/');
+		if (idx >= 0 && idx != zipEntryName.Length - 1) {
+			return zipEntryName.Substring (idx + 1);
+		}
+
+		return zipEntryName;
+	}
+
+	public static string GetZipEntryDirName (string zipEntryName)
+	{
+		int idx = zipEntryName.LastIndexOf ('/');
+		if (idx < 0) {
+			return String.Empty;
+		}
+
+		return zipEntryName.Substring (0, idx + 1);
+	}
 }

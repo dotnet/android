@@ -43,7 +43,7 @@ class XADebug
 		var parsedOptions = new ParsedOptions ();
 		log.Verbose = parsedOptions.Verbose;
 
-		var opts = new OptionSet {
+ 		var opts = new OptionSet {
 			"Usage: dotnet xadebug [OPTIONS] <PROJECT_DIRECTORY_PATH | APPLICATION_APK_PATH>",
 			"",
 			{ "p|package-name=", "name of the application package", v => parsedOptions.PackageName = EnsureNonEmptyString (log, "-p|--package-name", v, ref haveOptionErrors) },
@@ -158,8 +158,12 @@ class XADebug
 			return 1;
 		}
 
-		var debugSession = new DebugSession (log, apkFilePath, apk, parsedOptions);
-		return debugSession.Prepare () ? 0 : 1;
+		var debugSession = new DebugSession (log, appInfo, apkFilePath, apk, parsedOptions);
+		if (!debugSession.Prepare ()) {
+			return 1;
+		}
+
+		return 0;
 	}
 
 	static ApplicationInfo? ReadManifest (ZipArchive apk, ParsedOptions parsedOptions)
