@@ -336,10 +336,12 @@ namespace Xamarin.Android.Tasks {
 				if (PackageName == null)
 					PackageName = t.Namespace;
 
-				var name        = JavaNativeTypeManager.ToJniName (t, cache).Replace ('/', '.');
-				var compatName  = JavaNativeTypeManager.ToCompatJniName (t, cache).Replace ('/', '.');
-				if (((string) app.Attribute (attName)) == compatName) {
-					app.SetAttributeValue (attName, name);
+				if (t.IsSubclassOf ("Android.App.Application", cache)) {
+					(string name, string compatName) = GetNames (t, cache);
+					if (((string) app.Attribute (attName)) == compatName) {
+						app.SetAttributeValue (attName, name);
+					}
+					continue;
 				}
 
 				Func<TypeDefinition, string, int, XElement> generator = GetGenerator (t, cache);
@@ -347,6 +349,7 @@ namespace Xamarin.Android.Tasks {
 					continue;
 
 				try {
+					(string name, string compatName) = GetNames (t, cache);
 					// activity not present: create a launcher for it IFF it has attribute
 					if (!existingTypes.Contains (name) && !existingTypes.Contains (compatName)) {
 						XElement fromCode = generator (t, name, targetSdkVersionValue);
@@ -480,6 +483,11 @@ namespace Xamarin.Android.Tasks {
 				return ret;
 			}
 		}
+
+		(string name, string compatName) GetNames(TypeDefinition type, TypeDefinitionCache cache) => (
+			JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.'),
+			JavaNativeTypeManager.ToCompatJniName (type, cache).Replace ('/', '.')
+		);
 
 		// FIXME: our manifest merger is hacky.
 		// To support complete manifest merger, we will have to implement fairly complicated one, described at
