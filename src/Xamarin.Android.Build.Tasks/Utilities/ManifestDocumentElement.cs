@@ -23,9 +23,9 @@ namespace Xamarin.Android.Manifest {
 
 	class ManifestDocumentElement {
 
-		public static string ToString (TypeDefinition typeDef)
+		public static string ToString (TypeDefinition typeDef, TypeDefinitionCache cache)
 		{
-			return JavaNativeTypeManager.ToJniName (typeDef).Replace ('/', '.');
+			return JavaNativeTypeManager.ToJniName (typeDef, cache).Replace ('/', '.');
 		}
 
 		public static TypeDefinition ResolveType (string type, ICustomAttributeProvider provider, IAssemblyResolver resolver)
@@ -80,7 +80,7 @@ namespace Xamarin.Android.Manifest {
 			public Action<T, object>  Setter;
 			public Type               MemberType;
 			public Func<T, string>    AttributeValue;
-			public Func<T, ICustomAttributeProvider, IAssemblyResolver, string>    AttributeValue2;
+			public Func<T, ICustomAttributeProvider, IAssemblyResolver, TypeDefinitionCache, string>    AttributeValue2;
 		}
 
 		readonly IDictionary<string, MappingInfo>   Mappings = new Dictionary<string, MappingInfo> ();
@@ -104,7 +104,7 @@ namespace Xamarin.Android.Manifest {
 			});
 		}
 
-		public void Add (string member, string attributeName, Action<T, object> setter, Func<T, ICustomAttributeProvider, IAssemblyResolver, string> attributeValue)
+		public void Add (string member, string attributeName, Action<T, object> setter, Func<T, ICustomAttributeProvider, IAssemblyResolver, TypeDefinitionCache, string> attributeValue)
 		{
 			Mappings.Add (member, new MappingInfo {
 					AttributeName   = attributeName,
@@ -130,19 +130,19 @@ namespace Xamarin.Android.Manifest {
 			return specified;
 		}
 
-		public XElement ToElement (T value, ICollection<string> specified, string packageName,
+		public XElement ToElement (T value, ICollection<string> specified, string packageName, TypeDefinitionCache cache,
 			ICustomAttributeProvider provider = null, IAssemblyResolver resolver = null, int targetSdkVersion = 0)
 		{
 			var r = new XElement (Element,
 					specified.OrderBy (e => e)
-					.Select (e => ToAttribute (e, value, packageName, provider, resolver, targetSdkVersion))
+					.Select (e => ToAttribute (e, value, packageName, provider, resolver, cache, targetSdkVersion))
 					.Where (a => a != null));
 			AndroidResource.UpdateXmlResource (r);
 			return r;
 		}
 
 		XAttribute ToAttribute (string name, T value, string packageName,
-			ICustomAttributeProvider provider, IAssemblyResolver resolver, int targetSdkVersion = 0)
+			ICustomAttributeProvider provider, IAssemblyResolver resolver, TypeDefinitionCache cache, int targetSdkVersion = 0)
 		{
 			if (!Mappings.ContainsKey (name))
 				throw new ArgumentException ("Invalid attribute name: " + name);
@@ -150,20 +150,20 @@ namespace Xamarin.Android.Manifest {
 			if (m.AttributeName == null)
 				return null;
 
-			string v = ToAttributeValue (name, value, provider, resolver,targetSdkVersion);
+			string v = ToAttributeValue (name, value, provider, resolver, cache, targetSdkVersion);
 			if (v == null)
 				return null;
 			v = v.Replace ("@PACKAGE_NAME@", packageName);
 			return new XAttribute (ManifestDocument.AndroidXmlNamespace + m.AttributeName, v);
 		}
 
-		string ToAttributeValue (string name, T value, ICustomAttributeProvider provider, IAssemblyResolver resolver, int targetSdkVersion = 0)
+		string ToAttributeValue (string name, T value, ICustomAttributeProvider provider, IAssemblyResolver resolver, TypeDefinitionCache cache, int targetSdkVersion = 0)
 		{
 			var m = Mappings [name];
 			if (m.AttributeValue != null)
 				return m.AttributeValue (value);
 			if (m.AttributeValue2 != null)
-				return m.AttributeValue2 (value, provider, resolver);
+				return m.AttributeValue2 (value, provider, resolver, cache);
 
 			if (m.Getter == null)
 				return null;
@@ -174,25 +174,25 @@ namespace Xamarin.Android.Manifest {
 
 			var t = m.MemberType ?? v.GetType ();
 			var c = ValueConverters [t];
-			return c (v, provider, resolver, targetSdkVersion);
+			return c (v, provider, resolver, targetSdkVersion, cache);
 		}
 
-		static readonly Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, string>> ValueConverters = new Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, string>> () {
-			{ typeof (bool),                (value, p, r, v) => ToString ((bool) value) },
-			{ typeof (int),                 (value, p, r, v) => value.ToString () },
-			{ typeof (float),               (value, p, r, v) => value.ToString () },
-			{ typeof (string),              (value, p, r, v) => value.ToString () },
-			{ typeof (ActivityPersistableMode),     (value, p, r, v) => ToString ((ActivityPersistableMode) value) },
-			{ typeof (ConfigChanges),       (value, p, r, v) => ToString ((ConfigChanges) value) },
-			{ typeof (DocumentLaunchMode),  (value, p, r, v) => ToString ((DocumentLaunchMode) value) },
-			{ typeof (ForegroundService),   (value, p, r, v) => ToString ((ForegroundService) value) },
-			{ typeof (LaunchMode),          (value, p, r, v) => ToString ((LaunchMode) value) },
-			{ typeof (Protection),          (value, p, r, v) => ToString ((Protection) value) },
-			{ typeof (ScreenOrientation),   (value, p, r, v) => ToString ((ScreenOrientation) value, v) },
-			{ typeof (SoftInput),           (value, p, r, v) => ToString ((SoftInput) value) },
-			{ typeof (UiOptions),           (value, p, r, v) => ToString ((UiOptions) value) },
-			{ typeof (Type),                (value, p, r, v) => ToString (value.ToString (), p, r) },
-			{ typeof (WindowRotationAnimation),     (value, p, r, v) => ToString ((WindowRotationAnimation) value) },
+		static readonly Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, TypeDefinitionCache, string>> ValueConverters = new () {
+			{ typeof (bool),                (value, p, r, v, c) => ToString ((bool) value) },
+			{ typeof (int),                 (value, p, r, v, c) => value.ToString () },
+			{ typeof (float),               (value, p, r, v, c) => value.ToString () },
+			{ typeof (string),              (value, p, r, v, c) => value.ToString () },
+			{ typeof (ActivityPersistableMode),     (value, p, r, v, c) => ToString ((ActivityPersistableMode) value) },
+			{ typeof (ConfigChanges),       (value, p, r, v, c) => ToString ((ConfigChanges) value) },
+			{ typeof (DocumentLaunchMode),  (value, p, r, v, c) => ToString ((DocumentLaunchMode) value) },
+			{ typeof (ForegroundService),   (value, p, r, v, c) => ToString ((ForegroundService) value) },
+			{ typeof (LaunchMode),          (value, p, r, v, c) => ToString ((LaunchMode) value) },
+			{ typeof (Protection),          (value, p, r, v, c) => ToString ((Protection) value) },
+			{ typeof (ScreenOrientation),   (value, p, r, v, c) => ToString ((ScreenOrientation) value, v) },
+			{ typeof (SoftInput),           (value, p, r, v, c) => ToString ((SoftInput) value) },
+			{ typeof (UiOptions),           (value, p, r, v, c) => ToString ((UiOptions) value) },
+			{ typeof (Type),                (value, p, r, v, c) => ToString (value.ToString (), p, r, c) },
+			{ typeof (WindowRotationAnimation),     (value, p, r, v, c) => ToString ((WindowRotationAnimation) value) },
 		};
 
 		static string ToString (bool value)
@@ -360,10 +360,10 @@ namespace Xamarin.Android.Manifest {
 			}
 		}
 
-		static string ToString (string value, ICustomAttributeProvider provider, IAssemblyResolver resolver)
+		static string ToString (string value, ICustomAttributeProvider provider, IAssemblyResolver resolver, TypeDefinitionCache cache)
 		{
 			var typeDef = ResolveType (value, provider, resolver);
-			return ToString (typeDef);
+			return ToString (typeDef, cache);
 		}
 
 		static string ToString (ForegroundService value)
