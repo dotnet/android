@@ -60,16 +60,16 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     Inputs="$(_AndroidResFlagFile);@(_AndroidResourceDest);@(LibraryResourceDirectories->'%(StampFile)')"
     Outputs="$(_DesignerIntermediateOutputPath)R.txt"
   >
-    <!-- Generate an R.txt file using the Managed Parser -->
-    <GenerateRtxt
-        AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-        CaseMapFile="$(_GenerateResourceCaseMapFile)"
-        JavaPlatformJarPath="$(JavaPlatformJarPath)"
-        ResourceDirectory="$(MonoAndroidResDirIntermediate)"
-        ResourceFlagFile="$(_AndroidResFlagFile)"
-        RTxtFile="$(_DesignerIntermediateOutputPath)R.txt"
-    >
-    </GenerateRtxt>
+  <!-- Generate an R.txt file using the Managed Parser -->
+  <GenerateRtxt
+      AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+      CaseMapFile="$(_GenerateResourceCaseMapFile)"
+      JavaPlatformJarPath="$(JavaPlatformJarPath)"
+      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+      ResourceFlagFile="$(_AndroidResFlagFile)"
+      RTxtFile="$(_DesignerIntermediateOutputPath)R.txt"
+  >
+  </GenerateRtxt>
 </Target>
 
 <Target Name="_GenerateResourceCaseMap"
@@ -77,18 +77,18 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     Inputs="@(_AndroidResourceDest);@(LibraryResourceDirectories->'%(StampFile)')"
     Outputs="$(_GenerateResourceCaseMapFile)"
   >
-    <!-- Generate a ResourceMap file for the project and its resources -->
-    <GenerateResourceCaseMap
-        AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-        OutputFile="$(_GenerateResourceCaseMapFile)"
-        ProjectDir="$(ProjectDir)"
-        ResourceDirectory="$(MonoAndroidResDirIntermediate)"
-        Resources="@(_AndroidResourceDest)"
-    />
-    <Touch Files="$(_GenerateResourceCaseMapFile)" />
-    <ItemGroup>
-      <FileWrites Include="$(_GenerateResourceCaseMapFile)" />
-    </ItemGroup>
+  <!-- Generate a ResourceMap file for the project and its resources -->
+  <GenerateResourceCaseMap
+      AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+      OutputFile="$(_GenerateResourceCaseMapFile)"
+      ProjectDir="$(ProjectDir)"
+      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+      Resources="@(_AndroidResourceDest)"
+  />
+  <Touch Files="$(_GenerateResourceCaseMapFile)" />
+  <ItemGroup>
+    <FileWrites Include="$(_GenerateResourceCaseMapFile)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_GenerateResourceDesignerIntermediateClass"
@@ -99,16 +99,16 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <!-- Creates a Resource.designer.cs file in the Intermediate output path which derives from the
        Designer Assembly, for backward compatability.
    -->
-    <GenerateResourceDesignerIntermediateClass
-        IsApplication="$(AndroidApplication)"
-        Namespace="$(AndroidResgenNamespace)"
-        OutputFile="$(_GenerateResourceDesignerClassFile)"
-    >
-    </GenerateResourceDesignerIntermediateClass>
-    <Touch Files="$(_GenerateResourceDesignerClassFile)" />
-    <ItemGroup>
-      <FileWrites Include="$(_GenerateResourceDesignerClassFile)" />
-    </ItemGroup>
+  <GenerateResourceDesignerIntermediateClass
+      IsApplication="$(AndroidApplication)"
+      Namespace="$(AndroidResgenNamespace)"
+      OutputFile="$(_GenerateResourceDesignerClassFile)"
+  >
+  </GenerateResourceDesignerIntermediateClass>
+  <Touch Files="$(_GenerateResourceDesignerClassFile)" />
+  <ItemGroup>
+    <FileWrites Include="$(_GenerateResourceDesignerClassFile)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_GenerateResourceDesignerAssembly"
@@ -116,41 +116,41 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     DependsOnTargets="_GenerateResourceCaseMap"
     Inputs="$(_DesignerIntermediateOutputPath)R.txt"
     Outputs="$(_GenerateResourceDesignerAssemblyOutput)">
-    <GenerateResourceDesignerAssembly
-        ContinueOnError="$(DesignTimeBuild)"
-        AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-        AssemblyName="$(AssemblyName)"
-        CaseMapFile="$(_GenerateResourceCaseMapFile)"
-        DesignTimeBuild="$(DesignTimeBuild)"
-        Deterministic="$(Deterministic)"
-        FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-        IsApplication="$(AndroidApplication)"
-        OutputFile="$(_GenerateResourceDesignerAssemblyOutput)"
-        ProjectDir="$(ProjectDir)"
-        Resources="@(AndroidResource);@(AndroidBoundLayout)"
-        ResourceDirectory="$(MonoAndroidResourcePrefix)"
-        RTxtFile="$(_DesignerIntermediateOutputPath)R.txt"
-        TargetFrameworkIdentifier="$(TargetFrameworkIdentifier)"
-        TargetFrameworkVersion="$(TargetFrameworkVersion)"
-    >
-    </GenerateResourceDesignerAssembly>
-    <ItemGroup>
-      <FileWrites Include="$(_GenerateResourceDesignerAssemblyOutput)" />
-    </ItemGroup>
+  <GenerateResourceDesignerAssembly
+      ContinueOnError="$(DesignTimeBuild)"
+      AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+      AssemblyName="$(AssemblyName)"
+      CaseMapFile="$(_GenerateResourceCaseMapFile)"
+      DesignTimeBuild="$(DesignTimeBuild)"
+      Deterministic="$(Deterministic)"
+      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+      IsApplication="$(AndroidApplication)"
+      OutputFile="$(_GenerateResourceDesignerAssemblyOutput)"
+      ProjectDir="$(ProjectDir)"
+      Resources="@(AndroidResource);@(AndroidBoundLayout)"
+      ResourceDirectory="$(MonoAndroidResourcePrefix)"
+      RTxtFile="$(_DesignerIntermediateOutputPath)R.txt"
+      TargetFrameworkIdentifier="$(TargetFrameworkIdentifier)"
+      TargetFrameworkVersion="$(TargetFrameworkVersion)"
+  >
+  </GenerateResourceDesignerAssembly>
+  <ItemGroup>
+    <FileWrites Include="$(_GenerateResourceDesignerAssemblyOutput)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_CheckForInvalidDesignerConfig"
     Condition=" '$(AndroidUseDesignerAssembly)' != 'True' "
     DependsOnTargets="_AddAndroidCustomMetaData">
-    <ItemGroup>
-      <_ErrorItems Include="@(_MonoAndroidReferencePath)" Condition=" '%(_MonoAndroidReferencePath.HasResourceDesignerAssemblyReference)' == 'True' "/>
-      <_ErrorItems Include="@(_MonoAndroidReferenceDependencyPaths)"  Condition=" '%(_MonoAndroidReferenceDependencyPaths.HasResourceDesignerAssemblyReference)' == 'True' "/>
-    </ItemGroup>
-    <AndroidError Code="XA1034"
-        ResourceName="XA1034"
-        FormatArguments="%(_ErrorItems.FullPath)"
-        Condition=" '@(_ErrorItems->Count())' != '0' "
-    />
+  <ItemGroup>
+    <_ErrorItems Include="@(_MonoAndroidReferencePath)" Condition=" '%(_MonoAndroidReferencePath.HasResourceDesignerAssemblyReference)' == 'True' "/>
+    <_ErrorItems Include="@(_MonoAndroidReferenceDependencyPaths)"  Condition=" '%(_MonoAndroidReferenceDependencyPaths.HasResourceDesignerAssemblyReference)' == 'True' "/>
+  </ItemGroup>
+  <AndroidError Code="XA1034"
+      ResourceName="XA1034"
+      FormatArguments="%(_ErrorItems.FullPath)"
+      Condition=" '@(_ErrorItems->Count())' != '0' "
+  />
 </Target>
 
 <PropertyGroup>
@@ -168,17 +168,17 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
     DependsOnTargets="_SetupDesignerProperties"
     AfterTargets="GenerateGlobalUsings">
-    <ItemGroup>
-      <ReferencePath Include="$(_GenerateResourceDesignerAssemblyOutput)">
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ReferencePath>
-      <Compile Remove="$(_AndroidResourceDesignerFile)" />
-      <Compile Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' != 'F#' "/>
-      <!-- For F# we need to use the CompileBefore ItemGroup so that our type is processed
-            before all the other types in the build. Otherwise we get weird compiler errors.
-        -->
-      <CompileBefore Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' == 'F#' "/>
-    </ItemGroup>
+  <ItemGroup>
+    <ReferencePath Include="$(_GenerateResourceDesignerAssemblyOutput)">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </ReferencePath>
+    <Compile Remove="$(_AndroidResourceDesignerFile)" />
+    <Compile Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' != 'F#' "/>
+    <!-- For F# we need to use the CompileBefore ItemGroup so that our type is processed
+          before all the other types in the build. Otherwise we get weird compiler errors.
+      -->
+    <CompileBefore Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' == 'F#' "/>
+  </ItemGroup>
 </Target>
 
 <!--
@@ -193,14 +193,14 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
     AfterTargets="ComputeResolvedFilesToPublishList"
     DependsOnTargets="_SetupDesignerProperties">
-    <ItemGroup>
-      <ResolvedFileToPublish Include="$(_GenerateResourceDesignerAssemblyOutput)">
-        <RelativePath>$(_DesignerAssemblyName).dll</RelativePath>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-        <PostprocessAssembly>true</PostprocessAssembly>
-        <IsTrimmable>true</IsTrimmable>
-      </ResolvedFileToPublish>
-    </ItemGroup>
+  <ItemGroup>
+    <ResolvedFileToPublish Include="$(_GenerateResourceDesignerAssemblyOutput)">
+      <RelativePath>$(_DesignerAssemblyName).dll</RelativePath>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <PostprocessAssembly>true</PostprocessAssembly>
+      <IsTrimmable>true</IsTrimmable>
+    </ResolvedFileToPublish>
+  </ItemGroup>
 </Target>
 
 <Target Name="_BuildResourceDesigner"
