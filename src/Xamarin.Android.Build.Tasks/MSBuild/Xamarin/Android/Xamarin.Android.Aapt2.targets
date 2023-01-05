@@ -90,7 +90,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_ConvertResourcesCases"
-    Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidBuildPropertiesCache);@(AndroidResource);@(_LibraryResourceDirectories->'%(StampFile)')"
+    Inputs="$(_AndroidBuildPropertiesCache);@(AndroidResource);@(_LibraryResourceDirectories->'%(StampFile)')"
     Outputs="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp"
     DependsOnTargets="_CollectLibraryResourceDirectories;$(_BeforeConvertResourcesCases)"
   >

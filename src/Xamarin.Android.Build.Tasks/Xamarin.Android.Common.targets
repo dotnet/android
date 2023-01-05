@@ -914,7 +914,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GenerateAndroidAssetsDir"
-	Inputs="@(_AndroidMSBuildAllProjects);@(_AndroidResolvedAssets)"
+	Inputs="@(_AndroidResolvedAssets);$(_AndroidBuildPropertiesCache)"
 	Outputs="@(_AndroidAssetsDest)">
 	<MakeDir Directories="$(MonoAndroidAssetsDirIntermediate)" />
 	<Copy SourceFiles="@(_AndroidResolvedAssets)" DestinationFiles="@(_AndroidAssetsDest)" SkipUnchangedFiles="true" />
@@ -994,6 +994,10 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
 		<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
 		<_PropertyCacheItems Include="AndroidGenerateJniMarshalMethods=$(AndroidGenerateJniMarshalMethods)" />
+		<_PropertyCacheItems Include="AndroidEnableMarshalMethods=$(AndroidEnableMarshalMethods)" />
+		<_PropertyCacheItems Include="AndroidUseAssemblyStore=$(AndroidUseAssemblyStore)" />
+		<_PropertyCacheItems Include="AndroidEnableAssemblyCompression=$(AndroidEnableAssemblyCompression)" />
+		<_PropertyCacheItems Include="AndroidManifestMerger=$(AndroidManifestMerger)" />
 		<_PropertyCacheItems Include="OS=$(OS)" />
 		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
@@ -1026,7 +1030,6 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_BeforeManagedUpdateAndroidResgen">
   <PropertyGroup>
     <_ManagedUpdateAndroidResgenInputs>
-      @(_AndroidMSBuildAllProjects);
       @(AndroidResource);
       @(AndroidBoundLayout);
       @(_MonoAndroidReferencePath);
@@ -1111,7 +1114,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GenerateAndroidResourceDir"
-	Inputs="$(MSBuildProjectFullPath);@(_AndroidMSBuildAllProjects);@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache)"
+	Inputs="@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache)"
 	Outputs="$(_AndroidResFlagFile)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CheckForInvalidResourceFileNames
@@ -1525,7 +1528,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateJavaStubs"
     DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-    Inputs="@(_AndroidMSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+    Inputs="@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
   <PropertyGroup>
@@ -1591,7 +1594,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_ManifestMerger"
     Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' "
-    Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+    Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);$(_AndroidBuildPropertiesCache)"
     Outputs="$(IntermediateOutputPath)android\AndroidManifest.xml"
   >
   <ItemGroup>
@@ -1759,7 +1762,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
-  Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+  Inputs="$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
@@ -1813,7 +1816,6 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_CreateBaseApkInputs>
       $(_CreateBaseApkInputs);
-      @(_AndroidMSBuildAllProjects);
       $(IntermediateOutputPath)android\AndroidManifest.xml;
       @(_ModifiedResources);
       @(_AndroidAssetsDest);
@@ -1934,8 +1936,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CalculateProguardConfigurationFiles;
 	</_CompileToDalvikDependsOnTargets>
 	<_CompileToDalvikInputs>
-		@(_AndroidMSBuildAllProjects)
-		;@(_JavaLibrariesToCompileForApp)
+		@(_JavaLibrariesToCompileForApp)
 		;@(AndroidExternalJavaLibrary)
 		;$(_AndroidIntermediateClassesZip)
 		;@(ProguardConfiguration)
@@ -2114,8 +2115,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
 	<_BuildApkEmbedInputs>
-		@(_AndroidMSBuildAllProjects)
-		;$(_PackagedResources)
+		$(_PackagedResources)
 		;@(_ShrunkAssemblies)
 		;@(AndroidNativeLibrary)
 		;@(_DexFile)
@@ -2371,7 +2371,6 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_PrepareForSign">
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
     <_SignInputs>
-      @(_AndroidMSBuildAllProjects);
       $(_AndroidBuildPropertiesCache);
       $(_AppBundleIntermediate);
     </_SignInputs>
@@ -2381,7 +2380,6 @@ because xbuild doesn't support framework reference assemblies.
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
     <_SignInputs>
-      @(_AndroidMSBuildAllProjects);
       $(_AndroidBuildPropertiesCache);
       $(ApkFileIntermediate);
     </_SignInputs>

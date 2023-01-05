@@ -700,6 +700,43 @@ namespace Lib2
 		}
 
 		[Test]
+		public void CSProjFileChanges ()
+		{
+			// A subset of targets that can skip when the .csproj file changes
+			var targets = new [] {
+				"_CompileJava",
+				"_CompileToDalvik",
+				"_ConvertResourcesCases",
+				"_GenerateAndroidAssetsDir",
+				"_GenerateAndroidResourceDir",
+				"_GeneratePackageManagerJava",
+				"_ManifestMerger",
+			};
+
+			var proj = new XamarinAndroidApplicationProject {
+				ManifestMerger = "manifestmerger.jar",
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\foo.txt") {
+						TextContent =  () => "bar",
+					},
+				}
+			};
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+			foreach (var target in targets) {
+				b.Output.AssertTargetIsNotSkipped (target);
+			}
+
+			// Touch the project file, by adding a property
+			proj.SetProperty ("Foo", "Bar");
+
+			Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+			foreach (var target in targets) {
+				b.Output.AssertTargetIsSkipped (target);
+			}
+		}
+
+		[Test]
 		[NonParallelizable] // /restore can fail on Mac in parallel
 		public void ConvertCustomView ([Values (true, false)] bool useAapt2)
 		{
