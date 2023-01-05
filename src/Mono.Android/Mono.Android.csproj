@@ -205,6 +205,7 @@
     <Compile Include="Android.Graphics.Drawables\RotateDrawable.cs" />
     <Compile Include="Android.Graphics.Drawables\ScaleDrawable.cs" />
     <Compile Include="Android.Hardware\SensorManager.cs" />
+    <Compile Include="Android.Hardware.Camera2\CameraAccessException.cs" />
     <Compile Include="Android.Hardware.Camera2.Params\LensShadingMap.cs" />
     <Compile Include="Android.Hardware.Camera2.Params\RggbChannelVector.cs" />
     <Compile Include="Android.Hardware.Camera2.Params\TonemapCurve.cs" />
