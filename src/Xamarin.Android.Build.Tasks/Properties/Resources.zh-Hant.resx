@@ -488,6 +488,11 @@ Please change the value to an assembly-qualifed type name which inherits from '{
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.</comment>
   </data>
+  <data name="XA1034" xml:space="preserve">
+    <value>Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.</value>
+    <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
+{0} - The name of the assembly</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>在下列組件中偵測到使用 AppDomain.CreateDomain(): {0}。.NET 6 及更新版本只支援單一 AppDomain，因此在 .NET 6 發行之後，此 API 就無法再於 Xamarin.Android 中使用。</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
