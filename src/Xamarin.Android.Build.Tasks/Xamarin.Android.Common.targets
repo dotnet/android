@@ -57,6 +57,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaStubs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -375,6 +376,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DesignTime.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.EmbeddedResource.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Javac.targets" />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Resource.Designer.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.SkipCases.projitems" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Legacy.targets" Condition=" '$(UsingAndroidNETSdk)' != 'True' " />
@@ -574,11 +576,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_RemoveLegacyDesigner"
-		Condition=" '$(Language)' == 'C#' and '$(AndroidUseIntermediateDesignerFile)' == 'true' and '$(ManagedDesignTimeBuild)' != 'true' ">
+		Condition=" '$(Language)' == 'C#' and '$(ManagedDesignTimeBuild)' != 'true' ">
 	<ItemGroup>
-		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
-		<Compile Remove="@(CorrectCasedItem)" Condition=" '$(AndroidResgenFile)' != '' "/>
-		<Compile Include="$(_AndroidResourceDesignerFile)" />
+		<CorrectCasedItem Include="%(Compile.Identity)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'true' And '$(AndroidResgenFile)' != '' And '%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
+		<!-- Forcably Remove the old Resource.designer.cs even if the AndroidResgenFile is not set.-->
+		<CorrectCasedItem Include="%(Compile.Identity)" Condition=" '$(AndroidUseDesignerAssembly)' == 'True' And '%(Compile.Filename)%(Compile.Extension)' == '$(_AndroidResourceDesigner)' "/>
+		<Compile Remove="@(CorrectCasedItem)" />
+		<Compile Include="$(_AndroidResourceDesignerFile)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'true' And '$(AndroidUseDesignerAssembly)' != 'true' " />
 	</ItemGroup>
 </Target>
 
@@ -998,6 +1002,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidSupportedAbis=$(AndroidSupportedAbis)" />
 		<_PropertyCacheItems Include="AndroidManifestPlaceholders=$(AndroidManifestPlaceholders)" />
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
+		<_PropertyCacheItems Include="AndroidUseDesignerAssembly=$(AndroidUseDesignerAssembly)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
@@ -1038,10 +1043,10 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <!-- Managed DesignTime Resource Generation -->
-<Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' "
+<Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And  '$(AndroidUseDesignerAssembly)' != 'True' "
 		Inputs="$(_ManagedUpdateAndroidResgenInputs)"
 		Outputs="$(_AndroidManagedResourceDesignerFile)"
-		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_ValidateAndroidPackageProperties;_BeforeManagedUpdateAndroidResgen">
+		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_ValidateAndroidPackageProperties;_GenerateResourceCaseMap;_BeforeManagedUpdateAndroidResgen">
 	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" />
 	<!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
@@ -1060,6 +1065,7 @@ because xbuild doesn't support framework reference assemblies.
 		DesignTimeBuild="$(DesignTimeBuild)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
 		ResourceFlagFile="$(_AndroidResFlagFile)"
+		CaseMapFile="$(_GenerateResourceCaseMapFile)"
 		Condition="Exists ('$(MonoAndroidResourcePrefix)')"
 	/>
 	<Touch Condition="Exists ('$(_AndroidManagedResourceDesignerFile)')" Files="$(_AndroidManagedResourceDesignerFile)" />
@@ -1080,11 +1086,11 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="UpdateAndroidResources"
     Condition=" '$(DesignTimeBuild)' != 'True' Or '$(DeferredBuildSupported)' != 'True' Or '$(DeferredBuild)' == 'True' "
-    DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources"
+    DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_BuildResourceDesigner;_UpdateAndroidResources"
 />
 
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
-<Target Name="_CheckForDeletedResourceFile">
+<Target Name="_CheckForDeletedResourceFile" Condition=" '$(AndroidUseDesignerAssembly)' != 'True' ">
 	<Delete Files="$(_AndroidResgenFlagFile)"
 		Condition="Exists ('$(_AndroidResgenFlagFile)') AND '$(_AndroidResourceDesignerFile)' != '' AND !Exists('$(_AndroidResourceDesignerFile)')" />
 </Target>
@@ -1244,6 +1250,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GenerateAndroidResourceDir;
 		_IncludeLayoutBindingSources;
 		_DefineBuildTargetAbis;
+		_GenerateResourceCaseMap;
 	</_UpdateAndroidResgenDependsOnTargets>
 	<_UpdateAndroidResgenInputs>
 		@(_AndroidMSBuildAllProjects);
@@ -1265,7 +1272,7 @@ because xbuild doesn't support framework reference assemblies.
 	<CallTarget Targets="_UpdateAndroidResgenAapt2" Condition=" '$(AndroidUseAapt2)' == 'true' " />
 
 	<GenerateLibraryResources
-		Condition=" '$(_AndroidResourceDesignerFile)' != '' And Exists('$(IntermediateOutputPath)R.txt') "
+		Condition=" ('$(_AndroidResourceDesignerFile)' != '' Or '$(AndroidUseDesignerAssembly)' == 'True') And Exists('$(IntermediateOutputPath)R.txt') "
 		ResourceSymbolsTextFile="$(IntermediateOutputPath)R.txt"
 		OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
 		LibraryTextFiles="@(LibraryResourceDirectories->'%(Identity)\..\R.txt')"
@@ -1288,7 +1295,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
-		Condition="'$(_AndroidResourceDesignerFile)' != ''"
+		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(AndroidUseDesignerAssembly)' != 'True' "
 		ContinueOnError="$(DesignTimeBuild)"
 		NetResgenOutputFile="$(_AndroidResourceDesignerFile)"
 		DesignTimeOutputFile="$(_AndroidManagedResourceDesignerFile)"
@@ -1304,18 +1311,42 @@ because xbuild doesn't support framework reference assemblies.
 		UseManagedResourceGenerator="$(_UseManagedResourceGenerator)"
 		DesignTimeBuild="$(DesignTimeBuild)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
+		CaseMapFile="$(_GenerateResourceCaseMapFile)"
+	/>
+	<!-- Generate the final Resource Assembly if we need to. -->
+	<GenerateResourceDesignerAssembly
+			Condition="'$(AndroidUseDesignerAssembly)' == 'True' "
+			ContinueOnError="$(DesignTimeBuild)"
+			RTxtFile="$(IntermediateOutputPath)R.txt"
+			IsApplication="$(AndroidApplication)"
+			DesignTimeBuild="$(DesignTimeBuild)"
+			Deterministic="$(Deterministic)"
+			OutputFile="$(_GenerateResourceDesignerAssemblyOutput)"
+			TargetFrameworkIdentifier="$(TargetFrameworkIdentifier)"
+			TargetFrameworkVersion="$(TargetFrameworkVersion)"
+			ProjectDir="$(ProjectDir)"
+			Resources="@(AndroidResource);@(AndroidBoundLayout)"
+			ResourceDirectory="$(MonoAndroidResourcePrefix)"
+			CaseMapFile="$(_GenerateResourceCaseMapFile)"
+			FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+			AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+			AssemblyName="$(AssemblyName)"
+	>
+	</GenerateResourceDesignerAssembly>
+	<ItemGroup>
+		<FileWrites Include="$(_GenerateResourceDesignerAssemblyOutput)" />
+	</ItemGroup>
+
+	<!-- Delete our temporary directory -->
+	<RemoveDirFixed
+			Directories="$(ResgenTemporaryDirectory)"
+			ContinueOnError="WarnAndContinue"
 	/>
 
-  <!-- Delete our temporary directory -->
-  <RemoveDirFixed
-      Directories="$(ResgenTemporaryDirectory)"
-      ContinueOnError="WarnAndContinue"
-  />
-
-  <Touch Files="$(_AndroidResgenFlagFile)" AlwaysCreate="True" />
-  <ItemGroup>
-    <FileWrites Include="$(_AndroidResgenFlagFile)" />
-  </ItemGroup>
+	<Touch Files="$(_AndroidResgenFlagFile)" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidResgenFlagFile)" />
+	</ItemGroup>
 </Target>
 
 <!-- AIDL Build -->
@@ -1460,6 +1491,7 @@ because xbuild doesn't support framework reference assemblies.
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
       TargetName="$(TargetName)"
       AddKeepAlives="$(AndroidAddKeepAlives)"
+      UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
       Deterministic="$(Deterministic)"
       UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
   />

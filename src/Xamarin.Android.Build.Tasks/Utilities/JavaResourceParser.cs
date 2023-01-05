@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tasks
 
 				while ((line = reader.ReadLine ()) != null) {
 					var info = Parser.Select (p => new { Match = p.Key.Match (line), Handler = p.Value }).FirstOrDefault (x => x.Match.Success);
-					
+
 					if (info == null)
 						continue;
 
@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 			Parse (@"^        public static final int ([^ =]+)\s*=\s*([^;]+);$",
 					(m, app, g, map) => {
 						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int), GetResourceName (name, m.Groups[1].Value, map)) {
+						var f = new CodeMemberField (typeof (int), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
 								Attributes      = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
 								InitExpression  = new CodePrimitiveExpression (ToInt32 (m.Groups [2].Value, m.Groups [2].Value.IndexOf ("0x", StringComparison.Ordinal) == 0 ? 16 : 10)),
 								Comments = {
@@ -97,7 +97,7 @@ namespace Xamarin.Android.Tasks
 			Parse (@"^        public static final int\[\] ([^ =]+) = {",
 					(m, app, g, map) => {
 						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int[]), GetResourceName (name, m.Groups[1].Value, map)) {
+						var f = new CodeMemberField (typeof (int[]), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
 								// pity I can't make the member readonly...
 								Attributes      = MemberAttributes.Public | MemberAttributes.Static,
 						};

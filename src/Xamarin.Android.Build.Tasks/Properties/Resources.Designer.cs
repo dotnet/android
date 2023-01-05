@@ -1467,5 +1467,14 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1033", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.
+        /// </summary>
+        public static string XA1034 {
+            get {
+                return ResourceManager.GetString("XA1034", resourceCulture);
+            }
+        }
     }
 }

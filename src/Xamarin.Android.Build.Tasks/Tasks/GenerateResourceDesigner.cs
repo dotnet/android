@@ -53,6 +53,8 @@ namespace Xamarin.Android.Tasks
 
 		public string ResourceFlagFile { get; set; }
 
+		public string CaseMapFile { get; set; }
+
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
 		public override bool RunTask ()
@@ -73,35 +75,7 @@ namespace Xamarin.Android.Tasks
 
 			var javaPlatformDirectory = Path.GetDirectoryName (JavaPlatformJarPath);
 
-			// Create our capitalization maps so we can support mixed case resources
-			foreach (var item in Resources) {
-				var path = Path.GetFullPath (item.ItemSpec);
-				if (!path.StartsWith (ResourceDirectory, StringComparison.OrdinalIgnoreCase))
-					continue;
-
-				var name = path.Substring (ResourceDirectory.Length).TrimStart ('/', '\\');
-				var logical_name = item.GetMetadata ("LogicalName").Replace ('\\', '/');
-				if (string.IsNullOrEmpty (logical_name))
-					logical_name = Path.GetFileName (path);
-
-				AddRename (name.Replace ('/', Path.DirectorySeparatorChar), logical_name.Replace ('/', Path.DirectorySeparatorChar));
-			}
-			if (AdditionalResourceDirectories != null) {
-				foreach (var additionalDir in AdditionalResourceDirectories) {
-					var dir = Path.Combine (ProjectDir, Path.GetDirectoryName (additionalDir.ItemSpec));
-					var file = Path.Combine (dir, "__res_name_case_map.txt");
-					if (!File.Exists (file)) {
-						// .NET 6 .aar files place the file in a sub-directory
-						file = Path.Combine (dir, ".net", "__res_name_case_map.txt");
-						if (!File.Exists (file))
-							continue;
-					}
-					foreach (var line in File.ReadAllLines (file).Where (l => !string.IsNullOrEmpty (l))) {
-						string [] tok = line.Split (';');
-						AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
-					}
-				}
-			}
+			resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, CaseMapFile, StringComparer.OrdinalIgnoreCase);
 
 			// Parse out the resources from the R.java file
 			CodeTypeDeclaration resources;

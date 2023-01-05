@@ -230,7 +230,7 @@ int string fixed 0x7f110001
 int string foo 0x7f110002
 int string hello 0x7f110003
 int string menu_settings 0x7f110004
-int[] styleable CustomFonts { 0x10100D2, 0x7F040000, 0x7F040000, 0x7F040001 }
+int[] styleable CustomFonts { 0x010100d2, 0x7f040000, 0x7f040000, 0x7f040001 }
 int styleable CustomFonts_android_scrollX 0
 int styleable CustomFonts_customFont 1
 int styleable CustomFonts_customFont 2
@@ -309,6 +309,7 @@ int xml myxml 0x7f140000
 
 			var libraryStrings = library.AndroidResources.FirstOrDefault (r => r.Include () == @"Resources\values\Strings.xml");
 
+			library.SetProperty ("AndroidUseDesignerAssembly", "false");
 			library.AndroidResources.Clear ();
 			library.AndroidResources.Add (libraryStrings);
 			library.AndroidResources.Add (new AndroidItem.AndroidResource (Path.Combine ("Resources", "animator", "slide_in_bottom.xml")) { TextContent = () => Animator });
@@ -355,6 +356,25 @@ int xml myxml 0x7f140000
 			}
 		}
 
+		GenerateResourceCaseMap CreateCaseMapTask (string path)
+		{
+			var task = new GenerateResourceCaseMap () {
+				BuildEngine = new MockBuildEngine (TestContext.Out)
+			};
+			task.ProjectDir = Path.Combine (Root, path);
+			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
+			task.Resources = new TaskItem [] {
+				new TaskItem (Path.Combine (Root, path, "res", "values", "strings.xml"), new Dictionary<string, string> () {
+					{ "LogicalName", "values\\strings.xml" },
+				}),
+			};
+			task.AdditionalResourceDirectories = new TaskItem [] {
+				new TaskItem (Path.Combine (Root, path, "lp", "res")),
+			};
+			task.OutputFile = new TaskItem (Path.Combine (Root, path, "case_map.txt"));
+			return task;
+		}
+
 		GenerateResourceDesigner CreateTask (string path)
 		{
 			var task = new GenerateResourceDesigner {
@@ -375,6 +395,7 @@ int xml myxml 0x7f140000
 			task.AdditionalResourceDirectories = new TaskItem [] {
 				new TaskItem (Path.Combine (Root, path, "lp", "res")),
 			};
+			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			task.IsApplication = true;
 			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
 			return task;
@@ -400,6 +421,8 @@ int xml myxml 0x7f140000
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
+			var mapTask = CreateCaseMapTask (path);
+			Assert.IsTrue (mapTask.Execute (), "Map Task should have executed successfully.");
 			var task = CreateTask (path);
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			AssertResourceDesigner (task, "GenerateDesignerFileExpected.cs");
@@ -411,6 +434,8 @@ int xml myxml 0x7f140000
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
+			var mapTask = CreateCaseMapTask (path);
+			Assert.IsTrue (mapTask.Execute (), "Map Task should have executed successfully.");
 			var task = CreateTask (path);
 			task.RTxtFile = Path.Combine (Root, path, "R.txt");
 			File.WriteAllText (task.RTxtFile, Rtxt);
@@ -444,6 +469,8 @@ int xml myxml 0x7f140000
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
+			var mapTask = CreateCaseMapTask (path);
+			Assert.IsTrue (mapTask.Execute (), "Map Task should have executed successfully.");
 			if (useRtxt)
 			    File.WriteAllText (Path.Combine (Root, path, "R.txt"), Rtxt);
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
@@ -465,6 +492,7 @@ int xml myxml 0x7f140000
 				new TaskItem (Path.Combine (Root, path, "lp", "res")),
 			};
 			task.ResourceFlagFile = Path.Combine (Root, path, "AndroidResgen.flag");
+			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			File.WriteAllText (task.ResourceFlagFile, string.Empty);
 			task.IsApplication = true;
 			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
@@ -481,6 +509,38 @@ int xml myxml 0x7f140000
 			var expectedWithNewId = Path.Combine (Root, path, "GenerateDesignerFileExpectedWithNewId.cs");
 			File.WriteAllText (expectedWithNewId, data.Replace ("withperiod", "withperiod2"));
 			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expectedWithNewId);
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		[Test]
+		[Category ("SmokeTests")]
+		public void RtxtGeneratorOutput ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			string resPath = Path.Combine (Root, path, "res");
+			string rTxt = Path.Combine (Root, path, "R.txt");
+			string expectedrTxt = Path.Combine (Root, path, "expectedR.txt");
+			CreateResourceDirectory (path);
+			File.WriteAllText (expectedrTxt, Rtxt);
+			List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
+			List<BuildMessageEventArgs> messages = new List<BuildMessageEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
+			var generateRtxt = new GenerateRtxt () {
+				BuildEngine = engine,
+				RTxtFile = rTxt,
+				ResourceDirectory = resPath,
+				JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar"),
+				ResourceFlagFile = Path.Combine (Root, path, "res.flag"),
+				AdditionalResourceDirectories = new string[] {
+					Path.Combine (Root, path, "lp", "res"),
+				},
+			};
+			Assert.IsTrue (generateRtxt.Execute (), "Task should have succeeded.");
+			FileAssert.Exists (rTxt, $"{rTxt} should have been created.");
+
+			CompareFilesIgnoreRuntimeInfoString (rTxt, expectedrTxt);
+
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 

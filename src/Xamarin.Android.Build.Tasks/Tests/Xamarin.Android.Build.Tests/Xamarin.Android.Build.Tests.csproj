@@ -59,6 +59,7 @@
 
   <ItemGroup>
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
+    <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
   </ItemGroup>
 
   <ItemGroup>

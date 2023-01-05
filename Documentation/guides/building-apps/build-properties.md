@@ -1364,6 +1364,35 @@ To suppress the default AOT profiles, set the property to `false`.
 
 Added in Xamarin.Android 10.1.
 
+## AndroidUseDesignerAssembly
+
+A bool property which controls if the build system will generate an
+`_Microsoft.Android.Resource.Designer.dll` as apposed to a `Resource.Designer.cs` file. The benefits of this are smaller applications and
+faster startup time.
+
+The default value is `true` in .NET 8.
+
+This setting is not backward compatible with Classic Xamarin.Android.
+As a Nuget Author it is recommended that you ship three versions of
+the assembly if you want to maintain backward compatibility.
+One for MonoAndroid, one for net6.0-android and
+one for net8.0-android. You can do this by using [Xamarin.Legacy.Sdk](https://www.nuget.org/packages/Xamarin.Legacy.Sdk). This is only required if your Nuget Library
+project makes use of `AndroidResource` items in the project or via a dependency.
+
+```
+<TargetFrameworks>monoandroid90;net6.0-android;net8.0-android</TargetFrameworks>
+```
+
+Alternatively turn this setting off until such time as both Classic and
+net7.0-android have been deprecated.
+
+.NET 8 Projects which choose to turn this setting off will not be able to
+consume references which do use it. If you try to use an assembly
+which does have this feature enabled in a project that does not, you will
+get a `XA1034` build error.
+
+Added in .NET 8.  Unsupported in Classic Xamarin.Android.
+
 ## AndroidUseInterpreter
 
 A boolean property that causes the `.apk` to contain the mono

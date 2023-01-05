@@ -35,6 +35,11 @@ namespace Xamarin.Android.Tasks {
 			foreach (var item in Inputs) {
 				var fn = Path.GetFileNameWithoutExtension (item.ItemSpec);
 				output.Add (item);
+				var md = item.GetMetadata ("HasResourceDesignerAssemblyReference");
+				if (string.IsNullOrEmpty (md)) {
+					var b = MonoAndroidHelper.HasResourceDesignerAssemblyReference (item);
+					item.SetMetadata ("HasResourceDesignerAssemblyReference", MonoAndroidHelper.HasResourceDesignerAssemblyReference (item).ToString ());
+				}
 				List<ITaskItem> metaDataList;
 				if (!metaData.TryGetValue (fn, out metaDataList))
 					continue;

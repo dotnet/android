@@ -4,14 +4,17 @@
     "AndroidManifest.xml": {
       "Size": 3032
     },
+    "assemblies/_Microsoft.Android.Resource.Designer.dll": {
+      "Size": 1028
+    },
     "assemblies/Java.Interop.dll": {
-      "Size": 58924
+      "Size": 58926
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 87710
+      "Size": 87074
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5924
+      "Size": 5833
     },
     "assemblies/rc.bin": {
       "Size": 1182
@@ -23,19 +26,19 @@
       "Size": 9253
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 484001
+      "Size": 483854
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2629
+      "Size": 2608
     },
     "assemblies/System.Runtime.InteropServices.dll": {
       "Size": 2269
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3628
+      "Size": 3276
     },
     "classes.dex": {
-      "Size": 18968
+      "Size": 19020
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 93552
@@ -56,16 +59,16 @@
       "Size": 150584
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 16632
+      "Size": 16728
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 2914
+      "Size": 3037
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2787
+      "Size": 2910
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -92,5 +95,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2603241
+  "PackageSize": 2603338
 }

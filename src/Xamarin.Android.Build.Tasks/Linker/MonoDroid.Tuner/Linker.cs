@@ -111,6 +111,8 @@ namespace MonoDroid.Tuner
 			pipeline.AppendStep (new RemoveResources (options.I18nAssemblies)); // remove collation tables
 			// end monodroid specific
 
+			if (options.UseDesignerAssembly)
+				pipeline.AppendStep (new FixLegacyResourceDesignerStep (cache));
 			pipeline.AppendStep (new FixAbstractMethodsStep (cache));
 			pipeline.AppendStep (new MonoDroidMarkStep (cache));
 			pipeline.AppendStep (new SweepStep ());

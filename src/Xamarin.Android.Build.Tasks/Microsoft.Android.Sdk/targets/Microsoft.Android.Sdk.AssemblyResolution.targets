@@ -67,6 +67,14 @@ _ResolveAssemblies MSBuild target.
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />
       <IntermediateAssembly Include="$(_OuterIntermediateAssembly)" />
     </ItemGroup>
+    <ItemGroup Condition=" '$(AndroidUseDesignerAssembly)' == 'True' ">
+      <ReferenceCopyLocalPaths Include="$(_GenerateResourceDesignerAssemblyOutput)">
+        <PostprocessAssembly>True</PostprocessAssembly>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <IsTrimmable>false</IsTrimmable>
+        <RuntimeIdentifier>android</RuntimeIdentifier>
+      </ReferenceCopyLocalPaths>
+    </ItemGroup>
     <ItemGroup Condition=" '@(_DebugSymbolsIntermediatePath->Count())' != '0' ">
       <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
       <_DebugSymbolsIntermediatePath Include="$([System.IO.Path]::ChangeExtension ($(_OuterIntermediateAssembly), '.pdb'))" />
