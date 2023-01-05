@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tasks
 					UseEmbeddedDex = value;
 				}
 
-				text = app.Attribute (androidNs + "testOnly");
+				text = app.Attribute (androidNs + "testOnly")?.Value;
 				if (bool.TryParse (text, out value)) {
 					IsTestOnly = value;
 				}
