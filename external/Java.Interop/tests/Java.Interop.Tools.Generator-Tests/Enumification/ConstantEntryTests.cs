@@ -84,6 +84,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual ("Cdsect", entry.EnumMember);
 			Assert.AreEqual (FieldAction.Keep, entry.FieldAction);
 			Assert.False (entry.IsFlags);
+			Assert.IsNull (entry.DeprecatedSince);
 		}
 
 		[Test]
@@ -99,13 +100,14 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
 			Assert.AreEqual ("Cdsect", entry.EnumMember);
 			Assert.AreEqual (FieldAction.None, entry.FieldAction);
+			Assert.IsNull (entry.DeprecatedSince);
 			Assert.False (entry.IsFlags);
 		}
 
 		[Test]
 		public void ParseRemoveEnumMapV2 ()
 		{
-			var csv = "R,10,I:org/xmlpull/v1/XmlPullParser.CDSECT,5,,,remove";
+			var csv = "R,10,I:org/xmlpull/v1/XmlPullParser.CDSECT,5,,,remove,,33";
 			var entry = ConstantEntry.FromString (csv);
 
 			Assert.AreEqual (ConstantAction.Remove, entry.Action);
@@ -116,6 +118,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual (string.Empty, entry.EnumMember);
 			Assert.AreEqual (FieldAction.Remove, entry.FieldAction);
 			Assert.False (entry.IsFlags);
+			Assert.AreEqual (33, entry.DeprecatedSince.Value);
 		}
 	}
 }

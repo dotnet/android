@@ -59,11 +59,16 @@ namespace MonoDroid.Generation
 
 				SourceWriterExtensions.AddSupportedOSPlatform (m.Attributes, member.ApiLevel, opt);
 
-				// Some of our source fields may have been marked with:
-				// "This constant will be removed in the future version. Use XXX enum directly instead of this field."
-				// We don't want this message to propogate to the enum.
-				if (managedMember != null && managedMember.Value.Field?.DeprecatedComment?.Contains ("enum directly instead of this field") == false)
+				if (member.DeprecatedSince.HasValue) {
+					// If we've manually marked it as obsolete in map.csv, that takes precedence
+					var msg = member.DeprecatedSince.Value == -1 ? "This value was incorrectly added to the enumeration and is not a valid value" : "deprecated";
+					SourceWriterExtensions.AddObsolete (m.Attributes, msg, opt, deprecatedSince: member.DeprecatedSince);
+				} else if (managedMember != null && managedMember.Value.Field?.DeprecatedComment?.Contains ("enum directly instead of this field") == false) {
+					// Some of our source fields may have been marked with:
+					// "This constant will be removed in the future version. Use XXX enum directly instead of this field."
+					// We don't want this message to propogate to the enum.
 					SourceWriterExtensions.AddObsolete (m.Attributes, managedMember.Value.Field.DeprecatedComment, opt, deprecatedSince: managedMember.Value.Field.DeprecatedSince);
+				}
 
 				enoom.Members.Add (m);
 			}

@@ -133,6 +133,60 @@ namespace generatortests
 			Assert.False (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]WithExcluded=1"), writer.ToString ());
 		}
 
+		[Test]
+		public void ObsoletedOSPlatformAttributeOverrideSupport ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='android.app' jni-name='android/app'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='ActivityManager' static='false' visibility='public' jni-signature='Landroid/app/ActivityManager;'>
+			      <field deprecated='not deprecated' final='true' name='RECENT_IGNORE_UNAVAILABLE' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;android.permission.BIND_CHOOSER_TARGET_SERVICE&quot;' visibility='public' volatile='false' api-since='30' />
+			    </class>
+			  </package>
+			</api>";
+
+			options.UseObsoletedOSPlatformAttributes = true;
+
+			var enu = CreateEnum ();
+			enu.Value.Members.Single (m => m.EnumMember == "WithExcluded").DeprecatedSince = 33;
+
+			var gens = ParseApiDefinition (xml);
+
+			generator.WriteEnumeration (options, enu, gens.ToArray ());
+
+			// The field itself is not deprecated, but [ObsoletedOSPlatform] should be written because we set `DeprecatedSince` on the enum map
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform(\"android33.0\")]WithExcluded=1"), writer.ToString ());
+		}
+
+		[Test]
+		public void ObsoleteAccidentalAddition ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='android.app' jni-name='android/app'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='ActivityManager' static='false' visibility='public' jni-signature='Landroid/app/ActivityManager;'>
+			      <field deprecated='not deprecated' final='true' name='RECENT_IGNORE_UNAVAILABLE' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;android.permission.BIND_CHOOSER_TARGET_SERVICE&quot;' visibility='public' volatile='false' api-since='30' />
+			    </class>
+			  </package>
+			</api>";
+
+			options.UseObsoletedOSPlatformAttributes = true;
+
+			var enu = CreateEnum ();
+			enu.Value.Members.Single (m => m.EnumMember == "WithExcluded").DeprecatedSince = -1;
+
+			var gens = ParseApiDefinition (xml);
+
+			generator.WriteEnumeration (options, enu, gens.ToArray ());
+
+			// "-1" is a "magic" API level which adds a message indicating the enum value shouldn't even exist
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"Thisvaluewasincorrectlyaddedtotheenumerationandisnotavalidvalue\")]WithExcluded=1"), writer.ToString ());
+		}
+
 		protected new string GetExpected (string testName)
 		{
 			var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);

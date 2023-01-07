@@ -16,6 +16,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 		public string? EnumMember { get; set; }
 		public FieldAction FieldAction { get; set; }
 		public bool IsFlags { get; set; }
+		public int? DeprecatedSince { get; set; }
 
 		public string EnumNamespace {
 			get {
@@ -133,7 +134,8 @@ namespace Java.Interop.Tools.Generator.Enumification
 				EnumFullType = parser.GetField (4),
 				EnumMember = parser.GetField (5),
 				FieldAction = FromFieldActionString (parser.GetField (6)),
-				IsFlags = parser.GetField (7).ToLowerInvariant () == "flags"
+				IsFlags = parser.GetField (7).ToLowerInvariant () == "flags",
+				DeprecatedSince = parser.GetFieldAsNullableInt32 (8)
 			};
 
 			entry.NormalizeJavaSignature ();
@@ -175,7 +177,8 @@ namespace Java.Interop.Tools.Generator.Enumification
 				EnumFullType,
 				EnumMember,
 				ToConstantFieldActionString (FieldAction),
-				IsFlags ? "flags" : string.Empty
+				IsFlags ? "flags" : string.Empty,
+				DeprecatedSince.HasValue ? DeprecatedSince.Value.ToString () : string.Empty,
 			};
 
 			return string.Join (",", fields);

@@ -23,5 +23,15 @@ namespace Java.Interop.Tools.Generator
 		{
 			return int.Parse (GetField (index));
 		}
+
+		public int? GetFieldAsNullableInt32 (int index)
+		{
+			var value = GetField (index);
+
+			if (int.TryParse (value, out var val))
+				return val;
+
+			return default;
+		}
 	}
 }

@@ -65,7 +65,7 @@ There is now a "v2" version of defining constants. This is a line-level change
 and you can mix "v1" and "v2" lines in the same file for backwards compatibility, 
 but for consistency it's probably better to stick to one style.
 
-A "v2" line contains up to 8 fields:
+A "v2" line contains up to 9 fields:
 
 * **Action** - The action to perform. This is what denotes a "v2" line, if the first
   character is not one of the following it will be treated as "v1".
@@ -89,10 +89,14 @@ A "v2" line contains up to 8 fields:
   * `keep` - Keeps the Java constant
 * **Flags** - If this field contains `flags` the enum will be created with the
   `[Flags]` attribute. (Any member will `flags` will make the whole enum `[Flags]`.)
-
+* **Deprecated Since** - This is generally only used by `Mono.Android.dll` to denote
+  the Android level the constant was deprecated in. Specifying "-1" will add an obsolete
+  message to the effect of: "This value was incorrectly added to the enumeration and is 
+  not a valid value". Leave blank if constant is not deprecated.
+  
 Full example:
 ```
-E,10,android/view/Window.PROGRESS_START,0,Android.Views.WindowProgress,Start,remove,flags
+E,10,android/view/Window.PROGRESS_START,0,Android.Views.WindowProgress,Start,remove,flags,30
 ```
 
 [0]: https://docs.microsoft.com/en-us/xamarin/android/platform/binding-java-library/customizing-bindings/java-bindings-metadata#enumfieldsxml-and-enummethodsxml

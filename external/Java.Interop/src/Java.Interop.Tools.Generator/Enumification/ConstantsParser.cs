@@ -48,6 +48,20 @@ namespace Java.Interop.Tools.Generator.Enumification
 
 		public static void SaveEnumMapCsv (List<ConstantEntry> constants, TextWriter writer)
 		{
+			var column_names = new [] {
+				"Action",
+				"API Level",
+				"JNI Signature",
+				"Enum Value",
+				"C# Enum Type",
+				"C# Member Name",
+				"Field Action",
+				"Is Flags",
+				"Deprecated Since",
+			};
+
+			writer.WriteLine ("// " + string.Join (",", column_names));
+
 			foreach (var c in Sort (constants))
 				writer.WriteLine (c.ToVersion2String ());
 		}
