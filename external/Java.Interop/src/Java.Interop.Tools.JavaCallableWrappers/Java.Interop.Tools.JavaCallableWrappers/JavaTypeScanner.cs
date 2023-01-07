@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -76,14 +76,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 				AddJavaTypes (javaTypes, nested);
 		}
 
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type) =>
-			ShouldSkipJavaCallableWrapperGeneration (type, resolver: null);
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type) => throw new NotSupportedException ();
 
-		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type, TypeDefinitionCache? cache) =>
-			ShouldSkipJavaCallableWrapperGeneration (type, (IMetadataResolver?) cache);
+		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type, TypeDefinitionCache cache) =>
+			ShouldSkipJavaCallableWrapperGeneration (type, (IMetadataResolver) cache);
 
-		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type, IMetadataResolver? resolver)
+		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type, IMetadataResolver resolver)
 		{
 			if (JavaNativeTypeManager.IsNonStaticInnerClass (type, resolver))
 				return true;

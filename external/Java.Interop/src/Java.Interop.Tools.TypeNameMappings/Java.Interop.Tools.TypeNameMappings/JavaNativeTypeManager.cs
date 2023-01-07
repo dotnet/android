@@ -414,39 +414,36 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return new ExportParameterAttribute ((ExportParameterKind)attr.ConstructorArguments [0].Value);
 		}
 
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static bool IsApplication (TypeDefinition type) =>
-			IsApplication (type, resolver: null);
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static bool IsApplication (TypeDefinition type) => throw new NotSupportedException ();
 
-		public static bool IsApplication (TypeDefinition type, TypeDefinitionCache? cache) =>
-			IsApplication (type, (IMetadataResolver?) cache);
+		public static bool IsApplication (TypeDefinition type, TypeDefinitionCache cache) =>
+			IsApplication (type, (IMetadataResolver) cache);
 
-		public static bool IsApplication (TypeDefinition type, IMetadataResolver? resolver)
+		public static bool IsApplication (TypeDefinition type, IMetadataResolver resolver)
 		{
 			return type.GetBaseTypes (resolver).Any (b => b.FullName == "Android.App.Application");
 		}
 
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static bool IsInstrumentation (TypeDefinition type) =>
-			IsInstrumentation (type, resolver: null);
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static bool IsInstrumentation (TypeDefinition type) => throw new NotSupportedException ();
 
-		public static bool IsInstrumentation (TypeDefinition type, TypeDefinitionCache? cache) =>
-			IsInstrumentation (type, (IMetadataResolver?) cache);
+		public static bool IsInstrumentation (TypeDefinition type, TypeDefinitionCache cache) =>
+			IsInstrumentation (type, (IMetadataResolver) cache);
 
-		public static bool IsInstrumentation (TypeDefinition type, IMetadataResolver? resolver)
+		public static bool IsInstrumentation (TypeDefinition type, IMetadataResolver resolver)
 		{
 			return type.GetBaseTypes (resolver).Any (b => b.FullName == "Android.App.Instrumentation");
 		}
 
 		// moved from JavaTypeInfo
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static string? GetJniSignature (MethodDefinition method) =>
-			GetJniSignature (method, resolver: null);
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static string? GetJniSignature (MethodDefinition method) => throw new NotSupportedException ();
 
-		public static string? GetJniSignature (MethodDefinition method, TypeDefinitionCache? cache) =>
-			GetJniSignature (method, (IMetadataResolver?) cache);
+		public static string? GetJniSignature (MethodDefinition method, TypeDefinitionCache cache) =>
+			GetJniSignature (method, (IMetadataResolver) cache);
 
-		public static string? GetJniSignature (MethodDefinition method, IMetadataResolver? resolver)
+		public static string? GetJniSignature (MethodDefinition method, IMetadataResolver resolver)
 		{
 			return GetJniSignature<TypeReference,ParameterDefinition> (
 				method.Parameters,
@@ -459,35 +456,33 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 		// moved from JavaTypeInfo
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static string? GetJniTypeName (TypeReference typeRef) =>
-			GetJniTypeName (typeRef, resolver: null);
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static string? GetJniTypeName (TypeReference typeRef) => throw new NotSupportedException ();
 
-		public static string? GetJniTypeName (TypeReference typeRef, TypeDefinitionCache? cache) =>
-			GetJniTypeName (typeRef, (IMetadataResolver?) cache);
+		public static string? GetJniTypeName (TypeReference typeRef, TypeDefinitionCache cache) =>
+			GetJniTypeName (typeRef, (IMetadataResolver) cache);
 
-		public static string? GetJniTypeName (TypeReference typeRef, IMetadataResolver? resolver)
+		public static string? GetJniTypeName (TypeReference typeRef, IMetadataResolver resolver)
 		{
 			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified, resolver);
 		}
 
-		internal static string? GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind, IMetadataResolver? cache)
+		internal static string? GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind, IMetadataResolver cache)
 		{
-			return GetJniTypeName<TypeReference, TypeDefinition> (typeRef, exportKind, t => t.Resolve (), t => {
+			return GetJniTypeName<TypeReference, TypeDefinition> (typeRef, exportKind, t => cache.Resolve (t), t => {
 				TypeReference etype;
 				int rank = GetArrayInfo (typeRef, out etype);
 				return new KeyValuePair<int,TypeReference> (rank,etype);
 				}, t => t.FullName, (t, k) => ToJniName (t, k, cache));
 		}
 
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static string ToCompatJniName (TypeDefinition type) =>
-			ToCompatJniName (type, resolver: null);
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static string ToCompatJniName (TypeDefinition type) => throw new NotSupportedException ();
 
-		public static string ToCompatJniName (TypeDefinition type, TypeDefinitionCache? cache) =>
-			ToCompatJniName (type, (IMetadataResolver?) cache);
+		public static string ToCompatJniName (TypeDefinition type, TypeDefinitionCache cache) =>
+			ToCompatJniName (type, (IMetadataResolver) cache);
 
-		public static string ToCompatJniName (TypeDefinition type, IMetadataResolver? resolver)
+		public static string ToCompatJniName (TypeDefinition type, IMetadataResolver resolver)
 		{
 			return ToJniName (
 					type:               type,
@@ -505,27 +500,26 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 		// Keep in sync with ToJniNameFromAttributes(Type) and ToJniName(Type)
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static string ToJniName (TypeDefinition type) =>
-			ToJniName (type, resolver: null);
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static string ToJniName (TypeDefinition type) => throw new NotSupportedException ();
 
-		public static string ToJniName (TypeDefinition type, TypeDefinitionCache? cache) =>
-			ToJniName (type, (IMetadataResolver?) cache);
+		public static string ToJniName (TypeDefinition type, TypeDefinitionCache cache) =>
+			ToJniName (type, (IMetadataResolver) cache);
 
-		public static string ToJniName (TypeDefinition type, IMetadataResolver? resolver)
+		public static string ToJniName (TypeDefinition type, IMetadataResolver resolver)
 		{
 			var x = ToJniName (type, ExportParameterKind.Unspecified, resolver) ??
 				"java/lang/Object";
 			return x;
 		}
 
-		static string? ToJniName (TypeDefinition type, ExportParameterKind exportKind, IMetadataResolver? cache)
+		static string? ToJniName (TypeDefinition type, ExportParameterKind exportKind, IMetadataResolver cache)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
 
 			if (type.IsValueType)
-				return GetPrimitiveClass (type);
+				return GetPrimitiveClass (type, cache);
 
 			if (type.FullName == "System.String")
 				return "java/lang/String";
@@ -545,16 +539,16 @@ namespace Java.Interop.Tools.TypeNameMappings
 			);
 		}
 
-		static string? ToJniNameFromAttributes (TypeDefinition type, IMetadataResolver? resolver)
+		static string? ToJniNameFromAttributes (TypeDefinition type, IMetadataResolver resolver)
 		{
 			return ToJniNameFromAttributesForAndroid (type, resolver) ??
 				ToJniNameFromAttributesForInterop (type, resolver);
 		}
 
-		static string? ToJniNameFromAttributesForInterop (TypeDefinition type, IMetadataResolver? resolver)
+		static string? ToJniNameFromAttributesForInterop (TypeDefinition type, IMetadataResolver resolver)
 		{
 			var attr = type.CustomAttributes.FirstOrDefault (a =>
-				Resolve (resolver, a.AttributeType)
+				resolver.Resolve (a.AttributeType)
 				.FullName == "Java.Interop.JniTypeSignatureAttribute");
 			if (attr == null) {
 				return null;
@@ -565,7 +559,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return (string) carg.Value;
 		}
 
-		static string? ToJniNameFromAttributesForAndroid (TypeDefinition type, IMetadataResolver? resolver)
+		static string? ToJniNameFromAttributesForAndroid (TypeDefinition type, IMetadataResolver resolver)
 		{
 			if (!type.HasCustomAttributes)
 				return null;
@@ -597,23 +591,18 @@ namespace Java.Interop.Tools.TypeNameMappings
 			"Android.Runtime.RegisterAttribute",
 		};
 
-		static bool IsIJniNameProviderAttribute (CustomAttribute attr, IMetadataResolver? resolver)
+		static bool IsIJniNameProviderAttribute (CustomAttribute attr, IMetadataResolver resolver)
 		{
 			// Fast path for a list of known IJniNameProviderAttribute implementations
 			if (KnownIJniNameProviders.Contains (attr.AttributeType.FullName))
 				return true;
 
 			// Slow path resolves the type, looking for IJniNameProviderAttribute
-			var attributeType = Resolve (resolver, attr.AttributeType);
+			var attributeType = resolver.Resolve (attr.AttributeType);
 			if (!attributeType.HasInterfaces)
 				return false;
 			return attributeType.Interfaces.Any (it => it.InterfaceType.FullName == typeof (IJniNameProviderAttribute).FullName);
 		}
-
-		static TypeDefinition Resolve (IMetadataResolver? resolver, TypeReference typeReference) =>
-			resolver?.Resolve (typeReference) ??
-			typeReference.Resolve () ??
-			throw new InvalidOperationException ();
 
 		public static int GetArrayInfo (Mono.Cecil.TypeReference type, out Mono.Cecil.TypeReference elementType)
 		{
@@ -626,10 +615,10 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return rank;
 		}
 
-		static string? GetPrimitiveClass (Mono.Cecil.TypeDefinition type)
+		static string? GetPrimitiveClass (Mono.Cecil.TypeDefinition type, IMetadataResolver cache)
 		{
 			if (type.IsEnum)
-				return GetPrimitiveClass (type.Fields.First (f => f.IsSpecialName).FieldType.Resolve ());
+				return GetPrimitiveClass (cache.Resolve (type.Fields.First (f => f.IsSpecialName).FieldType), cache);
 			if (type.FullName == "System.Byte")
 				return "B";
 			if (type.FullName == "System.Char")
@@ -649,14 +638,13 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return null;
 		}
 
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static string GetPackageName (TypeDefinition type) =>
-			GetPackageName (type, resolver: null);
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static string GetPackageName (TypeDefinition type) => throw new NotSupportedException ();
 
-		public static string GetPackageName (TypeDefinition type, TypeDefinitionCache? cache) =>
-			GetPackageName (type, (IMetadataResolver?) cache);
+		public static string GetPackageName (TypeDefinition type, TypeDefinitionCache cache) =>
+			GetPackageName (type, (IMetadataResolver) cache);
 
-		public static string GetPackageName (TypeDefinition type, IMetadataResolver? resolver)
+		public static string GetPackageName (TypeDefinition type, IMetadataResolver resolver)
 		{
 			if (IsPackageNamePreservedForAssembly (type.GetPartialAssemblyName (resolver)))
 				return type.Namespace.ToLowerInvariant ();
@@ -712,7 +700,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 #if HAVE_CECIL
-		internal static bool IsNonStaticInnerClass (TypeDefinition? type, IMetadataResolver? cache)
+		internal static bool IsNonStaticInnerClass (TypeDefinition? type, IMetadataResolver cache)
 		{
 			if (type == null)
 				return false;
@@ -726,7 +714,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 				.Any (ctor => ctor.Parameters.Any (p => p.Name == "__self"));
 		}
 
-		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type, IMetadataResolver? cache)
+		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type, IMetadataResolver cache)
 		{
 			var baseType = type.GetBaseTypes (cache).FirstOrDefault (t => t.GetCustomAttributes (typeof (RegisterAttribute)).Any ());
 			if (baseType != null)

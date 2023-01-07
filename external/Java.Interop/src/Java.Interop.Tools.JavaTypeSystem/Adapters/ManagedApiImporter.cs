@@ -10,13 +10,16 @@ namespace Java.Interop.Tools.JavaTypeSystem
 {
 	public static class ManagedApiImporter
 	{
-		public static JavaTypeCollection Parse (AssemblyDefinition assembly, JavaTypeCollection collection)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static JavaTypeCollection Parse (AssemblyDefinition assembly, JavaTypeCollection collection) => throw new NotSupportedException ();
+
+		public static JavaTypeCollection Parse (AssemblyDefinition assembly, JavaTypeCollection collection, TypeDefinitionCache resolver)
 		{
 			var types_to_add = new List<JavaTypeModel> ();
 
 			foreach (var md in assembly.Modules)
 				foreach (var td in md.Types) {
-					if (!ShouldSkipType (td) && ParseType (td, collection) is JavaTypeModel type)
+					if (!ShouldSkipType (td, resolver) && ParseType (td, collection) is JavaTypeModel type)
 						types_to_add.Add (type);
 				}
 
@@ -219,7 +222,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				AddReferenceTypeRecursive (nested, collection);
 		}
 
-		static bool ShouldSkipType (TypeDefinition type)
+		static bool ShouldSkipType (TypeDefinition type, TypeDefinitionCache cache)
 		{
 			// We want to use Java's collection types instead of our managed adapter.
 			// eg: 'Java.Util.ArrayList' over 'Android.Runtime.JavaList'
@@ -240,13 +243,13 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				? type.Module.GetType (type.FullName.Substring (0, type.FullName.IndexOf ('`')))
 				: null;
 
-			if (ShouldSkipGeneric (type, non_generic_type, null))
+			if (ShouldSkipGeneric (type, non_generic_type, cache))
 				return true;
 
 			return false;
 		}
 
-		static bool ShouldSkipGeneric (TypeDefinition? a, TypeDefinition? b, TypeDefinitionCache? cache)
+		static bool ShouldSkipGeneric (TypeDefinition? a, TypeDefinition? b, TypeDefinitionCache cache)
 		{
 			if (a == null || b == null)
 				return false;

@@ -33,7 +33,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 	 public class JavaCallableWrapperGenerator {
 
 		class JavaFieldInfo {
-			public JavaFieldInfo (MethodDefinition method, string fieldName, IMetadataResolver? resolver)
+			public JavaFieldInfo (MethodDefinition method, string fieldName, IMetadataResolver resolver)
 			{
 				this.FieldName = fieldName;
 				InitializerName = method.Name;
@@ -41,7 +41,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					?? throw new ArgumentException ($"Could not get JNI signature for method `{method.Name}`", nameof (method));
 				IsStatic = method.IsStatic;
 				Access = method.Attributes & MethodAttributes.MemberAccessMask;
-				Annotations = GetAnnotationsString ("\t", method.CustomAttributes);
+				Annotations = GetAnnotationsString ("\t", method.CustomAttributes, resolver);
 			}
 
 			public MethodAttributes Access { get; private set; }
@@ -69,25 +69,23 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		readonly IMetadataResolver cache;
 		readonly JavaCallableMethodClassifier? methodClassifier;
 
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object []> log)
-			: this (type, log, resolver: null, methodClassifier: null)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object []> log) => throw new NotSupportedException ();
+
+		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, TypeDefinitionCache cache)
+			: this (type, log, (IMetadataResolver) cache, methodClassifier: null)
 		{ }
 
-		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, TypeDefinitionCache? cache)
-			: this (type, log, (IMetadataResolver?) cache, methodClassifier: null)
-		{ }
-
-		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, TypeDefinitionCache? cache, JavaCallableMethodClassifier? methodClassifier)
-			: this (type, log, (IMetadataResolver?) cache, methodClassifier)
+		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, TypeDefinitionCache cache, JavaCallableMethodClassifier? methodClassifier)
+			: this (type, log, (IMetadataResolver) cache, methodClassifier)
 		{
 		}
 
-		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, IMetadataResolver? resolver)
+		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, IMetadataResolver resolver)
 			: this (type, log, resolver, methodClassifier: null)
 		{ }
 
-		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, IMetadataResolver? resolver, JavaCallableMethodClassifier? methodClassifier)
+		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, IMetadataResolver resolver, JavaCallableMethodClassifier? methodClassifier)
 			: this (type, null, log, resolver, methodClassifier)
 		{
 			AddNestedTypes (type);
@@ -133,7 +131,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			HasExport |= children.Any (t => t.HasExport);
 		}
 
-		JavaCallableWrapperGenerator (TypeDefinition type, string? outerType, Action<string, object[]> log, IMetadataResolver? resolver, JavaCallableMethodClassifier? methodClassifier = null)
+		JavaCallableWrapperGenerator (TypeDefinition type, string? outerType, Action<string, object[]> log, IMetadataResolver resolver, JavaCallableMethodClassifier? methodClassifier = null)
 		{
 			this.methodClassifier = methodClassifier;
 			this.type = type;
@@ -175,20 +173,23 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				}
 			}
 
-			foreach (MethodDefinition imethod in type.Interfaces.Select (ifaceInfo => ifaceInfo.InterfaceType)
-					.Select (r => {
-						var d = r.Resolve ();
-						if (d == null)
-							Diagnostic.Error (4204,
-									LookupSource (type),
-									Localization.Resources.JavaCallableWrappers_XA4204,
-									r.FullName);
-						return d;
-					})
-					.Where (d => d != null && GetTypeRegistrationAttributes (d).Any ())
-					.SelectMany (d => d!.Methods)
-					.Where (m => !m.IsStatic)) {
-				AddMethod (imethod, imethod);
+			foreach (InterfaceImplementation ifaceInfo in type.Interfaces) {
+				var typeReference = ifaceInfo.InterfaceType;
+				var typeDefinition = cache.Resolve (typeReference);
+				if (typeDefinition == null) {
+					Diagnostic.Error (4204,
+						LookupSource (type),
+						Localization.Resources.JavaCallableWrappers_XA4204,
+						typeReference.FullName);
+					continue;
+				}
+				if (!GetTypeRegistrationAttributes (typeDefinition).Any ())
+					continue;
+				foreach (MethodDefinition imethod in typeDefinition.Methods) {
+					if (imethod.IsStatic)
+						continue;
+					AddMethod (imethod, imethod);
+				}
 			}
 
 			var ctorTypes = new List<TypeDefinition> () {
@@ -303,7 +304,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				if (rattr != null) {
 					if (ctors.Any (c => c.JniSignature == rattr.Signature))
 						return;
-					ctors.Add (new Signature (ctor, rattr, managedParameters, outerType));
+					ctors.Add (new Signature (ctor, rattr, managedParameters, outerType, cache));
 					curCtors.Add (ctor);
 					return;
 				}
@@ -473,7 +474,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 						Diagnostic.Error (4217, LookupSource (implementedMethod), Localization.Resources.JavaCallableWrappers_XA4217, attr.Name);
 
 					bool shouldBeDynamicallyRegistered = methodClassifier?.ShouldBeDynamicallyRegistered (type, registeredMethod, implementedMethod, attr.OriginAttribute) ?? true;
-					var msig = new Signature (implementedMethod, attr, shouldBeDynamicallyRegistered);
+					var msig = new Signature (implementedMethod, attr, cache, shouldBeDynamicallyRegistered);
 					if (!registeredMethod.IsConstructor && !methods.Any (m => m.Name == msig.Name && m.Params == msig.Params))
 						methods.Add (msig);
 				}
@@ -601,17 +602,17 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			}
 		}
 
-		static string GetAnnotationsString (string indent, IEnumerable<CustomAttribute> atts)
+		static string GetAnnotationsString (string indent, IEnumerable<CustomAttribute> atts, IMetadataResolver resolver)
 		{
 			var sw = new StringWriter ();
-			WriteAnnotations (indent, sw, atts);
+			WriteAnnotations (indent, sw, atts, resolver);
 			return sw.ToString ();
 		}
 
-		static void WriteAnnotations (string indent, TextWriter sw, IEnumerable<CustomAttribute> atts)
+		static void WriteAnnotations (string indent, TextWriter sw, IEnumerable<CustomAttribute> atts, IMetadataResolver resolver)
 		{
 			foreach (var ca in atts) {
-				var catype = ca.AttributeType.Resolve ();
+				var catype = resolver.Resolve (ca.AttributeType);
 				var tca = catype.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "Android.Runtime.AnnotationAttribute");
 				if (tca != null) {
 					sw.Write (indent);
@@ -655,7 +656,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ();
 
 			// class annotations.
-			WriteAnnotations ("", sw, type.CustomAttributes);
+			WriteAnnotations ("", sw, type.CustomAttributes, cache);
 
 			sw.WriteLine ("public " + (type.IsAbstract ? "abstract " : "") + "class " + name);
 
@@ -673,15 +674,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					sw.Write ("mono.android.IGCUserPeer");
 					break;
 			}
-			IEnumerable<TypeDefinition> ifaces = type.Interfaces.Select (ifaceInfo => ifaceInfo.InterfaceType)
-				.Select (r => r.Resolve ())
-				.Where (d => GetTypeRegistrationAttributes (d).Any ());
-			if (ifaces.Any ()) {
-				foreach (TypeDefinition iface in ifaces) {
-					sw.WriteLine (",");
-					sw.Write ("\t\t");
-					sw.Write (GetJavaTypeName (iface, cache));
-				}
+			foreach (var ifaceInfo in type.Interfaces) {
+				var iface = cache.Resolve(ifaceInfo.InterfaceType);
+				if (!GetTypeRegistrationAttributes (iface).Any ())
+					continue;
+				sw.WriteLine (",");
+				sw.Write ("\t\t");
+				sw.Write (GetJavaTypeName (iface, cache));
 			}
 			sw.WriteLine ();
 			sw.WriteLine ("{");
@@ -811,7 +810,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		static string GetJavaTypeName (TypeReference r, IMetadataResolver cache)
 		{
-			TypeDefinition d = r.Resolve ();
+			TypeDefinition d = cache.Resolve (r);
 			string? jniName = JavaNativeTypeManager.ToJniName (d, cache);
 			if (jniName == null) {
 				Diagnostic.Error (4201, Localization.Resources.JavaCallableWrappers_XA4201, r.FullName);
@@ -827,12 +826,12 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		class Signature {
 
-			public Signature (MethodDefinition method, RegisterAttribute register, bool shouldBeDynamicallyRegistered = true) : this (method, register, null, null, shouldBeDynamicallyRegistered) {}
+			public Signature (MethodDefinition method, RegisterAttribute register, IMetadataResolver cache, bool shouldBeDynamicallyRegistered = true) : this (method, register, null, null, cache, shouldBeDynamicallyRegistered) {}
 
-			public Signature (MethodDefinition method, RegisterAttribute register, string? managedParameters, string? outerType, bool shouldBeDynamicallyRegistered = true)
+			public Signature (MethodDefinition method, RegisterAttribute register, string? managedParameters, string? outerType, IMetadataResolver cache, bool shouldBeDynamicallyRegistered = true)
 				: this (register.Name, register.Signature, register.Connector, managedParameters, outerType, null)
 			{
-				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes);
+				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes, cache);
 				IsDynamicallyRegistered = shouldBeDynamicallyRegistered;
 			}
 
@@ -844,10 +843,10 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				JavaAccess = JavaCallableWrapperGenerator.GetJavaAccess (method.Attributes & MethodAttributes.MemberAccessMask);
 				ThrownTypeNames = export.ThrownNames;
 				JavaNameOverride = export.Name;
-				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes);
+				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes, cache);
 			}
 
-			public Signature (MethodDefinition method, ExportFieldAttribute exportField, IMetadataResolver? cache)
+			public Signature (MethodDefinition method, ExportFieldAttribute exportField, IMetadataResolver cache)
 				: this (method.Name, GetJniSignature (method, cache), "__export__", null, null, null)
 			{
 				if (method.HasParameters)

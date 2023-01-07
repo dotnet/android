@@ -9,9 +9,12 @@ namespace generator
 {
 	public static class JavaTypeResolutionFixups
 	{
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static void Fixup (string xmlFile, string outputXmlFile, DirectoryAssemblyResolver resolver, string [] references) => throw new NotSupportedException ();
+
 		// This fixup ensures all referenced Java types can be resolved, and
 		// removes types and members that rely on unresolvable Java types.
-		public static void Fixup (string xmlFile, string outputXmlFile, DirectoryAssemblyResolver resolver, string [] references)
+		public static void Fixup (string xmlFile, string outputXmlFile, DirectoryAssemblyResolver resolver, string [] references, TypeDefinitionCache cache)
 		{
 			// Parse api.xml
 			var type_collection = JavaXmlApiImporter.Parse (xmlFile);
@@ -21,7 +24,7 @@ namespace generator
 				Report.Verbose (0, "Resolving assembly for Java type resolution: '{0}'.", reference);
 				var assembly = resolver.Load (reference);
 
-				ManagedApiImporter.Parse (assembly, type_collection);
+				ManagedApiImporter.Parse (assembly, type_collection, cache);
 			}
 
 			// Run the type resolution pass
