@@ -20,6 +20,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceCaseMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateRtxt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidDesignerConfig" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
 <PropertyGroup>
   <AndroidUseDesignerAssembly Condition=" '$(AndroidUseDesignerAssembly)' == '' ">False</AndroidUseDesignerAssembly>
@@ -140,17 +141,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CheckForInvalidDesignerConfig"
-    Condition=" '$(AndroidUseDesignerAssembly)' != 'True' "
-    DependsOnTargets="_AddAndroidCustomMetaData">
-  <ItemGroup>
-    <_ErrorItems Include="@(_MonoAndroidReferencePath)" Condition=" '%(_MonoAndroidReferencePath.HasResourceDesignerAssemblyReference)' == 'True' "/>
-    <_ErrorItems Include="@(_MonoAndroidReferenceDependencyPaths)"  Condition=" '%(_MonoAndroidReferenceDependencyPaths.HasResourceDesignerAssemblyReference)' == 'True' "/>
-  </ItemGroup>
-  <AndroidError Code="XA1034"
-      ResourceName="XA1034"
-      FormatArguments="%(_ErrorItems.FullPath)"
-      Condition=" '@(_ErrorItems->Count())' != '0' "
-  />
+    Condition=" '$(AndroidUseDesignerAssembly)' != 'True' ">
+  <CheckForInvalidDesignerConfig Assemblies="@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths)" />
 </Target>
 
 <PropertyGroup>

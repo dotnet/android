@@ -325,28 +325,6 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static bool HasResourceDesignerAssemblyReference (ITaskItem assembly)
-		{
-			if (!File.Exists (assembly.ItemSpec)) {
-				return false;
-			}
-			using var pe = new PEReader (File.OpenRead (assembly.ItemSpec));
-			var reader = pe.GetMetadataReader ();
-			return HasResourceDesignerAssemblyReference (reader);
-		}
-
-		public static bool HasResourceDesignerAssemblyReference (MetadataReader reader)
-		{
-			foreach (var handle in reader.AssemblyReferences) {
-				var reference = reader.GetAssemblyReference (handle);
-				var name = reader.GetString (reference.Name);
-				if (string.CompareOrdinal (name, "_Microsoft.Android.Resource.Designer") == 0) {
-					return true;
-				}
-			}
-			return false;
-		}
-
 		public static bool IsReferenceAssembly (string assembly)
 		{
 			using (var stream = File.OpenRead (assembly))
