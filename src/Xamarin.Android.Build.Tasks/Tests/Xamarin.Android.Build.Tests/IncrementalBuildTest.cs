@@ -706,9 +706,6 @@ namespace Lib2
 			var targets = new [] {
 				"_CompileJava",
 				"_CompileToDalvik",
-				"_ConvertResourcesCases",
-				"_GenerateAndroidAssetsDir",
-				"_GenerateAndroidResourceDir",
 				"_GeneratePackageManagerJava",
 				"_ManifestMerger",
 			};

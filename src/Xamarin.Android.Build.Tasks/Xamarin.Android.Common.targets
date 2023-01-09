@@ -914,7 +914,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GenerateAndroidAssetsDir"
-	Inputs="@(_AndroidResolvedAssets);$(_AndroidBuildPropertiesCache)"
+	Inputs="@(_AndroidMSBuildAllProjects);@(_AndroidResolvedAssets)"
 	Outputs="@(_AndroidAssetsDest)">
 	<MakeDir Directories="$(MonoAndroidAssetsDirIntermediate)" />
 	<Copy SourceFiles="@(_AndroidResolvedAssets)" DestinationFiles="@(_AndroidAssetsDest)" SkipUnchangedFiles="true" />
@@ -1030,6 +1030,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_BeforeManagedUpdateAndroidResgen">
   <PropertyGroup>
     <_ManagedUpdateAndroidResgenInputs>
+      @(_AndroidMSBuildAllProjects);
       @(AndroidResource);
       @(AndroidBoundLayout);
       @(_MonoAndroidReferencePath);
@@ -1114,7 +1115,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GenerateAndroidResourceDir"
-	Inputs="@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache)"
+	Inputs="$(MSBuildProjectFullPath);@(_AndroidMSBuildAllProjects);@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache)"
 	Outputs="$(_AndroidResFlagFile)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CheckForInvalidResourceFileNames
