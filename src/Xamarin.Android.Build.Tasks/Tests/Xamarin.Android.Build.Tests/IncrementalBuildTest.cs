@@ -531,8 +531,8 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
 
-				// Change .csproj & build again
-				proj.SetProperty ("Foo", "Bar");
+				// Change $(AndroidManifestMerger) & build again
+				proj.ManifestMerger = "legacy";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
 
