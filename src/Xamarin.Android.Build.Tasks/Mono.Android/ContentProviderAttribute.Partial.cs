@@ -118,9 +118,9 @@ namespace Android.Content {
 			return self;
 		}
 
-		public XElement ToElement (string packageName)
+		public XElement ToElement (string packageName, TypeDefinitionCache cache)
 		{
-			return mapping.ToElement (this, specified, packageName);
+			return mapping.ToElement (this, specified, packageName, cache);
 		}
 	}
 }
