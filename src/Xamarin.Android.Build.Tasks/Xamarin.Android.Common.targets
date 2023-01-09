@@ -1341,7 +1341,7 @@ because xbuild doesn't support framework reference assemblies.
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)" Condition=" !Exists ('$(MonoAndroidIntermediateAssemblyDir)') " />
 </Target>
 
-<Target Name="_CollectRuntimePackJarFiles" DependsOnTargets="ComputeResolvedFilesToPublishList">
+<Target Name="_CollectRuntimePackJarFiles">
   <ItemGroup>
     <AndroidJavaLibrary Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.jar' " />
   </ItemGroup>
