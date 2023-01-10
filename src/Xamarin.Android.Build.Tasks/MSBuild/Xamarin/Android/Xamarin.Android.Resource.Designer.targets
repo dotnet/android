@@ -141,7 +141,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CheckForInvalidDesignerConfig"
-    Condition=" '$(AndroidUseDesignerAssembly)' != 'True' ">
+    Condition=" '$(AndroidUseDesignerAssembly)' != 'True' "
+    DependsOnTargets="_AddAndroidCustomMetaData">
   <CheckForInvalidDesignerConfig Assemblies="@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths)" />
 </Target>
 
