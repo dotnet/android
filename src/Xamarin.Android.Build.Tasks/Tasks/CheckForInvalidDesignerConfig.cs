@@ -19,6 +19,9 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			if (Assemblies == null)
+				return true;
+
 			foreach (var assembly in Assemblies) {
 				if (HasResourceDesignerAssemblyReference (assembly)) {
 					Log.LogCodedError ("XA1034", Properties.Resources.XA1034, assembly);
