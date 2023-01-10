@@ -1,9 +1,9 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftDotnetSdkInternalPackageVersion>8.0.100-alpha.1.23059.3</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftDotnetSdkInternalPackageVersion>8.0.100-alpha.1.23060.5</MicrosoftDotnetSdkInternalPackageVersion>
     <MicrosoftNETILLinkTasksPackageVersion>8.0.100-1.23055.2</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>8.0.0-alpha.1.23057.5</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>8.0.0-alpha.1.23058.2</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadEmscriptennet7Manifest80100Version>8.0.0-alpha.1.22620.1</MicrosoftNETWorkloadEmscriptennet7Manifest80100Version>
