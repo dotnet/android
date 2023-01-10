@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tasks
 using System;
 
 namespace %NAMESPACE% {
-	public partial class Resource : %BASECLASS% {
+	public class Resource : %BASECLASS% {
 	}
 }
 ";
