@@ -706,7 +706,6 @@ namespace Lib2
 			var targets = new [] {
 				"_CompileJava",
 				"_CompileToDalvik",
-				"_GeneratePackageManagerJava",
 				"_ManifestMerger",
 			};
 
