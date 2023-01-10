@@ -994,9 +994,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
 		<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
 		<_PropertyCacheItems Include="AndroidGenerateJniMarshalMethods=$(AndroidGenerateJniMarshalMethods)" />
-		<_PropertyCacheItems Include="AndroidEnableMarshalMethods=$(AndroidEnableMarshalMethods)" />
-		<_PropertyCacheItems Include="AndroidUseAssemblyStore=$(AndroidUseAssemblyStore)" />
-		<_PropertyCacheItems Include="AndroidEnableAssemblyCompression=$(AndroidEnableAssemblyCompression)" />
 		<_PropertyCacheItems Include="AndroidManifestMerger=$(AndroidManifestMerger)" />
 		<_PropertyCacheItems Include="OS=$(OS)" />
 		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
@@ -1763,7 +1760,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
-  Inputs="$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+  Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
