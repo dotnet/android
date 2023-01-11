@@ -21,20 +21,8 @@ namespace MonoDroid.Tuner
 	{
 		internal const string DesignerAssemblyName = "_Microsoft.Android.Resource.Designer";
 		internal const string DesignerAssemblyNamespace = "Microsoft.Android.Resource.Designer";
-#if ILLINK
-		protected override void Process ()
-		{
-			cache = Context;
-		}
-#else // ILLINK
-		public FixLegacyResourceDesignerStep (IMetadataResolver cache)
-		{
-			this.cache = cache;
-		}
 
-		readonly
-#endif // ILLINK
-		IMetadataResolver cache;
+		bool designerLoaded = false;
 		AssemblyDefinition designerAssembly = null;
 		TypeDefinition designerType = null;
 		Dictionary<string, MethodDefinition> lookup;
@@ -49,35 +37,34 @@ namespace MonoDroid.Tuner
 
 		protected override void LoadDesigner ()
 		{
-			if (designerAssembly != null)
+			if (designerLoaded)
 				return;
-			var designerNameAssembly = AssemblyNameReference.Parse ($"{DesignerAssemblyName}, Version=1.0.0.0");
 			try {
-				designerAssembly = Resolve (designerNameAssembly);
-			} catch (Mono.Cecil.AssemblyResolutionException) {
-				LogMessage ($"   Could not resolve assembly {DesignerAssemblyName}.");
-			} catch (System.IO.FileNotFoundException) {
-				LogMessage ($"   Assembly {DesignerAssemblyName} did not exist.");
+				var designerNameAssembly = AssemblyNameReference.Parse ($"{DesignerAssemblyName}, Version=1.0.0.0");
+				try {
+					designerAssembly = Resolve (designerNameAssembly);
+					LogMessage ($"   Loaded {designerNameAssembly}");
+				} catch (Mono.Cecil.AssemblyResolutionException) {
+					LogMessage ($"   Could not resolve assembly {DesignerAssemblyName}.");
+				} catch (System.IO.FileNotFoundException) {
+					LogMessage ($"   Assembly {DesignerAssemblyName} did not exist.");
+				}
+				if (designerAssembly == null) {
+					return;
+				}
+				designerType = designerAssembly.MainModule.GetTypes ().FirstOrDefault (x => x.FullName == $"{DesignerAssemblyNamespace}.Resource");
+				if (designerType == null) {
+					LogMessage ($"   Did not find {DesignerAssemblyNamespace}.Resource type. It was probably linked out.");
+					return;
+				}
+				lookup = BuildResourceDesignerPropertyLookup (designerType);
+			} finally {
+				designerLoaded = true;
 			}
-			if (designerAssembly == null) {
-				return;
-			}
-			designerType = designerAssembly.MainModule.GetTypes ().FirstOrDefault (x => x.FullName == $"{DesignerAssemblyNamespace}.Resource");
-			if (designerType == null) {
-				LogMessage ($"   Did not find {DesignerAssemblyNamespace}.Resource type. It was probably linked out.");
-				return;
-			}
-			lookup = BuildResourceDesignerPropertyLookup (designerType);
-			return;
 		}
 
 		internal override bool ProcessAssemblyDesigner (AssemblyDefinition assembly)
 		{
-			if (designerAssembly == null || designerType == null) {
-				LogMessage ($"   Not using {DesignerAssemblyName}");
-				return false;
-			}
-
 			if (!FindResourceDesigner (assembly, mainApplication: false, out TypeDefinition designer, out CustomAttribute designerAttribute)) {
 				LogMessage ($"   {assembly.Name.Name} has no designer. ");
 				return false;
@@ -87,6 +74,15 @@ namespace MonoDroid.Tuner
 			LogMessage ($"   BaseType: {designer.BaseType.FullName}. ");
 			if (designer.BaseType.FullName == $"{DesignerAssemblyNamespace}.Resource") {
 				LogMessage ($"   {assembly.Name.Name} has already been processed. ");
+				return false;
+			}
+
+			// This is expected for the first call, in <LinkAssembliesNoShrink/>
+			if (!designerLoaded)
+				LoadDesigner ();
+
+			if (designerAssembly == null || designerType == null) {
+				LogMessage ($"   Not using {DesignerAssemblyName}");
 				return false;
 			}
 
@@ -114,9 +110,10 @@ namespace MonoDroid.Tuner
 				foreach (PropertyDefinition property in definition.Properties)
 				{
 					string key = $"{definition.Name}::{property.Name}";
-					if (!output.ContainsKey (key)) {
-						LogMessage ($"          Adding {key}");
-						output.Add(key, property.GetMethod);
+					if (output.ContainsKey (key)) {
+						LogMessage ($"          Found duplicate {key}");
+					} else {
+						output.Add (key, property.GetMethod);
 					}
 				}
 			}

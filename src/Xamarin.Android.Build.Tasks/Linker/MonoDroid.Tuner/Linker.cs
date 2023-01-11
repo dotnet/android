@@ -112,7 +112,7 @@ namespace MonoDroid.Tuner
 			// end monodroid specific
 
 			if (options.UseDesignerAssembly)
-				pipeline.AppendStep (new FixLegacyResourceDesignerStep (cache));
+				pipeline.AppendStep (new FixLegacyResourceDesignerStep ());
 			pipeline.AppendStep (new FixAbstractMethodsStep (cache));
 			pipeline.AppendStep (new MonoDroidMarkStep (cache));
 			pipeline.AppendStep (new SweepStep ());
