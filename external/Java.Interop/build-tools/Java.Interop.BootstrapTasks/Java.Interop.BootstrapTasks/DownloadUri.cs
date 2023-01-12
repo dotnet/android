@@ -41,7 +41,10 @@ namespace Java.Interop.BootstrapTasks {
 			}
 
 			var tasks   = new TTask [SourceUris.Length];
-			using (var client = new HttpClient ()) {
+			var handler = new HttpClientHandler {
+				CheckCertificateRevocationList  = true,
+			};
+			using (var client = new HttpClient (handler)) {
 				client.Timeout = TimeSpan.FromHours (3);
 				for (int i = 0; i < SourceUris.Length; ++i) {
 					tasks [i] = DownloadFile (client, SourceUris [i], DestinationFiles [i].ItemSpec);

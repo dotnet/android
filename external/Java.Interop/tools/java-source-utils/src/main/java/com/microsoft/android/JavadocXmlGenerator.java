@@ -39,7 +39,7 @@ public final class JavadocXmlGenerator implements AutoCloseable {
 		if (output == null)
 			this.output = System.out;
 		else {
-			final File file     = new File(output);
+			final File file     = new File(output);     // lgtm [java/path-injection-local]
 			final File parent   = file.getParentFile();
 			if (parent != null) {
 				parent.mkdirs();
