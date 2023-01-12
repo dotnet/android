@@ -105,7 +105,7 @@ namespace Xamarin.Android.Tasks
 
 		string FindMono ()
 		{
-			string mono = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<string> (MonoKey, Lifetime);
+			string mono = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<string> (MonoKey, Lifetime, flags: RegisterTaskObjectKeyFlags.None);
 			if (!string.IsNullOrEmpty (mono)) {
 				Log.LogDebugMessage ($"Found cached mono via {nameof (BuildEngine4.RegisterTaskObject)}");
 				return mono;
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var path in env.Split (Path.PathSeparator)) {
 					if (File.Exists (mono = Path.Combine (path, "mono"))) {
 						Log.LogDebugMessage ("Found mono in $PATH");
-						BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoKey, mono, Lifetime);
+						BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoKey, mono, Lifetime, flags: RegisterTaskObjectKeyFlags.None);
 						return mono;
 					}
 				}
@@ -125,13 +125,13 @@ namespace Xamarin.Android.Tasks
 			foreach (var path in KnownMonoPaths) {
 				if (File.Exists (mono = path)) {
 					Log.LogDebugMessage ($"Found mono in {nameof (KnownMonoPaths)}");
-					BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoKey, mono, Lifetime);
+					BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoKey, mono, Lifetime, flags: RegisterTaskObjectKeyFlags.None);
 					return mono;
 				}
 			}
 
 			// Last resort
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoKey, mono = "mono", Lifetime);
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoKey, mono = "mono", Lifetime, flags: RegisterTaskObjectKeyFlags.None);
 			return mono;
 		}
 
