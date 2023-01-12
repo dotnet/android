@@ -23,8 +23,10 @@ namespace Xamarin.Android.Tasks
 using System;
 
 namespace %NAMESPACE% {
+	#pragma warning disable IDE0002
 	public partial class Resource : %BASECLASS% {
 	}
+	#pragma warning restore IDE0002
 }
 ";
 		private const string FSharpTemplate = @"//------------------------------------------------------------------------------
