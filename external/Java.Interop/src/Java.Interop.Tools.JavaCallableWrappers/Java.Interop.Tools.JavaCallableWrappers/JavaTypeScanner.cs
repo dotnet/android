@@ -18,17 +18,15 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 
 		readonly IMetadataResolver cache;
 
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public JavaTypeScanner (Action<TraceLevel, string> logger)
-			: this (logger, resolver: null)
-		{ }
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public JavaTypeScanner (Action<TraceLevel, string> logger) => throw new NotSupportedException ();
 
-		public JavaTypeScanner (Action<TraceLevel, string> logger, TypeDefinitionCache? cache)
-			: this (logger, (IMetadataResolver?) cache)
+		public JavaTypeScanner (Action<TraceLevel, string> logger, TypeDefinitionCache cache)
+			: this (logger, (IMetadataResolver) cache)
 		{
 		}
 
-		public JavaTypeScanner (Action<TraceLevel, string> logger, IMetadataResolver? resolver)
+		public JavaTypeScanner (Action<TraceLevel, string> logger, IMetadataResolver resolver)
 		{
 			if (logger == null)
 				throw new ArgumentNullException (nameof (logger));
@@ -96,15 +94,14 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 			return false;
 		}
 
-		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log) =>
-			GetJavaTypes (assemblies, resolver, log, metadataResolver: null);
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
+		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log) => throw new NotSupportedException ();
 
 		// Returns all types for which we need to generate Java delegate types.
-		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log, TypeDefinitionCache? cache) =>
-			GetJavaTypes (assemblies, resolver, log, (IMetadataResolver?) cache);
+		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log, TypeDefinitionCache cache) =>
+			GetJavaTypes (assemblies, resolver, log, (IMetadataResolver) cache);
 
-		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log, IMetadataResolver? metadataResolver)
+		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log, IMetadataResolver metadataResolver)
 		{
 			Action<TraceLevel, string> l = (level, value) => log ("{0}", new string [] { value });
 			return new JavaTypeScanner (l, metadataResolver).GetJavaTypes (assemblies, resolver);
