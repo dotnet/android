@@ -22,12 +22,11 @@ namespace Xamarin.Android.Tasks
 		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, string aapt2, int numberOfInstances, int initalNumberOfDaemons, bool registerInDomain = false)
 		{
 			var area = registerInDomain ? RegisteredTaskObjectLifetime.AppDomain : RegisteredTaskObjectLifetime.Build;
-			var flags = registerInDomain ? RegisterTaskObjectKeyFlags.None : RegisterTaskObjectKeyFlags.IncludeProjectFile;
-			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (RegisterTaskObjectKey, area, flags: flags);
+			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (RegisterTaskObjectKey, area, flags: RegisterTaskObjectKeyFlags.None);
 			if (daemon == null)
 			{
 				daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons);
-				engine.RegisterTaskObjectAssemblyLocal (RegisterTaskObjectKey, daemon, area, allowEarlyCollection: false, flags: flags);
+				engine.RegisterTaskObjectAssemblyLocal (RegisterTaskObjectKey, daemon, area, allowEarlyCollection: false, flags: RegisterTaskObjectKeyFlags.None);
 			}
 			return daemon;
 		}
