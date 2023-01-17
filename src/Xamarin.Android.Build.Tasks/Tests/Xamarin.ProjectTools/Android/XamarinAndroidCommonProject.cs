@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Construction;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Xamarin.ProjectTools
 {
@@ -20,28 +17,27 @@ namespace Xamarin.ProjectTools
 
 		BuildItem.Source resourceDesigner;
 
-		static byte [] ScaleIcon (Image image, IImageFormat format, int width, int height)
-		{
-			float scale = Math.Min (width / image.Width, height / image.Height);
-			using (var ms = new MemoryStream ()) {
-				var clone = image.Clone (i => i.Resize (width, height));
-				clone.Save (ms, format);
-				return ms.ToArray ();
-			}
-		}
-
 		static XamarinAndroidCommonProject ()
 		{
-			var stream = typeof(XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png");
-			icon_binary_mdpi = new byte [stream.Length];
-			stream.Read (icon_binary_mdpi, 0, (int) stream.Length);
+			icon_binary_mdpi    = GetResourceContents ("mipmap-mdpi/appicon.png");
+			icon_binary_hdpi    = GetResourceContents ("mipmap-hdpi/appicon.png");
+			icon_binary_xhdpi   = GetResourceContents ("mipmap-xhdpi/appicon.png");
+			icon_binary_xxhdpi  = GetResourceContents ("mipmap-xxhdpi/appicon.png");
+			icon_binary_xxxhdpi = GetResourceContents ("mipmap-xxxhdpi/appicon.png");
+		}
 
-			stream.Position = 0;
-			using (var icon = Image.Load (stream, out var format)) {
-				icon_binary_hdpi = ScaleIcon (icon, format, 72, 72);
-				icon_binary_xhdpi = ScaleIcon (icon, format, 96, 96);
-				icon_binary_xxhdpi = ScaleIcon (icon, format, 144, 144);
-				icon_binary_xxxhdpi = ScaleIcon (icon, format, 192, 192);
+		static byte[] GetResourceContents (string resourceName)
+		{
+			var assembly    = typeof (XamarinAndroidCommonProject).Assembly;
+			var stream      = assembly.GetManifestResourceStream (resourceName) ??
+				assembly.GetManifestResourceStream (resourceName.Replace ('/', Path.DirectorySeparatorChar));
+			if (stream == null) {
+				return Array.Empty<byte>();
+			}
+			using (stream) {
+				var contents    = new byte [stream.Length];
+				stream.Read (contents, 0, (int) stream.Length);
+				return contents;
 			}
 		}
 
@@ -58,8 +54,12 @@ namespace Xamarin.ProjectTools
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable-xxhdpi\\Icon.png") { BinaryContent = () => icon_binary_xxhdpi });
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable-xxxhdpi\\Icon.png") { BinaryContent = () => icon_binary_xxxhdpi });
 			//AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable-nodpi\\Icon.png") { BinaryContent = () => icon_binary });
+			if (Builder.UseDotNet) {
+				// set our default
+				SetProperty ("AndroidUseDesignerAssembly", "True");
+			}
 		}
-		
+
 		public override string ProjectTypeGuid {
 			get { return "FAE04EC0-301F-11D3-BF4B-00C04F79EFBC"; }
 		}

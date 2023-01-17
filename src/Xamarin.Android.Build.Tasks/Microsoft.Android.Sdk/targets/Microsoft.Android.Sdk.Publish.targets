@@ -25,6 +25,7 @@ This file contains the implementation for 'dotnet publish'.
       <_AndroidPackageFormats Include="@(_AllPackageFormats->Distinct())" />
       <_AndroidFilesToPublish Include="$(OutputPath)*.%(_AndroidPackageFormats.Identity)" />
       <_AndroidFilesToPublish Include="$(AndroidProguardMappingFile)" Condition="Exists ('$(AndroidProguardMappingFile)')" />
+      <_AndroidFilesToPublish Include="$(_GenerateResourceDesignerAssemblyOutput)" Condition="Exists('$(_GenerateResourceDesignerAssemblyOutput)')" />
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
       <ResolvedFileToPublish Include="@(_AndroidFilesToPublish)" RelativePath="%(FileName)%(Extension)" />
     </ItemGroup>

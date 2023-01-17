@@ -471,7 +471,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (android_runtime_jnienv_class_token == -1 || jnienv_initialize_method_token == -1 || jnienv_registerjninatives_method_token == -1) {
-				throw new InvalidOperationException ($"Unable to find the required Android.Runtime.JNIEnvInit method tokens");
+				throw new InvalidOperationException ($"Unable to find the required Android.Runtime.JNIEnvInit method tokens for {assemblyFilePath}");
 			}
 		}
 

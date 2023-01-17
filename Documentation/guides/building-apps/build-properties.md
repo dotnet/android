@@ -1110,6 +1110,14 @@ or use `-p:AndroidCreateProguardMappingFile=False` on the command line.
 
 This property was added in Xamarin.Android 11.2.
 
+## AndroidD8IgnoreWarnings
+
+Specifies `--map-diagnostics warning info` to be passed to `d8`. The
+default value is `True`, but can be set to `False` to enforce more
+strict behavior. See the [D8 and R8 source code][r8-source] for details.
+
+Added in .NET 8.
+
 ## AndroidR8IgnoreWarnings
 
 Specifies
@@ -1118,7 +1126,12 @@ to continue with dex compilation even if certain warnings are
 encountered. The default value is `True`, but can be set to `False` to
 enforce more strict behavior. See the [ProGuard manual](https://www.guardsquare.com/manual/configuration/usage) for details.
 
+Starting in .NET 8, specifies `--map-diagnostics warning info`. See
+the [D8 and R8 source code][r8-source] for details.
+
 Added in Xamarin.Android 10.3.
+
+[r8-source]: https://r8.googlesource.com/r8/+/refs/tags/3.3.75/src/main/java/com/android/tools/r8/BaseCompilerCommandParser.java#246
 
 ## AndroidR8JarPath
 
@@ -1350,6 +1363,35 @@ the developer to suppress usage of the default AOT profiles.
 To suppress the default AOT profiles, set the property to `false`.
 
 Added in Xamarin.Android 10.1.
+
+## AndroidUseDesignerAssembly
+
+A bool property which controls if the build system will generate an
+`_Microsoft.Android.Resource.Designer.dll` as apposed to a `Resource.Designer.cs` file. The benefits of this are smaller applications and
+faster startup time.
+
+The default value is `true` in .NET 8.
+
+This setting is not backward compatible with Classic Xamarin.Android.
+As a Nuget Author it is recommended that you ship three versions of
+the assembly if you want to maintain backward compatibility.
+One for MonoAndroid, one for net6.0-android and
+one for net8.0-android. You can do this by using [Xamarin.Legacy.Sdk](https://www.nuget.org/packages/Xamarin.Legacy.Sdk). This is only required if your Nuget Library
+project makes use of `AndroidResource` items in the project or via a dependency.
+
+```
+<TargetFrameworks>monoandroid90;net6.0-android;net8.0-android</TargetFrameworks>
+```
+
+Alternatively turn this setting off until such time as both Classic and
+net7.0-android have been deprecated.
+
+.NET 8 Projects which choose to turn this setting off will not be able to
+consume references which do use it. If you try to use an assembly
+which does have this feature enabled in a project that does not, you will
+get a `XA1034` build error.
+
+Added in .NET 8.  Unsupported in Classic Xamarin.Android.
 
 ## AndroidUseInterpreter
 

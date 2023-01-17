@@ -16,6 +16,8 @@
 /build-tools/api-merge @jonpryor
 /build-tools/api-xml-adjuster @jonpryor
 /build-tools/automation @pjcollins @jonpryor
+/build-tools/cmake @grendello
+/build-tools/wrap-sh @grendello
 /build-tools/debian-metadata @directhex
 /build-tools/enumification-helpers @jonpryor
 /build-tools/manifest-attribute-codegen @jonpryor
@@ -30,9 +32,22 @@
 /src/r8 @jonathanpeppers @jonpryor
 /src/Xamarin.Android.Build.Tasks @dellis1972 @jonathanpeppers
 /src/Xamarin.Android.Build.Tasks/Linker @jonpryor
+/src/Xamarin.Android.Build.Tasks/Utilities/LlvmIrGenerator @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/TypeMap* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethods* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/*AssemblyStore* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/AssemblyCompression* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/CompressedAssembl* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/ELFHelper* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/EnvironmentFilesParser* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/JniRemappingAssemblyGenerator* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/NativeTypeMappingData* @grendello
+/src/Xamarin.Android.Build.Tasks/Utilities/NdkTools @grendello
 /src/Xamarin.Android.NamingCustomAttributes @jonpryor
 /src/Xamarin.Android.Tools.Aidl @jonpryor
 /src/monodroid/ @jonpryor @grendello
+/src/sqlite-xamarin @grendello
 /tests/TestRunner.* @grendello
 /tests/BCL-Tests @grendello
 /tests/CodeBehind @grendello
@@ -44,6 +59,9 @@
 /src/Mono.Android/java/mono/android/ @mcumming @jonpryor
 /src/Xamarin.Android.Build.Tasks/MSBuild/Xamarin/Android/Xamarin.Android.Designer.targets @mcumming @jonpryor
 
+/tools/assembly-store-reader @grendello
+/tools/decompress-assemblies @grendello
 /tools/jit-times @jonpryor
-/tools/xabuild @jonathanpeppers @jonpryor
 /tools/setup-windows @jonathanpeppers @jonpryor
+/tools/tmt @grendello
+/tools/xabuild @jonathanpeppers @jonpryor

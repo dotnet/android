@@ -58,18 +58,24 @@ namespace Xamarin.Android.Tasks
 
 			string assemblerName = Path.GetFileName (config.AssemblerPath);
 			LogDebugMessage ($"[LLVM llc] {psi.FileName} {psi.Arguments}");
+
+			var stdoutLines = new List<string> ();
+			var stderrLines = new List<string> ();
+
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (s, e) => {
-					if (e.Data != null)
+					if (e.Data != null) {
 						OnOutputData (assemblerName, s, e);
-					else
+						stdoutLines.Add (e.Data);
+					} else
 						stdout_completed.Set ();
 				};
 
 				proc.ErrorDataReceived += (s, e) => {
-					if (e.Data != null)
+					if (e.Data != null) {
 						OnErrorData (assemblerName, s, e);
-					else
+						stderrLines.Add (e.Data);
+					} else
 						stderr_completed.Set ();
 				};
 
@@ -87,7 +93,8 @@ namespace Xamarin.Android.Tasks
 					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 
 				if (proc.ExitCode != 0) {
-					LogCodedError ("XA3006", Properties.Resources.XA3006, Path.GetFileName (config.InputSource));
+					var sb = MonoAndroidHelper.MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
+					LogCodedError ("XA3006", Properties.Resources.XA3006, Path.GetFileName (config.InputSource), sb.ToString ());
 					Cancel ();
 				}
 			}

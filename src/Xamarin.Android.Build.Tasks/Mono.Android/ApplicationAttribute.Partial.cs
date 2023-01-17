@@ -59,15 +59,15 @@ namespace Android.App {
 			  "BackupAgent",
 			  "backupAgent",
 			  (self, value) => self._BackupAgent  = (string) value,
-				(self, p, r)  => {
+				(self, p, r, cache)  => {
 					var typeDef = ManifestDocumentElement.ResolveType (self._BackupAgent, p, r);
 
-					if (!typeDef.IsSubclassOf ("Android.App.Backup.BackupAgent"))
+					if (!typeDef.IsSubclassOf ("Android.App.Backup.BackupAgent", cache))
 						throw new InvalidOperationException (
 								string.Format ("The Type '{0}', referenced by the Android.App.ApplicationAttribute.BackupAgent property, must be a subclass of the type Android.App.Backup.BackupAgent.",
 									typeDef.FullName));
 
-					return ManifestDocumentElement.ToString (typeDef);
+					return ManifestDocumentElement.ToString (typeDef, cache);
 			  }
 			}, {
 			  "BackupInForeground",
@@ -256,16 +256,16 @@ namespace Android.App {
 			return self;
 		}
 
-		internal XElement ToElement (IAssemblyResolver resolver, string packageName)
+		internal XElement ToElement (IAssemblyResolver resolver, string packageName, TypeDefinitionCache cache)
 		{
-			return mapping.ToElement (this, specified, packageName, provider, resolver);
+			return mapping.ToElement (this, specified, packageName, cache, provider, resolver);
 		}
 
-		static string ToNameAttribute (ApplicationAttribute self)
+		static string ToNameAttribute (ApplicationAttribute self, ICustomAttributeProvider provider, IAssemblyResolver resolver, TypeDefinitionCache cache)
 		{
 			var type = self.provider as TypeDefinition;
 			if (string.IsNullOrEmpty (self.Name) && type != null)
-				return JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
+				return JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 
 			return self.Name;
 		}

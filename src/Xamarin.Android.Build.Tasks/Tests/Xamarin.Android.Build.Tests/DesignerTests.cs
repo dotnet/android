@@ -93,10 +93,14 @@ namespace UnnamedProject
 </LinearLayout>"
 			});
 
+			lib.SetProperty ("AndroidUseDesignerAssembly", "False");
+			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
+
 			using (var libb = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false))
 			using (var appb = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 				// Save the library project, but don't build it yet
 				libb.Save (lib);
+				appb.BuildLogFile = "build1.log";
 				appb.Target = target;
 				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have run completely.");
@@ -111,6 +115,7 @@ namespace UnnamedProject
 				// Build the library project now
 				Assert.IsTrue (libb.Build (lib, doNotCleanupOnUpdate: true), "library build should have succeeded.");
 				appb.Target = "Build";
+				appb.BuildLogFile = "build2.log";
 				Assert.IsTrue (appb.Build (proj, doNotCleanupOnUpdate: true), "app build should have succeeded.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have run completely.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
@@ -120,6 +125,7 @@ namespace UnnamedProject
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("unnamedproject.CustomTextView"),
 					"unnamedproject.CustomTextView should have been replaced with a $(Hash).CustomTextView");
 				appb.Target = target;
+				appb.BuildLogFile = "build3.log";
 				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters, doNotCleanupOnUpdate: true), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have been skipped.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");

@@ -48,7 +48,7 @@
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
     <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.1</AndroidNet7Version>
-    <AndroidNet6Version Condition=" '$(AndroidNet6Version)' == '' ">32.0.476</AndroidNet6Version>
+    <AndroidNet6Version Condition=" '$(AndroidNet6Version)' == '' ">32.0.485</AndroidNet6Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
@@ -244,7 +244,7 @@
   <!-- Unit Test Properties -->
   <PropertyGroup>
     <!-- When changing the version below, please also update the 'build-tools/scripts/nunit3-console*' scripts -->
-    <NUnitConsoleVersion Condition=" '$(NUnitConsoleVersion)' == '' ">3.11.1</NUnitConsoleVersion>
+    <NUnitConsoleVersion Condition=" '$(NUnitConsoleVersion)' == '' ">3.12.0</NUnitConsoleVersion>
     <_Runtime Condition=" '$(HostOS)' != 'Windows' ">$(ManagedRuntime) $(ManagedRuntimeArgs)</_Runtime>
     <_NUnit>$(_Runtime) $(XAPackagesDir)\nunit.consolerunner\$(NUnitConsoleVersion)\tools\nunit3-console.exe</_NUnit>
   </PropertyGroup>

@@ -44,7 +44,7 @@ _ResolveAssemblies MSBuild target.
   </PropertyGroup>
 
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
-      DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
+      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
         <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
@@ -66,6 +66,14 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup>
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />
       <IntermediateAssembly Include="$(_OuterIntermediateAssembly)" />
+    </ItemGroup>
+    <ItemGroup Condition=" '$(AndroidUseDesignerAssembly)' == 'True' ">
+      <ReferenceCopyLocalPaths Include="$(_GenerateResourceDesignerAssemblyOutput)">
+        <PostprocessAssembly>True</PostprocessAssembly>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <IsTrimmable>false</IsTrimmable>
+        <RuntimeIdentifier>android</RuntimeIdentifier>
+      </ReferenceCopyLocalPaths>
     </ItemGroup>
     <ItemGroup Condition=" '@(_DebugSymbolsIntermediatePath->Count())' != '0' ">
       <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />

@@ -37,21 +37,5 @@ namespace Xamarin.Android.Tasks
 				default: return char.ToUpperInvariant (name[0]) + name.Substring (1);
 			}
 		}
-
-		internal string GetResourceName (string type, string name, Dictionary<string, string> map)
-		{
-			string mappedValue;
-			string key = string.Format ("{0}{1}{2}", type, Path.DirectorySeparatorChar, name).ToLowerInvariant ();
-
-			if (map.TryGetValue (key, out mappedValue)) {
-				Log.LogDebugMessage ("  - Remapping resource: {0}.{1} -> {2}", type, name, mappedValue);
-				return ResourceIdentifier.CreateValidIdentifier (mappedValue.Substring (mappedValue.LastIndexOf (Path.DirectorySeparatorChar) + 1));
-			}
-
-			Log.LogDebugMessage ("  - Not remapping resource: {0}.{1}", type, name);
-
-			return ResourceIdentifier.CreateValidIdentifier (name);
-		}
-
 	}
 }

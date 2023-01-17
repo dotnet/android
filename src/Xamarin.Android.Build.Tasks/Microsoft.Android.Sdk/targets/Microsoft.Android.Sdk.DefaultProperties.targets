@@ -10,6 +10,8 @@
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
     <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' and '$(UsingAndroidNETSdk)' == 'true' ">Xamarin.Android.Net.AndroidMessageHandler</AndroidHttpClientHandlerType>
     <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' and '$(UsingAndroidNETSdk)' != 'true' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
+    <AndroidUseDesignerAssembly Condition=" '$(AndroidUseDesignerAssembly)' == '' ">true</AndroidUseDesignerAssembly>
+    <AndroidGenerateResourceDesigner Condition=" '$(AndroidUseDesignerAssembly)' == 'True' ">false</AndroidGenerateResourceDesigner>
     <AndroidGenerateResourceDesigner Condition=" '$(AndroidGenerateResourceDesigner)' == '' ">true</AndroidGenerateResourceDesigner>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">$(AndroidGenerateResourceDesigner)</AndroidUseIntermediateDesignerFile>
     <GenerateDependencyFile Condition=" '$(GenerateDependencyFile)' == '' ">false</GenerateDependencyFile>
@@ -95,6 +97,7 @@
     <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == ''">false</HttpActivityPropagationSupport>
     <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
     <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
+    <UseNativeHttpHandler Condition=" $(AndroidHttpClientHandlerType.Contains ('System.Net.Http.SocketsHttpHandler')) And '$(UseNativeHttpHandler)' == '' ">false</UseNativeHttpHandler>
     <UseNativeHttpHandler Condition="'$(UseNativeHttpHandler)' == ''">true</UseNativeHttpHandler>
     <_AggressiveAttributeTrimming Condition="'$(_AggressiveAttributeTrimming)' == ''">true</_AggressiveAttributeTrimming>
     <NullabilityInfoContextSupport Condition="'$(NullabilityInfoContextSupport)' == ''">false</NullabilityInfoContextSupport>

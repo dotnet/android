@@ -71,7 +71,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			var port = string.IsNullOrEmpty (Port) ? "" : $" -port {Port}";
 			var showWindow = ShowWindow ? "" : " -no-window";
-			var arguments = $"{Arguments ?? string.Empty} -verbose -detect-image-hang -logcat-output \"{LogcatFile}\" -no-boot-anim -no-audio -no-snapshot -cache-size 512 -timezone \"Etc/UTC\" {showWindow}{port} -avd {ImageName}";
+			var arguments = $"{Arguments ?? string.Empty} -verbose -detect-image-hang -logcat-output \"{LogcatFile}\" -no-boot-anim -no-audio -no-snapshot -cache-size 512 -change-locale en-US -timezone \"Etc/UTC\" {showWindow}{port} -avd {ImageName}";
 			Log.LogMessage (MessageImportance.Low, $"Tool {emulator} execution started with arguments: {arguments}");
 			var psi = new ProcessStartInfo () {
 				FileName                = emulator,

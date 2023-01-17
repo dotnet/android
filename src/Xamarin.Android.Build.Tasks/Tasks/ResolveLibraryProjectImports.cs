@@ -352,6 +352,7 @@ namespace Xamarin.Android.Tasks
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");
 				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
+				string rTxt = Path.Combine (importsDir, "R.txt");
 				string assetsDir = Path.Combine (importsDir, "assets");
 				string proguardFile = Path.Combine (importsDir, "proguard.txt");
 
@@ -367,7 +368,7 @@ namespace Xamarin.Android.Tasks
 							AddJar (jars, Path.GetFullPath (file));
 						}
 					}
-					if (Directory.Exists (resDir)) {
+					if (Directory.Exists (resDir) || File.Exists (rTxt)) {
 						var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
 						if (string.IsNullOrEmpty (skipProcessing)) {
 							skipProcessing = "True";
@@ -424,8 +425,9 @@ namespace Xamarin.Android.Tasks
 						Log.LogErrorFromException (new PathTooLongException ($"Error extracting resources from \"{aarFile.ItemSpec}\"", ex));
 					}
 				}
-				if (Directory.Exists (resDir)) {
-					CreateResourceArchive (resDir, resDirArchive);
+				if (Directory.Exists (resDir) || File.Exists (rTxt)) {
+					if (Directory.Exists (resDir))
+						CreateResourceArchive (resDir, resDirArchive);
 					var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
 					if (string.IsNullOrEmpty (skipProcessing)) {
 						skipProcessing = "True";
