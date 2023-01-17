@@ -138,22 +138,8 @@ namespace Xamarin.Android.Tasks {
 					LogCodedError ("APT0001", Properties.Resources.APT0001, message.Substring ("unknown option '".Length).TrimEnd ('.', '\''));
 					return false;
 				}
-				if (message.Contains ("in APK") && message.Contains ("is compressed.")) {
-					LogMessage (singleLine, messageImportance);
+				if (LogNotesOrWarnings (message, singleLine, messageImportance))
 					return true;
-				}
-				if (message.Contains ("fakeLogOpen")) {
-					LogMessage (singleLine, messageImportance);
-					return true;
-				}
-				if (message.Contains ("note:")) {
-					LogMessage (singleLine, messageImportance);
-					return true;
-				}
-				if (message.Contains ("warn:")) {
-					LogCodedWarning (GetErrorCode (singleLine), singleLine);
-					return true;
-				}
 				if (level.Contains ("note")) {
 					LogMessage (message, messageImportance);
 					return true;
@@ -199,12 +185,35 @@ namespace Xamarin.Android.Tasks {
 
 			if (!apptResult) {
 				var message = string.Format ("{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1));
+				if (LogNotesOrWarnings (message, singleLine, messageImportance))
+					return true;
 				var errorCode = GetErrorCode (message);
 				LogCodedError (errorCode, AddAdditionalErrorText (errorCode, message), ToolName);
 			} else {
 				LogCodedWarning (GetErrorCode (singleLine), singleLine);
 			}
 			return true;
+		}
+
+		bool LogNotesOrWarnings (string message, string singleLine, MessageImportance messageImportance)
+		{
+			if (message.Contains ("in APK") && message.Contains ("is compressed.")) {
+				LogMessage (singleLine, messageImportance);
+				return true;
+			}
+			if (message.Contains ("fakeLogOpen")) {
+				LogMessage (singleLine, messageImportance);
+				return true;
+			}
+			if (message.Contains ("note:")) {
+				LogMessage (singleLine, messageImportance);
+				return true;
+			}
+			if (message.Contains ("warn:")) {
+				LogCodedWarning (GetErrorCode (singleLine), singleLine);
+				return true;
+			}
+			return false;
 		}
 
 		static string AddAdditionalErrorText (string errorCode, string message)
