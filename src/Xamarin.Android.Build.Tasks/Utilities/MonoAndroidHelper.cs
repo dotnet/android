@@ -497,11 +497,11 @@ namespace Xamarin.Android.Tasks
 
 		static readonly string ResourceCaseMapKey = $"{nameof (MonoAndroidHelper)}_ResourceCaseMap";
 
-		public static void SaveResourceCaseMap (IBuildEngine4 engine, Dictionary<string, string> map) =>
-			engine.RegisterTaskObjectAssemblyLocal (ResourceCaseMapKey, map, RegisteredTaskObjectLifetime.Build);
+		public static void SaveResourceCaseMap (IBuildEngine4 engine, Dictionary<string, string> map, Func<object, (object, string)> keyCallback) =>
+			engine.RegisterTaskObjectAssemblyLocal (keyCallback (ResourceCaseMapKey), map, RegisteredTaskObjectLifetime.Build);
 
-		public static Dictionary<string, string> LoadResourceCaseMap (IBuildEngine4 engine) =>
-			engine.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (ResourceCaseMapKey, RegisteredTaskObjectLifetime.Build) ?? new Dictionary<string, string> (0);
+		public static Dictionary<string, string> LoadResourceCaseMap (IBuildEngine4 engine, Func<object, (object, string)> keyCallback) =>
+			engine.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (keyCallback (ResourceCaseMapKey), RegisteredTaskObjectLifetime.Build) ?? new Dictionary<string, string> (0);
 
 		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
 		{

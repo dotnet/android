@@ -412,7 +412,7 @@ namespace Xamarin.Android.Build.Tests
 				MonoAndroidHelper.SaveResourceCaseMap (engine, new Dictionary<string, string> {
 					{ $"layout{directorySeperator}main.axml", $"Layout{directorySeperator}Main.xml" },
 					{ $"values{directorySeperator}strings.xml", $"Values{directorySeperator}Strings.xml" },
- 				});
+ 				}, (o) => { return (o, path);} );
 				var task = new Aapt2Compile {
 					BuildEngine = engine,
 					ToolPath = GetPathToAapt2 (),

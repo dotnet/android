@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 
 			var javaPlatformDirectory = Path.GetDirectoryName (JavaPlatformJarPath);
 
-			resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, CaseMapFile, StringComparer.OrdinalIgnoreCase);
+			resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 
 			// Parse out the resources from the R.java file
 			CodeTypeDeclaration resources;
