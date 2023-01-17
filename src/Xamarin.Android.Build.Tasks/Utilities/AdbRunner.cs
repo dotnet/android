@@ -105,6 +105,28 @@ namespace Xamarin.Android.Tasks
 			return await RunAdb (runner);
 		}
 
+		public async Task<bool> Install (string apkPath, bool apkIsDebuggable = false, bool replaceExisting = true, bool noStreaming = true)
+		{
+			var runner = CreateAdbRunner ();
+			runner.AddArgument ("install");
+
+			if (replaceExisting) {
+				runner.AddArgument ("-r");
+			}
+
+			if (apkIsDebuggable) {
+				runner.AddArgument ("-d"); // Allow version code downgrade
+			}
+
+			if (noStreaming) {
+				runner.AddArgument ("--no-streaming");
+			}
+
+			runner.AddQuotedArgument (apkPath);
+
+			return await RunAdb (runner);
+		}
+
 		public async Task<(bool success, string output)> CreateDirectoryAs (string packageName, string directoryPath)
 		{
 			return await RunAs (packageName, "mkdir", "-p", directoryPath);

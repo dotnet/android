@@ -15,6 +15,8 @@ enum LogLevel
 class XamarinLoggingHelper
 {
 	static readonly object consoleLock = new object ();
+	string? logFilePath = null;
+	string? logFileDir = null;
 
 	public const ConsoleColor ErrorColor   = ConsoleColor.Red;
 	public const ConsoleColor DebugColor   = ConsoleColor.DarkGray;
@@ -25,6 +27,20 @@ class XamarinLoggingHelper
 	public const ConsoleColor StatusText   = ConsoleColor.White;
 
 	public bool Verbose { get; set; }
+	public string? LogFilePath {
+		get => logFilePath;
+		set {
+			if (!String.IsNullOrEmpty (value)) {
+				string? dir = Path.GetDirectoryName (value);
+				if (!String.IsNullOrEmpty (dir)) {
+					Directory.CreateDirectory (dir);
+				}
+			}
+
+			logFilePath = value;
+			logFileDir = Path.GetDirectoryName (value);
+		}
+	}
 
 	public void Message (string? message)
 	{
@@ -91,6 +107,7 @@ class XamarinLoggingHelper
 	public void Log (LogLevel level, string? message)
 	{
 		if (!Verbose && level == LogLevel.Debug) {
+			LogToFile (message);
 			return;
 		}
 
@@ -105,6 +122,8 @@ class XamarinLoggingHelper
 
 	public void Log (LogLevel level, string? message, ConsoleColor color)
 	{
+		LogToFile (message);
+
 		if (!Verbose && level == LogLevel.Debug) {
 			return;
 		}
@@ -123,6 +142,19 @@ class XamarinLoggingHelper
 		} finally {
 			Console.ForegroundColor = fg;
 		}
+	}
+
+	void LogToFile (string? message)
+	{
+		if (String.IsNullOrEmpty (LogFilePath)) {
+			return;
+		}
+
+		if (!String.IsNullOrEmpty (logFileDir) && !Directory.Exists (logFileDir)) {
+			Directory.CreateDirectory (logFileDir);
+		}
+
+		File.AppendAllText (LogFilePath, message);
 	}
 
 	ConsoleColor ForegroundColor (LogLevel level) => level switch {

@@ -23,6 +23,13 @@ class DebugSession
 	readonly string workDirectory;
 	readonly ApplicationInfo appInfo;
 
+	const string socketScheme = "unix-abstract";
+	string? socketDir = null;
+	string? socketName = null;
+	string? lldbScriptPath = null;
+	AndroidDevice? device = null;
+	AndroidNdk? ndk = null;
+
 	public DebugSession (XamarinLoggingHelper logger, ApplicationInfo appInfo, string apkPath, ZipArchive apk, ParsedOptions parsedOptions)
 	{
 		log = logger;
@@ -31,7 +38,7 @@ class DebugSession
 		this.apk = apk;
 		this.appInfo = appInfo;
 		workDirectory = Path.Combine (parsedOptions.WorkDirectory, Utilities.StringHash (apkPath));
-    }
+	}
 
 	public bool Prepare ()
 	{
@@ -41,8 +48,8 @@ class DebugSession
 			return false;
 		}
 
-		var ndk = new AndroidNdk (log, parsedOptions.NdkDirPath!, supportedAbis);
-		var device = new AndroidDevice (
+		ndk = new AndroidNdk (log, parsedOptions.NdkDirPath!, supportedAbis);
+		device = new AndroidDevice (
 			log,
 			ndk,
 			workDirectory,
@@ -51,6 +58,12 @@ class DebugSession
 			supportedAbis,
 			parsedOptions.TargetDevice
 		);
+
+		// Install first, since there might already be a version of this application on device that is not debuggable
+		if (!device.AdbRunner.Install (apkPath, apkIsDebuggable: true).Result) {
+			log.ErrorLine ($"Failed to install package '{apkPath}' to device");
+			return false;
+		}
 
 		if (!device.GatherInfo ()) {
 			return false;
@@ -70,6 +83,12 @@ class DebugSession
 			log.StatusLine ("All supported ABIs", String.Join (", ", supportedAbis));
 		}
 
+		socketDir = $"/xa-{appInfo.PackageName}";
+
+		var rnd = new Random ();
+		socketName = $"xa-platform-{rnd.NextInt64 ()}.sock";
+		lldbScriptPath = WriteLldbScript (appLibsDirectory, device, socketScheme, socketDir, socketName, mainProcessPath);
+
 		LogABIs ("Application", supportedAbis);
 		LogABIs ("     Device", device.DeviceAbis);
 		log.StatusLine ("    Selected ABI", $"{device.MainAbi} (architecture: {device.MainArch})");
@@ -80,22 +99,62 @@ class DebugSession
 		log.StatusLine ("Debug server launcher script path on device", device.DebugServerLauncherScriptPath);
 		log.MessageLine ();
 
-		// TODO: install the apk
-		// TODO: start the app
-		// TODO: start the app so that it waits for the debugger (until monodroid_gdb_wait is set)
-
-		string socketScheme = "unix-abstract";
-		string socketDir = $"/xa-{appInfo.PackageName}";
-
-		var rnd = new Random ();
-		string socketName = $"xa-platform-{rnd.NextInt64 ()}.sock";
-		string lldbScriptPath = WriteLldbScript (appLibsDirectory, device, socketScheme, socketDir, socketName, mainProcessPath);
-
-		return false;
+		return true;
 
 		void LogABIs (string which, IEnumerable<string> abis)
 		{
 			log.StatusLine ($"{which} ABIs", String.Join (", ", abis));
+		}
+	}
+
+	public bool Run ()
+	{
+		if (!EnsureValidState (nameof (socketDir), socketDir) ||
+		    !EnsureValidState (nameof (socketName), socketName) ||
+		    !EnsureValidState (nameof (lldbScriptPath), socketName) ||
+		    !EnsureValidState (nameof (device), device) ||
+		    !EnsureValidState (nameof (ndk), ndk)
+		) {
+			return false;
+		}
+
+		log.InfoLine ("Starting lldb server on device");
+
+		// TODO: either start the server in the background of the remote shell or keep this `RunAs` in the background
+		(bool success, string output) = device!.AdbRunner.RunAs (
+			    appInfo.PackageName,
+			    device.DebugServerLauncherScriptPath,
+			    device.LldbBaseDir,
+			    socketScheme,
+			    socketDir!,
+			    socketName!,
+			    "\\\"lldb process:gdb-remote packets\\\"").Result;
+
+		if (!success) {
+			return false;
+		}
+
+		// TODO: start the app
+		// TODO: start the app so that it waits for the debugger (until monodroid_gdb_wait is set)
+
+		return true;
+
+		bool EnsureValidState<T> (string name, T? variable)
+		{
+			bool valid;
+
+			if (typeof(T) == typeof(string)) {
+				valid = !String.IsNullOrEmpty ((string?)(object?)variable);
+			} else {
+				valid = variable != null;
+			}
+
+			if (valid) {
+				return true;
+			}
+
+			log.ErrorLine ($"Debug session hasn't been initialized properly. Required variable '{name}' not set");
+			return false;
 		}
 	}
 

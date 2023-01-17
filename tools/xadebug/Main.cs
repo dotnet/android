@@ -14,7 +14,7 @@ namespace Xamarin.Android.Debug;
 sealed class ParsedOptions
 {
 	public bool ShowHelp;
-	public bool Verbose = true; // TODO: remove the default once development is done
+	public bool Verbose;
 	public string Configuration = "Debug";
 	public string? PackageName;
 	public string? Activity;
@@ -62,6 +62,10 @@ class XADebug
 
 		List<string> rest = opts.Parse (args);
 		log.Verbose = parsedOptions.Verbose;
+
+		DateTime now = DateTime.Now;
+		log.LogFilePath = Path.Combine (Path.GetFullPath (parsedOptions.WorkDirectory), $"session-{now.Year}-{now.Month:00}-{now.Day:00}-{now.Hour:00}:{now.Minute:00}:{now.Second:00}.log");
+		log.StatusLine ("Session log file", log.LogFilePath);
 
 		if (parsedOptions.ShowHelp || rest.Count == 0) {
 			int ret = 0;
@@ -114,14 +118,15 @@ class XADebug
 
 		string aPath = rest[0];
 		string? apkFilePath = null;
+		string? buildLogPath = null;
 		ZipArchive? apk = null;
 
 		if (Directory.Exists (aPath)) {
-			apkFilePath = BuildApp (aPath, parsedOptions, projectPathIsDirectory: true);
+			(apkFilePath, buildLogPath) = BuildApp (aPath, parsedOptions, projectPathIsDirectory: true);
 		} else if (File.Exists (aPath)) {
 			if (String.Compare (".csproj", Path.GetExtension (aPath), StringComparison.OrdinalIgnoreCase) == 0) {
 				// Let's see if we can trust the file name...
-				apkFilePath = BuildApp (aPath, parsedOptions, projectPathIsDirectory: false);
+				(apkFilePath, buildLogPath) = BuildApp (aPath, parsedOptions, projectPathIsDirectory: false);
 			} else if (IsAndroidPackageFile (aPath, out apk)) {
 				apkFilePath = aPath;
 			} else {
@@ -131,6 +136,10 @@ class XADebug
 		} else {
 			log.ErrorLine ($"Neither directory nor file '{aPath}' exist");
 			log.ErrorLine ();
+		}
+
+		if (!String.IsNullOrEmpty (buildLogPath)) {
+			log.StatusLine ("Build log", buildLogPath);
 		}
 
 		if (String.IsNullOrEmpty (apkFilePath)) {
@@ -160,6 +169,10 @@ class XADebug
 
 		var debugSession = new DebugSession (log, appInfo, apkFilePath, apk, parsedOptions);
 		if (!debugSession.Prepare ()) {
+			return 1;
+		}
+
+		if (!debugSession.Run ()) {
 			return 1;
 		}
 
@@ -308,8 +321,10 @@ class XADebug
 		return apk.ContainsEntry (AndroidManifestZipPath);
 	}
 
-	static string? BuildApp (string projectPath, ParsedOptions parsedOptions, bool projectPathIsDirectory)
+	static (string? apkPath, string? buildLogPath) BuildApp (string projectPath, ParsedOptions parsedOptions, bool projectPathIsDirectory)
 	{
+		log.MessageLine ();
+
 		var dotnet = new DotNetRunner (log, parsedOptions.DotNetCommand, parsedOptions.WorkDirectory);
 		string? logPath = dotnet.Build (
 			projectPath,
@@ -322,7 +337,7 @@ class XADebug
 		).Result;
 
 		if (String.IsNullOrEmpty (logPath)) {
-			return null;
+			return FinishAndReturn (null, null);
 		}
 
 		string projectDir = projectPathIsDirectory ? projectPath : Path.GetDirectoryName (projectPath) ?? ".";
@@ -338,15 +353,21 @@ class XADebug
 			log.MessageLine ();
 			log.MessageLine ("Please run `xadebug` again, passing it path to the produced APK file");
 			log.MessageLine ();
-			return null;
+			return FinishAndReturn (null, logPath);
 		}
 
 		if (!File.Exists (apkPath)) {
 			log.ErrorLine ($"APK file '{apkPath}' not found after build");
-			return null;
+			return FinishAndReturn (null, logPath);
 		};
 
-		return apkPath;
+		return FinishAndReturn (apkPath, logPath);
+
+		(string? apkPath, string? buildLogPath) FinishAndReturn (string? apkPath, string? buildLogPath)
+		{
+			log.MessageLine ();
+			return (apkPath, buildLogPath);
+		}
 	}
 
 	static string? TryToGuessApkPath (string projectDir, ParsedOptions parsedOptions)
