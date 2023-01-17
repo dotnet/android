@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
@@ -41,6 +42,21 @@ namespace Xamarin.Android.Tasks
 			string result = validIdentifier.Replace (normalizedIdentifier, "_");
 
 			return result;
+		}
+
+		internal static string GetResourceName (string type, string name, Dictionary<string, string> map, TaskLoggingHelper log)
+		{
+			string mappedValue;
+			string key = string.Format ("{0}{1}{2}", type, Path.DirectorySeparatorChar, name).ToLowerInvariant ();
+
+			if (map.TryGetValue (key, out mappedValue)) {
+				log.LogDebugMessage ("  - Remapping resource: {0}.{1} -> {2}", type, name, mappedValue);
+				return ResourceIdentifier.CreateValidIdentifier (mappedValue.Substring (mappedValue.LastIndexOf (Path.DirectorySeparatorChar) + 1));
+			}
+
+			log.LogDebugMessage ("  - Not remapping resource: {0}.{1}", type, name);
+
+			return ResourceIdentifier.CreateValidIdentifier (name);
 		}
 	}
 }

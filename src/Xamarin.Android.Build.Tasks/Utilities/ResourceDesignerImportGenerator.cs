@@ -47,6 +47,7 @@ namespace Xamarin.Android.Tasks
 					var reader = pe.GetMetadataReader ();
 					var resourceDesignerName = GetResourceDesignerClass (reader);
 					if (string.IsNullOrEmpty (resourceDesignerName)) {
+						Log.LogDebugMessage ($"Could not find 'ResourceDesignerAttribute' in {assemblyPath}");
 						continue;
 					}
 					string aliasMetaData = assemblyPath.GetMetadata ("Aliases");

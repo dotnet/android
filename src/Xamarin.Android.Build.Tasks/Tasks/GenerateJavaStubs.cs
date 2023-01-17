@@ -499,7 +499,7 @@ namespace Xamarin.Android.Tasks
 						jti.Generate (writer);
 						if (useMarshalMethods) {
 							if (classifier.FoundDynamicallyRegisteredMethods (t)) {
-								Log.LogWarning ($"Type '{t.GetAssemblyQualifiedName ()}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
+								Log.LogWarning ($"Type '{t.GetAssemblyQualifiedName (cache)}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
 							}
 						}
 						writer.Flush ();

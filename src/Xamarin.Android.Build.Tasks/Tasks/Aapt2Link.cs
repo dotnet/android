@@ -82,6 +82,7 @@ namespace Xamarin.Android.Tasks {
 		List<string> tempFiles = new List<string> ();
 		SortedSet<string> rulesFiles = new SortedSet<string> ();
 		Dictionary<string, long> apks = new Dictionary<string, long> ();
+		string resourceSymbolsTextFileTemp;
 
 		protected override int GetRequiredDaemonInstances ()
 		{
@@ -92,6 +93,8 @@ namespace Xamarin.Android.Tasks {
 		{
 			try {
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
+
+				resourceSymbolsTextFileTemp = GetTempFile ();
 
 				await this.WhenAll (ManifestFiles, ProcessManifest);
 
@@ -132,6 +135,8 @@ namespace Xamarin.Android.Tasks {
 					}
 					Files.CopyIfStringChanged (sb.ToString (), ProguardRuleOutput);
 				}
+				if (!string.IsNullOrEmpty (ResourceSymbolsTextFile))
+					Files.CopyIfChanged (resourceSymbolsTextFileTemp, GetFullPath (ResourceSymbolsTextFile));
 			} finally {
 				lock (tempFiles) {
 					foreach (var temp in tempFiles) {
@@ -253,7 +258,7 @@ namespace Xamarin.Android.Tasks {
 
 			if (!string.IsNullOrEmpty (ResourceSymbolsTextFile)) {
 				cmd.Add ("--output-text-symbols");
-				cmd.Add (GetFullPath (ResourceSymbolsTextFile));
+				cmd.Add (GetFullPath (resourceSymbolsTextFileTemp));
 			}
 
 			if (ProtobufFormat)

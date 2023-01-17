@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -62,9 +62,9 @@ namespace Android.App
 			return self;
 		}
 
-		internal XElement ToElement (IAssemblyResolver resolver, string packageName)
+		internal XElement ToElement (IAssemblyResolver resolver, string packageName, TypeDefinitionCache cache)
 		{
-			return mapping.ToElement (this, specified, packageName, type, resolver);
+			return mapping.ToElement (this, specified, packageName, cache, type, resolver);
 		}
 	}
 }

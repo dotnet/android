@@ -477,8 +477,11 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=29706
 		[Test]
-		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease)
+		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease, [Values (false, true)] bool useDesignerAssembly)
 		{
+			if (useDesignerAssembly && !Builder.UseDotNet) {
+				Assert.Ignore ($"Skipping, {useDesignerAssembly} not supported in Legacy.");
+			}
 			var illegalSeperator = IsWindows ? "/" : @"\";
 			var dll = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -503,20 +506,18 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
 				},
 			};
+			if (!useDesignerAssembly)
+				dll.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
+			proj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			var path = Path.Combine ("temp", TestName);
 			using (var b = CreateDllBuilder (Path.Combine (path, dll.ProjectName))) {
 				Assert.IsTrue (b.Build (dll), "Build should have succeeded.");
 				using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), isRelease)) {
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-					string resource_designer_cs;
-					if (Builder.UseDotNet) {
-						resource_designer_cs = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "Resource.designer.cs");
-					} else {
-						resource_designer_cs = Path.Combine (Root, builder.ProjectDirectory, "Resources", "Resource.designer.cs");
-					}
-					var contents = File.ReadAllText (resource_designer_cs);
-					StringAssert.Contains ("public const int foo = ", contents);
-					StringAssert.Contains ("public const int foo2 = ", contents);
+					string resource_designer_cs = GetResourceDesignerPath (builder, proj);
+					var contents = GetResourceDesignerText (proj, resource_designer_cs);
+					StringAssert.Contains ("public const int foo =", contents);
+					StringAssert.Contains ("public const int foo2 =", contents);
 				}
 			}
 		}
@@ -2020,8 +2021,11 @@ public class ApplicationRegistration { }");
 		}
 
 		[Test]
-		public void AllResourcesInClassLibrary ([Values (true, false)] bool useAapt2)
+		public void AllResourcesInClassLibrary ([Values (true, false)] bool useAapt2, [Values (false, true)] bool useDesignerAssembly)
 		{
+			if (useDesignerAssembly && !Builder.UseDotNet) {
+				Assert.Ignore ($"Skipping, {useDesignerAssembly} not supported in Legacy.");
+			}
 			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 
@@ -2035,6 +2039,7 @@ public class ApplicationRegistration { }");
 				}
 			};
 			lib.SetProperty ("AndroidApplication", "False");
+			lib.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			lib.AndroidUseAapt2 = useAapt2;
 			if (Builder.UseDotNet) {
 				lib.RemoveProperty ("OutputType");
@@ -2054,6 +2059,7 @@ public class ApplicationRegistration { }");
 					},
 				}
 			};
+			app.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			app.AndroidResources.Clear (); // No Resources
 			if (Builder.UseDotNet) {
 				app.SetProperty (KnownProperties.OutputType, "Exe");
@@ -2075,7 +2081,7 @@ public class ApplicationRegistration { }");
 
 				var resource_designer_cs = GetResourceDesignerPath (appBuilder, app);
 				FileAssert.Exists (resource_designer_cs);
-				var contents = File.ReadAllText (resource_designer_cs);
+				var contents = GetResourceDesignerText (app, resource_designer_cs);
 				Assert.AreNotEqual ("", contents);
 			}
 		}

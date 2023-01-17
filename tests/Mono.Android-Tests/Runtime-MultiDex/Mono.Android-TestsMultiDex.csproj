@@ -24,6 +24,7 @@
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <_MonoAndroidTestPackage>Mono.Android_TestsMultiDex</_MonoAndroidTestPackage>
     <PlotDataLabelSuffix>-MultiDex</PlotDataLabelSuffix>
+    <AndroidUseIntermediateDesignerFile>True</AndroidUseIntermediateDesignerFile>
   </PropertyGroup>
   <Import Project="..\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\..\Configuration.props" />
@@ -67,7 +68,6 @@
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
     <Compile Remove="..\Resources\Resource.designer.cs" />
-    <Compile Include="Resources\Resource.designer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <ItemGroup>

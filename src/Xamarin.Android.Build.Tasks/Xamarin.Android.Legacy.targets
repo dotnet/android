@@ -108,8 +108,8 @@ projects. .NET 5 projects will not import this file.
     </CoreResolveReferencesDependsOn>
     <ResolveReferencesDependsOn>
       $(CoreResolveReferencesDependsOn);
-      UpdateAndroidInterfaceProxies;
       UpdateAndroidResources;
+      UpdateAndroidInterfaceProxies;
     </ResolveReferencesDependsOn>
     <DeferredBuildDependsOn>
       $(DeferredBuildDependsOn);
@@ -299,6 +299,10 @@ projects. .NET 5 projects will not import this file.
       <FilteredAssemblies
           Include="$(OutDir)$(TargetFileName)"
           Condition="Exists ('$(OutDir)$(TargetFileName)')"
+      />
+      <FilteredAssemblies
+          Include="$(_GenerateResourceDesignerAssemblyOutput)"
+          Condition="Exists ('$(_GenerateResourceDesignerAssemblyOutput)')"
       />
       <FilteredAssemblies
           Include="@(ReferenceCopyLocalPaths)"
@@ -656,6 +660,7 @@ projects. .NET 5 projects will not import this file.
         ProguardConfiguration="$(_ProguardProjectConfiguration)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         LinkResources="$(AndroidLinkResources)"
+        UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
         PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
         EnableProguard="$(AndroidEnableProguard)"
         Deterministic="$(Deterministic)"
