@@ -12,7 +12,7 @@ enum LogLevel
 	Debug
 }
 
-class XamarinLoggingHelper
+class XamarinLoggingHelper : ILogger
 {
 	static readonly object consoleLock = new object ();
 	string? logFilePath = null;
