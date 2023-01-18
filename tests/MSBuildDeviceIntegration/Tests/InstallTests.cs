@@ -291,6 +291,51 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void ToggleDebugReleaseWithSigning ([Values ("aab", "apk")] string packageFormat)
+		{
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			string path = Path.Combine ("temp", TestName.Replace ("\"", string.Empty));
+			byte [] data = ResourceData.GetKeystore ();
+			string storepassfile = Path.Combine (Root, path, "storepass.txt");
+			string keypassfile = Path.Combine (Root, path, "keypass.txt");
+			var password = "file:android";
+
+			var proj = new XamarinAndroidApplicationProject {
+			};
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass",  $"file:{storepassfile}");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass",  $"file:{keypassfile}");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", "test.keystore");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", "mykey");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
+			proj.SetProperty ("AndroidUseApkSigner", "true");
+			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "test.keystore") {
+				BinaryContent = () => data
+			});
+			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "storepass.txt") {
+				TextContent = () => password.Replace ("file:", string.Empty),
+				Encoding = Encoding.ASCII,
+			});
+			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "keypass.txt") {
+				TextContent = () => password.Replace ("file:", string.Empty),
+				Encoding = Encoding.ASCII,
+			});
+
+			using (var builder = CreateApkBuilder (path)) {
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+				//Now toggle to Release
+				proj.IsRelease = true;
+				Assert.IsTrue (builder.Install (proj), "Second install should have succeeded.");
+				proj.IsRelease = false;
+				Assert.IsTrue (builder.Install (proj), "Third install should have succeeded.");
+				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void LoggingPropsShouldCreateOverrideDirForRelease ()
 		{
 			AssertCommercialBuild ();
