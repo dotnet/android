@@ -103,19 +103,24 @@ namespace Xamarin.Android.Tasks
 			} else {
 				// Add the InternalsVisibleToAttribute so the app can access ResourceConstant
 				if (!string.IsNullOrEmpty (AssemblyName)) {
-					MethodReference internalsVisibleToAttributeConstructor = ImportCustomAttributeConstructor ("System.Runtime.CompilerServices.InternalsVisibleToAttribute", module, netstandardDef.MainModule);
+					MethodReference internalsVisibleToAttributeConstructor = ImportCustomAttributeConstructor ("System.Runtime.CompilerServices.InternalsVisibleToAttribute", module, netstandardDef.MainModule, argCount: 1);
 					var ar = new CustomAttribute (internalsVisibleToAttributeConstructor);
 					ar.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, AssemblyName));
 					module.Assembly.CustomAttributes.Add (ar);
 				}
 			}
 
-			MethodReference targetFrameworkConstructor = ImportCustomAttributeConstructor ("System.Runtime.Versioning.TargetFrameworkAttribute", module, netstandardDef.MainModule);
+			MethodReference targetFrameworkConstructor = ImportCustomAttributeConstructor ("System.Runtime.Versioning.TargetFrameworkAttribute", module, netstandardDef.MainModule, argCount: 1);
 
 			var attr = new CustomAttribute (targetFrameworkConstructor);
 			attr.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, $".NETStandard,Version=v2.1"));
 			attr.Properties.Add (new CustomAttributeNamedArgument ("FrameworkDisplayName", new CustomAttributeArgument (module.TypeSystem.String, "")));
 			module.Assembly.CustomAttributes.Add (attr);
+
+			MethodReference editorBrowserConstructor = ImportCustomAttributeConstructor ("System.ComponentModel.EditorBrowsableAttribute", module, netstandardDef.MainModule, argCount: 1);
+			TypeReference e = ImportType ("System.ComponentModel.EditorBrowsableState", module, netstandardDef.MainModule);
+			var editorBrowserAttr = new CustomAttribute (editorBrowserConstructor);
+			editorBrowserAttr.ConstructorArguments.Add (new CustomAttributeArgument (e, System.ComponentModel.EditorBrowsableState.Never));
 
 			var att = TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.Public | TypeAttributes.BeforeFieldInit;
 
@@ -131,6 +136,7 @@ namespace Xamarin.Android.Tasks
 				objectRef
 			);
 			CreateCtor (resourceDesigner, module);
+			resourceDesigner.CustomAttributes.Add (editorBrowserAttr);
 			module.Types.Add (resourceDesigner);
 			TypeDefinition constDesigner = null;
 			if (IsApplication) {
@@ -143,6 +149,7 @@ namespace Xamarin.Android.Tasks
 					objectRef
 				);
 				CreateCtor (constDesigner, module);
+				constDesigner.CustomAttributes.Add (editorBrowserAttr);
 				module.Types.Add (constDesigner);
 			}
 
@@ -196,11 +203,16 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		MethodReference ImportCustomAttributeConstructor (string type, ModuleDefinition module, ModuleDefinition sourceModule = null)
+		MethodReference ImportCustomAttributeConstructor (string type, ModuleDefinition module, ModuleDefinition sourceModule = null, int argCount = 0)
 		{
 			var tr = module.ImportReference ((sourceModule ?? module).ExportedTypes.First(x => x.FullName == type).Resolve ());
 			var tv = tr.Resolve();
-			return module.ImportReference (tv.Methods.First(x => x.IsConstructor));
+			return module.ImportReference (tv.Methods.First(x => x.IsConstructor && (x.Parameters?.Count ?? 0) == argCount));
+		}
+
+		TypeReference ImportType (string type, ModuleDefinition module, ModuleDefinition sourceModule = null)
+		{
+			return module.ImportReference ((sourceModule ?? module).ExportedTypes.First(x => x.FullName == type).Resolve ());
 		}
 
 		void CreateIntProperty (string resourceClass, string propertyName, int value, TypeDefinition resourceDesigner, ModuleDefinition module,

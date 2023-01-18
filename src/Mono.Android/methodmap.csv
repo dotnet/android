@@ -1879,7 +1879,7 @@
 23, android.telecom, InCallService.VideoCall.Callback, onCallSessionEvent, event, Android.Telecom.VideoSessionEvent
 23, android.telecom, InCallService.VideoCall.Callback, onSessionModifyResponseReceived, status, Android.Telecom.ModifyRequestResult
 23, android.telecom, InCallService.VideoCall.Callback, onVideoQualityChanged, videoQuality, Android.Telecom.VideoQuality
-23, android.telecom, InCallService, setAudioRoute, route, Android.Telecom.VideoQuality
+23, android.telecom, InCallService, setAudioRoute, route, Android.Telecom.CallAudioRoute
 23, android.telecom, PhoneAccount, hasCapabilities, capability, Android.Telecom.ConnectionCapability
 23, android.telecom, PhoneAccount, getCapabilities, return, Android.Telecom.ConnectionCapability
 23, android.telecom, RemoteConference, getConnectionCapabilities, return, Android.Telecom.ConnectionCapability
