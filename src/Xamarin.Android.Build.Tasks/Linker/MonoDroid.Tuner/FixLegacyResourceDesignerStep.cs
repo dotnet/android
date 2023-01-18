@@ -20,7 +20,7 @@ namespace MonoDroid.Tuner
 	public class FixLegacyResourceDesignerStep : LinkDesignerBase
 	{
 		internal const string DesignerAssemblyName = "_Microsoft.Android.Resource.Designer";
-		internal const string DesignerAssemblyNamespace = "Microsoft.Android.Resource.Designer";
+		internal const string DesignerAssemblyNamespace = "_Microsoft.Android.Resource.Designer";
 
 		bool designerLoaded = false;
 		AssemblyDefinition designerAssembly = null;
