@@ -51,6 +51,19 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 			return javaTypes;
 		}
 
+		public List<TypeDefinition> GetJavaTypes (AssemblyDefinition assembly)
+		{
+			var javaTypes = new List<TypeDefinition> ();
+
+			foreach (ModuleDefinition md in assembly.Modules) {
+				foreach (TypeDefinition td in md.Types) {
+					AddJavaTypes (javaTypes, td);
+				}
+			}
+
+			return javaTypes;
+		}
+
 		void AddJavaTypes (List<TypeDefinition> javaTypes, TypeDefinition type)
 		{
 			if (type.IsSubclassOf ("Java.Lang.Object", cache) ||
