@@ -710,16 +710,24 @@ namespace Java.Interop.Tools.TypeNameMappings
 			if (!type.DeclaringType.IsSubclassOf ("Java.Lang.Object", cache))
 				return false;
 
-			return GetBaseConstructors (type, cache)
-				.Any (ctor => ctor.Parameters.Any (p => p.Name == "__self"));
-		}
+			foreach (var baseType in type.GetBaseTypes (cache)) {
+				if (baseType == null)
+					continue;
+				if (!baseType.AnyCustomAttributes (typeof (RegisterAttribute)))
+					continue;
 
-		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type, IMetadataResolver cache)
-		{
-			var baseType = type.GetBaseTypes (cache).FirstOrDefault (t => t.GetCustomAttributes (typeof (RegisterAttribute)).Any ());
-			if (baseType != null)
-				return baseType.Methods.Where (m => m.IsConstructor && !m.IsStatic);
-			return Enumerable.Empty<MethodDefinition> ();
+				foreach (var method in baseType.Methods) {
+					if (!method.IsConstructor || method.IsStatic)
+						continue;
+					if (method.Parameters.Any (p => p.Name == "__self"))
+						return true;
+				}
+
+				// Stop at the first base type with [Register]
+				break;
+			}
+
+			return false;
 		}
 #endif  // HAVE_CECIL
 

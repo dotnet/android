@@ -164,10 +164,10 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				var baseRegisteredMethod = GetBaseRegisteredMethod (minfo);
 				if (baseRegisteredMethod != null)
 					AddMethod (baseRegisteredMethod, minfo);
-				else if (GetExportFieldAttributes (minfo).Any ()) {
+				else if (minfo.AnyCustomAttributes (typeof(ExportFieldAttribute))) {
 					AddMethod (null, minfo);
 					HasExport = true;
-				} else if (GetExportAttributes (minfo).Any ()) {
+				} else if (minfo.AnyCustomAttributes (typeof (ExportAttribute))) {
 					AddMethod (null, minfo);
 					HasExport = true;
 				}
@@ -205,8 +205,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			var curCtors = new List<MethodDefinition> ();
 
-			foreach (MethodDefinition minfo in type.Methods.Where (m => m.IsConstructor)) {
-				if (GetExportAttributes (minfo).Any ()) {
+			foreach (MethodDefinition minfo in type.Methods) {
+				if (minfo.IsConstructor && minfo.AnyCustomAttributes (typeof (ExportAttribute))) {
 					if (minfo.IsStatic) {
 						// Diagnostic.Warning (log, "ExportAttribute does not work on static constructor");
 					}
@@ -278,8 +278,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		void AddConstructors (TypeDefinition type, string? outerType, List<MethodDefinition>? baseCtors, List<MethodDefinition> curCtors, bool onlyRegisteredOrExportedCtors)
 		{
-			foreach (MethodDefinition ctor in type.Methods.Where (m => m.IsConstructor && !m.IsStatic))
-				if (!GetExportAttributes (ctor).Any ())
+			foreach (MethodDefinition ctor in type.Methods)
+				if (ctor.IsConstructor && !ctor.IsStatic && !ctor.AnyCustomAttributes (typeof (ExportAttribute)))
 					AddConstructor (ctor, type, outerType, baseCtors, curCtors, onlyRegisteredOrExportedCtors, false);
 		}
 
@@ -342,8 +342,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			while ((bmethod = method.GetBaseDefinition (cache)) != method) {
 				method = bmethod;
 
-				var attributes = method.GetCustomAttributes (typeof (RegisterAttribute));
-				if (attributes.Any ()) {
+				if (method.AnyCustomAttributes (typeof (RegisterAttribute))) {
 					return method;
 				}
 			}
