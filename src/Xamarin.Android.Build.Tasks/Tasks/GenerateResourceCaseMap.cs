@@ -34,7 +34,7 @@ namespace Xamarin.Android.Tasks
 			ResourceDirectory = Path.GetFullPath (ResourceDirectory);
 
 			// Create our capitalization maps so we can support mixed case resources
-			foreach (var item in Resources) {
+			foreach (var item in Resources ?? Array.Empty<ITaskItem>()) {
 				var path = Path.GetFullPath (item.ItemSpec);
 				if (!path.StartsWith (ResourceDirectory, StringComparison.OrdinalIgnoreCase)) {
 					Log.LogDebugMessage ($"Skipping {item}. Path is not include the '{ResourceDirectory}'");
