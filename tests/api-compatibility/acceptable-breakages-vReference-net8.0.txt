@@ -3079,3 +3079,4 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Apac
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Apache.Http.Conn.Ssl.SSLSocketFactory..ctor(Java.Security.KeyStore, System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Apache.Http.Conn.Ssl.SSLSocketFactory..ctor(Java.Security.KeyStore, System.String, Java.Security.KeyStore)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Org.Apache.Http.Conn.Ssl.SSLSocketFactory.CreateSocket(Java.Net.Socket, System.String, System.Int32, System.Boolean)' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'Android.Runtime.RegisterAttribute' exists on 'Android.Telecom.InCallService.SetAudioRoute(Android.Telecom.VideoQuality)' in the contract but not the implementation.
