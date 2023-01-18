@@ -669,6 +669,7 @@ int xml myxml 0x7f140000
 			task.Namespace = "MonoAndroidApplication4.MonoAndroidApplication4";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.aapt.cs");
 			task.ProjectDir = Path.Combine (Root, path);
+			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
 			task.Resources = new TaskItem [] {
 				new TaskItem (Path.Combine (Root, path, "res", "values", "strings.xml"), new Dictionary<string, string> () {
@@ -808,6 +809,7 @@ int styleable ElevenAttributes_attr10 10";
 			task.Namespace = "Foo.Foo";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
+			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			task.ResourceDirectory = Path.Combine (Root, path, "res");
 			task.Resources = new TaskItem [] {};
 			task.IsApplication = true;
