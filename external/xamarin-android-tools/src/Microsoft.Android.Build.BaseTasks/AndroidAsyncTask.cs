@@ -46,5 +46,7 @@ namespace Microsoft.Android.Build.Tasks
 		/// * RunTaskAsync is already on a background thread
 		/// </summary>
 		public virtual System.Threading.Tasks.Task RunTaskAsync () => System.Threading.Tasks.Task.CompletedTask;
+
+		protected object ProjectSpecificTaskObjectKey (object key) => (key, WorkingDirectory);
 	}
 }

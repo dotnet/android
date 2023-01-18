@@ -251,18 +251,30 @@ namespace Microsoft.Android.Build.Tasks
 
 		/// <summary>
 		/// IBuildEngine4.RegisterTaskObject, but adds the current assembly path into the key
+		/// The `key` should be unique to a project unless it is a global item.
+		/// Ideally the key should be the full path of a file in the project directory structure.
+		/// Or you can use the `ProjectSpecificTaskObjectKey` method of the `AndroidTask` to generate
+		/// a project specific key if needed.
 		/// </summary>
 		public static void RegisterTaskObjectAssemblyLocal (this IBuildEngine4 engine, object key, object value, RegisteredTaskObjectLifetime lifetime, bool allowEarlyCollection = false) =>
 			engine.RegisterTaskObject ((AssemblyLocation, key), value, lifetime, allowEarlyCollection);
 
 		/// <summary>
 		/// IBuildEngine4.GetRegisteredTaskObject, but adds the current assembly path into the key
+		/// The `key` should be unique to a project unless it is a global item.
+		/// Ideally the key should be the full path of a file in the project directory structure.
+		/// Or you can use the `ProjectSpecificTaskObjectKey` method of the `AndroidTask` to generate
+		/// a project specific key if needed.
 		/// </summary>
 		public static object GetRegisteredTaskObjectAssemblyLocal (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime) =>
 			engine.GetRegisteredTaskObject ((AssemblyLocation, key), lifetime);
 
 		/// <summary>
 		/// Generic version of IBuildEngine4.GetRegisteredTaskObject, but adds the current assembly path into the key
+		/// The `key` should be unique to a project unless it is a global item.
+		/// Ideally the key should be the full path of a file in the project directory structure.
+		/// Or you can use the `ProjectSpecificTaskObjectKey` method of the `AndroidTask` to generate
+		/// a project specific key if needed.
 		/// </summary>
 		public static T GetRegisteredTaskObjectAssemblyLocal<T> (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime)
 			where T : class =>
@@ -271,12 +283,20 @@ namespace Microsoft.Android.Build.Tasks
 
 		/// <summary>
 		/// IBuildEngine4.UnregisterTaskObject, but adds the current assembly path into the key
+		/// The `key` should be unique to a project unless it is a global item.
+		/// Ideally the key should be the full path of a file in the project directory structure.
+		/// Or you can use the `ProjectSpecificTaskObjectKey` method of the `AndroidTask` to generate
+		/// a project specific key if needed.
 		/// </summary>
 		public static object UnregisterTaskObjectAssemblyLocal (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime) =>
 			engine.UnregisterTaskObject ((AssemblyLocation, key), lifetime);
 
 		/// <summary>
-		/// Generic version of IBuildEngine4.UnregisterTaskObject, but adds the current assembly path into the key
+		/// Generic version of IBuildEngine4.UnregisterTaskObject, but adds the current assembly path into the key.
+		/// The `key` should be unique to a project unless it is a global item.
+		/// Ideally the key should be the full path of a file in the project directory structure.
+		/// Or you can use the `ProjectSpecificTaskObjectKey` method of the `AndroidTask` to generate
+		/// a project specific key if needed.
 		/// </summary>
 		public static T UnregisterTaskObjectAssemblyLocal<T> (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime)
 			where T : class =>
