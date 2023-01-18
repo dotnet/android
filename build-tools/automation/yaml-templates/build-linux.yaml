@@ -1,5 +1,6 @@
 parameters:
   buildPool: android-devdiv-ubuntu-vmss
+  buildResultArtifactName: Build Results - Linux
   checkoutCommit: ''
   checkoutPath: 's/xamarin-android'
   checkoutPersistCredentials: false
@@ -7,6 +8,7 @@ parameters:
   dependsOnResult: ''
   jobName: linux_build_create_sdk_pack
   jobDisplayName: Linux > Build
+  nugetArtifactName: $(LinuxNuGetArtifactName)
   repositoryAlias: self
   stageName: linux_build
   stageDisplayName: Linux
@@ -77,13 +79,13 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: upload linux sdk
       inputs:
-        artifactName: $(LinuxNuGetArtifactName)
+        artifactName: ${{ parameters.nugetArtifactName }}
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
     - template: upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-        artifactName: Build Results - Linux
+        artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
 
     - template: fail-on-issue.yaml

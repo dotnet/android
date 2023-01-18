@@ -1,5 +1,6 @@
 parameters:
   buildPool: $(1ESWindowsPool)
+  buildResultArtifactName: Build Results - Windows
   checkoutCommit: ''
   checkoutPath: ''
   checkoutPersistCredentials: false
@@ -130,7 +131,7 @@ stages:
 
     - template: upload-results.yaml
       parameters:
-        artifactName: Build Results - Windows
+        artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
 
     - template: fail-on-issue.yaml

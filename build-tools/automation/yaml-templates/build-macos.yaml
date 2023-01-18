@@ -1,18 +1,23 @@
 parameters:
   buildPoolName: $(MacBuildPoolName)
   buildPoolImage: $(MacBuildPoolImage)
+  buildResultArtifactName: Build Results - macOS
   checkoutCommit: ''
   checkoutPath: 's/xamarin-android'
   checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
+  installerArtifactName: $(InstallerArtifactName)
   jobName: mac_build_create_installers
   jobDisplayName: macOS > Build
+  nugetArtifactName: $(NuGetArtifactName)
   provisionatorChannel: latest
   repositoryAlias: self
   signClassicPkgContent: false
   stageName: mac_build
   stageDisplayName: Mac
+  testAssembliesArtifactName: $(TestAssembliesArtifactName)
+  windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -47,8 +52,11 @@ stages:
 
     - template: commercial-build.yaml
       parameters:
+        installerArtifactName: ${{ parameters.installerArtifactName }}
+        nugetArtifactName: ${{ parameters.nugetArtifactName }}
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
         signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
+        testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
 
     - template: remove-microbuild-tooling.yaml
       parameters:
@@ -64,13 +72,13 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: upload Windows toolchain pdb files
       inputs:
-        artifactName: $(WindowsToolchainPdbArtifactName)
+        artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
 
     - template: upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-        artifactName: Build Results - macOS
+        artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
 
     - template: run-xaprepare.yaml
