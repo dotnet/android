@@ -1,8 +1,11 @@
 parameters:
+  installerArtifactName: $(InstallerArtifactName)
   xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
   makeMSBuildArgs: ''
+  nugetArtifactName: $(NuGetArtifactName)
   provisionatorChannel: latest
   signClassicPkgContent: true
+  testAssembliesArtifactName: $(TestAssembliesArtifactName)
 
 steps:
 - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-11"
@@ -118,7 +121,7 @@ steps:
 - task: PublishPipelineArtifact@1
   displayName: upload nupkgs
   inputs:
-    artifactName: $(NuGetArtifactName)
+    artifactName: ${{ parameters.nugetArtifactName }}
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
 - script: >
@@ -137,7 +140,7 @@ steps:
 - task: PublishPipelineArtifact@1
   displayName: upload installers
   inputs:
-    artifactName: $(InstallerArtifactName)
+    artifactName: ${{ parameters.installerArtifactName }}
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
 # Upload test assemblies
@@ -150,11 +153,11 @@ steps:
 - task: PublishPipelineArtifact@1
   displayName: upload test assemblies
   inputs:
-    artifactName: $(TestAssembliesArtifactName)
+    artifactName: ${{ parameters.testAssembliesArtifactName }}
     targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
 - task: PublishPipelineArtifact@1
   displayName: upload build tools inventory
   inputs:
-    artifactName: BuildToolsInventory
+    artifactName: AndroidBuildToolsInventory
     targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
