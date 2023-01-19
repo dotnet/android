@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tasks
 
 			string assemblyName = Path.GetFileNameWithoutExtension (OutputFile.ItemSpec);
 
-			resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, CaseMapFile, StringComparer.OrdinalIgnoreCase);
+			resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 			// Generate an assembly which contains all the values in the provided
 			// R.txt file.
 			var mp = new ModuleParameters ();

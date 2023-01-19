@@ -27,11 +27,11 @@ namespace Xamarin.Android.Tasks {
 		public ITaskItem [] Processed { get; set; }
 
 		Dictionary<string, string> _resource_name_case_map;
-		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4);
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
 
 		public override bool RunTask ()
 		{
-			var acw_map = MonoAndroidHelper.LoadMapFile (BuildEngine4, AcwMapFile, StringComparer.Ordinal);
+			var acw_map = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.Ordinal);
 			var customViewMap = MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile);
 			var processed = new HashSet<string> ();
 
