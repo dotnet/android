@@ -4,7 +4,8 @@ on:
   # trigger for main and release branches.
   push:
     branches:
-      - '*'
+      - main
+      - 'release/**'
 
 jobs:
   pingRemote:
