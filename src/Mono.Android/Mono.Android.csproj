@@ -126,6 +126,7 @@
     <Compile Include="Android.Icu\DateIntervalFormat.cs" />
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
+    <Compile Include="Android.Telecom\InCallService.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
@@ -205,6 +206,7 @@
     <Compile Include="Android.Graphics.Drawables\RotateDrawable.cs" />
     <Compile Include="Android.Graphics.Drawables\ScaleDrawable.cs" />
     <Compile Include="Android.Hardware\SensorManager.cs" />
+    <Compile Include="Android.Hardware.Camera2\CameraAccessException.cs" />
     <Compile Include="Android.Hardware.Camera2.Params\LensShadingMap.cs" />
     <Compile Include="Android.Hardware.Camera2.Params\RggbChannelVector.cs" />
     <Compile Include="Android.Hardware.Camera2.Params\TonemapCurve.cs" />

@@ -1343,7 +1343,7 @@ stages:
       inputs:
         solution: $(System.DefaultWorkingDirectory)\UITools\src\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
         vsVersion: 17.0
-        msbuildArgs: /t:Build
+        msbuildArgs: /t:Build /p:GitHubToken=$(GitHub.Token)
         platform: Any CPU
         configuration: DebugWin32
 
