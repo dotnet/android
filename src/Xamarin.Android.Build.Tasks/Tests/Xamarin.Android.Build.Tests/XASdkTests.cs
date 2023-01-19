@@ -455,7 +455,7 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void GenerateResourceDesigner_false()
+		public void GenerateResourceDesigner_false([Values (false, true)] bool useDesignerAssembly)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				Sources = {
@@ -466,7 +466,8 @@ public class JavaSourceTest {
 			};
 			// Turn off Resource.designer.cs and remove usage of it
 			proj.SetProperty ("AndroidGenerateResourceDesigner", "false");
-			proj.SetProperty ("AndroidUseDesignerAssembly", "false");
+			if (!useDesignerAssembly)
+				proj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("Resource.Layout.Main", "0")
 				.Replace ("Resource.Id.myButton", "0");
@@ -474,12 +475,12 @@ public class JavaSourceTest {
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build(target: "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" }), "Designtime build should succeed.");
 			var intermediate = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
-			var resource_designer_cs = Path.Combine (intermediate, "designtime",  "Resource.designer.cs");
+			var resource_designer_cs = GetResourceDesignerPath (dotnet, proj, designtime: true);
 			FileAssert.DoesNotExist (resource_designer_cs);
 
 			Assert.IsTrue (dotnet.Build (), "build should succeed");
 
-			resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
+			resource_designer_cs =  GetResourceDesignerPath (dotnet, proj);
 			FileAssert.DoesNotExist (resource_designer_cs);
 
 			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
