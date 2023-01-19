@@ -34,7 +34,7 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 		"/system/vendor/@LIB@/mediadrm",
 	};
 
-	public NoLddDeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner adb, bool appIs64Bit, string localDestinationDir, AndroidDevice device)
+	public NoLddDeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner2 adb, bool appIs64Bit, string localDestinationDir, AndroidDevice device)
 		: base (log, adb, appIs64Bit, localDestinationDir, device)
 	{}
 
@@ -61,7 +61,7 @@ class NoLddDeviceLibraryCopier : DeviceLibraryCopier
 
 	void AddSharedLibraries (List<string> sharedLibraries, string deviceDirPath, HashSet<string> permittedPaths)
 	{
-		AdbRunner.OutputLineFilter filterOutErrors = (bool isStdError, string line) => {
+		AdbRunner2.OutputLineFilter filterOutErrors = (bool isStdError, string line) => {
 			if (!isStdError) {
 				return false; // don't suppress any lines on stdout
 			}

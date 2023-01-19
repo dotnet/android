@@ -12,7 +12,7 @@ enum LogLevel
 	Debug
 }
 
-class XamarinLoggingHelper : ILogger
+class XamarinLoggingHelper : ILogger, IProcessOutputLogger
 {
 	static readonly object consoleLock = new object ();
 	string? logFilePath = null;
@@ -39,6 +39,22 @@ class XamarinLoggingHelper : ILogger
 
 			logFilePath = value;
 			logFileDir = Path.GetDirectoryName (value);
+		}
+	}
+
+	public IProcessOutputLogger? WrappedLogger => null;
+
+	public string? StdoutPrefix {
+		get => String.Empty;
+		set {
+			// no op
+		}
+	}
+
+	public string? StderrPrefix {
+		get => "stderr> ";
+		set {
+			// no op
 		}
 	}
 
@@ -202,5 +218,17 @@ class XamarinLoggingHelper : ILogger
 			WarningLine (String.Format (message, messageArgs));
 		}
 	}
-#endregion
+
+	public void WriteStdout (string text, bool writeLine = true)
+	{
+		LogToFile ($"{StdoutPrefix}{text}{GetNewline (writeLine)}");
+	}
+
+	public void WriteStderr (string text, bool writeLine = true)
+	{
+		LogToFile ($"{StderrPrefix}{text}{GetNewline (writeLine)}");
+	}
+
+	string GetNewline (bool yes) => yes ? Environment.NewLine : String.Empty;
+    #endregion
 }

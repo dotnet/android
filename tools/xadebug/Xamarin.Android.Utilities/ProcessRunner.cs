@@ -20,10 +20,12 @@ class ProcessRunner2 : IDisposable
 	bool disposed;
 	bool running;
 	List<string>? arguments;
+	Task<ProcessStatus>? backgroundProcess;
 
 	public bool CreateWindow                            { get; set; }
 	public Dictionary<string, string> Environment       { get; } = new Dictionary<string, string> (StringComparer.Ordinal);
 	public string? FullCommandLine                      { get; private set; }
+	public bool LeaveRunning                            { get; set; }
 	public bool LogRunInfo                              { get; set; } = true;
 	public bool LogStderr                               { get; set; }
 	public bool LogStdout                               { get; set; }
@@ -57,6 +59,21 @@ class ProcessRunner2 : IDisposable
 	public void Kill (bool gracefully = true)
 	{}
 
+	public void AddArguments (IEnumerable<string?>? args)
+	{
+		if (args == null) {
+			return;
+		}
+
+		foreach (string? a in args) {
+			if (String.IsNullOrEmpty (a)) {
+				continue;
+			}
+
+			AddArgument (a);
+		}
+	}
+
 	public void AddArgument (string arg)
 	{
 		if (arguments == null) {
@@ -76,22 +93,66 @@ class ProcessRunner2 : IDisposable
 	/// </summary>
 	public ProcessStatus Run ()
 	{
+		return Run (ProcessTimeout);
+	}
+
+	public ProcessStatus Run (TimeSpan processTimeout)
+	{
+		MarkRunning ();
+
 		try {
-			return DoRun (PrepareForRun ());
+			return DoRun (processTimeout);
 		} finally {
 			MarkNotRunning ();
 		}
 	}
 
-	ProcessStatus DoRun (ProcessStartInfo psi)
+	ProcessStatus DoRun (TimeSpan processTimeout)
 	{
-		ManualResetEventSlim? stdout_done = null;
-		ManualResetEventSlim? stderr_done = null;
+		var psi = new ProcessStartInfo (command) {
+			CreateNoWindow = !CreateWindow,
+			RedirectStandardError = LogStderr,
+			RedirectStandardOutput = LogStdout,
+			UseShellExecute = UseShell,
+			WindowStyle = WindowStyle,
+		};
 
+		if (arguments != null && arguments.Count > 0) {
+			psi.Arguments = String.Join (" ", arguments);
+		}
+
+		if (Environment.Count > 0) {
+			foreach (var kvp in Environment) {
+				psi.Environment.Add (kvp.Key, kvp.Value);
+			}
+		}
+
+		if (!String.IsNullOrEmpty (WorkingDirectory)) {
+			psi.WorkingDirectory = WorkingDirectory;
+		}
+
+		if (psi.RedirectStandardError) {
+			StandardErrorEncoding = StandardErrorEncoding;
+		}
+
+		if (psi.RedirectStandardOutput) {
+			StandardOutputEncoding = StandardOutputEncoding;
+		}
+
+		if (CustomizeStartInfo != null) {
+			CustomizeStartInfo (psi);
+		}
+
+		EnsureValidConfig (psi);
+
+		FullCommandLine = $"{psi.FileName} {psi.Arguments}";
+
+		ManualResetEventSlim? stderr_done = null;
 		if (LogStderr) {
 			stderr_done = new ManualResetEventSlim (false);
 		}
 
+		ManualResetEventSlim? stdout_done = null;
 		if (LogStdout) {
 			stdout_done = new ManualResetEventSlim (false);
 		}
@@ -137,7 +198,7 @@ class ProcessRunner2 : IDisposable
 			process.BeginOutputReadLine ();
 		}
 
-		int timeout = ProcessTimeout == TimeSpan.MaxValue ? -1 : (int)ProcessTimeout.TotalMilliseconds;
+		int timeout = processTimeout == TimeSpan.MaxValue ? -1 : (int)processTimeout.TotalMilliseconds;
 		bool exited = process.WaitForExit (timeout);
 		if (!exited) {
 			logger?.ErrorLine ($"Process '{FullCommandLine}' timed out after {ProcessTimeout}");
@@ -170,11 +231,42 @@ class ProcessRunner2 : IDisposable
 
 	/// <summary>
 	/// Run process in background, calling the <param ref="completionHandler"/> on completion. This is meant to be used for processes which are to run under control of our
-	/// process but without us actively monitoring them or awaiting their completion.
+	/// process but without us actively monitoring them or awaiting their completion. By default the process will run without a timeout (the <see cref="ProcessTimeout"/>
+	/// property is ignored). Timeout can be changed by setting the <param ref="processTimeout"/> parameter to anything other than <c>TimeSpan.MaxValue</c>
 	/// </summary>
-	public void RunInBackground (Action<ProcessRunner2, ProcessStatus> completionHandler)
+	public void RunInBackground (Action<ProcessRunner2, ProcessStatus> completionHandler, TimeSpan? processTimeout = null)
 	{
-		ProcessStartInfo psi = PrepareForRun ();
+		backgroundProcess = new Task<ProcessStatus> (
+			() => Run (processTimeout ?? TimeSpan.MaxValue),
+			TaskCreationOptions.LongRunning
+		).ContinueWith<ProcessStatus> (
+			(Task<ProcessStatus> task) => {
+				ProcessStatus status;
+				if (task.IsFaulted) {
+					status = new ProcessStatus (task.Exception!);
+				} else {
+					status = new ProcessStatus ();
+				}
+				completionHandler (this, status);
+				return status;
+			}, TaskContinuationOptions.OnlyOnFaulted
+		).ContinueWith<ProcessStatus> (
+			(Task<ProcessStatus> task) => {
+				completionHandler (this, task.Result);
+				return task.Result;
+			},
+			TaskContinuationOptions.OnlyOnRanToCompletion
+		).ContinueWith<ProcessStatus> (
+			(Task<ProcessStatus> task) => {
+				var status = new ProcessStatus ();
+				completionHandler (this, status);
+				return status;
+			},
+			TaskContinuationOptions.OnlyOnCanceled
+		);
+
+		backgroundProcess.ConfigureAwait (false);
+		backgroundProcess.Start ();
 	}
 
 	protected virtual void Dispose (bool disposing)
@@ -196,50 +288,6 @@ class ProcessRunner2 : IDisposable
 	{
 		Dispose (disposing: true);
 		GC.SuppressFinalize (this);
-	}
-
-	ProcessStartInfo PrepareForRun ()
-	{
-		MarkRunning ();
-
-		var psi = new ProcessStartInfo (command) {
-			CreateNoWindow = !CreateWindow,
-			RedirectStandardError = LogStderr,
-			RedirectStandardOutput = LogStdout,
-			UseShellExecute = UseShell,
-			WindowStyle = WindowStyle,
-		};
-
-		if (arguments != null && arguments.Count > 0) {
-			psi.Arguments = String.Join (" ", arguments);
-		}
-
-		if (Environment.Count > 0) {
-			foreach (var kvp in Environment) {
-				psi.Environment.Add (kvp.Key, kvp.Value);
-			}
-		}
-
-		if (!String.IsNullOrEmpty (WorkingDirectory)) {
-			psi.WorkingDirectory = WorkingDirectory;
-		}
-
-		if (psi.RedirectStandardError) {
-			StandardErrorEncoding = StandardErrorEncoding;
-		}
-
-		if (psi.RedirectStandardOutput) {
-			StandardOutputEncoding = StandardOutputEncoding;
-		}
-
-		if (CustomizeStartInfo != null) {
-			CustomizeStartInfo (psi);
-		}
-
-		EnsureValidConfig (psi);
-
-		FullCommandLine = $"{psi.FileName} {psi.Arguments}";
-		return psi;
 	}
 
 	void MarkRunning ()

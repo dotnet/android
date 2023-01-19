@@ -47,7 +47,7 @@ class AndroidDevice
 	string outputDir;
 
 	XamarinLoggingHelper log;
-	AdbRunner adb;
+	AdbRunner2 adb;
 	AndroidNdk ndk;
 
 	public int ApiLevel => apiLevel;
@@ -62,9 +62,9 @@ class AndroidDevice
 	public string LldbBaseDir => appLldbBaseDir ?? String.Empty;
 	public string AppDataDir => appDataDir ?? String.Empty;
 	public string? DeviceLddPath => deviceLdd;
-	public AdbRunner AdbRunner => adb;
+	public AdbRunner2 AdbRunner => adb;
 
-	public AndroidDevice (XamarinLoggingHelper log, AndroidNdk ndk, string outputDir, string adbPath, string packageName, List<string> supportedAbis, string? adbTargetDevice = null)
+	public AndroidDevice (XamarinLoggingHelper log, IProcessOutputLogger processLogger, AndroidNdk ndk, string outputDir, string adbPath, string packageName, List<string> supportedAbis, string? adbTargetDevice = null)
 	{
 		this.adbPath = adbPath;
 		this.log = log;
@@ -73,7 +73,7 @@ class AndroidDevice
 		this.ndk = ndk;
 		this.outputDir = outputDir;
 
-		adb = new AdbRunner (log, adbPath, adbTargetDevice);
+		adb = new AdbRunner2 (log, processLogger, adbPath, adbTargetDevice);
 	}
 
 	// TODO: implement manual error checking on API 21, since `adb` won't ever return any error code other than 0 - we need to look at the output of any command to determine

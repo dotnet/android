@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 
 using Xamarin.Android.Utilities;
-using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Debug;
 
 class LddDeviceLibraryCopier : DeviceLibraryCopier
 {
-	public LddDeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner adb, bool appIs64Bit, string localDestinationDir, AndroidDevice device)
+	public LddDeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner2 adb, bool appIs64Bit, string localDestinationDir, AndroidDevice device)
 		: base (log, adb, appIs64Bit, localDestinationDir, device)
 	{}
 

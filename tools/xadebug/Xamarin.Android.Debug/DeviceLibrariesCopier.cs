@@ -10,10 +10,10 @@ abstract class DeviceLibraryCopier
 	protected XamarinLoggingHelper Log   { get; }
 	protected bool AppIs64Bit            { get; }
 	protected string LocalDestinationDir { get; }
-	protected AdbRunner Adb              { get; }
+	protected AdbRunner2 Adb             { get; }
 	protected AndroidDevice Device       { get; }
 
-	protected DeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner adb, bool appIs64Bit, string localDestinationDir, AndroidDevice device)
+	protected DeviceLibraryCopier (XamarinLoggingHelper log, AdbRunner2 adb, bool appIs64Bit, string localDestinationDir, AndroidDevice device)
 	{
 		Log = log;
 		Adb = adb;

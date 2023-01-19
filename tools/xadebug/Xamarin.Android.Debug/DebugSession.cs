@@ -50,7 +50,8 @@ class DebugSession
 
 		ndk = new AndroidNdk (log, parsedOptions.NdkDirPath!, supportedAbis);
 		device = new AndroidDevice (
-			log,
+			log, // general logger
+			log, // process output logger
 			ndk,
 			workDirectory,
 			parsedOptions.AdbPath,
