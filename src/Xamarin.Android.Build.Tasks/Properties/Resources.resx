@@ -531,7 +531,7 @@ Please change the value to an assembly-qualifed type name which inherits from '{
 {0} - The assembly name</comment>
   </data>
   <data name="APT2264" xml:space="preserve">
-    <value>This is probably caused by the project exceeding the Max Path length. See https://learn.microsoft.com/en-us/xamarin/android/errors-and-warnings/apt2264 for details.</value>
+    <value>This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
