@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (
-				JniRemappingNativeCodeInfoKey,
+				ProjectSpecificTaskObjectKey (JniRemappingNativeCodeInfoKey),
 				new JniRemappingNativeCodeInfo (typeReplacementsCount, jniRemappingGenerator.ReplacementMethodIndexEntryCount),
 				RegisteredTaskObjectLifetime.Build
 			);

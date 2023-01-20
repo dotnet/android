@@ -537,7 +537,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (useMarshalMethods) {
-				BuildEngine4.RegisterTaskObjectAssemblyLocal (MarshalMethodsRegisterTaskKey, new MarshalMethodsState (classifier.MarshalMethods), RegisteredTaskObjectLifetime.Build);
+				BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (MarshalMethodsRegisterTaskKey), new MarshalMethodsState (classifier.MarshalMethods), RegisteredTaskObjectLifetime.Build);
 			}
 
 			return ok;
@@ -591,7 +591,7 @@ namespace Xamarin.Android.Tasks
 			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState))
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (ApplicationConfigTaskState.RegisterTaskObjectKey, appConfState, RegisteredTaskObjectLifetime.Build);
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), appConfState, RegisteredTaskObjectLifetime.Build);
 		}
 	}
 }

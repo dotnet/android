@@ -527,7 +527,7 @@ namespace Xamarin.Android.Tasks
 		{
 			string key = Guid.NewGuid ().ToString ();
 			LogDebugMessage ($"Registering {widgets?.Count} widgets for key {key}");
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (key, widgets, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (key), widgets, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
 			return key;
 		}
 

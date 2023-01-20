@@ -248,6 +248,30 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildSolutionWithMultipleProjectsInParallel ()
+		{
+			var testPath = Path.Combine ("temp", "BuildSolutionWithMultipleProjects");
+			var sb = new SolutionBuilder("BuildSolutionWithMultipleProjects.sln") {
+				SolutionPath = Path.Combine (Root, testPath),
+				MaxCpuCount = 4,
+			};
+			for (int i=1; i <= 4; i++) {
+				var app1 = new XamarinAndroidApplicationProject () {
+					ProjectName = $"App{i}",
+					PackageName = $"com.companyname.App{i}",
+					AotAssemblies = true,
+					IsRelease = true,
+				};
+				app1.SetProperty ("AndroidEnableMarshalMethods", "True");
+				sb.Projects.Add (app1);
+			}
+			sb.BuildingInsideVisualStudio = false;
+			Assert.IsTrue (sb.Build (), "Build of solution should have succeeded");
+			Assert.IsTrue (sb.ReBuild (), "ReBuild of solution should have succeeded");
+			sb.Dispose ();
+		}
+
+		[Test]
 		public void JavacTaskDoesNotRunOnSecondBuild ()
 		{
 			var app = new XamarinAndroidApplicationProject () {

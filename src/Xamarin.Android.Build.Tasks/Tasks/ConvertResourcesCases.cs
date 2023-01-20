@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tasks
 		Dictionary<string,string> _resource_name_case_map;
 		Dictionary<string, HashSet<string>> customViewMap;
 
-		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4);
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
 
 		public override bool RunTask ()
 		{
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 				lastUpdate = File.GetLastWriteTimeUtc (AndroidConversionFlagFile);
 			}
 			Log.LogDebugMessage ("  AndroidConversionFlagFile modified: {0}", lastUpdate);
-			
+
 			var resourcedirectories = new List<string> ();
 			foreach (var dir in ResourceDirectories) {
 				if (dir == item)
