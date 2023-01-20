@@ -44,7 +44,7 @@ _ResolveAssemblies MSBuild target.
   </PropertyGroup>
 
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
-      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
+      DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
         <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />

@@ -2006,8 +2006,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_ResolveAssemblies"
 >
   <ItemGroup>
-    <!-- In .NET 6+, the .NET SDK locates these files -->
-    <_AndroidResolvedSatellitePaths Condition=" '$(UsingAndroidNETSdk)' != 'true' " Include="@(ReferenceSatellitePaths)" />
+    <_AndroidResolvedSatellitePaths Include="@(ReferenceSatellitePaths)" />
     <!-- Satellites from the current project, see: https://github.com/microsoft/msbuild/blob/master/src/Tasks/Microsoft.Common.CurrentVersion.targets#L4283-L4299 -->
     <_AndroidResolvedSatellitePaths Include="@(IntermediateSatelliteAssembliesWithTargetPath->'$(OutDir)%(Culture)\$(TargetName).resources.dll')" />
   </ItemGroup>
