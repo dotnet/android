@@ -1,0 +1,90 @@
+parameters:
+  buildPoolName: $(MacBuildPoolName)
+  buildPoolImage: $(MacBuildPoolImage)
+  buildResultArtifactName: Build Results - macOS
+  checkoutCommit: ''
+  checkoutPath: 's/xamarin-android'
+  checkoutPersistCredentials: false
+  dependsOn: ''
+  dependsOnResult: ''
+  installerArtifactName: $(InstallerArtifactName)
+  jobName: mac_build_create_installers
+  jobDisplayName: macOS > Build
+  nugetArtifactName: $(NuGetArtifactName)
+  provisionatorChannel: latest
+  repositoryAlias: self
+  signClassicPkgContent: false
+  stageName: mac_build
+  stageDisplayName: Mac
+  testAssembliesArtifactName: $(TestAssembliesArtifactName)
+  windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
+
+stages:
+- stage: ${{ parameters.stageName }}
+  displayName: ${{ parameters.stageDisplayName }}
+  dependsOn: ${{ parameters.dependsOn }}
+  ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
+    condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
+  jobs:
+  # Check - "Xamarin.Android (macOS > Build)"
+  - job: ${{ parameters.jobName }}
+    displayName: ${{ parameters.jobDisplayName }}
+    pool:
+      name: ${{ parameters.buildPoolName }}
+      vmImage: ${{ parameters.buildPoolImage }}
+      ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), eq(variables['Build.Reason'], 'PullRequest')) }}:
+        demands: macOS.Name -equals Monterey
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
+      parameters:
+        resource: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.checkoutCommit }}
+        path: ${{ parameters.checkoutPath }}
+        persistCredentials: ${{ parameters.checkoutPersistCredentials }}
+
+    - template: install-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - template: commercial-build.yaml
+      parameters:
+        installerArtifactName: ${{ parameters.installerArtifactName }}
+        nugetArtifactName: ${{ parameters.nugetArtifactName }}
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
+        testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
+
+    - template: remove-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - script: >
+        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
+        cd $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/windows-toolchain-pdb &&
+        zip -r $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/windows-toolchain-pdb.zip .
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: zip Windows toolchain pdb files
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload Windows toolchain pdb files
+      inputs:
+        artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+
+    - template: upload-results.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        artifactName: ${{ parameters.buildResultArtifactName }}
+        includeBuildResults: true
+
+    - template: run-xaprepare.yaml
+      parameters:
+        arguments: --s=DetermineApplicableTests
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        displayName: determine which test stages to run
+        name: TestConditions
+        condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
