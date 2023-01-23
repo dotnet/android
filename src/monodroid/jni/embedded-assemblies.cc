@@ -35,6 +35,7 @@
 #include "mono-image-loader.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
+#include "monodroid-glue-internal.hh"
 #include "startup-aware-lock.hh"
 #include "timing-internal.hh"
 #include "search.hh"
@@ -74,6 +75,13 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 }
 
 force_inline void
+EmbeddedAssemblies::set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept
+{
+	dest_assembly_data = source_assembly_data;
+	dest_assembly_data_size = source_assembly_data_size;
+}
+
+force_inline void
 EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[maybe_unused]] const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
 #if defined (ANDROID) && defined (HAVE_LZ4) && defined (RELEASE)
@@ -81,31 +89,32 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		if (XA_UNLIKELY (compressed_assemblies.descriptors == nullptr)) {
 			log_fatal (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
-			exit (FATAL_EXIT_MISSING_ASSEMBLY);
+			abort ();
 		}
 		if (XA_UNLIKELY (header->descriptor_index >= compressed_assemblies.count)) {
 			log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor index %u", header->descriptor_index);
-			exit (FATAL_EXIT_MISSING_ASSEMBLY);
+			abort ();
 		}
 
 		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
 		assembly_data_size = data_size - sizeof(CompressedAssemblyHeader);
 		if (!cad.loaded) {
-			if (XA_UNLIKELY (cad.data == nullptr)) {
-				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
-				exit (FATAL_EXIT_MISSING_ASSEMBLY);
+			StartupAwareLock decompress_lock (assembly_decompress_mutex);
+
+			if (cad.loaded) {
+				set_assembly_data_and_size (reinterpret_cast<uint8_t*>(cad.data), cad.uncompressed_file_size, assembly_data, assembly_data_size);
+				return;
 			}
 
-			bool log_timing = FastTiming::enabled () && !FastTiming::is_bare_mode ();
-			size_t decompress_time_index;
-			if (XA_UNLIKELY (log_timing)) {
-				decompress_time_index = internal_timing->start_event (TimingEventKind::AssemblyDecompression);
+			if (XA_UNLIKELY (cad.data == nullptr)) {
+				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
+				abort ();
 			}
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
 				if (header->uncompressed_length > cad.uncompressed_file_size) {
 					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", name, cad.uncompressed_file_size, header->uncompressed_length);
-					exit (FATAL_EXIT_MISSING_ASSEMBLY);
+					abort ();
 				} else {
 					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", name);
 				}
@@ -115,29 +124,23 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 			const char *data_start = reinterpret_cast<const char*>(data + sizeof(CompressedAssemblyHeader));
 			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
 
-			if (XA_UNLIKELY (log_timing)) {
-				internal_timing->end_event (decompress_time_index, true /* uses_more_info */);
-				internal_timing->add_more_info (decompress_time_index, name);
-			}
-
 			if (ret < 0) {
 				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", name, ret);
-				exit (FATAL_EXIT_MISSING_ASSEMBLY);
+				abort ();
 			}
 
 			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
 				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
-				exit (FATAL_EXIT_MISSING_ASSEMBLY);
+				abort ();
 			}
 			cad.loaded = true;
 		}
-		assembly_data = reinterpret_cast<uint8_t*>(cad.data);
-		assembly_data_size = cad.uncompressed_file_size;
+
+		set_assembly_data_and_size (reinterpret_cast<uint8_t*>(cad.data), cad.uncompressed_file_size, assembly_data, assembly_data_size);
 	} else
 #endif
 	{
-		assembly_data = data;
-		assembly_data_size = data_size;
+		set_assembly_data_and_size (data, data_size, assembly_data, assembly_data_size);
 	}
 }
 
@@ -411,14 +414,15 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 
 		log_debug (
 			LOG_ASSEMBLY,
-			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u",
+			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; name == '%s'",
 			assembly_runtime_info.image_data,
 			assembly_runtime_info.debug_info_data,
 			assembly_runtime_info.config_data,
 			assembly_runtime_info.descriptor,
 			assembly_runtime_info.descriptor->data_size,
 			assembly_runtime_info.descriptor->debug_data_size,
-			assembly_runtime_info.descriptor->config_data_size
+			assembly_runtime_info.descriptor->config_data_size,
+			name.get ()
 		);
 	}
 
