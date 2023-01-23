@@ -553,7 +553,7 @@ namespace Xamarin.Android.Build.Tests
 			return GetPathToLatestBuildTools (exe);
 		}
 
-		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project, bool designtime = false)
+		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
 		{
 			string path;
 			if (Builder.UseDotNet) {
@@ -561,12 +561,8 @@ namespace Xamarin.Android.Build.Tests
 				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
 					return Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
 				}
-				if (designtime)
-					path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
 			} else {
 				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
-				if (designtime)
-					path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
 			}
 			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
 		}
