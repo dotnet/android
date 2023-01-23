@@ -14,7 +14,8 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Category ("UsesDevice")]
-	public class DebuggingTest : DeviceTest {
+	public class DebuggingTest : DeviceTest
+	{
 		[TearDown]
 		public void ClearDebugProperties ()
 		{
@@ -48,7 +49,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs, [Values (false, true)] bool useEmbeddedDex)
 		{
-			AssertHasDevices ();
 			SwitchUser ();
 
 			var proj = new XamarinFormsAndroidApplicationProject () {
@@ -68,13 +68,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.True (b.Install (proj), "Project should have installed.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				AssertExtractNativeLibs (manifest, extractNativeLibs);
-				ClearAdbLogcat ();
-				b.BuildLogFile = "run.log";
-				if (CommercialBuildAvailable)
-					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
-				else
-					AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
-
+				RunProjectAndAssert (proj, b);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 				b.BuildLogFile = "uninstall.log";
@@ -85,7 +79,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ClassLibraryMainLauncherRuns ([Values (true, false)] bool preloadAssemblies)
 		{
-			AssertHasDevices ();
 			SwitchUser ();
 
 			var path = Path.Combine ("temp", TestName);
@@ -130,13 +123,7 @@ namespace Xamarin.Android.Build.Tests
 				SetTargetFrameworkAndManifest (app, appBuilder);
 				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
 				Assert.True (appBuilder.Install (app), "app should have installed.");
-				ClearAdbLogcat ();
-				appBuilder.BuildLogFile = "run.log";
-				if (CommercialBuildAvailable)
-					Assert.True (appBuilder.RunTarget (app, "_Run"), "Project should have run.");
-				else
-					AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
-
+				RunProjectAndAssert (app, appBuilder);
 				Assert.True (WaitForActivityToStart (app.PackageName, "MainActivity",
 					Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 			}
@@ -173,7 +160,6 @@ namespace Xamarin.Android.Build.Tests
 		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 			SwitchUser ();
 
 			var path = Path.Combine (Root, "temp", TestName);
@@ -246,13 +232,11 @@ namespace ${ROOT_NAMESPACE} {
 					EvaluationOptions = EvaluationOptions.DefaultOptions,
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
-				ClearAdbLogcat ();
-				b.BuildLogFile = "run.log";
-				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true, parameters: new string [] {
+				RunProjectAndAssert (proj, b, doNotCleanupOnUpdate: true, parameters: new string [] {
 					$"AndroidSdbTargetPort={port}",
 					$"AndroidSdbHostPort={port}",
 					"AndroidAttachDebugger=True",
-				}), "Project should have run.");
+				});
 
 				session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
 				session.OutputWriter += (isStderr, text) => { Console.WriteLine (text); };
@@ -351,7 +335,6 @@ namespace ${ROOT_NAMESPACE} {
 		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string debugType)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 			SwitchUser ();
 			WaitFor (5000);
 
@@ -463,15 +446,12 @@ namespace ${ROOT_NAMESPACE} {
 					EvaluationOptions = EvaluationOptions.DefaultOptions,
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
-				ClearAdbLogcat ();
-				appBuilder.BuildLogFile = "run.log";
 
 				parameters.Add ($"AndroidSdbTargetPort={port}");
 				parameters.Add ($"AndroidSdbHostPort={port}");
 				parameters.Add ("AndroidAttachDebugger=True");
 
-				Assert.True (appBuilder.RunTarget (app, "_Run", doNotCleanupOnUpdate: true,
-					parameters: parameters.ToArray ()), "Project should have run.");
+				RunProjectAndAssert (app, appBuilder, doNotCleanupOnUpdate: true, parameters: parameters.ToArray ());
 
 				session.LogWriter += (isStderr, text) => {
 					TestContext.Out.WriteLine (text);

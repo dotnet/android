@@ -52,7 +52,7 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					parameters.Add (KnownProperties.AndroidSupportedAbis + "=\"armeabi-v7a;arm64-v8a;x86;x86_64\"");
 				}
-				if (HasDevices) {
+				if (IsDeviceAttached ()) {
 					Assert.IsTrue (builder.Install (project, doNotCleanupOnUpdate: true, parameters: parameters.ToArray (), saveProject: false),
 						"Install should have succeeded.");
 					ClearAdbLogcat ();
