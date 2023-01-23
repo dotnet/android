@@ -1715,6 +1715,9 @@
   <remove-node api-since="33" path="/api/package[@name='java.util.concurrent']/class[@name='TimeUnit']/method[@name='of' and count(parameter)=1 and parameter[1][@type='java.time.temporal.ChronoUnit']]" />
   <remove-node api-since="33" path="/api/package[@name='java.util.concurrent']/class[@name='TimeUnit']/method[@name='toChronoUnit' and count(parameter)=0]" />
 
+  <attr path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='systemUiVisibility']" name="deprecated">This property has an incorrect enumeration type. Use the SystemUiFlags property instead.</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='systemUiVisibility']" name="deprecated-since">0</attr>
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
