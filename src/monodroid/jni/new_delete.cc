@@ -21,7 +21,7 @@ operator new (size_t size)
 	void* p = do_alloc (size);
 	if (p == nullptr) {
 		log_fatal (LOG_DEFAULT, "Out of memory in the `new` operator");
-		exit (FATAL_EXIT_OUT_OF_MEMORY);
+		abort ();
 	}
 
 	return p;

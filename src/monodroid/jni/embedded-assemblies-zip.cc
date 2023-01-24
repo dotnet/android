@@ -47,12 +47,12 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 #endif
 	if (!result || entry_name.empty ()) {
 		log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory info for entry %u in APK file %s", entry_index, state.apk_name);
-		exit (FATAL_EXIT_NO_ASSEMBLIES);
+		abort ();
 	}
 
 	if (!zip_adjust_data_offset (state.apk_fd, state)) {
 		log_fatal (LOG_ASSEMBLY, "Failed to adjust data start offset for entry %u in APK file %s", entry_index, state.apk_name);
-		exit (FATAL_EXIT_NO_ASSEMBLIES);
+		abort ();
 	}
 #ifdef DEBUG
 	log_info (LOG_ASSEMBLY, "    ZIP: local header offset: %u; data offset: %u; file size: %u", state.local_header_offset, state.data_offset, state.file_size);
@@ -79,7 +79,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	if ((state.data_offset & 0x3) != 0) {
 		log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at bad offset %lu within the .apk\n", entry_name.get (), state.data_offset);
 		log_fatal (LOG_ASSEMBLY, "You MUST run `zipalign` on %s\n", strrchr (state.apk_name, '/') + 1);
-		exit (FATAL_EXIT_MISSING_ZIPALIGN);
+		abort ();
 	}
 
 	return true;
@@ -277,7 +277,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 
 	if (!zip_read_cd_info (fd, cd_offset, cd_size, cd_entries)) {
 		log_fatal (LOG_ASSEMBLY,  "Failed to read the EOCD record from APK file %s", apk_name);
-		exit (FATAL_EXIT_NO_ASSEMBLIES);
+		abort ();
 	}
 #ifdef DEBUG
 	log_info (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
@@ -287,7 +287,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
 	if (retval < 0) {
 		log_fatal (LOG_ASSEMBLY, "Failed to seek to central directory position in the APK file %s. %s (result: %d; errno: %d)", apk_name, std::strerror (errno), retval, errno);
-		exit (FATAL_EXIT_NO_ASSEMBLIES);
+		abort ();
 	}
 
 	std::vector<uint8_t>  buf (cd_size);
@@ -306,7 +306,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	ssize_t nread = read (fd, buf.data (), static_cast<read_count_type>(buf.size ()));
 	if (static_cast<size_t>(nread) != cd_size) {
 		log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory from the APK archive %s. %s (nread: %d; errno: %d)", apk_name, std::strerror (errno), nread, errno);
-		exit (FATAL_EXIT_NO_ASSEMBLIES);
+		abort ();
 	}
 
 	if (application_config.have_assembly_store) {

@@ -205,7 +205,7 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 		log_info (LOG_DEFAULT, "No libapp!");
 		if (!androidSystem.is_embedded_dso_mode_enabled ()) {
 			log_fatal (LOG_BUNDLE, "bundled app initialization error");
-			exit (FATAL_EXIT_CANNOT_LOAD_BUNDLE);
+			abort ();
 		} else {
 			log_info (LOG_BUNDLE, "bundled app not found in the APK, ignoring.");
 			return;
@@ -236,7 +236,7 @@ MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unu
 	if (r != JNI_OK) {
 #if DEBUG
 		log_fatal (LOG_DEFAULT, "ERROR: Unable to attach current thread to the Java VM!");
-		exit (FATAL_EXIT_ATTACH_JVM_FAILED);
+		abort ();
 #endif
 	}
 }
@@ -733,7 +733,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 			int sock = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (sock < 0) {
 				log_fatal (LOG_DEBUGGER, "Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? %s", strerror (errno));
-				exit (FATAL_EXIT_DEBUGGER_CONNECT);
+				abort ();
 			}
 
 			sockaddr_in addr;
@@ -746,7 +746,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 			if ((r = inet_pton (AF_INET, options.host, &addr.sin_addr)) != 1) {
 				log_error (LOG_DEBUGGER, "Could not setup a socket for stdout and stderr: %s",
 						r == -1 ? strerror (errno) : "address not parseable in the specified address family");
-				exit (FATAL_EXIT_DEBUGGER_CONNECT);
+				abort ();
 			}
 
 			if (options.server) {
@@ -755,7 +755,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 				if (accepted < 0) {
 					log_fatal (LOG_DEBUGGER, "Error accepting stdout and stderr (%s:%d): %s",
 							     options.host, options.out_port, strerror (errno));
-					exit (FATAL_EXIT_DEBUGGER_CONNECT);
+					abort ();
 				}
 
 				dup2 (accepted, 1);
@@ -764,7 +764,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 				if (monodroid_debug_connect (sock, addr) != 1) {
 					log_fatal (LOG_DEBUGGER, "Error connecting stdout and stderr (%s:%d): %s",
 							     options.host, options.out_port, strerror (errno));
-					exit (FATAL_EXIT_DEBUGGER_CONNECT);
+					abort ();
 				}
 
 				dup2 (sock, 1);
@@ -1291,7 +1291,7 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 {
 	if (handle == nullptr) {
 		log_fatal (LOG_DEFAULT, "Internal API library is required");
-		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+		abort ();
 	}
 
 	// There's a very, very small chance of a race condition here, but it should be acceptable and we can save some time
@@ -1314,7 +1314,7 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 			// We COULD ignore this situation, but if the function is missing it means we messed something up and thus
 			// it *is* a fatal error.
 			log_fatal (LOG_DEFAULT, "Unable to properly close Internal API library, shutdown function '%s' not found in the module", MonoAndroidInternalCalls::SHUTDOWN_FUNCTION_NAME);
-			exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+			abort ();
 		}
 		api_shutdown ();
 	}
@@ -1324,13 +1324,13 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 	auto api_init = reinterpret_cast<external_api_init_fn>(java_interop_lib_symbol (handle, MonoAndroidInternalCalls::INIT_FUNCTION_NAME, nullptr));
 	if (api_init == nullptr) {
 		log_fatal (LOG_DEFAULT, "Unable to initialize Internal API library, init function '%s' not found in the module", MonoAndroidInternalCalls::INIT_FUNCTION_NAME);
-		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+		abort ();
 	}
 
 	log_debug (LOG_DEFAULT, "Initializing Internal API library %p", handle);
 	if (!api_init (api)) {
 		log_fatal (LOG_DEFAULT, "Failed to initialize Internal API library");
-		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+		abort ();
 	}
 }
 #endif // ndef NET

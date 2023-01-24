@@ -81,11 +81,11 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		if (XA_UNLIKELY (compressed_assemblies.descriptors == nullptr)) {
 			log_fatal (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
-			exit (FATAL_EXIT_MISSING_ASSEMBLY);
+			abort ();
 		}
 		if (XA_UNLIKELY (header->descriptor_index >= compressed_assemblies.count)) {
 			log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor index %u", header->descriptor_index);
-			exit (FATAL_EXIT_MISSING_ASSEMBLY);
+			abort ();
 		}
 
 		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
@@ -93,7 +93,7 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 		if (!cad.loaded) {
 			if (XA_UNLIKELY (cad.data == nullptr)) {
 				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
-				exit (FATAL_EXIT_MISSING_ASSEMBLY);
+				abort ();
 			}
 
 			bool log_timing = FastTiming::enabled () && !FastTiming::is_bare_mode ();
@@ -105,7 +105,7 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
 				if (header->uncompressed_length > cad.uncompressed_file_size) {
 					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", name, cad.uncompressed_file_size, header->uncompressed_length);
-					exit (FATAL_EXIT_MISSING_ASSEMBLY);
+					abort ();
 				} else {
 					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", name);
 				}
@@ -122,12 +122,12 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 
 			if (ret < 0) {
 				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", name, ret);
-				exit (FATAL_EXIT_MISSING_ASSEMBLY);
+				abort ();
 			}
 
 			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
 				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
-				exit (FATAL_EXIT_MISSING_ASSEMBLY);
+				abort ();
 			}
 			cad.loaded = true;
 		}
@@ -553,7 +553,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 	// This is a coding error on our part, crash!
 	if (base == nullptr) {
 		log_fatal (LOG_ASSEMBLY, "Map address not passed to binary_search");
-		exit (FATAL_EXIT_MISSING_ASSEMBLY);
+		abort ();
 	}
 
 	[[maybe_unused]]
@@ -912,7 +912,7 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 
 	if (mmap_info.area == MAP_FAILED) {
 		log_fatal (LOG_DEFAULT, "Could not `mmap` apk fd %d entry `%s`: %s", fd, filename, strerror (errno));
-		exit (FATAL_EXIT_CANNOT_FIND_APK);
+		abort ();
 	}
 
 	mmap_info.size  = offsetSize;
@@ -933,7 +933,7 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 
 	if ((fd = open (apk, O_RDONLY)) < 0) {
 		log_error (LOG_DEFAULT, "ERROR: Unable to load application package %s.", apk);
-		exit (FATAL_EXIT_NO_ASSEMBLIES);
+		abort ();
 	}
 	log_info (LOG_ASSEMBLY, "APK %s FD: %d", apk, fd);
 
@@ -1202,7 +1202,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 	std::unique_ptr<uint8_t[]> index_data = typemap_load_index (dir_fd, dir_path.get (), index_name);
 	if (!index_data) {
 		log_fatal (LOG_ASSEMBLY, "typemap: unable to load TypeMap data index from '%s/%s'", dir_path.get (), index_name);
-		exit (FATAL_EXIT_NO_ASSEMBLIES); // TODO: use a new error code here
+		abort ();
 	}
 
 	for (size_t i = 0; i < type_map_count; i++) {

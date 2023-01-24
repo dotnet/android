@@ -40,7 +40,7 @@ init ()
 
 	if (AndroidEnvironment_NotifyTimeZoneChanged == nullptr) {
 		log_fatal (LOG_DEFAULT, "Unable to find Android.Runtime.AndroidEnvironment.NotifyTimeZoneChanged()!");
-		exit (FATAL_EXIT_MISSING_ASSEMBLY);
+		abort ();
 	}
 }
 
