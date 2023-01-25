@@ -17,6 +17,7 @@
 
 #include "cppcompat.hh"
 #include "platform-compat.hh"
+#include "helpers.hh"
 
 static inline void
 do_abort_unless (const char* fmt, ...)
@@ -32,7 +33,7 @@ do_abort_unless (const char* fmt, ...)
 #endif // ndef ANDROID
 	va_end (ap);
 
-	std::abort ();
+	xamarin::android::Helpers::abort_application ();
 }
 
 #define abort_unless(_condition_, _fmt_, ...) \
