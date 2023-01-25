@@ -248,7 +248,7 @@ Debug::start_debugging_and_profiling ()
 		DebuggerConnectionStatus res = start_connection (connect_args);
 		if (res == DebuggerConnectionStatus::Error) {
 			log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args);
-			abort ();
+			Helpers::abort_application ();
 		} else if (res == DebuggerConnectionStatus::Connected) {
 			/* Wait for XS to configure debugging/profiling */
 			gettimeofday(&wait_tv, nullptr);
@@ -474,7 +474,7 @@ Debug::process_cmd (int fd, char *cmd)
 		log_info (LOG_DEFAULT, "Debugger requested an exit, will exit immediately.\n");
 		fflush (stdout);
 		fflush (stderr);
-		abort ();
+		Helpers::abort_application ();
 	}
 
 	bool use_fd = false;
@@ -655,7 +655,7 @@ xamarin::android::conn_thread (void *arg)
 	res = instance->handle_server_connection ();
 	if (res && res != 3) {
 		log_fatal (LOG_DEBUGGER, "Error communicating with the IDE, exiting...");
-		abort ();
+		Helpers::abort_application ();
 	}
 
 	return nullptr;

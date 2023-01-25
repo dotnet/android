@@ -205,7 +205,7 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 		log_info (LOG_DEFAULT, "No libapp!");
 		if (!androidSystem.is_embedded_dso_mode_enabled ()) {
 			log_fatal (LOG_BUNDLE, "bundled app initialization error");
-			abort ();
+			Helpers::abort_application ();
 		} else {
 			log_info (LOG_BUNDLE, "bundled app not found in the APK, ignoring.");
 			return;
@@ -236,7 +236,7 @@ MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unu
 	if (r != JNI_OK) {
 #if DEBUG
 		log_fatal (LOG_DEFAULT, "ERROR: Unable to attach current thread to the Java VM!");
-		abort ();
+		Helpers::abort_application ();
 #endif
 	}
 }
@@ -733,7 +733,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 			int sock = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (sock < 0) {
 				log_fatal (LOG_DEBUGGER, "Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? %s", strerror (errno));
-				abort ();
+				Helpers::abort_application ();
 			}
 
 			sockaddr_in addr;
@@ -746,7 +746,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 			if ((r = inet_pton (AF_INET, options.host, &addr.sin_addr)) != 1) {
 				log_error (LOG_DEBUGGER, "Could not setup a socket for stdout and stderr: %s",
 						r == -1 ? strerror (errno) : "address not parseable in the specified address family");
-				abort ();
+				Helpers::abort_application ();
 			}
 
 			if (options.server) {
@@ -755,7 +755,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 				if (accepted < 0) {
 					log_fatal (LOG_DEBUGGER, "Error accepting stdout and stderr (%s:%d): %s",
 							     options.host, options.out_port, strerror (errno));
-					abort ();
+					Helpers::abort_application ();
 				}
 
 				dup2 (accepted, 1);
@@ -764,7 +764,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 				if (monodroid_debug_connect (sock, addr) != 1) {
 					log_fatal (LOG_DEBUGGER, "Error connecting stdout and stderr (%s:%d): %s",
 							     options.host, options.out_port, strerror (errno));
-					abort ();
+					Helpers::abort_application ();
 				}
 
 				dup2 (sock, 1);
@@ -937,7 +937,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		log_fatal (LOG_DEFAULT, "Make sure that all entries in the APK directory named `assemblies/` are STORED (not compressed)");
 		log_fatal (LOG_DEFAULT, "If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `assemblies/` are compressed");
 
-		abort ();
+		Helpers::abort_application ();
 	}
 
 	MonoDomain *domain;
@@ -1019,7 +1019,7 @@ MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJava
 				info->handle_type,
 				info->refs_added,
 				info->weak_handle);
-		abort ();
+		Helpers::abort_application ();
 	}
 }
 
@@ -1291,7 +1291,7 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 {
 	if (handle == nullptr) {
 		log_fatal (LOG_DEFAULT, "Internal API library is required");
-		abort ();
+		Helpers::abort_application ();
 	}
 
 	// There's a very, very small chance of a race condition here, but it should be acceptable and we can save some time
@@ -1314,7 +1314,7 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 			// We COULD ignore this situation, but if the function is missing it means we messed something up and thus
 			// it *is* a fatal error.
 			log_fatal (LOG_DEFAULT, "Unable to properly close Internal API library, shutdown function '%s' not found in the module", MonoAndroidInternalCalls::SHUTDOWN_FUNCTION_NAME);
-			abort ();
+			Helpers::abort_application ();
 		}
 		api_shutdown ();
 	}
@@ -1324,13 +1324,13 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 	auto api_init = reinterpret_cast<external_api_init_fn>(java_interop_lib_symbol (handle, MonoAndroidInternalCalls::INIT_FUNCTION_NAME, nullptr));
 	if (api_init == nullptr) {
 		log_fatal (LOG_DEFAULT, "Unable to initialize Internal API library, init function '%s' not found in the module", MonoAndroidInternalCalls::INIT_FUNCTION_NAME);
-		abort ();
+		Helpers::abort_application ();
 	}
 
 	log_debug (LOG_DEFAULT, "Initializing Internal API library %p", handle);
 	if (!api_init (api)) {
 		log_fatal (LOG_DEFAULT, "Failed to initialize Internal API library");
-		abort ();
+		Helpers::abort_application ();
 	}
 }
 #endif // ndef NET

@@ -91,7 +91,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 	void *monosgen = dlopen (monosgen_path, RTLD_LAZY | RTLD_GLOBAL);
 	if (monosgen == nullptr) {
 		log_fatal (LOG_DEFAULT, "Failed to dlopen Mono runtime from %s: %s", monosgen_path, dlerror ());
-		abort ();
+		Helpers::abort_application ();
 	}
 }
 
@@ -276,7 +276,7 @@ get_libmonosgen_path ()
 
 	log_fatal (LOG_DEFAULT, "Do you have a shared runtime build of your app with AndroidManifest.xml android:minSdkVersion < 10 while running on a 64-bit Android 5.0 target? This combination is not supported.");
 	log_fatal (LOG_DEFAULT, "Please either set android:minSdkVersion >= 10 or use a build without the shared runtime (like default Release configuration).");
-	abort ();
+	Helpers::abort_application ();
 
 	return libmonoso;
 }

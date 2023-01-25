@@ -158,7 +158,7 @@ Util::monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const
 
 	if (assm == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
 		log_fatal (LOG_DEFAULT, "Unable to find assembly '%s'.", basename);
-		abort ();
+		Helpers::abort_application ();
 	}
 	return assm;
 }
@@ -186,7 +186,7 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 
 	if (!assm) {
 		log_fatal (LOG_DEFAULT, "Unable to find assembly '%s'.", basename);
-		abort ();
+		Helpers::abort_application ();
 	}
 	return assm;
 }

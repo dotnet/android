@@ -2,6 +2,7 @@
 #define __HELPERS_HH
 
 #include <cstdint>
+#include <cstdlib>
 
 #include "java-interop-util.h"
 #include "platform-compat.hh"
@@ -21,7 +22,7 @@ namespace xamarin::android
 
 			if (XA_UNLIKELY (__builtin_add_overflow (a, b, &ret))) {
 				log_fatal (LOG_DEFAULT, "Integer overflow on addition at %s:%u", file, line);
-				abort ();
+				abort_application ();
 			}
 
 			return ret;
@@ -45,11 +46,13 @@ namespace xamarin::android
 
 			if (XA_UNLIKELY (__builtin_mul_overflow (a, b, &ret))) {
 				log_fatal (LOG_DEFAULT, "Integer overflow on multiplication at %s:%u", file, line);
-				abort ();
+				abort_application ();
 			}
 
 			return ret;
 		}
+
+		[[noreturn]] static void abort_application () noexcept;
 	};
 }
 #endif // __HELPERS_HH
