@@ -47,7 +47,7 @@
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
-    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.1</AndroidNet7Version>
+    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.26</AndroidNet7Version>
     <AndroidNet6Version Condition=" '$(AndroidNet6Version)' == '' ">32.0.485</AndroidNet6Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
