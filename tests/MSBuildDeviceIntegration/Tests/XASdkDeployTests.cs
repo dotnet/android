@@ -77,21 +77,10 @@ namespace Xamarin.Android.Build.Tests
 			proj.AddNuGetSourcesForOlderTargetFrameworks ();
 			proj.SetRuntimeIdentifier (DeviceAbi);
 
-			var relativeProjDir = Path.Combine ("temp", TestName);
-			var fullProjDir     = Path.Combine (Root, relativeProjDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
-			var files = proj.Save ();
-			proj.Populate (relativeProjDir, files);
-			proj.CopyNuGetConfig (relativeProjDir);
-			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
-
+			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
-			WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (fullProjDir, "logcat.log"), 30);
-			RunAdbCommand ($"uninstall {proj.PackageName}");
-			Assert.IsTrue(didLaunch, "Activity should have started.");
+			RunAndWaitForPermission (dotnet);
+			AssertActivityStarted (proj);
 		}
 
 		[Test]
@@ -117,21 +106,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": global::Example.RemapActivity");
 			proj.SetRuntimeIdentifier (DeviceAbi);
-			var relativeProjDir = Path.Combine ("temp", TestName);
-			var fullProjDir     = Path.Combine (Root, relativeProjDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
-			var files = proj.Save ();
-			proj.Populate (relativeProjDir, files);
-			proj.CopyNuGetConfig (relativeProjDir);
-			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
 
+			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
-
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (fullProjDir, "logcat.log"));
-			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
-			var logcatOutput = File.ReadAllText (Path.Combine (fullProjDir, "logcat.log"));
+			AssertActivityStarted (proj);
+			var logcatOutput = File.ReadAllText (Path.Combine (FullProjectDirectory, "logcat.log"));
 
 			StringAssert.Contains (
 					"RemapActivity.onMyCreate() invoked!",
@@ -158,13 +138,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 
-			var relativeProjDir = Path.Combine ("temp", TestName);
-			var fullProjDir = Path.Combine (Root, relativeProjDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
-			var files = proj.Save ();
-			proj.Populate (relativeProjDir, files);
-			proj.CopyNuGetConfig (relativeProjDir);
-			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
+			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build ("Install"), "`dotnet build` should succeed");
 
 			bool breakpointHit = false;
@@ -219,6 +193,80 @@ namespace Xamarin.Android.Build.Tests
 			}
 			WaitFor (2000);
 			Assert.IsTrue (breakpointHit, "Should have a breakpoint");
+		}
+
+		[Test]
+		public void ArchitectureSpecificActivity ()
+		{
+			AssertHasDevices ();
+
+			// Setup dependencies App A -> Lib B
+			var path = Path.Combine ("temp", TestName);
+
+			var libB = new XASdkProject (outputType: "Library") {
+				ProjectName = "LibraryB",
+				IsRelease = true,
+			};
+			libB.SetProperty ("IsTrimmable", "true");
+			libB.MainActivity = libB.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine ($\"IntPtr.Size: {IntPtr.Size}\");");
+
+			var appA = new XASdkProject {
+				RootNamespace = "LibraryB",
+				ProjectName = "AppA",
+				IsRelease = true,
+				Sources = {
+					new BuildItem.Source ("KeepMainActivity.cs") {
+						TextContent = () =>
+@"public class KeepMainActivity
+{
+	LibraryB.MainActivity foo;
+}",
+					}
+				}
+			};
+			appA.Sources.RemoveAt (1); // Remove MainActivity.cs, it's in Lib B
+			appA.AddReference (libB);
+
+			// Will save the project, does not need to build it
+			CreateDotNetBuilder (libB, Path.Combine (path, libB.ProjectName));
+
+			// Build & run the app
+			var dotnet = CreateDotNetBuilder (appA, Path.Combine (path, appA.ProjectName));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			RunAndWaitForPermission (dotnet);
+			AssertActivityStarted (appA);
+		}
+
+		/// <summary>
+		/// The full path to the project directory
+		/// </summary>
+		public string FullProjectDirectory { get; set; }
+
+		DotNetCLI CreateDotNetBuilder (XASdkProject project, string relativeProjectDir = null)
+		{
+			if (string.IsNullOrEmpty (relativeProjectDir)) {
+				relativeProjectDir = Path.Combine ("temp", TestName);
+			}
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] =
+				FullProjectDirectory = Path.Combine (Root, relativeProjectDir);
+			var files = project.Save ();
+			project.Populate (relativeProjectDir, files);
+			project.CopyNuGetConfig (relativeProjectDir);
+			return new DotNetCLI (project, Path.Combine (FullProjectDirectory, project.ProjectFilePath));
+		}
+
+		void RunAndWaitForPermission (DotNetCLI dotnet)
+		{
+			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
+			WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
+		}
+
+		void AssertActivityStarted (XASdkProject project, string activityName = "MainActivity")
+		{
+			bool didLaunch = WaitForActivityToStart (project.PackageName, activityName,
+				Path.Combine (FullProjectDirectory, "logcat.log"), 30);
+			RunAdbCommand ($"uninstall {project.PackageName}");
+			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 	}
 }

@@ -841,5 +841,70 @@ namespace Styleable.Library {
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
+
+		[Test]
+		public void DoNotErrorOnPerArchJavaTypeDuplicates ()
+		{
+			if (!Builder.UseDotNet)
+				Assert.Ignore ("Test only valid on .NET");
+
+			var path = Path.Combine (Root, "temp", TestName);
+			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
+			lib.SetProperty ("IsTrimmable", "true");
+			lib.Sources.Add (new BuildItem.Source ("Library1.cs") {
+				TextContent = () => @"
+namespace Lib1;
+public class Library1 : Java.Lang.Object {
+	private static bool Is64Bits = IntPtr.Size >= 8;
+
+	public static bool Is64 () {
+		return Is64Bits;
+	}
+}",
+			});
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true, ProjectName = "App1" };
+			proj.References.Add (new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1"));
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"base.OnCreate (bundle);\n" +
+				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
+
+			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));
+			using var b = CreateApkBuilder (Path.Combine (path, "App1"));
+			Assert.IsTrue (lb.Build (lib), "build should have succeeded.");
+			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
+
+			Assert.True (b.RunTarget (proj, "Run"), "Project should have run.");
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"));
+			Assert.IsTrue (didStart, "Activity should have started.");
+		}
+
+		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
+		{
+			if (string.IsNullOrEmpty (relativeProjectDir)) {
+				relativeProjectDir = Path.Combine ("temp", TestName);
+			}
+			string fullProjectDirectory = Path.Combine (Root, relativeProjectDir);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjectDirectory;
+
+			new XASdkProject ().CopyNuGetConfig (relativeProjectDir);
+			return new DotNetCLI (Path.Combine (fullProjectDirectory, $"{TestName}.csproj"));
+		}
+
+		DotNetCLI CreateDotNetBuilder (XASdkProject project, string relativeProjectDir = null)
+		{
+			if (string.IsNullOrEmpty (relativeProjectDir)) {
+				relativeProjectDir = Path.Combine ("temp", TestName);
+			}
+			string fullProjectDirectory = Path.Combine (Root, relativeProjectDir);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjectDirectory;
+			var files = project.Save ();
+			project.Populate (relativeProjectDir, files);
+			project.CopyNuGetConfig (relativeProjectDir);
+			return new DotNetCLI (project, Path.Combine (fullProjectDirectory, project.ProjectFilePath));
+		}
 	}
 }
