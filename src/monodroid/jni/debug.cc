@@ -474,7 +474,7 @@ Debug::process_cmd (int fd, char *cmd)
 		log_info (LOG_DEFAULT, "Debugger requested an exit, will exit immediately.\n");
 		fflush (stdout);
 		fflush (stderr);
-		Helpers::abort_application ();
+		exit (0);
 	}
 
 	bool use_fd = false;
