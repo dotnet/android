@@ -541,7 +541,7 @@ namespace xamarin::android::internal
 				size_t slen = strlen (s);
 				if (offset + count > slen) {
 					log_fatal (LOG_DEFAULT, "Attempt to assign data from a string exceeds the source string length");
-					exit (1);
+					Helpers::abort_application ();
 				}
 			}
 
@@ -746,7 +746,7 @@ namespace xamarin::android::internal
 				"Index %u is out of range (0 - %u)",
 				access_index, idx
 			);
-			exit (1);
+			Helpers::abort_application ();
 		}
 
 		force_inline void ensure_have_extra (size_t length) noexcept
@@ -758,7 +758,7 @@ namespace xamarin::android::internal
 					"Attempt to store too much data in a buffer (capacity: %u; exceeded by: %u)",
 					buffer.size (), needed_space - buffer.size ()
 				);
-				abort ();
+				Helpers::abort_application ();
 			}
 		}
 

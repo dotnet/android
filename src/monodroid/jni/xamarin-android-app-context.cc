@@ -52,7 +52,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 		           marshal_methods_number_of_classes - 1,
 		           class_index
 		);
-		abort ();
+		Helpers::abort_application ();
 	}
 
 	// We need to do that, as Mono APIs cannot be invoked from threads that aren't attached to the runtime.
@@ -111,7 +111,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 		}
 	}
 
-	abort ();
+	Helpers::abort_application ();
 }
 
 void
