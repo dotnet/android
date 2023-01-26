@@ -32,6 +32,8 @@ namespace generator.SourceWriters
 				MemberType	    = (!ji) ? null : (MemberTypes?) MemberTypes.TypeInfo,
 			});
 
+			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, opt, iface.IsDeprecated, deprecatedSince: iface.DeprecatedSince);
+
 			Fields.Add (new PeerMembersField (opt, iface.RawJniName, $"{iface.Name}Invoker", false));
 
 			if (!ji) {

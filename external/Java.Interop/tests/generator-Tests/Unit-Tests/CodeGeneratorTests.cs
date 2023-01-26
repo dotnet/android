@@ -612,6 +612,36 @@ namespace generatortests
 		}
 
 		[Test]
+		public void ObsoletedOSPlatformAttributeInterfaceInfrastructureSupport ()
+		{
+			var xml = @"<api>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='false' deprecated='This interface was deprecated in API-25' final='false' name='MyType' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyType;' deprecated-since='25' />
+			  </package>
+			</api>";
+
+			options.UseObsoletedOSPlatformAttributes = true;
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.OfType<InterfaceGen> ().Single (g => g.Name == "IMyType");
+
+			generator.Context.ContextTypes.Push (iface);
+			var invoker = new InterfaceInvokerClass (iface, options, generator.Context);
+			var extensions = new InterfaceExtensionsClass (iface, iface.Name, options);
+			generator.Context.ContextTypes.Pop ();
+
+			// Ensure attribute was added to invoker class
+			var invoker_attribute = invoker.Attributes.OfType<ObsoletedOSPlatformAttr> ().Single ();
+			Assert.AreEqual ("This interface was deprecated in API-25", invoker_attribute.Message);
+			Assert.AreEqual (25, invoker_attribute.Version);
+
+			// Ensure attribute was added to extensions class
+			var extensions_attribute = invoker.Attributes.OfType<ObsoletedOSPlatformAttr> ().Single ();
+			Assert.AreEqual ("This interface was deprecated in API-25", extensions_attribute.Message);
+			Assert.AreEqual (25, extensions_attribute.Version);
+		}
+
+		[Test]
 		public void ObsoleteGetterOnlyProperty ()
 		{
 			var xml = @"<api>

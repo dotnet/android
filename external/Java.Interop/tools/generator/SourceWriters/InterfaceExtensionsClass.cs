@@ -18,6 +18,8 @@ namespace generator.SourceWriters
 			IsStatic = true;
 			IsPartial = true;
 
+			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, opt, iface.IsDeprecated, deprecatedSince: iface.DeprecatedSince);
+
 			foreach (var method in iface.Methods.Where (m => !m.IsStatic)) {
 				if (method.CanHaveStringOverload) {
 					// TODO: Don't allow obsolete here to match old generator.
