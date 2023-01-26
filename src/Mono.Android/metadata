@@ -1717,6 +1717,10 @@
 
   <attr api-since="34" path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='systemUiVisibility']" name="deprecated">This property has an incorrect enumeration type. Use the SystemUiFlags property instead.</attr>
   <attr api-since="34" path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='systemUiVisibility']" name="deprecated-since">0</attr>
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='getSystemUiVisibility']" name="deprecated">This property has an incorrect enumeration type. Use the SystemUiFlags property instead.</attr>
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='getSystemUiVisibility']" name="deprecated-since">0</attr>
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='setSystemUiVisibility']" name="deprecated">This property has an incorrect enumeration type. Use the SystemUiFlags property instead.</attr>
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='setSystemUiVisibility']" name="deprecated-since">0</attr>
 
   <!--
     ***********************************************************************
