@@ -28,23 +28,41 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object [] DotNetBuildLibrarySource = new object [] {
 			new object [] {
-				/* isRelease */    false,
-				/* duplicateAar */ false,
+				/* isRelease */           false,
+				/* duplicateAar */        false,
+				/* useDesignerAssembly */ false,
 			},
 			new object [] {
-				/* isRelease */    false,
-				/* duplicateAar */ true,
+				/* isRelease */           false,
+				/* duplicateAar */        true,
+				/* useDesignerAssembly */ false,
 			},
 			new object [] {
-				/* isRelease */    true,
-				/* duplicateAar */ false,
+				/* isRelease */           true,
+				/* duplicateAar */        false,
+				/* useDesignerAssembly */ false,
+			},
+			new object [] {
+				/* isRelease */           false,
+				/* duplicateAar */        false,
+				/* useDesignerAssembly */ true,
+			},
+			new object [] {
+				/* isRelease */           false,
+				/* duplicateAar */        true,
+				/* useDesignerAssembly */ true,
+			},
+			new object [] {
+				/* isRelease */           true,
+				/* duplicateAar */        false,
+				/* useDesignerAssembly */ true,
 			},
 		};
 
 		[Test]
 		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildLibrarySource))]
-		public void DotNetBuildLibrary (bool isRelease, bool duplicateAar)
+		public void DotNetBuildLibrary (bool isRelease, bool duplicateAar, bool useDesignerAssembly)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var env_var = "MY_ENVIRONMENT_VAR";
@@ -70,6 +88,7 @@ namespace Xamarin.Android.Build.Tests
 			libC.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\bar\\bar.txt") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
+			libC.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			var activity = libC.Sources.FirstOrDefault (s => s.Include () == "MainActivity.cs");
 			if (activity != null)
 				libC.Sources.Remove (activity);
@@ -141,6 +160,7 @@ namespace Xamarin.Android.Build.Tests
 				BinaryContent = () => Array.Empty<byte> (),
 			});
 			libB.AddReference (libC);
+			libB.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 
 			activity = libB.Sources.FirstOrDefault (s => s.Include () == "MainActivity.cs");
 			if (activity != null)
@@ -190,6 +210,7 @@ namespace Xamarin.Android.Build.Tests
 				// Test a duplicate @(AndroidLibrary) item with the same path of LibraryB.aar
 				appA.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (aarPath));
 			}
+			appA.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			var appBuilder = CreateDotNetBuilder (appA, Path.Combine (path, appA.ProjectName));
 			Assert.IsTrue (appBuilder.Build (), $"{appA.ProjectName} should succeed");
 
@@ -223,11 +244,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
 
 			// Check Resource.designer.cs
-			var resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
-			FileAssert.Exists (resource_designer_cs);
-			var resource_designer_text = File.ReadAllText (resource_designer_cs);
-			StringAssert.Contains ("public const int MyLayout", resource_designer_text);
-			StringAssert.Contains ("global::LibraryB.Resource.Drawable.IMALLCAPS = global::AppA.Resource.Drawable.IMALLCAPS", resource_designer_text);
+			if (!useDesignerAssembly) {
+				var resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
+				FileAssert.Exists (resource_designer_cs);
+				var resource_designer_text = File.ReadAllText (resource_designer_cs);
+				StringAssert.Contains ("public const int MyLayout", resource_designer_text);
+				StringAssert.Contains ("global::LibraryB.Resource.Drawable.IMALLCAPS = global::AppA.Resource.Drawable.IMALLCAPS", resource_designer_text);
+			}
 		}
 
 		[Test]
@@ -432,7 +455,54 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void GenerateResourceDesigner_false()
+		public void GenerateResourceDesigner([Values (false, true)] bool generateResourceDesigner, [Values (false, true)] bool useDesignerAssembly)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var libraryB = new XASdkProject (outputType: "Library") {
+				ProjectName = "LibraryB",
+			};
+			libraryB.Sources.Clear ();
+			libraryB.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () => @"namespace LibraryB;
+public class Foo {
+	public static int foo => Resource.Drawable.foo;
+}",
+			});
+			libraryB.Sources.Add (new AndroidItem.AndroidResource (() => "Resources\\drawable\\foo.png") {
+				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
+			});
+			libraryB.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
+			var libraryA = new XASdkProject (outputType: "Library") {
+				ProjectName = "LibraryA",
+			};
+			libraryA.Sources.Clear ();
+			libraryA.Sources.Add (new BuildItem.Source ("FooA.cs") {
+				TextContent = () => @"namespace LibraryA;
+public class FooA {
+	public int foo => 0;
+	public int foo2 => LibraryB.Foo.foo;
+	public int foo3 => LibraryB.Resource.Drawable.foo;
+}",
+			});
+			libraryA.AddReference (libraryB);
+			libraryA.SetProperty ("AndroidGenerateResourceDesigner", generateResourceDesigner.ToString ());
+			if (!useDesignerAssembly)
+				libraryA.SetProperty ("AndroidUseDesignerAssembly", "False");
+			var libraryBBuilder = CreateDotNetBuilder (libraryB, Path.Combine (path, libraryB.ProjectName));
+			Assert.IsTrue (libraryBBuilder.Build (), "Build of LibraryB should succeed.");
+			var libraryABuilder = CreateDotNetBuilder (libraryA, Path.Combine (path, libraryA.ProjectName));
+			Assert.IsTrue (libraryABuilder.Build (), "Build of LibraryA should succeed.");
+			var proj = new XASdkProject () {
+				ProjectName = "App1",
+			};
+			proj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
+			proj.AddReference (libraryA);
+			var dotnet = CreateDotNetBuilder (proj, Path.Combine (path, proj.ProjectName));
+			Assert.IsTrue (dotnet.Build (), "Build of Proj should succeed.");
+		}
+
+		[Test]
+		public void GenerateResourceDesigner_false([Values (false, true)] bool useDesignerAssembly)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				Sources = {
@@ -443,6 +513,8 @@ public class JavaSourceTest {
 			};
 			// Turn off Resource.designer.cs and remove usage of it
 			proj.SetProperty ("AndroidGenerateResourceDesigner", "false");
+			if (!useDesignerAssembly)
+				proj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("Resource.Layout.Main", "0")
 				.Replace ("Resource.Id.myButton", "0");
@@ -451,11 +523,15 @@ public class JavaSourceTest {
 			Assert.IsTrue (dotnet.Build(target: "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" }), "Designtime build should succeed.");
 			var intermediate = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
 			var resource_designer_cs = Path.Combine (intermediate, "designtime",  "Resource.designer.cs");
+			if (useDesignerAssembly)
+				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
 			FileAssert.DoesNotExist (resource_designer_cs);
 
 			Assert.IsTrue (dotnet.Build (), "build should succeed");
 
-			resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
+			resource_designer_cs =  Path.Combine (intermediate, "Resource.designer.cs");
+			if (useDesignerAssembly)
+				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
 			FileAssert.DoesNotExist (resource_designer_cs);
 
 			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
@@ -1037,20 +1113,50 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			};
 			appA.AddReference (libB);
 			var appBuilder = CreateDotNetBuilder (appA, Path.Combine (path, appA.ProjectName));
+			appBuilder.BuildLogFile = Path.Combine (Root, path, appA.ProjectName, "build1.log");
 			Assert.IsTrue (appBuilder.Build (runtimeIdentifier: runtimeIdentifier), $"{appA.ProjectName} should succeed");
-			appBuilder.AssertTargetIsNotSkipped ("CoreCompile");
+			appBuilder.AssertTargetIsNotSkipped ("CoreCompile", occurrence: 1);
 			if (isRelease) {
 				appBuilder.AssertTargetIsNotSkipped ("_RemoveRegisterAttribute");
 				appBuilder.AssertTargetIsNotSkipped ("_AndroidAot");
 			}
 
 			// Build again, no changes
+			appBuilder.BuildLogFile = Path.Combine (Root, path, appA.ProjectName, "build2.log");
 			Assert.IsTrue (appBuilder.Build (runtimeIdentifier: runtimeIdentifier), $"{appA.ProjectName} should succeed");
-			appBuilder.AssertTargetIsSkipped ("CoreCompile");
+			appBuilder.AssertTargetIsSkipped ("CoreCompile", occurrence: 2);
 			if (isRelease) {
 				appBuilder.AssertTargetIsSkipped ("_RemoveRegisterAttribute");
 				appBuilder.AssertTargetIsSkipped ("_AndroidAotCompilation");
 			}
+		}
+
+		[Test]
+		public void DotNetDesignTimeBuild ()
+		{
+			var proj = new XASdkProject ();
+			proj.SetProperty ("AndroidUseDesignerAssembly", "true");
+			var builder = CreateDotNetBuilder (proj);
+			var parameters = new [] { "BuildingInsideVisualStudio=true"};
+			builder.BuildLogFile = "update.log";
+			Assert.IsTrue (builder.Build ("Compile", parameters: parameters), $"{proj.ProjectName} should succeed");
+			builder.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 1);
+			builder.AssertTargetIsNotSkipped ("_GenerateRtxt");
+			builder.AssertTargetIsNotSkipped ("_GenerateResourceDesignerIntermediateClass");
+			builder.AssertTargetIsNotSkipped ("_GenerateResourceDesignerAssembly", occurrence: 1);
+			parameters = new [] { "BuildingInsideVisualStudio=true" };
+			builder.BuildLogFile = "build1.log";
+			Assert.IsTrue (builder.Build ("SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed");
+			builder.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 2);
+			builder.AssertTargetIsSkipped ("_GenerateRtxt", occurrence: 1);
+			builder.AssertTargetIsSkipped ("_GenerateResourceDesignerIntermediateClass", occurrence: 1);
+			builder.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly", occurrence: 2);
+			builder.BuildLogFile = "build2.log";
+			Assert.IsTrue (builder.Build ("SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed 2");
+			builder.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 3);
+			builder.AssertTargetIsSkipped ("_GenerateRtxt", occurrence: 2);
+			builder.AssertTargetIsSkipped ("_GenerateResourceDesignerIntermediateClass", occurrence: 2);
+			builder.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly");
 		}
 
 		[Test]

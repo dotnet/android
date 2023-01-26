@@ -54,8 +54,12 @@ namespace Xamarin.ProjectTools
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable-xxhdpi\\Icon.png") { BinaryContent = () => icon_binary_xxhdpi });
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable-xxxhdpi\\Icon.png") { BinaryContent = () => icon_binary_xxxhdpi });
 			//AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable-nodpi\\Icon.png") { BinaryContent = () => icon_binary });
+			if (Builder.UseDotNet) {
+				// set our default
+				SetProperty ("AndroidUseDesignerAssembly", "True");
+			}
 		}
-		
+
 		public override string ProjectTypeGuid {
 			get { return "FAE04EC0-301F-11D3-BF4B-00C04F79EFBC"; }
 		}

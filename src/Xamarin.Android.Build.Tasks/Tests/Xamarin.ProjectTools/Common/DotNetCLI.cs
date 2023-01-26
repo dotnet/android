@@ -147,13 +147,15 @@ namespace Xamarin.ProjectTools
 			if (string.IsNullOrEmpty (BuildLogFile))
 				BuildLogFile = Path.Combine (testDir, "build.log");
 
-			var binlog = string.IsNullOrEmpty (target) ? "msbuild" : target;
+			var binlog = string.IsNullOrEmpty (target) ? Path.GetFileNameWithoutExtension (string.IsNullOrEmpty (BuildLogFile) ? "msbuild" : BuildLogFile) : target;
 			var arguments = new List<string> {
 				verb,
 				$"\"{projectOrSolution}\"",
 				"/noconsolelogger",
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
 				$"/bl:\"{Path.Combine (testDir, $"{binlog}.binlog")}\"",
+				"-m:1",
+				"-nr:false",
 				"/p:_DisableParallelAot=true",
 			};
 			if (!string.IsNullOrEmpty (target)) {

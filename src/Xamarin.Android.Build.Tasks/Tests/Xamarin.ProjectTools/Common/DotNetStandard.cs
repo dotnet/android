@@ -45,6 +45,8 @@ namespace Xamarin.ProjectTools
 				ExtraNuGetConfigSources = new List<string> {
 					"https://api.nuget.org/v3/index.json",
 					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
+					// NOTE: .NET 6 currently uses .NET 7 linker
+					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json",
 				};
 			} else if (targetFramework.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1) {
 				ExtraNuGetConfigSources = new List<string> {

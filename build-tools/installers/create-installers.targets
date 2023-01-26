@@ -303,6 +303,7 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.CSharp.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.D8.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Designer.targets" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Resource.Designer.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.DesignTime.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.EmbeddedResource.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.FSharp.targets" ExcludeFromAndroidNETSdk="true" />

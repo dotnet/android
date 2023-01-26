@@ -4,38 +4,41 @@
     "AndroidManifest.xml": {
       "Size": 3032
     },
+    "assemblies/_Microsoft.Android.Resource.Designer.dll": {
+      "Size": 1024
+    },
     "assemblies/Java.Interop.dll": {
-      "Size": 58924
+      "Size": 58916
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 87710
+      "Size": 87170
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5924
+      "Size": 5931
     },
     "assemblies/rc.bin": {
       "Size": 1182
     },
     "assemblies/System.Console.dll": {
-      "Size": 6593
+      "Size": 6586
     },
     "assemblies/System.Linq.dll": {
-      "Size": 9253
+      "Size": 9252
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 484001
+      "Size": 517260
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2629
+      "Size": 2611
     },
     "assemblies/System.Runtime.InteropServices.dll": {
-      "Size": 2269
+      "Size": 2265
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3628
+      "Size": 3257
     },
     "classes.dex": {
-      "Size": 18968
+      "Size": 19020
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 93552
@@ -44,28 +47,28 @@
       "Size": 434704
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3064488
+      "Size": 3089272
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723840
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 94312
+      "Size": 94328
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 150584
+      "Size": 152960
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 16632
+      "Size": 16760
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 2914
+      "Size": 3037
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2787
+      "Size": 2910
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -92,5 +95,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2603241
+  "PackageSize": 2648394
 }

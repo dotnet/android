@@ -20,9 +20,19 @@ namespace Xamarin.Android.Tasks
 		public string ValidHandlerType { get; set; }
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
+		public bool UsingAndroidNETSdk { get; set; }
 
 		public override bool RunTask ()
 		{
+			// Fast path for known types
+			if (UsingAndroidNETSdk) {
+				if (ClientHandlerType == "Xamarin.Android.Net.AndroidMessageHandler")
+					return !Log.HasLoggedErrors;
+			} else {
+				if (ClientHandlerType == "Xamarin.Android.Net.AndroidClientHandler")
+					return !Log.HasLoggedErrors;
+			}
+
 			string[] types = ClientHandlerType.Split (',');
 			string type = types[0].Trim ();
 			string assembly = "Mono.Android";

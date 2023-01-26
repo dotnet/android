@@ -43,9 +43,9 @@ namespace Android.App {
 			return String.Format("0x{0}", GLESVersion.ToString("X8"));
 		}
 
-		internal XElement ToElement (string packageName)
+		internal XElement ToElement (string packageName, TypeDefinitionCache cache)
 		{
-			return mapping.ToElement (this, specified, packageName);
+			return mapping.ToElement (this, specified, packageName, cache);
 		}
 
 		ICollection<string> specified;

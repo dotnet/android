@@ -13,8 +13,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)System.Linq\LinqExpressionTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Resources\Resource.designer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\AssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Resource.designer.cs" Condition=" '$(AndroidUseDesignerAssembly)' == 'False' And '$(AndroidUseIntermediateDesignerFile)' == 'False' "/>
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\ApplicationTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Content.Res\AssetManagerTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Content\IntentTest.cs" />

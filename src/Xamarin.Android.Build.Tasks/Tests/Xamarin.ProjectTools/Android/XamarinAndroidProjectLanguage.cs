@@ -34,7 +34,7 @@ namespace Xamarin.ProjectTools
 				get { return ".fs"; }
 			}
 			public override string DefaultDesignerExtension {
-				get { return ".cs"; }
+				get { return Builder.UseDotNet ? ".fs" : ".cs"; }
 			}
 			public override string DefaultProjectExtension {
 				get { return ".fsproj"; }

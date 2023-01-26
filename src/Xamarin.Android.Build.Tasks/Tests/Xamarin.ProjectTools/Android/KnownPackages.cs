@@ -203,9 +203,19 @@ namespace Xamarin.ProjectTools
 			Version = "4.7.0.1142",
 			TargetFramework = "MonoAndroid10.0",
 		};
+		public static Package XamarinForms_5_0_0_2515 = new Package {
+			Id = "Xamarin.Forms",
+			Version = "5.0.0.2515",
+			TargetFramework = "MonoAndroid10.0",
+		};
 		public static Package XamarinFormsMaps_4_7_0_1142 = new Package {
 			Id = "Xamarin.Forms.Maps",
 			Version = "4.7.0.1142",
+			TargetFramework = "MonoAndroid10.0",
+		};
+		public static Package XamarinFormsMaps_5_0_0_2515 = new Package {
+			Id = "Xamarin.Forms.Maps",
+			Version = "5.0.0.2515",
 			TargetFramework = "MonoAndroid10.0",
 		};
 		public static Package XamarinFormsMaps_4_0_0_425677 = new Package {
@@ -473,6 +483,11 @@ namespace Xamarin.ProjectTools
 		public static Package Xamarin_Build_Download = new Package {
 			Id = "Xamarin.Build.Download",
 			Version = "0.11.2",
+		};
+
+		public static Package Xamarin_Build_Download_0_11_3 = new Package {
+			Id = "Xamarin.Build.Download",
+			Version = "0.11.3",
 		};
 		// NOTE: old version required for some tests
 		public static Package Xamarin_Build_Download_0_4_11 = new Package {

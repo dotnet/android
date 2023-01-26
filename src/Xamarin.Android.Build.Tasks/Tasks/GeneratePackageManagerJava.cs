@@ -370,8 +370,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
-			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
-			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey, RegisteredTaskObjectLifetime.Build);
+			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), RegisteredTaskObjectLifetime.Build);
+			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 				IsBundledApp = IsBundledApplication,
 				UsesMonoAOT = usesMonoAOT,
@@ -404,7 +404,7 @@ namespace Xamarin.Android.Tasks
 			};
 			appConfigAsmGen.Init ();
 
-			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (GenerateJavaStubs.MarshalMethodsRegisterTaskKey, RegisteredTaskObjectLifetime.Build);
+			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (ProjectSpecificTaskObjectKey (GenerateJavaStubs.MarshalMethodsRegisterTaskKey), RegisteredTaskObjectLifetime.Build);
 			MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
 
 			if (enableMarshalMethods) {
@@ -471,7 +471,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (android_runtime_jnienv_class_token == -1 || jnienv_initialize_method_token == -1 || jnienv_registerjninatives_method_token == -1) {
-				throw new InvalidOperationException ($"Unable to find the required Android.Runtime.JNIEnvInit method tokens");
+				throw new InvalidOperationException ($"Unable to find the required Android.Runtime.JNIEnvInit method tokens for {assemblyFilePath}");
 			}
 		}
 

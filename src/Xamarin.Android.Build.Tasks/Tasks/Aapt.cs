@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tasks
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		string resourceDirectory;
 
-		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4);
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
 
 		bool ManifestIsUpToDate (string manifestFile)
 		{
