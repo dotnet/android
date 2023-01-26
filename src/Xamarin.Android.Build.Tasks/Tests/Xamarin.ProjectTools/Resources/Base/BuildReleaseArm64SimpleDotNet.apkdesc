@@ -44,7 +44,7 @@
       "Size": 93552
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 434704
+      "Size": 379320
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3090760
@@ -59,7 +59,7 @@
       "Size": 155056
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 16760
+      "Size": 16720
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
@@ -95,5 +95,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2648394
+  "PackageSize": 2632010
 }

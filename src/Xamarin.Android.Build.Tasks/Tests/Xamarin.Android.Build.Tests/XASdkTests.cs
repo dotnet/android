@@ -455,7 +455,54 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void GenerateResourceDesigner_false()
+		public void GenerateResourceDesigner([Values (false, true)] bool generateResourceDesigner, [Values (false, true)] bool useDesignerAssembly)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var libraryB = new XASdkProject (outputType: "Library") {
+				ProjectName = "LibraryB",
+			};
+			libraryB.Sources.Clear ();
+			libraryB.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () => @"namespace LibraryB;
+public class Foo {
+	public static int foo => Resource.Drawable.foo;
+}",
+			});
+			libraryB.Sources.Add (new AndroidItem.AndroidResource (() => "Resources\\drawable\\foo.png") {
+				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
+			});
+			libraryB.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
+			var libraryA = new XASdkProject (outputType: "Library") {
+				ProjectName = "LibraryA",
+			};
+			libraryA.Sources.Clear ();
+			libraryA.Sources.Add (new BuildItem.Source ("FooA.cs") {
+				TextContent = () => @"namespace LibraryA;
+public class FooA {
+	public int foo => 0;
+	public int foo2 => LibraryB.Foo.foo;
+	public int foo3 => LibraryB.Resource.Drawable.foo;
+}",
+			});
+			libraryA.AddReference (libraryB);
+			libraryA.SetProperty ("AndroidGenerateResourceDesigner", generateResourceDesigner.ToString ());
+			if (!useDesignerAssembly)
+				libraryA.SetProperty ("AndroidUseDesignerAssembly", "False");
+			var libraryBBuilder = CreateDotNetBuilder (libraryB, Path.Combine (path, libraryB.ProjectName));
+			Assert.IsTrue (libraryBBuilder.Build (), "Build of LibraryB should succeed.");
+			var libraryABuilder = CreateDotNetBuilder (libraryA, Path.Combine (path, libraryA.ProjectName));
+			Assert.IsTrue (libraryABuilder.Build (), "Build of LibraryA should succeed.");
+			var proj = new XASdkProject () {
+				ProjectName = "App1",
+			};
+			proj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
+			proj.AddReference (libraryA);
+			var dotnet = CreateDotNetBuilder (proj, Path.Combine (path, proj.ProjectName));
+			Assert.IsTrue (dotnet.Build (), "Build of Proj should succeed.");
+		}
+
+		[Test]
+		public void GenerateResourceDesigner_false([Values (false, true)] bool useDesignerAssembly)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				Sources = {
@@ -466,7 +513,8 @@ public class JavaSourceTest {
 			};
 			// Turn off Resource.designer.cs and remove usage of it
 			proj.SetProperty ("AndroidGenerateResourceDesigner", "false");
-			proj.SetProperty ("AndroidUseDesignerAssembly", "false");
+			if (!useDesignerAssembly)
+				proj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("Resource.Layout.Main", "0")
 				.Replace ("Resource.Id.myButton", "0");
@@ -475,11 +523,15 @@ public class JavaSourceTest {
 			Assert.IsTrue (dotnet.Build(target: "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" }), "Designtime build should succeed.");
 			var intermediate = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
 			var resource_designer_cs = Path.Combine (intermediate, "designtime",  "Resource.designer.cs");
+			if (useDesignerAssembly)
+				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
 			FileAssert.DoesNotExist (resource_designer_cs);
 
 			Assert.IsTrue (dotnet.Build (), "build should succeed");
 
-			resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
+			resource_designer_cs =  Path.Combine (intermediate, "Resource.designer.cs");
+			if (useDesignerAssembly)
+				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
 			FileAssert.DoesNotExist (resource_designer_cs);
 
 			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");

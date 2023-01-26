@@ -531,7 +531,7 @@ MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const ch
 				PinvokeEntry const& e = internal_pinvokes[i];
 				log_fatal (LOG_ASSEMBLY, "\t'%s'=%p (hash: 0x%zx)", e.name, e.func, e.hash);
 			}
-			abort ();
+			Helpers::abort_application ();
 		}
 
 		return entry->func;

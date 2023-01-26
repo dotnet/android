@@ -206,7 +206,7 @@
       "Size": 93552
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 434704
+      "Size": 379320
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3090760
@@ -221,7 +221,7 @@
       "Size": 155056
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 333760
+      "Size": 333720
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
