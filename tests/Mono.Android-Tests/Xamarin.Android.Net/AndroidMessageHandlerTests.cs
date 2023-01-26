@@ -146,7 +146,7 @@ namespace Xamarin.Android.NetTests
 #else
 			catch (Java.IO.IOException) {}
 #endif
-			catch (System.Net.HttpRequestException) {}
+			catch (System.Net.Http.HttpRequestException) {}
 		}
 	}
 }
