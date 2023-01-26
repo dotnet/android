@@ -143,10 +143,10 @@ namespace Xamarin.Android.NetTests
 			// we need to consider legacy code that migrated to .NET and may still expect WebException.  Thus, we throw both
 			// of these and we need to catch both here
 			catch (System.Net.WebException) {}
-			catch (System.Net.HttpRequestException) {}
 #else
 			catch (Java.IO.IOException) {}
 #endif
+			catch (System.Net.HttpRequestException) {}
 		}
 	}
 }
