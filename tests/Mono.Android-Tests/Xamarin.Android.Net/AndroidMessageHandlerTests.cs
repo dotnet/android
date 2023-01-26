@@ -139,7 +139,11 @@ namespace Xamarin.Android.NetTests
 				Assert.Fail ("The request wasn't rejected");
 			}
 #if NET
-			catch (System.Net.WebException ex) {}
+			// While technically we should be throwing only HttpRequestException (as per HttpClient.SendAsync docs), in reality
+			// we need to consider legacy code that migrated to .NET and may still expect WebException.  Thus, we throw both
+			// of these and we need to catch both here
+			catch (System.Net.WebException) {}
+			catch (System.Net.HttpRequestException) {}
 #else
 			catch (Java.IO.IOException) {}
 #endif
