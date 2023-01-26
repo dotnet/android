@@ -1388,6 +1388,12 @@ because xbuild doesn't support framework reference assemblies.
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)" Condition=" !Exists ('$(MonoAndroidIntermediateAssemblyDir)') " />
 </Target>
 
+<Target Name="_CollectRuntimePackJarFiles">
+  <ItemGroup>
+    <AndroidJavaLibrary Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.jar' " />
+  </ItemGroup>
+</Target>
+
 <Target Name="_CollectRuntimeJarFilenames">
   <PropertyGroup>
     <_RuntimeJar Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
@@ -1909,6 +1915,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
     <_CompileJavaDependsOnTargets>
+		_CollectRuntimePackJarFiles;
 		_AdjustJavacVersionArguments;
 		_GeneratePackageManagerJava;
 		_FindJavaStubFiles;
