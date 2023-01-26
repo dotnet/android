@@ -157,6 +157,10 @@ get_xamarin_android_msbuild_path (void)
 
 	// Compute the final path
 	base_path = utils.utf16_to_utf8 (buffer);
+	if (base_path == nullptr) {
+		log_fatal (LOG_DEFAULT, "Failed to convert UTF-16 to UTF-8 in %s", __PRETTY_FUNCTION__);
+		Helpers::abort_application ();
+	}
 	CoTaskMemFree (buffer);
 	msbuild_folder_path = utils.path_combine (base_path, suffix);
 	free (base_path);
@@ -266,7 +270,7 @@ MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name)
 	char* name = mono_method_full_name (method, 1);
 
 	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, static_cast<long int>(diff.sec), diff.ms, diff.ns);
+	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, static_cast<long>(diff.sec), diff.ms, diff.ns);
 
 	free (name);
 }
@@ -409,7 +413,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 	if (application_config.instant_run_enabled) {
 		for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 			const char *p = androidSystem.get_override_dir (i);
-			if (!utils.directory_exists (p))
+			if (p == nullptr || !utils.directory_exists (p))
 				continue;
 			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", p);
 			embeddedAssemblies.try_load_typemaps_from_directory (p);
@@ -1488,6 +1492,10 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 			const char *last_sep = strrchr (the_path, MONODROID_PATH_SEPARATOR_CHAR);
 			if (last_sep != nullptr) {
 				char *dir = utils.strdup_new (the_path, last_sep - the_path);
+				if (dir == nullptr) {
+					return false;
+				}
+
 				tmp_name = utils.string_concat (dir, MONODROID_PATH_SEPARATOR, API_DSO_NAME);
 				delete[] dir;
 				if (!utils.file_exists (tmp_name)) {
@@ -1514,7 +1522,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 		if (!found) {
 			// Next lets try the location of the XA runtime DLL, libxa-internal-api.dll should be next to it.
 			const char *path = get_my_location (false);
-			found = probe_dll_at (path);
+			found = probe_dll_at (path); // lgtm [cpp/unguardednullreturndereference] probe_dll_at checks whether the passed pointer is nullptr
 			if (path != nullptr) {
 				free (reinterpret_cast<void*>(const_cast<char*>(path)));
 			}
@@ -1879,6 +1887,11 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 	}
 
 	const char *assm_name = assembly.get_cstr ();
+	if (XA_UNLIKELY (assm_name == nullptr)) {
+		log_warn (LOG_ASSEMBLY, "Unable to load assembly into ALC, name is null");
+		return;
+	}
+
 	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
 
 	MonoImageOpenStatus open_status;
@@ -1908,6 +1921,11 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 	}
 
 	const char *assm_name = assembly.get_cstr ();
+	if (XA_UNLIKELY (assm_name == nullptr)) {
+		log_warn (LOG_ASSEMBLY, "Unable to load assembly into AppDomain, name is null");
+		return;
+	}
+
 	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
 
 #ifndef ANDROID
@@ -1979,6 +1997,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
                                                 bool force_preload_assemblies, bool have_split_apks)
 {
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
+	abort_unless (domain != nullptr, "Failed to create AppDomain");
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if constexpr (is_running_on_desktop) {
@@ -1996,7 +2015,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 #endif // def NET
 
 #ifndef ANDROID
-	if (assembliesBytes != nullptr)
+	if (assembliesBytes != nullptr && domain != nullptr)
 		designerAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes, assembliesPaths);
 #endif
 	bool preload = (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
