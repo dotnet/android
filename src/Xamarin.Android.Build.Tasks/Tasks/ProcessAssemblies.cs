@@ -89,7 +89,7 @@ namespace Xamarin.Android.Tasks
 					if (!IsFromAKnownRuntimePack (item))
 						continue;
 					var name = Path.GetFileNameWithoutExtension(item.ItemSpec);
-					if (!javaLibraries.TryGetValue (name, out var javaLibrary)) {
+					if (!javaLibraries.ContainsKey (name)) {
 						javaLibraries [name] = item;
 					}
 				}
