@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tasks
 			return cmd;
 		}
 
-		const string InstallErrorRegExString = @"(?<exception>com.android.tools.build.bundletool.model.exceptions.CommandExecutionException+):(?<error>.+)";
+		const string InstallErrorRegExString = @"(?<exception>com.android.tools.build.bundletool.model.exceptions.CommandExecutionException):(?<error>.+)";
 		static readonly Regex installErrorRegEx = new Regex (InstallErrorRegExString, RegexOptions.Compiled);
 
 		protected override IEnumerable<Regex> GetCustomExpressions ()
