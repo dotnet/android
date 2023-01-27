@@ -167,7 +167,7 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 					final   String          bootClassPath   = getNextOptionValue(args, arg);
 					final   ArrayList<File> files           = new ArrayList<File>();
 					for (final String cp : bootClassPath.split(File.pathSeparator)) {
-						final   File    file    = new File(cp); // lgtm [java/path-injection-local]
+						final   File    file    = new File(cp); // lgtm [java/path-injection-local] java-source-utils.jar is a command-line app, and is useless if it doesn't support command-line args.
 						if (!file.exists()) {
 							System.err.println(App.APP_NAME + ": warning: invalid file path for option `-bootclasspath`: " + cp);
 							continue;
@@ -253,7 +253,7 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 					if (arg.startsWith("@")) {
 						// response file?
 						final   String  responseFileName = arg.substring(1);
-						final   File    responseFile     = new File(responseFileName);  // lgtm [java/path-injection-local]
+						final   File    responseFile     = new File(responseFileName);  // lgtm [java/path-injection-local] java-source-utils.jar is a command-line app, and is useless if it doesn't support command-line args.
 						if (responseFile.exists()) {
 							final   Iterator<String>        lines   =
 								Files.readAllLines(responseFile.toPath())
@@ -267,7 +267,7 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 							break;
 						}
 					}
-					final   File    file        = new File(arg);    // lgtm [java/path-injection-local]
+					final   File    file        = new File(arg);    // lgtm [java/path-injection-local] java-source-utils.jar is a command-line app, and is useless if it doesn't support command-line args.
 					if (!file.exists()) {
 						System.err.println(App.APP_NAME + ": warning: invalid file path for option `FILES`: " + arg);
 						break;
@@ -347,7 +347,7 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 			throw new IllegalArgumentException(
 					"Expected required value for option `" + option + "`.");
 		final   String  fileName    = args.next();
-		final   File    file        = new File(fileName);   // lgtm [java/path-injection-local]
+		final   File    file        = new File(fileName);   // lgtm [java/path-injection-local] java-source-utils.jar is a command-line app, and is useless if it doesn't support command-line args.
 		if (!file.exists()) {
 			System.err.println(App.APP_NAME + ": warning: invalid file path for option `" + option + "`: " + fileName);
 			return null;
