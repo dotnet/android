@@ -314,7 +314,7 @@ namespace Xamarin.Android.Tasks {
 			Tuple.Create ("APT2097", "failed to open directory"),
 			Tuple.Create ("APT2098", "failed to open file"),
 			Tuple.Create ("APT2099", "failed to open resources.arsc"),
-			Tuple.Create ("APT2100", "failed to open resources.pb"),
+			Tuple.Create ("APT2100", "failed to open resources.pb"), // lgtm [csharp/responsible-ai/ml-training-and-serialization-files-referenced] These are not the droids you are looking for. Not ML data training files.
 			Tuple.Create ("APT2101", "failed to open"),
 			Tuple.Create ("APT2102", "failed to parse binary XML"),
 			Tuple.Create ("APT2103", "failed to parse binary"),
@@ -367,7 +367,7 @@ namespace Xamarin.Android.Tasks {
 			Tuple.Create ("APT2150", "invalid preferred density"),
 			Tuple.Create ("APT2151", "invalid resource ID"),
 			Tuple.Create ("APT2152", "invalid resource name"),
-			Tuple.Create ("APT2153", "invalid resources.pb"),
+			Tuple.Create ("APT2153", "invalid resources.pb"), // lgtm [csharp/responsible-ai/ml-training-and-serialization-files-referenced] These are not the droids you are looking for. Not ML data training files.
 			Tuple.Create ("APT2154", "invalid split name"),
 			Tuple.Create ("APT2155", "invalid split parameter"),
 			Tuple.Create ("APT2156", "invalid static library"),
