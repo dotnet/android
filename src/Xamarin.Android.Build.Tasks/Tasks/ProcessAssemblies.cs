@@ -32,8 +32,13 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] InputAssemblies { get; set; } = Array.Empty<ITaskItem> ();
 
+		public ITaskItem [] InputJavaLibraries { get; set; } = Array.Empty<ITaskItem> ();
+
 		[Output]
 		public ITaskItem []? OutputAssemblies { get; set; }
+
+		[Output]
+		public ITaskItem []? OutputJavaLibraries { get; set; }
 
 		[Output]
 		public ITaskItem []? ShrunkAssemblies { get; set; }
@@ -78,6 +83,19 @@ namespace Xamarin.Android.Tasks
 				ShrunkAssemblies = shrunkAssemblies.ToArray ();
 			}
 
+			if (InputJavaLibraries != null) {
+				var javaLibraries = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
+				foreach (var item in InputJavaLibraries) {
+					if (!IsFromAKnownRuntimePack (item))
+						continue;
+					var name = Path.GetFileNameWithoutExtension(item.ItemSpec);
+					if (!javaLibraries.ContainsKey (name)) {
+						javaLibraries [name] = item;
+					}
+				}
+				OutputJavaLibraries = javaLibraries.Values.ToArray ();
+			}
+
 			return !Log.HasLoggedErrors;
 		}
 
@@ -112,7 +130,7 @@ namespace Xamarin.Android.Tasks
 				SetAssemblyAbiMetadata (assembly, symbol, isDuplicate: false);
 				symbol?.SetDestinationSubPath ();
 				assembly.SetDestinationSubPath ();
-				assembly.SetMetadata ("FrameworkAssembly", IsFrameworkAssembly (assembly).ToString ());
+				assembly.SetMetadata ("FrameworkAssembly", IsFromAKnownRuntimePack (assembly).ToString ());
 				assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
 				output.Add (assembly);
 			}
@@ -134,7 +152,7 @@ namespace Xamarin.Android.Tasks
 
 					// Calculate %(FrameworkAssembly) and %(HasMonoAndroidReference) for the first
 					if (frameworkAssembly == null) {
-						frameworkAssembly = IsFrameworkAssembly (assembly);
+						frameworkAssembly = IsFromAKnownRuntimePack (assembly);
 					}
 					if (hasMonoAndroidReference == null) {
 						hasMonoAndroidReference = MonoAndroidHelper.IsMonoAndroidAssembly (assembly) ||
@@ -170,7 +188,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		static bool IsFrameworkAssembly (ITaskItem assembly)
+		static bool IsFromAKnownRuntimePack (ITaskItem assembly)
 		{
 			string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
 			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.Ordinal) ||

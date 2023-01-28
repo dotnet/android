@@ -116,14 +116,17 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup>
       <_ResolvedAssemblyFiles Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
       <_ResolvedSymbolFiles   Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.pdb' " />
+      <_ResolvedJavaLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.jar' " />
     </ItemGroup>
     <ProcessAssemblies
         RuntimeIdentifiers="@(_RIDs)"
         InputAssemblies="@(_ResolvedAssemblyFiles->Distinct())"
+        InputJavaLibraries="@(_ResolvedJavaLibraries->Distinct())"
         ResolvedSymbols="@(_ResolvedSymbolFiles->Distinct())"
         AndroidIncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
         PublishTrimmed="$(PublishTrimmed)">
       <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />
+      <Output TaskParameter="OutputJavaLibraries" ItemName="AndroidJavaLibrary" />
       <Output TaskParameter="ResolvedSymbols"  ItemName="ResolvedSymbols" />
       <Output TaskParameter="ShrunkAssemblies" ItemName="_ProcessedShrunkAssemblies" />
     </ProcessAssemblies>
