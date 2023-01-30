@@ -157,11 +157,11 @@ get_xamarin_android_msbuild_path (void)
 
 	// Compute the final path
 	base_path = utils.utf16_to_utf8 (buffer);
-	// TEST: checking if the below code breaks the designer
-	// if (base_path == nullptr) {
-	// 	log_fatal (LOG_DEFAULT, "Failed to convert UTF-16 to UTF-8 in %s", __PRETTY_FUNCTION__);
-	// 	Helpers::abort_application ();
-	// }
+	// TESTED: doesn't break the Designer
+	if (base_path == nullptr) {
+		log_fatal (LOG_DEFAULT, "Failed to convert UTF-16 to UTF-8 in %s", __PRETTY_FUNCTION__);
+		Helpers::abort_application ();
+	}
 	CoTaskMemFree (buffer);
 	msbuild_folder_path = utils.path_combine (base_path, suffix);
 	free (base_path);
@@ -1493,9 +1493,10 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 			const char *last_sep = strrchr (the_path, MONODROID_PATH_SEPARATOR_CHAR);
 			if (last_sep != nullptr) {
 				char *dir = utils.strdup_new (the_path, last_sep - the_path);
-				if (dir == nullptr) {
-					return false;
-				}
+				// TESTING: checking if this breaks the Designer
+				// if (dir == nullptr) {
+				// 	return false;
+				// }
 
 				tmp_name = utils.string_concat (dir, MONODROID_PATH_SEPARATOR, API_DSO_NAME);
 				delete[] dir;
