@@ -93,7 +93,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_GenerateResourceDesignerIntermediateClass"
-    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' And '$(AndroidGenerateResourceDesigner)' == 'true' "
     Inputs="$(MSBuildProjectFullPath)"
     Outputs="$(_GenerateResourceDesignerClassFile)"
   >
@@ -166,11 +166,11 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </ReferencePath>
     <Compile Remove="$(_AndroidResourceDesignerFile)" />
-    <Compile Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' != 'F#' "/>
+    <Compile Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' != 'F#' And '$(AndroidGenerateResourceDesigner)' == 'true' "/>
     <!-- For F# we need to use the CompileBefore ItemGroup so that our type is processed
           before all the other types in the build. Otherwise we get weird compiler errors.
       -->
-    <CompileBefore Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' == 'F#' "/>
+    <CompileBefore Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' == 'F#' And '$(AndroidGenerateResourceDesigner)' == 'true' "/>
   </ItemGroup>
 </Target>
 

@@ -17,6 +17,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="_WriteLockFile">
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveUnknownFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidComputeResPaths" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidSignPackage" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidCreateDebugKey" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2672,21 +2673,12 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_DeployCommand>&quot;$(AdbToolPath)adb&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;</_DeployCommand>
   </PropertyGroup>
-  <Exec
-      ContinueOnError="True"
-      Command="$(_DeployCommand)"
-      ConsoleToMSBuild="True">
-    <Output TaskParameter="ExitCode"      PropertyName="_DeployExitCode" />
-    <Output TaskParameter="ConsoleOutput" ItemName="_DeployConsoleOutput" />
-  </Exec>
-  <ItemGroup>
-    <_AdbError Include="The command `$(_DeployCommand)` exited with code $(_DeployExitCode):" />
-    <_AdbError Include="@(_DeployConsoleOutput->'  %(Identity)')" />
-  </ItemGroup>
-  <Error
-      Condition=" '$(_DeployExitCode)' != '0' "
-      Code="ADB0000"
-      Text="@(_AdbError, '%0a')"
+  <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="install"
+      Arguments="-r &quot;$(ApkFileSigned)&quot;"
   />
 </Target>
 
@@ -2718,11 +2710,25 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_UninstallCommand>&quot;$(AdbToolPath)adb&quot; $(AdbTarget) uninstall -k &quot;$(_AndroidPackage)&quot;</_UninstallCommand>
   </PropertyGroup>
-  <Exec
-      ContinueOnError="True"
-      Command="$(_UninstallCommand)"
-      ConsoleToMSBuild="True"
+  <AndroidAdb
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' "
+      ContinueOnError="True"
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="uninstall"
+      Arguments="-k $(_AndroidPackage)"
+  >
+    <Output TaskParameter="Result" PropertyName="_UninstallResult" />
+  </AndroidAdb>
+   <AndroidAdb
+      Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '$(_UninstallResult)' == 'false' "
+      ContinueOnError="True"
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="shell cmd package uninstall"
+      Arguments="$(_AndroidPackage)"
   />
   <InstallApkSet
       ToolPath="$(JavaToolPath)"
@@ -2742,7 +2748,13 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_Uninstall">
-  <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) uninstall $(_AndroidPackage)" />
+  <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="uninstall"
+      Arguments="$(_AndroidPackage)"
+  />
 </Target>
 
 <Target Name="Uninstall"
