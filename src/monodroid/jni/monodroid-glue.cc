@@ -157,10 +157,11 @@ get_xamarin_android_msbuild_path (void)
 
 	// Compute the final path
 	base_path = utils.utf16_to_utf8 (buffer);
-	if (base_path == nullptr) {
-		log_fatal (LOG_DEFAULT, "Failed to convert UTF-16 to UTF-8 in %s", __PRETTY_FUNCTION__);
-		Helpers::abort_application ();
-	}
+	// TEST: checking if the below code breaks the designer
+	// if (base_path == nullptr) {
+	// 	log_fatal (LOG_DEFAULT, "Failed to convert UTF-16 to UTF-8 in %s", __PRETTY_FUNCTION__);
+	// 	Helpers::abort_application ();
+	// }
 	CoTaskMemFree (buffer);
 	msbuild_folder_path = utils.path_combine (base_path, suffix);
 	free (base_path);
