@@ -2017,7 +2017,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 #endif // def NET
 
 #ifndef ANDROID
-	if (assembliesBytes != nullptr /* && domain != nullptr */)
+	if (assembliesBytes != nullptr && domain != nullptr)
 		designerAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes, assembliesPaths);
 #endif
 	bool preload = (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
