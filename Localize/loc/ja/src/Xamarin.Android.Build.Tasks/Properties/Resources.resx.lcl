@@ -669,24 +669,36 @@
       <Item ItemId=";XA1031" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.]D;]A;Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['AndroidHttpClientHandlerType' プロパティ値 '{0}' は '{1}' から派生する必要があります。]D;]A;値を '{1}' から継承するアセンブリ修飾型名に変更するか、プロパティを完全に削除してください。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA1032" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{1}' から '{0}' を解決できませんでした。`AndroidHttpClientHandlerType` の設定を確認してください。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA1033" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' を解決できませんでした。`AndroidHttpClientHandlerType` の設定を確認してください。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA1034" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[プロジェクトは `_Microsoft.Android.Resource.Designer` アセンブリを使用する '{0}' を参照していますが、この機能を有効にしていません。プロジェクト ファイルで `AndroidUseDesignerAssembly` MSBuild プロパティを `true` に設定してください。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
