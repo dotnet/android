@@ -158,10 +158,10 @@ get_xamarin_android_msbuild_path (void)
 	// Compute the final path
 	base_path = utils.utf16_to_utf8 (buffer);
 	// TESTED: doesn't break the Designer
-	if (base_path == nullptr) {
-		log_fatal (LOG_DEFAULT, "Failed to convert UTF-16 to UTF-8 in %s", __PRETTY_FUNCTION__);
-		Helpers::abort_application ();
-	}
+	// if (base_path == nullptr) {
+	// 	log_fatal (LOG_DEFAULT, "Failed to convert UTF-16 to UTF-8 in %s", __PRETTY_FUNCTION__);
+	// 	Helpers::abort_application ();
+	// }
 	CoTaskMemFree (buffer);
 	msbuild_folder_path = utils.path_combine (base_path, suffix);
 	free (base_path);
@@ -414,7 +414,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 	if (application_config.instant_run_enabled) {
 		for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 			const char *p = androidSystem.get_override_dir (i);
-			if (p == nullptr || !utils.directory_exists (p))
+			if (/* p == nullptr || */ !utils.directory_exists (p))
 				continue;
 			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", p);
 			embeddedAssemblies.try_load_typemaps_from_directory (p);
@@ -1889,10 +1889,10 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 	}
 
 	const char *assm_name = assembly.get_cstr ();
-	if (XA_UNLIKELY (assm_name == nullptr)) {
-		log_warn (LOG_ASSEMBLY, "Unable to load assembly into ALC, name is null");
-		return;
-	}
+	// if (XA_UNLIKELY (assm_name == nullptr)) {
+	// 	log_warn (LOG_ASSEMBLY, "Unable to load assembly into ALC, name is null");
+	// 	return;
+	// }
 
 	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
 
@@ -1923,10 +1923,10 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 	}
 
 	const char *assm_name = assembly.get_cstr ();
-	if (XA_UNLIKELY (assm_name == nullptr)) {
-		log_warn (LOG_ASSEMBLY, "Unable to load assembly into AppDomain, name is null");
-		return;
-	}
+	// if (XA_UNLIKELY (assm_name == nullptr)) {
+	// 	log_warn (LOG_ASSEMBLY, "Unable to load assembly into AppDomain, name is null");
+	// 	return;
+	// }
 
 	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
 
@@ -1999,7 +1999,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
                                                 bool force_preload_assemblies, bool have_split_apks)
 {
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
-	abort_unless (domain != nullptr, "Failed to create AppDomain");
+	//	abort_unless (domain != nullptr, "Failed to create AppDomain");
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if constexpr (is_running_on_desktop) {
@@ -2017,7 +2017,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 #endif // def NET
 
 #ifndef ANDROID
-	if (assembliesBytes != nullptr && domain != nullptr)
+	if (assembliesBytes != nullptr /* && domain != nullptr */)
 		designerAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes, assembliesPaths);
 #endif
 	bool preload = (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
