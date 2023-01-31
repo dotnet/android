@@ -1999,7 +1999,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
                                                 bool force_preload_assemblies, bool have_split_apks)
 {
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
-	//	abort_unless (domain != nullptr, "Failed to create AppDomain");
+	abort_unless (domain != nullptr, "Failed to create AppDomain");
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if constexpr (is_running_on_desktop) {
