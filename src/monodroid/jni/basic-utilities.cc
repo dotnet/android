@@ -128,9 +128,9 @@ BasicUtilities::file_exists (const char *file)
 bool
 BasicUtilities::directory_exists (const char *directory)
 {
-	// if (directory == nullptr) {
-	// 	return false;
-	// }
+	if (directory == nullptr) {
+		return false;
+	}
 
 	monodroid_stat_t s;
 	if (monodroid_stat (directory, &s) == 0 && (s.st_mode & S_IFMT) == S_IFDIR)
