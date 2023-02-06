@@ -74,7 +74,6 @@ namespace Xamarin.Android.Build.Tests
 				MainAssembly = "linked/HelloAndroid.dll",
 				TargetFrameworkVersion = "v6.0",
 				Manifest = Path.Combine (path, "AndroidManifest.xml"),
-				IsBundledApplication = false,
 				SupportedAbis = new string [] { "x86" , "arm64-v8a" },
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
 				EnablePreloadAssembliesDefault = false,

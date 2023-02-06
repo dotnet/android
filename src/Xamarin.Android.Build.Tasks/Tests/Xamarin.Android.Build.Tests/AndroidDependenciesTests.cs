@@ -56,7 +56,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("AotAssemblies", false)]
 		[TestCase ("AndroidEnableProfiledAot", false)]
 		[TestCase ("EnableLLVM", true)]
-		[TestCase ("BundleAssemblies", true)]
 		public void GetDependencyNdkRequiredConditions (string property, bool ndkRequired)
 		{
 			var proj = new XamarinAndroidApplicationProject ();

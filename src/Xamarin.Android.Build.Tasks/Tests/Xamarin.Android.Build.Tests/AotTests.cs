@@ -144,9 +144,7 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = true,
 				PackageName = "com.xamarin.buildaotappwithspecialchars",
 			};
-			if (!Builder.UseDotNet) {
-				proj.BundleAssemblies = true;
-			}
+
 			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());

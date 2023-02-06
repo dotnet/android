@@ -361,10 +361,6 @@
       <Link>LayoutBinding.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="..\monodroid\jni\mkbundle-api.h">
-      <Link>mkbundle-api.h</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="updateinfo.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

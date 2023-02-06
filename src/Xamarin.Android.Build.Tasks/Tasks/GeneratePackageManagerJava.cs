@@ -54,9 +54,6 @@ namespace Xamarin.Android.Tasks
 		public string Manifest { get; set; }
 
 		[Required]
-		public bool IsBundledApplication { get; set; }
-
-		[Required]
 		public string [] SupportedAbis { get; set; }
 
 		[Required]
@@ -373,7 +370,6 @@ namespace Xamarin.Android.Tasks
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), RegisteredTaskObjectLifetime.Build);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
-				IsBundledApp = IsBundledApplication,
 				UsesMonoAOT = usesMonoAOT,
 				UsesMonoLLVM = EnableLLVM,
 				UsesAssemblyPreload = environmentParser.UsesAssemblyPreload,

@@ -185,7 +185,7 @@ namespace Xamarin.Android.Tasks
 					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath, compressionMethod: dexCompressionMethod);
 				}
 
-				if (EmbedAssemblies && !BundleAssemblies) {
+				if (EmbedAssemblies) {
 					AddAssemblies (apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
 					apk.Flush ();
 				}

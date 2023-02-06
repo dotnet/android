@@ -1101,63 +1101,6 @@ namespace UnamedProject
 			}
 		}
 
-		[Test]
-		[Category ("SmokeTests"), Category ("MkBundle")]
-		public void BuildMkBundleApplicationRelease ()
-		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true, BundleAssemblies = true };
-			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
-			using (var b = CreateApkBuilder ("temp/BuildMkBundleApplicationRelease", false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"bundles", "armeabi-v7a", "assemblies.o");
-				Assert.IsTrue (File.Exists (assemblies), "assemblies.o does not exist");
-				var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"bundles", "armeabi-v7a", "libmonodroid_bundle_app.so");
-				Assert.IsTrue (File.Exists (libapp), "libmonodroid_bundle_app.so does not exist");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-						"lib/armeabi-v7a/libmonodroid_bundle_app.so"),
-						$"lib/armeabi-v7a/libmonodroid_bundle_app.so should be in the {proj.PackageName}-Signed.apk");
-					Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-						Path.Combine ("assemblies", "UnnamedProject.dll")),
-						$"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
-				}
-			}
-		}
-
-		[Test]
-		[Category ("Minor"), Category ("MkBundle")]
-		public void BuildMkBundleApplicationReleaseAllAbi ()
-		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true, BundleAssemblies = true };
-			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			using (var b = CreateApkBuilder ("temp/BuildMkBundleApplicationReleaseAllAbi", false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				foreach (var abi in new string [] { "armeabi-v7a", "x86" }) {
-					var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"bundles", abi, "assemblies.o");
-					Assert.IsTrue (File.Exists (assemblies), abi + " assemblies.o does not exist");
-					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"bundles", abi, "libmonodroid_bundle_app.so");
-					Assert.IsTrue (File.Exists (libapp), abi + " libmonodroid_bundle_app.so does not exist");
-					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-					using (var zipFile = ZipHelper.OpenZip (apk)) {
-						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-							"lib/" + abi + "/libmonodroid_bundle_app.so"),
-							$"lib/{0}/libmonodroid_bundle_app.so should be in the {proj.PackageName}-Signed.apk", abi);
-						Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-							Path.Combine ("assemblies", "UnnamedProject.dll")),
-							$"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
-					}
-				}
-			}
-		}
-
 		static readonly object [] BuildProguardEnabledProjectSource = new object [] {
 			new object [] {
 				/* isRelease */ false,

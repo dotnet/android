@@ -161,16 +161,6 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_Tests-Bundle
-        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Bundle.xml
-        extraBuildArgs: /p:BundleAssemblies=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
-        artifactFolder: Bundle
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
         testName: Mono.Android_TestsAppBundle
         project: tests/Mono.Android-Tests/Runtime-AppBundle/Mono.Android-TestsAppBundle.csproj
         testResultsFiles: TestResult-Mono.Android_TestsAppBundle-$(ApkTestConfiguration).xml
@@ -271,16 +261,6 @@ stages:
         extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Profiled-Aot
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Forms-Performance-Integration-Bundle
-        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
-        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Bundle.xml
-        extraBuildArgs: /p:BundleAssemblies=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
-        artifactFolder: Bundle
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:

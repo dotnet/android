@@ -1090,7 +1090,6 @@ namespace Lib2
 			var path = Path.Combine ("temp", $"BuildAotApplication_{supportedAbis}_{androidAotMode}_{aotAssemblies}_{expectedResult}");
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				BundleAssemblies = false,
 				AotAssemblies = aotAssemblies,
 			};
 			if (aotAssemblies) {
