@@ -204,6 +204,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(DebugSymbols)' == 'True' And '$(Optimize)' == 'True'" >True</MonoSymbolArchive>
 	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' ">False</MonoSymbolArchive>
 
+	<BundleAssemblies Condition="'$(BundleAssemblies)' == ''">False</BundleAssemblies>
 	<DeployExternal Condition="'$(DeployExternal)' == ''">False</DeployExternal>
 
 	<!-- Obsolete build property: should be removed in the future releases -->
