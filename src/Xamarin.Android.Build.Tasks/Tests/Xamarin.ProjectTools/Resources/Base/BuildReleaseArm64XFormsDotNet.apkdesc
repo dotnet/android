@@ -11,13 +11,13 @@
       "Size": 7313
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66786
+      "Size": 66797
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 444703
+      "Size": 444665
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5895
+      "Size": 5836
     },
     "assemblies/mscorlib.dll": {
       "Size": 3857
@@ -131,7 +131,7 @@
       "Size": 1856
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 5294
+      "Size": 5342
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5870
@@ -200,13 +200,13 @@
       "Size": 40158
     },
     "classes.dex": {
-      "Size": 3141008
+      "Size": 3126408
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 93552
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 379320
+      "Size": 379104
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3090760
@@ -221,7 +221,7 @@
       "Size": 155056
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 333720
+      "Size": 333712
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -1976,5 +1976,5 @@
       "Size": 341228
     }
   },
-  "PackageSize": 7828228
+  "PackageSize": 7803652
 }
