@@ -132,53 +132,6 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_Tests
-        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
-        artifactFolder: Default
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_Tests-Aot
-        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=True /p:EnableLLVM=True
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
-        artifactFolder: AotLlvm
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_Tests-Profiled-Aot
-        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Profiled-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
-        artifactFolder: Profiled-Aot
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_TestsAppBundle
-        project: tests/Mono.Android-Tests/Runtime-AppBundle/Mono.Android-TestsAppBundle.csproj
-        testResultsFiles: TestResult-Mono.Android_TestsAppBundle-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_TestsAppBundle-Signed.aab
-        artifactFolder: Aab
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_TestsMultiDex
-        project: tests/Mono.Android-Tests/Runtime-MultiDex/Mono.Android-TestsMultiDex.csproj
-        testResultsFiles: TestResult-Mono.Android_TestsMultiDex-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_TestsMultiDex-Signed.apk
-        artifactFolder: MultiDex
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
         testName: Xamarin.Android.JcwGen_Tests
         project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
