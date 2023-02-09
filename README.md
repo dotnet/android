@@ -53,16 +53,16 @@ Classic Xamarin.Android installers are available here:
 
 | Platform        | Link   |
 |-----------------|--------|
-| **Commercial Xamarin.Android 13.0 (d17-3)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-3-Windows-x86_64] |
-| **Commercial Xamarin.Android 13.0 (d17-3)** for macOS                                       | [Download][commercial-d17-3-macOS-x86_64]   |
+| **Commercial Xamarin.Android 13.1 (d17-4)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-4-Windows-x86_64] |
+| **Commercial Xamarin.Android 13.1 (d17-4)** for macOS                                       | [Download][commercial-d17-4-macOS-x86_64]   |
 | **OSS Xamarin.Android (main)** for Ubuntu\*                                                 | [![OSS Linux/Ubuntu x86_64][oss-ubuntu-x86_64-icon]][oss-ubuntu-x86_64-status] |
 
 *\* Please note that the OSS installer packages are not digitally signed.*
 
 [Previous Releases](Documentation/previous-releases.md) are also available for download.
 
-[commercial-d17-3-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-3-windows
-[commercial-d17-3-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-3-macos
+[commercial-d17-4-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-4-windows
+[commercial-d17-4-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-4-macos
 
 # Contributing
 

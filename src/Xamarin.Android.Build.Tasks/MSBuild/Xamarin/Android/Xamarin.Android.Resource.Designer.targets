@@ -1,0 +1,203 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Resource.Designer.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+This file imports the version- and platform-specific targets for the project importing
+this file. This file also defines targets to produce an error if the specified targets
+file does not exist, but the project is built anyway (command-line or IDE build).
+
+Copyright (C) 2016 Xamarin. All rights reserved.
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerIntermediateClass" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceCaseMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateRtxt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidDesignerConfig" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+<PropertyGroup>
+  <AndroidUseDesignerAssembly Condition=" '$(AndroidUseDesignerAssembly)' == '' ">False</AndroidUseDesignerAssembly>
+</PropertyGroup>
+
+<Target Name="_SetupDesignerProperties">
+  <PropertyGroup>
+    <_DesignerAssemblyName>_Microsoft.Android.Resource.Designer</_DesignerAssemblyName>
+    <!--
+      Handle the case where ResolveProjectReferences is running.
+      `ResolveProjectReferences` runs after a project has build, but
+      during the referencing project build system.
+
+      Unfortunately it gets passed the referencing projects `IntermediateOutputPath`
+      value, this can cause it to look for files which do not exist.
+    -->
+    <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And Exists ('$(IntermediateOutputPath)$(_DesignerAssemblyName).dll') ">$(IntermediateOutputPath)</_DesignerIntermediateOutputPath>
+    <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' And Exists ('$(_OuterIntermediateOutputPath)$(_DesignerAssemblyName).dll') ">$(_OuterIntermediateOutputPath)</_DesignerIntermediateOutputPath>
+    <!-- If we have not already built an assembly in either location, prefer the
+    `_OuterIntermediateOutputPath` if possible over the `IntermediateOutputPath`.
+    This will mean only one copy of the assembly will be created. Rather than one
+    per TargetFramework.
+    -->
+    <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' ">$(_OuterIntermediateOutputPath)</_DesignerIntermediateOutputPath>
+    <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' ">$(IntermediateOutputPath)</_DesignerIntermediateOutputPath>
+    <_GenerateResourceDesignerAssemblyOutput>$(_DesignerIntermediateOutputPath)$(_DesignerAssemblyName).dll</_GenerateResourceDesignerAssemblyOutput>
+    <_GenerateResourceDesignerClassFile Condition=" '$(Language)' == 'F#' ">$(_DesignerIntermediateOutputPath)_$(_DesignerAssemblyName).fs</_GenerateResourceDesignerClassFile>
+    <_GenerateResourceDesignerClassFile Condition=" '$(_GenerateResourceDesignerClassFile)' == '' ">$(_DesignerIntermediateOutputPath)_$(_DesignerAssemblyName).cs</_GenerateResourceDesignerClassFile>
+    <_GenerateResourceCaseMapFile>$(_DesignerIntermediateOutputPath)case_map.txt</_GenerateResourceCaseMapFile>
+  </PropertyGroup>
+  <Message Text="_OuterIntermediateOutputPath: $(_OuterIntermediateOutputPath)" />
+  <Message Text="IntermediateOutputPath: $(IntermediateOutputPath)" />
+</Target>
+
+<Target Name="_GenerateRtxt"
+    Condition="'$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
+    DependsOnTargets="_CreatePropertiesCache;_ResolveSdks;_ResolveAndroidTooling;_GetJavaPlatformJar;_GenerateAndroidResourceDir;_SetupDesignerProperties"
+    Inputs="$(_AndroidResFlagFile);@(_AndroidResourceDest);@(LibraryResourceDirectories->'%(StampFile)')"
+    Outputs="$(_DesignerIntermediateOutputPath)R.txt"
+  >
+  <!-- Generate an R.txt file using the Managed Parser -->
+  <GenerateRtxt
+      AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+      CaseMapFile="$(_GenerateResourceCaseMapFile)"
+      JavaPlatformJarPath="$(JavaPlatformJarPath)"
+      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+      ResourceFlagFile="$(_AndroidResFlagFile)"
+      RTxtFile="$(_DesignerIntermediateOutputPath)R.txt"
+  >
+  </GenerateRtxt>
+</Target>
+
+<Target Name="_GenerateResourceCaseMap"
+    DependsOnTargets="_ComputeAndroidResourcePaths;_SetupDesignerProperties;_GetLibraryImports"
+    Inputs="@(_AndroidResourceDest);@(LibraryResourceDirectories->'%(StampFile)')"
+    Outputs="$(_GenerateResourceCaseMapFile)"
+  >
+  <!-- Generate a ResourceMap file for the project and its resources -->
+  <GenerateResourceCaseMap
+      AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+      OutputFile="$(_GenerateResourceCaseMapFile)"
+      ProjectDir="$(ProjectDir)"
+      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+      Resources="@(_AndroidResourceDest)"
+  />
+  <Touch Files="$(_GenerateResourceCaseMapFile)" />
+  <ItemGroup>
+    <FileWrites Include="$(_GenerateResourceCaseMapFile)" />
+  </ItemGroup>
+</Target>
+
+<Target Name="_GenerateResourceDesignerIntermediateClass"
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' And '$(AndroidGenerateResourceDesigner)' == 'true' "
+    Inputs="$(MSBuildProjectFullPath)"
+    Outputs="$(_GenerateResourceDesignerClassFile)"
+  >
+  <!-- Creates a Resource.designer.cs file in the Intermediate output path which derives from the
+       Designer Assembly, for backward compatability.
+   -->
+  <GenerateResourceDesignerIntermediateClass
+      IsApplication="$(AndroidApplication)"
+      Namespace="$(AndroidResgenNamespace)"
+      OutputFile="$(_GenerateResourceDesignerClassFile)"
+  >
+  </GenerateResourceDesignerIntermediateClass>
+  <Touch Files="$(_GenerateResourceDesignerClassFile)" />
+  <ItemGroup>
+    <FileWrites Include="$(_GenerateResourceDesignerClassFile)" />
+  </ItemGroup>
+</Target>
+
+<Target Name="_GenerateResourceDesignerAssembly"
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
+    DependsOnTargets="_GenerateResourceCaseMap"
+    Inputs="$(_DesignerIntermediateOutputPath)R.txt"
+    Outputs="$(_GenerateResourceDesignerAssemblyOutput)">
+  <GenerateResourceDesignerAssembly
+      ContinueOnError="$(DesignTimeBuild)"
+      AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+      AssemblyName="$(AssemblyName)"
+      CaseMapFile="$(_GenerateResourceCaseMapFile)"
+      DesignTimeBuild="$(DesignTimeBuild)"
+      Deterministic="$(Deterministic)"
+      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+      IsApplication="$(AndroidApplication)"
+      OutputFile="$(_GenerateResourceDesignerAssemblyOutput)"
+      ProjectDir="$(ProjectDir)"
+      Resources="@(AndroidResource);@(AndroidBoundLayout)"
+      ResourceDirectory="$(MonoAndroidResourcePrefix)"
+      RTxtFile="$(_DesignerIntermediateOutputPath)R.txt"
+      TargetFrameworkIdentifier="$(TargetFrameworkIdentifier)"
+      TargetFrameworkVersion="$(TargetFrameworkVersion)"
+  >
+  </GenerateResourceDesignerAssembly>
+  <ItemGroup>
+    <FileWrites Include="$(_GenerateResourceDesignerAssemblyOutput)" />
+  </ItemGroup>
+</Target>
+
+<Target Name="_CheckForInvalidDesignerConfig"
+    Condition=" '$(AndroidUseDesignerAssembly)' != 'True' "
+    DependsOnTargets="_AddAndroidCustomMetaData">
+  <CheckForInvalidDesignerConfig Assemblies="@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths)" />
+</Target>
+
+<PropertyGroup>
+  <_BuildResourceDesignerDependsOn>
+    _SetupDesignerProperties;
+    _GenerateResourceCaseMap;
+    _GenerateRtxt;
+    _GenerateResourceDesignerIntermediateClass;
+    _GenerateResourceDesignerAssembly;
+    _AddResourceDesignerFiles;
+  </_BuildResourceDesignerDependsOn>
+</PropertyGroup>
+
+<Target Name="_AddResourceDesignerFiles"
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
+    DependsOnTargets="_SetupDesignerProperties"
+    AfterTargets="GenerateGlobalUsings">
+  <ItemGroup>
+    <ReferencePath Include="$(_GenerateResourceDesignerAssemblyOutput)">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </ReferencePath>
+    <Compile Remove="$(_AndroidResourceDesignerFile)" />
+    <Compile Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' != 'F#' And '$(AndroidGenerateResourceDesigner)' == 'true' "/>
+    <!-- For F# we need to use the CompileBefore ItemGroup so that our type is processed
+          before all the other types in the build. Otherwise we get weird compiler errors.
+      -->
+    <CompileBefore Include="$(_GenerateResourceDesignerClassFile)" Condition=" '$(Language)' == 'F#' And '$(AndroidGenerateResourceDesigner)' == 'true' "/>
+  </ItemGroup>
+</Target>
+
+<!--
+    We need to inject the designer assembly into the `ResolvedFileToPublish` item group in
+    order for it to be included in the final application package.
+
+    In additon we MUST set the `PostprocessAssembly` metadata to `true` so that the file
+    is processed by the ILLink step. If we do not do this then the reference to
+    `netstandard.dll` is not replaced with `System.Private.CoreLib` and the app crashes.
+-->
+<Target Name="_AddResourceDesignerToPublishFiles"
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
+    AfterTargets="ComputeResolvedFilesToPublishList"
+    DependsOnTargets="_SetupDesignerProperties">
+  <ItemGroup>
+    <ResolvedFileToPublish Include="$(_GenerateResourceDesignerAssemblyOutput)">
+      <RelativePath>$(_DesignerAssemblyName).dll</RelativePath>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <PostprocessAssembly>true</PostprocessAssembly>
+      <IsTrimmable>true</IsTrimmable>
+    </ResolvedFileToPublish>
+  </ItemGroup>
+</Target>
+
+<Target Name="_BuildResourceDesigner"
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
+    DependsOnTargets="$(_BuildResourceDesignerDependsOn)" />
+
+</Project>

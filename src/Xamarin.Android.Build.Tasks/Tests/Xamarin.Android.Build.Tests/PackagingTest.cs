@@ -95,6 +95,7 @@ namespace Xamarin.Android.Build.Tests
 					"System.Runtime.InteropServices.dll",
 					"System.Linq.dll",
 					"UnnamedProject.dll",
+					"_Microsoft.Android.Resource.Designer.dll",
 				} :
 				new [] {
 					"Java.Interop.dll",

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Xamarin.Android.Prepare
 {
@@ -30,10 +31,14 @@ namespace Xamarin.Android.Prepare
 			string XABuildTools30PackagePrefix = Context.Instance.Properties [KnownProperties.XABuildTools30PackagePrefix] ?? String.Empty;
 			string XAPlatformToolsVersion  = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
 			string XAPlatformToolsPackagePrefix = Context.Instance.Properties [KnownProperties.XAPlatformToolsPackagePrefix] ?? String.Empty;
+			bool isArm64Apple = Context.Instance.OS.Flavor == "macOS" && RuntimeInformation.OSArchitecture == Architecture.Arm64;
+			string emulatorArch = isArm64Apple ? "aarch64" : "x64";
+			string systemImageArch = isArm64Apple ? "arm64-v8a" : "x86_64";
 
 			// Upstream manifests with version information:
 			//
 			//  https://dl-ssl.google.com/android/repository/repository2-1.xml
+			//  https://dl-ssl.google.com/android/repository/repository2-3.xml
 			//    * platform APIs
 			//    * build-tools
 			//    * command-line tools
@@ -69,11 +74,11 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-32_r01",   apiLevel: "32", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-33_r01",   apiLevel: "33", pkgRevision: "1"),
 
-				new AndroidToolchainComponent ("sources-31_r01",
-					destDir: Path.Combine ("platforms", $"android-31", "src"),
+				new AndroidToolchainComponent ("sources-33_r01",
+					destDir: Path.Combine ("sources", "android-33"),
 					pkgRevision: "1",
 					dependencyType: AndroidToolchainComponentType.BuildDependency,
-					buildToolVersion: "31.1"
+					buildToolVersion: "33.1"
 				),
 				new AndroidToolchainComponent ("docs-24_r01",
 					destDir: "docs",
@@ -87,10 +92,10 @@ namespace Xamarin.Android.Prepare
 					dependencyType: AndroidToolchainComponentType.BuildDependency,
 					buildToolVersion: "47.0.0"
 				),
-				new AndroidToolchainComponent ($"x86_64-29_r07-{osTag}",
-					destDir: Path.Combine ("system-images", "android-29", "default", "x86_64"),
+				new AndroidToolchainComponent (isArm64Apple ? $"{systemImageArch}-29_r08" : $"{systemImageArch}-29_r08-{osTag}",
+					destDir: Path.Combine ("system-images", "android-29", "default", systemImageArch),
 					relativeUrl: new Uri ("sys-img/android/", UriKind.Relative),
-					pkgRevision: "7",
+					pkgRevision: "8",
 					dependencyType: AndroidToolchainComponentType.EmulatorDependency
 				),
 				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}",
@@ -123,7 +128,7 @@ namespace Xamarin.Android.Prepare
 					buildToolName: "android-sdk-platform-tools",
 					buildToolVersion: XAPlatformToolsVersion
 				),
-				new AndroidToolchainComponent ($"emulator-{osTag}_x64-{EmulatorVersion}",
+				new AndroidToolchainComponent ($"emulator-{osTag}_{emulatorArch}-{EmulatorVersion}",
 					destDir: "emulator",
 					pkgRevision: EmulatorPkgRevision,
 					dependencyType: AndroidToolchainComponentType.EmulatorDependency

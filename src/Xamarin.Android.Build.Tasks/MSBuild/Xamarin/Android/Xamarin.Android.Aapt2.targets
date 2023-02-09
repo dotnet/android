@@ -154,7 +154,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <AndroidAapt2LinkExtraArgs Condition=" $(AndroidResgenExtraArgs.Contains('--no-version-vectors')) And !($(AndroidAapt2LinkExtraArgs.Contains('--no-version-vectors'))) ">--no-version-vectors $(AndroidAapt2LinkExtraArgs) </AndroidAapt2LinkExtraArgs>
   </PropertyGroup>
   <Aapt2Link
-      Condition=" '$(_AndroidResourceDesignerFile)' != '' "
+      Condition=" '$(_AndroidResourceDesignerFile)' != '' Or '$(AndroidUseDesignerAssembly)' == 'True' "
       ContinueOnError="$(DesignTimeBuild)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
       DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
@@ -244,6 +244,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <ItemGroup Condition=" '$(_Aapt2ProguardRules)' != '' And Exists('$(_Aapt2ProguardRules)') ">
     <ProguardConfiguration Include="$(_Aapt2ProguardRules)" />
     <FileWrites Include="$(_Aapt2ProguardRules)" />
+    <FileWrites Include="$(IntermediateOutputPath)android\*\aapt_rules.txt" />
   </ItemGroup>
 </Target>
 </Project>

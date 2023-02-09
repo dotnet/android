@@ -425,6 +425,7 @@ namespace Xamarin.Android.Net
 					if (redirectState.NewUrl == null)
 						throw new InvalidOperationException ("Request redirected but no new URI specified");
 					request.Method = redirectState.Method;
+					request.RequestUri = redirectState.NewUrl;
 				} catch (Java.Net.SocketTimeoutException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new WebException (ex.Message, ex, WebExceptionStatus.Timeout, null);
 				} catch (Java.Net.UnknownServiceException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -493,7 +494,11 @@ namespace Xamarin.Android.Net
 						Logger.Log (LogLevel.Info, LOG_APP, $"Exception caught while cancelling connection: {ex}");
 						ct.ThrowIfCancellationRequested ();
 					}
-					throw;
+
+					// All exceptions related to connectivity should be wrapped in HttpRequestException. In theory it is possible that the exception will be
+					// thrown for another reason above, but it's OK to wrap it in HttpRequestException anyway, since we're working in the context of
+					// `ConnectAsync` which, from the end user's point of view, is 100% related to connectivity.
+					throw new HttpRequestException ("Connection failure", ex);
 				}
 			}, ct);
 		}

@@ -128,7 +128,7 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (ToolPath, ToolExe);
 		}
 
-		bool LogFromException (string exception, string error) {
+		protected bool LogFromException (string exception, string error) {
 			switch (exception) {
 				case "java.lang.OutOfMemoryError":
 					Log.LogCodedError ("XA5213", Properties.Resources.XA5213, ToolName, GenerateCommandLineCommands ());
@@ -138,7 +138,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		bool ProcessOutput (string singleLine, AssemblyIdentityMap assemblyMap)
+		internal virtual bool ProcessOutput (string singleLine, AssemblyIdentityMap assemblyMap)
 		{
 			var match = CodeErrorRegEx.Match (singleLine);
 			var exceptionMatch = ExceptionRegEx.Match (singleLine);
@@ -197,6 +197,23 @@ namespace Xamarin.Android.Tasks
 			column = 0;
 		}
 
+		protected virtual IEnumerable<Regex> GetCustomExpressions ()
+		{
+			return Enumerable.Empty<Regex> ();
+		}
+
+		protected void SetFileLineAndColumn (string file, int line = 0, int column = 0)
+		{
+			this.file = file;
+			this.line = line;
+			this.column = column;
+		}
+
+		protected void AppendTextToErrorText (string text)
+		{
+			errorText.AppendLine (text);
+		}
+
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
 			errorLines.Add (singleLine);
@@ -207,7 +224,11 @@ namespace Xamarin.Android.Tasks
 			}
 			var match = CodeErrorRegEx.Match (singleLine);
 			var exceptionMatch = ExceptionRegEx.Match (singleLine);
-			foundError = foundError || match.Success || exceptionMatch.Success;
+			var customMatch = false;
+			foreach (var customRegex in GetCustomExpressions ()) {
+				customMatch |= customRegex.Match (singleLine).Success;
+			}
+			foundError = foundError || match.Success || exceptionMatch.Success || customMatch;
 		}
 	}
 }

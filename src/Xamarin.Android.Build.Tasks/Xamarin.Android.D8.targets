@@ -48,6 +48,11 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         Condition=" '$(AndroidLinkTool)' != '' "
     />
 
+    <ItemGroup>
+      <_AndroidD8MapDiagnostics Condition=" '$(AndroidD8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
+      <_AndroidR8MapDiagnostics Condition=" '$(AndroidR8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
+    </ItemGroup>
+
     <R8
         Condition=" '$(_UseR8)' == 'True' "
         ToolPath="$(JavaToolPath)"
@@ -77,6 +82,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ExtraArguments="$(AndroidR8ExtraArguments)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+        MapDiagnostics="@(_AndroidR8MapDiagnostics)"
     />
     <D8
         Condition=" '$(_UseR8)' != 'True' "
@@ -96,6 +102,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ExtraArguments="$(AndroidD8ExtraArguments)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+        MapDiagnostics="@(_AndroidD8MapDiagnostics)"
     />
 
     <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />

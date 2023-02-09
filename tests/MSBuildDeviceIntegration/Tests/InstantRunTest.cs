@@ -56,6 +56,7 @@ namespace Xamarin.Android.Build.Tests
 				UseLatestPlatformSdk = true,
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
+			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
 			var b = CreateApkBuilder ($"temp/InstantRunTargetsSkipped_{useManagedResourceGenerator}", cleanupOnDispose: false);
 			Assert.IsTrue (b.Build (proj), "1 build should have succeeded.");
 

@@ -107,6 +107,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
 
   <PropertyGroup>
     <CoreResolveReferencesDependsOn>
+      _CreatePropertiesCache;
       _SeparateAppExtensionReferences;
       $(ResolveReferencesDependsOn);
       _ConvertAndroidMamMappingFileToXml;
@@ -116,17 +117,25 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
     </CoreResolveReferencesDependsOn>
     <ResolveReferencesDependsOn>
       $(CoreResolveReferencesDependsOn);
-      UpdateAndroidInterfaceProxies;
       UpdateAndroidResources;
+      _BuildResourceDesigner;
+      UpdateAndroidInterfaceProxies;
       _SetAndroidGenerateManagedBindings;
       AddBindingsToCompile;
+      _CheckForInvalidDesignerConfig;
     </ResolveReferencesDependsOn>
+    <DesignTimeResolveAssemblyReferencesDependsOn>
+      $(DesignTimeResolveAssemblyReferencesDependsOn);
+      _BuildResourceDesigner;
+    </DesignTimeResolveAssemblyReferencesDependsOn>
     <_UpdateAndroidResourcesDependsOn>
       $(CoreResolveReferencesDependsOn);
       _CreatePropertiesCache;
       _CheckForDeletedResourceFile;
       _ComputeAndroidResourcePaths;
       _UpdateAndroidResgen;
+      _CreateAar;
+      _BuildResourceDesigner;
     </_UpdateAndroidResourcesDependsOn>
     <CompileDependsOn>
       _SetupMSBuildAllProjects;
@@ -134,11 +143,14 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _AddAndroidDefines;
       _IncludeLayoutBindingSources;
       AddLibraryJarsToBind;
+      _BuildResourceDesigner;
+      _AddResourceDesignerFiles;
       $(CompileDependsOn);
+      _CheckAndroidHttpClientHandlerType;
     </CompileDependsOn>
     <CoreCompileDependsOn>
       UpdateGeneratedFiles;
-      $(CoreCompileDependsOn)
+      $(CoreCompileDependsOn);
     </CoreCompileDependsOn>
     <DeferredBuildDependsOn>
       $(DeferredBuildDependsOn);
@@ -169,6 +181,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _BeforeGetAndroidDependencies;
       _SetLatestTargetFrameworkVersion;
       _ResolveSdks;
+      _ResolveMonoAndroidSdks;
       _ResolveAndroidTooling;
       $(GetAndroidDependenciesDependsOn);
     </GetAndroidDependenciesDependsOn>

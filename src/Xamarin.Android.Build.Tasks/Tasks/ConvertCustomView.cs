@@ -27,11 +27,11 @@ namespace Xamarin.Android.Tasks {
 		public ITaskItem [] Processed { get; set; }
 
 		Dictionary<string, string> _resource_name_case_map;
-		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4);
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
 
 		public override bool RunTask ()
 		{
-			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
+			var acw_map = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.Ordinal);
 			var customViewMap = MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile);
 			var processed = new HashSet<string> ();
 
@@ -119,8 +119,8 @@ namespace Xamarin.Android.Tasks {
 
 		bool TryFixFragment (XAttribute attr, Dictionary<string, string> acwMap)
 		{
-			// Looks for any: 
-			//   <fragment class="My.DotNet.Class" 
+			// Looks for any:
+			//   <fragment class="My.DotNet.Class"
 			//   <fragment android:name="My.DotNet.Class" ...
 			// and tries to change it to the ACW name
 			if (attr.Parent.Name != "fragment")

@@ -10,7 +10,7 @@ steps:
   condition: ${{ parameters.condition }}
 
 # ESRP signing requires minimum azure client version 2.8.0
-- template: azure-tools/az-client-update.yml@yaml
+- template: azure-tools/az-client-update.yml@yaml-templates
   parameters:
     version: '2.8.0'
     condition: and(${{ parameters.condition }}, eq(variables['agent.os'], 'Darwin'))

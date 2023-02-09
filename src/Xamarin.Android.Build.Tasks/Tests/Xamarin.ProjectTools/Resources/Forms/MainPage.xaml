@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="${ROOT_NAMESPACE}.MainPage">
     <StackLayout>
-        <Label Text="Welcome to Xamarin.Forms!" 
+        <Label x:Name="myLabel"
+           Text="Welcome to Xamarin.Forms!"
            HorizontalOptions="Center"
            VerticalOptions="CenterAndExpand" />
         <Button Text="Click Me" Clicked="Button_Clicked" x:Name="myXFButton" AutomationId="myXFButton" />

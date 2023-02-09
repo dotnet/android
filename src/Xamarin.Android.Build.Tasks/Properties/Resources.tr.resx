@@ -470,6 +470,29 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>'RunAOTCompilation' MSBuild özelliği yalnızca kırpma etkinleştirildiğinde desteklenir. Bu yapı yapılandırması için 'PublishTrimmed' öğesini 'true' olarak ayarlamak için proje dosyasını bir metin düzenleyicide düzenleyin.</value>
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
+  <data name="XA1031" xml:space="preserve">
+    <value>'{0}' 'AndroidHttpClientHandlerType' özellik değeri '{1}' türünden türetilmelidir.
+Lütfen değeri '{1}' türünden devralan derlemeye uygun bir tür adına dönüştürün veya özelliği tamamen kaldırın.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
+{0} - The value of the property.
+{1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
+  </data>
+  <data name="XA1032" xml:space="preserve">
+    <value>'{0}' değeri '{1}' derlemesinden çözümlenemedi. Lütfen `AndroidHttpClientHandlerType` ayarınızı kontrol edin.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
+{0} - The value of the property.
+{1} - The name of the assembly.</comment>
+  </data>
+  <data name="XA1033" xml:space="preserve">
+    <value>'{0}' değeri çözümlenemedi. Lütfen `AndroidHttpClientHandlerType` ayarınızı kontrol edin.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
+{0} - The value of the property.</comment>
+  </data>
+  <data name="XA1034" xml:space="preserve">
+    <value>Projeniz `_Microsoft.Android.Resource.Designer` derlemesini kullanan '{0}' özelliğine başvuruyor ancak bu özellik etkin değil. Lütfen proje dosyanızda `AndroidUseDesignerAssembly` MSBuild özelliğini `true` olarak ayarlayın.</value>
+    <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
+{0} - The name of the assembly</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>{0} bütünleştirilmiş kodunda AppDomain.CreateDomain() metodunun kullanıldığı saptandı. .NET 6 üstünde yalnızca tek bir AppDomain destekleneceğinden bu API, .NET 6 yayımlandıktan sonra artık Xamarin.Android içinde bulunmayacaktır.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -530,11 +553,12 @@ In this message, the term "binding" means a piece of generated code that makes i
 "r10d" is the version of the NDK.</comment>
   </data>
   <data name="XA3006" xml:space="preserve">
-    <value>Yerel bütünleştirilmiş kod dosyası derlenemedi: {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)</comment>
+    <value>Yerel bütünleştirilmiş kod dosyası derlenemedi: {0}{1}</value>
+    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces). The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3007" xml:space="preserve">
-    <value>Yerel paylaşılan kitaplık bağlanamadı: {0}</value>
+    <value>Yerel paylaşılan kitaplık bağlanamadı: {0}{1}</value>
+    <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
     <value>{0} sınıfı için şu özel durum nedeniyle Java türü oluşturulamadı: {1}</value>

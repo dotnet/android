@@ -487,6 +487,7 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/embedded-assemblies-zip.cc
   ${SOURCES_DIR}/globals.cc
+  ${SOURCES_DIR}/helpers.cc
   ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/jni-remapping.cc
   ${SOURCES_DIR}/monodroid-glue.cc
@@ -565,6 +566,7 @@ set(XAMARIN_DEBUG_APP_HELPER_SOURCES
   ${SOURCES_DIR}/basic-utilities.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
   ${SOURCES_DIR}/debug-app-helper.cc
+  ${SOURCES_DIR}/helpers.cc
   ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/shared-constants.cc
   )

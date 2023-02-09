@@ -463,7 +463,13 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (jniType == '[') {
-					idx++;
+					// Arrays of arrays (any rank) are bound as a simple pointer, which makes the generated code much simpler (no need to generate pointers to
+					// pointers to pointers etc), especially that we don't need to dereference these pointers in generated code, we simply pass them along to
+					// the managed land after all.
+					while (signature[idx] == '[') {
+						idx++;
+					}
+
 					jniType = signature[idx];
 					if (jniArrayTypeMap.TryGetValue (jniType, out managedType)) {
 						if (jniType == 'L') {

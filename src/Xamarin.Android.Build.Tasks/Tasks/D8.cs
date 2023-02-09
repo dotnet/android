@@ -2,7 +2,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
@@ -39,6 +38,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem [] JavaLibrariesToEmbed { get; set; }
 		public ITaskItem [] AlternativeJarLibrariesToEmbed { get; set; }
 		public ITaskItem [] JavaLibrariesToReference { get; set; }
+		public ITaskItem [] MapDiagnostics { get; set; }
 
 		public string ExtraArguments { get; set; }
 
@@ -110,22 +110,19 @@ namespace Xamarin.Android.Tasks
 			foreach (var jar in injars)
 				cmd.AppendFileNameIfNotNull (jar);
 
-			return cmd;
-		}
-
-		/// <summary>
-		/// r8 tends to print:
-		/// Warning: Resource 'META-INF/MANIFEST.MF' already exists.
-		/// </summary>
-		static readonly Regex resourceWarning = new Regex ("Warning: Resource.+already exists", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
-		{
-			if (resourceWarning.IsMatch (singleLine)) {
-				Log.LogMessage (messageImportance, singleLine);
-			} else {
-				base.LogEventsFromTextOutput (singleLine, messageImportance);
+			if (MapDiagnostics != null) {
+				foreach (var diagnostic in MapDiagnostics) {
+					var from = diagnostic.ItemSpec;
+					var to = diagnostic.GetMetadata ("To");
+					if (string.IsNullOrEmpty (from) || string.IsNullOrEmpty (to))
+						continue;
+					cmd.AppendSwitch ("--map-diagnostics");
+					cmd.AppendSwitch (from);
+					cmd.AppendSwitch (to);
+				}
 			}
+
+			return cmd;
 		}
 	}
 }

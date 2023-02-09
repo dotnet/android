@@ -156,6 +156,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
+			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
 			using (var b = CreateApkBuilder (path)) {
 				b.Target = "Compile";
 				Assert.IsTrue(b.Build (proj), "DesignTime Build should have succeeded");
@@ -241,6 +242,30 @@ namespace Xamarin.Android.Build.Tests
 				OutputPath = Path.Combine("..","bin","Debug"),
 			};
 			sb.Projects.Add (app2);
+			Assert.IsTrue (sb.Build (), "Build of solution should have succeeded");
+			Assert.IsTrue (sb.ReBuild (), "ReBuild of solution should have succeeded");
+			sb.Dispose ();
+		}
+
+		[Test]
+		public void BuildSolutionWithMultipleProjectsInParallel ()
+		{
+			var testPath = Path.Combine ("temp", "BuildSolutionWithMultipleProjects");
+			var sb = new SolutionBuilder("BuildSolutionWithMultipleProjects.sln") {
+				SolutionPath = Path.Combine (Root, testPath),
+				MaxCpuCount = 4,
+			};
+			for (int i=1; i <= 4; i++) {
+				var app1 = new XamarinAndroidApplicationProject () {
+					ProjectName = $"App{i}",
+					PackageName = $"com.companyname.App{i}",
+					AotAssemblies = true,
+					IsRelease = true,
+				};
+				app1.SetProperty ("AndroidEnableMarshalMethods", "True");
+				sb.Projects.Add (app1);
+			}
+			sb.BuildingInsideVisualStudio = false;
 			Assert.IsTrue (sb.Build (), "Build of solution should have succeeded");
 			Assert.IsTrue (sb.ReBuild (), "ReBuild of solution should have succeeded");
 			sb.Dispose ();
@@ -830,6 +855,7 @@ namespace Lib2
 				FileAssert.Exists (stamp);
 				File.Delete (stamp);
 
+				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				var actual = ReadCache (cacheFile);
 				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec),
@@ -843,6 +869,7 @@ namespace Lib2
 				};
 				proj.OtherBuildItems.Add (aar);
 
+				b.BuildLogFile = "build3.log";
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 				actual = ReadCache (cacheFile);
 				Assert.AreEqual (expected.Jars.Length + 1, actual.Jars.Length,
@@ -856,6 +883,7 @@ namespace Lib2
 				}
 
 				// Build with no changes, checking we are skipping targets appropriately
+				b.BuildLogFile = "build4.log";
 				Assert.IsTrue (b.Build (proj), "fourth build should have succeeded.");
 				var targets = new List<string> {
 					"_UpdateAndroidResgen",
@@ -1274,6 +1302,7 @@ namespace Lib2
 				// AndroidResource change
 				proj.LayoutMain += $"{Environment.NewLine}<!--comment-->";
 				proj.Touch ("Resources\\layout\\Main.axml");
+				builder.BuildLogFile = "build2.log";
 				Assert.IsTrue (builder.Build (proj), "second build should succeed");
 
 				builder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");

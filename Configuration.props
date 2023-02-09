@@ -47,13 +47,14 @@
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
-    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.1</AndroidNet7Version>
-    <AndroidNet6Version Condition=" '$(AndroidNet6Version)' == '' ">32.0.476</AndroidNet6Version>
+    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.26</AndroidNet7Version>
+    <AndroidNet6Version Condition=" '$(AndroidNet6Version)' == '' ">32.0.485</AndroidNet6Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
     <HostOS Condition="$([MSBuild]::IsOSPlatform('linux'))">Linux</HostOS>
     <HostOS Condition="$([MSBuild]::IsOSPlatform('osx'))">Darwin</HostOS>
+    <HostOSArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString())</HostOSArchitecture>
   </PropertyGroup>
   <PropertyGroup>
     <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('windows'))">Microsoft.Android.Sdk.Windows</MicrosoftAndroidSdkPackName>
@@ -194,9 +195,9 @@
     <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">7.0</CommandLineToolsFolder>
     <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">8512546_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
-    <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-1.xml -->
-    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">8129060</EmulatorVersion>
-    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">31.3.1</EmulatorPkgRevision>
+    <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-3.xml -->
+    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">9364964</EmulatorVersion>
+    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">32.1.9</EmulatorPkgRevision>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
@@ -244,7 +245,7 @@
   <!-- Unit Test Properties -->
   <PropertyGroup>
     <!-- When changing the version below, please also update the 'build-tools/scripts/nunit3-console*' scripts -->
-    <NUnitConsoleVersion Condition=" '$(NUnitConsoleVersion)' == '' ">3.11.1</NUnitConsoleVersion>
+    <NUnitConsoleVersion Condition=" '$(NUnitConsoleVersion)' == '' ">3.12.0</NUnitConsoleVersion>
     <_Runtime Condition=" '$(HostOS)' != 'Windows' ">$(ManagedRuntime) $(ManagedRuntimeArgs)</_Runtime>
     <_NUnit>$(_Runtime) $(XAPackagesDir)\nunit.consolerunner\$(NUnitConsoleVersion)\tools\nunit3-console.exe</_NUnit>
   </PropertyGroup>

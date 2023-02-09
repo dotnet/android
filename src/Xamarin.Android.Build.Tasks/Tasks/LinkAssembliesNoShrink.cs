@@ -38,6 +38,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool AddKeepAlives { get; set; }
 
+		public bool UseDesignerAssembly { get; set; }
+
 		public bool Deterministic { get; set; }
 
 		public override bool RunTask ()
@@ -64,6 +66,7 @@ namespace Xamarin.Android.Tasks
 				var cache = new TypeDefinitionCache ();
 				var fixAbstractMethodsStep = new FixAbstractMethodsStep (resolver, cache, Log);
 				var addKeepAliveStep = new AddKeepAlivesStep (resolver, cache, Log, UsingAndroidNETSdk);
+				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (resolver, Log);
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
@@ -91,8 +94,12 @@ namespace Xamarin.Android.Tasks
 						if (assemblyDefinition == null)
 							assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
 
-						if (fixAbstractMethodsStep.FixAbstractMethods (assemblyDefinition) ||
-						    (AddKeepAlives && addKeepAliveStep.AddKeepAlives (assemblyDefinition))) {
+						bool save = fixAbstractMethodsStep.FixAbstractMethods (assemblyDefinition);
+						if (UseDesignerAssembly)
+							save |= fixLegacyResourceDesignerStep.ProcessAssemblyDesigner (assemblyDefinition);
+						if (AddKeepAlives)
+							save |= addKeepAliveStep.AddKeepAlives (assemblyDefinition);
+						if (save) {
 							Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
 							writerParameters.WriteSymbols = assemblyDefinition.MainModule.HasSymbols;
 							assemblyDefinition.Write (destination.ItemSpec, writerParameters);
@@ -116,6 +123,28 @@ namespace Xamarin.Android.Tasks
 
 				// NOTE: We still need to update the timestamp on this file, or this target would run again
 				File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
+			}
+		}
+
+		class FixLegacyResourceDesignerStep : MonoDroid.Tuner.FixLegacyResourceDesignerStep
+		{
+			readonly DirectoryAssemblyResolver resolver;
+			readonly TaskLoggingHelper logger;
+
+			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TaskLoggingHelper logger)
+			{
+				this.resolver = resolver;
+				this.logger = logger;
+			}
+
+			public override void LogMessage (string message)
+			{
+				logger.LogDebugMessage ("{0}", message);
+			}
+
+			public override AssemblyDefinition Resolve (AssemblyNameReference name)
+			{
+				return resolver.Resolve (name);
 			}
 		}
 

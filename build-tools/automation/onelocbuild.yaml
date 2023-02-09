@@ -1,0 +1,59 @@
+# Xamarin.Android OneLocBuild
+
+name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+
+trigger: none
+
+pr: none
+
+schedules:
+- cron: "0 6 * * *"
+  displayName: Run daily at 6:00 UTC
+  branches:
+    include:
+    - main
+
+jobs:
+- job: OneLocBuild
+  displayName: OneLocBuild
+  condition: and(eq(variables['System.TeamProject'], 'DevDiv'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool: VSEngSS-MicroBuild2022-1ES
+  timeoutInMinutes: 30
+  variables:
+  - group: Xamarin-Secrets
+  workspace:
+    clean: all
+  steps:
+  - checkout: self
+    clean: true
+
+  - task: PowerShell@2
+    displayName: Update LocProject.json
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\Localize\update-locproject.ps1
+      arguments: -SourcesDirectory "$(Build.SourcesDirectory)" -LocProjectPath "$(Build.SourcesDirectory)\Localize\LocProject.json"
+
+  - task: OneLocBuild@2
+    displayName: OneLocBuild
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    inputs:
+      locProj: Localize/LocProject.json
+      outDir: $(Build.StagingDirectory)
+      packageSourceAuth: patAuth
+      patVariable: $(OneLocBuild--PAT)
+      isCreatePrSelected: true
+      repoType: gitHub
+      gitHubPatVariable: $(github--pat--vs-mobiletools-engineering-service2)
+      prSourceBranchPrefix: locpr
+      isShouldReusePrSelected: true
+      isAutoCompletePrSelected: false
+      isUseLfLineEndingsSelected: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Localization Files
+    inputs:
+      PathtoPublish: $(Build.StagingDirectory)/loc
+      ArtifactName: Loc
+    condition: succeededOrFailed()

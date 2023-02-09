@@ -12,6 +12,8 @@ using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
 using System.Runtime.CompilerServices;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -556,10 +558,35 @@ namespace Xamarin.Android.Build.Tests
 			string path;
 			if (Builder.UseDotNet) {
 				path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
+				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
+					return Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
+				}
 			} else {
 				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
 			}
 			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
+		}
+
+		protected string GetResourceDesignerText (XamarinAndroidProject project, string path)
+		{
+			if (Builder.UseDotNet) {
+				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
+					var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
+					return decompiler.DecompileWholeModuleAsString ();
+				}
+			}
+			return File.ReadAllText (path);
+		}
+
+		protected string[] GetResourceDesignerLines (XamarinAndroidProject project, string path)
+		{
+			if (Builder.UseDotNet) {
+				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
+					var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
+					return decompiler.DecompileWholeModuleAsString ().Split (Environment.NewLine[0]);
+				}
+			}
+			return File.ReadAllLines (path);
 		}
 
 		/// <summary>

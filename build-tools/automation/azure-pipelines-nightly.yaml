@@ -11,7 +11,7 @@ pr:
 # External sources, scripts, tests, and yaml template files.
 resources:
   repositories:
-  - repository: yaml
+  - repository: yaml-templates
     type: github
     name: xamarin/yaml-templates
     ref: refs/heads/main
@@ -35,14 +35,15 @@ stages:
     pool:
       name: VSEng-Xamarin-RedmondMac-Android-Untrusted
       demands: macOS.Name -equals Monterey
-    timeoutInMinutes: 240
-    cancelTimeoutInMinutes: 5
+    timeoutInMinutes: 420
     workspace:
       clean: all
     variables:
       - group: Xamarin-Secrets
       - group: Xamarin Signing
       - group: xamops-azdev-secrets
+      - name: Codeql.Enabled
+        value: true
     steps:
     - checkout: self
       submodules: recursive
@@ -67,7 +68,6 @@ stages:
   - job: emulator_tests
     displayName: macOS > Tests > APKs (Emulator)
     timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 2
     strategy:
       matrix:
         Android21-x86:
@@ -98,6 +98,10 @@ stages:
           avdApiLevel: 31
           avdAbi: x86_64
           avdType: default
+        Android33-x86_64:
+          avdApiLevel: 33
+          avdAbi: x86_64
+          avdType: google_apis
     pool:
       vmImage: $(HostedMacImage)
     workspace:
@@ -170,5 +174,54 @@ stages:
   - template: yaml-templates/run-timezoneinfo-tests.yaml
     parameters:
       node_id: 4
+
+  # Localization test jobs
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 1
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 2
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 3
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 4
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 5
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 6
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 7
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 8
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 9
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 10
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 11
+
+  - template: yaml-templates/run-localization-tests.yaml
+    parameters:
+      node_id: 12
 
   - template: yaml-templates/run-systemapp-tests.yaml
