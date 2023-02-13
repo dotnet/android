@@ -34,7 +34,7 @@ namespace Xamarin.Android.NetTests
 			},
 		};
 
-#if NETCOREAPP
+#if NET
 		[Test]
 		[TestCaseSource (nameof (DecompressionSource))]
 		public async Task Decompression (string urlPath, string encoding)
