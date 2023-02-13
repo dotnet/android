@@ -11,8 +11,8 @@
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <!-- Match the first three version numbers and append 00 -->
-    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), `^\d+\.\d+\.\d`))00</DotNetPreviewVersionBand>
+    <!-- Hardcoded for .NET 7.0.200 SDK -->
+    <DotNetPreviewVersionBand>7.0.100</DotNetPreviewVersionBand>
     <DotNetSdkManifestsFolder>$(DotNetPreviewVersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), `\-(preview|rc).\d+`))</DotNetSdkManifestsFolder>
     <!-- NOTE: sometimes we hardcode these when transitioning to new version bands -->
     <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
