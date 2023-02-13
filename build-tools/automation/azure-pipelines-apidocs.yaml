@@ -117,3 +117,25 @@ stages:
       inputs:
         artifactName: Api Docs Diff
         targetPath: $(Build.StagingDirectory)/api-doc-diff
+
+    - powershell: |
+        $docsUpdateBinlog = Get-ChildItem -Path "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)" -Filter *UpdateApiDocs-*.binlog | Select-Object -First 1
+        $buildLog = "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/temp-build.log"
+        & "$(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet" build $docsUpdateBinlog > $buildLog
+
+        $issueContent = & {
+            Get-Content -Path $buildLog | Select-String "## Exception translating remarks"
+            Get-Content -Path $buildLog | Select-String "## Unable to translate remarks"
+            Get-Content -Path $buildLog | Select-String "JavadocImport-"
+        }
+
+        if ($issueContent) {
+            Write-Host "The following issues were found, review the build log for more details:"
+            Write-Host ""
+            foreach ($line in $issueContent) {
+                Write-Host $line
+                Write-Host ""
+            }
+            exit 1
+        }
+      displayName: Report issues in docs generation
