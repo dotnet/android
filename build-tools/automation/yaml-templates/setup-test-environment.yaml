@@ -11,6 +11,7 @@ parameters:
 steps:
 - checkout: self
   clean: true
+  submodules: true
   ${{ if ne(parameters.xaSourcePath, variables['System.DefaultWorkingDirectory']) }}:
     path: s/xamarin-android
 
