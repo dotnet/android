@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -21,19 +22,44 @@ namespace Xamarin.Android.NetTests
 
 		// We can't test `deflate` for now because it's broken in the BCL for https://httpbin.org/deflate (S.I.Compression.DeflateStream doesn't recognize the compression
 		// method used by the server)
+		static readonly object[] DecompressionSource = new object[] {
+			new object[] {
+				"gzip", // urlPath
+				"gzip", // encoding
+			},
+
+			new object[] {
+				"brotli", // urlPath
+				"br", // encoding
+			},
+		};
+
+#if NETCOREAPP
 		[Test]
-		public async Task Decompression ([Values ("gzip", "brotli")] urlPath)
+		[TestCaseSource (nameof (DecompressionSource))]
+		public async Task Decompression (string urlPath, string encoding)
 		{
 			var handler = new AndroidMessageHandler {
 				AutomaticDecompression = DecompressionMethods.All
 			};
 
 			var client = new HttpClient (handler);
-			string response = await client.GetStringAsync ($"https://httpbin.org/{urlPath}");
+			HttpResponseMessage response = await client.GetAsync ($"https://httpbin.org/{urlPath}");
 
-			Assert.IsTrue (response.Length > 0, "Response was empty");
-			Assert.IsTrue (response.Contains ($"\"{urlPath}\"", StringComparison.OrdinalIgnoreCase), $"\"{urlPath}\" should have been in the response JSON");
+			Assert.IsNull (response.Content.Headers.ContentLength, "Content-Length header should have been removed");
+
+			foreach (string enc in response.Content.Headers.ContentEncoding) {
+				if (String.Compare (enc, encoding, StringComparison.Ordinal) == 0) {
+					Assert.Fail ($"Encoding '{encoding}' should have been removed from the Content-Encoding header");
+				}
+			}
+
+			string responseBody = await response.ReadAsStringAsync ();
+
+			Assert.IsTrue (responseBody.Length > 0, "Response was empty");
+			Assert.IsTrue (responseBody.Contains ($"\"{urlPath}\"", StringComparison.OrdinalIgnoreCase), $"\"{urlPath}\" should have been in the response JSON");
 		}
+#endif
 
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
