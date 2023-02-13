@@ -403,7 +403,7 @@ stages:
         configuration: $(XA.Build.Configuration)
         testName: Xamarin.Android.BindingRuntime_Tests
         project: tests/BindingTests/Xamarin.Android.BindingRuntime-Tests/Xamarin.Android.BindingRuntime-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.BindingRuntime_Tests-$(ApkTestConfiguration).xml
+        testResultsFiles: TestResult-Xamarin.Android.BindingRuntime_Tests-$(XA.Build.Configuration).xml
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.BindingRuntime_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-Default
         useDotNet: true
@@ -413,7 +413,7 @@ stages:
         configuration: $(XA.Build.Configuration)
         testName: Xamarin.Android.BindingRuntime_Tests_FastDev
         project: tests/BindingTests/Xamarin.Android.BindingRuntime-Tests/Xamarin.Android.BindingRuntime-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.BindingRuntime_Tests_FastDev-$(ApkTestConfiguration).xml
+        testResultsFiles: TestResult-Xamarin.Android.BindingRuntime_Tests_FastDev-$(XA.Build.Configuration).xml
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.BindingRuntime_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-FastDev_Assemblies_Dexes
         extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
