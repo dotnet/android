@@ -19,6 +19,22 @@ namespace Xamarin.Android.NetTests
 			return new AndroidMessageHandler ();
 		}
 
+		// We can't test `deflate` for now because it's broken in the BCL for https://httpbin.org/deflate (S.I.Compression.DeflateStream doesn't recognize the compression
+		// method used by the server)
+		[Test]
+		public async Task Decompression ([Values ("gzip", "brotli")] urlPath)
+		{
+			var handler = new AndroidMessageHandler {
+				AutomaticDecompression = DecompressionMethods.All
+			};
+
+			var client = new HttpClient (handler);
+			string response = await client.GetStringAsync ($"https://httpbin.org/{urlPath}");
+
+			Assert.IsTrue (response.Length > 0, "Response was empty");
+			Assert.IsTrue (response.Contains ($"\"{urlPath}\"", StringComparison.OrdinalIgnoreCase), $"\"{urlPath}\" should have been in the response JSON");
+		}
+
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
 		{
