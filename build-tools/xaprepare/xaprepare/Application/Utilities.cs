@@ -471,12 +471,21 @@ namespace Xamarin.Android.Prepare
 			return (success, size);
 		}
 
+		public static HttpClient CreateHttpClient ()
+		{
+			var handler = new HttpClientHandler {
+				CheckCertificateRevocationList = true,
+			};
+
+			return new HttpClient (handler);
+		}
+
 		public static async Task<(bool success, ulong size, HttpStatusCode status)> GetDownloadSizeWithStatus (Uri url)
 		{
 			TimeSpan delay = ExceptionRetryInitialDelay;
 			for (int i = 0; i < ExceptionRetries; i++) {
 				try {
-					using (var httpClient = new HttpClient ()) {
+					using (HttpClient httpClient = CreateHttpClient ()) {
 						httpClient.Timeout = WebRequestTimeout;
 						var req = new HttpRequestMessage (HttpMethod.Head, url);
 						req.Headers.ConnectionClose = true;
@@ -524,7 +533,7 @@ namespace Xamarin.Android.Prepare
 
 		static async Task DoDownload (Uri url, string targetFile, DownloadStatus status)
 		{
-			using (var httpClient = new HttpClient ()) {
+			using (HttpClient httpClient = CreateHttpClient ()) {
 				httpClient.Timeout = WebRequestTimeout;
 				Log.DebugLine ("Calling GetAsync");
 				HttpResponseMessage resp = await httpClient.GetAsync (url, HttpCompletionOption.ResponseHeadersRead);
@@ -820,7 +829,7 @@ namespace Xamarin.Android.Prepare
 					LogError ($"failed with exit code {runner.ExitCode}");
 					return String.Empty;
 				}
-				
+
 				string ret = sw.ToString ();
 				if (trimTrailingWhitespace)
 					return ret.TrimEnd ();

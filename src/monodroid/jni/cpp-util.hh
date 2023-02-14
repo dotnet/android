@@ -112,7 +112,7 @@ namespace xamarin::android
 		// `sizeof... (Length)` part which subtracts the number of template parameters - the amount of NUL bytes so that
 		// we don't waste space.
 		constexpr size_t total_length = (... + Length) - sizeof... (Length);
-		char_array<total_length + 1> ret;
+		char_array<total_length + 1> ret; // lgtm [cpp/paddingbyteinformationdisclosure] the buffer is filled in the loop below
 		ret[total_length] = 0;
 
 		size_t i = 0;
