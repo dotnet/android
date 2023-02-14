@@ -2,7 +2,7 @@
 // Adapted from:
 //
 // System.Net.DigestClient.cs
-//                                      
+//
 // Authors:
 //      Greg Reinacker (gregr@rassoc.com)
 //      Sebastien Pouliot (spouliot@motus.com)
@@ -55,7 +55,7 @@ namespace Xamarin.Android.Net
 		}
 
 		public string CNonce {
-			get { 
+			get {
 				if (_cnonce == null) {
 					// 15 is a multiple of 3 which is better for base64 because it
 					// wont end with '=' and risk messing up the server parsing
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Net
 		}
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms", Justification = "Only supported algorithm by RFC2617.")]
-		public bool Parse (string challenge) 
+		public bool Parse (string challenge)
 		{
 			parser = new AuthDigestHeaderParser (challenge);
 			if (!parser.Parse ())
@@ -81,12 +81,12 @@ namespace Xamarin.Android.Net
 
 			// build the hash object (only MD5 is defined in RFC2617)
 			if ((parser.Algorithm == null) || (parser.Algorithm.StartsWith ("MD5", StringComparison.OrdinalIgnoreCase)))
-				hash = MD5.Create ();
+				hash = MD5.Create (); // lgtm [cs/weak-crypto] This is part of RFC2617 and we cannot change the algorithm here.
 
 			return true;
 		}
 
-		string? HashToHexString (string toBeHashed) 
+		string? HashToHexString (string toBeHashed)
 		{
 			if (hash == null)
 				return null;
@@ -100,7 +100,7 @@ namespace Xamarin.Android.Net
 			return sb.ToString ();
 		}
 
-		string? HA1 (string username, string password) 
+		string? HA1 (string username, string password)
 		{
 			string ha1 = $"{username}:{Realm}:{password}";
 			if (String.Compare (Algorithm, "md5-sess", StringComparison.OrdinalIgnoreCase) == 0)
@@ -108,18 +108,18 @@ namespace Xamarin.Android.Net
 			return HashToHexString (ha1);
 		}
 
-		string? HA2 (HttpURLConnection webRequest) 
+		string? HA2 (HttpURLConnection webRequest)
 		{
 			var uri = new Uri (webRequest.URL?.ToString ()!);
 			string ha2 = $"{webRequest.RequestMethod}:{uri.PathAndQuery}";
 			if (QOP == "auth-int") {
 				// TODO
 				// ha2 += String.Format (":{0}", hentity);
-			}		
+			}
 			return HashToHexString (ha2);
 		}
 
-		string? Response (string username, string password, HttpURLConnection webRequest) 
+		string? Response (string username, string password, HttpURLConnection webRequest)
 		{
 			string response = $"{HA1 (username, password)}:{Nonce}:";
 			if (QOP != null)
@@ -128,13 +128,13 @@ namespace Xamarin.Android.Net
 			return HashToHexString (response);
 		}
 
-		public Authorization? Authenticate (HttpURLConnection request, ICredentials credentials) 
+		public Authorization? Authenticate (HttpURLConnection request, ICredentials credentials)
 		{
 			if (parser == null)
 				throw new InvalidOperationException ();
 			if (request == null)
 				return null;
-	
+
 			lastUse = DateTime.Now;
 			var uri = new Uri (request.URL?.ToString ()!);
 			NetworkCredential cred = credentials.GetCredential (uri, "digest");
