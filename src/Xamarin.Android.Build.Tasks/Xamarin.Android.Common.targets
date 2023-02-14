@@ -599,7 +599,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_AndroidPackage>$(ApplicationId)</_AndroidPackage>
     <_ApplicationLabel>$(ApplicationTitle)</_ApplicationLabel>
     <_AndroidVersionName>$(ApplicationDisplayVersion)</_AndroidVersionName>
-    <_AndroidVersionCode Condition=" '$(AndroidCreatePackagePerAbi)' != 'true' ">$(ApplicationVersion)</_AndroidVersionCode>
+    <_AndroidVersionCode Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' And '$(ApplicationVersion)' != '' ">$(ApplicationVersion)</_AndroidVersionCode>
+    <_AndroidVersionCode Condition=" '$(AndroidCreatePackagePerAbi)' != 'true' And '$(_AndroidVersionCode)' == '' ">$(ApplicationVersion)</_AndroidVersionCode>
   </PropertyGroup>
   <AndroidError Code="XA1018"
       ResourceName="XA1018"
