@@ -29,9 +29,9 @@
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
     <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v13.0</AndroidLatestStableFrameworkVersion>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
-    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">Tiramisu</AndroidLatestUnstablePlatformId>
-    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v13.0</AndroidLatestUnstableFrameworkVersion>
+    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">34</AndroidLatestUnstableApiLevel>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">UpsideDownCake</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v13.0.99</AndroidLatestUnstableFrameworkVersion>
     <!-- The default API level used for $(TargetPlatformVersion) -->
     <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">33</AndroidDefaultTargetDotnetApiLevel>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->

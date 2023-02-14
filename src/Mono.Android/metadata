@@ -1722,6 +1722,15 @@
   <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='setSystemUiVisibility']" name="deprecated">This property has an incorrect enumeration type. Use the SystemUiFlags property instead.</attr>
   <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='setSystemUiVisibility']" name="deprecated-since">0</attr>
 
+  <!-- An abstract Buffer.Duplicate () method got added in 34. It creates covariant return type issue with already existing derived class methods -->
+  <remove-node api-since="34" path="/api/package[@name='java.nio']/class[@name='Buffer']/method[@name='duplicate' and count(parameter)=0]" />
+  <remove-node api-since="34" path="/api/package[@name='java.nio']/class[@name='Buffer']/method[@name='slice' and count(parameter)=0]" />
+  <remove-node api-since="34" path="/api/package[@name='java.nio']/class[@name='Buffer']/method[@name='slice' and count(parameter)=2]" />
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=2]" name="managedReturn">Java.Nio.ByteBuffer</attr>
+  <remove-node api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='duplicate' and count(parameter)=0]" />
+  <remove-node api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=0]" />
+  <remove-node api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=2]" />
+	
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -1740,6 +1749,8 @@
   <attr api-since="32" path="/api/package/interface[contains(@merge.SourceFile,'api-Sv2.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="33" path="/api/package/interface[contains(@merge.SourceFile,'api-33.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="33" path="/api/package/interface[contains(@merge.SourceFile,'api-Tiramisu.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="34" path="/api/package/interface[contains(@merge.SourceFile,'api-34.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="34" path="/api/package/interface[contains(@merge.SourceFile,'api-UpsideDownCake.xml.in')]" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -1758,6 +1769,8 @@
   <attr api-since="32" path="/api//*[contains(@merge.SourceFile,'api-Sv2.xml.in')]" name="api-since">32</attr>
   <attr api-since="33" path="/api//*[contains(@merge.SourceFile,'api-33.xml.in')]" name="api-since">33</attr>
   <attr api-since="33" path="/api//*[contains(@merge.SourceFile,'api-Tiramisu.xml.in')]" name="api-since">33</attr>
+  <attr api-since="34" path="/api//*[contains(@merge.SourceFile,'api-34.xml.in')]" name="api-since">34</attr>
+  <attr api-since="34" path="/api//*[contains(@merge.SourceFile,'api-UpsideDownCake.xml.in')]" name="api-since">34</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 
