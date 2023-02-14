@@ -157,7 +157,7 @@ namespace Xamarin.Android.Prepare
 		async Task<bool> FetchFiles (Dictionary<string, string> neededFiles, string destinationDirectory, Uri url)
 		{
 			Utilities.CreateDirectory (destinationDirectory);
-			using (var httpClient = new HttpClient ()) {
+			using (HttpClient httpClient = Utilities.CreateHttpClient ()) {
 				bool success;
 				long size;
 

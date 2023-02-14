@@ -8,16 +8,16 @@
       "Size": 7207
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 69945
+      "Size": 69944
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 571971
+      "Size": 571969
     },
     "assemblies/Mono.Security.dll": {
       "Size": 68430
     },
     "assemblies/mscorlib.dll": {
-      "Size": 915392
+      "Size": 915393
     },
     "assemblies/System.Core.dll": {
       "Size": 164045
@@ -32,7 +32,7 @@
       "Size": 110693
     },
     "assemblies/System.Numerics.dll": {
-      "Size": 15681
+      "Size": 15680
     },
     "assemblies/System.Runtime.Serialization.dll": {
       "Size": 186653
@@ -71,16 +71,16 @@
       "Size": 43130
     },
     "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
-      "Size": 6708
+      "Size": 6707
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.Common.dll": {
-      "Size": 7055
+      "Size": 7054
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.Core.dll": {
       "Size": 7186
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.ViewModel.dll": {
-      "Size": 4861
+      "Size": 4862
     },
     "assemblies/Xamarin.AndroidX.Loader.dll": {
       "Size": 13578
@@ -119,7 +119,7 @@
       "Size": 1613872
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 275048
+      "Size": 277472
     },
     "lib/arm64-v8a/libmono-native.so": {
       "Size": 750976

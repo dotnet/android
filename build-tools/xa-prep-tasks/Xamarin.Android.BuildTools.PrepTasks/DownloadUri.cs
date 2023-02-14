@@ -43,7 +43,17 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 			var source  = cancellationTokenSource = new CancellationTokenSource ();
 			var tasks   = new Task<ITaskItem> [SourceUris.Length];
-			using (var client = new HttpClient ()) {
+
+			// LGTM recommendation
+			//
+			// Using HttpClient without providing a platform specific handler (WinHttpHandler or CurlHandler) where the CheckCertificateRevocationList property is set
+			// to true, will allow revoked certificates to be accepted by the HttpClient as valid.
+			//
+			var handler = new HttpClientHandler {
+				CheckCertificateRevocationList = true,
+			};
+
+			using (var client = new HttpClient (handler)) {
 				client.Timeout = TimeSpan.FromHours (3);
 				for (int i = 0; i < SourceUris.Length; ++i) {
 					tasks [i] = DownloadFile (client, source, SourceUris [i], DestinationFiles [i]);
