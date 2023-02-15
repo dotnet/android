@@ -857,6 +857,7 @@ namespace Lib2
 
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				FileAssert.Exists (cacheFile);
 				var actual = ReadCache (cacheFile);
 				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec),
 					expected.Jars.Select (j => j.ItemSpec));
@@ -871,6 +872,7 @@ namespace Lib2
 
 				b.BuildLogFile = "build3.log";
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
+				FileAssert.Exists (cacheFile);
 				actual = ReadCache (cacheFile);
 				Assert.AreEqual (expected.Jars.Length + 1, actual.Jars.Length,
 					$"{nameof (expected.Jars)} should have one more item");
@@ -885,6 +887,7 @@ namespace Lib2
 				// Build with no changes, checking we are skipping targets appropriately
 				b.BuildLogFile = "build4.log";
 				Assert.IsTrue (b.Build (proj), "fourth build should have succeeded.");
+				FileAssert.Exists (cacheFile);
 				var targets = new List<string> {
 					"_UpdateAndroidResgen",
 					"_CompileJava",
