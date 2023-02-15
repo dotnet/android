@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_TargetLibraryName>libthread-load.so</_TargetLibraryName>
+    <_TargetLibrarySourceDir>$(MSBuildThisFileDirectory)\..\native</_TargetLibrarySourceDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <_RID Include="$(RuntimeIdentifier)"  Condition=" '$(RuntimeIdentifiers)' == '' " />
+    <_RID Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifiers)' != '' " />
+  </ItemGroup>
+
+  <Target Name="_PrepareTargetLibraries">
+    <PropertyGroup>
+      <NinjaPath Condition=" '$(NinjaPath)' == '' ">ninja</NinjaPath>
+      <CmakePath Condition=" '$(CmakePath)' == '' ">cmake</CmakePath>
+      <_CmakeAndroidFlags>-GNinja -DCMAKE_MAKE_PROGRAM="$(NinjaPath)" -DANDROID_STL="none" -DANDROID_CPP_FEATURES="no-rtti no-exceptions" -DCMAKE_TOOLCHAIN_FILE="$(_AndroidNdkDirectory)build\cmake\android.toolchain.cmake" -DANDROID_NDK=$(_AndroidNdkDirectory)</_CmakeAndroidFlags>
+      <_TargetLibraryBuildDir>$(IntermediateOutputPath)\native</_TargetLibraryBuildDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_TargetLibrary Include="$(_TargetLibraryBuildDir)\%(_RID.Identity)\$(_TargetLibraryName)">
+        <RID>%(_RID.Identity)</RID>
+        <ABI Condition=" '%(_RID.Identity)' == 'android-arm' ">armeabi-v7a</ABI>
+        <ABI Condition=" '%(_RID.Identity)' == 'android-arm64' ">arm64-v8a</ABI>
+        <ABI Condition=" '%(_RID.Identity)' == 'android-x86' ">x86</ABI>
+        <ABI Condition=" '%(_RID.Identity)' == 'android-x64' ">x86_64</ABI>
+        <CMakeFlags>$(_CmakeAndroidFlags) -DCMAKE_BUILD_TYPE=$(Configuration) -DANDROID_PLATFORM=$(AndroidSdkPlatformVersion)</CMakeFlags>
+        <WorkingDirectory>$(_TargetLibraryBuildDir)\%(_RID.Identity)</WorkingDirectory>
+      </_TargetLibrary>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_BuildNativeLib"
+          BeforeTargets="CoreBuild"
+          DependsOnTargets="_PrepareTargetLibraries"
+          Inputs="$(_TargetLibrarySourceDir)\CMakeLists.txt $(_TargetLibrarySourceDir)\*.cc"
+          Outputs="@(_TargetLibrary)">
+    <MakeDir Directories="%(_TargetLibrary.WorkingDirectory)"/>
+    <Exec
+        Command="$(CmakePath) %(_TargetLibrary.CMakeFlags) -DANDROID_ABI=%(_TargetLibrary.ABI) $(_TargetLibrarySourceDir)"
+        WorkingDirectory="%(_TargetLibrary.WorkingDirectory)" />
+    <Exec
+        Command="$(NinjaPath)"
+        WorkingDirectory="%(_TargetLibrary.WorkingDirectory)" />
+
+    <ItemGroup>
+      <AndroidNativeLibrary Include="%(_TargetLibrary.Identity)" />
+    </ItemGroup>
+  </Target>
+</Project>
