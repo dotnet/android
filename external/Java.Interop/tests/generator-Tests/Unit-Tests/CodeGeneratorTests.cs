@@ -827,6 +827,55 @@ namespace generatortests
 			Assert.False (sb.ToString ().Contains ("warning BG8403"));
 		}
 
+
+		[Test]
+		public void AvoidNREOnInvalidBaseMethod ()
+		{
+			// We copy methods from the package-private base class to the public class, however
+			// the copied method is not valid because it doesn't understand the generic argument
+			// type. The method is remove from the public class, but we need to ensure the
+			// base class method still exists and IsValid.
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+
+			  <package name='android.view' jni-name='android/view'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' final='false' name='View' static='false' visibility='public' jni-signature='Landroid/view/View;' />
+			  </package>
+
+			  <package name='com.google.android.material.behavior' jni-name='com/google/android/material/behavior'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='ViewOffsetBehavior' static='false' visibility='' jni-signature='Lcom/google/android/material/appbar/ViewOffsetBehavior;'>
+			      <typeParameters>
+				<typeParameter name='V' classBound='android.view.View' jni-classBound='Landroid/view/View;'>
+				  <genericConstraints>
+				    <genericConstraint type='android.view.View' />
+				  </genericConstraints>
+				</typeParameter>
+			      </typeParameters>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='layoutChild' jni-signature='(Landroid/view/View;)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='protected'>
+				<parameter name='child' type='V' jni-type='TV;' not-null='true' />
+			      </method>
+			    </class>
+    
+			    <class abstract='false' deprecated='not deprecated' extends='com.google.android.material.behavior.ViewOffsetBehavior' extends-generic-aware='com.google.android.material.behavior.ViewOffsetBehavior&lt;android.view.View&gt;' jni-extends='Lcom/google/android/material/appbar/ViewOffsetBehavior;' final='false' name='Behavior' static='false' visibility='public' jni-signature='Lcom/google/android/material/appbar/Behavior;'>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+
+			var public_class = gens.Single (g => g.Name == "Behavior");
+			var base_class = gens.Single (g => g.Name == "ViewOffsetBehavior");
+
+			// Method got removed
+			Assert.AreEqual (0, public_class.Methods.Count);
+
+			// Method still exists and is valid
+			Assert.AreEqual (1, base_class.Methods.Count);
+			Assert.AreEqual (true, base_class.Methods [0].IsValid);
+		}
+
 		static string StripRegisterAttributes (string str)
 		{
 			// It is hard to test if the [Obsolete] is on the setter/etc due to the [Register], so remove all [Register]s

@@ -107,6 +107,57 @@ namespace MonoDroid.Generation
 
 		public bool CanHaveStringOverload => IsReturnCharSequence || Parameters.HasCharSequence;
 
+		public Method Clone (GenBase declaringType)
+		{
+			var clone = new Method (declaringType);
+
+			// MethodBase
+			clone.Annotation = Annotation;
+			clone.ApiAvailableSince = ApiAvailableSince;
+			clone.AssemblyName = AssemblyName;
+			clone.Deprecated = Deprecated;
+			clone.DeprecatedSince = DeprecatedSince;
+			clone.IsAcw = IsAcw;
+			clone.Name = Name;
+			clone.Visibility = Visibility;
+			clone.LineNumber = LineNumber;
+			clone.LinePosition = LinePosition;
+			clone.SourceFile = SourceFile;
+			clone.JavadocInfo = JavadocInfo;
+
+			if (GenericArguments != null)
+				foreach (var ga in GenericArguments)
+					clone.GenericArguments.Add (ga.Clone ());
+
+			foreach (var p in Parameters)
+				clone.Parameters.Add (p.Clone ());
+
+			// Method
+			clone.ArgsType = ArgsType;
+			clone.CustomAttributes = CustomAttributes;
+			clone.EventName = EventName;
+			clone.GenerateAsyncWrapper = GenerateAsyncWrapper;
+			clone.GenerateDispatchingSetter = GenerateDispatchingSetter;
+			clone.IsAbstract = IsAbstract;
+			clone.IsFinal = IsFinal;
+			clone.IsInterfaceDefaultMethod = IsInterfaceDefaultMethod;
+			clone.OverriddenInterfaceMethod = OverriddenInterfaceMethod;
+			clone.IsReturnEnumified = IsReturnEnumified;
+			clone.IsStatic = IsStatic;
+			clone.IsVirtual = IsVirtual;
+			clone.JavaName = JavaName;
+			clone.ManagedOverride = ManagedOverride;
+			clone.ManagedReturn = ManagedReturn;
+			clone.PropertyNameOverride = PropertyNameOverride;
+			clone.Return = Return;
+			clone.ReturnNotNull = ReturnNotNull;
+			clone.RetVal = RetVal.Clone (clone);
+			clone.SourceApiLevel = SourceApiLevel;
+			clone.ExplicitInterface = ExplicitInterface;
+
+			return clone;
+		}
+
 		public string ConnectorName => $"Get{Name}{IDSignature}Handler";
 
 		public string EscapedCallbackName => IdentifierValidator.CreateValidIdentifier ($"cb_{JavaName}{IDSignature}", true);

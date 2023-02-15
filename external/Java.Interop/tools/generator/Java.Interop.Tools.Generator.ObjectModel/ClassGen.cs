@@ -63,7 +63,7 @@ namespace MonoDroid.Generation
 					foreach (var baseMethod in baseClass.Methods) {
 						var method = Methods.FirstOrDefault (m => m.Matches (baseMethod));
 						if (method == null)
-							Methods.Add (baseMethod);
+							Methods.Add (baseMethod.Clone (this));
 					}
 					BaseType = baseClass.BaseType;
 				} else {

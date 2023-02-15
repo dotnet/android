@@ -57,7 +57,7 @@ namespace Xamarin.Test {
 			}
 		}
 
-		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PackageClassB']/method[@name='packageMethodB' and count(parameter)=0]"
+		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']/method[@name='packageMethodB' and count(parameter)=0]"
 		[Register ("packageMethodB", "()V", "")]
 		public unsafe void PackageMethodB ()
 		{
@@ -68,7 +68,7 @@ namespace Xamarin.Test {
 			}
 		}
 
-		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PackageClassA']/method[@name='packageMethodA' and count(parameter)=0]"
+		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']/method[@name='packageMethodA' and count(parameter)=0]"
 		[Register ("packageMethodA", "()V", "")]
 		public unsafe void PackageMethodA ()
 		{

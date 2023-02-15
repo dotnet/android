@@ -72,6 +72,9 @@ namespace generatortests
 				options.SymbolTable.AddType (gen);
 
 			foreach (var gen in gens)
+				gen.FixupAccessModifiers (options);
+
+			foreach (var gen in gens)
 				gen.Validate (options, new GenericParameterDefinitionList (), generator.Context);
 
 			foreach (var gen in gens)

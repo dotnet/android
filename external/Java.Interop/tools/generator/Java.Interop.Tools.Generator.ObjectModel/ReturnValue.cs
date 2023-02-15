@@ -28,6 +28,11 @@ namespace MonoDroid.Generation {
 
 		public string CallMethodPrefix => TypeNameUtilities.GetCallPrefix (sym);
 
+		public ReturnValue Clone (Method owner)
+		{
+			return new ReturnValue (owner, java_type, managed_type, is_enumified, NotNull);
+		}
+
 		public string DefaultValue {
 			get { return sym.DefaultValue; }
 		}

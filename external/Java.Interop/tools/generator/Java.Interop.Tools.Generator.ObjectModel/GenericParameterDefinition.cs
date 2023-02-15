@@ -49,6 +49,11 @@ namespace MonoDroid.Generation
 			validated = is_valid = true;
 			return true;
 		}
+
+		public GenericParameterDefinition Clone ()
+		{
+			return new GenericParameterDefinition (Name, ConstraintExpressions);
+		}
 	}
 	
 	public class GenericParameterDefinitionList : List<GenericParameterDefinition>

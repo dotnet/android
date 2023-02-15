@@ -32,7 +32,12 @@ namespace MonoDroid.Generation {
 			this.is_enumified = isEnumified;
 			NotNull = notNull;
 		}
-		
+
+		public Parameter Clone ()
+		{
+			return new Parameter (name, type, managed_type, is_enumified, rawtype, NotNull);
+		}
+
 		public string GetCall (CodeGenerationOptions opt)
 		{
 			var rgm = sym as IRequireGenericMarshal;
