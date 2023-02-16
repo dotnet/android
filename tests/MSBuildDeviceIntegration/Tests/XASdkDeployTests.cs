@@ -156,6 +156,59 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void SupportDesugaringStaticInterfaceMethods ()
+		{
+			AssertHasDevices ();
+			if (!Builder.UseDotNet) {
+				Assert.Ignore ("Skipping. Test not relevant under Classic.");
+			}
+
+			var proj = new XASdkProject () {
+				IsRelease = true,
+				OtherBuildItems = {
+					new AndroidItem.AndroidJavaSource ("StaticMethodsInterface.java") {
+						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+						TextContent = () => ResourceData.IdmStaticMethodsInterface,
+						Metadata = {
+							{ "Bind", "True" },
+						},
+					},
+				},
+			};
+
+			// Note: To properly test, Desugaring must be *enabled*, which requires that
+			// `$(SupportedOSPlatformVersion)` be *less than* 23.  21 is currently the default,
+			// but set this explicitly anyway just so that this implicit requirement is explicit.
+			proj.SetProperty (proj.ReleaseProperties, "SupportedOSPlatformVersion", "21");
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
+		Console.WriteLine ($""# jonp static interface default method invocation; IStaticMethodsInterface.Value={Example.IStaticMethodsInterface.Value}"");
+");
+			proj.SetRuntimeIdentifier (DeviceAbi);
+			var relativeProjDir = Path.Combine ("temp", TestName);
+			var fullProjDir     = Path.Combine (Root, relativeProjDir);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
+			var files = proj.Save ();
+			proj.Populate (relativeProjDir, files);
+			proj.CopyNuGetConfig (relativeProjDir);
+			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
+
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
+
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (fullProjDir, "logcat.log"));
+			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
+			var logcatOutput = File.ReadAllText (Path.Combine (fullProjDir, "logcat.log"));
+
+			StringAssert.Contains (
+					"IStaticMethodsInterface.Value=3",
+					logcatOutput,
+					"Was IStaticMethodsInterface.Value executed?"
+			);
+		}
+
+		[Test]
 		[Category ("Debugger"), Category ("Node-4")]
 		public void DotNetDebug ([Values("net6.0-android", "net7.0-android")] string targetFramework)
 		{
