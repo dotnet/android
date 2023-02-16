@@ -230,19 +230,21 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 void
 MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
 {
-	JNIEnv* env;
+	JNIEnv* env = nullptr;
 	int r;
 #ifdef PLATFORM_ANDROID
 	r = osBridge.get_jvm ()->AttachCurrentThread (&env, nullptr);
 #else   // ndef PLATFORM_ANDROID
 	r = osBridge.get_jvm ()->AttachCurrentThread (reinterpret_cast<void**>(&env), nullptr);
 #endif  // ndef PLATFORM_ANDROID
-	if (r != JNI_OK) {
+	if (r != JNI_OK || env == nullptr) {
 #if DEBUG
 		log_fatal (LOG_DEFAULT, "ERROR: Unable to attach current thread to the Java VM!");
 		Helpers::abort_application ();
 #endif
 	}
+
+	env->CallStaticVoidMethod (mono_android_Runtime, mono_android_Runtime_setCurrentThreadContext);
 }
 
 void
@@ -1062,7 +1064,7 @@ MonodroidRuntime::init_android_runtime (
 #if !defined (NET)
 	MonoDomain *domain,
 #endif // ndef NET
-	JNIEnv *env, jclass runtimeClass, jobject loader)
+	JNIEnv *env, jobject loader)
 {
 	constexpr char icall_typemap_java_to_managed[] = "Java.Interop.TypeManager::monodroid_typemap_java_to_managed";
 	constexpr char icall_typemap_managed_to_java[] = "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java";
@@ -1091,7 +1093,7 @@ MonodroidRuntime::init_android_runtime (
 	init.logCategories          = log_categories;
 	init.version                = env->GetVersion ();
 	init.androidSdkVersion      = android_api_level;
-	init.localRefsAreIndirect   = LocalRefsAreIndirect (env, runtimeClass, init.androidSdkVersion);
+	init.localRefsAreIndirect   = LocalRefsAreIndirect (env, mono_android_Runtime, init.androidSdkVersion);
 	init.isRunningOnDesktop     = is_running_on_desktop ? 1 : 0;
 	init.brokenExceptionTransitions = application_config.broken_exception_transitions ? 1 : 0;
 	init.packageNamingPolicy    = static_cast<int>(application_config.package_naming_policy);
@@ -1105,7 +1107,7 @@ MonodroidRuntime::init_android_runtime (
 
 	log_warn (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
 
-	init.grefClass = utils.get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
+	init.grefClass = utils.get_class_from_runtime_field (env, mono_android_Runtime, "java_lang_Class", true);
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
@@ -1188,9 +1190,9 @@ MonodroidRuntime::init_android_runtime (
 	env->DeleteLocalRef (lrefLoaderClass);
 
 	init.grefLoader           = env->NewGlobalRef (loader);
-	init.grefIGCUserPeer      = utils.get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
+	init.grefIGCUserPeer      = utils.get_class_from_runtime_field (env, mono_android_Runtime, "mono_android_IGCUserPeer", true);
 
-	osBridge.initialize_on_runtime_init (env, runtimeClass);
+	osBridge.initialize_on_runtime_init (env, mono_android_Runtime);
 
 	log_debug (LOG_DEFAULT, "Calling into managed runtime init");
 
@@ -1613,7 +1615,7 @@ MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, size_t home_len, 
 {
 	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path_len);
 	utils.path_combine (dir, home.get_cstr (), home_len, relativePath, relative_path_len);
-	log_info (LOG_DEFAULT, "Creating XDG directory: %s", dir.get ());
+	log_debug (LOG_DEFAULT, "Creating XDG directory: %s", dir.get ());
 	int rv = utils.create_directory (dir.get (), DEFAULT_DIRECTORY_MODE);
 	if (rv < 0 && errno != EEXIST)
 		log_warn (LOG_DEFAULT, "Failed to create XDG directory %s. %s", dir.get (), strerror (errno));
@@ -2025,10 +2027,10 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 
 #if defined (NET)
 	load_assemblies (default_alc, preload, assemblies);
-	init_android_runtime (env, runtimeClass, loader);
+	init_android_runtime (env, loader);
 #else // def NET
 	load_assemblies (domain, preload, assemblies);
-	init_android_runtime (domain, env, runtimeClass, loader);
+	init_android_runtime (domain, env, loader);
 #endif // ndef NET
 	osBridge.add_monodroid_domain (domain);
 
@@ -2191,6 +2193,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
                                                           jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {
+	mono_android_Runtime = reinterpret_cast<jclass> (env->NewGlobalRef (klass));
+
 	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level_raw = nullptr;
 
@@ -2207,6 +2211,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		timing = new Timing ();
 		total_time_index = internal_timing->start_event (TimingEventKind::TotalRuntimeInit);
 	}
+
+	mono_android_Runtime_setCurrentThreadContext = env->GetStaticMethodID (mono_android_Runtime, "setCurrentThreadContext", "()V");
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper &home = applicationDirs[SharedConstants::APP_DIRS_FILES_DIR_INDEX];
@@ -2286,7 +2292,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;
 		androidSystem.set_runtime_libdir (strdup (jstr.get_cstr ()));
-		log_info (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
+		log_debug (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
 	}
 
 	androidSystem.setup_process_args (runtimeApks);
@@ -2340,7 +2346,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	mono_config_parse_memory (reinterpret_cast<const char*> (monodroid_config));
 	mono_register_machine_config (reinterpret_cast<const char*> (monodroid_machine_config));
 #endif // ndef NET
-	log_info (LOG_DEFAULT, "Probing for Mono AOT mode\n");
+	log_debug (LOG_DEFAULT, "Probing for Mono AOT mode");
 
 	MonoAotMode mode = MonoAotMode::MONO_AOT_MODE_NONE;
 	if (androidSystem.is_mono_aot_enabled ()) {
@@ -2362,20 +2368,20 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		}
 #else   // defined (NET)
 		if (mode != MonoAotMode::MONO_AOT_MODE_INTERP_ONLY) {
-			log_info (LOG_DEFAULT, "Enabling AOT mode in Mono");
+			log_debug (LOG_DEFAULT, "Enabling AOT mode in Mono");
 		} else {
-			log_info (LOG_DEFAULT, "Enabling Mono Interpreter");
+			log_debug (LOG_DEFAULT, "Enabling Mono Interpreter");
 		}
 #endif  // !defined (NET)
 	}
 	mono_jit_set_aot_mode (mode);
 
-	log_info (LOG_DEFAULT, "Probing if we should use LLVM\n");
+	log_debug (LOG_DEFAULT, "Probing if we should use LLVM");
 
 	if (androidSystem.is_mono_llvm_enabled ()) {
 		char *args [1];
 		args[0] = const_cast<char*> ("--llvm");
-		log_info (LOG_DEFAULT, "Enabling LLVM mode in Mono\n");
+		log_debug (LOG_DEFAULT, "Enabling LLVM mode in Mono");
 		mono_jit_parse_options (1,  args);
 		mono_set_use_llvm (true);
 	}

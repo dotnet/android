@@ -10,6 +10,8 @@ public class Runtime {
 	static java.lang.Class mono_android_IGCUserPeer = mono.android.IGCUserPeer.class;
 	static java.lang.Class mono_android_GCUserPeer = mono.android.GCUserPeer.class;
 
+	public static ClassLoader classLoader;
+
 	static {
 		Thread.setDefaultUncaughtExceptionHandler (new XamarinUncaughtExceptionHandler (Thread.getDefaultUncaughtExceptionHandler ()));
 	}
@@ -35,6 +37,12 @@ public class Runtime {
 	public static native void destroyContexts (int[] contextIDs);
 	public static native void propagateUncaughtException (Thread javaThread, Throwable javaException);
 	public static native void dumpTimingData ();
+
+	public static void setCurrentThreadContext ()
+	{
+		Thread current = Thread.currentThread ();
+		current.setContextClassLoader (classLoader);
+	}
 }
 
 final class XamarinUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {

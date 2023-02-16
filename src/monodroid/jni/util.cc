@@ -143,7 +143,7 @@ Util::monodroid_store_package_name (const char *name)
 	// And yes, I know it could be done in a simple loop or in even simpler 8 lines of code, but
 	// that would be boring, wouldn't it? :)
 	package_hash_to_hex (hash, 0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u);
-	log_info (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
+	log_debug (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
 }
 
 #if defined (NET)

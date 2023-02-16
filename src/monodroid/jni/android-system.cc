@@ -339,7 +339,15 @@ AndroidSystem::create_update_dir (char *override_dir)
 
 	override_dirs [0] = override_dir;
 	utils.create_public_directory (override_dir);
-	log_warn (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
+
+	// Documentation for the Debug build (in Documentation/workflow/DevelopmentTips.md) makes use of this message, so
+	// let's leave it as `warn` for Debug builds.
+	constexpr char message[] = "Creating public update directory: `%s`";
+#if defined (RELEASE)
+	log_debug (LOG_DEFAULT, message, override_dir);
+#else // ndef RELEASE
+	log_warn (LOG_DEFAULT, message, override_dir);
+#endif // def RELEASE
 }
 
 bool
@@ -364,9 +372,9 @@ AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exis
 	if (path == nullptr || *path == '\0')
 		return nullptr;
 
-	log_info (LOG_ASSEMBLY, "Trying to load shared library '%s'", path);
+	log_debug (LOG_ASSEMBLY, "Trying to load shared library '%s'", path);
 	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !utils.file_exists (path)) {
-		log_info (LOG_ASSEMBLY, "Shared library '%s' not found", path);
+		log_warn (LOG_ASSEMBLY, "Shared library '%s' not found", path);
 		return nullptr;
 	}
 
@@ -669,12 +677,12 @@ AndroidSystem::setup_environment ()
 		}
 
 		if (aotMode != MonoAotMode::MONO_AOT_MODE_LAST) {
-			log_info (LOG_DEFAULT, "Mono AOT mode: %s", mono_aot_mode_name);
+			log_debug (LOG_DEFAULT, "Mono AOT mode: %s", mono_aot_mode_name);
 		} else {
 			if (!is_interpreter_enabled ()) {
 				log_warn (LOG_DEFAULT, "Unknown Mono AOT mode: %s", mono_aot_mode_name);
 			} else {
-				log_warn (LOG_DEFAULT, "Mono AOT mode: interpreter");
+				log_debug (LOG_DEFAULT, "Mono AOT mode: interpreter");
 			}
 		}
 	}

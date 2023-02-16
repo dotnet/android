@@ -47,6 +47,7 @@ public class MonoPackageManager {
 				String runtimeDir = getNativeLibraryPath (runtimePackage);
 				int localDateTimeOffset;
 
+
 				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 					localDateTimeOffset = OffsetDateTime.now().getOffset().getTotalSeconds();
 				}
@@ -112,6 +113,7 @@ public class MonoPackageManager {
 
 				System.loadLibrary("monodroid");
 
+				Runtime.classLoader = loader;
 				Runtime.initInternal (
 						language,
 						apks,

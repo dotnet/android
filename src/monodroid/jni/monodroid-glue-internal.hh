@@ -301,9 +301,9 @@ namespace xamarin::android::internal
 		void parse_gdb_options ();
 		void mono_runtime_init (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args);
 #if defined (NET)
-		void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader);
+		void init_android_runtime (JNIEnv *env, jobject loader);
 #else //def NET
-		void init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader);
+		void init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader);
 		void setup_bundled_app (const char *dso_name);
 #endif // ndef NET
 		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
@@ -385,6 +385,9 @@ namespace xamarin::android::internal
 		timing_period       jit_time;
 		FILE               *jit_log;
 		MonoProfilerHandle  profiler_handle;
+
+		inline static jclass    mono_android_Runtime;
+		inline static jmethodID mono_android_Runtime_setCurrentThreadContext;
 #if !defined (NET)
 		FILE               *counters;
 #endif // ndef NET
