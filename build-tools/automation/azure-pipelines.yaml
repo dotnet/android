@@ -652,48 +652,11 @@ stages:
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-- stage: msbuilddevice_tests
-  displayName: MSBuild Emulator Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
-  jobs:
-  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator One .NET #N)"
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: mac_dotnetdevice_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: mac_dotnetdevice_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: mac_dotnetdevice_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 4
-      job_name: mac_dotnetdevice_tests_4
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
+      
+- template: yaml-templates/stage-msbuild-emulator-tests.yaml
+  parameters:
+    provisionatorChannel: ${{ parameters.provisionatorChannel }}
+    stageCondition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
 
   - job: wear_tests
     displayName: macOS > Tests > WearOS 
