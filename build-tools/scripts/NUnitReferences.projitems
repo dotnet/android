@@ -1,9 +1,9 @@
 <Project>
   <!-- This file assumes Configuration.props has been imported -->
   <ItemGroup>
-    <PackageReference Include="NUnit"               Version="3.13.2" />
+    <PackageReference Include="NUnit"               Version="3.13.3" />
     <PackageReference Include="NUnit.ConsoleRunner" Version="$(NUnitConsoleVersion)" />
-    <PackageReference Include="NUnit3TestAdapter"   Version="4.0.0" />
+    <PackageReference Include="NUnit3TestAdapter"   Version="4.3.1" />
   </ItemGroup>
   <!-- Required packages for .NET Core -->
   <ItemGroup Condition=" '$(TargetFramework)' != 'net472' and '$(TargetFramework)' != 'netstandard2.0' ">
