@@ -71,13 +71,19 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (DotNetInstallAndRunSource))]
 		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, string targetFramework)
 		{
+			var id = new Random ().Next (1, 5000);
+
 			XASdkProject proj;
 			if (xamarinForms) {
 				proj = new XamarinFormsXASdkProject {
+					ProjectName = $"DotNetInstallAndRun{id}",
+					PackageName = $"com.xamarin.dotnetinstallandrun{id}",
 					IsRelease = isRelease
 				};
 			} else {
 				proj = new XASdkProject {
+					ProjectName = $"DotNetInstallAndRun{id}",
+					PackageName = $"com.xamarin.dotnetinstallandrun{id}",
 					IsRelease = isRelease
 				};
 			}
@@ -88,6 +94,7 @@ namespace Xamarin.Android.Build.Tests
 			var relativeProjDir = Path.Combine ("temp", TestName);
 			var fullProjDir     = Path.Combine (Root, relativeProjDir);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
+			TestPackageNames[proj.PackageName] = proj.PackageName;
 			var files = proj.Save ();
 			proj.Populate (relativeProjDir, files);
 			proj.CopyNuGetConfig (relativeProjDir);
@@ -105,7 +112,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
 		{
+			var id = new Random ().Next (1, 5000);
+
 			var proj = new XASdkProject () {
+				ProjectName = $"TypeAndMemberRemapping{id}",
+				PackageName = $"com.xamarin.typeandmemberremapping{id}",
 				IsRelease = isRelease,
 				OtherBuildItems = {
 					new AndroidItem._AndroidRemapMembers ("RemapActivity.xml") {
@@ -126,6 +137,7 @@ namespace Xamarin.Android.Build.Tests
 			var relativeProjDir = Path.Combine ("temp", TestName);
 			var fullProjDir     = Path.Combine (Root, relativeProjDir);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
+			TestPackageNames[proj.PackageName] = proj.PackageName;
 			var files = proj.Save ();
 			proj.Populate (relativeProjDir, files);
 			proj.CopyNuGetConfig (relativeProjDir);
@@ -220,6 +232,7 @@ namespace Xamarin.Android.Build.Tests
 			var relativeProjDir = Path.Combine ("temp", TestName);
 			var fullProjDir = Path.Combine (Root, relativeProjDir);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
+			TestPackageNames[proj.PackageName] = proj.PackageName;
 			var files = proj.Save ();
 			proj.Populate (relativeProjDir, files);
 			proj.CopyNuGetConfig (relativeProjDir);
