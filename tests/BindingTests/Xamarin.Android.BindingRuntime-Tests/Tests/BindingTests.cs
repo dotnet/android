@@ -178,31 +178,36 @@ namespace Xamarin.Android.BindingRuntime_Tests {
 			}
 		}
 
-		//[Test]
-		//public void JavaAbstractMethodTest ()
-		//{
-		//	// Library is referencing APIv1, ICursor is from APIv2
-		//	// if the Library assembly isn't fixed, the MyClrCursor instance is not even created
-		//	Test.Bindings.ICursor ic = new Library.MyClrCursor ();
+#if TODO_7794
+		// This test requires that https://github.com/xamarin/xamarin-android/issues/7794
+		// be completed first, as it depends on Xamarin.Android.FixJavaAbstractMethod* projects.
 
-		//	// we should be able to call Method without issue
-		//	ic.Method ();
-		//	try {
-		//		// when calling Newmethod, we should get Java.Lang.AbstractMethodError. we catch
-		//		// general Exception on purpose, so that AbstractmethodError is not marked by MarkStep
-		//		// but by FixAbstractMethodStep
-		//		ic.NewMethod ();
-		//	} catch (Exception e) {
-		//		if (e.GetType ().ToString () != "Java.Lang.AbstractMethodError")
-		//			throw e;
-		//	}
+		[Test]
+		public void JavaAbstractMethodTest ()
+		{
+			// Library is referencing APIv1, ICursor is from APIv2
+			// if the Library assembly isn't fixed, the MyClrCursor instance is not even created
+			Test.Bindings.ICursor ic = new Library.MyClrCursor ();
 
-		//	var mi = ic.GetType ().GetMethod ("MethodWithCursor");
+			// we should be able to call Method without issue
+			ic.Method ();
+			try {
+				// when calling Newmethod, we should get Java.Lang.AbstractMethodError. we catch
+				// general Exception on purpose, so that AbstractmethodError is not marked by MarkStep
+				// but by FixAbstractMethodStep
+				ic.NewMethod ();
+			} catch (Exception e) {
+				if (e.GetType ().ToString () != "Java.Lang.AbstractMethodError")
+					throw e;
+			}
 
-		//	if (mi != null && mi.GetMethodBody ().LocalVariables.Count == 0)
-		//		throw new Exception ("FixAbstractMethodStep broken, MethodWithRT added, while it should not be");
-		//}
+			var mi = ic.GetType ().GetMethod ("MethodWithCursor");
 
+			if (mi != null && mi.GetMethodBody ().LocalVariables.Count == 0)
+				throw new Exception ("FixAbstractMethodStep broken, MethodWithRT added, while it should not be");
+		}
+#endif  // TODO_7794
+		
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=36036
 		[Test]
 		public void NestedClassTest ()
