@@ -20,24 +20,26 @@ namespace Xamarin.Android.BindingRuntime_Tests {
 			Assert.IsTrue (t is Com.Xamarin.Android.Timing);
 		}
 
-		//[Test]
-		//public void TestResourceId ()
-		//{
-		//	Assert.AreEqual (Resource.Id.action_settings, Com.Example.Javalib.MainActivity.ActionSettings);
-		//}
+#if TODO_7794
+		[Test]
+		public void TestResourceId ()
+		{
+			Assert.AreEqual (Resource.Id.action_settings, Com.Example.Javalib.MainActivity.ActionSettings);
+		}
 
-		//[Test]
-		//public void TestNativeLibDllImport ()
-		//{
-		//	Assert.AreEqual (TestNativeLib.Binding.SampleFunction (), 0xf00);
-		//}
+		[Test]
+		public void TestNativeLibDllImport ()
+		{
+			Assert.AreEqual (TestNativeLib.Binding.SampleFunction (), 0xf00);
+		}
 
-		//[Test]
-		//public void TestNativeLibDllImportInEmbeddedArchive ()
-		//{
-		//	Assert.AreEqual (TestNativeLib.Binding.SampleFunction2 (), 0xf200);
-		//}
-
+		[Test]
+		public void TestNativeLibDllImportInEmbeddedArchive ()
+		{
+			Assert.AreEqual (TestNativeLib.Binding.SampleFunction2 (), 0xf200);
+		}
+#endif  // TODO_7794
+		
 		[Test]
 		public void NamespaceTransforms ()
 		{
