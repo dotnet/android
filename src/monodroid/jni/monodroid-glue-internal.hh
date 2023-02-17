@@ -281,7 +281,7 @@ namespace xamarin::android::internal
 #if !defined (NET)
 		static void  init_internal_api_dso (void *handle);
 #endif // ndef NET
-		int LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version);
+		int LocalRefsAreIndirect (JNIEnv *env, int version) noexcept;
 		void create_xdg_directory (jstring_wrapper& home, size_t home_len, const char *relativePath, size_t relative_path_len, const char *environmentVariableName);
 		void create_xdg_directories_and_environment (jstring_wrapper &homeDir);
 		void disable_external_signal_handlers ();
@@ -326,7 +326,7 @@ namespace xamarin::android::internal
 		MonoClass* get_android_runtime_class (MonoDomain *domain);
 #endif
 		MonoDomain*	create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks);
-		MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
+		MonoDomain* create_and_initialize_domain (JNIEnv* env, jstring_array_wrapper &runtimeApks,
 		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
 		                                          jobject loader, bool is_root_domain, bool force_preload_assemblies,
 		                                          bool have_split_apks);

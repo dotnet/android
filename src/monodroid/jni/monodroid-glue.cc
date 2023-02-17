@@ -995,7 +995,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 }
 
 inline int
-MonodroidRuntime::LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version)
+MonodroidRuntime::LocalRefsAreIndirect (JNIEnv *env, int version) noexcept
 {
 	if (version < 14) {
 		java_System = nullptr;
@@ -1003,7 +1003,7 @@ MonodroidRuntime::LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int ve
 		return 0;
 	}
 
-	java_System = utils.get_class_from_runtime_field(env, runtimeClass, "java_lang_System", true);
+	java_System = utils.get_class_from_runtime_field(env, mono_android_Runtime, "java_lang_System", true);
 	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
 
 	return 1;
@@ -1093,7 +1093,7 @@ MonodroidRuntime::init_android_runtime (
 	init.logCategories          = log_categories;
 	init.version                = env->GetVersion ();
 	init.androidSdkVersion      = android_api_level;
-	init.localRefsAreIndirect   = LocalRefsAreIndirect (env, mono_android_Runtime, init.androidSdkVersion);
+	init.localRefsAreIndirect   = LocalRefsAreIndirect (env, init.androidSdkVersion);
 	init.isRunningOnDesktop     = is_running_on_desktop ? 1 : 0;
 	init.brokenExceptionTransitions = application_config.broken_exception_transitions ? 1 : 0;
 	init.packageNamingPolicy    = static_cast<int>(application_config.package_naming_policy);
@@ -1993,7 +1993,7 @@ monodroid_Mono_UnhandledException_internal ([[maybe_unused]] MonoException *ex)
 }
 
 MonoDomain*
-MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
+MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jstring_array_wrapper &runtimeApks,
                                                 jstring_array_wrapper &assemblies, [[maybe_unused]] jobjectArray assembliesBytes,
                                                 [[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, bool is_root_domain,
                                                 bool force_preload_assemblies, bool have_split_apks)
@@ -2407,7 +2407,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_array_wrapper assemblies (env, assembliesJava);
 	jstring_array_wrapper assembliesPaths (env);
 	/* the first assembly is used to initialize the AppDomain name */
-	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
+	create_and_initialize_domain (env, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
 
 #if defined (ANDROID) && !defined (NET)
 	// Mono from mono/mono has a bug which requires us to install the handlers after `mono_init_jit_version` is called

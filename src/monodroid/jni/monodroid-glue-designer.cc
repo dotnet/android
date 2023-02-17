@@ -42,7 +42,7 @@ MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (JNIEnv *en
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	jstring_array_wrapper assemblies (env, assembliesJava);
 	jstring_array_wrapper assembliePaths (env, assembliesPaths);
-	MonoDomain *domain = create_and_initialize_domain (env, klass, runtimeApks, assemblies, assembliesBytes, assembliePaths, loader, /*is_root_domain:*/ false, force_preload_assemblies, /* have_split_apks */ false);
+	MonoDomain *domain = create_and_initialize_domain (env, runtimeApks, assemblies, assembliesBytes, assembliePaths, loader, /*is_root_domain:*/ false, force_preload_assemblies, /* have_split_apks */ false);
 	mono_domain_set (domain, FALSE);
 	int domain_id = mono_domain_get_id (domain);
 	current_context_id = domain_id;
