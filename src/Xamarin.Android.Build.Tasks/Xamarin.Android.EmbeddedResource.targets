@@ -46,6 +46,10 @@ This file is used by all project types, including binding projects.
         OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
     />
     <Touch Files="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidLibraryProjectImportsCache)"
+          Condition="Exists ('$(_AndroidLibraryProjectImportsCache)')"/>
+    </ItemGroup>
   </Target>
 
   <Target Name="_ExtractLibraryProjectImports" DependsOnTargets="_ResolveLibraryProjectImports">
