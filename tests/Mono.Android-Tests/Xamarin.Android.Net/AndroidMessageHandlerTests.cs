@@ -54,7 +54,7 @@ namespace Xamarin.Android.NetTests
 				}
 			}
 
-			string responseBody = await response.ReadAsStringAsync ();
+			string responseBody = await response.Content.ReadAsStringAsync ();
 
 			Assert.IsTrue (responseBody.Length > 0, "Response was empty");
 			Assert.IsTrue (responseBody.Contains ($"\"{urlPath}\"", StringComparison.OrdinalIgnoreCase), $"\"{urlPath}\" should have been in the response JSON");
