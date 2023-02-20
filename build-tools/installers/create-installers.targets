@@ -331,12 +331,6 @@
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\x86_64-linux-android-as.cmd" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\x86_64-linux-android-ld.cmd" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\x86_64-linux-android-strip.cmd" />
-    <_MSBuildLibHostFilesWin Include="$(MicrosoftAndroidSdkOutDir)lib\host-mxe-Win64\libmono-android.debug.dll"   Condition=" '$(HostOS)' != 'Windows' " />
-    <_MSBuildLibHostFilesWin Include="$(MicrosoftAndroidSdkOutDir)lib\host-mxe-Win64\libmono-android.release.dll" Condition=" '$(HostOS)' != 'Windows' " />
-    <_MSBuildLibHostFilesWin Include="$(MicrosoftAndroidSdkOutDir)lib\host-mxe-Win64\libMonoPosixHelper.dll" />
-    <_MSBuildLibHostFilesWin Include="$(MicrosoftAndroidSdkOutDir)lib\host-mxe-Win64\libmonosgen-2.0.dll" />
-    <_MSBuildLibHostFilesWin Include="$(MicrosoftAndroidSdkOutDir)lib\host-mxe-Win64\libxamarin-app.dll" Condition=" '$(HostOS)' != 'Windows' " />
-    <_MSBuildLibHostFilesWin Include="$(MicrosoftAndroidSdkOutDir)lib\host-mxe-Win64\libxa-internal-api.dll" Condition=" '$(HostOS)' != 'Windows' " />
   </ItemGroup>
   <ItemDefinitionGroup>
     <_MSBuildFilesUnixSignAndHarden>
