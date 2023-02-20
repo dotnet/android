@@ -71,7 +71,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (DotNetInstallAndRunSource))]
 		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, string targetFramework)
 		{
-			var id = new Random ().Next (1, 5000);
+			var id = DateTime.Now.ToString ("yyyyMMddHHmmssfff");
 
 			XASdkProject proj;
 			if (xamarinForms) {
@@ -112,7 +112,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
 		{
-			var id = new Random ().Next (1, 5000);
+			var id = DateTime.Now.ToString ("yyyyMMddHHmmssfff");
 
 			var proj = new XASdkProject () {
 				ProjectName = $"TypeAndMemberRemapping{id}",
