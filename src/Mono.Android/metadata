@@ -469,7 +469,9 @@
   <remove-node path="/api/package[@name='java.lang']/class[@name='Float']/field[@name='NaN']" />
   <remove-node path="/api/package[@name='java.lang']/class[@name='Float']/field[@name='NEGATIVE_INFINITY']" />
   <remove-node path="/api/package[@name='java.lang']/class[@name='Float']/field[@name='POSITIVE_INFINITY']" />
+  <remove-node path="/api/package[@name='java.lang']/class[@name='System']/method[@name='loadLibrary']" />"
   <attr path="/api/package[@name='java.lang']/class[@name='System']" name="managedName">JavaSystem</attr>
+
   <remove-node path="/api/package[@name='java.nio']/class/method[@name='array']" />
 
   <attr path="/api/package[@name='java.text']/class[@name='Format']" name="managedName">_Format</attr>

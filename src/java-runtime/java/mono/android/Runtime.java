@@ -2,6 +2,7 @@ package mono.android;
 
 import java.lang.Thread;
 import java.lang.Throwable;
+import android.util.Log;
 
 public class Runtime {
 	static java.lang.Class java_lang_Class = java.lang.Class.class;;
@@ -42,6 +43,17 @@ public class Runtime {
 	{
 		Thread current = Thread.currentThread ();
 		current.setContextClassLoader (classLoader);
+	}
+
+	public static boolean loadLibrary (String libname)
+	{
+		try {
+			System.loadLibrary (libname);
+			return true;
+		} catch (java.lang.UnsatisfiedLinkError ex) {
+			Log.w ("monodroid", "Failed to load shared library with System.loadLibrary", ex);
+			return false;
+		}
 	}
 }
 

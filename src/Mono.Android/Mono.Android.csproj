@@ -343,6 +343,7 @@
     <Compile Include="Java.Lang\IllegalAccessException.cs" />
     <Compile Include="Java.Lang\InstantiationException.cs" />
     <Compile Include="Java.Lang\Integer.cs" />
+    <Compile Include="Java.Lang\JavaSystem.cs" />
     <Compile Include="Java.Lang\Long.cs" />
     <Compile Include="Java.Lang\NoSuchFieldException.cs" />
     <Compile Include="Java.Lang\NoSuchMethodException.cs" />

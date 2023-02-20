@@ -21,6 +21,7 @@ static PinvokeEntry internal_pinvokes[] = {
 	{0x598d2f254820f3e, "java_interop_jnienv_get_static_boolean_field", reinterpret_cast<void*>(&java_interop_jnienv_get_static_boolean_field)},
 	{0x5b18f8f4ce49a20, "java_interop_jnienv_monitor_enter", reinterpret_cast<void*>(&java_interop_jnienv_monitor_enter)},
 	{0x70785cce71f97d8, "java_interop_jnienv_new_double_array", reinterpret_cast<void*>(&java_interop_jnienv_new_double_array)},
+	{0x947a0f978ec92a0, "monodroid_javasystem_loadLibrary", reinterpret_cast<void*>(&monodroid_javasystem_loadLibrary)},
 	{0x965a897d67e700b, "java_interop_jnienv_new_boolean_array", reinterpret_cast<void*>(&java_interop_jnienv_new_boolean_array)},
 	{0xc4dc2d6b38c69b7, "java_interop_jnienv_set_long_field", reinterpret_cast<void*>(&java_interop_jnienv_set_long_field)},
 	{0xd79adc86d9b8e08, "java_interop_jnienv_get_object_class", reinterpret_cast<void*>(&java_interop_jnienv_get_object_class)},
@@ -871,6 +872,7 @@ static PinvokeEntry internal_pinvokes[] = {
 	{0xd9ae215c, "java_interop_jnienv_set_double_field", reinterpret_cast<void*>(&java_interop_jnienv_set_double_field)},
 	{0xdafeab24, "java_interop_jnienv_set_byte_field", reinterpret_cast<void*>(&java_interop_jnienv_set_byte_field)},
 	{0xde1b27c1, "java_interop_jnienv_get_direct_buffer_capacity", reinterpret_cast<void*>(&java_interop_jnienv_get_direct_buffer_capacity)},
+	{0xde7f4b10, "monodroid_javasystem_loadLibrary", reinterpret_cast<void*>(&monodroid_javasystem_loadLibrary)},
 	{0xded15d19, "java_interop_jnienv_get_direct_buffer_address", reinterpret_cast<void*>(&java_interop_jnienv_get_direct_buffer_address)},
 	{0xdf0668e8, "java_interop_jnienv_get_int_field", reinterpret_cast<void*>(&java_interop_jnienv_get_int_field)},
 	{0xe215a17c, "_monodroid_weak_gref_delete", reinterpret_cast<void*>(&_monodroid_weak_gref_delete)},
@@ -1329,5 +1331,5 @@ constexpr hash_t system_io_compression_native_library_hash = 0xafe3142c;
 constexpr hash_t system_security_cryptography_native_android_library_hash = 0x93625cd;
 #endif
 
-constexpr size_t internal_pinvokes_count = 237;
+constexpr size_t internal_pinvokes_count = 238;
 constexpr size_t dotnet_pinvokes_count = 410;

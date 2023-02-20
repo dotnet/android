@@ -248,6 +248,8 @@ namespace xamarin::android::internal
 
 		char*	get_java_class_name_for_TypeManager (jclass klass);
 
+		static void monodroid_javasystem_loadLibrary (const char *libname) noexcept;
+
 	private:
 #if defined (ANDROID)
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);

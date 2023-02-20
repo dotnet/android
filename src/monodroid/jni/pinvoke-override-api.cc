@@ -367,6 +367,12 @@ _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char
 	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
 }
 
+static void
+monodroid_javasystem_loadLibrary (const char *libname)
+{
+	MonodroidRuntime::monodroid_javasystem_loadLibrary (libname);
+}
+
 #include "pinvoke-tables.include"
 
 MonodroidRuntime::pinvoke_library_map MonodroidRuntime::other_pinvoke_map (MonodroidRuntime::LIBRARY_MAP_INITIAL_BUCKET_COUNT);
