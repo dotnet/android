@@ -45,5 +45,6 @@
   </ItemGroup>
   <Target Name="_AfterBuild" AfterTargets="Build">
     <Delete Files="$(OutputPath)MSBuild.$(_MSBuildExtension).config" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" Targets="CopyToLegacySdkOutDir" />
   </Target>
 </Project>
