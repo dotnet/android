@@ -158,7 +158,6 @@
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jit-times.pdb" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jnimarshalmethod-gen.exe" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jnimarshalmethod-gen.pdb" />
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Java.Interop.dll.config" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Java.Runtime.Environment.dll" /> <!-- Required by jnimarshalmethod-gen.exe -->
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Java.Runtime.Environment.pdb" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Java.Runtime.Environment.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
