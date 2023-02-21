@@ -48,7 +48,7 @@ namespace Xamarin.Android.Build.Tests
 		public void DeviceSetup ()
 		{
 			SetAdbLogcatBufferSize (64);
-			RunAdbCommand ("logcat -c");
+			ClearAdbLogcat ();
 			CreateGuestUser (GuestUserName);
 		}
 
@@ -69,6 +69,9 @@ namespace Xamarin.Android.Build.Tests
 				TestContext.Out.WriteLine ($"{nameof(CheckDevice)} is restarting the emulator.");
 				RestartDevice (Path.Combine (Root, "Emulator.csproj"));
 			}
+
+			// We want to start with a clean logcat buffer for each test
+			ClearAdbLogcat ();
 		}
 
 		[TearDown]
@@ -82,6 +85,9 @@ namespace Xamarin.Android.Build.Tests
 				string remote = "/data/local/tmp/screenshot.png";
 				string localUi = Path.Combine (outputDir, "ui.xml");
 				RunAdbCommand ($"shell screencap {remote}");
+
+				// Give the app a chance to finish logging
+				Thread.Sleep (1000);
 				var output = RunAdbCommand ($"logcat -d");
 				File.WriteAllText (deviceLog, output);
 				RunAdbCommand ($"pull {remote} \"{local}\"");
