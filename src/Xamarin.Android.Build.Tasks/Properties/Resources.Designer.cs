@@ -801,6 +801,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to This is probably caused by the project exceeding the Max Path length. Please move your entire project closer to the Root of the drive..
+        /// </summary>
+        public static string APT2264 {
+            get {
+                return ResourceManager.GetString("APT2264", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Could not AOT the assembly: {0}.
         /// </summary>
         public static string XA3001 {
