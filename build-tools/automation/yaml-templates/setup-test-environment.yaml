@@ -7,6 +7,7 @@ parameters:
   updateVS: false
   jdkTestFolder: $(JAVA_HOME_11_X64)
   remove_dotnet: false
+  installTestSlicer: false
 
 steps:
 - checkout: self
@@ -102,4 +103,5 @@ steps:
 
 - template: install-apkdiff.yaml
 
-- template: install-dotnet-test-slicer.yaml
+- ${{ if eq(parameters.installTestSlicer, true) }}:
+  - template: install-dotnet-test-slicer.yaml

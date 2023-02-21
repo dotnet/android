@@ -2,6 +2,7 @@
 
 parameters:
   job_name: 'mac_dotnetdevice_tests'
+  agent_count: 6
   nunit_categories: $(DotNetNUnitCategories)
   target_framework: $(DotNetStableTargetFramework)
   provisionatorChannel: latest
@@ -16,8 +17,8 @@ stages:
   jobs:
   - job: ${{ parameters.job_name }}
     strategy:
-      parallel: 4
-    displayName: "macOS > Tests > MSBuild+Emulator $(System.JobPositionInPhase)"
+      parallel: ${{ parameters.agent_count }}
+    displayName: "macOS > Tests > MSBuild+Emulator"
     condition: ${{ parameters.jobCondition }}
     pool:
       vmImage: $(HostedMacImage)
@@ -30,6 +31,7 @@ stages:
       parameters:
         provisionClassic: false
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        installTestSlicer: true
 
     - template: run-xaprepare.yaml
       parameters:

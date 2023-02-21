@@ -8,7 +8,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("Node-3")]
+	[Category ("UsesDevice")]
 	public class UncaughtExceptionTests : DeviceTest
 	{
 		class LogcatLine
