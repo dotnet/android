@@ -314,9 +314,12 @@ namespace Android.Runtime {
 				desugarType.Append ("Desugar").Append (name);
 			}
 
+			var typeWithPrefix  = desugarType.ToString ();
+			var typeWithSuffix  = $"{jniSimpleReference}$-CC";
+
 			return new[]{
-				desugarType.ToString (),
-				$"{jniSimpleReference}$-CC"
+				GetReplacementTypeCore (typeWithPrefix) ?? typeWithPrefix,
+				GetReplacementTypeCore (typeWithSuffix) ?? typeWithSuffix,
 			};
 		}
 
