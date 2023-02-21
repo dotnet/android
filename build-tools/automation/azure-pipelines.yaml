@@ -127,27 +127,6 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.JcwGen_Tests
-        project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.JcwGen_Tests-Signed.apk
-        artifactFolder: Default
-        useDotNet: false
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.JcwGen_Tests_FastDev
-        project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.JcwGen_Tests-Signed.apk
-        artifactFolder: FastDev_Assemblies_Dexes
-        extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
-        useDotNet: false
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
         testName: Xamarin.Android.Locale_Tests
         project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration).xml
@@ -413,7 +392,7 @@ stages:
         configuration: $(XA.Build.Configuration)
         testName: Xamarin.Android.BindingRuntime_Tests_FastDev
         project: tests/BindingTests/Xamarin.Android.BindingRuntime-Tests/Xamarin.Android.BindingRuntime-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.BindingRuntime_Tests_FastDev-$(XA.Build.Configuration).xml
+        testResultsFiles: TestResult-Xamarin.Android.BindingRuntime_Tests-$(XA.Build.Configuration).xml
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.BindingRuntime_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-FastDev_Assemblies_Dexes
         extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes

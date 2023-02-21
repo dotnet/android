@@ -24,13 +24,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AndroidLibrary Update="Jars\org.jetbrains.kotlin.kotlin-stdlib.jar" Bind="False" />
+    <PackageReference Include="Xamarin.Kotlin.StdLib" Version="1.8.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <AndroidNamespaceReplacement Include="xamarin.example" Replacement="Example" />
     <AndroidNamespaceReplacement Include="com.example" Replacement="Transformed.Namespace" />

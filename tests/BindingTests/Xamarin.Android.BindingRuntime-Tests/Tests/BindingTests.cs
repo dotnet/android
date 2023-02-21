@@ -72,27 +72,27 @@ namespace Xamarin.Android.BindingRuntime_Tests {
 #pragma warning restore 0219
 		}
 
-		//[Test]
-		//public void Arrays ()
-		//{
-		//	using (var dh = new Com.Xamarin.Android.DataHandler ()) {
-		//		EventHandler<Com.Xamarin.Android.DataEventArgs> h = (o, e) => {
-		//			Assert.AreEqual ("fromNode", e.FromNode);
-		//			Assert.AreEqual ("fromChannel", e.FromChannel);
-		//			Assert.AreEqual ("payloadType", e.PayloadType);
-		//			for (int i = 0; i < e.Payload.Length; ++i) {
-		//				for (int j = 0; j < e.Payload [i].Length; ++j) {
-		//					byte expected = (byte) (((i+1)*10) + (j+1));
-		//					Assert.AreEqual ((byte)(expected + 'J'), e.Payload [i][j]);
-		//					e.Payload [i][j] = expected;
-		//				}
-		//			}
-		//		};
-		//		dh.Data += h;
-		//		dh.Send ();
-		//		dh.Data -= h;
-		//	}
-		//}
+		[Test]
+		public void Arrays ()
+		{
+			using (var dh = new Com.Xamarin.Android.DataHandler ()) {
+				EventHandler<Com.Xamarin.Android.DataEventArgs> h = (o, e) => {
+					Assert.AreEqual ("fromNode", e.FromNode);
+					Assert.AreEqual ("fromChannel", e.FromChannel);
+					Assert.AreEqual ("payloadType", e.PayloadType);
+					for (int i = 0; i < e.Payload.Length; ++i) {
+						for (int j = 0; j < e.Payload [i].Length; ++j) {
+							byte expected = (byte) (((i + 1) * 10) + (j + 1));
+							Assert.AreEqual ((byte) (expected + 'J'), e.Payload [i] [j]);
+							e.Payload [i] [j] = expected;
+						}
+					}
+				};
+				dh.Data += h;
+				dh.Send ();
+				dh.Data -= h;
+			}
+		}
 
 		[Test]
 		public void JavaSideActivation ()
