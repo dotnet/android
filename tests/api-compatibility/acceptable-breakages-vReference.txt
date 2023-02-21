@@ -1,2 +1,3 @@
 Compat issues with assembly Mono.Android:
 CannotRemoveAttribute : Attribute 'Android.Runtime.RegisterAttribute' exists on 'Android.Telecom.InCallService.SetAudioRoute(Android.Telecom.VideoQuality)' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'Android.Runtime.RegisterAttribute' exists on 'Java.Lang.JavaSystem.LoadLibrary(System.String)' in the contract but not the implementation.
