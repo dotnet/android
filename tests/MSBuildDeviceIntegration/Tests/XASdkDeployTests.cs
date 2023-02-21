@@ -43,7 +43,7 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				/* isRelease */      true,
 				/* xamarinForms */   false,
-				/* targetFramework*/ "net8.0-android",
+				/* targetFramework*/ "net7.0-android",
 			},
 			new object[] {
 				/* isRelease */      false,
