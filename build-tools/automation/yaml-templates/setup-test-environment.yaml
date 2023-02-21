@@ -101,3 +101,5 @@ steps:
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
 
 - template: install-apkdiff.yaml
+
+- template: install-dotnet-test-slicer.yaml
