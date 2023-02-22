@@ -11,7 +11,7 @@
       "Size": 66840
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 445342
+      "Size": 445269
     },
     "assemblies/mscorlib.dll": {
       "Size": 3830
@@ -125,7 +125,7 @@
       "Size": 1828
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 117371
+      "Size": 117367
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5872
@@ -197,7 +197,7 @@
       "Size": 3480884
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 371888
+      "Size": 371504
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3075360
@@ -779,7 +779,7 @@
       "Size": 470
     },
     "res/drawable-hdpi-v4/icon.png": {
-      "Size": 4762
+      "Size": 4791
     },
     "res/drawable-hdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 212
