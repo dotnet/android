@@ -530,6 +530,10 @@ Bitte ändern Sie den Wert in einen Assembly-basierten Typnamen, der von „{1}�
     <comment>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
 {0} - The assembly name</comment>
   </data>
+  <data name="APT2264" xml:space="preserve">
+    <value>This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.</value>
+    <comment>The following are literal names and should not be translated:</comment>
+  </data>
   <data name="XA3001" xml:space="preserve">
     <value>AOT für Assembly nicht möglich: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
