@@ -14,7 +14,7 @@ resources:
   - repository: yaml-templates
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/pjc/xa-sec-onboard
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
@@ -1441,4 +1441,3 @@ stages:
     stageDependsOn: []
     credScanSuppressionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
     policheckExclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
-    policheckOptionsRulesDBPath: $(System.DefaultWorkingDirectory)\build-tools\automation\policheck-rules-db.mdb
