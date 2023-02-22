@@ -57,7 +57,8 @@ namespace Xamarin.ProjectTools
 			Sdk = "Microsoft.NET.Sdk";
 			TargetFramework = "net8.0-android";
 			SupportedOSPlatformVersion = "21";
-			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
+			var id = DateTime.Now.ToString ("yyyyMMddHHmmssfff");
+			PackageName = $"com.xamarin.{(packageName ?? ProjectName + id).ToLower ()}";
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 			GlobalPackagesFolder = FileSystemUtils.FindNugetGlobalPackageFolder ();
 			SetProperty (KnownProperties.OutputType, outputType);

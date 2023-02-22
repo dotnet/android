@@ -76,14 +76,14 @@ namespace Xamarin.Android.Build.Tests
 			XASdkProject proj;
 			if (xamarinForms) {
 				proj = new XamarinFormsXASdkProject {
-					ProjectName = $"DotNetInstallAndRun{id}",
-					PackageName = $"com.xamarin.dotnetinstallandrun{id}",
+					ProjectName = $"DotNetInstallAndRun",
+					//PackageName = $"com.xamarin.dotnetinstallandrun{id}",
 					IsRelease = isRelease
 				};
 			} else {
 				proj = new XASdkProject {
-					ProjectName = $"DotNetInstallAndRun{id}",
-					PackageName = $"com.xamarin.dotnetinstallandrun{id}",
+					ProjectName = $"DotNetInstallAndRun",
+					//PackageName = $"com.xamarin.dotnetinstallandrun{id}",
 					IsRelease = isRelease
 				};
 			}
@@ -115,8 +115,8 @@ namespace Xamarin.Android.Build.Tests
 			var id = DateTime.Now.ToString ("yyyyMMddHHmmssfff");
 
 			var proj = new XASdkProject () {
-				ProjectName = $"TypeAndMemberRemapping{id}",
-				PackageName = $"com.xamarin.typeandmemberremapping{id}",
+				ProjectName = $"TypeAndMemberRemapping",
+				//PackageName = $"com.xamarin.typeandmemberremapping{id}",
 				IsRelease = isRelease,
 				OtherBuildItems = {
 					new AndroidItem._AndroidRemapMembers ("RemapActivity.xml") {
