@@ -108,6 +108,38 @@ namespace Java.InteropTests
 			// Shouldn't throw; should instead invoke ObjectHelper.getHashCodeHelper(Object)
 			o.remappedToStaticHashCode ();
 		}
+
+#if !__ANDROID__
+		// Note: this test looks up a static method from one class, then
+		// calls `JNIEnv::CallStaticObjectMethod()` passing in a jclass
+		// for a *different* class.
+		//
+		// This appears to work on Desktop JVM.
+		//
+		// On Android, this will ABORT the app:
+		//  JNI DETECTED ERROR IN APPLICATION: can't call static int com.xamarin.interop.DesugarAndroidInterface$_CC.getClassName() with class java.lang.Class<com.xamarin.interop.AndroidInterface>
+		//      in call to CallStaticObjectMethodA
+		//
+		// *Fascinating* the differences that can appear between JVM implementations
+		[Test]
+		public unsafe void DoesTheJmethodNeedToMatchDeclaringType ()
+		{
+			var iface   = new JniType ("com/xamarin/interop/AndroidInterface");
+			var desugar = new JniType ("com/xamarin/interop/DesugarAndroidInterface$_CC");
+			var m       = desugar.GetStaticMethod ("getClassName", "()Ljava/lang/String;");
+
+			var r = JniEnvironment.StaticMethods.CallStaticObjectMethod (iface.PeerReference, m, null);
+			var s = JniEnvironment.Strings.ToString (ref r, JniObjectReferenceOptions.CopyAndDispose);
+			Assert.AreEqual ("DesugarAndroidInterface$-CC", s);
+		}
+#endif  // !__ANDROID__
+
+		[Test]
+		public void DesugarInterfaceStaticMethod ()
+		{
+			var s = IAndroidInterface.getClassName ();
+			Assert.AreEqual ("DesugarAndroidInterface$-CC", s);
+		}
 #endif  // NET
 	}
 
@@ -208,4 +240,19 @@ namespace Java.InteropTests
 			return base.hashCode ();
 		}
 	}
+
+#if NET
+	[JniTypeSignature (JniTypeName)]
+	interface IAndroidInterface : IJavaPeerable {
+		internal            const       string          JniTypeName    = "com/xamarin/interop/AndroidInterface";
+
+		private static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (IAndroidInterface), isInterface: true);
+
+		public static unsafe string getClassName ()
+		{
+			var s = _members.StaticMethods.InvokeObjectMethod ("getClassName.()Ljava/lang/String;", null);
+			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
+		}
+	}
+#endif  // NET
 }

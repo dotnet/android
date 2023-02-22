@@ -1,0 +1,21 @@
+<Project>
+
+  <Target Name="BuildInteropTestJar"
+      BeforeTargets="Build"
+      Inputs="@(JavaInteropTestJar)"
+      Outputs="$(OutputPath)interop-test.jar">
+    <MakeDir Directories="$(IntermediateOutputPath)it-classes" />
+    <ItemGroup>
+      <_Source Include="@(JavaInteropTestJar->Replace('%5c', '/'))" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)_java_sources.txt"
+        Lines="@(_Source)"
+        Overwrite="True"
+    />
+    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)../$(Configuration)/java-interop.jar&quot; &quot;@$(IntermediateOutputPath)_java_sources.txt&quot;" />
+    <Delete Files="$(IntermediateOutputPath)_java_sources.txt" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(IntermediateOutputPath)it-classes&quot; ." />
+  </Target>
+
+</Project>

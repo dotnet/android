@@ -91,8 +91,8 @@ namespace Java.InteropTests {
 			// "potentially non-existent" types ensures that we don't throw
 			// from places we don't want to internally throw.
 			return new[]{
-				desugarType,
-				$"{jniSimpleReference}$-CC"
+				$"{desugarType}$_CC",           // For JniPeerMembersTests.DesugarInterfaceStaticMethod()
+				$"{jniSimpleReference}$-CC",
 			};
 		}
 

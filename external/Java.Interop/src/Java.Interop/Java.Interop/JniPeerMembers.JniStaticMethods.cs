@@ -66,6 +66,18 @@ namespace Java.Interop
 			return Members.JniPeerType.GetStaticMethod (method, signature);
 		}
 
+#pragma warning disable CA1801
+		JniType GetMethodDeclaringType (JniMethodInfo method)
+		{
+#if NET
+			if (method.StaticRedirect != null) {
+				return method.StaticRedirect;
+			}
+#endif  // NET
+			return Members.JniPeerType;
+		}
+#pragma warning restore CA1801
+
 #if NET
 		JniMethodInfo? FindInFallbackTypes (string method, string signature)
 		{
@@ -80,6 +92,8 @@ namespace Java.Interop
 						continue;
 					}
 					if (t.TryGetStaticMethod (method, signature, out var m)) {
+						m.StaticRedirect    = t;
+						t                   = null;
 						return m;
 					}
 				}
@@ -94,61 +108,61 @@ namespace Java.Interop
 		public unsafe void InvokeVoidMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			JniEnvironment.StaticMethods.CallStaticVoidMethod (Members.JniPeerType.PeerReference, m, parameters);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
 		public unsafe bool InvokeBooleanMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return JniEnvironment.StaticMethods.CallStaticBooleanMethod (Members.JniPeerType.PeerReference, m, parameters);
+			return JniEnvironment.StaticMethods.CallStaticBooleanMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
 		public unsafe sbyte InvokeSByteMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return JniEnvironment.StaticMethods.CallStaticByteMethod (Members.JniPeerType.PeerReference, m, parameters);
+			return JniEnvironment.StaticMethods.CallStaticByteMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
 		public unsafe char InvokeCharMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return JniEnvironment.StaticMethods.CallStaticCharMethod (Members.JniPeerType.PeerReference, m, parameters);
+			return JniEnvironment.StaticMethods.CallStaticCharMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
 		public unsafe short InvokeInt16Method (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return JniEnvironment.StaticMethods.CallStaticShortMethod (Members.JniPeerType.PeerReference, m, parameters);
+			return JniEnvironment.StaticMethods.CallStaticShortMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
 		public unsafe int InvokeInt32Method (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return JniEnvironment.StaticMethods.CallStaticIntMethod (Members.JniPeerType.PeerReference, m, parameters);
+			return JniEnvironment.StaticMethods.CallStaticIntMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
 		public unsafe long InvokeInt64Method (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return JniEnvironment.StaticMethods.CallStaticLongMethod (Members.JniPeerType.PeerReference, m, parameters);
+			return JniEnvironment.StaticMethods.CallStaticLongMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
 		public unsafe float InvokeSingleMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return JniEnvironment.StaticMethods.CallStaticFloatMethod (Members.JniPeerType.PeerReference, m, parameters);
+			return JniEnvironment.StaticMethods.CallStaticFloatMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
 		public unsafe double InvokeDoubleMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return JniEnvironment.StaticMethods.CallStaticDoubleMethod (Members.JniPeerType.PeerReference, m, parameters);
+			return JniEnvironment.StaticMethods.CallStaticDoubleMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
 		public unsafe JniObjectReference InvokeObjectMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return JniEnvironment.StaticMethods.CallStaticObjectMethod (Members.JniPeerType.PeerReference, m, parameters);
+			return JniEnvironment.StaticMethods.CallStaticObjectMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 	}}
 }

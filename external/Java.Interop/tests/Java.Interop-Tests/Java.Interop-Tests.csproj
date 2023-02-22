@@ -53,14 +53,12 @@
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\RenameClassBase1.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\RenameClassBase2.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\RenameClassDerived.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\AndroidInterface.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\DesugarAndroidInterface$_CC.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\SelfRegistration.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\TestType.java" />
   </ItemGroup>
 
-  <Target Name="BuildInteropTestJar" BeforeTargets="Build" Inputs="@(JavaInteropTestJar)" Outputs="$(OutputPath)interop-test.jar">
-    <MakeDir Directories="$(IntermediateOutputPath)it-classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)../$(Configuration)/java-interop.jar&quot; @(JavaInteropTestJar->'%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(IntermediateOutputPath)it-classes&quot; ." />
-  </Target>
+  <Import Project="Java.Interop-Tests.targets" />
 
 </Project>

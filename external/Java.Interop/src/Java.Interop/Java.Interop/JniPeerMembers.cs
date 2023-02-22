@@ -12,7 +12,7 @@ namespace Java.Interop {
 		private bool isInterface;
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool isInterface)
-			: this (jniPeerTypeName, managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
+			: this (jniPeerTypeName = GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
 		{
 		}
 
