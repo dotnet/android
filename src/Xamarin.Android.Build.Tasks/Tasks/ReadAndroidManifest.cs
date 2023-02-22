@@ -35,6 +35,9 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public bool UseEmbeddedDex { get; set; } = false;
 
+		[Output]
+		public bool IsTestOnly { get; set; } = false;
+
 		public override bool RunTask ()
 		{
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
@@ -50,6 +53,11 @@ namespace Xamarin.Android.Tasks
 				text = app.Attribute (androidNs + "useEmbeddedDex")?.Value;
 				if (bool.TryParse (text, out value)) {
 					UseEmbeddedDex = value;
+				}
+
+				text = app.Attribute (androidNs + "testOnly")?.Value;
+				if (bool.TryParse (text, out value)) {
+					IsTestOnly = value;
 				}
 
 				var libraries = new List<ITaskItem> ();

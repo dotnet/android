@@ -27,11 +27,6 @@ Overridable MSBuild properties include:
     This is an integer value, e.g. `15` for
     [API-15 (Android 4.0.3)](http://developer.android.com/about/versions/android-4.0.3.html).
 
-  * `$(AndroidFirstFrameworkVersion)`: The first `$(TargetFrameworkVersion)`
-    which will be built by `make jenkins` and included in the installer.
-    Currently `v4.4`.
-    This controls what is included in `build-tools/create-vsix` packages.
-
   * `$(AndroidFrameworkVersion)`: The Xamarin.Android `$(TargetFrameworkVersion)`
     version which corresponds to `$(AndroidApiLevel)`. This is *usually* the
     Android version number with a leading `v`, e.g. `v4.0.3` for API-15.
