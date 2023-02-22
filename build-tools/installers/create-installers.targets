@@ -14,7 +14,6 @@
     <LegacyMSBuildSrcDir>$(XAInstallPrefix)xbuild\Xamarin\Android\</LegacyMSBuildSrcDir>
     <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
     <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)\..\create-pkg\runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
-    <FirstInstallerFrameworkVersion Condition="Exists('$(FrameworkSrcDir)\$(AndroidFirstFrameworkVersion)')">$(AndroidFirstFrameworkVersion)</FirstInstallerFrameworkVersion>
     <FirstInstallerFrameworkVersion Condition="'$(FirstInstallerFrameworkVersion)' == ''">$(AndroidLatestStableFrameworkVersion)</FirstInstallerFrameworkVersion>
     <BclFrameworkVersion>v1.0</BclFrameworkVersion>
     <LibExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</LibExtension>

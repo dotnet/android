@@ -188,21 +188,36 @@ namespace Xamarin.Android.Tasks {
 					message = message.Substring ("error: ".Length);
 
 				if (level.Contains ("error") || (line != 0 && !string.IsNullOrEmpty (file))) {
+					var errorCode = GetErrorCode (message);
 					if (manifestError)
-						LogCodedError (GetErrorCode (message), string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile.ItemSpec, 0);
+						LogCodedError (errorCode, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile.ItemSpec, 0);
 					else
-						LogCodedError (GetErrorCode (message), message, file, line);
+						LogCodedError (errorCode, AddAdditionalErrorText (errorCode, message), file, line);
 					return true;
 				}
 			}
 
 			if (!apptResult) {
 				var message = string.Format ("{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1));
-				LogCodedError (GetErrorCode (message), message, ToolName);
+				var errorCode = GetErrorCode (message);
+				LogCodedError (errorCode, AddAdditionalErrorText (errorCode, message), ToolName);
 			} else {
 				LogCodedWarning (GetErrorCode (singleLine), singleLine);
 			}
 			return true;
+		}
+
+		static string AddAdditionalErrorText (string errorCode, string message)
+		{
+			var sb = new StringBuilder ();
+			sb.AppendLine (message);
+			switch (errorCode)
+			{
+				case "APT2264":
+					sb.AppendLine (Xamarin.Android.Tasks.Properties.Resources.APT2264);
+				break;
+			}
+			return sb.ToString ();
 		}
 
 		static string GetErrorCode (string message)
@@ -478,6 +493,7 @@ namespace Xamarin.Android.Tasks {
 			Tuple.Create ("APT2261", "file failed to compile"),
 			Tuple.Create ("APT2262", "unexpected element <activity> found in <manifest>"),
 			Tuple.Create ("APT2263", "found in <manifest>"),  // unexpected element <xxxxx> found in <manifest>
+			Tuple.Create ("APT2264", "The system cannot find the file specified. (2).") // Windows Long Path error from aapt2
 		};
 	}
 }
