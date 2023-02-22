@@ -764,12 +764,14 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void SingleProject_ApplicationId ()
+		public void SingleProject_ApplicationId ([Values (false, true)] bool testOnly)
 		{
 			AssertHasDevices ();
 
 			proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
+			if (testOnly)
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
 
 			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
