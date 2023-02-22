@@ -87,7 +87,7 @@ namespace Xamarin.Android.Build.Tests
 				RunAdbCommand ($"shell screencap {remote}");
 
 				// Give the app a chance to finish logging
-				Thread.Sleep (1000);
+				WaitFor (1000);
 				var output = RunAdbCommand ($"logcat -d");
 				File.WriteAllText (deviceLog, output);
 				RunAdbCommand ($"pull {remote} \"{local}\"");
