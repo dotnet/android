@@ -1439,5 +1439,7 @@ stages:
 - template: security/full/v0.yml@yaml-templates
   parameters:
     stageDependsOn: []
-    credScanSuppressionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
-    policheckExclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
+    credScanSuppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\CredScanSuppressions.json
+    policheckExclusionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\PoliCheckExclusions.xml
+    sourceGdnSuppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\source.gdnsuppress
+    tsaConfigFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\tsaoptions-v2.json
