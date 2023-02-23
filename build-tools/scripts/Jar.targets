@@ -35,9 +35,16 @@
       <_DestDir>$(IntermediateOutputPath)__CreateTestJarFile-bin</_DestDir>
       <_AndroidJar>-bootclasspath "$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar"</_AndroidJar>
       <_CP>-cp "$(_JavaInteropJarPath)"</_CP>
+      <_JavacFilesResponse>$(IntermediateOutputPath)__javac_response.txt</_JavacFilesResponse>
     </PropertyGroup>
+    <WriteLinesToFile
+        File="$(_JavacFilesResponse)"
+        Lines="@(_JavacSource)"
+        Overwrite="True"
+    />
     <MakeDir Directories="$(_DestDir)" />
-    <Exec Command="$(_Javac) $(_Targets) -d &quot;$(_DestDir)&quot; $(_AndroidJar) $(_CP) @(_JavacSource->'&quot;%(Identity)&quot;', ' ')" />
+    <Exec Command="$(_Javac) $(_Targets) -d &quot;$(_DestDir)&quot; $(_AndroidJar) $(_CP) &quot;@$(_JavacFilesResponse)&quot;" />
+    <Delete Files="$(_JavacFilesResponse)" />
     <Exec
         Command="$(_Jar) cf &quot;classes.jar&quot; ."
         WorkingDirectory="$(_DestDir)"

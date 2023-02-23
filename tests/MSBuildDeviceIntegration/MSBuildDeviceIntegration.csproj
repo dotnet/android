@@ -31,6 +31,9 @@
     <EmbeddedResource Include="Resources\RemapActivity*">
       <LogicalName>%(FileName)%(Extension)</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\StaticMethodsInterface*">
+      <LogicalName>%(FileName)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

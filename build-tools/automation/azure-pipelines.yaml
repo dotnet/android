@@ -30,11 +30,6 @@ resources:
     name: xamarin/release-scripts
     ref: refs/heads/sign-and-notarized
     endpoint: xamarin
-  - repository: uitools
-    type: github
-    name: xamarin/UITools
-    ref: refs/heads/main
-    endpoint: xamarin
 
 parameters:
 - name: provisionatorChannel
@@ -495,11 +490,6 @@ stages:
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
-- stage: wear_tests
-  displayName: WearOS Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
-  jobs:
   - job: wear_tests
     displayName: macOS > Tests > WearOS 
     timeoutInMinutes: 180
