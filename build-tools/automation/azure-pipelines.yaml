@@ -1443,7 +1443,8 @@ stages:
     sourceGdnSuppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\source.gdnsuppress
     tsaConfigFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\tsaoptions-v2.json
     policheckLocScanEnabled: true
-    policheckExclusionFilesFolder: $(Build.SourcesDirectory)\build-tools\automation\policheck
+    policheckExclusionFilesFolder: $(Build.SourcesDirectory)\build-tools\automation\guardian
+    policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\build-tools\automation\guardian
     policheckChsScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hans
     policheckChtScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hant
     policheckCsyScanFolder: $(Build.SourcesDirectory)\Localize\loc\cs
