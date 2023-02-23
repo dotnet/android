@@ -50,19 +50,18 @@ namespace Xamarin.Android.Build.Tests
 				);
 			}
 
-			var app = new XamarinAndroidApplicationProject {
+			proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
-			app.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
 				Assert.IsTrue (libBuilder.Build (lib), "Library Build should have succeeded.");
 				Assert.IsTrue (appBuilder.Install (proj), "Install should have succeeded.");
 
-				var apk = Path.Combine (Root, appBuilder.ProjectDirectory,
-					app.OutputPath, $"{app.PackageName}-Signed.apk");
+				var apk = Path.Combine (Root, appBuilder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk);
 
 				foreach (string lang in languages) {
