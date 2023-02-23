@@ -24,13 +24,4 @@
     <Exec Command="&quot;$(NdkBuildPath)&quot;" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
   </Target>
 
-  <Import Project="$(MSBuildThisFileDirectory)..\..\build-tools\scripts\JavaInteropDllConfigs.targets" />
-
-  <!-- Not required when testing against a system installation of XA. -->
-  <Target Name="EnsureJavaInteropDllConfigs"
-      Condition="Exists ('$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll')"
-      BeforeTargets="_GenerateJniMarshalMethods"
-      DependsOnTargets="_CreateJavaInteropDllConfigs">
-  </Target>
-
 </Project>
