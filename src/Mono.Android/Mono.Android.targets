@@ -264,7 +264,7 @@
   </ItemGroup>
   <Target
       Name="_CheckApiCompatibility"
-      Condition=" '$(DisableApiCompatibilityCheck)' != 'True' "
+      Condition=" '$(DisableApiCompatibilityCheck)' != 'True' And '$(TargetFramework)' != 'monoandroid10'"
       AfterTargets="CopyFilesToOutputDirectory"
 
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
