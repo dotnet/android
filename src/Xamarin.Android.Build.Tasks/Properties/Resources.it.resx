@@ -530,6 +530,10 @@ Modificare il valore in un nome di tipo con qualifica assembly che eredita da '{
     <comment>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
 {0} - The assembly name</comment>
   </data>
+  <data name="APT2264" xml:space="preserve">
+    <value>This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.</value>
+    <comment>The following are literal names and should not be translated:</comment>
+  </data>
   <data name="XA3001" xml:space="preserve">
     <value>Non è stato possibile eseguire la compilazione AOT dell'assembly: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
