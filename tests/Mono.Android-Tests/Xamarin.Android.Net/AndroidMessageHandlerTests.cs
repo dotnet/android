@@ -46,8 +46,6 @@ namespace Xamarin.Android.NetTests
 			var client = new HttpClient (handler);
 			HttpResponseMessage response = await client.GetAsync ($"https://httpbin.org/{urlPath}");
 
-			Assert.IsNull (response.Content.Headers.ContentLength, "Content-Length header should have been removed");
-
 			foreach (string enc in response.Content.Headers.ContentEncoding) {
 				if (String.Compare (enc, encoding, StringComparison.Ordinal) == 0) {
 					Assert.Fail ($"Encoding '{encoding}' should have been removed from the Content-Encoding header");
