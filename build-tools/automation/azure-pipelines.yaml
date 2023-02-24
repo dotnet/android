@@ -14,7 +14,7 @@ resources:
   - repository: yaml-templates
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/dev/pjc/xa-sec-onboard
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
@@ -1458,4 +1458,3 @@ stages:
     policheckPtbScanFolder: $(Build.SourcesDirectory)\Localize\loc\pt-BR
     policheckRusScanFolder: $(Build.SourcesDirectory)\Localize\loc\ru
     policheckTrkScanFolder: $(Build.SourcesDirectory)\Localize\loc\tr
-    tsaReportBranch: refs/heads/dev/pjc/cs-template
