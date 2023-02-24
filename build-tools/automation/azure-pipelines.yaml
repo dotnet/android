@@ -1458,3 +1458,4 @@ stages:
     policheckPtbScanFolder: $(Build.SourcesDirectory)\Localize\loc\pt-BR
     policheckRusScanFolder: $(Build.SourcesDirectory)\Localize\loc\ru
     policheckTrkScanFolder: $(Build.SourcesDirectory)\Localize\loc\tr
+    tsaReportBranch: refs/heads/dev/pjc/cs-template
