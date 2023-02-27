@@ -20,7 +20,7 @@ using System.Xml.XPath;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("Node-2")]
+	[Category ("UsesDevice")]
 	[NonParallelizable]
 	public class DeploymentTest : DeviceTest {
 

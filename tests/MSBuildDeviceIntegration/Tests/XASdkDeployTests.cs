@@ -16,7 +16,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("SmokeTests"), Category ("WearOS"), Category ("Node-3")]
+	[Category ("UsesDevice"), Category ("SmokeTests"), Category ("WearOS")]
 	public class XASdkDeployTests : DeviceTest
 	{
 		static object [] DotNetInstallAndRunSource = new object [] {
@@ -209,7 +209,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("Debugger"), Category ("Node-4")]
+		[Category ("Debugger")]
 		public void DotNetDebug ([Values("net6.0-android", "net7.0-android")] string targetFramework)
 		{
 			AssertCommercialBuild ();
