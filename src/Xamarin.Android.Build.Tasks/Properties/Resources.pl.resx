@@ -531,7 +531,7 @@ Zmień wartość na nazwę typu kwalifikowalnego zestawu, która dziedziczy po �
 {0} - The assembly name</comment>
   </data>
   <data name="APT2264" xml:space="preserve">
-    <value>This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.</value>
+    <value>Jest to prawdopodobnie spowodowane przez projekt przekraczający ograniczenie maksymalnej długości ścieżki systemu Windows. Aby uzyskać szczegółowe informacje, zobacz https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
