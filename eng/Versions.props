@@ -9,6 +9,7 @@
     <MicrosoftNETWorkloadEmscriptenCurrentManifest80100alpha1Version>8.0.0-alpha.1.23077.4</MicrosoftNETWorkloadEmscriptenCurrentManifest80100alpha1Version>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest80100alpha1Version)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
+    <SystemIOHashingPackageVersion>8.0.0-alpha.1.23080.2</SystemIOHashingPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->
