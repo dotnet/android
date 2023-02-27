@@ -46,7 +46,7 @@ stages:
     - pwsh: |
         dotnet-test-slicer `
           --test-assembly="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll" `
-          --test-filter="cat != TimeZoneInfo & cat != Localization ${{ parameters.nunit_categories }}" `
+          --test-filter="cat != TimeZoneInfo & cat != Localization & cat != SmokeTests ${{ parameters.nunit_categories }}" `
           --slice-number=$(System.JobPositionInPhase) `
           --total-slices=$(System.TotalJobsInPhase) `
           --outfile="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.runsettings"
