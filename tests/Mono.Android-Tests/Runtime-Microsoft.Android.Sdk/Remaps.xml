@@ -2,6 +2,9 @@
   <replace-type
       from="com/xamarin/interop/RenameClassBase1"
       to="com/xamarin/interop/RenameClassBase2" />
+  <replace-type
+      from="com/xamarin/interop/AndroidInterface"
+      to="com/xamarin/interop/DesugarAndroidInterface$_CC" />
   <replace-method
       source-type="java/lang/Object"
       source-method-name="remappedToToString"
