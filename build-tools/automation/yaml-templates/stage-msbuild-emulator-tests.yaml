@@ -130,7 +130,6 @@ stages:
 
     - template: run-nunit-tests.yaml
       parameters:
-        useDotNet: true
         testRunTitle: WearOS On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         dotNetTestExtraArgs: --filter "TestCategory = WearOS"
