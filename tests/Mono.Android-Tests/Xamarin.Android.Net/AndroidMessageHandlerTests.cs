@@ -55,7 +55,7 @@ namespace Xamarin.Android.NetTests
 			string responseBody = await response.Content.ReadAsStringAsync ();
 
 			Assert.IsTrue (responseBody.Length > 0, "Response was empty");
-			Assert.AreEqual (response.Content.Headers.ContentLength, response.Length, "Retrieved data length is different than the one specified in the Content-Length header");
+			Assert.AreEqual (response.Content.Headers.ContentLength, responseBody.Length, "Retrieved data length is different than the one specified in the Content-Length header");
 			Assert.IsTrue (responseBody.Contains ($"\"{urlPath}\"", StringComparison.OrdinalIgnoreCase), $"\"{urlPath}\" should have been in the response JSON");
 		}
 #endif
