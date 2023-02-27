@@ -26,18 +26,20 @@ namespace Xamarin.Android.NetTests
 			new object[] {
 				"gzip", // urlPath
 				"gzip", // encoding
+				"gzipped", // jsonFieldName
 			},
 
 			new object[] {
 				"brotli", // urlPath
 				"br", // encoding
+				"brotli", // jsonFieldName
 			},
 		};
 
 #if NET
 		[Test]
 		[TestCaseSource (nameof (DecompressionSource))]
-		public async Task Decompression (string urlPath, string encoding)
+		public async Task Decompression (string urlPath, string encoding, string jsonFieldName)
 		{
 			var handler = new AndroidMessageHandler {
 				AutomaticDecompression = DecompressionMethods.All
@@ -56,7 +58,7 @@ namespace Xamarin.Android.NetTests
 
 			Assert.IsTrue (responseBody.Length > 0, "Response was empty");
 			Assert.AreEqual (response.Content.Headers.ContentLength, responseBody.Length, "Retrieved data length is different than the one specified in the Content-Length header");
-			Assert.IsTrue (responseBody.Contains ($"\"{urlPath}\"", StringComparison.OrdinalIgnoreCase), $"\"{urlPath}\" should have been in the response JSON");
+			Assert.IsTrue (responseBody.Contains ($"\"{jsonFieldName}\"", StringComparison.OrdinalIgnoreCase), $"\"{jsonFieldName}\" should have been in the response JSON");
 		}
 #endif
 
