@@ -36,7 +36,6 @@ jobs:
       parameters:
         testRunTitle: LocalizationTests On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        useDotNet: true
         dotNetTestExtraArgs:  --filter "Name~CheckLocalizationIsCorrectNode${{ parameters.node_id }}"
         testResultsFile: TestResult-LocalizationTests-Node${{ parameters.node_id }}-$(XA.Build.Configuration).xml
 

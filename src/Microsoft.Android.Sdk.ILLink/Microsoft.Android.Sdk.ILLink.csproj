@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <DefineConstants>ILLINK</DefineConstants>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Microsoft.NET.ILLink" Version="$(MicrosoftNETILLinkTasksPackageVersion)" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" ReferenceOutputAssembly="False" />

@@ -8,7 +8,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("Node-2")]
+	[Category ("UsesDevice")]
 	public class InstallAndRunTests : DeviceTest
 	{
 		static ProjectBuilder builder;
