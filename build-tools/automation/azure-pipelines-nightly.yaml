@@ -71,7 +71,6 @@ stages:
 - stage: designer_tests
   displayName: Designer Tests
   dependsOn: mac_build
-  condition: and(succeeded(), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'Designer'))
   jobs:
   # Check - "Xamarin.Android (macOS > Tests > Designer Integration)"
   - job: designer_integration_mac
