@@ -51,7 +51,7 @@ public class Runtime {
 			System.loadLibrary (libname);
 			return true;
 		} catch (java.lang.UnsatisfiedLinkError ex) {
-			Log.w ("monodroid", "Failed to load shared library with System.loadLibrary", ex);
+			Log.w ("monodroid", String.format ("Failed to load shared library '%s' with System.loadLibrary", libname), ex);
 			return false;
 		}
 	}

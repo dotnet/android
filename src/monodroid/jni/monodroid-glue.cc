@@ -2563,18 +2563,20 @@ MonodroidRuntime::monodroid_javasystem_loadLibrary (const char *libname) noexcep
 	JNIEnv *env = osBridge.ensure_jnienv ();
 	jmethodID loadLibraryID = env->GetStaticMethodID (mono_android_Runtime, "loadLibrary", "(Ljava/lang/String;)Z");
 	if (loadLibraryID == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to look up the mono.android.Runtime.loadLibrary Java method");
-		return;
+		log_fatal (LOG_DEFAULT, "Failed to look up the mono.android.Runtime.loadLibrary Java method");
+		Helpers::abort_application ();
 	}
 
 	jstring libname_java = env->NewStringUTF (libname);
 	jboolean success = env->CallStaticBooleanMethod (mono_android_Runtime, loadLibraryID, libname_java);
+	env->DeleteLocalRef (libname_java);
+
 	if (success != 0) {
 		// Loaded
 		return;
 	}
 
-	log_warn (LOG_DEFAULT, "System.loadLibrary failed, attempting to load the library directly");
+	log_warn (LOG_DEFAULT, "System.loadLibrary failed for '%s', attempting to load the library directly", libname);
 	monodroidRuntime.monodroid_dlopen (libname, MONO_DL_LOCAL, nullptr, nullptr);
 }
 

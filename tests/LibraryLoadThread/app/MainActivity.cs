@@ -14,23 +14,23 @@ public class MainActivity : Activity
 {
 	BCLThread? thread;
 
-    protected override void OnCreate (Bundle? savedInstanceState)
-    {
-        base.OnCreate (savedInstanceState);
+	protected override void OnCreate (Bundle? savedInstanceState)
+	{
+		base.OnCreate (savedInstanceState);
 
-        // Set our view from the "main" layout resource
-        SetContentView (Resource.Layout.activity_main);
+		// Set our view from the "main" layout resource
+		SetContentView (Resource.Layout.activity_main);
 
-        thread = new BCLThread (new BCLThreadStart (LoadLibraryInThread));
-        thread.Start ();
-    }
+		thread = new BCLThread (new BCLThreadStart (LoadLibraryInThread));
+		thread.Start ();
+	}
 
-    [DllImport ("thread-load")]
-    static extern void HelloWorld (string from);
+	[DllImport ("thread-load")]
+	static extern void HelloWorld (string from);
 
-    static void LoadLibraryInThread ()
-    {
-	    JavaSystem.LoadLibrary ("thread-local");
-	    HelloWorld (nameof (LoadLibraryInThread));
-    }
+	static void LoadLibraryInThread ()
+	{
+		JavaSystem.LoadLibrary ("thread-local");
+		HelloWorld (nameof (LoadLibraryInThread));
+	}
 }
