@@ -6,7 +6,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("DotNetIgnore"), Category ("Node-1")] // .csproj files are legacy projects that won't build under dotnet
+	[Category ("DotNetIgnore")] // .csproj files are legacy projects that won't build under dotnet
 	public class DeleteBinObjTest : DeviceTest
 	{
 		const string BaseUrl = "https://github.com/dellis1972/xamarin-android-unittest-files/blob/main/";

@@ -116,6 +116,7 @@ stages:
 
     - template: run-nunit-tests.yaml
       parameters:
+        useDotNet: false
         testRunTitle: Smoke MSBuild Tests - Windows Build Tree
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-SmokeMSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
@@ -123,7 +124,6 @@ stages:
 
     - template: run-nunit-tests.yaml
       parameters:
-        useDotNet: true
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-SmokeMSBuildTests-WinDotnetBuild-$(XA.Build.Configuration).xml
