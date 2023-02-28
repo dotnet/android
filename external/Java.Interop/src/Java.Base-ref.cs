@@ -6408,7 +6408,7 @@ namespace Java.Lang.Reflect
     {
         protected AccessibleObject() { }
         protected AccessibleObject(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
-        public virtual bool Accessible { get { throw null; } set { } }
+        public virtual bool Accessible { [System.ObsoleteAttribute("deprecated")] get { throw null; } set { } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }

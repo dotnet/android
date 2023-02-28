@@ -105,10 +105,28 @@ steps:
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop.Export'
-  condition: eq('${{ parameters.runNativeTests }}', 'true')
+  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
   inputs:
     command: test
     testRunTitle: Java.Interop.Export (${{ parameters.platformName }})
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'jnimarshalmethod-gen Java.Interop.Export-Tests.dll'
+  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+  inputs:
+    command: custom
+    custom: bin/$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/jnimarshalmethod-gen.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll -v -v --keeptemp -o bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: Java.Interop.Export w/ jnimarshalmethod-gen!'
+  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+  inputs:
+    command: test
+    testRunTitle: Java.Interop.Export (jnimarshalmethod-gen + ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll
   continueOnError: true
 

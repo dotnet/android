@@ -18,6 +18,8 @@ PREPARE_EXTERNAL_FILES  = \
 DEPENDENCIES = \
 	bin/Test$(CONFIGURATION)/libNativeTiming$(NATIVE_EXT)
 
+NET_SUFFIX = -net7.0
+
 TESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll \
@@ -33,7 +35,7 @@ TESTS = \
 	bin/Test$(CONFIGURATION)/Xamarin.SourceWriter-Tests.dll
 
 NET_TESTS = \
-	bin/Test$(CONFIGURATION)-net7.0/Java.Base-Tests.dll
+	bin/Test$(CONFIGURATION)$(NET_SUFFIX)/Java.Base-Tests.dll
 
 PTESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll
@@ -42,6 +44,10 @@ ATESTS = \
 	bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll
 
 all: $(DEPENDENCIES) $(TESTS)
+
+bin/ilverify:
+	-mkdir bin
+	dotnet tool install --tool-path bin dotnet-ilverify
 
 run-all-tests:
 	r=0; \
@@ -127,7 +133,7 @@ run-tests: $(TESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	$(foreach t,$(TESTS), $(call RUN_TEST,$(t),1)) \
 	exit $$r;
 
-run-net-tests: $(NET_TESTS) bin/Test$(CONFIGURATION)-net7.0/$(JAVA_INTEROP_LIB)
+run-net-tests: $(NET_TESTS) bin/Test$(CONFIGURATION)$(NET_SUFFIX)/$(JAVA_INTEROP_LIB)
 	r=0; \
 	$(foreach t,$(NET_TESTS), dotnet test $(t) || r=1) \
 	exit $$r;
@@ -150,15 +156,28 @@ $(JRE_DLL_CONFIG): src/Java.Runtime.Environment/Java.Runtime.Environment.csproj
 
 define run-jnimarshalmethod-gen
 	MONO_TRACE_LISTENER=Console.Out \
-	$(RUNTIME) bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe -v --jvm "$(JI_JVM_PATH)" -L "$(JI_MONO_LIB_PATH)mono/4.5" -L "$(JI_MONO_LIB_PATH)mono/4.5/Facades" $(2) $(1)
+	dotnet bin/$(CONFIGURATION)$(NET_SUFFIX)/jnimarshalmethod-gen.dll $(2) $(1)
 endef
 
-run-test-jnimarshal: bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB) $(JRE_DLL_CONFIG)
+# want: /usr/local/share/dotnet/shared/Microsoft.NETCore.App/7.0.0
+# have: Microsoft.NETCore.App 7.0.0 [/usr/local/share/dotnet/shared/Microsoft.NETCore.App]
+#  use: shell pipeline!
+SYSTEM_NET_ASSEMBLIES_PATH := $(shell dotnet --list-runtimes | grep ^Microsoft.NETCore.App | tail -1 | sed -E 's,^Microsoft.NETCore.App ([^ ]+) \[([^]]+)\]$$,\2/\1,g' )
+
+run-test-jnimarshal: bin/Test$(CONFIGURATION)$(NET_SUFFIX)/Java.Interop.Export-Tests.dll bin/Test$(CONFIGURATION)$(NET_SUFFIX)/$(JAVA_INTEROP_LIB) bin/ilverify
 	mkdir -p test-jni-output
-	$(call run-jnimarshalmethod-gen,"$<",-f -o test-jni-output --keeptemp)
-	(test -f test-jni-output/$(notdir $<) && test -f test-jni-output/Java.Interop.Export-Tests-JniMarshalMethods.dll) || { echo "jnimarshalmethod-gen did not create the expected assemblies in the test-jni-output directory"; exit 1; }
+	# Do we run w/o error?
+	$(call run-jnimarshalmethod-gen,"$<", -v -v -o test-jni-output --keeptemp)
+	(test -f test-jni-output/$(notdir $<) ) || { echo "jnimarshalmethod-gen did not create the expected assemblies in the test-jni-output directory"; exit 1; }
+	# Is output valid?
+	ikdasm test-jni-output/Java.Interop.Export-Tests.dll || { echo "output can not be processed by ikdasm"; exit 1; }
+	bin/ilverify test-jni-output/Java.Interop.Export-Tests.dll \
+	  --tokens --system-module System.Private.CoreLib -r '$(dir $<)/*.dll' \
+	  -r '$(SYSTEM_NET_ASSEMBLIES_PATH)/*.dll' || { echo "ilverify found issues"; exit 1; }
+	# replace "original" assembly
 	$(call run-jnimarshalmethod-gen,"$<")
-	$(call RUN_TEST,$<)
+	# make sure tests still pass
+	dotnet test $<
 
 bin/Test$(CONFIGURATION)/generator.exe: bin/$(CONFIGURATION)/generator.exe
 	cp $<* `dirname "$@"`

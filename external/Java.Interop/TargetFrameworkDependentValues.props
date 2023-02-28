@@ -12,6 +12,7 @@
     <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)-$(TargetFramework.ToLowerInvariant())\</TestOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">$(UtilityOutputFullPathCoreApps)</UtilityOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
+    <_XamarinAndroidCecilPath Condition=" '$(CecilSourceDirectory)' != '' And Exists('$(UtilityOutputFullPathCoreApps)Xamarin.Android.Cecil.dll') ">$(UtilityOutputFullPathCoreApps)Xamarin.Android.Cecil.dll</_XamarinAndroidCecilPath>
     <RollForward>Major</RollForward>
     <JIUtilityVersion>$(JINetToolVersion)</JIUtilityVersion>
     <JICoreLibVersion>$(JINetCoreLibVersion)</JICoreLibVersion>
@@ -23,6 +24,7 @@
     <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</ToolOutputFullPath>
     <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPath)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
+    <_XamarinAndroidCecilPath Condition=" '$(CecilSourceDirectory)' != '' And Exists('$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll') ">$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll</_XamarinAndroidCecilPath>
     <JIUtilityVersion>$(JIOldToolVersion)</JIUtilityVersion>
     <JICoreLibVersion>$(JIOldCoreLibVersion)</JICoreLibVersion>
   </PropertyGroup>

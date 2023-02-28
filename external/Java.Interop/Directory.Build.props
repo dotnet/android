@@ -72,7 +72,6 @@
     <_JavacSourceOptions>-source $(JavacSourceVersion) -target $(JavacTargetVersion) $(_BootClassPath)</_JavacSourceOptions>
   </PropertyGroup>
   <PropertyGroup>
-    <_XamarinAndroidCecilPath Condition=" '$(CecilSourceDirectory)' != '' And Exists('$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll') ">$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll</_XamarinAndroidCecilPath>
     <XamarinAndroidToolsFullPath>$([System.IO.Path]::GetFullPath ('$(XamarinAndroidToolsDirectory)'))</XamarinAndroidToolsFullPath>
   </PropertyGroup>
 

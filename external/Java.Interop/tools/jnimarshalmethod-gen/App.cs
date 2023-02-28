@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Emit;
+using System.Runtime.Loader;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 using Java.Interop;
 
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Options;
 using Mono.Collections.Generic;
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.Expressions;
 
 #if _DUMP_REGISTER_NATIVE_MEMBERS
 using Mono.Linq.Expressions;
@@ -23,19 +28,36 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 	{
 
 		internal const string Name = "jnimarshalmethod-gen";
-		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: true, loadReaderParameters: new ReaderParameters () { ReadSymbols = true, InMemory = true });
+		static DirectoryAssemblyResolver resolver;
 		static readonly TypeDefinitionCache cache = new TypeDefinitionCache ();
-		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
 		static Dictionary<string, TypeDefinition> typeMap = new Dictionary<string, TypeDefinition> ();
 		static List<string> references = new List<string> ();
 		static public bool Debug;
-		static public bool Verbose;
+		static public bool Verbose => Verbosity > 0;
+		static public int Verbosity;
 		static bool keepTemporary;
 		static bool forceRegeneration;
 		static List<Regex> typeNameRegexes = new List<Regex> ();
 		static string jvmDllPath;
 		List<string> FilesToDelete = new List<string> ();
+		// AssemblyLoadContext loadContext;
 		static string outDirectory;
+
+		static readonly string AppName;
+
+		static App()
+		{
+			AppName = Path.GetFileNameWithoutExtension (Environment.GetCommandLineArgs () [0]);
+			var r = new ReaderParameters {
+				ReadSymbols                 = true,
+				InMemory                    = true,
+			};
+			resolver = new DirectoryAssemblyResolver (
+					logger:                 Log,
+					loadDebugSymbols:       true,
+					loadReaderParameters:   r
+			);
+		}
 
 		public static int Main (string [] args)
 		{
@@ -50,6 +72,34 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				File.Delete (path);
 
 			return 0;
+		}
+
+		static void Log (TraceLevel level, string message)
+		{
+			switch (level) {
+			case TraceLevel.Error:
+				ColorMessage ($"{AppName}: error: ", ConsoleColor.Red, Console.Error, writeLine: false);
+				ColorMessage (message, ConsoleColor.Red, Console.Error);
+				break;
+			case TraceLevel.Warning:
+				ColorMessage ($"{AppName}: warning: ", ConsoleColor.Yellow, Console.Error, writeLine: false);
+				ColorMessage (message, ConsoleColor.Yellow, Console.Error);
+				break;
+			case TraceLevel.Info:
+				if (Verbose)
+					ColorMessage (message, ConsoleColor.Cyan, Console.Out);
+				break;
+			case TraceLevel.Verbose:
+				if (Verbosity > 1) {
+					Console.WriteLine (message);
+				}
+				break;
+			default:
+				if (level == 0 || ((int) level) > Verbosity) {
+					Console.WriteLine (message);
+				}
+				break;
+			}
 		}
 
 		void AddMonoPathToResolverSearchDirectories ()
@@ -111,9 +161,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				{ "t|type=",
 				  "Generate marshaling methods only for types whose names match {TYPE-REGEX}.",
 				  v => typeNameRegexes.Add (new Regex (v)) },
-				{ "v|verbose",
+				{ "v|verbose:",
 				  "Output information about progress during the run of the tool",
-				  v => Verbose = true },
+				  (int? v) => Verbosity = v.HasValue ? v.Value : Verbosity + 1 },
 				new ResponseFileSource(),
 			};
 
@@ -151,36 +201,71 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		{
 			CreateJavaVM (jvmDllPath);
 
-			var readerParameters = new ReaderParameters {
+			var readerParameters    = new ReaderParameters {
 				AssemblyResolver   = resolver,
 				InMemory           = true,
 				ReadSymbols        = true,
-				ReadWrite          = string.IsNullOrEmpty (outDirectory),
+				ReadWrite          = false,
 			};
 			var readerParametersNoSymbols = new ReaderParameters {
 				AssemblyResolver   = resolver,
 				InMemory           = true,
 				ReadSymbols        = false,
-				ReadWrite          = string.IsNullOrEmpty (outDirectory),
+				ReadWrite          = false,
+			};
+
+			foreach (var r in references) {
+				resolver.SearchDirectories.Add (Path.GetDirectoryName (r));
+			}
+			foreach (var assembly in assemblies) {
+				resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
+			}
+			var corlibDir   = Path.GetDirectoryName (typeof (object).Assembly.Location);
+			if (corlibDir != null) {
+				resolver.SearchDirectories.Add (corlibDir);
+			}
+
+			// loadContext = CreateLoadContext ();
+			AppDomain.CurrentDomain.AssemblyResolve += (o, e) => {
+				Log (TraceLevel.Verbose, $"# jonp: resolving assembly: {e.Name}");
+				foreach (var d in resolver.SearchDirectories) {
+					var a = Path.Combine (d, e.Name);
+					var f = a + ".dll";
+					if (File.Exists (f)) {
+						return Assembly.LoadFile (Path.GetFullPath (f));
+					}
+					f = a + ".exe";
+					if (File.Exists (f)) {
+						return Assembly.LoadFile (Path.GetFullPath (f));
+					}
+				}
+				return null;
 			};
 
 			foreach (var r in references) {
 				try {
+					// loadContext.LoadFromAssemblyPath (Path.GetFullPath (r));
 					Assembly.LoadFile (Path.GetFullPath (r));
-				} catch (Exception) {
+				} catch (Exception e) {
+					Console.WriteLine (e);
 					ErrorAndExit (Message.ErrorUnableToPreloadReference, r);
 				}
-				resolver.SearchDirectories.Add (Path.GetDirectoryName (r));
 			}
 
 			foreach (var assembly in assemblies) {
 				if (!File.Exists (assembly)) {
 					ErrorAndExit (Message.ErrorPathDoesNotExist, assembly);
 				}
+				bool inPlaceUpdate      = string.IsNullOrEmpty (outDirectory) ||
+					string.Equals (Path.GetFullPath (outDirectory), Path.GetDirectoryName (Path.GetFullPath (assembly)), StringComparison.OrdinalIgnoreCase);
 
-				resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
+				readerParameters.ReadWrite  = readerParametersNoSymbols.ReadWrite = inPlaceUpdate;
+
 				AssemblyDefinition ad;
 				try {
+					if (inPlaceUpdate) {
+						File.Copy (assembly, assembly + ".orig");
+					}
 					ad = AssemblyDefinition.ReadAssembly (assembly, readerParameters);
 					resolver.AddToCache (ad);
 				} catch (Exception) {
@@ -197,7 +282,6 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			foreach (var assembly in assemblies) {
 				try {
 					CreateMarshalMethodAssembly (assembly);
-					definedTypes.Clear ();
 				} catch (Exception e) {
 					ErrorAndExit (Message.ErrorUnableToProcessAssembly, assembly, Environment.NewLine, e.Message, e);
 				}
@@ -206,6 +290,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		void CreateJavaVM (string jvmDllPath)
 		{
+			if (string.IsNullOrEmpty (jvmDllPath)) {
+				jvmDllPath  = ReadJavaSdkDirectoryFromJdkInfoProps ();
+			}
 			var builder = new JreRuntimeOptions {
 				JvmLibraryPath  = jvmDllPath,
 			};
@@ -217,27 +304,72 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			}
 		}
 
+		static string ReadJavaSdkDirectoryFromJdkInfoProps ()
+		{
+			var location    = typeof (App).Assembly.Location;	// …/bin/Debug-net7.0/jnimarshalmethod-gen.dll
+			var binDir      = Path.GetDirectoryName (Path.GetDirectoryName (location)) ?? Environment.CurrentDirectory;
+			var dirName     = Path.GetFileName (Path.GetDirectoryName (location));
+			if (binDir == null || dirName == null) {
+				return null;
+			}
+			if (!dirName.StartsWith ("Debug", StringComparison.OrdinalIgnoreCase) &&
+					!dirName.StartsWith ("Release", StringComparison.OrdinalIgnoreCase)) {
+				return null;
+			}
+			var buildName   = "Build" + dirName;
+			if (buildName.Contains ('-')) {
+				buildName = buildName.Substring (0, buildName.IndexOf ('-'));
+			}
+			var jdkPropFile = Path.Combine (binDir, buildName, "JdkInfo.props");
+			if (!File.Exists (jdkPropFile)) {
+				return null;
+			}
+
+			var msbuild = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
+
+			var jdkProps = XDocument.Load (jdkPropFile);
+			var jdkJvmPath = jdkProps.Elements ()
+				.Elements (msbuild + "Choose")
+				.Elements (msbuild + "When")
+				.Elements (msbuild + "PropertyGroup")
+				.Elements (msbuild + "JdkJvmPath")
+				.FirstOrDefault ();
+			if (jdkJvmPath == null) {
+				return null;
+			}
+			return jdkJvmPath.Value;
+		}
+
+		AssemblyLoadContext CreateLoadContext ()
+		{
+			var c = new AssemblyLoadContext ("jnimarshalmethod-gen", isCollectible: true);
+			c.Resolving += (context, name) => {
+				Log (TraceLevel.Verbose, $"# jonp: trying to load assembly: {name}");
+				if (name.Name == "Java.Interop") {
+					return typeof (IJavaPeerable).Assembly;
+				}
+				if (name.Name == "Java.Interop.Export") {
+					return typeof (JavaCallableAttribute).Assembly;
+				}
+				foreach (var d in resolver.SearchDirectories) {
+					var a = Path.Combine (d, name.Name);
+					var f = a + ".dll";
+					if (File.Exists (f)) {
+						return context.LoadFromAssemblyPath (Path.GetFullPath (f));
+					}
+					f = a + ".exe";
+					if (File.Exists (f)) {
+						return context.LoadFromAssemblyPath (Path.GetFullPath (f));
+					}
+				}
+				return null;
+			};
+			return c;
+		}
+
 		static JniRuntime.JniMarshalMemberBuilder CreateExportedMemberBuilder ()
 		{
 			return JniEnvironment.Runtime.MarshalMemberBuilder;
-		}
-
-		static TypeBuilder GetTypeBuilder (ModuleBuilder mb, Type type)
-		{
-			if (definedTypes.ContainsKey (type.FullName))
-				return definedTypes [type.FullName];
-
-			if (type.IsNested) {
-				var outer = GetTypeBuilder (mb, type.DeclaringType);
-				var nested = outer.DefineNestedType (type.Name, System.Reflection.TypeAttributes.NestedPublic);
-				definedTypes [type.FullName] = nested;
-				return nested;
-			}
-
-			var tb = mb.DefineType (type.FullName, System.Reflection.TypeAttributes.Public);
-			definedTypes [type.FullName] = tb;
-
-			return tb;
 		}
 
 		class MethodsComparer : IComparer<MethodInfo>
@@ -278,7 +410,6 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		void CreateMarshalMethodAssembly (string path)
 		{
-			var assembly        = Assembly.Load (File.ReadAllBytes (Path.GetFullPath (path)));
 			var baseName        = Path.GetFileNameWithoutExtension (path);
 			var assemblyName    = new AssemblyName (baseName + "-JniMarshalMethods");
 			var fileName        = assemblyName.Name + ".dll";
@@ -289,16 +420,17 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			if (Verbose)
 				ColorWriteLine ($"Preparing marshal method assembly '{assemblyName}'", ConsoleColor.Cyan);
 
-			var da = AppDomain.CurrentDomain.DefineDynamicAssembly (
-					assemblyName,
-					AssemblyBuilderAccess.Save,
-					destDir);
-
-			var dm = da.DefineDynamicModule ("<default>", fileName);
-
 			var ad = resolver.GetAssembly (path);
 
+			var assemblyBuilder = new ExpressionAssemblyBuilder (ad, Log) {
+				KeepTemporaryFiles  = keepTemporary,
+			};
+
 			PrepareTypeMap (ad.MainModule);
+
+//			var assembly        = loadContext.LoadFromStream (File.OpenRead (path));
+			var assemblyBytes   = File.ReadAllBytes (path);
+			var assembly        = Assembly.Load (assemblyBytes);
 
 			Type[] types = null;
 			try {
@@ -307,6 +439,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				types = e.Types;
 				foreach (var le in e.LoaderExceptions)
 					Warning (Message.WarningTypeLoadException, Environment.NewLine, le);
+				if (Verbose) {
+					ColorMessage ($"Exception: {e.ToString ()}", ConsoleColor.Red, Console.Error);
+				}
 			}
 
 			foreach (var systemType in types) {
@@ -349,9 +484,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				if (Verbose)
 					ColorWriteLine ($"Processing {type} type", ConsoleColor.Yellow);
 
-				var registrationElements    = new List<Expression> ();
+				var registrations           = new List<ExpressionMethodRegistration> ();
 				var targetType              = Expression.Variable (typeof(Type), "targetType");
-				TypeBuilder dt = null;
 
 				var flags = BindingFlags.Public | BindingFlags.NonPublic |
 						BindingFlags.Instance | BindingFlags.Static;
@@ -360,15 +494,27 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				Array.Sort (methods, new MethodsComparer (type, td));
 
 				addedMethods.Clear ();
+				var mmTypeDef = new TypeDefinition (
+						@namespace: null,
+						name:       TypeMover.NestedName,
+						attributes: Mono.Cecil.TypeAttributes.NestedPrivate
+				);
+				mmTypeDef.BaseType = assemblyBuilder.DeclaringAssemblyDefinition.MainModule.TypeSystem.Object;
 
 				foreach (var method in methods) {
 					// TODO: Constructors
 					var export  = method.GetCustomAttribute<JavaCallableAttribute> ();
+					var exportObj = method.GetCustomAttributes (inherit:false).SingleOrDefault (a => a.GetType ().Name == "JavaCallableAttribute");
 					string signature = null;
 					string name = null;
 					string methodName = method.Name;
 
-					if (export == null) {
+					if (exportObj != null) {
+						dynamic e = exportObj;
+						name = e.Name;
+						signature = e.Signature;
+					}
+					else {
 						if (method.IsGenericMethod || method.ContainsGenericParameters || method.IsGenericMethodDefinition || method.ReturnType.IsGenericType)
 							continue;
 
@@ -388,59 +534,63 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 							continue;
 					}
 
-					if (dt == null)
-						dt = GetTypeBuilder (dm, type);
-
-					if (addedMethods.Contains (methodName))
+					if (addedMethods.Contains (methodName)) {
+						Log (TraceLevel.Verbose, $"# jonp: method `{methodName}` already added (?!)");
 						continue;
+					}
 
 					if (Verbose) {
 						Console.Write ("Adding marshal method for ");
 						ColorWriteLine ($"{method}", ConsoleColor.Green );
 					}
 
-					var mb = dt.DefineMethod (
-							methodName,
-							System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.Static);
-
 					var lambda  = builder.CreateMarshalToManagedExpression (method);
-					lambda.CompileToMethod (mb);
+#if _DUMP_REGISTER_NATIVE_MEMBERS
+					Log (TraceLevel.Verbose, $"## Dumping contents of marshal method for `{td.FullName}::{method.Name}({string.Join (", ", method.GetParameters ().Select (p => p.ParameterType))})`:");
+					Console.WriteLine (lambda.ToCSharpCode ());
+#endif  // _DUMP_REGISTER_NATIVE_MEMBERS
+					var mmDef = assemblyBuilder.Compile (lambda);
+					mmDef.Name = export?.Name ?? ("n_TODO" + lambda.GetHashCode ());
+					mmTypeDef.Methods.Add (mmDef);
 
 					if (export != null) {
 						name = export.Name;
 						signature = export.Signature;
 					}
 
-					if (signature == null)
+					if (signature == null) {
 						signature = builder.GetJniMethodSignature (method);
+					}
 
-					registrationElements.Add (CreateRegistration (name, signature, lambda, targetType, methodName));
+					registrations.Add (new ExpressionMethodRegistration (name, signature, mmDef));
 
 					addedMethods.Add (methodName);
 				}
-				if (dt != null)
-					AddRegisterNativeMembers (dt, targetType, registrationElements);
+				if (registrations.Count > 0) {
+					var m = assemblyBuilder.CreateRegistrationMethod (registrations);
+					mmTypeDef.Methods.Add (m);
+					td.NestedTypes.Add (mmTypeDef);
+				}
 			}
-
-			foreach (var tb in definedTypes)
-				tb.Value.CreateType ();
-
-			da.Save (fileName);
 
 			if (Verbose)
 				ColorWriteLine ($"Marshal method assembly '{assemblyName}' created", ConsoleColor.Cyan);
 
 			resolver.SearchDirectories.Add (destDir);
-			var dstAssembly = resolver.GetAssembly (fileName);
+			// var dstAssembly = resolver.GetAssembly (fileName);
 
-			if (!string.IsNullOrEmpty (outDirectory))
+			if (!string.IsNullOrEmpty (outDirectory)) {
+				Directory.CreateDirectory (outDirectory);
 				path = Path.Combine (outDirectory, Path.GetFileName (path));
+			}
 
-			var mover = new TypeMover (dstAssembly, ad, path, definedTypes, resolver, cache);
-			mover.Move ();
+			assemblyBuilder.Write (path);
 
-			if (!keepTemporary)
-				FilesToDelete.Add (dstAssembly.MainModule.FileName);
+			// var mover = new TypeMover (dstAssembly, ad, path, definedTypes, resolver, cache);
+			// mover.Move ();
+
+			// if (!keepTemporary)
+			// 	FilesToDelete.Add (dstAssembly.MainModule.FileName);
 		}
 
 		static  readonly    MethodInfo          Delegate_CreateDelegate             = typeof (Delegate).GetMethod ("CreateDelegate", new[] {
@@ -480,32 +630,6 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					Expression.Constant (method),
 					Expression.Constant (signature),
 					d);
-		}
-
-		static void AddRegisterNativeMembers (TypeBuilder dt, ParameterExpression targetType, List<Expression> registrationElements)
-		{
-			if (Verbose) {
-				Console.Write ("Adding registration method for ");
-				ColorWriteLine ($"{dt.FullName}", ConsoleColor.Green);
-			}
-
-			var args    = Expression.Parameter (typeof (JniNativeMethodRegistrationArguments),   "args");
-			var body = Expression.Block (
-					new[]{targetType},
-					Expression.Assign (targetType, Expression.Call (Type_GetType, Expression.Constant (dt.FullName))),
-					Expression.Call (args, JniNativeMethodRegistrationArguments_AddRegistrations, Expression.NewArrayInit (typeof (JniNativeMethodRegistration), registrationElements.ToArray ())));
-
-			var lambda  = Expression.Lambda<Action<JniNativeMethodRegistrationArguments>> (body, new[]{ args });
-
-			var rb = dt.DefineMethod ("__RegisterNativeMembers",
-					System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.Static);
-			rb.SetParameters (typeof (JniNativeMethodRegistrationArguments));
-			rb.SetCustomAttribute (new CustomAttributeBuilder (typeof (JniAddNativeMethodRegistrationAttribute).GetConstructor (Type.EmptyTypes), new object[0]));
-#if _DUMP_REGISTER_NATIVE_MEMBERS
-			Console.WriteLine ($"## Dumping contents of `{dt.FullName}::__RegisterNativeMembers`: ");
-			Console.WriteLine (lambda.ToCSharpCode ());
-#endif  // _DUMP_REGISTER_NATIVE_MEMBERS
-			lambda.CompileToMethod (rb);
 		}
 
 		static void ColorMessage (string message, ConsoleColor color, TextWriter writer, bool writeLine = true)
@@ -700,5 +824,38 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			return false;
 		}
+	}
+}
+
+class _Jonp_ReferenceCodeGen
+{
+	static void A (IntPtr jnienv, IntPtr klass, int value)
+	{
+		JniRuntime jvm = JniEnvironment.Runtime;
+		JniRuntime.JniValueManager vm;
+
+		var envp = new JniTransition (jnienv);
+		try {
+			vm = jvm.ValueManager;
+			vm.WaitForGCBridgeProcessing ();
+		} catch (Exception e) when (jvm.ExceptionShouldTransitionToJni (e)) {
+			envp.SetPendingException (e);
+		} finally {
+			envp.Dispose ();
+		}
+	}
+
+	static void B ()
+	{
+	}
+
+	[JniAddNativeMethodRegistration]
+	static void RegisterNativeMethods (JniNativeMethodRegistrationArguments args)
+	{
+		var methods = new [] {
+			new JniNativeMethodRegistration ("a", "()V", new Action<IntPtr, IntPtr, int> (A)),
+			new JniNativeMethodRegistration ("b", "()V", new Action (B)),
+		};
+		args.AddRegistrations (methods);
 	}
 }

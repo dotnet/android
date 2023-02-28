@@ -12,7 +12,6 @@ using NUnit.Framework;
 
 namespace Java.InteropTests
 {
-#if !NET
 	[TestFixture]
 	class MarshalMemberBuilderTest : JavaVMFixture
 	{
@@ -27,11 +26,17 @@ namespace Java.InteropTests
 
 				Assert.AreEqual ("action",  methods [0].Name);
 				Assert.AreEqual ("()V",     methods [0].Signature);
-				Assert.IsTrue (methods [0].Marshaler is Action<IntPtr, IntPtr>);
 
-				Assert.AreEqual ("staticAction",    methods [1].Name);
-				Assert.AreEqual ("()V",             methods [1].Signature);
+				Assert.AreEqual ("staticAction",        methods [1].Name);
+				Assert.AreEqual ("()V",                 methods [1].Signature);
+
+#if NET
+				Assert.AreEqual ("_JniMarshal_PP_V",    methods [0].Marshaler.GetType ().FullName);
+				Assert.AreEqual ("_JniMarshal_PP_V",    methods [1].Marshaler.GetType ().FullName);
+#else
+				Assert.IsTrue (methods [0].Marshaler is Action<IntPtr, IntPtr>);
 				Assert.IsTrue (methods [1].Marshaler is Action<IntPtr, IntPtr>);
+#endif  // NET
 
 				var m = t.GetStaticMethod ("testStaticMethods", "()V");
 				JniEnvironment.StaticMethods.CallStaticVoidMethod (t.PeerReference, m);
@@ -201,6 +206,12 @@ namespace Java.InteropTests
 		{
 			Console.WriteLine ("## member: {0}", memberName);
 			Console.WriteLine (expression.ToCSharpCode ());
+			Assert.AreEqual (expectedBody, expression.ToCSharpCode ());
+#if NET
+			// TODO: Use src/Java.Interop.Tools.Expressions to compile `expression`
+			// and use the "IL decompiler" in tests/Java.Interop.Tools.Expressions-Tests
+			// to verify the expected IL
+#else
 			var da = AppDomain.CurrentDomain.DefineDynamicAssembly(
 				new AssemblyName("dyn"), // call it whatever you want
 				System.Reflection.Emit.AssemblyBuilderAccess.Save,
@@ -216,10 +227,10 @@ namespace Java.InteropTests
 			expression.CompileToMethod (mb);
 			dt.CreateType();
 			Assert.AreEqual (expressionType,    expression.Type);
-			Assert.AreEqual (expectedBody,      expression.ToCSharpCode ());
 #if !__ANDROID__
 			da.Save (_name);
 #endif  // !__ANDROID__
+#endif  // !NET
 		}
 
 		[Test]
@@ -556,5 +567,4 @@ namespace Java.InteropTests
 }}");
 		}
 	}
-#endif  // !NET
 }

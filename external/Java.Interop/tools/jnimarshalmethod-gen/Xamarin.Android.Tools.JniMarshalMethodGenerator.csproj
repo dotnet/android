@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <LangVersion>8.0</LangVersion>
     <AssemblyName>jnimarshalmethod-gen</AssemblyName>
@@ -13,6 +13,7 @@
 
   <PropertyGroup>
     <OutputPath>$(UtilityOutputFullPath)</OutputPath>
+    <_DumpRegisterNativeMembers>True</_DumpRegisterNativeMembers>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(_DumpRegisterNativeMembers)' == 'True' ">
@@ -35,6 +36,7 @@
     <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Expressions\Java.Interop.Tools.Expressions.csproj" />
   </ItemGroup>
 
 </Project>

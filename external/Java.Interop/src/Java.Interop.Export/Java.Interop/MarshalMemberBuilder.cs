@@ -84,20 +84,6 @@ namespace Java.Interop {
 			return export.Signature = GetJniMethodSignature (method);
 		}
 
-		string GetTypeSignature (ParameterInfo p)
-		{
-			var info        = Runtime.TypeManager.GetTypeSignature (p.ParameterType);
-			if (info.IsValid)
-				return info.QualifiedReference;
-
-			var marshaler   = GetParameterMarshaler (p);
-			info            = Runtime.TypeManager.GetTypeSignature (marshaler.MarshalType);
-			if (info.IsValid)
-				return info.QualifiedReference;
-
-			throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
-		}
-
 		Delegate CreateJniMethodMarshaler (MethodInfo method, JavaCallableAttribute? export, Type? type)
 		{
 			var e = CreateMarshalToManagedExpression (method, export, type);
@@ -242,6 +228,7 @@ namespace Java.Interop {
 				: Expression.Lambda (marshalerType, body, bodyParams);
 		}
 
+		// Keep in sync with ExpressionAssemblyBuilder.GetMarshalMethodDelegateType()
 		static Type? GetMarshalerType (Type? returnType, List<Type> funcTypeParams, Type? declaringType)
 		{
 			// Too many parameters; does a `_JniMarshal_*` type exist in the type's declaring assembly?
@@ -277,6 +264,7 @@ namespace Java.Interop {
 		static AssemblyBuilder? assemblyBuilder;
 		static ModuleBuilder?   moduleBuilder;
 		static Type[]?          DelegateCtorSignature;
+		static Dictionary<string, Type>? marshalDelegateTypes;
 
 		static Type? CreateMarshalDelegateType (string name, Type? returnType, List<Type> funcTypeParams)
 		{
@@ -290,6 +278,10 @@ namespace Java.Interop {
 						typeof (object),
 						typeof (IntPtr)
 					};
+					marshalDelegateTypes = new (StringComparer.Ordinal);
+				}
+				if (marshalDelegateTypes!.TryGetValue (name, out var type)) {
+					return type;
 				}
 				funcTypeParams.Insert (0, typeof (IntPtr));
 				funcTypeParams.Insert (0, typeof (IntPtr));
@@ -307,7 +299,9 @@ namespace Java.Interop {
 					.SetImplementationFlags (ImplAttributes);
 				typeBuilder.DefineMethod ("Invoke", InvokeAttributes, returnType, funcTypeParams.ToArray ())
 					.SetImplementationFlags (ImplAttributes);
-				return typeBuilder.CreateTypeInfo ();
+				var marshalDelType = typeBuilder.CreateTypeInfo ();
+				marshalDelegateTypes.Add (name, marshalDelType);
+				return marshalDelType;
 			}
 		}
 #endif  // NET
