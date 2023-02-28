@@ -18,6 +18,6 @@
     <!-- NOTE: sometimes we hardcode these when transitioning to new version bands -->
     <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
     <DotNetMonoManifestVersionBand>8.0.100-preview.2</DotNetMonoManifestVersionBand>
-    <DotNetEmscriptenManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetEmscriptenManifestVersionBand>
+    <DotNetEmscriptenManifestVersionBand>8.0.100-preview.2</DotNetEmscriptenManifestVersionBand>
   </PropertyGroup>
 </Project>
