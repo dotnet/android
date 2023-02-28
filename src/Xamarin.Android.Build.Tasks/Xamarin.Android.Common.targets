@@ -1456,7 +1456,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_GetReferenceAssemblyPaths;_SetLatestTargetFrameworkVersion"
     Inputs="$(_AndroidBuildPropertiesCache);@(ResolvedUserAssemblies)"
     Outputs="$(_AndroidStampDirectory)_GenerateJniMarshalMethods.stamp">
-  <Error Text="jnimarshalmethod-gen is not supported." />
+  <Error Text="%24(AndroidGenerateJniMarshalMethods)=True is not supported at this time." />
 </Target>
 
 <Target Name="_LinkAssembliesNoShrinkInputs">
