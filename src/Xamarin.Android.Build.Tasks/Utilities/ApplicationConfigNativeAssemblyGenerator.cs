@@ -149,7 +149,6 @@ namespace Xamarin.Android.Tasks
 		StructureInfo<AssemblyStoreSingleAssemblyRuntimeData> assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
 		StructureInfo<AssemblyStoreRuntimeData> assemblyStoreRuntimeDataStructureInfo;
 
-		public bool IsBundledApp { get; set; }
 		public bool UsesMonoAOT { get; set; }
 		public bool UsesMonoLLVM { get; set; }
 		public bool UsesAssemblyPreload { get; set; }
@@ -196,7 +195,6 @@ namespace Xamarin.Android.Tasks
 				uses_mono_aot = UsesMonoAOT,
 				aot_lazy_load = AotEnableLazyLoad,
 				uses_assembly_preload = UsesAssemblyPreload,
-				is_a_bundled_app = IsBundledApp,
 				broken_exception_transitions = BrokenExceptionTransitions,
 				instant_run_enabled = InstantRunEnabled,
 				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,

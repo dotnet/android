@@ -2,10 +2,4 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="Xamarin.Forms.Performance.Integration.Droid.projitems" />
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
-  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\JavaInteropDllConfigs.targets" />
-  <Target Name="EnsureJavaInteropDllConfigs"
-      Condition="Exists ('$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll')"
-      BeforeTargets="_GenerateJniMarshalMethods"
-      DependsOnTargets="_CreateJavaInteropDllConfigs">
-  </Target>
 </Project>

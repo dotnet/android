@@ -16,16 +16,7 @@ namespace Xamarin.Android.Prepare
 			var msbuild = new MSBuildRunner (context);
 			string xfTestPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "tests", "Xamarin.Forms-Performance-Integration", "Xamarin.Forms.Performance.Integration.csproj");
 
-			if (!await msbuild.Restore (projectPath: xfTestPath, logTag: "xfperf", binlogName: "prepare-local"))
-				return false;
-
-			// The Xamarin.Forms PackageReference version varies based on the value of $(BundleAssemblies)
-			return await msbuild.Restore (
-				projectPath: xfTestPath,
-				logTag: "xfperfbundle",
-				arguments: new List<string> { "-p:BundleAssemblies=true" },
-				binlogName: "prepare-local-bundle"
-			);
+			return await msbuild.Restore (projectPath: xfTestPath, logTag: "xfperf", binlogName: "prepare-local");
 		}
 	}
 }

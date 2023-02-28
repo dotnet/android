@@ -54,9 +54,6 @@ namespace Xamarin.Android.Tasks
 		public string Manifest { get; set; }
 
 		[Required]
-		public bool IsBundledApplication { get; set; }
-
-		[Required]
 		public string [] SupportedAbis { get; set; }
 
 		[Required]
@@ -265,7 +262,9 @@ namespace Xamarin.Android.Tasks
 			HashSet<string> archAssemblyNames = null;
 			HashSet<string> uniqueAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
-				string assemblyName = Path.GetFileName (assembly.ItemSpec);
+				// We need to use the 'RelativePath' metadata, if found, because it will give us the correct path for satellite assemblies - with the culture in the path.
+				string? relativePath = assembly.GetMetadata ("RelativePath");
+				string assemblyName = String.IsNullOrEmpty (relativePath) ? Path.GetFileName (assembly.ItemSpec) : relativePath;
 				if (!uniqueAssemblyNames.Contains (assemblyName)) {
 					uniqueAssemblyNames.Add (assemblyName);
 				}
@@ -373,7 +372,6 @@ namespace Xamarin.Android.Tasks
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), RegisteredTaskObjectLifetime.Build);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
-				IsBundledApp = IsBundledApplication,
 				UsesMonoAOT = usesMonoAOT,
 				UsesMonoLLVM = EnableLLVM,
 				UsesAssemblyPreload = environmentParser.UsesAssemblyPreload,
