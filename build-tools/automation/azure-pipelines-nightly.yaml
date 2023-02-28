@@ -71,6 +71,9 @@ stages:
 - stage: designer_tests
   displayName: Designer Tests
   dependsOn: mac_build
+  variables:
+    - group: Xamarin-Secrets
+    - group: xamops-azdev-secrets
   jobs:
   # Check - "Xamarin.Android (macOS > Tests > Designer Integration)"
   - job: designer_integration_mac
