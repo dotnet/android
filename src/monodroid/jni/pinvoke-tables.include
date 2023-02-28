@@ -1367,5 +1367,5 @@ constexpr hash_t system_io_compression_native_library_hash = 0xafe3142c;
 constexpr hash_t system_security_cryptography_native_android_library_hash = 0x93625cd;
 #endif
 
-constexpr size_t internal_pinvokes_count = 237;
+constexpr size_t internal_pinvokes_count = 238;
 constexpr size_t dotnet_pinvokes_count = 428;
