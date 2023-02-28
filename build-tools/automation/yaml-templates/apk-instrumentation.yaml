@@ -9,7 +9,7 @@ parameters:
   testResultsFormat: NUnit
   artifactSource: ""
   artifactFolder: ""
-  useDotNet: false
+  useDotNet: true
   condition: succeeded()
 
 steps:

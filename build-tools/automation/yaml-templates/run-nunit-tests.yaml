@@ -6,12 +6,15 @@ parameters:
   testResultsFile: TestResult.xml
   nunitConsoleExtraArgs: ''
   dotNetTestExtraArgs: ''
-  useDotNet: false
+  useDotNet: true
+  useDotNetPreview: false
   workers: $(NUnit.NumberOfTestWorkers)
   condition: succeeded()
+  timeoutInMinutes: 0
+  retryCountOnTaskFailure: 0
 
 steps:
-- ${{ if eq(parameters.useDotNet, false) }}:
+- ${{ if and(eq(parameters.useDotNet, false), eq(parameters.useDotNetPreview, false)) }}:
   - powershell: |
       Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
       if ([Environment]::OSVersion.Platform -eq "Unix") {
@@ -28,7 +31,7 @@ steps:
     condition: ${{ parameters.condition }}
     continueOnError: true
 
-- ${{ if eq(parameters.useDotNet, true) }}:
+- ${{ if and(eq(parameters.useDotNet, true), eq(parameters.useDotNetPreview, true)) }}:
   - powershell: Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
   - template: run-dotnet-preview.yaml
     parameters:
@@ -43,6 +46,21 @@ steps:
       displayName: run ${{ parameters.testRunTitle }}
       condition: ${{ parameters.condition }}
 
+- ${{ if and(eq(parameters.useDotNet, true), eq(parameters.useDotNetPreview, false)) }}:
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: test
+      projects: ${{ parameters.testAssembly }}
+      arguments: >-
+        ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
+      publishTestResults: true
+      testRunTitle: ${{ parameters.testRunTitle }}
+    displayName: run ${{ parameters.testRunTitle }}
+    condition: ${{ parameters.condition }}
+    continueOnError: true
+    timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+
 - template: kill-processes.yaml
 
 - task: PublishTestResults@2
@@ -50,4 +68,4 @@ steps:
     testResultsFormat: $(TestResultsFormat)
     testResultsFiles: ${{ parameters.testResultsFile }}
     testRunTitle: ${{ parameters.testRunTitle }}
-  condition: ${{ parameters.condition }}
+  condition: and(${{ parameters.condition }}, or(ne('${{ parameters.useDotNet }}', 'true'), eq('${{ parameters.useDotNetPreview }}', 'true')))

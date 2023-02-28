@@ -11,7 +11,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[TestFixtureSource(nameof(FixtureArgs))]
-	[Category ("Node-1"), Category ("XamarinBuildDownload")]
+	[Category ("XamarinBuildDownload")]
 	public class BundleToolTests : DeviceTest
 	{
 		static readonly object[] FixtureArgs = {

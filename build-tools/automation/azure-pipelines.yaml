@@ -132,6 +132,7 @@ stages:
         testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.JcwGen_Tests-Signed.apk
         artifactFolder: Default
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -142,6 +143,7 @@ stages:
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.JcwGen_Tests-Signed.apk
         artifactFolder: FastDev_Assemblies_Dexes
         extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -151,6 +153,7 @@ stages:
         testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration).xml
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Locale_Tests-Signed.apk
         artifactFolder: Default
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -161,6 +164,7 @@ stages:
         extraBuildArgs: /p:AotAssemblies=True
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Locale_Tests-Signed.apk
         artifactFolder: Aot
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -171,6 +175,7 @@ stages:
         extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Locale_Tests-Signed.apk
         artifactFolder: Profiled-Aot
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -180,6 +185,7 @@ stages:
         testResultsFiles: TestResult-Xamarin.Android.EmbeddedDSO_Test.nunit-$(ApkTestConfiguration).xml
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.EmbeddedDSO_Test-Signed.apk
         artifactFolder: Default
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -189,6 +195,7 @@ stages:
         testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration).xml
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Default
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -199,6 +206,7 @@ stages:
         extraBuildArgs: /p:AotAssemblies=true
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Aot
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -209,6 +217,7 @@ stages:
         extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Profiled-Aot
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -219,6 +228,7 @@ stages:
         extraBuildArgs: /p:BundleAssemblies=true
         artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Bundle
+        useDotNet: false
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -228,6 +238,7 @@ stages:
         testResultsFiles: TestResult-apkdiff-com.companyname.vsandroidapp-Signed-$(ApkTestConfiguration).xml
         artifactSource: bin/Test$(ApkTestConfiguration)/com.companyname.vsandroidapp-Signed.apk
         artifactFolder: Default
+        useDotNet: false
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -347,7 +358,6 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration).xml
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-$(XA.Build.Configuration)
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -358,7 +368,6 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-Debug.xml
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-Debug
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -369,7 +378,6 @@ stages:
         extraBuildArgs: -p:TestsFlavor=NoAab -p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-NoAab
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -380,7 +388,6 @@ stages:
         extraBuildArgs: -p:TestsFlavor=Interpreter -p:UseInterpreter=True
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-Interpreter
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -391,7 +398,6 @@ stages:
         extraBuildArgs: -p:TestsFlavor=NoAot -p:RunAOTCompilation=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-NoAot
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -402,7 +408,6 @@ stages:
         extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
-        useDotNet: true
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -497,7 +502,6 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        useDotNet: true
         testRunTitle: MSBuildDeviceIntegration Smoke - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
@@ -546,7 +550,6 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        useDotNet: true
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
@@ -649,117 +652,12 @@ stages:
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-- stage: msbuilddevice_tests
-  displayName: MSBuild Emulator Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
-  jobs:
-  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator One .NET #N)"
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: mac_dotnetdevice_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: mac_dotnetdevice_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: mac_dotnetdevice_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 4
-      job_name: mac_dotnetdevice_tests_4
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - job: wear_tests
-    displayName: macOS > Tests > WearOS 
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 2
-    strategy:
-      matrix:
-        Android30-x86:
-          avdApiLevel: 30
-          avdAbi: x86
-          avdType: android-wear
-          deviceName: wear_square
-    pool:
-      vmImage: $(HostedMacImage)
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install required brew tools and prepare java.interop
-        arguments: --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
-
-    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
-      displayName: set Java8SdkDirectory
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: install and launch emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:InstallAvdImage;AcquireAndroidTarget /p:TestDeviceName=$(deviceName) /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-$(avdApiLevel).binlog
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        useDotNet: true
-        testRunTitle: WearOS On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        dotNetTestExtraArgs: --filter "TestCategory = WearOS"
-        testResultsFile: TestResult-WearOS--$(XA.Build.Configuration).xml
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:AcquireAndroidTarget,ReleaseAndroidTarget /p:TestDeviceName=$(deviceName) /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
-
-    - template: yaml-templates/fail-on-issue.yaml
-
+      
+- template: yaml-templates/stage-msbuild-emulator-tests.yaml
+  parameters:
+    provisionatorChannel: ${{ parameters.provisionatorChannel }}
+    stageCondition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
+    nunit_categories: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != PackagesConfig & cat != StaticProject & cat != SystemApplication'
 
 - stage: bcl_tests
   displayName: BCL Emulator Tests
@@ -805,6 +703,7 @@ stages:
         testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.nunit-$(XA.Build.Configuration).xml
         artifactSource: bin/Test$(XA.Build.Configuration)/Xamarin.Android.Bcl_Tests-Signed.apk
         artifactFolder: Default
+        useDotNet: false
 
     - task: PublishTestResults@2
       displayName: publish Xamarin.Android.Bcl-Tests-XUnit results
