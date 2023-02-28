@@ -22,7 +22,7 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
     <Using Include="Android.OS.Bundle" Alias="Bundle" Platform="Android" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) ">
+  <ItemGroup Condition=" '$(MonoAndroidResourcePrefix)' != '' and '$(EnableDefaultAndroidItems)' == 'true' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) ">
     <!-- Default Resource file inclusion -->
     <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.xml" />
@@ -35,8 +35,14 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.otf" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.ttc" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\raw\*" Exclude="$(MonoAndroidResourcePrefix)\raw\.*" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(MonoAndroidAssetsPrefix)' != '' and '$(EnableDefaultAndroidItems)' == 'true' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) ">
     <!-- Default Asset file inclusion -->
     <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" Exclude="$(MonoAndroidAssetsPrefix)\**\.*\**" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) ">
     <!-- Default XPath transforms for bindings -->
     <TransformFile Include="Transforms*.xml" />
     <TransformFile Include="Transforms\**\*.xml" />
