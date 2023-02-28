@@ -242,7 +242,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mkbundle.exe"          ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mkbundle.pdb"          ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mkbundle-api.h" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mono-symbolicate.exe"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mono-symbolicate.pdb"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.CompilerServices.SymbolWriter.dll" />

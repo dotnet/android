@@ -144,9 +144,7 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = true,
 				PackageName = "com.xamarin.buildaotappwithspecialchars",
 			};
-			if (!Builder.UseDotNet) {
-				proj.BundleAssemblies = true;
-			}
+
 			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
@@ -194,12 +192,7 @@ namespace Xamarin.Android.Build.Tests
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
 					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
-					if (!Builder.UseDotNet) {
-						// BundleAssemblies=true
-						Assert.IsFalse (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
-					} else {
-						Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
-					}
+					Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),

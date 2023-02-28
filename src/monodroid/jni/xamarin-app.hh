@@ -205,7 +205,6 @@ struct ApplicationConfig
 	bool uses_mono_aot;
 	bool aot_lazy_load;
 	bool uses_assembly_preload;
-	bool is_a_bundled_app;
 	bool broken_exception_transitions;
 	bool instant_run_enabled;
 	bool jni_add_native_method_registration_attribute_present;

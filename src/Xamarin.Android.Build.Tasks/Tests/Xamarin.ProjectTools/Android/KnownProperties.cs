@@ -21,7 +21,6 @@ namespace Xamarin.ProjectTools
 		public const string SupportedOSPlatformVersion = "SupportedOSPlatformVersion";
 
 		public const string Deterministic = "Deterministic";
-		public const string BundleAssemblies = "BundleAssemblies";
 		public const string AndroidEnableDesugar = "AndroidEnableDesugar";
 		public const string AndroidManifestMerger = "AndroidManifestMerger";
 		public const string AndroidLinkTool = "AndroidLinkTool";
@@ -39,4 +38,3 @@ namespace Xamarin.ProjectTools
 		public const string ImplicitUsings = "ImplicitUsings";
 	}
 }
-

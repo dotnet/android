@@ -186,7 +186,7 @@ namespace Xamarin.Android.Tasks
 					apk.Flush ();
 				}
 
-				if (EmbedAssemblies && !BundleAssemblies) {
+				if (EmbedAssemblies) {
 					AddAssemblies (apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
 					apk.Flush ();
 				}

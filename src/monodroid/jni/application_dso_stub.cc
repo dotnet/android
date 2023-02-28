@@ -46,7 +46,6 @@ const ApplicationConfig application_config = {
 	.uses_mono_aot = false,
 	.aot_lazy_load = false,
 	.uses_assembly_preload = false,
-	.is_a_bundled_app = false,
 	.broken_exception_transitions = false,
 	.instant_run_enabled = false,
 	.jni_add_native_method_registration_attribute_present = false,
