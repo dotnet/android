@@ -807,11 +807,17 @@ namespace App1
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
 					},
-					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
-					}
 				}
 			};
+
+			var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
+			foreach (string lang in languages) {
+				lib.OtherBuildItems.Add (
+					new BuildItem ("EmbeddedResource", $"Foo.{lang}.resx") {
+						TextContent = () => InlineData.ResxWithContents ($"<data name=\"CancelButton\"><value>{lang}</value></data>")
+					}
+				);
+			}
 
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -829,7 +835,10 @@ namespace App1
 				var apk = Path.Combine (Root, appBuilder.ProjectDirectory,
 					app.OutputPath, $"{app.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk);
-				Assert.IsTrue (helper.Exists ($"assemblies/es/{lib.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+
+				foreach (string lang in languages) {
+					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+				}
 			}
 		}
 
