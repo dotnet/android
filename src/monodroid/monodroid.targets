@@ -3,7 +3,6 @@
   <Import Project="..\..\external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props" Condition="Exists('..\..\external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props')"/>
   <Import Project="..\..\bin\Build$(Configuration)\cmake-config.props" Condition="Exists('..\..\bin\Build$(Configuration)\cmake-config.props')" />
   <Import Project="monodroid.projitems" />
-  <Import Project="..\..\build-tools\scripts\JavaInteropDllConfigs.targets" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateMonoDroidIncludes" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
