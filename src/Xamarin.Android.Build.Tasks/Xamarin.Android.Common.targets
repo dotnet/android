@@ -1456,22 +1456,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_GetReferenceAssemblyPaths;_SetLatestTargetFrameworkVersion"
     Inputs="$(_AndroidBuildPropertiesCache);@(ResolvedUserAssemblies)"
     Outputs="$(_AndroidStampDirectory)_GenerateJniMarshalMethods.stamp">
-  <ItemGroup>
-    <_JniFrameworkAssembly Include="Mono.Android.dll" />
-    <_JniFrameworkAssembly Include="OpenTK.dll" />
-    <_JniFrameworkAssembly Include="Xamarin.Android.NUnitLite.dll" />
-    <_AssembliesToProcess Include="@(ResolvedUserAssemblies)" />
-    <_AssembliesToProcess Include="@(ResolvedFrameworkAssemblies)" Condition=" '%(Filename)' == '@(_JniFrameworkAssembly->'%(Filename)')' " />
-  </ItemGroup>
-  <RemoveDirFixed Directories="$(_JniMarshalMethodsOutputDir)" />
-  <MakeDir Directories="$(_JniMarshalMethodsOutputDir)" />
-  <Exec
-      Command="DYLD_LIBRARY_PATH=&quot;$(MonoAndroidLibDirectory)&quot; MONO_CONFIG=&quot;$(MonoAndroidBinDirectory)mono.config&quot; MONO_PATH=&quot;$(MonoAndroidBinDirectory)\bcl&quot;:&quot;$(MonoAndroidBinDirectory)\bcl\Facades&quot;:&quot;$(_XATargetFrameworkDirectories)&quot; &quot;$(MonoAndroidBinDirectory)mono&quot; --debug &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; @(ResolvedAssemblies->'--r=&quot;%(Identity)&quot;', ' ') --o=&quot;$(_JniMarshalMethodsOutputDir)&quot; $(AndroidGenerateJniMarshalMethodsAdditionalArguments) @(_AssembliesToProcess->'&quot;%(Identity)&quot;', ' ')"
-  />
-  <Touch Files="$(_AndroidStampDirectory)_GenerateJniMarshalMethods.stamp" AlwaysCreate="True" />
-  <ItemGroup>
-    <FileWrites Include="$(_AssembliesToProcess)" />
-  </ItemGroup>
+  <Error Text="%24(AndroidGenerateJniMarshalMethods)=True is not supported at this time." />
 </Target>
 
 <Target Name="_LinkAssembliesNoShrinkInputs">

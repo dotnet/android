@@ -13,7 +13,7 @@ MonodroidRuntime::get_method_name (uint32_t mono_image_index, uint32_t method_to
 {
 	uint64_t id = (static_cast<uint64_t>(mono_image_index) << 32) | method_token;
 
-	log_debug (LOG_ASSEMBLY, "Looking for name of method with id 0x%llx, in mono image at index %u", id, mono_image_index);
+	log_debug (LOG_ASSEMBLY, "MM: looking for name of method with id 0x%llx, in mono image at index %u", id, mono_image_index);
 	size_t i = 0;
 	while (mm_method_names[i].id != 0) {
 		if (mm_method_names[i].id == id) {
@@ -58,19 +58,15 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	// We need to do that, as Mono APIs cannot be invoked from threads that aren't attached to the runtime.
 	mono_thread_attach (mono_get_root_domain ());
 
-	// We don't check for valid return values from image loader, class and method lookup because if any
-	// of them fails to find the requested entity, they will return `null`.  In consequence, we can pass
-	// these pointers without checking all the way to `mono_method_get_unmanaged_callers_only_ftnptr`, after
-	// which call we check for errors.  This saves some time (not much, but definitely more than zero)
 	MonoImage *image = MonoImageLoader::get_from_index (mono_image_index);
 	MarshalMethodsManagedClass &klass = marshal_methods_class_cache[class_index];
 	if (klass.klass == nullptr) {
-		klass.klass = mono_class_get (image, klass.token);
+		klass.klass = image != nullptr ? mono_class_get (image, klass.token) : nullptr;
 	}
 
-	MonoMethod *method = mono_get_method (image, method_token, klass.klass);
+	MonoMethod *method = klass.klass != nullptr ? mono_get_method (image, method_token, klass.klass) : nullptr;
 	MonoError error;
-	void *ret = mono_method_get_unmanaged_callers_only_ftnptr (method, &error);
+	void *ret = method != nullptr ? mono_method_get_unmanaged_callers_only_ftnptr (method, &error) : nullptr;
 
 	if (XA_LIKELY (ret != nullptr)) {
 		if constexpr (NeedsLocking) {

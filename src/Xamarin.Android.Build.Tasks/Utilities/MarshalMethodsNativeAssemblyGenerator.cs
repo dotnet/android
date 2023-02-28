@@ -816,7 +816,8 @@ namespace Xamarin.Android.Tasks
 				uint index = 0;
 
 				foreach (string name in uniqueAssemblyNames) {
-					string clippedName = Path.GetFileNameWithoutExtension (name);
+					// We must make sure we keep the possible culture prefix, which will be treated as "directory" path here
+					string clippedName = Path.Combine (Path.GetDirectoryName (name) ?? String.Empty, Path.GetFileNameWithoutExtension (name));
 					ulong hashFull = HashName (name, is64Bit);
 					ulong hashClipped = HashName (clippedName, is64Bit);
 

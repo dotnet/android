@@ -25,7 +25,54 @@ namespace Xamarin.Android.Build.Tests
 				Directory.Delete (builder.ProjectDirectory, recursive: true);
 
 			builder?.Dispose ();
+			builder = null;
 			proj = null;
+		}
+
+		[Test]
+		public void NativeAssemblyCacheWithSatelliteAssemblies ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Localization",
+				OtherBuildItems = {
+					new BuildItem ("EmbeddedResource", "Foo.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+				}
+			};
+
+			var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
+			foreach (string lang in languages) {
+				lib.OtherBuildItems.Add (
+					new BuildItem ("EmbeddedResource", $"Foo.{lang}.resx") {
+						TextContent = () => InlineData.ResxWithContents ($"<data name=\"CancelButton\"><value>{lang}</value></data>")
+					}
+				);
+			}
+
+			proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+				builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+				Assert.IsTrue (libBuilder.Build (lib), "Library Build should have succeeded.");
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+				var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				var helper = new ArchiveAssemblyHelper (apk);
+
+				foreach (string lang in languages) {
+					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+				}
+
+				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				                                     Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+			}
 		}
 
 		[Test]
