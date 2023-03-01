@@ -9,22 +9,22 @@ namespace Xamarin.Android.Tools.Aidl
 	{
 		Dictionary<string,string> nsmap;
 		Dictionary<string,string> regs;
-		List<AssemblyDefinition> asses = new List<AssemblyDefinition> ();
+		List<AssemblyDefinition> assems = new List<AssemblyDefinition> ();
 		
 		public BindingDatabase (IEnumerable<string> assemblies, Func<string,AssemblyDefinition> resolveAssembly)
 		{
-			foreach (var assfile in assemblies) {
-				var ass = resolveAssembly (assfile);
-				if (ass == null)
+			foreach (var assemfile in assemblies) {
+				var assem = resolveAssembly (assemfile);
+				if (assem == null)
 					throw new InvalidOperationException ("Failed to resolve specified assembly");
-				asses.Add (ass);
+				assems.Add (assem);
 			}
 			Initialize (assemblies, resolveAssembly);
 		}
 		
-		public BindingDatabase (IEnumerable<AssemblyDefinition> asses)
+		public BindingDatabase (IEnumerable<AssemblyDefinition> assems)
 		{
-			this.asses.AddRange (asses);
+			this.assems.AddRange (assems);
 			Initialize (null, null);
 		}
 		
@@ -43,17 +43,17 @@ namespace Xamarin.Android.Tools.Aidl
 			var r = new Dictionary<string,string> ();
 			regs = r;
 
-			foreach (var ass in asses) {
-				if (!ass.CustomAttributes.Any (a => a.AttributeType.FullName != "Android.Runtime.NamespaceMappingAttribute"))
+			foreach (var assem in assems) {
+				if (!assem.CustomAttributes.Any (a => a.AttributeType.FullName != "Android.Runtime.NamespaceMappingAttribute"))
 					continue; // irrelevant assembly.
-				foreach (var att in ass.CustomAttributes) {
+				foreach (var att in assem.CustomAttributes) {
 					if (att.AttributeType.FullName != "Android.Runtime.NamespaceMappingAttribute")
 						continue;
 					string java = (string) att.Properties.First (p => p.Name == "Java").Argument.Value;
 					string cs = (string) att.Properties.First (p => p.Name == "Managed").Argument.Value;
 					d [java] = cs;
 				}
-				foreach (var md in ass.Modules)
+				foreach (var md in assem.Modules)
 					foreach (var td in md.Types.Where (t => t.IsPublic || t.IsNestedPublic))
 						foreach (var att in td.CustomAttributes.Where (a => a.AttributeType.FullName == "Android.Runtime.RegisterAttribute"))
 							r [((string) att.ConstructorArguments [0].Value).Replace ('/', '.').Replace ('$', '.')] = td.FullName;
