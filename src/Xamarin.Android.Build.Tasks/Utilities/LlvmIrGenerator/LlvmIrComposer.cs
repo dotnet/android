@@ -1,8 +1,7 @@
 using System;
 using System.IO;
+using System.IO.Hashing;
 using System.Text;
-
-using K4os.Hash.xxHash;
 
 using Xamarin.Android.Tools;
 
@@ -45,10 +44,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			byte[] nameBytes = Encoding.UTF8.GetBytes (name);
 			if (is64Bit) {
-				return XXH64.DigestOf (nameBytes, 0, nameBytes.Length);
+				return XxHash64.HashToUInt64 (nameBytes);
 			}
 
-			return (ulong)XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
+			return (ulong)XxHash32.HashToUInt32 (nameBytes);
 		}
 
 		protected virtual void InitGenerator (LlvmIrGenerator generator)

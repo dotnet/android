@@ -1,7 +1,6 @@
 using System;
+using System.IO.Hashing;
 using System.Text;
-
-using K4os.Hash.xxHash;
 
 namespace Xamarin.Android.Tasks
 {
@@ -37,8 +36,8 @@ namespace Xamarin.Android.Tasks
 			LocalBlobIndex = localBlobIndex;
 
 			byte[] nameBytes = Encoding.UTF8.GetBytes (name);
-			NameHash32 = XXH32.DigestOf (nameBytes, 0, nameBytes.Length);
-			NameHash64 = XXH64.DigestOf (nameBytes, 0, nameBytes.Length);
+			NameHash32 = XxHash32.HashToUInt32 (nameBytes);
+			NameHash64 = XxHash64.HashToUInt64 (nameBytes);
 		}
 	}
 }
