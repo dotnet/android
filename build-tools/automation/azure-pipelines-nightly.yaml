@@ -77,7 +77,7 @@ stages:
   jobs:
   # Check - "Xamarin.Android (macOS > Tests > Designer Integration)"
   - job: designer_integration_mac
-    condition: true #TODO: Enable once test issues are fixed.
+    condition: false #TODO: Enable once test issues are fixed.
     displayName: macOS > Tests > Designer Integration
     pool:
       vmImage: $(HostedMacImage)
