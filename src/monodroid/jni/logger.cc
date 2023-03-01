@@ -174,10 +174,6 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 			continue;
 		}
 
-		if (set_category ("bundle",   param, LOG_BUNDLE)) {
-			continue;
-		}
-
 		if (set_category ("network",  param, LOG_NET)) {
 			continue;
 		}
