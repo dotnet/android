@@ -16,6 +16,10 @@
       <Uri>https://github.com/dotnet/emsdk</Uri>
       <Sha>7b6bae13ad0b1a8df4fd3d4122c0d4e690d0f1c7</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.4-alpha.23113.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+      <Uri>https://github.com/dotnet/cecil</Uri>
+      <Sha>68e0c35d0b4b6651b9a062a52e7dd694d7a43927</Sha>
+    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.ApiCompat" Version="7.0.0-beta.22103.1">
