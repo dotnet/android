@@ -11,6 +11,7 @@ parameters:
   installApkDiff: true
   installLegacyDotNet: true
   restoreNUnitConsole: true
+  updateMono: true
   androidSdkPlatforms: 19,21,26,32,33
 
 steps:
@@ -61,12 +62,13 @@ steps:
     custom: build-server
     arguments: shutdown
 
-- template: run-xaprepare.yaml
-  parameters:
-    displayName: run xaprepare-UpdateMono
-    arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
-    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-    xaSourcePath: ${{ parameters.xaSourcePath }}
+- ${{ if eq(parameters.updateMono, true) }}:
+  - template: run-xaprepare.yaml
+    parameters:
+      displayName: run xaprepare-UpdateMono
+      arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
+      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - template: run-xaprepare.yaml
   parameters:

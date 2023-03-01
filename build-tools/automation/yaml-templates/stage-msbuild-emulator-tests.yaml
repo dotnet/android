@@ -37,6 +37,7 @@ stages:
         installApkDiff: false
         installLegacyDotNet: false
         restoreNUnitConsole: false
+        updateMono: false
         androidSdkPlatforms: $(androidSdkPlatforms)
 
     - template: run-xaprepare.yaml
@@ -101,6 +102,7 @@ stages:
         installApkDiff: false
         installLegacyDotNet: false
         restoreNUnitConsole: false
+        updateMono: false
         androidSdkPlatforms: $(androidSdkPlatforms)
 
     - template: run-xaprepare.yaml
