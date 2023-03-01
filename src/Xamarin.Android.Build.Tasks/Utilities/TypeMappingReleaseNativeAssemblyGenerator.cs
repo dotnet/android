@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO.Hashing;
 using System.Linq;
 using System.Text;
 
-using K4os.Hash.xxHash;
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -306,10 +306,10 @@ namespace Xamarin.Android.Tasks
 			ulong HashBytes (byte[] bytes)
 			{
 				if (is64Bit) {
-					return XXH64.DigestOf (bytes, 0, bytes.Length);
+					return XxHash64.HashToUInt64 (bytes);
 				}
 
-				return (ulong)XXH32.DigestOf (bytes, 0, bytes.Length);
+				return (ulong)XxHash32.HashToUInt32 (bytes);
 			}
 		}
 

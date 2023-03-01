@@ -103,11 +103,6 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public string MinSdkVersion { get; set; } = "19";
 
-		public bool BundleAssemblies {
-			get { return string.Equals (GetProperty (KnownProperties.BundleAssemblies), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.BundleAssemblies, value.ToString ()); }
-		}
-
 		string AotAssembliesPropertyName => Builder.UseDotNet ? KnownProperties.RunAOTCompilation : KnownProperties.AotAssemblies;
 
 		public bool AotAssemblies {

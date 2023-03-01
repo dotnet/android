@@ -222,17 +222,6 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Forms-Performance-Integration-Bundle
-        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
-        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Bundle.xml
-        extraBuildArgs: /p:BundleAssemblies=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
-        artifactFolder: Bundle
-        useDotNet: false
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
         testName: VSAndroidApp
         project: samples/VSAndroidAppProxy.csproj
         testResultsFiles: TestResult-apkdiff-com.companyname.vsandroidapp-Signed-$(ApkTestConfiguration).xml
@@ -652,7 +641,7 @@ stages:
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
       provisionatorChannel: ${{ parameters.provisionatorChannel }}
-      
+
 - template: yaml-templates/stage-msbuild-emulator-tests.yaml
   parameters:
     provisionatorChannel: ${{ parameters.provisionatorChannel }}

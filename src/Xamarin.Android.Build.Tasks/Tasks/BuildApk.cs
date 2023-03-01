@@ -183,9 +183,10 @@ namespace Xamarin.Android.Tasks
 					string apkName = dex.GetMetadata ("ApkName");
 					string dexPath = string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName;
 					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath, compressionMethod: dexCompressionMethod);
+					apk.Flush ();
 				}
 
-				if (EmbedAssemblies && !BundleAssemblies) {
+				if (EmbedAssemblies) {
 					AddAssemblies (apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
 					apk.Flush ();
 				}

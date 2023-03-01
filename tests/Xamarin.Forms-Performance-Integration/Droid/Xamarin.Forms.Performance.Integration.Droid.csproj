@@ -60,8 +60,7 @@
       <Project>{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}</Project>
     </ProjectReference>
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
-    <PackageReference Condition=" '$(BundleAssemblies)' == 'true' " Include="Xamarin.Forms" Version="4.0.0.425677" />
-    <PackageReference Condition=" '$(BundleAssemblies)' != 'true' " Include="Xamarin.Forms" Version="4.5.0.617" />
+    <PackageReference Include="Xamarin.Forms" Version="4.5.0.617" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\AboutAssets.txt" />
