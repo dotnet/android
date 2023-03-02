@@ -59,7 +59,7 @@ stages:
           --outfile="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.runsettings"
       displayName: Slice unit tests
       
-    - template: start-emulator.yaml
+    - template: start-stop-emulator.yaml
 
     - template: run-nunit-tests.yaml
       parameters:
@@ -69,7 +69,9 @@ stages:
         dotNetTestExtraArgs: --settings "$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.runsettings"
         testResultsFile: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}-$(System.JobPositionInPhase)-$(XA.Build.Configuration).xml
 
-    - template: shut-down-emulator.yaml
+    - template: start-stop-emulator.yaml
+      parameters:
+        command: stop
 
     - template: upload-results.yaml
       parameters:
@@ -122,13 +124,13 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: start-emulator.yaml
+    - template: start-stop-emulator.yaml
       parameters:
-        installImage: true
-        installDeviceName: $(deviceName)
-        installAvdApiLevel: $(avdApiLevel)
-        installAvdAbi: $(avdAbi)
-        installAvdType: $(avdType)
+        specificImage: true
+        deviceName: $(deviceName)
+        avdApiLevel: $(avdApiLevel)
+        avdAbi: $(avdAbi)
+        avdType: $(avdType)
 
     - template: run-nunit-tests.yaml
       parameters:
@@ -137,13 +139,14 @@ stages:
         dotNetTestExtraArgs: --filter "TestCategory = WearOS"
         testResultsFile: TestResult-WearOS--$(XA.Build.Configuration).xml
 
-    - template: shut-down-emulator.yaml
+    - template: start-stop-emulator.yaml
       parameters:
-        releaseImage: true
-        releaseDeviceName: $(deviceName)
-        releaseAvdApiLevel: $(avdApiLevel)
-        releaseAvdAbi: $(avdAbi)
-        releaseAvdType: $(avdType)
+        command: stop
+        specificImage: true
+        deviceName: $(deviceName)
+        avdApiLevel: $(avdApiLevel)
+        avdAbi: $(avdAbi)
+        avdType: $(avdType)
 
     - template: upload-results.yaml
       parameters:
