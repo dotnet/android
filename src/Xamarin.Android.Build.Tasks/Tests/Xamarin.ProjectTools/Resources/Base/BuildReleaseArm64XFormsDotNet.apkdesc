@@ -11,7 +11,7 @@
       "Size": 7313
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66563
+      "Size": 66562
     },
     "assemblies/Mono.Android.dll": {
       "Size": 444618
@@ -63,6 +63,9 @@
     },
     "assemblies/System.Drawing.Primitives.dll": {
       "Size": 12011
+    },
+    "assemblies/System.IO.Compression.Brotli.dll": {
+      "Size": 11871
     },
     "assemblies/System.IO.Compression.dll": {
       "Size": 15983
@@ -131,7 +134,7 @@
       "Size": 1866
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 5294
+      "Size": 5286
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5867
@@ -221,7 +224,7 @@
       "Size": 154904
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 333760
+      "Size": 333840
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -335,13 +338,13 @@
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 79326
+      "Size": 79441
     },
     "META-INF/com.google.android.material_material.version": {
       "Size": 10
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 79199
+      "Size": 79314
     },
     "META-INF/proguard/androidx-annotations.pro": {
       "Size": 339
@@ -1976,5 +1979,5 @@
       "Size": 341228
     }
   },
-  "PackageSize": 7820036
+  "PackageSize": 7832413
 }
