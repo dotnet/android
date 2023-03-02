@@ -317,10 +317,16 @@ namespace Android.Runtime {
 			var typeWithPrefix  = desugarType.ToString ();
 			var typeWithSuffix  = $"{jniSimpleReference}$-CC";
 
-			return new[]{
+			var replacements    = new[]{
 				GetReplacementTypeCore (typeWithPrefix) ?? typeWithPrefix,
 				GetReplacementTypeCore (typeWithSuffix) ?? typeWithSuffix,
 			};
+
+			if (Logger.LogAssembly) {
+				var message = $"Remapping type `{jniSimpleReference}` to one one of {{ `{replacements[0]}`, `{replacements[1]}` }}";
+				Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+			}
+			return replacements;
 		}
 
 		protected override string? GetReplacementTypeCore (string jniSimpleReference)
@@ -350,11 +356,19 @@ namespace Android.Runtime {
 
 			var method = new JniRemappingReplacementMethod ();
 			method = Marshal.PtrToStructure<JniRemappingReplacementMethod>(retInfo);
+			var newSignature = jniMethodSignature;
 
 			int? paramCount = null;
 			if (method.is_static) {
 				paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature) + 1;
-				jniMethodSignature  = $"(L{jniSourceType};" + jniMethodSignature.Substring ("(".Length);
+				newSignature = $"(L{jniSourceType};" + jniMethodSignature.Substring ("(".Length);
+			}
+
+			if (Logger.LogAssembly) {
+				var message = $"Remapping method `{jniSourceType}.{jniMethodName}{jniMethodSignature}` to " +
+					$"`{method.target_type}.{method.target_name}{newSignature}`; " +
+					$"param-count: {paramCount}; instance-to-static? {method.is_static}";
+				Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
 			}
 
 			return new JniRuntime.ReplacementMethodInfo {
@@ -363,7 +377,7 @@ namespace Android.Runtime {
 					SourceJniMethodSignature        = jniMethodSignature,
 					TargetJniType                   = method.target_type,
 					TargetJniMethodName             = method.target_name,
-					TargetJniMethodSignature        = jniMethodSignature,
+					TargetJniMethodSignature        = newSignature,
 					TargetJniMethodParameterCount   = paramCount,
 					TargetJniMethodInstanceToStatic = method.is_static,
 			};
