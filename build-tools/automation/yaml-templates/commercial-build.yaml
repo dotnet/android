@@ -130,7 +130,7 @@ steps:
   displayName: upload nupkgs
   inputs:
     artifactName: ${{ parameters.nugetArtifactName }}
-    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
 
 - script: >
     mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
