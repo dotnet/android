@@ -66,13 +66,14 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make create-nupkgs
 
-    - script: >
-        df -h &&
-        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
-        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/Microsoft.Android.Sdk.Linux*.nupkg
-        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
-        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/SignList.xml
-        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
+    - script: |
+        df -h
+        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
+        BUILD_PATH="$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)"
+        ls -R "$BUILD_PATH"
+
+        ln "$BUILD_PATH/$(NuGetArtifactName)/Microsoft.Android.Sdk.Linux*.nupkg" "$BUILD_PATH/nuget-linux"
+        ln "$BUILD_PATH/$(NuGetArtifactName)/SignList.xml" "$BUILD_PATH/nuget-linux"
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy linux sdk
 
