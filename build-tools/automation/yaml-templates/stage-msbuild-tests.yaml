@@ -1,0 +1,114 @@
+# Runs MSBuild tests that do not require devices on Mac/Windows
+
+parameters:
+  mac_agent_count: 8
+  win_agent_count: 4
+  nunit_categories: $(DotNetNUnitCategories)
+  target_framework: $(DotNetStableTargetFramework)
+  provisionatorChannel: latest
+  stageCondition: succeeded()
+
+stages:
+- stage: msbuild_dotnet
+  displayName: MSBuild Tests
+  dependsOn: mac_build
+  condition: ${{ parameters.stageCondition }}
+  jobs:
+  - job: mac_msbuild_tests
+    strategy:
+      parallel: ${{ parameters.mac_agent_count }}
+    displayName: "macOS > Tests > MSBuild"
+    pool:
+      vmImage: $(HostedMacImage)
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      androidSdkPlatforms: 33
+    steps:
+    - template: setup-test-environment.yaml
+      parameters:
+        provisionClassic: false
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        installTestSlicer: true
+        
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - pwsh: |
+        dotnet-test-slicer `
+          --test-assembly="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll" `
+          --test-filter="cat != SmokeTests ${{ parameters.nunit_categories }}" `
+          --slice-number=$(System.JobPositionInPhase) `
+          --total-slices=$(System.TotalJobsInPhase) `
+          --outfile="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.runsettings"
+      displayName: Slice unit tests
+
+    - template: run-nunit-tests.yaml
+      parameters:
+        useDotNet: true
+        testRunTitle: Xamarin.Android.Build.Tests - macOS-$(System.JobPositionInPhase)
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --settings "$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.runsettings"
+        testResultsFile: TestResult-MSBuildTests-mac_msbuild_tests-$(System.JobPositionInPhase)-$(XA.Build.Configuration).xml
+
+    - template: upload-results.yaml
+      parameters:
+        artifactName: Test Results - MSBuild - macOS-$(System.JobPositionInPhase)
+
+    - template: fail-on-issue.yaml
+
+  - job: win_msbuild_tests
+    strategy:
+      parallel: ${{ parameters.win_agent_count }}
+    displayName: "Windows > Tests > MSBuild"
+    pool: $(1ESWindowsPool)
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    variables:
+      androidSdkPlatforms: 33
+      VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
+    steps:
+    - script: netsh int ipv4 set global sourceroutingbehavior=drop
+
+    - template: kill-processes.yaml
+
+    - template: clean.yaml
+
+    - template: setup-test-environment.yaml
+      parameters:
+        provisionClassic: false
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        installTestSlicer: true
+        remove_dotnet: true
+        
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - pwsh: |
+        dotnet-test-slicer `
+          --test-assembly="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll" `
+          --test-filter="cat != SmokeTests ${{ parameters.nunit_categories }}" `
+          --slice-number=$(System.JobPositionInPhase) `
+          --total-slices=$(System.TotalJobsInPhase) `
+          --outfile="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.runsettings"
+      displayName: Slice unit tests
+
+    - template: run-nunit-tests.yaml
+      parameters:
+        useDotNet: true
+        testRunTitle: Xamarin.Android.Build.Tests - macOS-$(System.JobPositionInPhase)
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --settings "$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.runsettings"
+        testResultsFile: TestResult-MSBuildTests-win_msbuild_tests-$(System.JobPositionInPhase)-$(XA.Build.Configuration).xml
+
+    - template: upload-results.yaml
+      parameters:
+        artifactName: Test Results - MSBuild - Windows-$(System.JobPositionInPhase)
+
+    - template: fail-on-issue.yaml

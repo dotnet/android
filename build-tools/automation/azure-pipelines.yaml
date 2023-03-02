@@ -550,98 +550,13 @@ stages:
         artifactName: Test Results - MSBuild Smoke - Linux
 
     - template: yaml-templates/fail-on-issue.yaml
-
-- stage: msbuild_dotnet
-  displayName: One .NET Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
-  jobs:
-  # Xamarin.Android (Test MSBuild One .NET - macOS)
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: mac_dotnet_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: mac_dotnet_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: mac_dotnet_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 4
-      job_name: mac_dotnet_tests_4
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 5
-      job_name: mac_dotnet_tests_5
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 6
-      job_name: mac_dotnet_tests_6
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  # Xamarin.Android (Test MSBuild One .NET - Windows)
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 1
-      additional_node_id: 4
-      job_name: win_dotnet_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 2
-      additional_node_id: 5
-      job_name: win_dotnet_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 3
-      additional_node_id: 6
-      job_name: win_dotnet_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
+      
+- template: yaml-templates/stage-msbuild-tests.yaml
+  parameters:
+    provisionatorChannel: ${{ parameters.provisionatorChannel }}
+    stageCondition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
+    nunit_categories: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != PackagesConfig & cat != StaticProject & cat != SystemApplication'
+      
 - template: yaml-templates/stage-msbuild-emulator-tests.yaml
   parameters:
     provisionatorChannel: ${{ parameters.provisionatorChannel }}
