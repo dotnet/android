@@ -1,10 +1,7 @@
 # Runs MSBuild tests that do not require devices on Mac/Windows
 
 parameters:
-  mac_agent_count: 8
-  win_agent_count: 4
   nunit_categories: $(DotNetNUnitCategories)
-  target_framework: $(DotNetStableTargetFramework)
   stageCondition: succeeded()
 
 stages:
@@ -13,84 +10,18 @@ stages:
   dependsOn: mac_build
   condition: ${{ parameters.stageCondition }}
   jobs:
-  - job: mac_msbuild_tests
-    strategy:
-      parallel: ${{ parameters.mac_agent_count }}
-    displayName: "macOS > Tests > MSBuild"
-    pool:
-      vmImage: $(HostedMacImage)
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    variables:
-      androidSdkPlatforms: 33
-    steps:
-    - template: setup-test-environment.yaml
-      parameters:
-        provisionClassic: false
-        installTestSlicer: true
-        installApkDiff: false
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
-        
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - template: run-sliced-nunit-tests.yaml
-      parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
-        testFilter: cat != SmokeTests ${{ parameters.nunit_categories }}
-        testRunTitle: Xamarin.Android.Build.Tests - macOS
-        testResultsTitle: TestResult-MSBuildTests-mac_msbuild_tests
-
-    - template: upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild - macOS-$(System.JobPositionInPhase)
-
-    - template: fail-on-issue.yaml
-
-  - job: win_msbuild_tests
-    strategy:
-      parallel: ${{ parameters.win_agent_count }}
-    displayName: "Windows > Tests > MSBuild"
-    pool: $(1ESWindowsPool)
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 5
-    variables:
-      androidSdkPlatforms: 33
-    steps:
-    - script: netsh int ipv4 set global sourceroutingbehavior=drop
-
-    - template: kill-processes.yaml
-
-    - template: clean.yaml
-
-    - template: setup-test-environment.yaml
-      parameters:
-        provisionClassic: false
-        installTestSlicer: true
-        installApkDiff: false
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - template: run-sliced-nunit-tests.yaml
-      parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
-        testFilter: cat != SmokeTests ${{ parameters.nunit_categories }}
-        testRunTitle: Xamarin.Android.Build.Tests - Windows
-        testResultsTitle: TestResult-MSBuildTests-win_msbuild_tests
-
-    - template: upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild - Windows-$(System.JobPositionInPhase)
-
-    - template: fail-on-issue.yaml
+  - template: run-msbuild-tests.yaml
+    parameters:
+      testOS: macOS
+      jobName: mac_msbuild_tests
+      jobDisplayName: macOS > Tests > MSBuild
+      agentCount: 8
+      testFilter: cat != SmokeTests ${{ parameters.nunit_categories }}
+      
+  - template: run-msbuild-tests.yaml
+    parameters:
+      testOS: Windows
+      jobName: win_msbuild_tests
+      jobDisplayName: Windows > Tests > MSBuild
+      agentCount: 4
+      testFilter: cat != SmokeTests ${{ parameters.nunit_categories }}
