@@ -553,13 +553,11 @@ stages:
       
 - template: yaml-templates/stage-msbuild-tests.yaml
   parameters:
-    provisionatorChannel: ${{ parameters.provisionatorChannel }}
     stageCondition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
     nunit_categories: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != PackagesConfig & cat != StaticProject & cat != SystemApplication'
       
 - template: yaml-templates/stage-msbuild-emulator-tests.yaml
   parameters:
-    provisionatorChannel: ${{ parameters.provisionatorChannel }}
     stageCondition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
     nunit_categories: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != PackagesConfig & cat != StaticProject & cat != SystemApplication'
 

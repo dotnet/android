@@ -5,7 +5,6 @@ parameters:
   win_agent_count: 4
   nunit_categories: $(DotNetNUnitCategories)
   target_framework: $(DotNetStableTargetFramework)
-  provisionatorChannel: latest
   stageCondition: succeeded()
 
 stages:
@@ -30,8 +29,11 @@ stages:
     - template: setup-test-environment.yaml
       parameters:
         provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         installTestSlicer: true
+        installApkDiff: false
+        installLegacyDotNet: false
+        restoreNUnitConsole: false
+        updateMono: false
         
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -70,7 +72,6 @@ stages:
     cancelTimeoutInMinutes: 5
     variables:
       androidSdkPlatforms: 33
-      VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
     steps:
     - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
@@ -81,9 +82,10 @@ stages:
     - template: setup-test-environment.yaml
       parameters:
         provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         installTestSlicer: true
-        remove_dotnet: true
+        installApkDiff: false
+        installLegacyDotNet: false
+        restoreNUnitConsole: false
         
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -102,7 +104,7 @@ stages:
     - template: run-nunit-tests.yaml
       parameters:
         useDotNet: true
-        testRunTitle: Xamarin.Android.Build.Tests - macOS-$(System.JobPositionInPhase)
+        testRunTitle: Xamarin.Android.Build.Tests - Windows-$(System.JobPositionInPhase)
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --settings "$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.runsettings"
         testResultsFile: TestResult-MSBuildTests-win_msbuild_tests-$(System.JobPositionInPhase)-$(XA.Build.Configuration).xml

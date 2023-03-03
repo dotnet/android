@@ -5,9 +5,7 @@ parameters:
   agent_count: 6
   nunit_categories: $(DotNetNUnitCategories)
   target_framework: $(DotNetStableTargetFramework)
-  provisionatorChannel: latest
   stageCondition: succeeded()
-  jobCondition: succeeded()
 
 stages:
 - stage: msbuilddevice_tests
@@ -19,7 +17,6 @@ stages:
     strategy:
       parallel: ${{ parameters.agent_count }}
     displayName: "macOS > Tests > MSBuild+Emulator"
-    condition: ${{ parameters.jobCondition }}
     pool:
       vmImage: $(HostedMacImage)
     timeoutInMinutes: 90
