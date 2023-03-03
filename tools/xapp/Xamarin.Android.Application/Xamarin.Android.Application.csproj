@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Version>$(ProductVersion)</Version>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Xamarin.Android.Application</RootNamespace>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>2023 Microsoft Corporation</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
+    <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
+    <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="$(SystemRuntimeCompilerServicesUnsafeVersion)" />
+  </ItemGroup>
+
+</Project>
