@@ -1,0 +1,23 @@
+parameters:
+  testAssembly:           # NUnit test assembly to run
+  testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  testRunTitle:           # Title of the test run
+  testResultsTitle:       # Title used to construct test results file name
+
+steps:
+- pwsh: |
+    dotnet-test-slicer `
+      --test-assembly="${{ parameters.testAssembly }}" `
+      --test-filter="${{ parameters.testFilter }}" `
+      --slice-number=$(System.JobPositionInPhase) `
+      --total-slices=$(System.TotalJobsInPhase) `
+      --outfile="${{ parameters.testAssembly }}.runsettings"
+  displayName: Slice unit tests
+
+- template: run-nunit-tests.yaml
+  parameters:
+    useDotNet: true
+    testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
+    testAssembly: ${{ parameters.testAssembly }}
+    dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
+    testResultsFile: ${{ parameters.testResultsTitle }}-$(System.JobPositionInPhase)-$(XA.Build.Configuration).xml

@@ -40,22 +40,12 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - pwsh: |
-        dotnet-test-slicer `
-          --test-assembly="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll" `
-          --test-filter="cat != SmokeTests ${{ parameters.nunit_categories }}" `
-          --slice-number=$(System.JobPositionInPhase) `
-          --total-slices=$(System.TotalJobsInPhase) `
-          --outfile="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.runsettings"
-      displayName: Slice unit tests
-
-    - template: run-nunit-tests.yaml
+    - template: run-sliced-nunit-tests.yaml
       parameters:
-        useDotNet: true
-        testRunTitle: Xamarin.Android.Build.Tests - macOS-$(System.JobPositionInPhase)
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --settings "$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.runsettings"
-        testResultsFile: TestResult-MSBuildTests-mac_msbuild_tests-$(System.JobPositionInPhase)-$(XA.Build.Configuration).xml
+        testFilter: cat != SmokeTests ${{ parameters.nunit_categories }}
+        testRunTitle: Xamarin.Android.Build.Tests - macOS
+        testResultsTitle: TestResult-MSBuildTests-mac_msbuild_tests
 
     - template: upload-results.yaml
       parameters:
@@ -92,22 +82,12 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - pwsh: |
-        dotnet-test-slicer `
-          --test-assembly="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll" `
-          --test-filter="cat != SmokeTests ${{ parameters.nunit_categories }}" `
-          --slice-number=$(System.JobPositionInPhase) `
-          --total-slices=$(System.TotalJobsInPhase) `
-          --outfile="$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.runsettings"
-      displayName: Slice unit tests
-
-    - template: run-nunit-tests.yaml
+    - template: run-sliced-nunit-tests.yaml
       parameters:
-        useDotNet: true
-        testRunTitle: Xamarin.Android.Build.Tests - Windows-$(System.JobPositionInPhase)
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --settings "$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/${{ parameters.target_framework }}/Xamarin.Android.Build.Tests.runsettings"
-        testResultsFile: TestResult-MSBuildTests-win_msbuild_tests-$(System.JobPositionInPhase)-$(XA.Build.Configuration).xml
+        testFilter: cat != SmokeTests ${{ parameters.nunit_categories }}
+        testRunTitle: Xamarin.Android.Build.Tests - Windows
+        testResultsTitle: TestResult-MSBuildTests-win_msbuild_tests
 
     - template: upload-results.yaml
       parameters:
