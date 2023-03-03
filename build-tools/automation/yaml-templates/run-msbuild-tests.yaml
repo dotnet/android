@@ -4,7 +4,8 @@ parameters:
   jobDisplayName:         # Display name of the job
   agentCount:             # Number of build agents to run in parallel
   testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
-
+  installApkDiff: false   # Smoke tests use apkdiff, others do not
+  
 jobs:
 - job: ${{ parameters.jobName }}
   strategy:
@@ -17,8 +18,6 @@ jobs:
       vmImage: $(HostedMacImage)
   timeoutInMinutes: 180
   cancelTimeoutInMinutes: 5
-  variables:
-    androidSdkPlatforms: 33
   steps:
   - ${{ if eq(parameters.testOS, 'Windows') }}:
     - script: netsh int ipv4 set global sourceroutingbehavior=drop
@@ -31,7 +30,7 @@ jobs:
     parameters:
       provisionClassic: false
       installTestSlicer: true
-      installApkDiff: false
+      installApkDiff: ${{ parameters.installApkDiff }}
       installLegacyDotNet: false
       restoreNUnitConsole: false
       updateMono: false
@@ -44,7 +43,7 @@ jobs:
   - template: run-sliced-nunit-tests.yaml
     parameters:
       testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-      testFilter: cat != SmokeTests ${{ parameters.nunit_categories }}
+      testFilter: ${{ parameters.testFilter }} $(ExcludedNUnitCategories)
       testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
       testResultsTitle: TestResult-MSBuildTests-${{ parameters.jobName }}
 

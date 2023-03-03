@@ -3,8 +3,6 @@
 parameters:
   job_name: 'mac_dotnetdevice_tests'
   agent_count: 6
-  nunit_categories: $(DotNetNUnitCategories)
-  target_framework: $(DotNetStableTargetFramework)
   stageCondition: succeeded()
 
 stages:
@@ -51,8 +49,8 @@ stages:
 
     - template: run-sliced-nunit-tests.yaml
       parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/${{ parameters.target_framework }}/MSBuildDeviceIntegration.dll
-        testFilter: cat != TimeZoneInfo & cat != Localization & cat != SmokeTests ${{ parameters.nunit_categories }}
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+        testFilter: cat != TimeZoneInfo & cat != Localization & cat != SmokeTests $(ExcludedNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testResultsTitle: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}
 
