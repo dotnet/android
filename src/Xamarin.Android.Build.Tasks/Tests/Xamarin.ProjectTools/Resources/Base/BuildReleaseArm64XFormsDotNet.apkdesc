@@ -11,13 +11,13 @@
       "Size": 7313
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66562
+      "Size": 66563
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 444618
+      "Size": 445325
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5894
+      "Size": 5895
     },
     "assemblies/mscorlib.dll": {
       "Size": 3868
@@ -65,7 +65,7 @@
       "Size": 12011
     },
     "assemblies/System.IO.Compression.Brotli.dll": {
-      "Size": 11871
+      "Size": 11031
     },
     "assemblies/System.IO.Compression.dll": {
       "Size": 15983
@@ -92,7 +92,7 @@
       "Size": 8155
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 814366
+      "Size": 814504
     },
     "assemblies/System.Private.DataContractSerialization.dll": {
       "Size": 192382
@@ -134,7 +134,7 @@
       "Size": 1866
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 5286
+      "Size": 5294
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5867
@@ -209,7 +209,7 @@
       "Size": 93552
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 380656
+      "Size": 380736
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3107296
@@ -224,7 +224,7 @@
       "Size": 154904
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 333840
+      "Size": 333880
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
