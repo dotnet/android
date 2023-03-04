@@ -10,7 +10,7 @@
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest80100preview2Version)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.4-alpha.23113.1</MicrosoftDotNetCecilPackageVersion>
-    <SystemIOHashingPackageVersion>8.0.0-alpha.1.23080.2</SystemIOHashingPackageVersion>
+    <SystemIOHashingPackageVersion>$(MicrosoftNETCoreAppRefPackageVersion)</SystemIOHashingPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->
