@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +12,6 @@ using TaskItem = Microsoft.Build.Utilities.TaskItem;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-2")]
 	public class FilterAssembliesTests : BaseTest
 	{
 		string tempDirectory;

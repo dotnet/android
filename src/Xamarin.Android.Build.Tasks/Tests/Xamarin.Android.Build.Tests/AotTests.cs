@@ -11,7 +11,7 @@ using Xamarin.Android.Build;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-2"), Category ("AOT")]
+	[Category ("AOT")]
 	[Parallelizable (ParallelScope.Children)]
 	public class AotTests : BaseTest
 	{

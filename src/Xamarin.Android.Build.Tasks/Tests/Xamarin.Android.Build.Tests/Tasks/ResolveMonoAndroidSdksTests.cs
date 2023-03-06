@@ -7,7 +7,6 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-5")]
 	public class ResolveMonoAndroidSdksTests : BaseTest
 	{
 		static readonly string [] parameters = new [] { "_ResolveMonoAndroidSdksDependsOn=" };

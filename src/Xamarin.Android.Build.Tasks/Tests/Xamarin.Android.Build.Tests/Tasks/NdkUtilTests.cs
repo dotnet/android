@@ -13,7 +13,6 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests.Tasks {
 
 	[TestFixture]
-	[Category ("Node-5")]
 	public class NdkUtilTests : BaseTest {
 
 		List<BuildErrorEventArgs> errors;

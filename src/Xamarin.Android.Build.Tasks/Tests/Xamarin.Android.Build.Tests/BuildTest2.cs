@@ -19,8 +19,6 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	// Contains ~half of the BuildTest cases, so we can run them on a different CI agent
-	[Category ("Node-4")]
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest2 : BaseTest
 	{

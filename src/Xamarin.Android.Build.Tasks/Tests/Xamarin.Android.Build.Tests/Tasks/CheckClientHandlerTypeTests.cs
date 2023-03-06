@@ -12,7 +12,6 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-2")]
 	public class CheckClientHandlerTypeTests : BaseTest
 	{
 		[Test]
