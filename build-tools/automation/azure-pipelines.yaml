@@ -402,9 +402,8 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        useDotNetPreview: true
         testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
         testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
