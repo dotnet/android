@@ -152,7 +152,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "create-android-api", "build
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "xapp", "xapp", "{2F5EB899-105F-4CDF-B18F-5F7B902C15E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XApp", "tools\xapp\xapp\xapp.csproj", "{2D91DE25-43BA-4333-9B04-FE4347269847}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xapp", "tools\xapp\xapp.csproj", "{2D91DE25-43BA-4333-9B04-FE4347269847}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

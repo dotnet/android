@@ -1,17 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\Configuration.props" />
+  <Import Project="../../Configuration.props" />
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <OutputPath>../../bin/$(Configuration)/bin/xapp</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
+    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+
     <Version>$(ProductVersion)</Version>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Xamarin.Android.Application</RootNamespace>
     <Company>Microsoft Corporation</Company>
     <Copyright>2023 Microsoft Corporation</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
@@ -19,5 +23,4 @@
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="$(SystemRuntimeCompilerServicesUnsafeVersion)" />
   </ItemGroup>
-
 </Project>

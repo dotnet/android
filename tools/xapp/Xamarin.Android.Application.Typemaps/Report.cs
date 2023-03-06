@@ -44,7 +44,7 @@ namespace tmt
 			bool filtering = filterRegex != null;
 
 			if (!onlyManaged) {
-				typemap.Map.JavaToManaged.Sort ((MapEntry left, MapEntry right) => left.JavaType.Name.CompareTo (right.JavaType.Name));
+				typemap.Map.JavaToManaged.Sort ((MapEntry left, MapEntry right) => String.Compare (left.JavaType.Name, right.JavaType.Name, StringComparison.Ordinal));
 				if (typemap.Map.Kind == MapKind.Release) {
 					fileGenerator = FileGenerateJavaToManagedRelease;
 					consoleGenerator = ConsoleGenerateJavaToManagedRelease;
@@ -69,7 +69,7 @@ namespace tmt
 					if (result != 0)
 						return result;
 
-					return left.ManagedType.TypeName.CompareTo (right.ManagedType.TypeName);
+					return String.Compare (left.ManagedType.TypeName, right.ManagedType.TypeName, StringComparison.Ordinal);
 				});
 
 				if (typemap.Map.Kind == MapKind.Release) {
