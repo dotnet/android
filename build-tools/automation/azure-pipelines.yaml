@@ -400,6 +400,13 @@ stages:
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
 
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        useDotNetPreview: true
+        testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
+        testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
+
     - task: MSBuild@1
       displayName: shut down emulator
       inputs:
