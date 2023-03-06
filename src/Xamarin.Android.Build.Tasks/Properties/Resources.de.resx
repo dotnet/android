@@ -493,6 +493,10 @@ Bitte ändern Sie den Wert in einen Assembly-basierten Typnamen, der von „{1}�
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
 {0} - The name of the assembly</comment>
   </data>
+  <data name="XA1035" xml:space="preserve">
+    <value>The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>In der Assembly "{0}" wurde die Verwendung von "AppDomain.CreateDomain()" festgestellt. .NET 6 und höher unterstützt nur eine einzelne AppDomain, sodass diese API nach dem Release von .NET 6 nicht mehr in Xamarin.Android verfügbar ist.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain

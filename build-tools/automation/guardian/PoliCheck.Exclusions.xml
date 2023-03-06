@@ -1,0 +1,13 @@
+<PoliCheckExclusions>
+  <!-- Each of these exclusions is a folder name - if \[name]\ exists in the file path, it will be skipped -->
+  <Exclusion Type="FolderPathFull">LICENSE-DATA|NREFACTORY|LOCALIZE</Exclusion>
+  <!-- Each of these exclusions is a folder name - if any folder or file starts with "\[name]", it will be skipped -->
+  <!--<Exclusion Type="FolderPathStart">ABC|XYZ</Exclusion>-->
+  <!-- Each of these file types will be completely skipped for the entire scan -->
+  <!--<Exclusion Type="FileType">.ABC|.XYZ</Exclusion>-->
+  <!-- The specified file names will be skipped during the scan regardless which folder they are in -->
+  <Exclusion Type="FileName">REMAINING-INT-CONSTS.TXT|TAIWANCALENDAR.XML|XAMARIN-ANDROID-SDK-9.XML|SQLITE3.C|MAP.CSV|METHODMAP.EXT.CSV|EXTERNALWHITELIST.CSV|SYMBOLARCHIVEWHITELIST.CSV|POLICHECK.EXCLUSIONS.xml
+|API-10.PARAMS.TXT|API-15.PARAMS.TXT|API-16.PARAMS.TXT|API-17.PARAMS.TXT|API-18.PARAMS.TXT|API-19.PARAMS.TXT|API-20.PARAMS.TXT|API-21.PARAMS.TXT|API-22.PARAMS.TXT|API-23.PARAMS.TXT|API-24.PARAMS.TXT
+|API-25.PARAMS.TXT|API-26.PARAMS.TXT|API-27.PARAMS.TXT|API-28.PARAMS.TXT|API-29.PARAMS.TXT|API-30.PARAMS.TXT|API-31.PARAMS.TXT|API-32.PARAMS.TXT|API-33.PARAMS.TXT
+  </Exclusion>
+</PoliCheckExclusions>
