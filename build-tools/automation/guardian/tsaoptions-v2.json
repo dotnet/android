@@ -1,0 +1,11 @@
+{
+  "codebaseName": "xamarin.android_main",
+  "notificationAliases": [
+      "dotnet-android-eng@microsoft.com"
+  ],
+  "instanceUrl": "https://devdiv.visualstudio.com/",
+  "projectName": "DevDiv",
+  "areaPath": "DevDiv\\VS Client - Runtime SDKs\\Android",
+  "iterationPath": "DevDiv",
+  "allTools": true
+}

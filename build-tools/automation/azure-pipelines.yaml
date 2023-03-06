@@ -876,54 +876,26 @@ stages:
       packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
       GitHub.Token: $(GitHub.Token)
 
-- stage: tenets
-  dependsOn: []
-  displayName: Tenets
-  jobs:
-  # Check - "Xamarin.Android (Tenets Code Analysis)"
-  - job: run_static_analysis
-    displayName: Code Analysis
-    pool:
-      vmImage: $(HostedWinImage)
-    timeoutInMinutes: 60
-    cancelTimeoutInMinutes: 5
-    steps:
-    - checkout: self
-      submodules: recursive
-
-    - template: security\credscan\v2.yml@yaml-templates
-      parameters:
-        suppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
-
-    - template: security\policheck\v1.yml@yaml-templates
-      parameters:
-        exclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
-        pE: 1|2|3|4
-        rulesDBPath: $(System.DefaultWorkingDirectory)\build-tools\automation\policheck-rules-db.mdb
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@3
-      displayName: Run AntiMalware (Defender) Scan
-      inputs:
-        FileDirPath: $(System.DefaultWorkingDirectory)
-        EnableServices: true
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
-      displayName: Create Security Analysis Report
-      inputs:
-        CredScan: true
-        PoliCheck: true
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
-      displayName: Publish Security Analysis Logs
-      inputs:
-        ArtifactName: CodeAnalysisLogs
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
-      displayName: Fail Job if Security Issues are Detected
-      inputs:
-        CredScan: true
-        PoliCheck: true
-      condition: succeededOrFailed()
+# Check - "Xamarin.Android (Compliance)"
+- template: security/full/v0.yml@yaml-templates
+  parameters:
+    stageDependsOn: []
+    credScanSuppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\CredScanSuppressions.json
+    sourceGdnSuppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\source.gdnsuppress
+    tsaConfigFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\tsaoptions-v2.json
+    policheckLocScanEnabled: true
+    policheckExclusionFilesFolder: $(Build.SourcesDirectory)\build-tools\automation\guardian
+    policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\build-tools\automation\guardian
+    policheckChsScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hans
+    policheckChtScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hant
+    policheckCsyScanFolder: $(Build.SourcesDirectory)\Localize\loc\cs
+    policheckDeuScanFolder: $(Build.SourcesDirectory)\Localize\loc\de
+    policheckEsnScanFolder: $(Build.SourcesDirectory)\Localize\loc\es
+    policheckFraScanFolder: $(Build.SourcesDirectory)\Localize\loc\fr
+    policheckItaScanFolder: $(Build.SourcesDirectory)\Localize\loc\it
+    policheckJpnScanFolder: $(Build.SourcesDirectory)\Localize\loc\ja
+    policheckKorScanFolder: $(Build.SourcesDirectory)\Localize\loc\ko
+    policheckPlkScanFolder: $(Build.SourcesDirectory)\Localize\loc\pl
+    policheckPtbScanFolder: $(Build.SourcesDirectory)\Localize\loc\pt-BR
+    policheckRusScanFolder: $(Build.SourcesDirectory)\Localize\loc\ru
+    policheckTrkScanFolder: $(Build.SourcesDirectory)\Localize\loc\tr
