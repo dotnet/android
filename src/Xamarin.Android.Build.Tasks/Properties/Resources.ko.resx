@@ -494,7 +494,7 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA1035" xml:space="preserve">
-    <value>The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.</value>
+    <value>'BundleAssemblies' 속성은 사용되지 않으며 애플리케이션 빌드에 영향을 주지 않습니다. 동일한 기능이 'AndroidUseAssemblyStore' 및 'AndroidEnableAssemblyCompression' 속성에 의해 구현됩니다.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
