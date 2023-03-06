@@ -1,0 +1,31 @@
+parameters:
+  command: start          # 'start' or 'stop'
+  specificImage: false    # 'true' to use a specific emulator AVD image
+  deviceName:             # Device name, like 'wear_square', required if 'specificImage' is 'true'
+  avdApiLevel:            # Device API level, like '30', required if 'specificImage' is 'true'
+  avdAbi:                 # Device ABI, like 'x86', required if 'specificImage' is 'true'
+  avdType:                # Device AVD, like 'android-wear', required if 'specificImage' is 'true'
+
+steps:
+- ${{ if eq(parameters.command, 'start') }}:
+  - task: DotNetCoreCLI@2
+    displayName: Start emulator
+    continueOnError: false
+    inputs:
+      projects: src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
+      ${{ if eq(parameters.specificImage, true) }}:
+        arguments: -c $(XA.Build.Configuration) -t:"InstallAvdImage;AcquireAndroidTarget" -p:TestDeviceName=${{ parameters.deviceName }} -p:TestAvdApiLevel=${{ parameters.avdApiLevel }} -p:TestAvdAbi=${{ parameters.avdAbi }} -p:TestAvdType=${{ parameters.avdType }} -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-${{ parameters.avdApiLevel }}.binlog
+      ${{ else }}:
+        arguments: -c $(XA.Build.Configuration) -t:AcquireAndroidTarget -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+
+- ${{ if eq(parameters.command, 'stop') }}:
+  - task: DotNetCoreCLI@2
+    displayName: Stop emulator
+    condition: always()
+    continueOnError: true
+    inputs:
+      projects: src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
+      ${{ if eq(parameters.specificImage, true) }}:
+        arguments: -c $(XA.Build.Configuration) -t:"AcquireAndroidTarget,ReleaseAndroidTarget" -p:TestDeviceName=${{ parameters.deviceName }} -p:TestAvdApiLevel=${{ parameters.avdApiLevel }} -p:TestAvdAbi=${{ parameters.avdAbi }} -p:TestAvdType=${{ parameters.avdType }} -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+      ${{ else }}:
+        arguments: -c $(XA.Build.Configuration) -t:"AcquireAndroidTarget,ReleaseAndroidTarget" -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog

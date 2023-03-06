@@ -129,6 +129,7 @@
       <_InstallArguments Include="android" />
       <_InstallArguments Include="android-$(AndroidLatestUnstableApiLevel)" Condition=" '@(_PreviewPacks->Count())' != '0' " />
       <_InstallArguments Include="--skip-manifest-update" />
+      <_InstallArguments Include="--skip-sign-check" />
       <_InstallArguments Include="--verbosity diag" />
       <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
@@ -278,7 +279,7 @@
         Overwrite="true"
     />
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; workload install android-deps --configfile &quot;$(XamarinAndroidSourcePath)NuGet.config&quot; --skip-manifest-update --verbosity diag"
+        Command="&quot;$(DotNetPreviewTool)&quot; workload install android-deps --configfile &quot;$(XamarinAndroidSourcePath)NuGet.config&quot; --skip-manifest-update --skip-sign-check --verbosity diag"
         EnvironmentVariables="DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=$(BuildOutputDirectory)lib\sdk-manifests"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
     />

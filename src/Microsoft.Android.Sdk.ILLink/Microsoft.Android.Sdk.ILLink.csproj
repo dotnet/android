@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <DefineConstants>ILLINK</DefineConstants>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>

@@ -142,6 +142,7 @@ stages:
         extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType)
         artifactSource: bin/Test$(XA.Build.Configuration)/Mono.Android_Tests-Signed.apk
         artifactFolder: Default
+        useDotNet: false
 
     - task: MSBuild@1
       displayName: shut down emulator

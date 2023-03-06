@@ -46,7 +46,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("Node-3")]
 		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs, [Values (false, true)] bool useEmbeddedDex)
 		{
 			AssertHasDevices ();
@@ -84,7 +83,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("Node-3")]
 		public void ClassLibraryMainLauncherRuns ([Values (true, false)] bool preloadAssemblies)
 		{
 			AssertHasDevices ();
@@ -169,7 +167,7 @@ namespace Xamarin.Android.Build.Tests
 		};
 #pragma warning restore 414
 
-		[Test, Category ("Debugger"), Category ("Node-4")]
+		[Test, Category ("Debugger")]
 		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
 		[Retry(5)]
 		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts)
@@ -347,7 +345,7 @@ namespace ${ROOT_NAMESPACE} {
 		};
 #pragma warning restore 414
 
-		[Test, Category ("SmokeTests"), Category ("Debugger"), Category ("Node-4")]
+		[Test, Category ("SmokeTests"), Category ("Debugger")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (5)]
 		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string debugType)
