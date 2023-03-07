@@ -7,6 +7,7 @@ namespace Xamarin.Android.Application;
 class DataProviderAppInfo : DataProvider
 {
 	public string ArchiveType        { get; }
+	public bool ContainsAOTLibs      { get; private set; }
 	public bool HasRuntimeConfigBlob { get; private set; }
 	public bool IsDebug              { get; private set; }
 	public bool IsProfileable        { get; private set; }

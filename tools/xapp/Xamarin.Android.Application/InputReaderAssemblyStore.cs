@@ -34,7 +34,7 @@ class InputReaderAssemblyStore : InputReader
 			return false;
 		}
 
-		return assemblyStore.ExtractAssembly (assemblyNameRegex, outputDirectory, decompress);
+		throw new NotImplementedException ();
 	}
 
 	protected override DataProviderAssemblyStore? ReadAssemblyStore ()

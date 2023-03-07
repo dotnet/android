@@ -7,6 +7,9 @@ abstract class DataProvider
 	protected Stream? InputStream { get; }
 	public string? InputPath   { get; }
 
+	protected DataProvider ()
+	{}
+
 	protected DataProvider (string inputPath)
 	{
 		InputPath = inputPath;

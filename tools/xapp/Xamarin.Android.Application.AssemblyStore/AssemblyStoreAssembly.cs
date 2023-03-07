@@ -17,6 +17,8 @@ namespace Xamarin.Android.AssemblyStore
 		public string Name           { get; set; } = String.Empty;
 		public uint RuntimeIndex     { get; set; }
 
+		public bool IsCompressed     { get; }
+
 		public AssemblyStoreReader Store       { get; }
 		public string DllName        => MakeFileName ("dll");
 		public string PdbName        => MakeFileName ("pdb");
@@ -32,16 +34,17 @@ namespace Xamarin.Android.AssemblyStore
 			DebugDataSize = reader.ReadUInt32 ();
 			ConfigDataOffset = reader.ReadUInt32 ();
 			ConfigDataSize = reader.ReadUInt32 ();
+			IsCompressed = store.IsCompressed (DataOffset);
 		}
 
-		public void ExtractImage (string outputDirPath, string? fileName = null)
+		public void ExtractImage (string outputDirPath, string? fileName = null, bool decompress = true)
 		{
-			Store.ExtractAssemblyImage (this, MakeOutputFilePath (outputDirPath, "dll", fileName));
+			Store.ExtractAssemblyImage (this, MakeOutputFilePath (outputDirPath, "dll", fileName), decompress);
 		}
 
-		public void ExtractImage (Stream output)
+		public void ExtractImage (Stream output, bool decompress = true)
 		{
-			Store.ExtractAssemblyImage (this, output);
+			Store.ExtractAssemblyImage (this, output, decompress);
 		}
 
 		public void ExtractDebugData (string outputDirPath, string? fileName = null)

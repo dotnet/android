@@ -24,7 +24,7 @@
 
    <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
-    <Compile Include="..\..\tools\xapp\Xamarin.Android.Application\Xamarin.Android.Application.AssemblyStore\AssemblyStore*.cs" />
+    <Compile Include="..\..\tools\xapp\Xamarin.Android.Application.AssemblyStore\AssemblyStore*.cs" />
     <EmbeddedResource Include="Resources\LinkDescTest\*.*" />
   </ItemGroup>
   <ItemGroup>

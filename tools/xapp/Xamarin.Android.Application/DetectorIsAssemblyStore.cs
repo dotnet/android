@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+using Xamarin.Android.AssemblyStore;
+
 namespace Xamarin.Android.Application;
 
 class DetectorIsAssemblyStore : InputTypeDetector
@@ -11,7 +13,7 @@ class DetectorIsAssemblyStore : InputTypeDetector
 		using var reader = new BinaryReader (fs);
 
 		uint signature = reader.ReadUInt32 ();
-		if (signature != DataProviderAssemblyStore.ASSEMBLY_STORE_MAGIC) {
+		if (signature != AssemblyStoreReader.ASSEMBLY_STORE_MAGIC) {
 			return (false, null);
 		}
 

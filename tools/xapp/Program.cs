@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Mono.Options;
 
 using Xamarin.Android.Application;
+using Xamarin.Android.AssemblyStore;
 
 namespace Xamarin.XApp;
 
@@ -58,19 +59,35 @@ class App
 			return;
 		}
 
+		assemblyStore.EnsureFullAssemblyInformation ();
+
 		Console.WriteLine ("Assembly store info:");
-		Console.WriteLine ($"  Version: {assemblyStore.Version}");
-		Console.WriteLine ($"       ID: {assemblyStore.ID}");
-		if (assemblyStore.IsArchSpecific) {
-			Console.WriteLine ($"  Specific to architecture: {ArchitectureName (assemblyStore)}");
-		}
-		Console.WriteLine ($"  Local entry count: {assemblyStore.LocalEntryCount}");
-		Console.WriteLine ($"  Global entry count: {assemblyStore.GlobalEntryCount}");
+		Console.WriteLine ($"  Number of read blobs: {assemblyStore.Blobs.Count}");
+		Console.WriteLine ($"  Manifest present: {YesNo (assemblyStore.Manifest != null)}");
 		Console.WriteLine ();
+		Console.WriteLine ("Individual blob information:");
+
+		foreach (AssemblyStoreReader blob in assemblyStore.Blobs) {
+			Console.WriteLine ($"       ID: {blob.StoreID}");
+			Console.WriteLine ($"  Version: {blob.Version}");
+			if (blob.IsArchSpecific) {
+				Console.WriteLine ($"  Specific to architecture: {ArchitectureName (blob)}");
+			}
+			Console.WriteLine ($"  Local entry count: {blob.LocalEntryCount}");
+			Console.WriteLine ($"  Global entry count: {blob.GlobalEntryCount}");
+			Console.WriteLine ("  Assemblies in this blob:");
+			foreach (AssemblyStoreAssembly asm in blob.Assemblies) {
+				string not = asm.IsCompressed ? String.Empty : "not ";
+				Console.WriteLine ($"    {asm.Name} ({not}compressed)");
+			}
+			Console.WriteLine ();
+		}
 	}
 
-	static string ArchitectureName (DataProviderAssemblyStore store)
+	static string YesNo (bool yes) => yes ? "yes" : "no";
+
+	static string ArchitectureName (AssemblyStoreReader blob)
 	{
-		return String.IsNullOrEmpty (store.DetectedArchitecture) ? "yes, undetermined" : store.DetectedArchitecture;
+		return String.IsNullOrEmpty (blob.Arch) ? "yes, undetermined" : blob.Arch;
 	}
 }
