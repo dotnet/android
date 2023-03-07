@@ -88,7 +88,8 @@ namespace Xamarin.SourceWriter
 
 			if (IsOverride)
 				writer.Write ("override ");
-			else if (IsVirtual)
+
+			if (IsVirtual)
 				writer.Write ("virtual ");
 			else if (IsAbstract)
 				writer.Write ("abstract ");

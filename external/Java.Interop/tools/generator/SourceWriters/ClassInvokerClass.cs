@@ -64,21 +64,21 @@ namespace generator.SourceWriters
 				Properties.Add (new ThresholdTypeGetter ());
 			}
 
-			AddMemberInvokers (klass, opt, new HashSet<string> ());
+			AddMemberInvokers (klass, opt, new HashSet<string> (), klass.SkippedInvokerMethods);
 		}
 
-		void AddMemberInvokers (ClassGen klass, CodeGenerationOptions opt, HashSet<string> members)
+		void AddMemberInvokers (ClassGen klass, CodeGenerationOptions opt, HashSet<string> members, HashSet<string> skipInvokers)
 		{
 			AddPropertyInvokers (klass, klass.Properties, members, opt);
-			AddMethodInvokers (klass, klass.Methods, members, null, opt);
+			AddMethodInvokers (klass, klass.Methods, members, skipInvokers, null, opt);
 
 			foreach (var iface in klass.GetAllDerivedInterfaces ()) {
 				AddPropertyInvokers (klass, iface.Properties.Where (p => !klass.ContainsProperty (p.Name, false, false)), members, opt);
-				AddMethodInvokers (klass, iface.Methods.Where (m => (opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod) && !klass.ContainsMethod (m, false, false) && !klass.IsCovariantMethod (m) && !klass.ExplicitlyImplementedInterfaceMethods.Contains (m.GetSignature ())), members, iface, opt);
+				AddMethodInvokers (klass, iface.Methods.Where (m => (opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod) && !klass.ContainsMethod (m, false, false) && !klass.IsCovariantMethod (m) && !klass.ExplicitlyImplementedInterfaceMethods.Contains (m.GetSignature ())), members, skipInvokers, iface, opt);
 			}
 
 			if (klass.BaseGen != null && klass.BaseGen.FullName != "Java.Lang.Object")
-				AddMemberInvokers (klass.BaseGen, opt, members);
+				AddMemberInvokers (klass.BaseGen, opt, members, skipInvokers);
 		}
 
 		void AddPropertyInvokers (ClassGen klass, IEnumerable<Property> properties, HashSet<string> members, CodeGenerationOptions opt)
@@ -100,9 +100,12 @@ namespace generator.SourceWriters
 			}
 		}
 
-		void AddMethodInvokers (ClassGen klass, IEnumerable<Method> methods, HashSet<string> members, InterfaceGen gen, CodeGenerationOptions opt)
+		void AddMethodInvokers (ClassGen klass, IEnumerable<Method> methods, HashSet<string> members, HashSet<string> skipInvokers, InterfaceGen gen, CodeGenerationOptions opt)
 		{
 			foreach (var m in methods) {
+				if (skipInvokers.Contains ($"{m.DeclaringType.RawJniName}.{m.JavaName}{m.JniSignature}"))
+					continue;
+
 				var sig = m.GetSignature ();
 
 				if (members.Contains (sig))

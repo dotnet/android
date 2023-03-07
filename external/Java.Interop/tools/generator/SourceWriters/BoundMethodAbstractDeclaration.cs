@@ -44,6 +44,9 @@ namespace generator.SourceWriters
 
 			NewFirst = true;
 
+			if (method.ManagedOverride?.ToLowerInvariant () == "override")
+				IsOverride = true;
+
 			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
 				method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);
 			}
