@@ -20,6 +20,16 @@ resources:
     type: github
     name: xamarin/monodroid
     endpoint: xamarin
+  - repository: uitools
+    type: github
+    name: xamarin/UITools
+    ref: refs/heads/main
+    endpoint: xamarin
+
+parameters:
+- name: provisionatorChannel
+  type: string
+  default: latest           # Support for launching a build against a Provisionator PR (e.g., pr/[github-account-name]/[pr-number]) as a means to test in-progress Provisionator changes
 
 # Global variables
 variables:
@@ -57,6 +67,159 @@ stages:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: Build Results - Nightly macOS
         includeBuildResults: true
+
+- stage: designer_tests
+  displayName: Designer Tests
+  dependsOn: mac_build
+  variables:
+    - group: Xamarin-Secrets
+    - group: xamops-azdev-secrets
+  jobs:
+  # Check - "Xamarin.Android (macOS > Tests > Designer Integration)"
+  - job: designer_integration_mac
+    condition: false #TODO: Enable once test issues are fixed.
+    displayName: macOS > Tests > Designer Integration
+    pool:
+      vmImage: $(HostedMacImage)
+    timeoutInMinutes: 120
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      EnableRegressionTest: true
+    steps:
+    - checkout: uitools
+      clean: true
+      submodules: recursive
+      path: s/UITools
+      persistCredentials: true
+
+    - powershell: |
+        # Use the branch name of the source being built or the PR target branch name. Fall back to 'main' if the branch is unknown.
+        $branchName = "main"
+        Set-Location -Path $(System.DefaultWorkingDirectory)/UITools
+        git checkout $branchName
+        git submodule update -q --init --recursive
+      displayName: Clone and update UITools
+
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
+    - task: provisionator@2
+      displayName: provision designer dependencies
+      inputs:
+        github_token: $(GitHub.Token)
+        provisioning_script: $(System.DefaultWorkingDirectory)/UITools/src/bot-provisioning/dependencies.csx
+        provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
+      env:
+        PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
+
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        jdkTestFolder: $(JAVA_HOME_8_X64)
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
+
+    - template: designer/android-designer-build-mac.yaml@yaml-templates
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/src
+
+    - template: designer/android-designer-tests.yaml@yaml-templates
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/src
+        runAddinTests: false
+
+    - task: CopyFiles@2
+      displayName: 'Copy binlogs'
+      inputs:
+        sourceFolder: $(System.DefaultWorkingDirectory)/UITools/src/Xamarin.Designer.Android
+        contents: '**/*.binlog'
+        targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
+        overWrite: true
+        flattenFolders: true
+      condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+
+    - template: yaml-templates/publish-artifact.yaml
+      parameters:
+        displayName: upload designer binlogs
+        artifactName: Test Results - Designer - macOS
+        targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
+        condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+
+  # Check - "Xamarin.Android (Windows > Tests > Designer Integration)"
+  - job: designer_integration_win
+    displayName: Windows > Tests > Designer Integration
+    pool:
+      vmImage: $(HostedWinImage)
+    timeoutInMinutes: 120
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      EnableRegressionTest: true
+      RegressionTestSuiteOutputDir: C:\Git\ADesRegTestSuite
+      VisualStudioInstallationPath: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
+    steps:
+    - checkout: uitools
+      clean: true
+      submodules: recursive
+      path: s\UITools
+      persistCredentials: true
+
+    - powershell: |
+        # Use the branch name of the source being built or the PR target branch name. Fall back to 'main' if the branch is unknown.
+        $branchName = "main"
+        Set-Location -Path $(System.DefaultWorkingDirectory)\UITools
+        git checkout $branchName
+        git submodule update -q --init --recursive
+      displayName: Clone and update UITools
+
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
+    - task: provisionator@2
+      displayName: provision designer dependencies
+      inputs:
+        github_token: $(GitHub.Token)
+        provisioning_script: $(System.DefaultWorkingDirectory)\UITools\src\bot-provisioning\dependencies.csx
+        provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
+      env:
+        PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
+
+    - template: yaml-templates\setup-test-environment.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)\xamarin-android
+        jdkTestFolder: $(JAVA_HOME_8_X64)
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
+
+    - task: VSBuild@1
+      displayName: Restore Xamarin.AndroidDesigner
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\UITools\src\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
+        vsVersion: 17.0
+        msbuildArgs: >-
+          /t:Restore /p:RestoreDisableParallel=true
+          /p:RestoreConfigFile="$(System.DefaultWorkingDirectory)\UITools\NuGet.Config"
+          /p:JavaSdkDirectory="$(JAVA_HOME_8_X64)"
+        platform: Any CPU
+        configuration: DebugWin32
+
+    - task: VSBuild@1
+      displayName: Build Xamarin.AndroidDesigner
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\UITools\src\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
+        vsVersion: 17.0
+        msbuildArgs: /t:Build /p:GitHubToken=$(GitHub.Token)
+        platform: Any CPU
+        configuration: DebugWin32
+
+    - template: yaml-templates/run-designer-tests.yml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\src
 
 - stage: test
   displayName: Test
