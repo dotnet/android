@@ -413,6 +413,11 @@
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 
+  <!-- Do not build classic for API versions above 33 -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' And '$(AndroidApiLevel)' &gt; '33'">
+    <BuildDependsOn></BuildDependsOn>
+  </PropertyGroup>
+  
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn>
       $(BuildDependsOn);
