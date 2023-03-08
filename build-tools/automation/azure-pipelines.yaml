@@ -317,6 +317,11 @@ stages:
       parameters:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
+        
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     # Set up dependencies to run tests in both debug and release configurations
     - task: DotNetCoreCLI@2
