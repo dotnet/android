@@ -1623,10 +1623,11 @@ MonodroidRuntime::set_profile_options ()
 		value.assign (prop_value);
 	}
 
-	// NET+ supports only the AOT Mono profiler, if the prefix is absent or different than 'aot:' we consider the
+	// In NET+ if the prefix is absent or different than 'aot:' or 'log:' we consider the
 	// property to contain value for the dotnet tracing profiler.
 	constexpr char AOT_PREFIX[] = "aot:";
-	if (!value.starts_with (AOT_PREFIX)) {
+	constexpr char LOG_PREFIX[] = "log:";
+	if (!value.starts_with (AOT_PREFIX) && !value.starts_with (LOG_PREFIX)) {
 		// setenv(3) makes copies of its arguments
 		setenv ("DOTNET_DiagnosticPorts", value.get (), 1);
 		return;
@@ -1655,12 +1656,18 @@ MonodroidRuntime::set_profile_options ()
 	if (!have_output_arg) {
 		constexpr char PROFILE_FILE_NAME_PREFIX[] = "profile.";
 		constexpr char AOT_EXT[] = "aotprofile";
+		constexpr char MLPD_EXT[] = "mlpd";
 
 		output_path
 			.assign_c (androidSystem.get_override_dir (0))
 			.append (MONODROID_PATH_SEPARATOR)
-			.append (PROFILE_FILE_NAME_PREFIX)
-			.append (AOT_EXT);
+			.append (PROFILE_FILE_NAME_PREFIX);
+
+		if (value.starts_with (AOT_PREFIX)) {
+			output_path.append (AOT_EXT);
+		} else if (value.starts_with (LOG_PREFIX)) {
+			output_path.append (MLPD_EXT);
+		}
 
 		value
 			.append (",")
