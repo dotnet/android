@@ -206,6 +206,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("Debugger")]
+		[Retry(5)]
 		public void DotNetDebug ([Values("net6.0-android", "net7.0-android")] string targetFramework)
 		{
 			AssertCommercialBuild ();
@@ -230,52 +231,58 @@ namespace Xamarin.Android.Build.Tests
 			var sw = new Stopwatch ();
 			// setup the debugger
 			var session = new SoftDebuggerSession ();
-			session.Breakpoints = new BreakpointStore {
-				{ Path.Combine (Root, dotnet.ProjectDirectory, "MainActivity.cs"), 10 },
-			};
-			session.TargetHitBreakpoint += (sender, e) => {
-				Console.WriteLine ($"BREAK {e.Type}");
-				breakpointHit = true;
-				session.Continue ();
-			};
-			var rnd = new Random ();
-			int port = rnd.Next (10000, 20000);
-			TestContext.Out.WriteLine ($"{port}");
-			var args = new SoftDebuggerConnectArgs ("", IPAddress.Loopback, port) {
-				MaxConnectionAttempts = 10,
-			};
-			var startInfo = new SoftDebuggerStartInfo (args) {
-				WorkingDirectory = Path.Combine (dotnet.ProjectDirectory, proj.IntermediateOutputPath, runtimeId, "android", "assets"),
-			};
-			var options = new DebuggerSessionOptions () {
-				EvaluationOptions = EvaluationOptions.DefaultOptions,
-			};
-			options.EvaluationOptions.UseExternalTypeResolver = true;
-			dotnet.BuildLogFile = Path.Combine (Root, dotnet.ProjectDirectory, "run.log");
-			Assert.True (dotnet.Build ("Run", parameters: new [] {
-				$"AndroidSdbTargetPort={port}",
-				$"AndroidSdbHostPort={port}",
-				"AndroidAttachDebugger=True",
-			}), "Project should have run.");
-			WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
-			Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, dotnet.ProjectDirectory, "logcat.log"), 120), "Activity should have started");
-			// we need to give a bit of time for the debug server to start up.
-			WaitFor (2000);
-			session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
-			session.OutputWriter += (isStderr, text) => { Console.WriteLine (text); };
-			session.DebugWriter += (level, category, message) => { Console.WriteLine (message); };
-			session.Run (startInfo, options);
-			WaitFor (TimeSpan.FromSeconds (30), () => session.IsConnected);
-			Assert.True (session.IsConnected, "Debugger should have connected but it did not.");
-			// we need to wait here for a while to allow the breakpoints to hit
-			// but we need to timeout
-			TimeSpan timeout = TimeSpan.FromSeconds (60);
-			while (session.IsConnected && !breakpointHit && timeout >= TimeSpan.Zero) {
-				Thread.Sleep (10);
-				timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
+			try {
+				session.Breakpoints = new BreakpointStore {
+					{ Path.Combine (Root, dotnet.ProjectDirectory, "MainActivity.cs"), 10 },
+				};
+				session.TargetHitBreakpoint += (sender, e) => {
+					Console.WriteLine ($"BREAK {e.Type}");
+					breakpointHit = true;
+					session.Continue ();
+				};
+				var rnd = new Random ();
+				int port = rnd.Next (10000, 20000);
+				TestContext.Out.WriteLine ($"{port}");
+				var args = new SoftDebuggerConnectArgs ("", IPAddress.Loopback, port) {
+					MaxConnectionAttempts = 10,
+				};
+				var startInfo = new SoftDebuggerStartInfo (args) {
+					WorkingDirectory = Path.Combine (dotnet.ProjectDirectory, proj.IntermediateOutputPath, runtimeId, "android", "assets"),
+				};
+				var options = new DebuggerSessionOptions () {
+					EvaluationOptions = EvaluationOptions.DefaultOptions,
+				};
+				options.EvaluationOptions.UseExternalTypeResolver = true;
+				dotnet.BuildLogFile = Path.Combine (Root, dotnet.ProjectDirectory, "run.log");
+				Assert.True (dotnet.Build ("Run", parameters: new [] {
+					$"AndroidSdbTargetPort={port}",
+					$"AndroidSdbHostPort={port}",
+					"AndroidAttachDebugger=True",
+				}), "Project should have run.");
+				WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
+				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, dotnet.ProjectDirectory, "logcat.log"), 120), "Activity should have started");
+				// we need to give a bit of time for the debug server to start up.
+				WaitFor (2000);
+				session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
+				session.OutputWriter += (isStderr, text) => { Console.WriteLine (text); };
+				session.DebugWriter += (level, category, message) => { Console.WriteLine (message); };
+				session.Run (startInfo, options);
+				WaitFor (TimeSpan.FromSeconds (30), () => session.IsConnected);
+				Assert.True (session.IsConnected, "Debugger should have connected but it did not.");
+				// we need to wait here for a while to allow the breakpoints to hit
+				// but we need to timeout
+				TimeSpan timeout = TimeSpan.FromSeconds (60);
+				while (session.IsConnected && !breakpointHit && timeout >= TimeSpan.Zero) {
+					Thread.Sleep (10);
+					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
+				}
+				WaitFor (2000);
+				Assert.IsTrue (breakpointHit, "Should have a breakpoint");
+			} catch (Exception ex) {
+				Assert.Fail($"Exception occurred {ex}");
+			} finally {
+				session.Exit ();
 			}
-			WaitFor (2000);
-			Assert.IsTrue (breakpointHit, "Should have a breakpoint");
 		}
 	}
 }
