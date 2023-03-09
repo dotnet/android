@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application;
 
 class InputType
@@ -26,10 +28,10 @@ class InputType
 		},
 	};
 
-	public static InputReader? Detect (string inputFilePath)
+	public static InputReader? Detect (string inputFilePath, ILogger log)
 	{
 		foreach (InputTypeDetector detector in detectors) {
-			InputReader? reader = DetectRecursively (detector, null, inputFilePath);
+			InputReader? reader = DetectRecursively (detector, null, inputFilePath, log);
 			if (reader != null) {
 				return reader;
 			}
@@ -38,18 +40,18 @@ class InputType
 		return null;
 	}
 
-	static InputReader? DetectRecursively (InputTypeDetector detector, InputTypeDetector? parentDetector, string inputFilePath)
+	static InputReader? DetectRecursively (InputTypeDetector detector, InputTypeDetector? parentDetector, string inputFilePath, ILogger log)
 	{
 		bool success;
 		InputReader? reader;
 
 		try {
-			(success, reader) = detector.Detect (inputFilePath, parentDetector);
+			(success, reader) = detector.Detect (inputFilePath, parentDetector, log);
 		} catch (Exception ex) {
 			// TODO: real logging, no trace
-			Console.Error.WriteLine ("Detector failed with exception:");
-			Console.Error.WriteLine (ex.StackTrace);
-			Console.Error.WriteLine ();
+			log.ErrorLine ("Detector failed with exception:");
+			log.ErrorLine (ex.ToString ());
+			log.MessageLine ();
 			return null;
 		}
 
@@ -66,7 +68,7 @@ class InputType
 		}
 
 		foreach (InputTypeDetector nestedDetector in detector.Nested) {
-			reader = DetectRecursively (nestedDetector, detector, inputFilePath);
+			reader = DetectRecursively (nestedDetector, detector, inputFilePath, log);
 			if (reader != null) {
 				return reader;
 			}

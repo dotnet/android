@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application;
 
 class InputReaderAssemblyStore : InputReader
@@ -15,13 +17,15 @@ class InputReaderAssemblyStore : InputReader
 	public override bool SupportsTypemaps           => false;
 	public override bool SupportsAppInfo            => false;
 
-	public InputReaderAssemblyStore (string filePath)
+	public InputReaderAssemblyStore (string filePath, ILogger log)
+		: base (log)
 	{
 		this.filePath = filePath;
 		inputStream = null;
 	}
 
-	public InputReaderAssemblyStore (Stream inputStream, string? filePath = null)
+	public InputReaderAssemblyStore (Stream inputStream, string? filePath, ILogger log)
+		: base (log)
 	{
 		this.inputStream = inputStream;
 		filePath = null;
@@ -52,7 +56,7 @@ class InputReaderAssemblyStore : InputReader
 			inputStream = File.OpenRead (filePath);
 		}
 
-		store = new DataProviderAssemblyStore (inputStream, filePath);
+		store = new DataProviderAssemblyStore (inputStream, filePath, Log);
 		return store;
 	}
 }

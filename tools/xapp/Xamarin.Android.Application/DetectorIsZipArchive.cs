@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 
+using Xamarin.Android.Application.Utilities;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Application;
@@ -9,7 +10,7 @@ class DetectorIsZipArchive : InputTypeDetector
 {
 	public ZipArchive? Archive { get; private set; }
 
-	public override (bool accepted, InputReader? reader) Detect (string inputFilePath, InputTypeDetector? parent)
+	public override (bool accepted, InputReader? reader) Detect (string inputFilePath, InputTypeDetector? parent, ILogger log)
 	{
 		using var fs = File.OpenRead (inputFilePath);
 		using var reader = new BinaryReader (fs);

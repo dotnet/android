@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 
+using Xamarin.Android.Application.Utilities;
 using Xamarin.Android.AssemblyStore;
 
 namespace Xamarin.Android.Application;
@@ -10,7 +11,8 @@ class DataProviderAssemblyStore : DataProvider
 	public List<AssemblyStoreReader> Blobs { get; } = new List<AssemblyStoreReader> ();
 	public AssemblyStoreManifestReader? Manifest { get; private set; }
 
-	public DataProviderAssemblyStore (Stream inputStream, string inputPath)
+	public DataProviderAssemblyStore (Stream inputStream, string inputPath, ILogger log)
+		: base (log)
 	{
 		Blobs.Add (new AssemblyStoreReader (inputStream, inputPath, keepStoreInMemory: true));
 	}

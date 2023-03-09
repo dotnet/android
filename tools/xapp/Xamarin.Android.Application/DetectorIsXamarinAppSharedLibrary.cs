@@ -1,10 +1,12 @@
 using System;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application;
 
 class DetectorIsXamarinAppSharedLibrary : InputTypeDetector
 {
-	public override (bool accepted, InputReader? reader) Detect (string inputFilePath, InputTypeDetector? parent)
+	public override (bool accepted, InputReader? reader) Detect (string inputFilePath, InputTypeDetector? parent, ILogger log)
 	{
 		if (parent == null) {
 			throw new ArgumentNullException (nameof (parent));

@@ -1,19 +1,20 @@
 using System;
 
+using Xamarin.Android.Application.Utilities;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Application;
 
 class InputReaderApk : InputReaderZip
 {
-	protected override string DexDirPath            => String.Empty;
-	protected override string InternalAssetsDirPath => "assets/xa-internal";
-	protected override string ManifestDirPath       => String.Empty;
-	protected override string NativeLibsDirPath     => "lib";
-	protected override string AssembliesDirPath     => "assemblies";
-	protected override string ArchiveType           =>"APK";
+	public override string DexDirPath            => String.Empty;
+	public override string InternalAssetsDirPath => "assets/xa-internal";
+	public override string ManifestDirPath       => String.Empty;
+	public override string NativeLibsDirPath     => "lib";
+	public override string AssembliesDirPath     => "assemblies";
+	public override string ArchiveType           =>"APK";
 
-	public InputReaderApk (ZipArchive archive, string archivePath)
-		: base (archive, archivePath)
+	public InputReaderApk (ZipArchive archive, string archivePath, ILogger log)
+		: base (archive, archivePath, log)
 	{}
 }

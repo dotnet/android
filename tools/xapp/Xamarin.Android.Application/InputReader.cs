@@ -1,5 +1,7 @@
 using System;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application;
 
 abstract class InputReader
@@ -9,6 +11,13 @@ abstract class InputReader
 	public abstract bool SupportsXamarinApp         { get; }
 	public abstract bool SupportsTypemaps           { get; }
 	public abstract bool SupportsAppInfo            { get; }
+
+	protected ILogger Log                           { get; }
+
+	protected InputReader (ILogger log)
+	{
+		Log = log;
+	}
 
 	protected virtual DataProviderAppInfo? ReadAppInfo ()
 	{

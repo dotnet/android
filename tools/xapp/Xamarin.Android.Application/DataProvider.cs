@@ -1,22 +1,26 @@
 using System.IO;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application;
 
 abstract class DataProvider
 {
+	protected ILogger Log         { get; }
 	protected Stream? InputStream { get; }
-	public string? InputPath   { get; }
+	public string? InputPath      { get; }
 
-	protected DataProvider ()
+	protected DataProvider (ILogger log)
 	{}
 
-	protected DataProvider (string inputPath)
+	protected DataProvider (string inputPath, ILogger log)
+		: this (log)
 	{
 		InputPath = inputPath;
 	}
 
-	protected DataProvider (Stream inputStream, string? inputPath)
-		: this (inputPath ?? "[STREAM]")
+	protected DataProvider (Stream inputStream, string? inputPath, ILogger log)
+		: this (inputPath ?? "[STREAM]", log)
 	{
 		InputStream = inputStream;
 	}

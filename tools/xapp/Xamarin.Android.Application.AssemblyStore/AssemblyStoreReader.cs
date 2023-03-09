@@ -52,7 +52,7 @@ namespace Xamarin.Android.AssemblyStore
 				}
 			}
 
-			Arch = DetectArchitecture (inputPath);
+			Arch = GetBlobArchitecture (inputPath);
 		}
 
 		public void EnsureAssemblyNames (AssemblyStoreManifestReader? manifest = null)
@@ -99,13 +99,13 @@ namespace Xamarin.Android.AssemblyStore
 			}
 		}
 
-		string DetectArchitecture (string? inputPath)
+		public static string GetBlobArchitecture (string? fullBlobPath)
 		{
-			if (String.IsNullOrEmpty (inputPath)) {
+			if (String.IsNullOrEmpty (fullBlobPath)) {
 				return String.Empty;
 			}
 
-			string? fileName = Path.GetFileName (inputPath);
+			string? fileName = Path.GetFileName (fullBlobPath);
 			if (String.IsNullOrEmpty (fileName)) {
 				return String.Empty;
 			}
@@ -267,7 +267,7 @@ namespace Xamarin.Android.AssemblyStore
 					return false;
 				}
 
-				output.Write (outputBytes);
+				output.Write (outputBytes, 0, decoded);
 				output.Flush ();
 				output.Seek (0, SeekOrigin.Begin);
 			} finally {
