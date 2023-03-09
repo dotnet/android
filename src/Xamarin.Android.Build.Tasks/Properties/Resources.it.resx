@@ -494,7 +494,7 @@ Modificare il valore in un nome di tipo con qualifica assembly che eredita da '{
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA1035" xml:space="preserve">
-    <value>The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.</value>
+    <value>La proprietà 'BundleAssemblies' è deprecata e non ha alcun effetto sul build dell'applicazione. La funzione equivalente è implementata dalle proprietà 'AndroidUseAssemblyStore' e 'AndroidEnableAssemblyCompression'.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">

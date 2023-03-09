@@ -20,10 +20,6 @@
       <Uri>https://github.com/dotnet/cecil</Uri>
       <Sha>68e0c35d0b4b6651b9a062a52e7dd694d7a43927</Sha>
     </Dependency>
-    <Dependency Name="System.IO.Hashing" Version="8.0.0-alpha.1.23080.2" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
-      <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>9529803ae29c2804880c6bd8ca710b8c037cb498</Sha>
-    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.ApiCompat" Version="7.0.0-beta.22103.1">
