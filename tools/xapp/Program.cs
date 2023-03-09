@@ -79,9 +79,21 @@ class App
 
 		log.InfoLine ();
 		log.MessageLine ("Application info:");
-		log.StatusLine ("  Package name", appInfo.PackageName);
 		log.StatusLine ("  Archive type", appInfo.ArchiveType);
 		log.StatusYesNoLine ($"  Signed", appInfo.IsSigned);
+		log.StatusLine ("  Package name", appInfo.PackageName);
+		log.StatusLine ("  Main activity name", appInfo.MainActivityName);
+		log.StatusLine ("  Application name", appInfo.ApplicationName);
+		log.StatusLine ("  Launcher label", appInfo.ApplicationLabel);
+		log.StatusLine ("  Minimum SDK version", appInfo.MinSdkVersion);
+		log.StatusLine ("  Target SDK version", appInfo.TargetSdkVersion);
+		log.StatusYesNoLine ("  Extracts native libs", appInfo.ExtractsNativeLibs);
+		log.StatusYesNoLine ("  Uses permissions", appInfo.UsesPermissions.Count != 0);
+		if (appInfo.UsesPermissions.Count != 0) {
+			foreach (string permission in appInfo.UsesPermissions) {
+				log.MessageLine ($"    {permission}");
+			}
+		}
 
 		string supportedAbis;
 		if (appInfo.SupportedAbis.Length == 0) {
@@ -102,10 +114,8 @@ class App
 		log.StatusYesNoLine ($"  Contains runtime config blob", appInfo.HasRuntimeConfigBlob);
 		log.StatusYesNoLine ($"  Debuggable", appInfo.IsDebug);
 		log.StatusYesNoLine ($"  Profileable", appInfo.IsProfileable);
-		log.StatusYesNoLine ($"  Test build", appInfo.IsTesting);
+		log.StatusYesNoLine ($"  Test-only build", appInfo.IsTestOnly);
 		log.StatusYesNoLine ($"  Uses AOT", appInfo.UsesAOT);
-		log.StatusYesNoLine ($"  Uses MAUI", appInfo.UsesMAUI);
-		log.StatusYesNoLine ($"  Uses Xamarin.Forms", appInfo.UsesXamarinForms);
 	}
 
 	static void PrintAssemblyStoreInfo (InputReader reader)
