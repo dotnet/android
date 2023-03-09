@@ -494,7 +494,7 @@ Změňte hodnotu na název typu kvalifikovaného sestavení, který dědí z: {1
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA1035" xml:space="preserve">
-    <value>The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.</value>
+    <value>Vlastnost BundleAssemblies je zastaralá a nemá žádný vliv na sestavení aplikace. Ekvivalentní funkce jsou implementovány vlastnostmi AndroidUseAssemblyStore a AndroidEnableAssemblyCompression.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
