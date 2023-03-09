@@ -19,7 +19,6 @@ namespace Xamarin.Android.Build.Tests
 		public void SystemApplicationCanInstall ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,

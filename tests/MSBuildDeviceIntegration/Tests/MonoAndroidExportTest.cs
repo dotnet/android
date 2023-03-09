@@ -13,7 +13,8 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Category ("UsesDevice")]
-	public class MonoAndroidExportTest : DeviceTest {
+	public class MonoAndroidExportTest : DeviceTest
+	{
 #pragma warning disable 414
 		static object [] MonoAndroidExportTestCases = new object [] {
 			new object[] {
@@ -49,7 +50,6 @@ namespace Xamarin.Android.Build.Tests
 		public void MonoAndroidExportReferencedAppStarts (bool embedAssemblies, string fastDevType, bool isRelease)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				References = {
@@ -118,10 +118,7 @@ namespace UnnamedProject
 	</application >
 </manifest>";
 				Assert.True (b.Install (proj), "Project should have installed.");
-				ClearAdbLogcat ();
-				b.BuildLogFile = "run.log";
-				Assert.True (b.RunTarget (proj, "StartAndroidActivity", doNotCleanupOnUpdate: true), "Project should have run.");
-
+				RunProjectAndAssert (proj, b, doNotCleanupOnUpdate: true);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 				string expectedLogcatOutput = "ContainsExportedMethods: constructed! Handle=";

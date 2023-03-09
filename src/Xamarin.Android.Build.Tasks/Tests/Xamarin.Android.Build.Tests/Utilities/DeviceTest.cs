@@ -17,11 +17,17 @@ namespace Xamarin.Android.Build.Tests
 	{
 		public const string GuestUserName = "guest1";
 
-		protected bool HasDevices {
-			get {
-				string output = RunAdbCommand ("shell echo OK");
-				return output.Contains ("OK");
+		protected string DeviceAbi { get; private set; }
+
+		protected int DeviceSdkVersion { get; private set;}
+
+		static string _shellEchoOutput = null;
+		protected static bool IsDeviceAttached (bool refreshCachedValue = false)
+		{
+			if (string.IsNullOrEmpty (_shellEchoOutput) || refreshCachedValue) {
+				_shellEchoOutput = RunAdbCommand ("shell echo OK", timeout: 15);
 			}
+			return _shellEchoOutput.Contains ("OK");
 		}
 
 		/// <summary>
@@ -30,7 +36,7 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		public void AssertHasDevices (bool fail = true)
 		{
-			if (!HasDevices) {
+			if (!IsDeviceAttached (refreshCachedValue: true)) {
 				var message = "This test requires an attached device or emulator.";
 				if (fail) {
 					Assert.Fail (message);
@@ -40,34 +46,55 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected string DeviceAbi => SetUp.DeviceAbi;
-
-		protected int DeviceSdkVersion => SetUp.DeviceSdkVersion;
-
 		[OneTimeSetUp]
 		public void DeviceSetup ()
 		{
-			SetAdbLogcatBufferSize (64);
-			ClearAdbLogcat ();
-			CreateGuestUser (GuestUserName);
+			if (IsDeviceAttached ()) {
+				try {
+					DeviceSdkVersion = GetSdkVersion ();
+					if (DeviceSdkVersion != -1) {
+						if (DeviceSdkVersion >= 21)
+							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
+
+						if (string.IsNullOrEmpty (DeviceAbi))
+							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2");
+
+						if (DeviceAbi.Contains (",")) {
+							DeviceAbi = DeviceAbi.Split (',')[0];
+						}
+					}
+				} catch (Exception ex) {
+					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
+				}
+				SetAdbLogcatBufferSize (64);
+				CreateGuestUser (GuestUserName);
+			}
 		}
 
 		[OneTimeTearDown]
 		public void DeviceTearDown ()
 		{
-			// make sure we are not on a guest user anymore.
-			SwitchUser ();
-			DeleteGuestUser(GuestUserName);
+			if (IsDeviceAttached ()) {
+				// make sure we are not on a guest user anymore.
+				SwitchUser ();
+				DeleteGuestUser (GuestUserName);
+
+				var packages = TestPackageNames.Values.ToArray ();
+				TestPackageNames.Clear ();
+				foreach (var package in packages) {
+					RunAdbCommand ($"uninstall {package}");
+				}
+			}
 		}
 
 		[SetUp]
-		public void CheckDevice ()
+		public virtual void SetupTest ()
 		{
-			if (!HasDevices) {
+			if (!IsDeviceAttached (refreshCachedValue: true)) {
 				// something went wrong with the emulator.
 				// lets restart it.
-				TestContext.Out.WriteLine ($"{nameof(CheckDevice)} is restarting the emulator.");
-				RestartDevice (Path.Combine (Root, "Emulator.csproj"));
+				RestartDevice ();
+				AssertHasDevices ();
 			}
 
 			// We want to start with a clean logcat buffer for each test
@@ -77,7 +104,7 @@ namespace Xamarin.Android.Build.Tests
 		[TearDown]
 		protected override void CleanupTest ()
 		{
-			if (HasDevices && TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed &&
+			if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && IsDeviceAttached () &&
 					TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir)) {
 				Directory.CreateDirectory (outputDir);
 				string local = Path.Combine (outputDir, "screenshot.png");
@@ -106,30 +133,35 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			ClearAdbLogcat ();
-
-
 			base.CleanupTest ();
 		}
 
-		[OneTimeTearDown]
-		protected static void UnInstallTestApp ()
- 		{
-			var packages = TestPackageNames.Values.ToArray ();
-			TestPackageNames.Clear ();
- 			foreach(var package in packages) {
- 				RunAdbCommand ($"uninstall {package}");
+		protected int GetSdkVersion ()
+		{
+			var command = $"shell getprop ro.build.version.sdk";
+			var result = RunAdbCommand (command);
+			if (result.Contains ("*")) {
+				// Run the command again, we likely got:
+				// * daemon not running; starting now at tcp:5037
+				// * daemon started successfully
+				// adb.exe: device offline
+				TestContext.WriteLine ($"Retrying:\n{command}\n{result}");
+				result = RunAdbCommand (command);
 			}
- 		}
+			if (!int.TryParse (result, out var sdkVersion)) {
+				sdkVersion = -1;
+			}
+			return sdkVersion;
+		}
 
-		public static void RestartDevice (string project)
+		public static void RestartDevice ()
 		{
 			TestContext.Out.WriteLine ($"Trying to restart Emulator");
 			// shell out to msbuild and start the emulator again
-			using (var builder = new Builder ()) {
-				var out1 = RunProcessWithExitCode (builder.BuildTool, $"{(Builder.UseDotNet ? "build" : "")} {project} /restore /t:AcquireAndroidTarget", timeoutInSeconds: 120);
-				TestContext.Out.WriteLine ($"{out1}");
-			}
+			var dotnet = new DotNetCLI (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Tests", "Xamarin.Android.Build.Tests", "Emulator.csproj"));
+			dotnet.ProjectDirectory = XABuildPaths.TestAssemblyOutputDirectory;
+			Assert.IsTrue (dotnet.Build ("AcquireAndroidTarget", parameters: new string[] { "TestAvdForceCreation=false", $"Configuration={XABuildPaths.Configuration}" }), "Failed to acquire emulator.");
+			WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 		}
 
 		protected static void RunAdbInput (string command, params object [] args)
@@ -152,9 +184,23 @@ namespace Xamarin.Android.Build.Tests
 			return RunAdbCommand ("shell setprop debug.mono.extra \"\"");
 		}
 
-		protected static void AdbStartActivity (string activity)
+		protected static string AdbStartActivity (string activity)
 		{
-			RunAdbCommand ($"shell am start -S -n \"{activity}\"");
+			return RunAdbCommand ($"shell am start -S -n \"{activity}\"");
+		}
+
+		protected static void RunProjectAndAssert (XamarinAndroidApplicationProject proj, ProjectBuilder builder, string logName = "run.log", bool doNotCleanupOnUpdate = false, string [] parameters = null)
+		{
+			if (Builder.UseDotNet) {
+				builder.BuildLogFile = logName;
+				Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
+			} else if (CommercialBuildAvailable) {
+				builder.BuildLogFile = logName;
+				Assert.True (builder.RunTarget (proj, "_Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
+			} else {
+				var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+				Assert.IsTrue (result.Contains ("Starting: Intent { cmp="), $"Attempt to start activity failed with:\n{result}");
+			}
 		}
 
 		protected TimeSpan ProfileFor (Func<bool> func, TimeSpan? timeout = null)
