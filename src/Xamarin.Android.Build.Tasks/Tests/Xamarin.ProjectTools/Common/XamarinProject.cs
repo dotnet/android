@@ -37,7 +37,7 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// If true, the ProjectDirectory will be deleted and populated on the first build
 		/// </summary>
-		public virtual bool ShouldPopulate => true;
+		public virtual bool ShouldPopulate { get; set; } = true;
 		public IList<Import> Imports { get; private set; }
 		PropertyGroup common, debug, release;
 		bool isRelease;
@@ -117,6 +117,11 @@ $@"<Project>
 		public string TargetFramework {
 			get { return GetProperty ("TargetFramework"); }
 			set { SetProperty ("TargetFramework", value); }
+		}
+
+		public string TargetFrameworks {
+			get { return GetProperty ("TargetFrameworks"); }
+			set { SetProperty ("TargetFrameworks", value); }
 		}
 
 		public string GetProperty (string name)
@@ -418,11 +423,11 @@ $@"<Project>
 				Directory.CreateDirectory (Path.GetDirectoryName (projNugetConfig));
 				File.Copy (repoNuGetConfig, projNugetConfig, overwrite: true);
 
-				var doc = XDocument.Load (projNugetConfig);
-				AddNuGetConfigSources (doc);
+				AddNuGetConfigSources (projNugetConfig);
 
 				// Set a local PackageReference installation folder if specified
 				if (!string.IsNullOrEmpty (GlobalPackagesFolder)) {
+					var doc = XDocument.Load (projNugetConfig);
 					XElement gpfElement = doc.Descendants ().FirstOrDefault (c => c.Name.LocalName.ToLowerInvariant () == "add"
 						&& c.Attributes ().Any (a => a.Name.LocalName.ToLowerInvariant () == "key" && a.Value.ToLowerInvariant () == "globalpackagesfolder"));
 					if (gpfElement != default (XElement)) {
@@ -440,35 +445,39 @@ $@"<Project>
 							doc.Root.Add (configParentElement);
 						}
 					}
+					doc.Save (projNugetConfig);
 				}
-
-				doc.Save (projNugetConfig);
 			}
 		}
 
 		/// <summary>
 		/// Updates a NuGet.config based on sources in ExtraNuGetConfigSources
-		/// The dotnet7 source is required while in preview, but eventually it should not be needed by tests
+		/// If target framework is not the latest or default, sources are added for previous releases
 		/// </summary>
-		protected void AddNuGetConfigSources (XDocument doc)
+		protected void AddNuGetConfigSources (string nugetConfigPath)
 		{
+			XDocument doc;
+			if (File.Exists (nugetConfigPath))
+				doc = XDocument.Load (nugetConfigPath);
+			else
+				doc = new XDocument (new XElement ("configuration"));
+
 			const string elementName = "packageSources";
-			XElement pkgSourcesElement = doc.Root.Elements ().FirstOrDefault (d => string.Equals (d.Name.LocalName, elementName, StringComparison.OrdinalIgnoreCase));
+			XElement pkgSourcesElement = doc.Root?.Elements ().FirstOrDefault (d => string.Equals (d.Name.LocalName, elementName, StringComparison.OrdinalIgnoreCase));
 			if (pkgSourcesElement == null) {
-				doc.Root.Add (pkgSourcesElement= new XElement (elementName));
+				doc.Root.Add (pkgSourcesElement = new XElement (elementName));
 			}
 
-			foreach (XElement element in pkgSourcesElement.Elements ()) {
-				XAttribute value = element.Attribute ("value");
-				if (value != null && value.Value == "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json") {
-					element.Remove ();
-					break;
-				}
+			if (ExtraNuGetConfigSources == null) {
+				ExtraNuGetConfigSources = new List<string> ();
 			}
 
-			// Add extra sources
-			if (ExtraNuGetConfigSources == null)
-				return;
+			if (TargetFramework?.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1
+				|| TargetFrameworks?.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1) {
+				ExtraNuGetConfigSources.Add ("https://api.nuget.org/v3/index.json");
+				ExtraNuGetConfigSources.Add ("https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json");
+			}
+
 			int sourceIndex = 0;
 			foreach (var source in ExtraNuGetConfigSources) {
 				var sourceElement = new XElement ("add");
@@ -476,6 +485,8 @@ $@"<Project>
 				sourceElement.SetAttributeValue ("value", source);
 				pkgSourcesElement.Add (sourceElement);
 			}
+
+			doc.Save (nugetConfigPath);
 		}
 	}
 }

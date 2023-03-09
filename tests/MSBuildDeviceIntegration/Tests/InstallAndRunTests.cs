@@ -718,18 +718,19 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android33.0")] string dotnetTargetFramework)
 		{
-			string path = Path.Combine (Root, "temp", TestName);
-
 			if (!Builder.UseDotNet) {
 				Assert.Ignore ("Skipping. Test not relevant under Classic.");
 			}
+
 			// Build a NuGet Package
-			var nuget = new XASdkProject (outputType: "Library") {
+			var nuget = new XamarinAndroidLibraryProject () {
 				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",
 				ProjectName = "Test.Nuget.Package",
 				IsRelease = true,
+				ExtraNuGetConfigSources = {
+					"https://api.nuget.org/v3/index.json",
+				},
 			};
-			nuget.AddNuGetSourcesForOlderTargetFrameworks ();
 			nuget.Sources.Clear ();
 			nuget.Sources.Add (new AndroidItem.AndroidResource ("Resources/values/Strings.xml") {
 						TextContent = () => @"<resources>
@@ -739,15 +740,18 @@ using System.Runtime.Serialization.Json;
 			nuget.SetProperty ("PackageName", "Test.Nuget.Package");
 			var legacyTargetFrameworkVersion = "13.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
-			nuget.SetProperty ("TargetFramework",  value: "");
-			nuget.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
+			nuget.TargetFramework = "";
+			nuget.TargetFrameworks = $"{dotnetTargetFramework};{legacyTargetFramework}";
 
-			string directory = Path.Combine ("temp", TestName, "Test.Nuget.Package");
-			var dotnet = CreateDotNetBuilder (nuget, directory);
-			Assert.IsTrue (dotnet.Pack (), "`dotnet pack` should succeed");
+			var rootPath = Path.Combine (Root, "temp", TestName);
+			var nugetBuilder = CreateDllBuilder (Path.Combine (rootPath, nuget.ProjectName));
+			nugetBuilder.Save (nuget);
+			var dotnet = new DotNetCLI (Path.Combine (rootPath, nuget.ProjectName, nuget.ProjectFilePath));
+			Assert.IsTrue (dotnet.Pack (parameters: new [] { "Configuration=Release" }), "`dotnet pack` should succeed");
 
 			// Build an app which references it.
 			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
 				IsRelease = true,
 			};
 			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
@@ -755,7 +759,7 @@ using System.Runtime.Serialization.Json;
 				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
 <configuration>
   <packageSources>
-	<add key='local' value='" + Path.Combine (Root, directory, "bin", "Release") + @"' />
+	<add key='local' value='" + Path.Combine (Root, nugetBuilder.ProjectDirectory, "bin", "Release") + @"' />
   </packageSources>
 </configuration>",
 			});
@@ -763,7 +767,7 @@ using System.Runtime.Serialization.Json;
 					Id = "Test.Nuget.Package",
 					Version = "1.0.0",
 				});
-			builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+			builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
 			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "Install should have succeeded.");
 			string resource_designer = GetResourceDesignerPath (builder, proj);
 			var contents = GetResourceDesignerText (proj, resource_designer);
@@ -1017,30 +1021,5 @@ namespace Styleable.Library {
 			}
 		}
 
-
-		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
-		{
-			if (string.IsNullOrEmpty (relativeProjectDir)) {
-				relativeProjectDir = Path.Combine ("temp", TestName);
-			}
-			string fullProjectDirectory = Path.Combine (Root, relativeProjectDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjectDirectory;
-
-			new XASdkProject ().CopyNuGetConfig (relativeProjectDir);
-			return new DotNetCLI (Path.Combine (fullProjectDirectory, $"{TestName}.csproj"));
-		}
-
-		DotNetCLI CreateDotNetBuilder (XASdkProject project, string relativeProjectDir = null)
-		{
-			if (string.IsNullOrEmpty (relativeProjectDir)) {
-				relativeProjectDir = Path.Combine ("temp", TestName);
-			}
-			string fullProjectDirectory = Path.Combine (Root, relativeProjectDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjectDirectory;
-			var files = project.Save ();
-			project.Populate (relativeProjectDir, files);
-			project.CopyNuGetConfig (relativeProjectDir);
-			return new DotNetCLI (project, Path.Combine (fullProjectDirectory, project.ProjectFilePath));
-		}
 	}
 }
