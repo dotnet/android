@@ -21,8 +21,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BuildBasicApplicationAndAotProfileIt ()
 		{
-			AssertHasDevices ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = false,
