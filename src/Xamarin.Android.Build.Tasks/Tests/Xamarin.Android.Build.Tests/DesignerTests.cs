@@ -137,7 +137,6 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void IncrementalDesignTimeBuild ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();

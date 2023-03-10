@@ -206,7 +206,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
-		[Category ("UsesDevice"), Category ("SmokeTests")]
+		[Category ("UsesDevice")]
 		public void SmokeTestBuildAndRunWithSpecialCharacters ()
 		{
 			var testName = "テスト";
