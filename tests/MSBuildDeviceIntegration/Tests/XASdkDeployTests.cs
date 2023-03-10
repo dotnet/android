@@ -71,8 +71,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (DotNetInstallAndRunSource))]
 		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, string targetFramework)
 		{
-			AssertHasDevices ();
-
 			XASdkProject proj;
 			if (xamarinForms) {
 				proj = new XamarinFormsXASdkProject {
@@ -107,8 +105,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
 		{
-			AssertHasDevices ();
-
 			var proj = new XASdkProject () {
 				IsRelease = isRelease,
 				OtherBuildItems = {
@@ -213,7 +209,6 @@ namespace Xamarin.Android.Build.Tests
 		public void DotNetDebug ([Values("net6.0-android", "net7.0-android")] string targetFramework)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XASdkProject ();
 			proj.TargetFramework = targetFramework;
@@ -256,7 +251,6 @@ namespace Xamarin.Android.Build.Tests
 				EvaluationOptions = EvaluationOptions.DefaultOptions,
 			};
 			options.EvaluationOptions.UseExternalTypeResolver = true;
-			ClearAdbLogcat ();
 			dotnet.BuildLogFile = Path.Combine (Root, dotnet.ProjectDirectory, "run.log");
 			Assert.True (dotnet.Build ("Run", parameters: new [] {
 				$"AndroidSdbTargetPort={port}",

@@ -25,16 +25,6 @@ namespace Xamarin.Android.Build.Tests
 		[SetUpFixture]
 		public class SetUp
 		{
-			public static string DeviceAbi {
-				get;
-				private set;
-			}
-
-			public static int DeviceSdkVersion {
-				get;
-				private set;
-			}
-
 			public static string TestDirectoryRoot {
 				get;
 				private set;
@@ -44,41 +34,6 @@ namespace Xamarin.Android.Build.Tests
 			public void BeforeAllTests ()
 			{
 				TestDirectoryRoot = XABuildPaths.TestOutputDirectory;
-
-				try {
-					DeviceSdkVersion = GetSdkVersion ();
-					if (DeviceSdkVersion != -1) {
-						if (DeviceSdkVersion >= 21)
-							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
-
-						if (string.IsNullOrEmpty (DeviceAbi))
-							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2");
-
-						if (DeviceAbi.Contains (",")) {
-							DeviceAbi = DeviceAbi.Split (',')[0];
-						}
-					}
-				} catch (Exception ex) {
-					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
-				}
-			}
-
-			int GetSdkVersion ()
-			{
-				var command = $"shell getprop ro.build.version.sdk";
-				var result = RunAdbCommand (command);
-				if (result.Contains ("*")) {
-					// Run the command again, we likely got:
-					// * daemon not running; starting now at tcp:5037
-					// * daemon started successfully
-					// adb.exe: device offline
-					TestContext.WriteLine ($"Retrying:\n{command}\n{result}");
-					result = RunAdbCommand (command);
-				}
-				if (!int.TryParse (result, out var sdkVersion)) {
-					sdkVersion = -1;
-				}
-				return sdkVersion;
 			}
 
 			[OneTimeTearDown]
@@ -208,7 +163,7 @@ namespace Xamarin.Android.Build.Tests
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
 			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-			return RunProcess (adb, $"{adbTarget} {command}");
+			return RunProcess (adb, $"{adbTarget} {command}", timeout);
 		}
 
 		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args)
@@ -225,9 +180,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected static string RunProcess (string exe, string args)
+		protected static string RunProcess (string exe, string args, int timeoutInSeconds = 30)
 		{
-			var (_, stdOutput, stdError) = RunProcessWithExitCode (exe, args);
+			var (_, stdOutput, stdError) = RunProcessWithExitCode (exe, args, timeoutInSeconds);
 
 			return stdOutput + stdError;
 		}
