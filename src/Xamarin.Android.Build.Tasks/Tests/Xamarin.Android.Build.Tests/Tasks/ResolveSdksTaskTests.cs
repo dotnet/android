@@ -12,7 +12,6 @@ using ValidateJavaVersion = Xamarin.Android.Tasks.Legacy.ValidateJavaVersion;
 namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
-	[Category ("Node-5")]
 	[NonParallelizable] // NOTE: This test was hanging without this
 	public class ResolveSdksTaskTests : BaseTest {
 #pragma warning disable 414

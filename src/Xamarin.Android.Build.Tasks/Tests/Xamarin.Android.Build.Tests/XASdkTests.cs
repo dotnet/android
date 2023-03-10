@@ -18,7 +18,6 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[NonParallelizable] // On MacOS, parallel /restore causes issues
-	[Category ("Node-5")]
 	public class XASdkTests : BaseTest
 	{
 		/// <summary>

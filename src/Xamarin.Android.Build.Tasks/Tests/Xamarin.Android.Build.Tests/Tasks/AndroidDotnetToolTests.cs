@@ -12,7 +12,6 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-5")]
 	public class AndroidDotnetToolTests : BaseTest
 	{
 		MockBuildEngine engine;

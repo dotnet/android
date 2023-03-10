@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -9,7 +9,6 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
-	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Self)]
 	public class AndroidComputeResPathsTests : BaseTest {
 

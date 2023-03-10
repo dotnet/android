@@ -11,7 +11,6 @@ namespace Xamarin.Android.Build.Tests
 {
 
 	[TestFixture]
-	[Category ("Node-2")]
 	public class CheckForInvalidResourceFileNamesTests : BaseTest {
 
 #pragma warning disable 414
