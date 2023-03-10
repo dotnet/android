@@ -1706,8 +1706,16 @@ because xbuild doesn't support framework reference assemblies.
    />
 </Target>
 
+<PropertyGroup>
+  <_GenerateAndroidRemapNativeCodeDependsOn>
+    _ConvertAndroidMamMappingFileToXml;
+    _CollectAndroidRemapMembers;
+    _PrepareAndroidRemapNativeAssemblySources
+  </_GenerateAndroidRemapNativeCodeDependsOn>
+</PropertyGroup>
+
 <Target Name="_GenerateAndroidRemapNativeCode"
-        DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
+        DependsOnTargets="$(_GenerateAndroidRemapNativeCodeDependsOn)"
         Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
         Inputs="$(_XARemapMembersFilePath)"
         Outputs="@(_AndroidRemapAssemblySource)">
