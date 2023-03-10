@@ -18,13 +18,11 @@ sealed class ParsedOptions
 
 class App
 {
-	static XamarinLoggingHelper log;
+	static XamarinLoggingHelper log = new XamarinLoggingHelper ();
 
 	static int Main (string[] args)
 	{
-		log = new XamarinLoggingHelper {
-			Verbose = true,
-		};
+		log.Verbose = true;
 
 		var parsedOptions = new ParsedOptions ();
 

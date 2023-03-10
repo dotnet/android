@@ -1,8 +1,7 @@
-namespace tmt
+namespace Xamarin.Android.Application.Typemaps;
+
+enum MapKind
 {
-	enum MapKind
-	{
-		Debug,
-		Release
-	}
+	Debug,
+	Release
 }

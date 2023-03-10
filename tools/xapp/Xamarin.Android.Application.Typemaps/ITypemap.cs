@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace tmt
+namespace Xamarin.Android.Application.Typemaps
 {
 	interface ITypemap
 	{

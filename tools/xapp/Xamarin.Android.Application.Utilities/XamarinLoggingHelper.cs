@@ -107,7 +107,7 @@ class XamarinLoggingHelper : ILogger
 
 	public void Status (string label, IFormattable val)
 	{
-		Status (label, val.ToString ());
+		Status (label, val.ToString () ?? String.Empty);
 	}
 
 	public void StatusLine (string label, string text)

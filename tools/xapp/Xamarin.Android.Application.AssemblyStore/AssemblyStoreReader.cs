@@ -68,7 +68,7 @@ namespace Xamarin.Android.AssemblyStore
 
 		void DetermineName (AssemblyStoreAssembly asm, AssemblyStoreManifestReader? manifest)
 		{
-			if (manifest != null && manifest.EntriesByHash64.TryGetValue (asm.Hash64, out AssemblyStoreManifestEntry entry)) {
+			if (manifest != null && manifest.EntriesByHash64.TryGetValue (asm.Hash64, out AssemblyStoreManifestEntry? entry) && entry != null) {
 				asm.Name = entry.Name;
 				return;
 			}

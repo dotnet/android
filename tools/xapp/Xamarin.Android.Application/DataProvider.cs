@@ -11,7 +11,9 @@ abstract class DataProvider
 	public string? InputPath      { get; }
 
 	protected DataProvider (ILogger log)
-	{}
+	{
+		Log = log;
+	}
 
 	protected DataProvider (string inputPath, ILogger log)
 		: this (log)

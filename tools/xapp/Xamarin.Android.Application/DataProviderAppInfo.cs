@@ -15,8 +15,8 @@ class DataProviderAppInfo : DataProvider
 
 	InputReaderZip reader;
 
-	public string ApplicationName              { get; private set; }
-	public string ApplicationLabel             { get; private set; }
+	public string ApplicationName              { get; private set; } = String.Empty;
+	public string ApplicationLabel             { get; private set; } = String.Empty;
 	public string ArchiveType                  => reader.ArchiveType;
 	public bool ExtractsNativeLibs             { get; private set; }
 	public bool HasRuntimeConfigBlob           { get; private set; }
@@ -26,12 +26,12 @@ class DataProviderAppInfo : DataProvider
 	public bool IsProfileable                  { get; private set; }
 	public bool IsSigned                       { get; private set; }
 	public bool IsTestOnly                     { get; private set; }
-	public string MainActivityName             { get; private set; }
-	public string MinSdkVersion                { get; private set; }
+	public string MainActivityName             { get; private set; } = String.Empty;
+	public string MinSdkVersion                { get; private set; } = String.Empty;
 	public uint NumberOfAbiAssemblyStores      { get; private set; } = 0;
 	public string PackageName                  { get; private set; } = String.Empty;
 	public string[] SupportedAbis              { get; private set; }
-	public string TargetSdkVersion             { get; private set; }
+	public string TargetSdkVersion             { get; private set; } = String.Empty;
 	public uint TotalNumberOfAssemblyStores    { get; private set; } = 0;
 	public bool UsesAOT                        { get; private set; }
 	public bool UsesAssemblyStores             { get; private set; }
@@ -47,17 +47,21 @@ class DataProviderAppInfo : DataProvider
 		if (!HasRuntimeConfigBlob) {
 		}
 
-		XmlDocument? manifest = LoadManifest (log, out XmlNamespaceManager nsManager);
+		XmlDocument? manifest = LoadManifest (log, out XmlNamespaceManager? nsManager);
 		if (manifest == null) {
                         log.WarningLine ("Unable to parse Android manifest from the apk");
 		} else {
+			if (nsManager == null) {
+				throw new InvalidOperationException ("Internal error: nsManager must not be null");
+			}
+
 			// TODO: some strings can refer to resources, parse them
 			XmlNode? node = manifest.SelectSingleNode ("//manifest", nsManager);
-			PackageName = GetAttributeValue (node, "package");
+			PackageName = GetAttributeValue (node, "package") ?? String.Empty;
 
 			node = manifest.SelectSingleNode ("//manifest/uses-sdk", nsManager);
-			MinSdkVersion = GetAttributeValue (node, "android:minSdkVersion");
-			TargetSdkVersion = GetAttributeValue (node, "android:targetSdkVersion");
+			MinSdkVersion = GetAttributeValue (node, "android:minSdkVersion") ?? String.Empty;
+			TargetSdkVersion = GetAttributeValue (node, "android:targetSdkVersion") ?? String.Empty;
 
 			node = manifest.SelectSingleNode ("//manifest/application", nsManager);
 			IsDebug = GetBoolAttributeValue (node, "android:debuggable");
@@ -120,7 +124,7 @@ class DataProviderAppInfo : DataProvider
 		abis.CopyTo (SupportedAbis);
 	}
 
-	XmlDocument? LoadManifest (ILogger log, out XmlNamespaceManager nsManager)
+	XmlDocument? LoadManifest (ILogger log, out XmlNamespaceManager? nsManager)
 	{
 		nsManager = null;
 
@@ -137,6 +141,9 @@ class DataProviderAppInfo : DataProvider
 		try {
 			var axml = new AXMLParser (manifestData, log);
 			manifest = axml.Parse ();
+			if (manifest == null) {
+				return null;
+			}
 		} catch (Exception ex) {
 			log.DebugLine ("Failed to parse Android manifest.");
 			log.DebugLine (ex.ToString ());

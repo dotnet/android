@@ -3,7 +3,7 @@ using System.IO;
 
 using Mono.Cecil;
 
-namespace tmt
+namespace Xamarin.Android.Application.Typemaps
 {
 	class FilesystemManagedTypeResolver : ManagedTypeResolver
 	{

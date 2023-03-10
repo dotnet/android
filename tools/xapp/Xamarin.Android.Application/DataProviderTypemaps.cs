@@ -4,9 +4,9 @@ using Xamarin.Android.Application.Utilities;
 
 namespace Xamarin.Android.Application;
 
-class DataProviderTypemaps : DataProvider
+class DataProviderTypemaps : DataProviderXamarinApp
 {
-	public DataProviderTypemaps (Stream inputStream, string inputPath, ILogger log)
+	public DataProviderTypemaps (Stream inputStream, string? inputPath, ILogger log)
 		: base (inputStream, inputPath, log)
 	{
 	}

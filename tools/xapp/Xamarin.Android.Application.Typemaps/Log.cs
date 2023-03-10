@@ -1,52 +1,51 @@
 using System;
 
-namespace tmt
+namespace Xamarin.Android.Application.Typemaps;
+
+static class Log
 {
-	static class Log
+	static bool showDebug = false;
+
+	public static void SetVerbose (bool verbose)
 	{
-		static bool showDebug = false;
+		showDebug = verbose;
+	}
 
-		public static void SetVerbose (bool verbose)
-		{
-			showDebug = verbose;
+	public static void Error (string message = "")
+	{
+		if (message.Length > 0) {
+			Console.Error.Write ("Error: ");
+		}
+		Console.Error.WriteLine (message);
+	}
+
+	public static void Warning (string message = "")
+	{
+		if (message.Length > 0) {
+			Console.Error.Write ("Warning: ");
 		}
 
-		public static void Error (string message = "")
-		{
-			if (message.Length > 0) {
-				Console.Error.Write ("Error: ");
-			}
-			Console.Error.WriteLine (message);
+		Console.Error.WriteLine (message);
+	}
+
+	public static void Info (string message = "")
+	{
+		Console.WriteLine (message);
+	}
+
+	public static void Debug (string message = "")
+	{
+		if (!showDebug) {
+			return;
 		}
 
-		public static void Warning (string message = "")
-		{
-			if (message.Length > 0) {
-				Console.Error.Write ("Warning: ");
-			}
+		Console.WriteLine (message);
+	}
 
-			Console.Error.WriteLine (message);
-		}
-
-		public static void Info (string message = "")
-		{
-			Console.WriteLine (message);
-		}
-
-		public static void Debug (string message = "")
-		{
-			if (!showDebug) {
-				return;
-			}
-
-			Console.WriteLine (message);
-		}
-
-		public static void ExceptionError (string message, Exception ex)
-		{
-			Log.Error (message);
-			Log.Error ("Exception was thrown:");
-			Log.Error (ex.ToString ());
-		}
+	public static void ExceptionError (string message, Exception ex)
+	{
+		Log.Error (message);
+		Log.Error ("Exception was thrown:");
+		Log.Error (ex.ToString ());
 	}
 }

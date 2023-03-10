@@ -11,8 +11,8 @@ class DataProviderAssemblyStore : DataProvider
 	public List<AssemblyStoreReader> Blobs { get; } = new List<AssemblyStoreReader> ();
 	public AssemblyStoreManifestReader? Manifest { get; private set; }
 
-	public DataProviderAssemblyStore (Stream inputStream, string inputPath, ILogger log)
-		: base (log)
+	public DataProviderAssemblyStore (Stream inputStream, string? inputPath, ILogger log)
+		: base (inputStream, inputPath, log)
 	{
 		Blobs.Add (new AssemblyStoreReader (inputStream, inputPath, keepStoreInMemory: true));
 	}

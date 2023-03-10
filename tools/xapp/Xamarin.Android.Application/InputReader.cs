@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 using Xamarin.Android.Application.Utilities;
 
@@ -6,6 +7,8 @@ namespace Xamarin.Android.Application;
 
 abstract class InputReader
 {
+	readonly object providerCreatorLock = new object();
+
 	public abstract bool SupportsAssemblyExtraction { get; }
 	public abstract bool SupportsAssemblyStore      { get; }
 	public abstract bool SupportsXamarinApp         { get; }
@@ -87,5 +90,26 @@ abstract class InputReader
 		}
 
 		return ReadAssemblyStore ();
+	}
+
+	protected T? CreateProvider<T> (string? filePath, ref Stream? stream, ref T? instance, Func<Stream, string?, ILogger, T> createInstance) where T: DataProvider
+	{
+		lock (providerCreatorLock) {
+			if (instance != null) {
+				return instance;
+			}
+
+			if (stream == null) {
+				if (String.IsNullOrEmpty (filePath)) {
+					// TODO: log
+					return null;
+				}
+
+				stream = File.OpenRead (filePath);
+			}
+
+			instance = createInstance (stream, filePath, Log);
+			return instance;
+		}
 	}
 }

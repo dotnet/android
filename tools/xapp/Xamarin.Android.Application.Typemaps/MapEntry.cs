@@ -1,14 +1,13 @@
-namespace tmt
-{
-	class MapEntry
-	{
-		public MapManagedType ManagedType { get; }
-		public MapJavaType JavaType { get; }
+namespace Xamarin.Android.Application.Typemaps;
 
-		public MapEntry (MapManagedType managedType, MapJavaType javaType)
-		{
-			ManagedType = managedType;
-			JavaType = javaType;
-		}
+class MapEntry
+{
+	public MapManagedType ManagedType { get; }
+	public MapJavaType JavaType { get; }
+
+	public MapEntry (MapManagedType managedType, MapJavaType javaType)
+	{
+		ManagedType = managedType;
+		JavaType = javaType;
 	}
 }

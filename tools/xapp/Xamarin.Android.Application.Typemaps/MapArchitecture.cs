@@ -1,11 +1,10 @@
-namespace tmt
+namespace Xamarin.Android.Application.Typemaps;
+
+enum MapArchitecture
 {
-	enum MapArchitecture
-	{
-		FastDev,
-		X86,
-		X86_64,
-		ARM,
-		ARM64,
-	}
+	FastDev,
+	X86,
+	X86_64,
+	ARM,
+	ARM64,
 }

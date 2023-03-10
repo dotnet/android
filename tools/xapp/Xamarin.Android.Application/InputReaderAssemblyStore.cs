@@ -43,20 +43,11 @@ class InputReaderAssemblyStore : InputReader
 
 	protected override DataProviderAssemblyStore? ReadAssemblyStore ()
 	{
-		if (store != null) {
-			return  store;
-		}
-
-		if (inputStream == null) {
-			if (String.IsNullOrEmpty (filePath)) {
-				// TODO: log
-				return null;
-			}
-
-			inputStream = File.OpenRead (filePath);
-		}
-
-		store = new DataProviderAssemblyStore (inputStream, filePath, Log);
-		return store;
+		return CreateProvider (
+			filePath,
+			ref inputStream,
+			ref store,
+			(Stream s, string? path, ILogger logger) => new DataProviderAssemblyStore (s, path, logger)
+		);
 	}
 }
