@@ -98,6 +98,63 @@ And the output files should be found in the current directory. You can
 use the `-o` switch if you would prefer to output them to a specific
 directory.
 
+## How to get GC memory dumps?
+
+If running on desktop, you can simply do:
+
+```
+$ dotnet gcdump collect -p 29096
+```
+
+See the [`dotnet-gcdump` documentation][dotnet-gcdump] for details.
+
+This will connect to a process and save a `*.gcdump` file. You can
+open this file in Visual Studio on Windows, for example:
+
+![Visual Studio GC Heap Dump](../images/VS-GC-Dump.png)
+
+To get this data from an Android application, you need all the above
+setup for `adb shell`, `dsrouter`, etc. except you need to change the
+provider for `dotnet-trace`:
+
+```
+$  dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-DotNETRuntimeMonoProfiler:0xC900003:4
+```
+
+`0xC900003`, a bitmask, enables the following event types:
+
+* `GCKeyword`
+* `GCHandleKeyword`
+* `GCHeapCollectKeyword`
+* `GCRootKeyword`
+
+See the [`Microsoft-DotNETRuntimeMonoProfiler` event types][mono-events] for more info.
+
+`:4` enables "Informational" verbosity.
+
+This saves a `.nettrace` file with GC events that are not available
+with the default provider.
+
+To actually view this data, you'll have to use one of:
+
+* https://github.com/lateralusX/diagnostics-nettrace-samples
+* https://github.com/filipnavara/mono-nettrace-gcdump
+
+Using `mono-nettrace-gcdump`:
+
+```
+$ dotnet run --project mono-nettrace-gcdump.csproj -- foo.nettrace
+```
+
+This saves a `foo.gcdump` that you can open in Visual Studio.
+
+See the [dotnet/runtime documentation][gc-dumps-on-mono] for
+additional details.
+
+[dotnet-gcdump]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-gcdump
+[mono-events]: https://github.com/dotnet/runtime/blob/c887c92d8af4ce65b19962b777f96ae8eb997a42/src/coreclr/vm/ClrEtwAll.man#L7425
+[gc-dumps-on-mono]: https://github.com/dotnet/runtime/blob/728fd85bc7ad04f5a0ea2ad0d4d8afe371ff9b64/docs/design/mono/diagnostics-tracing.md#collect-gc-dumps-on-monovm
+
 ## How to `dotnet trace` our build?
 
 Setting this up is easy, the main issue is there end up being
