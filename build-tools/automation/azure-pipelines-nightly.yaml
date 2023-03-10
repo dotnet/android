@@ -58,15 +58,16 @@ stages:
         artifactName: Build Results - Nightly macOS
         includeBuildResults: true
 
-- stage: test
-  displayName: Test
+
+- stage: test_apk
+  displayName: Test APKs
   dependsOn: mac_build
   variables:
-    - group: Xamarin-Secrets
-    - group: xamops-azdev-secrets
+  - group: Xamarin-Secrets
+  - group: xamops-azdev-secrets
   jobs:
-  - job: emulator_tests
-    displayName: macOS > Tests > APKs (Emulator)
+  - job: test_apk_monoandroid
+    displayName: macOS > Test APKs > Mono.Android
     timeoutInMinutes: 180
     strategy:
       matrix:
@@ -136,13 +137,12 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        testName: Mono.Android_Tests-$(avdApiLevel)-$(avdAbi)-$(avdType)
-        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(XA.Build.Configuration).xml
-        extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType)
-        artifactSource: bin/Test$(XA.Build.Configuration)/Mono.Android_Tests-Signed.apk
-        artifactFolder: Default
-        useDotNet: false
+        testName: Mono.Android.NET_Tests-$(XA.Build.Configuration)-$(avdApiLevel)
+        project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)$(avdApiLevel).xml
+        extraBuildArgs: -p:TestsFlavor=$(avdApiLevel) -p:TestAvdApiLevel=$(avdApiLevel) -p:TestAvdAbi=$(avdAbi) -p:TestAvdType=$(avdType)
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: Mono.Android-$(XA.Build.Configuration)-$(avdApiLevel)
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -159,70 +159,317 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # TimeZoneInfo test jobs
-  - template: yaml-templates/run-timezoneinfo-tests.yaml
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 1
+      emulatorMSBuildArgs: -p:TestAvdExtraBootArgs=-writable-system
+      jobName: SystemApplicationTests
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: SystemApplicationTests On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=SystemApplicationTests"
+          testResultsFile: TestResult-SystemApplicationTests-$(XA.Build.Configuration).xml
 
-  - template: yaml-templates/run-timezoneinfo-tests.yaml
+
+# TimeZoneInfo test jobs
+- stage: test_timezoneinfo
+  displayName: Test TimeZoneInfo
+  dependsOn: mac_build
+  variables:
+  - group: Xamarin-Secrets
+  - group: xamops-azdev-secrets
+  jobs:
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 2
+      jobName: TimeZoneInfoTests1
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode1 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode1"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode1-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode2 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode2"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode2-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode3 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode3"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode3-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
 
-  - template: yaml-templates/run-timezoneinfo-tests.yaml
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 3
+      jobName: TimeZoneInfoTests2
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode4 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode4"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode4-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode5 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode5"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode5-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode6 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode6"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode6-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
 
-  - template: yaml-templates/run-timezoneinfo-tests.yaml
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 4
+      jobName: TimeZoneInfoTests3
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode7 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode7"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode7-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode8 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode8"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode8-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode9 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode9"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode9-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
 
-  # Localization test jobs
-  - template: yaml-templates/run-localization-tests.yaml
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 1
+      jobName: TimeZoneInfoTests4
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode10 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode10"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode10-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode11 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode11"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode11-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode12 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode12"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode12-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
 
-  - template: yaml-templates/run-localization-tests.yaml
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 2
+      jobName: TimeZoneInfoTests5
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode13 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode13"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode13-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode14 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode14"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode14-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckTimeZoneInfoIsCorrectNode15 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckTimeZoneInfoIsCorrectNode15"
+          testResultsFile: TestResult-CheckTimeZoneInfoIsCorrectNode15-$(XA.Build.Configuration).xml
+          timeoutInMinutes: 75
+          retryCountOnTaskFailure: 2
 
-  - template: yaml-templates/run-localization-tests.yaml
+
+# Localization test jobs
+- stage: test_locals
+  displayName: Test Localization
+  dependsOn: mac_build
+  variables:
+  - group: Xamarin-Secrets
+  - group: xamops-azdev-secrets
+  jobs:
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 3
+      jobName: LocalizationTests1
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode1 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode1"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode1-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode2 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode2"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode2-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode3 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode3"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode3-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
 
-  - template: yaml-templates/run-localization-tests.yaml
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 4
+      jobName: LocalizationTests2
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode4 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode4"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode4-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode5 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode5"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode5-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode6 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode6"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode6-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
 
-  - template: yaml-templates/run-localization-tests.yaml
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 5
+      jobName: LocalizationTests3
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode7 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode7"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode7-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode8 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode8"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode8-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode9 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode9"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode9-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
 
-  - template: yaml-templates/run-localization-tests.yaml
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 6
+      jobName: LocalizationTests4
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode10 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode10"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode10-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode11 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode11"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode11-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode12 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode12"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode12-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
 
-  - template: yaml-templates/run-localization-tests.yaml
+  - template: yaml-templates/run-emulator-tests.yaml
     parameters:
-      node_id: 7
-
-  - template: yaml-templates/run-localization-tests.yaml
-    parameters:
-      node_id: 8
-
-  - template: yaml-templates/run-localization-tests.yaml
-    parameters:
-      node_id: 9
-
-  - template: yaml-templates/run-localization-tests.yaml
-    parameters:
-      node_id: 10
-
-  - template: yaml-templates/run-localization-tests.yaml
-    parameters:
-      node_id: 11
-
-  - template: yaml-templates/run-localization-tests.yaml
-    parameters:
-      node_id: 12
-
-  - template: yaml-templates/run-systemapp-tests.yaml
+      jobName: LocalizationTests5
+      emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode13 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode13"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode13-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode14 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode14"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode14-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CheckLocalizationIsCorrectNode15 On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=CheckLocalizationIsCorrectNode15"
+          testResultsFile: TestResult-CheckLocalizationIsCorrectNode15-$(XA.Build.Configuration).xml
+          retryCountOnTaskFailure: 2

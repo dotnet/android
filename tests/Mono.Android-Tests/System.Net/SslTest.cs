@@ -71,6 +71,12 @@ namespace System.NetTests {
 		[Test]
 		public void HttpsShouldWork ()
 		{
+#if NET6_0_OR_GREATER
+			if (!OperatingSystem.IsAndroidVersionAtLeast (24)) {
+				Assert.Ignore ("Not supported on API 23 and lower.");
+			}
+#endif // NET6_0_OR_GREATER
+
 			RunIgnoringWebException (DoHttpsShouldWork);
 		}
 
@@ -98,6 +104,12 @@ namespace System.NetTests {
 		[Test (Description="Bug https://bugzilla.xamarin.com/show_bug.cgi?id=18962")]
 		public void VerifyTrustedCertificates ()
 		{
+#if NET6_0_OR_GREATER
+			if (!OperatingSystem.IsAndroidVersionAtLeast (24)) {
+				Assert.Ignore ("Not supported on API 23 and lower.");
+			}
+#endif // NET6_0_OR_GREATER
+
 			Assert.DoesNotThrow (() => RunIgnoringWebException (DoVerifyTrustedCertificates), "Certificate validation");
 		}
 
