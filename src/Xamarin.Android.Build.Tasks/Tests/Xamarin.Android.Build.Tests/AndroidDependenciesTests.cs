@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 							}
 						}
 						catch (Exception e) {
-							// ignore
+							TestContext.WriteLine ($"Could not extract platform-tools version from repository2-3.xml: {e}");
 						}
 					}
 					Assert.IsTrue (usedNewDir, $"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`.");
