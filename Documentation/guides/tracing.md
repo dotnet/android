@@ -138,12 +138,12 @@ with the default provider.
 To actually view this data, you'll have to use one of:
 
 * https://github.com/lateralusX/diagnostics-nettrace-samples
-* https://github.com/filipnavara/mono-nettrace-gcdump
+* https://github.com/filipnavara/mono-gcdump
 
-Using `mono-nettrace-gcdump`:
+Using `mono-gcdump`:
 
 ```
-$ dotnet run --project mono-nettrace-gcdump.csproj -- foo.nettrace
+$ dotnet run -- convert foo.nettrace
 ```
 
 This saves a `foo.gcdump` that you can open in Visual Studio.
