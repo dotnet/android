@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
@@ -31,6 +32,7 @@ namespace Xamarin.Android.Build.Tests
 				var proj = new XamarinAndroidApplicationProject {
 					TargetSdkVersion = apiLevel.ToString (),
 				};
+				const string ExpectedPlatformToolsVersion = "34.0.1";
 				using (var b = CreateApkBuilder ()) {
 					b.CleanupAfterSuccessfulBuild = false;
 					string defaultTarget = b.Target;
@@ -39,17 +41,48 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (b.Build (proj, parameters: new string [] {
 						"AcceptAndroidSDKLicenses=true",
 						"AndroidManifestType=GoogleV2",     // Need GoogleV2 so we can install API-32
-						"AndroidSdkPlatformToolsVersion=34.0.0",
+						$"AndroidSdkPlatformToolsVersion={ExpectedPlatformToolsVersion}",
 					}), "InstallAndroidDependencies should have succeeded.");
 					b.Target = defaultTarget;
 					b.BuildLogFile = "build.log";
 					Assert.IsTrue (b.Build (proj, true), "build should have succeeded.");
-					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}"), $"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`.");
+					bool usedNewDir = b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}");
+					if (!usedNewDir) {
+						// Is this because the platform-tools version changed (again?!)
+						try {
+							var currentPlatformToolsVersion = GetCurrentPlatformToolsVersion ();
+							if (currentPlatformToolsVersion != ExpectedPlatformToolsVersion) {
+								Assert.Fail ($"_AndroidSdkDirectory not set to new SDK path `{sdkPath}`, *probably* because Google's repository has a newer platform-tools package!  " +
+										$"repository2-3.xml contains platform-tools {currentPlatformToolsVersion}; expected {ExpectedPlatformToolsVersion}!");
+							}
+						}
+						catch (Exception e) {
+							TestContext.WriteLine ($"Could not extract platform-tools version from repository2-3.xml: {e}");
+						}
+					}
+					Assert.IsTrue (usedNewDir, $"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"JavaPlatformJarPath={sdkPath}"), $"JavaPlatformJarPath did not contain new SDK path `{sdkPath}`.");
 				}
 			} finally {
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", old);
 			}
+		}
+
+		static string GetCurrentPlatformToolsVersion ()
+		{
+			var s = new XmlReaderSettings {
+				XmlResolver = null,
+			};
+			var r = XmlReader.Create ("https://dl-ssl.google.com/android/repository/repository2-3.xml", s);
+			var d = XDocument.Load (r);
+
+			var platformToolsPackage    = d.Root.Elements ("remotePackage")
+				.Where (e => "platform-tools" == (string) e.Attribute("path"))
+				.FirstOrDefault ();
+
+			var revision    = platformToolsPackage.Element ("revision");
+
+			return $"{revision.Element ("major")}.{revision.Element ("minor")}.{revision.Element ("micro")}";
 		}
 
 		[Test]
