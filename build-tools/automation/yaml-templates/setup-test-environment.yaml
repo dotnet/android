@@ -12,7 +12,7 @@ parameters:
   installLegacyDotNet: true
   restoreNUnitConsole: true
   updateMono: true
-  androidSdkPlatforms: 21,26,32,33
+  androidSdkPlatforms: 26,32,33
 
 steps:
 - checkout: self
