@@ -11,7 +11,6 @@ using SR = System.Reflection;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-5")]
 	public class LinkerTests : BaseTest
 	{
 		[Test]

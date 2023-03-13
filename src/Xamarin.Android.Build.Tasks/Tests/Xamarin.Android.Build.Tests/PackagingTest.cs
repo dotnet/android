@@ -12,7 +12,6 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-6")]
 	[Parallelizable (ParallelScope.Children)]
 	public class PackagingTest : BaseTest
 	{

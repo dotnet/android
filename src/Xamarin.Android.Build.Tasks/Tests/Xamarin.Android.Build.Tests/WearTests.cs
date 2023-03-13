@@ -5,7 +5,6 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-2")]
 	public class WearTests : BaseTest
 	{
 		[Test]
