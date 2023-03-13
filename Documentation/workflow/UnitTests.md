@@ -62,7 +62,7 @@ just like we do on other platforms.
 
 This section outlines how to write the unit tests for the various parts of the SDK.
 Any new test `class` should derive from `BaseTest` or in the case of Device based tests, `DeviceTest`. These base classes provide additional helper methods to
-create and run the unit tests. They also projects methods to run things like
+create and run the unit tests. They also contain methods to run things like
 `adb` commands and to auto cleanup the unit tests. They will also capture additional
 things like screenshots if a test fails.
 
@@ -109,7 +109,6 @@ You can then check these collections for specific output from the `Task`.
 Putting it all together
 
 ```csharp
-
 [Test]
 public void MyTaskShouldSucceedWithNoWarnings
 {
@@ -124,6 +123,25 @@ public void MyTaskShouldSucceedWithNoWarnings
 }
 ```
 
+Adding `ITaskItem` properties to the Task can be done just like setting normal properties. This way you
+can test out all sorts of scenarios.
+
+```csharp
+[Test]
+public void MyTaskShouldSucceedWithNoWarnings
+{
+    var warnings = new List<BuildWarningEventArgs>;
+    var messages = new List<BuildMessageEventArgs>;
+    var engine = new MockBuildEngine (TestContext.Out, warnings: warnings);
+    var task = new MyTask () {
+        BuildEngine = engine,
+        SomeItem = new TaskItem ("somefile.txt"),
+    };
+    Assert.IsTrue (task.Execute (), "Task should succeed.");
+    Assert.AreEqual (0, warnings.Count, $"Task should not emit any warnings, found {warnings.Count}");
+}
+```
+
 ### Build Tests
 
 Tests which need to test the SDK integration are located in the `src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj` project. These types of test do NOT run on a Device. Device tests are slow and expensive to run (time wise). Generally these tests check that apps can build and produce the correct files in the final `apk`. It is also where we add tests for specific user reported issues, for example build errors around non ASCII characters etc.
@@ -131,7 +149,7 @@ Tests which need to test the SDK integration are located in the `src/Xamarin.And
 There are other build tests which test other aspects of the SDK. Examples are
 `tests/CodeBehind/BuildTests/CodeBehindBuildTests.csproj`
 
-Writing a test makes use of the `src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj` API. This api exposes a way to programmatically generating csproj files as well as other application based source code. This saves us from having to have 1000's of csproj files all over the repo.
+Writing a test makes use of the `src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj` API. This API exposes a way to programmatically generating csproj files as well as other application based source code. This saves us from having to have 1000's of csproj files all over the repo.
 
 At its core you create an `XamarinAndroidProject` instance. This can be
 `XamarinAndroidApplicationProject` or say `XamarinFormsApplicationProject`.
@@ -142,8 +160,14 @@ var project = new XamarinAndroidApplicationProject ();
 
 You can then Add Items such as source files, images or other files. By default it
 will create a simple Android App which will include one `MainActivity.cs` and some
-standard resources. Properties can be set via the `SetProperty` method. This can be
-done globally or for a specific Configuration.
+standard resources. If you use one of the variants of the `XamarinAndroidApplicationProject`
+like `XamarinFormsApplicationProject` the default project will contain the files
+needed for that variant. For example the Xamarin.Forms one will contain `xaml` files
+for layout.
+
+MSBuild Properties can be set via the `SetProperty` method. This can be
+done globally or for a specific Configuration. By default the project has a
+`DebugConfiguration` and a `ReleaseConfiguration`.
 
 ```csharp
 project.SetProperty ("MyGlobalBoolProperty", "False");
@@ -151,8 +175,9 @@ project.SetProperty (project.DebugConfiguration, "MyDebugBoolProperty", "False")
 ```
 
 Once you have a project object constructed, you can make use of the `ProjectBuilder`
-to build the project. There are two helper methods `CreateApkBuilder` and `CreateDllBuilder` which are available. These will allow you do create a builder to
-output an `apk` or in the base of a `Library` project a `dll`.
+to build the project. There are two helper methods `CreateApkBuilder` and `CreateDllBuilder`
+which are available in the `BaseTest` class. These will allow you do create a builder
+to output an `apk` or in the base of a `Library` project a `dll`.
 You call `CreateApkBuilder` to create the builder then pass the project to the `Build`
 method. This will build the project. There are other methods such as `Save` and `Install` which can be used to run the various underlying MSBuild targets.
 NOTE: You should wrap your instances of a `ProjectBuilder` inside a `using` to make sure that the files are cleaned up correctly after the test has run. Tests which fail
@@ -169,13 +194,36 @@ projects and will generate .NET based projects. When running under `msbuild` it 
 generate the old style projects. This allows you do write the same test for both types
 of SDK.
 
-
-
-
 ### Device Tests
 
-Device based tests are located in `tests/MSBuildDeviceIntegration/MSBuildDeviceIntegration.csproj`. These work in a similar fashion to the other MSBuild
-related tests. The only requirement is that they need a Device Attached.
+Device based tests are located in `tests/MSBuildDeviceIntegration/MSBuildDeviceIntegration.csproj`.
+These work in a similar fashion to the other MSBuild related tests. The only requirement is
+that they need a Device Attached.
+
+The `DeviceTest` base class provides helper methods which will allow you to run your test application on
+the device. It also contains methods for capturing the `logcat` output, the UI and changing users.
+
+
+
+```csharp
+[Test]
+public void MyAppShouldRun ([Values (true, false)] bool isRelease)
+{
+    var proj = new XamarinAndroidApplicationProject () {
+        IsRelease = isRelease,
+    };
+    proj.SetDefaultTargetDevice ();
+    using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+        // Build and Install the app
+        Assert.True (b.Install (proj), "Project should have installed.");
+        // Run it
+        RunProjectAndAssert (proj, b);
+        // Wait for the app to start with a 30 second timeout
+        Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+            Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+    }
+}
+```
 
 ### On Device Unit Tests
 
