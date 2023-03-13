@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 using Mono.Cecil;
+using Xamarin.Android.Application.Utilities;
 
 namespace Xamarin.Android.Application.Typemaps;
 
@@ -13,9 +13,12 @@ abstract class ManagedTypeResolver
 	Dictionary<string, string> types = new Dictionary<string, string> (StringComparer.Ordinal);
 
 	protected Dictionary<string, string> AssemblyPaths { get; } = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+	protected ILogger Log { get; }
 
-	protected ManagedTypeResolver ()
-	{}
+	protected ManagedTypeResolver (ILogger log)
+	{
+		Log = log;
+	}
 
 	public string Lookup (string assemblyName, Guid mvid, uint tokenID)
 	{
@@ -36,7 +39,7 @@ abstract class ManagedTypeResolver
 				return typeName;
 			}
 		} else if (!AlreadyWarned.Contains (assemblyName)) {
-			Log.Warning ($"Assembly {assemblyName} cannot be found");
+			Log.WarningLine ($"Assembly {assemblyName} cannot be found");
 			AlreadyWarned.Add (assemblyName);
 		}
 
@@ -60,7 +63,7 @@ abstract class ManagedTypeResolver
 		}
 
 		if (!AlreadyWarned.Contains (key)) {
-			Log.Warning ($"Type with token ID {tokenID} ({tokenID:X08}) not found in {assemblyPath}");
+			Log.WarningLine ($"Type with token ID {tokenID} ({tokenID:X08}) not found in {assemblyPath}");
 			AlreadyWarned.Add (key);
 		}
 
@@ -76,7 +79,7 @@ abstract class ManagedTypeResolver
 			return;
 		}
 
-		Log.Debug ($"Loading '{assemblyPath}'");
+		Log.DebugLine ($"Loading '{assemblyPath}'");
 		AssemblyDefinition asm = ReadAssembly (assemblyPath);
 		foreach (ModuleDefinition module in asm.Modules) {
 			foreach (TypeDefinition type in module.Types) {
@@ -87,7 +90,7 @@ abstract class ManagedTypeResolver
 
 		void LoadType (TypeDefinition type)
 		{
-			Log.Debug ($"  {type.Name} (token as int: {type.MetadataToken.ToUInt32()}; RID: {type.MetadataToken.RID}; type: {type.MetadataToken.TokenType})");
+			Log.DebugLine ($"  {type.Name} (token as int: {type.MetadataToken.ToUInt32()}; RID: {type.MetadataToken.RID}; type: {type.MetadataToken.TokenType})");
 			types.Add (GetTypeKey (assemblyPath, type.Module.Mvid, type.MetadataToken.ToUInt32 ()), type.FullName);
 			if (type.NestedTypes.Count == 0) {
 				return;

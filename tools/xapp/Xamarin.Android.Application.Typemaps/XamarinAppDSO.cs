@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application.Typemaps;
 
 abstract class XamarinAppDSO : ITypemap
@@ -15,21 +17,23 @@ abstract class XamarinAppDSO : ITypemap
 	protected AnELF ELF                           => elf ?? throw new InvalidOperationException ("ELF image not loaded");
 	protected bool Is64Bit                        => ELF.Is64Bit;
 	protected ManagedTypeResolver ManagedResolver { get; }
+	protected ILogger Log                         { get; }
 
-	public MapArchitecture MapArchitecture        => ELF.MapArchitecture;
+	public MapArchitecture MapArchitecture        => TypemapUtilities.GetMapArchitecture (ELF.AnyELF);
 	public string FullPath                        { get; } = String.Empty;
 	public abstract string Description            { get; }
 	public abstract string FormatVersion          { get; }
 	public abstract Map Map                       { get; }
 
-	protected XamarinAppDSO (ManagedTypeResolver managedResolver, string fullPath)
+	protected XamarinAppDSO (ILogger log, ManagedTypeResolver managedResolver, string fullPath)
 	{
+		Log = log;
 		ManagedResolver = managedResolver;
 		FullPath = fullPath;
 	}
 
-	protected XamarinAppDSO (ManagedTypeResolver managedResolver, AnELF elf)
-		: this (managedResolver, Path.GetFullPath (elf.FilePath))
+	protected XamarinAppDSO (ILogger log, ManagedTypeResolver managedResolver, AnELF elf)
+		: this (log, managedResolver, Path.GetFullPath (elf.FilePath))
 	{
 		this.elf = elf;
 	}
@@ -37,7 +41,7 @@ abstract class XamarinAppDSO : ITypemap
 	public bool CanLoad (Stream stream, string filePath)
 	{
 		stream.Seek (0, SeekOrigin.Begin);
-		if (!AnELF.TryLoad (stream, filePath, out AnELF? elf) || elf == null) {
+		if (!AnELF.TryLoad (Log, stream, filePath, out AnELF? elf) || elf == null) {
 			Log.Debug ($"AnELF.TryLoad failed (elf == {elf})");
 			return false;
 		}
@@ -70,7 +74,7 @@ abstract class XamarinAppDSO : ITypemap
 			throw new InvalidOperationException ("Not enough data to read a 32-bit integer");
 
 		uint ret = BitConverter.ToUInt32 (data, (int)offset);
-		offset += packed ? DataSize : GetPaddedSize<uint> (offset);
+		offset += packed ? DataSize : ELF.GetPaddedSize<uint> (offset);
 
 		return ret;
 	}
@@ -83,7 +87,7 @@ abstract class XamarinAppDSO : ITypemap
 			throw new InvalidOperationException ("Not enough data to read a 64-bit integer");
 
 		ulong ret = BitConverter.ToUInt64 (data, (int)offset);
-		offset += packed ? DataSize : GetPaddedSize<ulong> (offset);
+		offset += packed ? DataSize : ELF.GetPaddedSize<ulong> (offset);
 
 		return ret;
 	}
@@ -99,51 +103,5 @@ abstract class XamarinAppDSO : ITypemap
 		}
 
 		return ret;
-	}
-
-	protected ulong GetPaddedSize<S> (ulong sizeSoFar)
-	{
-		ulong typeSize = GetTypeSize<S> ();
-
-		ulong modulo;
-		if (Is64Bit) {
-			modulo = typeSize < 8 ? 4u : 8u;
-		} else {
-			modulo = 4u;
-		}
-
-		ulong alignment = sizeSoFar % modulo;
-		if (alignment == 0)
-			return typeSize;
-
-		return typeSize + (modulo - alignment);
-	}
-
-	ulong GetTypeSize<S> ()
-	{
-		Type type = typeof(S);
-
-		if (type == typeof(string)) {
-			// We treat `string` as a generic pointer
-			return Is64Bit ? 8u : 4u;
-		}
-
-		if (type == typeof(byte)) {
-			return 1u;
-		}
-
-		if (type == typeof(bool)) {
-			return 1u;
-		}
-
-		if (type == typeof(Int32) || type == typeof(UInt32)) {
-			return 4u;
-		}
-
-		if (type == typeof(Int64) || type == typeof(UInt64)) {
-			return 8u;
-		}
-
-		throw new InvalidOperationException ($"Unable to map managed type {type} to native assembler type");
 	}
 }

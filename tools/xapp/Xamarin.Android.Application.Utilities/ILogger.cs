@@ -19,4 +19,5 @@ interface ILogger
 	void Log (LogLevel level, string? message);
 	void LogLine (LogLevel level, string? message, ConsoleColor color);
 	void Log (LogLevel level, string? message, ConsoleColor color);
+	void ExceptionError (string desc, Exception ex);
 }

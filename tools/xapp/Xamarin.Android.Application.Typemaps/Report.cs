@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application.Typemaps;
 
 class Report
@@ -22,9 +24,11 @@ class Report
 	bool onlyJava;
 	bool onlyManaged;
 	bool generateFiles;
+	ILogger log;
 
-	public Report (string outputDirectory, string filterRegex, bool full, bool onlyJava, bool onlyManaged, bool generateFiles)
+	public Report (ILogger log, string outputDirectory, string filterRegex, bool full, bool onlyJava, bool onlyManaged, bool generateFiles)
 	{
+		this.log = log;
 		this.outputDirectory = outputDirectory;
 		this.full = full;
 		this.onlyJava = onlyJava;
@@ -38,7 +42,7 @@ class Report
 
 	public void Generate (ITypemap typemap)
 	{
-		string baseOutputFile = generateFiles ? Utilities.GetOutputFileBaseName (outputDirectory, typemap.FormatVersion, typemap.Map.Kind, typemap.Map.Architecture) : String.Empty;
+		string baseOutputFile = generateFiles ? TypemapUtilities.GetOutputFileBaseName (outputDirectory, typemap.FormatVersion, typemap.Map.Kind, typemap.Map.Architecture) : String.Empty;
 		Action<StreamWriter, MapEntry, bool, bool> fileGenerator;
 		Action<MapEntry, bool> consoleGenerator;
 		bool filtering = filterRegex != null;
@@ -55,7 +59,7 @@ class Report
 
 			Generate (
 				filtering ? "Java to Managed" : "Java to Managed output file",
-				Utilities.GetJavaOutputFileName (baseOutputFile, "txt"),
+				TypemapUtilities.GetJavaOutputFileName (baseOutputFile, "txt"),
 				typemap.Map.JavaToManaged,
 				full,
 				fileGenerator,
@@ -82,7 +86,7 @@ class Report
 
 			Generate (
 				filtering ? "Managed to Java" : "Managed to Java output file",
-				Utilities.GetManagedOutputFileName (baseOutputFile, "txt"),
+				TypemapUtilities.GetManagedOutputFileName (baseOutputFile, "txt"),
 				typemap.Map.ManagedToJava,
 				full,
 				fileGenerator,
@@ -94,8 +98,8 @@ class Report
 	void Generate (string name, string outputFile, List<MapEntry> typemap, bool full, Action<StreamWriter, MapEntry, bool, bool> fileGenerator, Action<MapEntry, bool> consoleGenerator)
 	{
 		if (generateFiles) {
-			Log.Info ($"  {name}: {outputFile}");
-			Utilities.CreateFileDirectory (outputFile);
+			log.InfoLine ($"  {name}: {outputFile}");
+			Util.CreateFileDirectory (outputFile);
 		}
 
 		StreamWriter? sw = null;
@@ -119,8 +123,8 @@ class Report
 				}
 
 				if (firstMatch) {
-					Log.Info ();
-					Log.Info ($"  Matching entries ({name}):");
+					log.InfoLine ();
+					log.InfoLine ($"  Matching entries ({name}):");
 					firstMatch = false;
 				}
 
@@ -169,7 +173,7 @@ class Report
 
 	void ConsoleGenerateJavaToManagedDebug (MapEntry entry, bool full)
 	{
-		Log.Info ($"    {entry.JavaType.Name} -> {entry.ManagedType.TypeName}");
+		log.InfoLine ($"    {entry.JavaType.Name} -> {entry.ManagedType.TypeName}");
 	}
 
 	void FileGenerateJavaToManagedRelease (StreamWriter sw, MapEntry entry, bool full, bool firstEntry)
@@ -218,11 +222,11 @@ class Report
 				generic = String.Empty;
 			}
 
-			Log.Info ($"    {entry.JavaType.Name} -> {managedTypeName}{generic}");
+			log.InfoLine ($"    {entry.JavaType.Name} -> {managedTypeName}{generic}");
 			return;
 		}
 
-		Log.Info ($"    {entry.JavaType.Name} -> {managedTypeName}; MVID: {entry.ManagedType.MVID}; Token ID: {TokenIdToString (entry)}");
+		log.InfoLine ($"    {entry.JavaType.Name} -> {managedTypeName}; MVID: {entry.ManagedType.MVID}; Token ID: {TokenIdToString (entry)}");
 	}
 
 	string TokenIdToString (MapEntry entry)
@@ -250,7 +254,7 @@ class Report
 
 	void ConsoleGenerateManagedToJavaDebug (MapEntry entry, bool full)
 	{
-		Log.Info ($"    {GetManagedTypeNameDebug (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
+		log.InfoLine ($"    {GetManagedTypeNameDebug (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
 	}
 
 	void FileGenerateManagedToJavaRelease (StreamWriter sw, MapEntry entry, bool full, bool firstEntry)
@@ -291,9 +295,9 @@ class Report
 	void ConsoleGenerateManagedToJavaRelease (MapEntry entry, bool full)
 	{
 		if (!full) {
-			Log.Info ($"    {GetManagedTypeNameDebug (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
+			log.InfoLine ($"    {GetManagedTypeNameDebug (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
 		} else {
-			Log.Info ($"    {GetManagedTypeNameDebug (entry)}; MVID: {entry.ManagedType.MVID}; Token ID: {TokenIdToString (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
+			log.InfoLine ($"    {GetManagedTypeNameDebug (entry)}; MVID: {entry.ManagedType.MVID}; Token ID: {TokenIdToString (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
 		}
 	}
 

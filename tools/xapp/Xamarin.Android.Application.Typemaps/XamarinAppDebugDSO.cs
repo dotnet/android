@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application.Typemaps;
 
 class XamarinAppDebugDSO : XamarinAppDSO
@@ -13,8 +15,8 @@ class XamarinAppDebugDSO : XamarinAppDSO
 
 	XamarinAppDebugDSO_Version XAPP => xapp ?? throw new InvalidOperationException ("Format implementation not found");
 
-	public XamarinAppDebugDSO (ManagedTypeResolver managedResolver, string fullPath)
-		: base (managedResolver, fullPath)
+	public XamarinAppDebugDSO (ILogger log, ManagedTypeResolver managedResolver, string fullPath)
+		: base (log, managedResolver, fullPath)
 	{}
 
 	public override bool CanLoad (AnELF elf)
@@ -29,7 +31,7 @@ class XamarinAppDebugDSO : XamarinAppDSO
 			case 0:
 			case FormatTag_V1:
 				format_tag = 1;
-				reader = new XamarinAppDebugDSO_V1 (ManagedResolver, elf);
+				reader = new XamarinAppDebugDSO_V1 (Log, ManagedResolver, elf);
 				break;
 
 			default:
@@ -55,13 +57,13 @@ abstract class XamarinAppDebugDSO_Version : XamarinAppDSO
 {
 	public override string Description => "Xamarin App Debug DSO";
 
-	protected XamarinAppDebugDSO_Version (ManagedTypeResolver managedResolver, AnELF elf)
-		: base (managedResolver, elf)
+	protected XamarinAppDebugDSO_Version (ILogger log, ManagedTypeResolver managedResolver, AnELF elf)
+		: base (log, managedResolver, elf)
 	{}
 
 	protected Map MakeMap (List<MapEntry> managedToJava, List<MapEntry> javaToManaged)
 	{
-		return new Map (MapKind.Debug, ELF.MapArchitecture, managedToJava, javaToManaged, FormatVersion);
+		return new Map (MapKind.Debug, MapArchitecture, managedToJava, javaToManaged, FormatVersion);
 	}
 
 	public override bool Load (string outputDirectory, bool generateFiles)
@@ -99,8 +101,8 @@ class XamarinAppDebugDSO_V1 : XamarinAppDebugDSO_Version
 	public override string FormatVersion => "1";
 	public override Map Map => map ?? throw new InvalidOperationException ("Data hasn't been loaded yet");
 
-	public XamarinAppDebugDSO_V1 (ManagedTypeResolver managedResolver, AnELF elf)
-		: base (managedResolver, elf)
+	public XamarinAppDebugDSO_V1 (ILogger log, ManagedTypeResolver managedResolver, AnELF elf)
+		: base (log, managedResolver, elf)
 	{}
 
 
@@ -165,11 +167,11 @@ class XamarinAppDebugDSO_V1 : XamarinAppDebugDSO_Version
 	{
 		// MUST be kept in sync with: src/monodroid/jni/xamarin-app.hh (struct TypeMap)
 		ulong size = 0;
-		size += GetPaddedSize<uint> (size);   // entry_count
-		size += GetPaddedSize<string> (size); // assembly_name (pointer)
-		size += GetPaddedSize<string> (size); // data (pointer)
-		size += GetPaddedSize<string> (size); // java_to_managed (pointer)
-		size += GetPaddedSize<string> (size); // managed_to_java (pointer)
+		size += ELF.GetPaddedSize<uint> (size);   // entry_count
+		size += ELF.GetPaddedSize<string> (size); // assembly_name (pointer)
+		size += ELF.GetPaddedSize<string> (size); // data (pointer)
+		size += ELF.GetPaddedSize<string> (size); // java_to_managed (pointer)
+		size += ELF.GetPaddedSize<string> (size); // managed_to_java (pointer)
 
 		string filePath = ELF.FilePath;
 		byte[] mapData = ELF.GetData (TypeMapSymbolName);
@@ -224,8 +226,8 @@ class XamarinAppDebugDSO_V1 : XamarinAppDebugDSO_Version
 		Log.Info ($"  Loading {name} map: {entry_count} {entries}, please wait...");
 
 		ulong size = 0;
-		size += GetPaddedSize<string> (size); // from
-		size += GetPaddedSize<string> (size); // to
+		size += ELF.GetPaddedSize<string> (size); // from
+		size += ELF.GetPaddedSize<string> (size); // to
 
 		ulong mapSize = entry_count * size;
 		byte[] data = ELF.GetData (pointer, mapSize);

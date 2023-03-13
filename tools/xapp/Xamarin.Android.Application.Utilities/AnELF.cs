@@ -7,7 +7,7 @@ using ELFSharp;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
-namespace Xamarin.Android.Application.Typemaps;
+namespace Xamarin.Android.Application.Utilities;
 
 abstract class AnELF
 {
@@ -27,17 +27,18 @@ abstract class AnELF
 	protected ISymbolTable DynSymSection => dynamicSymbolsSection;
 	protected ISymbolTable? SymSection => symbolsSection;
 	protected ISection RodataSection => rodataSection;
-	protected IELF AnyELF => elf;
+	public IELF AnyELF => elf;
 	protected Stream ELFStream => elfStream;
+	protected ILogger Log { get; }
 
 	public string FilePath => filePath;
-	public MapArchitecture MapArchitecture => GetMapArchitecture ();
 
 	public abstract bool Is64Bit { get; }
 	public abstract string Bitness { get; }
 
-	protected AnELF (Stream stream, string filePath, IELF elf, ISymbolTable dynsymSection, ISection rodataSection, ISymbolTable? symSection)
+	protected AnELF (ILogger log, Stream stream, string filePath, IELF elf, ISymbolTable dynsymSection, ISection rodataSection, ISymbolTable? symSection)
 	{
+		Log = log;
 		this.filePath = filePath;
 		this.elf = elf;
 		elfStream = stream;
@@ -76,7 +77,7 @@ abstract class AnELF
 
 	public byte[] GetData (string symbolName)
 	{
-		Log.Debug ($"Looking for symbol: {symbolName}");
+		Log.DebugLine ($"Looking for symbol: {symbolName}");
 		ISymbolEntry? symbol = GetSymbol (symbolName);
 		if (symbol == null)
 			return EmptyArray;
@@ -119,6 +120,57 @@ abstract class AnELF
 		return Encoding.ASCII.GetString (data, (int)offset, count);
 	}
 
+	public ulong GetPaddedSize<S> (ulong sizeSoFar)
+	{
+		ulong typeSize = GetTypeSize<S> ();
+
+		ulong modulo;
+		if (Is64Bit) {
+			modulo = typeSize < 8 ? 4u : 8u;
+		} else {
+			modulo = 4u;
+		}
+
+		ulong alignment = sizeSoFar % modulo;
+		if (alignment == 0)
+			return typeSize;
+
+		return typeSize + (modulo - alignment);
+	}
+
+	public ulong GetPaddedSize<S> (ulong sizeSoFar, S _)
+	{
+		return GetPaddedSize<S> (sizeSoFar);
+	}
+
+	ulong GetTypeSize<S> ()
+	{
+		Type type = typeof(S);
+
+		if (type == typeof(string)) {
+			// We treat `string` as a generic pointer
+			return Is64Bit ? 8u : 4u;
+		}
+
+		if (type == typeof(byte)) {
+			return 1u;
+		}
+
+		if (type == typeof(bool)) {
+			return 1u;
+		}
+
+		if (type == typeof(Int32) || type == typeof(UInt32)) {
+			return 4u;
+		}
+
+		if (type == typeof(Int64) || type == typeof(UInt64)) {
+			return 8u;
+		}
+
+		throw new InvalidOperationException ($"Unable to map managed type {type} to native assembler type");
+	}
+
 	protected virtual byte[] GetData (SymbolEntry<ulong> symbol)
 	{
 		throw new NotSupportedException ();
@@ -136,11 +188,11 @@ abstract class AnELF
 
 	protected byte[] GetData (ISection section, ulong size, ulong offset)
 	{
-		Log.Debug ($"AnELF.GetData: section == {section.Name}; size == {size}; offset == {offset:X}");
+		Log.DebugLine ($"AnELF.GetData: section == {section.Name}; size == {size}; offset == {offset:X}");
 		byte[] data = section.GetContents ();
 
-		Log.Debug ($"  data length: {data.Length} (long: {data.LongLength})");
-		Log.Debug ($"  offset: {offset}; size: {size}");
+		Log.DebugLine ($"  data length: {data.Length} (long: {data.LongLength})");
+		Log.DebugLine ($"  offset: {offset}; size: {size}");
 		if ((ulong)data.LongLength < (offset + size)) {
 			return EmptyArray;
 		}
@@ -209,30 +261,30 @@ abstract class AnELF
 		return ret;
 	}
 
-	public static bool TryLoad (string filePath, out AnELF? anElf)
+	public static bool TryLoad (ILogger log, string filePath, out AnELF? anElf)
 	{
 		using var fs = File.OpenRead (filePath);
-		return TryLoad (fs, filePath, out anElf);
+		return TryLoad (log, fs, filePath, out anElf);
 	}
 
-	public static bool TryLoad (Stream stream, string filePath, out AnELF? anElf)
+	public static bool TryLoad (ILogger log, Stream stream, string filePath, out AnELF? anElf)
 	{
 		anElf = null;
 		Class elfClass = ELFReader.CheckELFType (stream);
 		if (elfClass == Class.NotELF) {
-			Log.Warning ($"AnELF.TryLoad: {filePath} is not an ELF binary");
+			log.WarningLine ($"AnELF.TryLoad: {filePath} is not an ELF binary");
 			return false;
 		}
 
 		IELF elf = ELFReader.Load (stream, shouldOwnStream: false);
 
 		if (elf.Type != FileType.SharedObject) {
-			Log.Warning ($"AnELF.TryLoad: {filePath} is not a shared library");
+			log.WarningLine ($"AnELF.TryLoad: {filePath} is not a shared library");
 			return false;
 		}
 
 		if (elf.Endianess != Endianess.LittleEndian) {
-			Log.Warning ($"AnELF.TryLoad: {filePath} is not a little-endian binary");
+			log.WarningLine ($"AnELF.TryLoad: {filePath} is not a little-endian binary");
 			return false;
 		}
 
@@ -251,20 +303,20 @@ abstract class AnELF
 				break;
 
 			default:
-				Log.Warning ($"{filePath} is for an unsupported machine type {elf.Machine}");
+				log.WarningLine ($"{filePath} is for an unsupported machine type {elf.Machine}");
 				return false;
 		}
 
 		ISymbolTable? symtab = GetSymbolTable (elf, DynsymSectionName);
 		if (symtab == null) {
-			Log.Warning ($"{filePath} does not contain dynamic symbol section '{DynsymSectionName}'");
+			log.WarningLine ($"{filePath} does not contain dynamic symbol section '{DynsymSectionName}'");
 			return false;
 		}
 		ISymbolTable dynsym = symtab;
 
 		ISection? sec = GetSection (elf, RodataSectionName);
 		if (sec == null) {
-			Log.Warning ("${filePath} does not contain read-only data section ('{RodataSectionName}')");
+			log.WarningLine ("${filePath} does not contain read-only data section ('{RodataSectionName}')");
 			return false;
 		}
 		ISection rodata = sec;
@@ -272,12 +324,12 @@ abstract class AnELF
 		ISymbolTable? sym = GetSymbolTable (elf, SymtabSectionName);
 
 		if (is64) {
-			anElf = new ELF64 (stream, filePath, elf, dynsym, rodata, sym);
+			anElf = new ELF64 (log, stream, filePath, elf, dynsym, rodata, sym);
 		} else {
-			anElf = new ELF32 (stream, filePath, elf, dynsym, rodata, sym);
+			anElf = new ELF32 (log, stream, filePath, elf, dynsym, rodata, sym);
 		}
 
-		Log.Debug ($"AnELF.TryLoad: {filePath} is a {anElf.Bitness}-bit ELF binary ({elf.Machine})");
+		log.DebugLine ($"AnELF.TryLoad: {filePath} is a {anElf.Bitness}-bit ELF binary ({elf.Machine})");
 		return true;
 	}
 
@@ -303,25 +355,5 @@ abstract class AnELF
 		}
 
 		return section;
-	}
-
-	MapArchitecture GetMapArchitecture ()
-	{
-		switch (AnyELF.Machine) {
-			case Machine.ARM:
-				return MapArchitecture.ARM;
-
-			case Machine.Intel386:
-				return MapArchitecture.X86;
-
-			case Machine.AArch64:
-				return MapArchitecture.ARM64;
-
-			case Machine.AMD64:
-				return MapArchitecture.X86_64;
-
-			default:
-				throw new InvalidOperationException ($"Unsupported ELF machine type {AnyELF.Machine}");
-		}
 	}
 }

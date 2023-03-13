@@ -1,6 +1,5 @@
 using System;
 
-using Xamarin.Android.Application.Typemaps;
 using Xamarin.Android.Application.Utilities;
 
 namespace Xamarin.Android.Application;
@@ -22,7 +21,7 @@ class DetectorIsXamarinAppSharedLibrary : InputTypeDetector
 
 		var elfDetector = parent as DetectorIsELFBinary ?? throw new ArgumentException ("must be an instance of DetectorIsELFBinary class", nameof (parent));
 
-		if (!AnELF.TryLoad (inputFilePath, out AnELF? elf) || elf == null) {
+		if (!AnELF.TryLoad (log, inputFilePath, out AnELF? elf) || elf == null) {
 			return (false, null);
 		}
 

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Xamarin.Android.Application.Utilities;
+
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Application.Typemaps;
@@ -24,9 +26,11 @@ class Loader
 
 	AndroidArch archFilter;
 	bool loadOnlyFirst;
+	ILogger log;
 
-	public Loader (AndroidArch archFilter, bool loadOnlyFirst)
+	public Loader (ILogger log, AndroidArch archFilter, bool loadOnlyFirst)
 	{
+		this.log = log;
 		this.archFilter = archFilter;
 		this.loadOnlyFirst = loadOnlyFirst;
 	}
@@ -38,7 +42,7 @@ class Loader
 		}
 
 		if (!Directory.Exists (path)) {
-			Log.Info ($"Directory or file '{path}' not found.");
+			log.InfoLine ($"Directory or file '{path}' not found.");
 			return new List<ITypemap> ();
 		}
 
@@ -77,7 +81,7 @@ class Loader
 			return LoadFromObjDir (fsPath);
 		}
 
-		Log.Warning ($"Cannot determine what to load from {path}");
+		log.WarningLine ($"Cannot determine what to load from {path}");
 		return new List<ITypemap> ();
 	}
 
@@ -151,7 +155,7 @@ class Loader
 			return LoadFromAPK (filePath, "base/root/assemblies/");
 		}
 
-		Log.Info ($"Unsupported file extension '{ext}', unable to load");
+		log.InfoLine ($"Unsupported file extension '{ext}', unable to load");
 		return CreateListAndReturn (null);
 
 		List<ITypemap> CreateListAndReturn (ITypemap? tm)
@@ -168,7 +172,7 @@ class Loader
 
 	ITypemap? LoadFromFastDevTypemap (string filePath)
 	{
-		ITypemap tm = new FastDevTypeMap ();
+		ITypemap tm = new FastDevTypeMap (log);
 
 		var fs = File.Open (filePath, FileMode.Open, FileAccess.Read);
 		try {
@@ -196,7 +200,7 @@ class Loader
 
 		var ret = new List<ITypemap> ();
 		ZipArchive zip = ZipArchive.Open (filePath, FileMode.Open);
-		var managedResolver = new ApkManagedTypeResolver (zip, assemblyEntryPrefix);
+		var managedResolver = new ApkManagedTypeResolver (log, zip, assemblyEntryPrefix);
 		foreach (ZipEntry entry in zip) {
 			if (!entry.FullName.EndsWith (xamarinAppEntryTail, StringComparison.Ordinal)) {
 				continue;
@@ -247,17 +251,17 @@ class Loader
 			AddIfExists (searchPaths, assetsDir);
 		}
 
-		return LoadDSO (fs, filePath, new FilesystemManagedTypeResolver (searchPaths));
+		return LoadDSO (fs, filePath, new FilesystemManagedTypeResolver (log, searchPaths));
 	}
 
 	ITypemap? LoadDSO (Stream stream, string filePath, ManagedTypeResolver managedResolver)
 	{
-		ITypemap tm = new XamarinAppDebugDSO (managedResolver, filePath);
+		ITypemap tm = new XamarinAppDebugDSO (log, managedResolver, filePath);
 		if (tm.CanLoad (stream, filePath)) {
 			return ReturnIfCorrectArch (tm);
 		}
 
-		tm = new XamarinAppReleaseDSO (managedResolver, filePath);
+		tm = new XamarinAppReleaseDSO (log, managedResolver, filePath);
 		if (tm.CanLoad (stream, filePath)) {
 			return ReturnIfCorrectArch (tm);
 		}

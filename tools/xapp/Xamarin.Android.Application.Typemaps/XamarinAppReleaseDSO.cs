@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application.Typemaps;
 
 class XamarinAppReleaseDSO : XamarinAppDSO
@@ -15,12 +17,12 @@ class XamarinAppReleaseDSO : XamarinAppDSO
 
 	XamarinAppReleaseDSO_Version XAPP => xapp ?? throw new InvalidOperationException ("Format implementation not found");
 
-	public XamarinAppReleaseDSO (ManagedTypeResolver managedResolver, string fullPath)
-		: base (managedResolver, fullPath)
+	public XamarinAppReleaseDSO (ILogger log, ManagedTypeResolver managedResolver, string fullPath)
+		: base (log, managedResolver, fullPath)
 	{}
 
-	protected XamarinAppReleaseDSO (ManagedTypeResolver managedResolver, AnELF elf)
-		: base (managedResolver, elf)
+	protected XamarinAppReleaseDSO (ILogger log, ManagedTypeResolver managedResolver, AnELF elf)
+		: base (log, managedResolver, elf)
 	{}
 
 	public override bool CanLoad (AnELF elf)
@@ -37,7 +39,7 @@ class XamarinAppReleaseDSO : XamarinAppDSO
 			case 0:
 			case FormatTag_V1:
 				format_tag = 1;
-				reader = new XamarinAppReleaseDSO_V1 (ManagedResolver, elf);
+				reader = new XamarinAppReleaseDSO_V1 (Log, ManagedResolver, elf);
 				break;
 
 			default:
@@ -63,13 +65,13 @@ abstract class XamarinAppReleaseDSO_Version : XamarinAppDSO
 {
 	public override string Description => "Xamarin App Release DSO";
 
-	protected XamarinAppReleaseDSO_Version (ManagedTypeResolver managedResolver, AnELF elf)
-		: base (managedResolver, elf)
+	protected XamarinAppReleaseDSO_Version (ILogger log, ManagedTypeResolver managedResolver, AnELF elf)
+		: base (log, managedResolver, elf)
 	{}
 
 	protected Map MakeMap (List<MapEntry> managedToJava, List<MapEntry> javaToManaged)
 	{
-		return new Map (MapKind.Release, ELF.MapArchitecture, managedToJava, javaToManaged, FormatVersion);
+		return new Map (MapKind.Release, MapArchitecture, managedToJava, javaToManaged, FormatVersion);
 	}
 
 	public override bool Load (string outputDirectory, bool generateFiles)
@@ -79,7 +81,7 @@ abstract class XamarinAppReleaseDSO_Version : XamarinAppDSO
 		}
 
 		if (generateFiles) {
-			string rawOutputFile = Utilities.GetOutputFileBaseName (outputDirectory, FormatVersion, MapKind.Release, ELF.MapArchitecture);
+			string rawOutputFile = TypemapUtilities.GetOutputFileBaseName (outputDirectory, FormatVersion, MapKind.Release, MapArchitecture);
 			SaveRaw (rawOutputFile, "raw");
 		}
 
@@ -137,8 +139,8 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 	public override string FormatVersion => "1";
 	public override Map Map => map ?? throw new InvalidOperationException ("Data hasn't been loaded yet");
 
-	public XamarinAppReleaseDSO_V1 (ManagedTypeResolver managedResolver, AnELF elf)
-		: base (managedResolver, elf)
+	public XamarinAppReleaseDSO_V1 (ILogger log, ManagedTypeResolver managedResolver, AnELF elf)
+		: base (log, managedResolver, elf)
 	{}
 
 	public override bool CanLoad (AnELF elf)
@@ -173,8 +175,8 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 			return;
 		}
 
-		string outputFilePath = Utilities.GetManagedOutputFileName (baseOutputFilePath, extension);
-		Utilities.CreateFileDirectory (outputFilePath);
+		string outputFilePath = TypemapUtilities.GetManagedOutputFileName (baseOutputFilePath, extension);
+		Util.CreateFileDirectory (outputFilePath);
 		using (var sw = new StreamWriter (outputFilePath, false, new UTF8Encoding (false))) {
 			sw.WriteLine ("TYPE_TOKEN_DECIMAL (TYPE_TOKEN_HEXADECIMAL)\tJAVA_MAP_INDEX");
 			uint index = 0;
@@ -200,7 +202,7 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 			sw.Flush ();
 		}
 
-		outputFilePath = Utilities.GetJavaOutputFileName (baseOutputFilePath, extension);
+		outputFilePath = TypemapUtilities.GetJavaOutputFileName (baseOutputFilePath, extension);
 		using (var sw = new StreamWriter (outputFilePath, false, new UTF8Encoding (false))) {
 			sw.WriteLine ("MANAGED_MODULE_INDEX\tTYPE_TOKEN_DECIMAL (TYPE_TOKEN_HEXADECIMAL)\tJAVA_TYPE_NAME");
 
@@ -356,8 +358,8 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 
 		// MUST be kept in sync with: src/monodroid/jni/xamarin-app.hh (struct TypeMapModule)
 		ulong size = 0;
-		size += GetPaddedSize<uint> (size); // module_index
-		size += GetPaddedSize<uint> (size); // type_token_id
+		size += ELF.GetPaddedSize<uint> (size); // module_index
+		size += ELF.GetPaddedSize<uint> (size); // type_token_id
 		size += javaNameWidth;
 
 		byte[] data = ELF.GetData (MapJavaSymbolName);
@@ -392,14 +394,14 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 		ulong size;
 
 		size  = 16;                           // module_uuid
-		size += GetPaddedSize<uint> (size);   // entry_count
-		size += GetPaddedSize<uint> (size);   // duplicate_count
-		size += GetPaddedSize<string> (size); // map (pointer)
-		size += GetPaddedSize<string> (size); // duplicate_map (pointer)
-		size += GetPaddedSize<string> (size); // assembly_name (pointer)
-		size += GetPaddedSize<string> (size); // image (pointer)
-		size += GetPaddedSize<uint> (size);   // java_name_width
-		size += GetPaddedSize<string> (size); // java_map (pointer)
+		size += ELF.GetPaddedSize<uint> (size);   // entry_count
+		size += ELF.GetPaddedSize<uint> (size);   // duplicate_count
+		size += ELF.GetPaddedSize<string> (size); // map (pointer)
+		size += ELF.GetPaddedSize<string> (size); // duplicate_map (pointer)
+		size += ELF.GetPaddedSize<string> (size); // assembly_name (pointer)
+		size += ELF.GetPaddedSize<string> (size); // image (pointer)
+		size += ELF.GetPaddedSize<uint> (size);   // java_name_width
+		size += ELF.GetPaddedSize<string> (size); // java_map (pointer)
 
 		byte[] moduleData = ELF.GetData (MapModulesSymbolName);
 		if (moduleData.Length == 0)
@@ -430,8 +432,8 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 			// MUST be kept in sync with: src/monodroid/jni/xamarin-app.hh (struct TypeMapModuleEntry)
 			ulong pointer = ReadPointer (moduleData, ref offset);
 			size  = 0;
-			size += GetPaddedSize<uint> (size); // type_token_id
-			size += GetPaddedSize<uint> (size); // java_map_index
+			size += ELF.GetPaddedSize<uint> (size); // type_token_id
+			size += ELF.GetPaddedSize<uint> (size); // java_map_index
 
 			ulong mapSize = size * module.entry_count;
 			byte[] data = ELF.GetData (pointer, mapSize);

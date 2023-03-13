@@ -175,6 +175,12 @@ class XamarinLoggingHelper : ILogger
 		}
 	}
 
+	public void ExceptionError (string desc, Exception ex)
+	{
+		LogLine (LogLevel.Error, desc, ErrorColor);
+		LogLine (LogLevel.Error, ex.ToString (), ErrorColor);
+	}
+
 	void LogToFile (string? message)
 	{
 		if (String.IsNullOrEmpty (LogFilePath)) {

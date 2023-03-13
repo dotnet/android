@@ -4,6 +4,7 @@ using System.IO;
 
 using K4os.Compression.LZ4;
 using Mono.Cecil;
+using Xamarin.Android.Application.Utilities;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Application.Typemaps;
@@ -15,7 +16,8 @@ class ApkManagedTypeResolver : ManagedTypeResolver
 	Dictionary<string, ZipEntry> assemblies;
 	ZipArchive apk;
 
-	public ApkManagedTypeResolver (ZipArchive apk, string assemblyEntryPrefix)
+	public ApkManagedTypeResolver (ILogger log, ZipArchive apk, string assemblyEntryPrefix)
+		: base (log)
 	{
 		this.apk = apk;
 		assemblies = new Dictionary<string, ZipEntry> (StringComparer.Ordinal);
@@ -72,15 +74,15 @@ class ApkManagedTypeResolver : ManagedTypeResolver
 				uint decompressedLength = reader.ReadUInt32 ();
 
 				int inputLength = (int)(stream.Length - 12);
-				byte[] sourceBytes = Utilities.BytePool.Rent (inputLength);
+				byte[] sourceBytes = Util.BytePool.Rent (inputLength);
 				reader.Read (sourceBytes, 0, inputLength);
 
-				assemblyBytes = Utilities.BytePool.Rent ((int)decompressedLength);
+				assemblyBytes = Util.BytePool.Rent ((int)decompressedLength);
 				int decoded = LZ4Codec.Decode (sourceBytes, 0, inputLength, assemblyBytes, 0, (int)decompressedLength);
 				if (decoded != (int)decompressedLength) {
 					throw new InvalidOperationException ($"Failed to decompress LZ4 data of {assemblyPath} (decoded: {decoded})");
 				}
-				Utilities.BytePool.Return (sourceBytes);
+				Util.BytePool.Return (sourceBytes);
 			}
 		}
 
@@ -89,7 +91,7 @@ class ApkManagedTypeResolver : ManagedTypeResolver
 			stream.Dispose ();
 			stream = new MemoryStream ();
 			stream.Write (assemblyBytes, 0, assemblyBytes.Length);
-			Utilities.BytePool.Return (assemblyBytes);
+			Util.BytePool.Return (assemblyBytes);
 			stream.Seek (0, SeekOrigin.Begin);
 		}
 

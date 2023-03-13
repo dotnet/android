@@ -6,6 +6,7 @@ using Mono.Options;
 using Xamarin.Android.Application;
 using Xamarin.Android.Application.Utilities;
 using Xamarin.Android.AssemblyStore;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.XApp;
 
@@ -46,20 +47,35 @@ class App
 				continue;
 			}
 
-			GenerateInfo (reader, inputFile);
+			PrintInfo (reader, inputFile);
 		}
 
 		return 0;
 	}
 
-	static void GenerateInfo (InputReader reader, string inputFile)
+	static void PrintInfo (InputReader reader, string inputFile)
 	{
 		log.DebugLine ($"Got reader '{reader}' for file '{inputFile}'");
-		PrintAssemblyStoreInfo (reader);
+		if (reader.SupportsAssemblyStore) {
+			PrintAssemblyStoreInfo (reader.GetAssemblyStore ());
+		}
 
 		if (reader.SupportsAppInfo) {
 			PrintAppInfo (reader.GetAppInfo ());
 		}
+
+		if (reader.SupportsXamarinApp) {
+			PrintXamarinAppInfo (reader.GetXamarinApp ());
+		}
+	}
+
+	static void PrintXamarinAppInfo (DataProviderXamarinApp? xamarinAppInfo)
+	{
+		if (xamarinAppInfo == null) {
+			return;
+		}
+
+		ApplicationConfig? applicationConfig = xamarinAppInfo.GetApplicationConfig ();
 	}
 
 	static void PrintAppInfo (DataProviderAppInfo? appInfo)
@@ -116,13 +132,8 @@ class App
 		log.StatusYesNoLine ($"  Uses AOT", appInfo.UsesAOT);
 	}
 
-	static void PrintAssemblyStoreInfo (InputReader reader)
+	static void PrintAssemblyStoreInfo (DataProviderAssemblyStore? assemblyStore)
 	{
-		if (!reader.SupportsAssemblyStore) {
-			return;
-		}
-
-		DataProviderAssemblyStore? assemblyStore = reader.GetAssemblyStore ();
 		if (assemblyStore == null) {
 			return;
 		}

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using Xamarin.Android.Application.Utilities;
+
 namespace Xamarin.Android.Application.Typemaps;
 
 class FastDevTypeMap : ITypemap
@@ -10,6 +12,7 @@ class FastDevTypeMap : ITypemap
 	FastDevTypeMap_Version? fdtm;
 
 	FastDevTypeMap_Version FDTM => fdtm ?? throw new InvalidOperationException ("Format implementation not found");
+	ILogger log;
 
 	public MapArchitecture MapArchitecture => MapArchitecture.FastDev;
 	public string Description              => fdtm?.Description ?? "FastDev typemap";
@@ -17,15 +20,20 @@ class FastDevTypeMap : ITypemap
 	public Map Map                         => FDTM.Map;
 	public string FullPath                 => FDTM.FullPath;
 
+	public FastDevTypeMap (ILogger log)
+	{
+		this.log = log;
+	}
+
 	public bool CanLoad (Stream stream, string filePath)
 	{
-		FastDevTypeMap_Version? reader = new FastDevTypeMap_V2 (stream, filePath);
+		FastDevTypeMap_Version? reader = new FastDevTypeMap_V2 (log, stream, filePath);
 		if (!reader.CanLoad (stream, filePath)) {
 			reader = null;
 		}
 
 		if (reader == null) {
-			Log.Error ($"{filePath} format is not supported by this version of TMT");
+			log.ErrorLine ($"{filePath} format is not supported by this version of TMT");
 			return false;
 		}
 
@@ -52,6 +60,7 @@ abstract class FastDevTypeMap_Version : ITypemap
 	public string FormatVersion            => SupportedFormat.ToString ();
 	public string FullPath                 { get; }
 
+	protected ILogger Log                  { get; }
 	protected Stream Input                 { get; }
 	protected UInt32 Magic                 { get; private set; } = 0;
 
@@ -60,8 +69,9 @@ abstract class FastDevTypeMap_Version : ITypemap
 
 	public abstract bool Load (string outputDirectory, bool generateFiles);
 
-	protected FastDevTypeMap_Version (Stream stream, string fullPath)
+	protected FastDevTypeMap_Version (ILogger log, Stream stream, string fullPath)
 	{
+		Log = log;
 		Input = stream;
 		FullPath = fullPath;
 	}
@@ -112,7 +122,7 @@ abstract class FastDevTypeMap_Version : ITypemap
 			if (primaryFile) {
 				throw new InvalidOperationException (message); // Should "never" happen
 			}
-			Log.Warning (message);
+			Log.WarningLine (message);
 			return false;
 		}
 
@@ -122,7 +132,7 @@ abstract class FastDevTypeMap_Version : ITypemap
 			if (primaryFile) {
 				throw new InvalidOperationException (message); // Should "never" happen
 			}
-			Log.Warning (message);
+			Log.WarningLine (message);
 			return false;
 		}
 
@@ -151,8 +161,8 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 	public override Map Map                   => map ?? throw new InvalidOperationException ("Data hasn't been loaded yet");
 	protected override UInt32 SupportedFormat => 2;
 
-	public FastDevTypeMap_V2 (Stream stream, string fullPath)
-		: base (stream, fullPath)
+	public FastDevTypeMap_V2 (ILogger log, Stream stream, string fullPath)
+		: base (log, stream, fullPath)
 	{
 		managedToJava = new List<MapEntry> ();
 		javaToManaged = new List<MapEntry> ();
@@ -182,7 +192,7 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 			Entry managedEntry;
 
 			if (entry.MappedTypeIndex == InvalidJavaToManagedMappingIndex) {
-				Log.Debug ($"Java-to-managed: entry {entry.TypeName} marked as to be ignored");
+				Log.DebugLine ($"Java-to-managed: entry {entry.TypeName} marked as to be ignored");
 				managedEntry = new Entry {
 					AssemblyName = entry.AssemblyName,
 					TypeName = "[Ignored]",
@@ -192,7 +202,7 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 			}
 
 			if (AlreadyUsed (entry, managedEntry, javaToManagedUsed)) {
-				Log.Debug ($"Java-to-managed: skipping duplicate {entry.TypeName} -> {managedEntry.TypeName}");
+				Log.DebugLine ($"Java-to-managed: skipping duplicate {entry.TypeName} -> {managedEntry.TypeName}");
 				continue;
 			}
 
@@ -202,7 +212,7 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 		foreach (Entry entry in managedToJavaSource) {
 			Entry javaEntry = javaToManagedSource[(int)entry.MappedTypeIndex];
 			if (AlreadyUsed (entry, javaEntry, managedToJavaUsed)) {
-				Log.Info ($"Managed-to-java: skipping duplicate {entry.TypeName} -> {javaEntry.TypeName}");
+				Log.InfoLine ($"Managed-to-java: skipping duplicate {entry.TypeName} -> {javaEntry.TypeName}");
 				continue;
 			}
 
@@ -241,7 +251,7 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 				return LoadModule (Input, FullPath, primaryFile: true);
 
 			default:
-				Log.Error ($"File {FullPath} has an usupported magic number ({Magic})");
+				Log.ErrorLine ($"File {FullPath} has an usupported magic number ({Magic})");
 				return false;
 		}
 	}
@@ -262,12 +272,12 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 		int nulPosition = FindFirstNUL (data);
 
 		if (nulPosition < 0) {
-			Log.Error ($"{filePath} entry at index {idx} is malformed - no terminating NUL");
+			Log.ErrorLine ($"{filePath} entry at index {idx} is malformed - no terminating NUL");
 			return false;
 		}
 
 		if (nulPosition == 0) {
-			Log.Error ($"{filePath} entry at index {idx} is malformed - empty file name");
+			Log.ErrorLine ($"{filePath} entry at index {idx} is malformed - empty file name");
 			return false;
 		}
 
@@ -286,13 +296,13 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 
 			UInt32 entryCount = br.ReadUInt32 ();
 			if (entryCount == 0) {
-				Log.Error ($"FastDev index {FullPath} has no entries");
+				Log.ErrorLine ($"FastDev index {FullPath} has no entries");
 				return false;
 			}
 
 			UInt32 filenameWidth = br.ReadUInt32 ();
 			if (filenameWidth == 0) {
-				Log.Error ($"FastDev index indicates file name width is 0");
+				Log.ErrorLine ($"FastDev index indicates file name width is 0");
 				return false;
 			}
 
@@ -317,7 +327,7 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 	bool LoadModule (string filePath, bool primaryFile)
 	{
 		if (!File.Exists (filePath)) {
-			Log.Error ($"Module {filePath} not found");
+			Log.ErrorLine ($"Module {filePath} not found");
 			return false;
 		}
 
@@ -328,7 +338,7 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 
 	bool LoadModule (Stream stream, string filePath, bool primaryFile)
 	{
-		Log.Debug ($"Loading FastDev typemap from module: {filePath}");
+		Log.DebugLine ($"Loading FastDev typemap from module: {filePath}");
 		stream.Seek (0, SeekOrigin.Begin);
 
 		string assemblyName = String.Empty;
@@ -341,45 +351,45 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 
 			UInt32 entryCount = br.ReadUInt32 ();
 			if (entryCount == 0) {
-				Log.Warning ($"FastDev typemap module file {filePath} has no entries");
+				Log.WarningLine ($"FastDev typemap module file {filePath} has no entries");
 				return false;
 			}
 
 			UInt32 javaNameWidth = br.ReadUInt32 ();
 			if (javaNameWidth == 0) {
-				Log.Error ($"FastDev module {filePath} indicates Java type name width is 0");
+				Log.ErrorLine ($"FastDev module {filePath} indicates Java type name width is 0");
 				return false;
 			}
 
 			UInt32 managedNameWidth = br.ReadUInt32 ();
 			if (managedNameWidth == 0) {
-				Log.Error ($"FastDev module {filePath} indicates managed type name width is 0");
+				Log.ErrorLine ($"FastDev module {filePath} indicates managed type name width is 0");
 				return false;
 			}
 
 			UInt32 assemblyNameSize = br.ReadUInt32 ();
 			if (assemblyNameSize == 0) {
-				Log.Error ($"FastDev module {filePath} indicates assembly name length is 0");
+				Log.ErrorLine ($"FastDev module {filePath} indicates assembly name length is 0");
 				return false;
 			}
 
-			byte[] data = Utilities.BytePool.Rent ((int)assemblyNameSize);
+			byte[] data = Util.BytePool.Rent ((int)assemblyNameSize);
 			int read = br.Read (data, 0, (int)assemblyNameSize);
 			if (read != (int)assemblyNameSize) {
-				Log.Error ($"FastDev typemap module file {filePath} is too short: not enough bytes to read assembly name");
-				Utilities.BytePool.Return (data);
+				Log.ErrorLine ($"FastDev typemap module file {filePath} is too short: not enough bytes to read assembly name");
+				Util.BytePool.Return (data);
 				return false;
 			}
 			assemblyName = Encoding.UTF8.GetString (data, 0, read);
-			Utilities.BytePool.Return (data);
+			Util.BytePool.Return (data);
 
 			if (!LoadModuleTable (br, assemblyName, filePath, javaToManaged, entryCount, javaNameWidth)) {
-				Log.Error ($"Failed to read java-to-managed table from module {filePath}");
+				Log.ErrorLine ($"Failed to read java-to-managed table from module {filePath}");
 				return false;
 			}
 
 			if (!LoadModuleTable (br, assemblyName, filePath, managedToJava, entryCount, managedNameWidth)) {
-				Log.Error ($"Failed to read managed-to-java table from module {filePath}");
+				Log.ErrorLine ($"Failed to read managed-to-java table from module {filePath}");
 				return false;
 			}
 
@@ -391,13 +401,13 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 
 	bool LoadModuleTable (BinaryReader br, string assemblyName, string filePath, List<Entry> table, UInt32 entryCount, UInt32 nameWidth)
 	{
-		byte[] data = Utilities.BytePool.Rent ((int)nameWidth);
+		byte[] data = Util.BytePool.Rent ((int)nameWidth);
 		bool somethingFailed = false;
 		for (UInt32 i = 0; i < entryCount; i++) {
 			int read = br.Read (data, 0, (int)nameWidth);
 			if (read != (int)nameWidth) {
-				Log.Error ($"Error reading module {filePath} at index {i}: missing {nameWidth - read} bytes");
-				Utilities.BytePool.Return (data);
+				Log.ErrorLine ($"Error reading module {filePath} at index {i}: missing {nameWidth - read} bytes");
+				Util.BytePool.Return (data);
 				return false;
 			}
 
@@ -416,7 +426,7 @@ class FastDevTypeMap_V2 : FastDevTypeMap_Version
 			);
 		}
 
-		Utilities.BytePool.Return (data);
+		Util.BytePool.Return (data);
 		return !somethingFailed;
 	}
 }

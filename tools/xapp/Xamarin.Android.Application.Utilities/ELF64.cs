@@ -5,7 +5,7 @@ using ELFSharp;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
-namespace Xamarin.Android.Application.Typemaps;
+namespace Xamarin.Android.Application.Utilities;
 
 class ELF64 : AnELF
 {
@@ -17,8 +17,8 @@ class ELF64 : AnELF
 	Section<ulong> Rodata => (Section<ulong>)RodataSection;
 	ELF<ulong> ELF => (ELF<ulong>)AnyELF;
 
-	public ELF64 (Stream stream, string filePath, IELF elf, ISymbolTable dynsymSection, ISection rodataSection, ISymbolTable? symSection)
-		: base (stream, filePath, elf, dynsymSection, rodataSection, symSection)
+	public ELF64 (ILogger log, Stream stream, string filePath, IELF elf, ISymbolTable dynsymSection, ISection rodataSection, ISymbolTable? symSection)
+		: base (log, stream, filePath, elf, dynsymSection, rodataSection, symSection)
 	{}
 
 	public override byte[] GetData (ulong symbolValue, ulong size = 0)
