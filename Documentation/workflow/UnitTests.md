@@ -239,8 +239,29 @@ If you want to check if a ui element was shown you can make use of the `GetUI` m
 `ClickButton` to click a specific part of the screen. While the method is called `ClickButton` it actually
 sends a `tap` to the screen at a specific point.
 
+```csharp
+[Test]
+public void MyAppShouldRunAndRespondToClick ()
+{
+    var proj = new XamarinAndroidApplicationProject ();
+    proj.SetDefaultTargetDevice ();
+    using (var b = CreateApkBuilder ()) {
+        // Build and Install the app
+        Assert.True (b.Install (proj), "Project should have installed.");
+        // Run it
+        RunProjectAndAssert (proj, b);
+        // Wait for the app to start with a 30 second timeout
+        Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+            Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+        Assert.True (ClickButton ("", "android:id/myButton", "Hello World, Click Me!"), "Button should have been clicked.");
+    }
+}
+```
+
 ### On Device Unit Tests
 
 There are a category of tests which run on the device itself, these tests the runtime
-behaviour. These run `NUnit` and `XUnit` tests directly on the device. Some of these are located in the runtime itself. We build them within the repo then run the tests on
-the device.
+behaviour. These run `NUnit` tests directly on the device. Some of these are located in the runtime itself. We build them within the repo then run the tests on the device. They use a custom mobile version of
+`NUnit` called `NUnitLite`. For the most part they are the same.
+
+These tests are generally found in the `tests/Mono.Android-Tests` directory.
