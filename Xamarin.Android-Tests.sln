@@ -86,10 +86,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop-Tests", "tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop", "external\Java.Interop\src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Aidl-Tests", "tests\Xamarin.Android.Tools.Aidl-Tests\Xamarin.Android.Tools.Aidl-Tests.csproj", "{883941C8-C4ED-428D-A7D2-26F2EEA23F92}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Aidl", "src\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj", "{302D9D2E-1F98-4374-9B6B-922F78620C4B}"
-EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		tests\Mono.Android-Tests\Mono.Android-Test.Shared.projitems*{0ab4956e-6fb9-4da0-9d49-ab65a3ff403a}*SharedItemsImports = 13
@@ -237,14 +233,6 @@ Global
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Release|Any CPU.Build.0 = Release|Any CPU
-		{883941C8-C4ED-428D-A7D2-26F2EEA23F92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{883941C8-C4ED-428D-A7D2-26F2EEA23F92}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{883941C8-C4ED-428D-A7D2-26F2EEA23F92}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{883941C8-C4ED-428D-A7D2-26F2EEA23F92}.Release|Any CPU.Build.0 = Release|Any CPU
-		{302D9D2E-1F98-4374-9B6B-922F78620C4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{302D9D2E-1F98-4374-9B6B-922F78620C4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{302D9D2E-1F98-4374-9B6B-922F78620C4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{302D9D2E-1F98-4374-9B6B-922F78620C4B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -281,8 +269,6 @@ Global
 		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
 		{6CB00820-A66B-43E5-8785-ED456C6E9F39} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
-		{883941C8-C4ED-428D-A7D2-26F2EEA23F92} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
-		{302D9D2E-1F98-4374-9B6B-922F78620C4B} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8643CD20-B195-4919-8135-27549488237E}

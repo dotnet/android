@@ -11,7 +11,6 @@ using System.Linq;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-5")]
 	public class KeyToolTests : BaseTest
 	{
 		List<BuildErrorEventArgs> errors;

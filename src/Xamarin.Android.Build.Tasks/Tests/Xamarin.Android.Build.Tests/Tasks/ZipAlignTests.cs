@@ -9,7 +9,6 @@ using Xamarin.Android.Tasks;
 namespace Xamarin.Android.Build.Tests.Tasks
 {
 	[TestFixture]
-	[Category ("Node-2")]
 	public class ZipAlignTests : BaseTest
 	{
 		string path;
