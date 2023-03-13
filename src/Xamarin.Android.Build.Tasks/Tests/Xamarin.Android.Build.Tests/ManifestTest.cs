@@ -707,7 +707,7 @@ namespace Bug12935
 				var usesSdk = doc.Element ("manifest")?.Element ("uses-sdk");
 				Assert.IsNotNull (usesSdk, "Should have found a uses-sdk element.");
 				var expected = addReference ? "23" : "19";
-				Assert.AreEqual (expected, usesSdk.Attribute ("minSdkVersion")?.Value, $"minSdkVersion should have been '{expected}' but was '{usesSdk.Attribute ("minSdkVersion")?.Value}'");
+				Assert.AreEqual (expected, usesSdk.Attribute (ns + "minSdkVersion")?.Value, $"minSdkVersion should have been '{expected}' but was '{usesSdk.Attribute ("minSdkVersion")?.Value}'");
 
 			}
 		}
