@@ -202,8 +202,17 @@ that they need a Device Attached.
 
 The `DeviceTest` base class provides helper methods which will allow you to run your test application on
 the device. It also contains methods for capturing the `logcat` output, the UI and changing users.
+You still use the various `Save` and `Build` methods on the `ProjectBuilder` class to build the app, but
+you can also use the `Install` method to install the app on the device or emulator.
 
+The `SetDefaultTargetDevice` method on the `XamarinAndroidApplicationProject` will set the MSBuild `AdbTarget`
+property from the `ADB_TARGET` environment variable. This will ensure that the test will use the same device
+that the environment wants it to use. The `ADB_TARGET` environment variable can be useful if you are running
+on a system which has multiple devices attached.
 
+In the example below the `RunProjectAndAssert` method will call the underlying `Run` target in MSBuild and make
+sure it runs successfully. The `WaitForActivityToStart` method is the one which monitors the `adb logcat` output
+to detect when the app starts.
 
 ```csharp
 [Test]
@@ -213,7 +222,7 @@ public void MyAppShouldRun ([Values (true, false)] bool isRelease)
         IsRelease = isRelease,
     };
     proj.SetDefaultTargetDevice ();
-    using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+    using (var b = CreateApkBuilder ()) {
         // Build and Install the app
         Assert.True (b.Install (proj), "Project should have installed.");
         // Run it
@@ -224,6 +233,11 @@ public void MyAppShouldRun ([Values (true, false)] bool isRelease)
     }
 }
 ```
+
+If you want to check if a ui element was shown you can make use of the `GetUI` method. This returns an
+`xml` representation of what is one the screen of the device at the time of the call. You can also call
+`ClickButton` to click a specific part of the screen. While the method is called `ClickButton` it actually
+sends a `tap` to the screen at a specific point.
 
 ### On Device Unit Tests
 
