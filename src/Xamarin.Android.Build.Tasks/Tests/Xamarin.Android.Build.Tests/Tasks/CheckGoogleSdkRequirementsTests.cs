@@ -1,4 +1,4 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +9,6 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
-	[Category ("Node-2")]
 	public class CheckGoogleSdkRequirementsTests : BaseTest {
 		List<BuildErrorEventArgs> errors;
 		List<BuildWarningEventArgs> warnings;

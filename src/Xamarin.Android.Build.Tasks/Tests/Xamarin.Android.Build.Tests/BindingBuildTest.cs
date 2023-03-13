@@ -11,7 +11,6 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Children)]
 	public class BindingBuildTest : BaseTest {
 #pragma warning disable 414
