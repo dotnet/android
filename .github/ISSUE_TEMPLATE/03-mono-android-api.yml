@@ -20,7 +20,7 @@ body:
       multiple: true
       options:
       - Classic Xamarin.Android (MonoAndroid12.0, etc.)
-      - Android for .NET (net6.0-android, etc.)
+      - .NET Android (net6.0-android, etc.)
     validations:
       required: true
   - type: input
