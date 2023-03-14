@@ -120,58 +120,11 @@ abstract class AnELF
 		return Encoding.ASCII.GetString (data, (int)offset, count);
 	}
 
-	public ulong GetPaddedSize<S> (ulong sizeSoFar)
-	{
-		ulong typeSize = GetTypeSize<S> ();
-		if (typeSize == 1) {
-			return 1;
-		}
-
-		ulong modulo;
-		if (Is64Bit) {
-			modulo = typeSize < 8 ? 4u : 8u;
-		} else {
-			modulo = 4u;
-		}
-
-		ulong alignment = sizeSoFar % modulo;
-		if (alignment == 0)
-			return typeSize;
-
-		return typeSize + (modulo - alignment);
-	}
+	public ulong GetPaddedSize<S> (ulong sizeSoFar) => Util.GetPaddedSize<S> (sizeSoFar, Is64Bit);
 
 	public ulong GetPaddedSize<S> (ulong sizeSoFar, S _)
 	{
 		return GetPaddedSize<S> (sizeSoFar);
-	}
-
-	ulong GetTypeSize<S> ()
-	{
-		Type type = typeof(S);
-
-		if (type == typeof(string)) {
-			// We treat `string` as a generic pointer
-			return Is64Bit ? 8u : 4u;
-		}
-
-		if (type == typeof(byte)) {
-			return 1u;
-		}
-
-		if (type == typeof(bool)) {
-			return 1u;
-		}
-
-		if (type == typeof(Int32) || type == typeof(UInt32)) {
-			return 4u;
-		}
-
-		if (type == typeof(Int64) || type == typeof(UInt64)) {
-			return 8u;
-		}
-
-		throw new InvalidOperationException ($"Unable to map managed type {type} to native assembler type");
 	}
 
 	protected virtual byte[] GetData (SymbolEntry<ulong> symbol)
@@ -191,11 +144,11 @@ abstract class AnELF
 
 	protected byte[] GetData (ISection section, ulong size, ulong offset)
 	{
-		Log.DebugLine ($"AnELF.GetData: section == {section.Name}; size == {size}; offset == {offset:X}");
+		Log.DebugLine ($"AnELF.GetData: section == {section.Name}; size == {size}");
 		byte[] data = section.GetContents ();
 
-		Log.DebugLine ($"  data length: {data.Length} (long: {data.LongLength})");
-		Log.DebugLine ($"  offset: {offset}; size: {size}");
+		Log.DebugLine ($"  section data length: {data.Length} (long: {data.LongLength})");
+		Log.DebugLine ($"  offset into section: {offset}; symbol data length: {size}");
 		if ((ulong)data.LongLength < (offset + size)) {
 			return EmptyArray;
 		}
