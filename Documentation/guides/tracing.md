@@ -100,13 +100,35 @@ directory.
 
 ## How to get GC memory dumps?
 
-If running on desktop, you can simply do:
+If running on desktop, you can use the `dotnet-gcdump` global tool.
+This can be installed via:
+
+```dotnetcli
+$ dotnet tool install --global dotnet-gcdump
+```
+
+To use it, for example:
 
 ```
-$ dotnet gcdump collect -p 29096
-```
+# `hw-readline` is a standard Hello World, with a `Console.ReadLine()` at the end
+$ dotnet run --project hw-readline.csproj
+Hello, World!
+Press <ENTER> to continue
 
-See the [`dotnet-gcdump` documentation][dotnet-gcdump] for details.
+# Then from another shell...
+
+# Determine which process ID to dump
+$ ps | grep 'dotnet.*hw-re'
+33972 ttys049    0:01.86 dotnet run --project hw-readline.csproj
+33977 ttys050    0:00.00 grep dotnet.*hw-re
+
+# Collect the GC info
+$ dotnet gcdump collect --process-id 33972
+Writing gcdump to '.../hw-readline/20230314_113922_33972.gcdump'...
+	Finished writing 5624131 bytes.
+```
+See the [`dotnet-gcdump` documentation][dotnet-gcdump]
+for further details about its usage.
 
 This will connect to a process and save a `*.gcdump` file. You can
 open this file in Visual Studio on Windows, for example:
@@ -143,7 +165,7 @@ To actually view this data, you'll have to use one of:
 Using `mono-gcdump`:
 
 ```
-$ dotnet run -- convert foo.nettrace
+$ dotnet run --project path/to/filipnavara/mono-gcdump/mono-gcdump.csproj -- convert foo.nettrace
 ```
 
 This saves a `foo.gcdump` that you can open in Visual Studio.
