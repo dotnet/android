@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 
-using Xamarin.Android.Application.Utilities;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Application.Utilities;
 
 namespace Xamarin.Android.Application;
 
@@ -10,7 +10,8 @@ class DataProviderXamarinApp : DataProvider
 {
 	const string ApplicationConfigSymbolName = "application_config";
 
-	AnELF elf;
+	readonly AnELF elf;
+	readonly ulong format_tag;
 
 	public DataProviderXamarinApp (Stream inputStream, string? inputPath, ILogger log)
 		: base (inputStream, inputPath, log)
@@ -21,6 +22,7 @@ class DataProviderXamarinApp : DataProvider
 		}
 
 		elf = maybeELF;
+		format_tag = GetFormatTag (elf);
 	}
 
 	public ApplicationConfig? GetApplicationConfig ()
@@ -59,11 +61,60 @@ class DataProviderXamarinApp : DataProvider
 		size += elf.GetPaddedSize (size, applicationConfig.android_package_name);
 
 		byte[] data = elf.GetData (ApplicationConfigSymbolName);
-		if (data.Length != (int)size) {
-			Log.WarningLine ($"Failed to read '{ApplicationConfigSymbolName}' data from {InputPath} (expected {size}, got {data.Length})");
+
+		switch (format_tag) {
+			case Constants.FormatTag_V1:
+				return GetApplicationConfig_V1 (applicationConfig, size, data);
+
+			case Constants.FormatTag_V2:
+				return GetApplicationConfig_V2 (applicationConfig, size, data);
+
+			default:
+				Log.WarningLine ($"libxamarin-app.so format 0x{format_tag:x} is not supported");
+				return null;
+		}
+	}
+
+	ApplicationConfig? GetApplicationConfig_V1 (ApplicationConfig applicationConfig, ulong currentApplicationConfigSize, byte[] data)
+	{
+		// Due to lack of consistent versioning, the latest "v1" binaries since commit 8bc7a3e84f95e70fe12790ac31ecd97957771cb2 are the same
+		// as the first V2 binaries.  Earlier versions had different structure sizes, so if we find these sizes below, we can instead use
+		// the V2 loader safely.
+		const int ExpectedSize32_V2 = 68;
+		const int ExpectedSize64_V2 = 72;
+
+		if (data.Length == ExpectedSize32_V2 || data.Length == ExpectedSize64_V2) {
+			Log.DebugLine ("Application config V1 with V2 structure size, forwarding to the V2 reader");
+			return GetApplicationConfig_V2 (applicationConfig, currentApplicationConfigSize, data);
+		}
+
+		Log.DebugLine ("Reading application config V1");
+
+		return applicationConfig;
+	}
+
+	ApplicationConfig? GetApplicationConfig_V2 (ApplicationConfig applicationConfig, ulong currentApplicationConfigSize, byte[] data)
+	{
+		Log.DebugLine ("Reading application config V2");
+
+		const int ExpectedSize32 = 68;
+		const int ExpectedSize64 = 72;
+
+		int expectedSize = elf.Is64Bit ? ExpectedSize64 : ExpectedSize32;
+		if (data.Length != expectedSize) {
+			Log.WarningLine ($"Failed to read '{ApplicationConfigSymbolName}' data from {InputPath} (expected {expectedSize}, got {data.Length})");
 			return null;
 		}
 
 		return applicationConfig;
+	}
+
+	ulong GetFormatTag (AnELF elfBinary)
+	{
+		if (!elfBinary.HasSymbol (Constants.FormatTagSymbolName)) {
+			return 0;
+		}
+
+		return elf.GetUInt64 (Constants.FormatTagSymbolName);
 	}
 }

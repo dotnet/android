@@ -27,23 +27,23 @@ class XamarinAppReleaseDSO : XamarinAppDSO
 
 	public override bool CanLoad (AnELF elf)
 	{
-		Log.Debug ($"Checking if {elf.FilePath} is a Release DSO");
+		Log.DebugLine ($"Checking if {elf.FilePath} is a Release DSO");
 
 		xapp = null;
 		ulong format_tag = 0;
-		if (elf.HasSymbol (FormatTag))
-			format_tag = elf.GetUInt64 (FormatTag);
+		if (elf.HasSymbol (Constants.FormatTagSymbolName))
+			format_tag = elf.GetUInt64 (Constants.FormatTagSymbolName);
 
 		XamarinAppReleaseDSO_Version? reader = null;
 		switch (format_tag) {
 			case 0:
-			case FormatTag_V1:
+			case Constants.FormatTag_V1:
 				format_tag = 1;
 				reader = new XamarinAppReleaseDSO_V1 (Log, ManagedResolver, elf);
 				break;
 
 			default:
-				Log.Error ($"{elf.FilePath} format ({format_tag}) is not supported by this version of TMT");
+				Log.ErrorLine ($"{elf.FilePath} format (0x{format_tag:X}) is not supported by this version of xapp");
 				return false;
 		}
 
@@ -171,7 +171,7 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 		const string indent = "\t";
 
 		if (modules == null || javaTypes == null) {
-			Log.Warning ($"{Description}: cannot save raw report, no data");
+			Log.WarningLine ($"{Description}: cannot save raw report, no data");
 			return;
 		}
 
@@ -244,7 +244,7 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 	bool DoConvert ()
 	{
 		if (modules == null || javaTypes == null) {
-			Log.Warning ($"{Description}: cannot convert maps, no data");
+			Log.WarningLine ($"{Description}: cannot convert maps, no data");
 			return false;
 		}
 
@@ -299,7 +299,7 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 				TypeMapJava java;
 
 				if ((uint)javaTypes.Count <= entry.java_map_index) {
-					Log.Error ($"Managed type {entry.type_token_id} in module {module.assembly_name} ({module.module_uuid}) has invalid Java map index {entry.java_map_index}");
+					Log.ErrorLine ($"Managed type {entry.type_token_id} in module {module.assembly_name} ({module.module_uuid}) has invalid Java map index {entry.java_map_index}");
 					return false;
 				}
 				java = javaTypes[(int)entry.java_map_index];
@@ -316,7 +316,7 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 		(bool success, TypeMapModule? module, bool isGeneric, bool isDuplicate) FindManagedType (uint moduleIndex, uint tokenID)
 		{
 			if (moduleIndex >= (uint)modules.Count) {
-				Log.Error ($"Invalid module index {moduleIndex} for type token ID {tokenID} at Java map index {index}");
+				Log.ErrorLine ($"Invalid module index {moduleIndex} for type token ID {tokenID} at Java map index {index}");
 				return (false, null, false, false);
 			}
 
@@ -339,7 +339,7 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 				}
 			}
 
-			Log.Error ($"Module {m.assembly_name} ({m.module_uuid}) at index {moduleIndex} doesn't contain an entry for managed type with token ID {tokenID}");
+			Log.ErrorLine ($"Module {m.assembly_name} ({m.module_uuid}) at index {moduleIndex} doesn't contain an entry for managed type with token ID {tokenID}");
 			return (false, null, false, false);
 		}
 
@@ -414,20 +414,20 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 		var ret = new List<TypeMapModule> ();
 		ulong offset = 0;
 		for (ulong i = 0; i < moduleCount; i++) {
-			Log.Debug ($"Module {i + 1}");
+			Log.DebugLine ($"Module {i + 1}");
 			var module = new TypeMapModule ();
 
 			byte[] mvid = new byte[16];
 			Array.Copy (moduleData, (int)offset, mvid, 0, mvid.Length);
 			module.module_uuid = new Guid (mvid);
 			offset += (ulong)mvid.Length;
-			Log.Debug ($"  module_uuid == {module.module_uuid}");
+			Log.DebugLine ($"  module_uuid == {module.module_uuid}");
 
 			module.entry_count = ReadUInt32 (moduleData, ref offset);
-			Log.Debug ($"  entry_count == {module.entry_count}");
+			Log.DebugLine ($"  entry_count == {module.entry_count}");
 
 			module.duplicate_count = ReadUInt32 (moduleData, ref offset);
-			Log.Debug ($"  duplicate_count == {module.duplicate_count}");
+			Log.DebugLine ($"  duplicate_count == {module.duplicate_count}");
 
 			// MUST be kept in sync with: src/monodroid/jni/xamarin-app.hh (struct TypeMapModuleEntry)
 			ulong pointer = ReadPointer (moduleData, ref offset);
@@ -452,8 +452,8 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 
 			pointer = ReadPointer (moduleData, ref offset);
 			module.assembly_name = ELF.GetASCIIZ (pointer);
-			Log.Debug ($"  assembly_name == {module.assembly_name}");
-			Log.Debug ("");
+			Log.DebugLine ($"  assembly_name == {module.assembly_name}");
+			Log.DebugLine ("");
 
 			// Read the values to properly adjust the offset taking padding into account
 			ReadPointer (moduleData, ref offset);

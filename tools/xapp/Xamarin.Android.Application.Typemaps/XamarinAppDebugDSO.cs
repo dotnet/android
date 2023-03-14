@@ -23,19 +23,19 @@ class XamarinAppDebugDSO : XamarinAppDSO
 	{
 		xapp = null;
 		ulong format_tag = 0;
-		if (elf.HasSymbol (FormatTag))
-			format_tag = elf.GetUInt64 (FormatTag);
+		if (elf.HasSymbol (Constants.FormatTagSymbolName))
+			format_tag = elf.GetUInt64 (Constants.FormatTagSymbolName);
 
 		XamarinAppDebugDSO_Version? reader = null;
 		switch (format_tag) {
 			case 0:
-			case FormatTag_V1:
+			case Constants.FormatTag_V1:
 				format_tag = 1;
 				reader = new XamarinAppDebugDSO_V1 (Log, ManagedResolver, elf);
 				break;
 
 			default:
-				Log.Error ($"{elf.FilePath} format ({format_tag}) is not supported by this version of TMT");
+				Log.ErrorLine ($"{elf.FilePath} format (0x{format_tag:X}) is not supported by this version of xapp");
 				return false;
 		}
 
@@ -176,12 +176,12 @@ class XamarinAppDebugDSO_V1 : XamarinAppDebugDSO_Version
 		string filePath = ELF.FilePath;
 		byte[] mapData = ELF.GetData (TypeMapSymbolName);
 		if (mapData.Length == 0) {
-			Log.Error ($"{filePath} doesn't have a valid '{TypeMapSymbolName}' symbol");
+			Log.ErrorLine ($"{filePath} doesn't have a valid '{TypeMapSymbolName}' symbol");
 			return false;
 		}
 
 		if ((ulong)mapData.Length != size) {
-			Log.Error ($"Symbol '{TypeMapSymbolName}' in {filePath} has invalid size. Expected {size}, got {mapData.Length}");
+			Log.ErrorLine ($"Symbol '{TypeMapSymbolName}' in {filePath} has invalid size. Expected {size}, got {mapData.Length}");
 			return false;
 		}
 
@@ -223,7 +223,7 @@ class XamarinAppDebugDSO_V1 : XamarinAppDebugDSO_Version
 	void LoadMap (string name, ulong pointer, uint entry_count, Action<string, string> addToMap)
 	{
 		string entries = entry_count == 1 ? "entry" : "entries";
-		Log.Info ($"  Loading {name} map: {entry_count} {entries}, please wait...");
+		Log.InfoLine ($"  Loading {name} map: {entry_count} {entries}, please wait...");
 
 		ulong size = 0;
 		size += ELF.GetPaddedSize<string> (size); // from

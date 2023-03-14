@@ -123,6 +123,9 @@ abstract class AnELF
 	public ulong GetPaddedSize<S> (ulong sizeSoFar)
 	{
 		ulong typeSize = GetTypeSize<S> ();
+		if (typeSize == 1) {
+			return 1;
+		}
 
 		ulong modulo;
 		if (Is64Bit) {

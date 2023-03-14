@@ -22,6 +22,7 @@ class DetectorIsXamarinAppSharedLibrary : InputTypeDetector
 		var elfDetector = parent as DetectorIsELFBinary ?? throw new ArgumentException ("must be an instance of DetectorIsELFBinary class", nameof (parent));
 
 		if (!AnELF.TryLoad (log, inputFilePath, out AnELF? elf) || elf == null) {
+			log.DebugLine ($"Unable to load ELF image from {inputFilePath}");
 			return (false, null);
 		}
 

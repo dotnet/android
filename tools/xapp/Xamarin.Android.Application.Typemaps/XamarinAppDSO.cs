@@ -7,11 +7,6 @@ namespace Xamarin.Android.Application.Typemaps;
 
 abstract class XamarinAppDSO : ITypemap
 {
-	// Corresponds to the `FORMAT_TAG` constant in src/monodroid/xamarin-app.hh
-	protected const ulong FormatTag_V1 = 0x015E6972616D58;
-
-	protected const string FormatTag = "format_tag";
-
 	AnELF? elf;
 
 	protected AnELF ELF                           => elf ?? throw new InvalidOperationException ("ELF image not loaded");
