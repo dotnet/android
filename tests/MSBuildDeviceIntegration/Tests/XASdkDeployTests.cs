@@ -16,7 +16,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("SmokeTests"), Category ("WearOS")]
+	[Category ("UsesDevice"), Category ("WearOS")]
 	public class XASdkDeployTests : DeviceTest
 	{
 		static object [] DotNetInstallAndRunSource = new object [] {

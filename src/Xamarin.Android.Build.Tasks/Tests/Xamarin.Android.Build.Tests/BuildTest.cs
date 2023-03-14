@@ -100,7 +100,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (CheckAssemblyCountsSource))]
 		[NonParallelizable]
-		[Category ("SmokeTests")]
 		public void CheckAssemblyCounts (bool isRelease, bool aot)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -145,7 +144,6 @@ namespace Xamarin.Android.Build.Tests
 		// DotNet fails, see https://github.com/dotnet/runtime/issues/65484
 		// Enable the commented out signature (and AOT) once the above is fixed
 		[Test]
-		[Category ("SmokeTests")]
 		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (false /*, true*/)] bool aot)
 		{
 			var testName = "テスト";
@@ -281,7 +279,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		[Category ("SmokeTests")]
 		public void BuildWithNativeLibraries ([Values (true, false)] bool isRelease)
 		{
 			var dll = new XamarinAndroidLibraryProject () {
@@ -409,7 +406,6 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void BuildWithExternalJavaLibrary ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -777,7 +773,7 @@ public class Test
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("AOT")]
+		[Category ("AOT")]
 		[NonParallelizable]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool)
 		{
@@ -1041,7 +1037,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		[Category ("DotNetIgnore")] // .mdb and non-portable .pdb files not supported in .NET 5+
 		public void BuildBasicApplicationCheckPdb ()
 		{
