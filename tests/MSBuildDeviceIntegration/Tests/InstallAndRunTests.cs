@@ -694,8 +694,30 @@ using System.Runtime.Serialization.Json;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
 
-			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")));
+			var activityNamespace   = proj.PackageName;
+			var activityName        = "MainActivity";
+			var logcatFilePath      = Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log");
+			var failedToLoad        = new List<string> ();
+			bool appLaunched        = MonitorAdbLogcat ((line) => {
+				if (SeenFailedToLoad (line))
+					failedToLoad.Add (line);
+				return SeenActivityDisplayed (line);
+			}, logcatFilePath, timeout: 120);
+
+			Assert.IsTrue (appLaunched, "LLVM app did not launch");
+			Assert.AreEqual (0, failedToLoad.Count, $"LLVM .so files not loaded:\n{string.Join ("\n", failedToLoad)}");
+
+			bool SeenActivityDisplayed (string line)
+			{
+				var idx1 = line.IndexOf ("ActivityManager: Displayed", StringComparison.OrdinalIgnoreCase);
+				var idx2 = idx1 > 0 ? 0 : line.IndexOf ("ActivityTaskManager: Displayed", StringComparison.OrdinalIgnoreCase);
+				return (idx1 > 0 || idx2 > 0) && line.Contains (activityNamespace) && line.Contains (activityName);
+			}
+
+			bool SeenFailedToLoad (string line)
+			{
+				return line.Contains ("Failed to load shared library");
+			}
 		}
 
 		[Test]
