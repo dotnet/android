@@ -66,8 +66,8 @@ abstract class AnELF
 	}
 
 	protected static SymbolEntry<T>? GetSymbol<T> (SymbolTable<T> symtab, T symbolValue) where T: struct
-	                                                                                              {
-		                                                                                              return symtab.Entries.Where (entry => entry.Value.Equals (symbolValue)).FirstOrDefault ();
+	{
+		return symtab.Entries.Where (entry => entry.Value.Equals (symbolValue)).FirstOrDefault ();
 	}
 
 	public bool HasSymbol (string symbolName)
@@ -77,25 +77,31 @@ abstract class AnELF
 
 	public byte[] GetData (string symbolName)
 	{
+		return GetData (symbolName, out ISymbolEntry? _);
+	}
+
+	public byte[] GetData (string symbolName, out ISymbolEntry? symbolEntry)
+	{
 		Log.DebugLine ($"Looking for symbol: {symbolName}");
-		ISymbolEntry? symbol = GetSymbol (symbolName);
-		if (symbol == null)
+		symbolEntry = GetSymbol (symbolName);
+		if (symbolEntry == null)
 			return EmptyArray;
 
 		if (Is64Bit) {
-			var symbol64 = symbol as SymbolEntry<ulong>;
+			var symbol64 = symbolEntry as SymbolEntry<ulong>;
 			if (symbol64 == null)
 				throw new InvalidOperationException ($"Symbol '{symbolName}' is not a valid 64-bit symbol");
 			return GetData (symbol64);
 		}
 
-		var symbol32 = symbol as SymbolEntry<uint>;
+		var symbol32 = symbolEntry as SymbolEntry<uint>;
 		if (symbol32 == null)
 			throw new InvalidOperationException ($"Symbol '{symbolName}' is not a valid 32-bit symbol");
 
 		return GetData (symbol32);
 	}
 
+	public abstract string GetStringFromPointerField (ISymbolEntry symbolEntry, ulong pointerFieldOffset);
 	public abstract byte[] GetData (ulong symbolValue, ulong size);
 
 	public string GetASCIIZ (ulong symbolValue)
@@ -144,7 +150,8 @@ abstract class AnELF
 
 	protected byte[] GetData (ISection section, ulong size, ulong offset)
 	{
-		Log.DebugLine ($"AnELF.GetData: section == {section.Name}; size == {size}");
+		ulong sectionOffset = (elf.Class == Class.Bit64 ? ((Section<ulong>)section).Offset : ((Section<uint>)section).Offset);
+		Log.DebugLine ($"AnELF.GetData: section == {section.Name}; type == {section.Type}; flags == {section.Flags}; offset into binary == {sectionOffset}; size == {size}");
 		byte[] data = section.GetContents ();
 
 		Log.DebugLine ($"  section data length: {data.Length} (long: {data.LongLength})");

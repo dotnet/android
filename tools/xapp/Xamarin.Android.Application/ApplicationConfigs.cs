@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+using ELFSharp.ELF.Sections;
+
 using Xamarin.Android.Application.Utilities;
 
 namespace Xamarin.Android.Application;
@@ -62,8 +64,8 @@ abstract class ApplicationConfigCommon
 
 sealed class ApplicationConfig_V1 : ApplicationConfigCommon
 {
-	public ApplicationConfig_V1 (byte[] data, bool is64Bit)
-		: base (is64Bit)
+	public ApplicationConfig_V1 (byte[] data, AnELF elf, ISymbolEntry symbolEntry)
+		: base (elf.Is64Bit)
 	{}
 }
 
@@ -95,8 +97,8 @@ sealed class ApplicationConfig_V2 : ApplicationConfigCommon
 	public readonly uint   mono_components_mask;
 	public readonly string android_package_name = String.Empty;
 
-	public ApplicationConfig_V2 (byte[] data, bool is64Bit)
-		: base (is64Bit)
+	public ApplicationConfig_V2 (byte[] data, AnELF elf, ISymbolEntry symbolEntry)
+		: base (elf.Is64Bit)
 	{
 		using Stream stream = GetStream (data);
 		using var reader = new BinaryReader (stream);
@@ -128,8 +130,8 @@ sealed class ApplicationConfig_V2 : ApplicationConfigCommon
 		sizeSoFar += ReadField (reader, ref jni_remapping_replacement_method_index_entry_count, sizeSoFar);
 		sizeSoFar += ReadField (reader, ref mono_components_mask, sizeSoFar);
 
-		// TODO: doesn't work as expected, a 0 is always read
-		ulong pointerValue = is64Bit ? reader.ReadUInt64 () : (ulong)reader.ReadUInt32 ();
+		// TODO: pointers require relocations, to be fixed up at load time. We need to simulate the loading process in order to read pointers.
+		ulong pointerValue = Is64Bit ? reader.ReadUInt64 () : (ulong)reader.ReadUInt32 ();
 		android_package_name = $"READING NOT IMPLEMENTED YET (pointer field value 0x{pointerValue:x})";
 	}
 }

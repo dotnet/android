@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+using ELFSharp.ELF.Sections;
+
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Application.Utilities;
 
@@ -60,14 +62,19 @@ class DataProviderXamarinApp : DataProvider
 		size += elf.GetPaddedSize (size, applicationConfig.mono_components_mask);
 		size += elf.GetPaddedSize (size, applicationConfig.android_package_name);
 
-		byte[] data = elf.GetData (ApplicationConfigSymbolName);
+		byte[] data = elf.GetData (ApplicationConfigSymbolName, out ISymbolEntry? symbolEntry);
+		if (data.Length == 0 || symbolEntry == null) {
+			string reason = symbolEntry == null ? "not found" : "is empty";
+			Log.WarningLine ($"Application config symbol '{ApplicationConfigSymbolName}' {reason} in {InputPath}");
+			return null;
+		}
 
 		switch (format_tag) {
 			case Constants.FormatTag_V1:
-				return GetApplicationConfig_V1 (size, data);
+				return GetApplicationConfig_V1 (size, data, symbolEntry);
 
 			case Constants.FormatTag_V2:
-				return GetApplicationConfig_V2 (size, data);
+				return GetApplicationConfig_V2 (size, data, symbolEntry);
 
 			default:
 				Log.WarningLine ($"libxamarin-app.so format 0x{format_tag:x} is not supported");
@@ -75,7 +82,7 @@ class DataProviderXamarinApp : DataProvider
 		}
 	}
 
-	ApplicationConfigShim? GetApplicationConfig_V1 (ulong currentApplicationConfigSize, byte[] data)
+	ApplicationConfigShim? GetApplicationConfig_V1 (ulong currentApplicationConfigSize, byte[] data, ISymbolEntry symbolEntry)
 	{
 		// Due to lack of consistent versioning, the latest "v1" binaries since commit 8bc7a3e84f95e70fe12790ac31ecd97957771cb2 are the same
 		// as the first V2 binaries.  Earlier versions had different structure sizes, so if we find these sizes below, we can instead use
@@ -85,22 +92,22 @@ class DataProviderXamarinApp : DataProvider
 
 		if (data.Length == ExpectedSize32_V2 || data.Length == ExpectedSize64_V2) {
 			Log.DebugLine ("Application config V1 with V2 structure size, forwarding to the V2 reader");
-			return GetApplicationConfig_V2 (currentApplicationConfigSize, data);
+			return GetApplicationConfig_V2 (currentApplicationConfigSize, data, symbolEntry);
 		}
 
 		Log.DebugLine ("Reading application config V1");
-		var appConfig = new ApplicationConfig_V1 (data, elf.Is64Bit);
+		var appConfig = new ApplicationConfig_V1 (data, elf, symbolEntry);
 
 		return new ApplicationConfigShim (appConfig);
 	}
 
-	ApplicationConfigShim? GetApplicationConfig_V2 (ulong currentApplicationConfigSize, byte[] data)
+	ApplicationConfigShim? GetApplicationConfig_V2 (ulong currentApplicationConfigSize, byte[] data, ISymbolEntry symbolEntry)
 	{
 		const int ExpectedSize32 = 68;
 		const int ExpectedSize64 = 72;
 
 		Log.DebugLine ("Reading application config V2");
-		var appConfig = new ApplicationConfig_V2 (data, elf.Is64Bit);
+		var appConfig = new ApplicationConfig_V2 (data, elf, symbolEntry);
 
 		int expectedSize = elf.Is64Bit ? ExpectedSize64 : ExpectedSize32;
 		if (data.Length != expectedSize) {

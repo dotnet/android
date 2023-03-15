@@ -21,6 +21,11 @@ class ELF32 : AnELF
 		: base (log, stream, filePath, elf, dynsymSection, rodataSection, symSection)
 	{}
 
+	public override string GetStringFromPointerField(ISymbolEntry symbolEntry, ulong pointerFieldOffset)
+	{
+		throw new NotImplementedException();
+	}
+
 	public override byte[] GetData (ulong symbolValue, ulong size = 0)
 	{
 		checked {
