@@ -109,7 +109,7 @@ $ dotnet tool install --global dotnet-gcdump
 
 To use it, for example:
 
-```
+```sh
 # `hw-readline` is a standard Hello World, with a `Console.ReadLine()` at the end
 $ dotnet run --project hw-readline.csproj
 Hello, World!
@@ -139,7 +139,7 @@ To get this data from an Android application, you need all the above
 setup for `adb shell`, `dsrouter`, etc. except you need to change the
 provider for `dotnet-trace`:
 
-```
+```sh
 $  dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-DotNETRuntimeMonoProfiler:0xC900001:4
 ```
 
@@ -163,7 +163,7 @@ To actually view this data, you'll have to use one of:
 
 Using `mono-gcdump`:
 
-```
+```sh
 $ dotnet run --project path/to/filipnavara/mono-gcdump/mono-gcdump.csproj -- convert foo.nettrace
 ```
 
