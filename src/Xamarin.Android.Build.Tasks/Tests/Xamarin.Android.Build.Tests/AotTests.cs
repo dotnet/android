@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.ContainsRegex (@$"Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
 		}
 
-		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
+		[Test, Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseProfiledAot ([Values (true, false)] bool enableLLVM)
 		{
 			if (Builder.UseDotNet && enableLLVM) {
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertProfiledAotBuildMessages (b);
 		}
 
-		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
+		[Test, Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseWithCustomAotProfile ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -255,7 +255,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		[Category ("SmokeTests"), Category ("XamarinBuildDownload")]
+		[Category ("XamarinBuildDownload")]
 		public void BuildAMassiveApp ()
 		{
 			var testPath = Path.Combine ("temp", "BuildAMassiveApp");

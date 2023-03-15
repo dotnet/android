@@ -22,7 +22,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
-		[Category ("SmokeTests")]
 		public void BuildBasicBindingLibrary (string classParser)
 		{
 			var targets = new List<string> {
@@ -154,7 +153,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
 		[NonParallelizable]
-		[Category ("SmokeTests")]
 		public void BuildLibraryZipBindigLibraryWithAarOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {

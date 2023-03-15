@@ -2,7 +2,7 @@
 
 parameters:
   job_name: 'mac_dotnetdevice_tests'
-  agent_count: 6
+  agent_count: 8
   stageCondition: succeeded()
 
 stages:
@@ -50,7 +50,7 @@ stages:
     - template: run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: cat != TimeZoneInfo & cat != Localization & cat != SmokeTests $(ExcludedNUnitCategories)
+        testFilter: cat != TimeZoneInfo & cat != Localization $(ExcludedNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testResultsTitle: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}
 

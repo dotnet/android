@@ -427,6 +427,7 @@ endif()
 if(ANDROID)
   if(ENABLE_NET)
     set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
+    set(XA_LIBRARY_STUBS_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/libstubs/${ANDROID_RID}")
     link_directories("${NET_RUNTIME_DIR}/native")
   else()
     set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_ABI}")
@@ -569,6 +570,10 @@ set(XAMARIN_DEBUG_APP_HELPER_SOURCES
   ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/shared-constants.cc
   )
+
+set(XAMARIN_STUB_LIB_SOURCES
+  libstub/stub.cc
+)
 
 # Build
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
@@ -716,3 +721,57 @@ target_link_libraries(
   ${XAMARIN_MONO_ANDROID_LIB}
   ${LINK_LIBS} xamarin-app
   )
+
+if(ANDROID AND ENABLE_NET)
+  add_library(
+    c
+    SHARED ${XAMARIN_STUB_LIB_SOURCES}
+  )
+
+  target_compile_definitions(
+    c
+    PRIVATE STUB_LIB_NAME=libc
+  )
+
+  target_compile_options(
+    c
+    PRIVATE -nostdlib
+  )
+
+  target_link_options(
+    c
+    PRIVATE -nostdlib
+  )
+
+  set_target_properties(
+    c
+    PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_STUBS_OUTPUT_DIRECTORY}"
+  )
+
+  add_library(
+    m
+    SHARED ${XAMARIN_STUB_LIB_SOURCES}
+  )
+
+  target_compile_definitions(
+    m
+    PRIVATE STUB_LIB_NAME=libm
+  )
+
+  target_compile_options(
+    m
+    PRIVATE -nostdlib
+  )
+
+  target_link_options(
+    m
+    PRIVATE -nostdlib
+  )
+
+  set_target_properties(
+    m
+    PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_STUBS_OUTPUT_DIRECTORY}"
+  )
+endif()
