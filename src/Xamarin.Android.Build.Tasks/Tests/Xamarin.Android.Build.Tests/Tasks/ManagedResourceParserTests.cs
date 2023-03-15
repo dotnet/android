@@ -512,7 +512,6 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void RtxtGeneratorOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -545,7 +544,6 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void CompareAapt2AndManagedParserOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);

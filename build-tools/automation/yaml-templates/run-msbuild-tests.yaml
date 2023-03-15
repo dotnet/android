@@ -4,7 +4,6 @@ parameters:
   jobDisplayName:         # Display name of the job
   agentCount:             # Number of build agents to run in parallel
   testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
-  installApkDiff: false   # Smoke tests use apkdiff, others do not
   
 jobs:
 - job: ${{ parameters.jobName }}
@@ -30,7 +29,6 @@ jobs:
     parameters:
       provisionClassic: false
       installTestSlicer: true
-      installApkDiff: ${{ parameters.installApkDiff }}
       installLegacyDotNet: false
       restoreNUnitConsole: false
       updateMono: false

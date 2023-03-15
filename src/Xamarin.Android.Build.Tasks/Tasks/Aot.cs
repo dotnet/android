@@ -169,9 +169,6 @@ namespace Xamarin.Android.Tasks
 					if (!string.IsNullOrEmpty (LdName)) {
 						aotOptions.Add ($"ld-name={LdName}");
 					}
-					if (!string.IsNullOrEmpty (LdFlags)) {
-						aotOptions.Add ($"ld-flags={LdFlags}");
-					}
 
 					// We don't check whether any mode option was added via `AotAdditionalArguments`, the `AndroidAotMode` property should always win here.
 					// Modes not supported by us directly can be set by setting `AndroidAotMode` to "normal" and adding the desired mode name to the
@@ -184,6 +181,10 @@ namespace Xamarin.Android.Tasks
 						case AotMode.Hybrid:
 							aotOptions.Add ("hybrid");
 							break;
+					}
+
+					if (!string.IsNullOrEmpty (LdFlags)) {
+						aotOptions.Add ($"ld-flags={LdFlags}");
 					}
 
 					// we need to quote the entire --aot arguments here to make sure it is parsed
