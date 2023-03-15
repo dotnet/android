@@ -93,7 +93,7 @@ stages:
 - template: yaml-templates/build-linux.yaml
 
 - stage: smoke_tests
-  displayName: Smoke Tests
+  displayName: Package Tests
   dependsOn: mac_build
   jobs:
 
@@ -115,7 +115,7 @@ stages:
       parameters:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
-        
+
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
@@ -251,80 +251,6 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # MSBuild Smoke Tests - Mac
-  - template: yaml-templates/run-msbuild-tests.yaml
-    parameters:
-      testOS: macOS
-      jobName: mac_smoke_msbuild_tests
-      jobDisplayName: macOS > Tests > MSBuild
-      agentCount: 2
-      testFilter: cat = SmokeTests
-      installApkDiff: true
-
-  # MSBuild Smoke Tests - Win
-  - template: yaml-templates/run-msbuild-tests.yaml
-    parameters:
-      testOS: Windows
-      jobName: win_smoke_msbuild_tests
-      jobDisplayName: Windows > Tests > MSBuild
-      agentCount: 2
-      testFilter: cat = SmokeTests
-      installApkDiff: true
-
-  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator)"
-  - job: mac_msbuilddevice_tests
-    displayName: macOS > Tests > MSBuild+Emulator One .NET
-    pool:
-      vmImage: $(HostedMacImage)
-    timeoutInMinutes: 180
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: start emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: MSBuildDeviceIntegration Smoke - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
-        testResultsFile: TestResult-MSBuildDeviceIntegrationSmoke-$(XA.Build.Configuration).xml
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild Smoke With Emulator - macOS - One .NET
-
-    - template: yaml-templates/fail-on-issue.yaml
-
 - stage: linux_tests
   displayName: Linux Tests
   dependsOn:
@@ -363,14 +289,10 @@ stages:
         artifactName: Test Results - MSBuild Smoke - Linux
 
     - template: yaml-templates/fail-on-issue.yaml
-      
+
 - template: yaml-templates/stage-msbuild-tests.yaml
-  parameters:
-    stageCondition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
-      
+
 - template: yaml-templates/stage-msbuild-emulator-tests.yaml
-  parameters:
-    stageCondition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
 
 - stage: dotnet_prepare_release
   displayName: Prepare .NET Release

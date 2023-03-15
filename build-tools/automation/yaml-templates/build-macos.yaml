@@ -80,11 +80,3 @@ stages:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
-
-    - template: run-xaprepare.yaml
-      parameters:
-        arguments: --s=DetermineApplicableTests
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-        displayName: determine which test stages to run
-        name: TestConditions
-        condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
