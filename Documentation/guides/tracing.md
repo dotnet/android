@@ -151,7 +151,8 @@ $  dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-Do
 
 See the [`Microsoft-DotNETRuntimeMonoProfiler` event types][mono-events] for more info.
 
-`:4` enables "Informational" verbosity.
+`:4` enables "Informational" verbosity, where the different logging
+levels are described by [`dotnet-trace help` output][dotnet-trace-help].
 
 This saves a `.nettrace` file with GC events that are not available
 with the default provider.
@@ -174,6 +175,7 @@ additional details.
 
 [dotnet-gcdump]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-gcdump
 [mono-events]: https://github.com/dotnet/runtime/blob/c887c92d8af4ce65b19962b777f96ae8eb997a42/src/coreclr/vm/ClrEtwAll.man#L7433-L7468
+[dotnet-trace-help]: https://github.com/dotnet/diagnostics/blob/6d755e8b5435b1380c118e9d81e075654b0330c9/documentation/dotnet-trace-instructions.md#dotnet-trace-help
 [gc-dumps-on-mono]: https://github.com/dotnet/runtime/blob/728fd85bc7ad04f5a0ea2ad0d4d8afe371ff9b64/docs/design/mono/diagnostics-tracing.md#collect-gc-dumps-on-monovm
 
 ## How to `dotnet trace` our build?
