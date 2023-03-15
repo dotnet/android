@@ -59,6 +59,11 @@ class ELF64 : AnELF
 		//  8. Get section data
 		//  9. Read ASCIIZ data from the offset obtained in 7.
 		//
+		//  Docs:
+		//    * https://github.com/ARM-software/abi-aa/blob/2982a9f3b512a5bfdc9e3fea5d3b298f9165c36b/aaelf64/aaelf64.rst#relocation
+		//    * https://maskray.me/blog/2021-10-31-relative-relocations-and-relr
+		//
+
 		throw new NotImplementedException();
 	}
 
