@@ -716,7 +716,7 @@ target_link_libraries(
   ${LINK_LIBS} xamarin-app
   )
 
-if(ANDROID AND ENABLE_NET)
+if(ANDROID)
   add_library(
     c
     SHARED ${XAMARIN_STUB_LIB_SOURCES}
