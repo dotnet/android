@@ -140,7 +140,7 @@ setup for `adb shell`, `dsrouter`, etc. except you need to change the
 provider for `dotnet-trace`:
 
 ```
-$  dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-DotNETRuntimeMonoProfiler:0xC900003:4
+$  dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-DotNETRuntimeMonoProfiler:0xC900001:4
 ```
 
 `0xC900001`, a bitmask, enables the following event types:
