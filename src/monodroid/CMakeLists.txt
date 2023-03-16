@@ -735,12 +735,12 @@ if(ANDROID AND ENABLE_NET)
 
   target_compile_options(
     c
-    PRIVATE -nostdlib
+    PRIVATE -nostdlib -fno-exceptions -fno-rtti
   )
 
   target_link_options(
     c
-    PRIVATE -nostdlib
+    PRIVATE -nostdlib -fno-exceptions -fno-rtti
   )
 
   set_target_properties(
@@ -761,12 +761,12 @@ if(ANDROID AND ENABLE_NET)
 
   target_compile_options(
     m
-    PRIVATE -nostdlib
+    PRIVATE -nostdlib -fno-exceptions -fno-rtti
   )
 
   target_link_options(
     m
-    PRIVATE -nostdlib
+    PRIVATE -nostdlib -fno-exceptions -fno-rtti
   )
 
   set_target_properties(
