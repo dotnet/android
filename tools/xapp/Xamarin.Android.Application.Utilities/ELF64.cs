@@ -20,7 +20,7 @@ class ELF64 : AnELF
 		: base (log, stream, filePath, elf, dynsymSection, rodataSection, symSection)
 	{}
 
-	public override string GetStringFromPointerField (ISymbolEntry symbolEntry, ulong pointerFieldOffset)
+	public override string? GetStringFromPointerField (ISymbolEntry symbolEntry, ulong pointerFieldOffset)
 	{
 		var symbol = symbolEntry as SymbolEntry<ulong>;
 		if (symbol == null) {
@@ -28,14 +28,8 @@ class ELF64 : AnELF
 		}
 
 		switch (ELF.Machine) {
-			case Machine.ARM:
-				return GetStringFromPointerField_ARM (symbol, pointerFieldOffset);
-
 			case Machine.AArch64:
 				return GetStringFromPointerField_ARM64 (symbol, pointerFieldOffset);
-
-			case Machine.Intel386:
-				return GetStringFromPointerField_X86 (symbol, pointerFieldOffset);
 
 			case Machine.AMD64:
 				return GetStringFromPointerField_X64 (symbol, pointerFieldOffset);
@@ -45,46 +39,102 @@ class ELF64 : AnELF
 		}
 	}
 
-	string GetStringFromPointerField_ARM64 (SymbolEntry<ulong> symbolEntry, ulong pointerFieldOffset)
+	string? GetStringFromPointerField_ARM64 (SymbolEntry<ulong> symbolEntry, ulong pointerFieldOffset)
 	{
+		return GetStringFromPointerField_Common (
+			symbolEntry,
+			pointerFieldOffset,
+			(ELF64_Rela rela) => {
+				// We only support R_AARCH64_RELATIVE right now
+				return (RelocationTypeARM64)rela.r_info == RelocationTypeARM64.R_AARCH64_RELATIVE;
+			}
+		);
+	}
+
+	string? GetStringFromPointerField_X64 (SymbolEntry<ulong> symbolEntry, ulong pointerFieldOffset)
+	{
+		return GetStringFromPointerField_Common (
+			symbolEntry,
+			pointerFieldOffset,
+			(ELF64_Rela rela) => {
+				// We only support R_X86_64_RELATIVE right now
+				return (RelocationTypeX64)rela.r_info == RelocationTypeX64.R_X86_64_RELATIVE;
+			}
+		);
+	}
+
+	string? GetStringFromPointerField_Common (SymbolEntry<ulong> symbolEntry, ulong pointerFieldOffset, Func<ELF64_Rela, bool> validRelocation)
+	{
+		Log.DebugLine ($"[ARM64] Getting string from a pointer field in symbol '{symbolEntry.Name}', at offset {pointerFieldOffset} into the structure");
+
+		if (symbolEntry.PointedSection.Type != SectionType.ProgBits || !symbolEntry.PointedSection.Flags.HasFlag (SectionFlags.Writable)) {
+			Log.DebugLine ("  Symbol section isn't a writable data one, pointers require a writable section to apply relocations");
+			Log.DebugLine ($"  Section info: {symbolEntry.PointedSection}");
+			return null;
+		}
+
 		// Steps:
 		//
-		//  1. Calculate address of the field in the symbol data: [symbol section offset] + [symbol offset into section] + pointerFieldOffset
+		//  1. Calculate address of the field in the symbol data: [symbol section virtual address] + [symbol offset into section] + pointerFieldOffset
+		//     ELFSharp does part of the job for us - symbol's value is its virtual address
+		ulong pointerVA = symbolEntry.Value + pointerFieldOffset;
+		Log.DebugLine ($"  Section address == 0x{symbolEntry.PointedSection.LoadAddress:x}; offset == 0x{symbolEntry.PointedSection.Offset:x}");
+		Log.DebugLine ($"  Symbol entry value == 0x{symbolEntry.Value:x}");
+		Log.DebugLine ($"  Virtual address of the pointer: 0x{pointerVA:x} ({pointerVA})");
+
 		//  2. Find the .rela.dyn section
+		const string RelaDynSectionName = ".rela.dyn";
+		Section<ulong>? relaDynSection = ELF.GetSection (RelaDynSectionName);
+		Log.DebugLine ($"  Relocation section: {Util.ToStringOrNull (relaDynSection)}");
+		if (relaDynSection == null) {
+			Log.DebugLine ($"  Section '{RelaDynSectionName}' not found");
+			return null;
+		}
+
+		// Make sure section type is what we need and expect
+		if (relaDynSection.Type != SectionType.RelocationAddends) {
+			Log.DebugLine ($"  Section '{RelaDynSectionName}' has invalid type. Expected {SectionType.RelocationAddends}, got {relaDynSection.Type}");
+			return null;
+		}
+		var relocationReader = new RelocationSectionAddend64 (relaDynSection);
+
 		//  3. Find relocation entry with offset matching the address calculated in 1. Relocation entry should have code 0x403 (1027) - R_AARCH64_RELATIVE
-		//  4. Read relocation entry (see elf(5) for Elf32_Rela and Elf64_Rela structures) and get the addendum value
-		//  5. Find section the addendum from 4. falls within
+		if (!relocationReader.Entries.TryGetValue (pointerVA, out ELF64_Rela? relocation) || relocation == null) {
+			Log.DebugLine ($"  Relocation for pointer address 0x{pointerVA:x} not found");
+			return null;
+		}
+		Log.DebugLine ($"  Found relocation: {relocation}");
+
+		if (!validRelocation (relocation)) {
+			// Yell, so that we can fix it
+			throw new NotSupportedException ($"AArch64 relocation type {relocation.r_info} not supported. Please report at https://github.com/xamarin/xamarin.android/issues/");
+		}
+
+		//  4. Read relocation entry (see elf(5) for Elf32_Rela and Elf64_Rela structures) and get the addend value
+		ulong addend = (ulong)relocation.r_addend;
+
+		//  5. Find section the addend from 4. falls within
+		Section<ulong>? pointeeSection = FindSectionForValue (addend);
+		if (pointeeSection == null) {
+			Log.DebugLine ($"  Unable to find section in which pointee 0x{addend:x} resides");
+			return null;
+		}
+		Log.DebugLine ($"  Pointee 0x{addend:x} falls within section {pointeeSection}");
+
 		//  6. Read that section data
-		//  7. Subtract section address from the addendum, this will give offset into the section
-		//  8. Get section data
-		//  9. Read ASCIIZ data from the offset obtained in 7.
-		//
-		//  Docs:
-		//    * https://github.com/ARM-software/abi-aa/blob/2982a9f3b512a5bfdc9e3fea5d3b298f9165c36b/aaelf64/aaelf64.rst#relocation
-		//    * https://maskray.me/blog/2021-10-31-relative-relocations-and-relr
-		//
+		byte[] data = pointeeSection.GetContents ();
 
-		throw new NotImplementedException();
-	}
+		//  7. Subtract section address from the addend, this will give offset into the section
+		ulong addendSectionOffset = addend - pointeeSection.LoadAddress;
+		Log.DebugLine ($"  Pointee offset into section data == 0x{addendSectionOffset:x} ({addendSectionOffset})");
 
-	string GetStringFromPointerField_ARM (SymbolEntry<ulong> symbolEntry, ulong pointerFieldOffset)
-	{
-		throw new NotImplementedException();
-	}
-
-	string GetStringFromPointerField_X64 (SymbolEntry<ulong> symbolEntry, ulong pointerFieldOffset)
-	{
-		throw new NotImplementedException();
-	}
-
-	string GetStringFromPointerField_X86 (SymbolEntry<ulong> symbolEntry, ulong pointerFieldOffset)
-	{
-		throw new NotImplementedException();
+		//  8. Read ASCIIZ data from the offset obtained in 7.
+		return GetASCIIZ (data, addendSectionOffset);
 	}
 
 	public override byte[] GetData (ulong symbolValue, ulong size = 0)
 	{
-		Log.Debug ($"ELF64.GetData: Looking for symbol value {symbolValue:X08}");
+		Log.DebugLine ($"ELF64.GetData: Looking for symbol value {symbolValue:X08}");
 
 		SymbolEntry<ulong>? symbol = GetSymbol (DynamicSymbols, symbolValue);
 		if (symbol == null && Symbols != null) {
@@ -93,43 +143,59 @@ class ELF64 : AnELF
 
 		if (symbol != null) {
 			Log.Debug ($"ELF64.GetData: found in section {symbol.PointedSection.Name}");
+			if (symbol.Size == 0) {
+				return EmptyArray;
+			}
+
 			return GetData (symbol);
 		}
 
-		Section<ulong> section = FindSectionForValue (symbolValue);
+		Section<ulong> section = FindProgBitsSectionForValue (symbolValue);
 
-		Log.Debug ($"ELF64.GetData: found in section {section} {section.Name}");
+		Log.DebugLine ($"ELF64.GetData: found in section {section} {section.Name}");
 		return GetData (section, size, OffsetInSection (section, symbolValue));
 	}
 
 	protected override byte[] GetData (SymbolEntry<ulong> symbol)
 	{
+		if (symbol.Size == 0) {
+			return EmptyArray;
+		}
+
 		return GetData (symbol, symbol.Size, OffsetInSection (symbol.PointedSection, symbol.Value));
 	}
 
-	Section<ulong> FindSectionForValue (ulong symbolValue)
+	Section<ulong> FindProgBitsSectionForValue (ulong symbolValue)
 	{
-		Log.Debug ($"FindSectionForValue ({symbolValue:X08})");
+		return FindSectionForValue (symbolValue, SectionType.ProgBits) ?? throw new InvalidOperationException ($"Section matching symbol value {symbolValue:X08} cannot be found");
+	}
+
+	Section<ulong>? FindSectionForValue (ulong symbolValue, SectionType requiredType = SectionType.Null)
+	{
+		Log.DebugLine ($"FindSectionForValue ({symbolValue:X08}, {requiredType})");
 		int nsections = ELF.Sections.Count;
 
 		for (int i = nsections - 1; i >= 0; i--) {
 			Section<ulong> section = ELF.GetSection (i);
-			if (section.Type != SectionType.ProgBits)
+			if (requiredType != SectionType.Null && section.Type != requiredType) {
 				continue;
+			}
 
-			if (SectionInRange (section, symbolValue))
+			if (SectionInRange (section, symbolValue)) {
 				return section;
+			}
 		}
 
-		throw new InvalidOperationException ($"Section matching symbol value {symbolValue:X08} cannot be found");
+		Log.DebugLine ($"Section matching symbol value {symbolValue:X08} cannot be found");
+		return null;
 	}
 
 	bool SectionInRange (Section<ulong> section, ulong symbolValue)
 	{
-		Log.Debug ($"SectionInRange ({section.Name}, {symbolValue:X08})");
-		Log.Debug ($"  address == {section.LoadAddress:X08}; size == {section.Size}; last address = {section.LoadAddress + section.Size:X08}");
-		Log.Debug ($"  symbolValue >= section.LoadAddress? {symbolValue >= section.LoadAddress}");
-		Log.Debug ($"  (section.LoadAddress + section.Size) >= symbolValue? {(section.LoadAddress + section.Size) >= symbolValue}");
+		Log.DebugLine ($"SectionInRange ({section.Name}, {symbolValue:X08})");
+		Log.DebugLine ($"  address == {section.LoadAddress:X08}; size == {section.Size}; last address = {section.LoadAddress + section.Size:X08}");
+		Log.DebugLine ($"  symbolValue >= section.LoadAddress? {symbolValue >= section.LoadAddress}");
+		Log.DebugLine ($"  (section.LoadAddress + section.Size) >= symbolValue? {(section.LoadAddress + section.Size) >= symbolValue}");
 		return symbolValue >= section.LoadAddress && (section.LoadAddress + section.Size) >= symbolValue;
 	}
 

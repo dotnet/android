@@ -65,5 +65,7 @@ static class Util
 		throw new InvalidOperationException ($"Unable to map managed type {type} to native assembler type");
 	}
 
+	public static string ToStringOrNull<T> (T? reference) => reference == null ? "<NULL>" : reference.ToString () ?? "[unknown]";
+
 	public static string YesNo (bool yes) => yes ? "yes" : "no";
 }

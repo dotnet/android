@@ -378,7 +378,7 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 				type_token_id = ReadUInt32 (data, ref offset, packed: true),
 			};
 
-			javaEntry.java_name = ELF.GetASCIIZ (data, offset);
+			javaEntry.java_name = ELF.GetASCIIZ (data, offset) ?? Constants.UnableToLoadDataForPointer;
 			offset += javaNameWidth;
 			ret.Add (javaEntry);
 		}
@@ -451,7 +451,7 @@ class XamarinAppReleaseDSO_V1 : XamarinAppReleaseDSO_Version
 			}
 
 			pointer = ReadPointer (moduleData, ref offset);
-			module.assembly_name = ELF.GetASCIIZ (pointer);
+			module.assembly_name = ELF.GetASCIIZ (pointer) ?? Constants.UnableToLoadDataForPointer;
 			Log.DebugLine ($"  assembly_name == {module.assembly_name}");
 			Log.DebugLine ("");
 

@@ -238,14 +238,14 @@ class XamarinAppDebugDSO_V1 : XamarinAppDebugDSO_Version
 		for (uint i = 0; i < entry_count; i++) {
 			pointer = ReadPointer (data, ref offset);
 			if (pointer != 0) {
-				mapFrom = ELF.GetASCIIZ (pointer);
+				mapFrom = ELF.GetASCIIZ (pointer) ?? Constants.UnableToLoadDataForPointer;
 			} else {
 				mapFrom = $"#{i}";
 			}
 
 			pointer = ReadPointer (data, ref offset);
 			if (pointer != 0) {
-				mapTo = ELF.GetASCIIZ (pointer);
+				mapTo = ELF.GetASCIIZ (pointer) ?? Constants.UnableToLoadDataForPointer;
 			} else {
 				mapTo = $"#{i}";
 			}

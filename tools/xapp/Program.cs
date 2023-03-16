@@ -6,7 +6,6 @@ using Mono.Options;
 using Xamarin.Android.Application;
 using Xamarin.Android.Application.Utilities;
 using Xamarin.Android.AssemblyStore;
-using Xamarin.Android.Tasks;
 
 namespace Xamarin.XApp;
 
@@ -75,37 +74,71 @@ class App
 			return;
 		}
 
+		log.InfoLine ("Miscellaneous information");
+		log.StatusLine ("  Mono AOT mode name", xamarinAppInfo.GetAOTMode () ?? "[information unavailable]");
+		log.InfoLine ();
+
+		log.InfoLine ("Application configuration structure");
 		ApplicationConfigShim? applicationConfig = xamarinAppInfo.GetApplicationConfig ();
 		if (applicationConfig == null) {
-			log.DebugLine ("ApplicationConfig information not available");
-			return;
+			log.InfoLine ("  not available");
+		} else {
+			PrintAppConfig (applicationConfig);
 		}
 
-		log.StatusLine ("Uses Mono LLVM", applicationConfig.UsesMonoLlvm);
-		log.StatusLine ("Uses Mono AOT", applicationConfig.UsesMonoAot);
-		log.StatusLine ("AOT lazy load", applicationConfig.AotLazyLoad);
-		log.StatusLine ("Uses assembly preload", applicationConfig.UsesAssemblyPreload);
-		log.StatusLine ("Broken exception transitions", applicationConfig.BrokenExceptionTransitions);
-		log.StatusLine ("Instant run enabled", applicationConfig.InstantRunEnabled);
-		log.StatusLine ("JNI add native method registration attribute present", applicationConfig.JniAddNativeMethodRegistrationAttributePresent);
-		log.StatusLine ("Have runtime config blob", applicationConfig.HaveRuntimeConfigBlob);
-		log.StatusLine ("Have assemblies blob", applicationConfig.HaveAssembliesBlob);
-		log.StatusLine ("Marshal methods enabled", applicationConfig.MarshalMethodsEnabled);
-		log.StatusLine ("Bound stream IO exception type", applicationConfig.BoundStreamIoExceptionType);
-		log.StatusLine ("Package naming policy", applicationConfig.PackageNamingPolicy);
-		log.StatusLine ("Environment variables count", applicationConfig.EnvironmentVariableCount);
-		log.StatusLine ("System property count", applicationConfig.SystemPropertyCount);
-		log.StatusLine ("Number of assemblies in APK", applicationConfig.NumberOfAssembliesInApk);
-		log.StatusLine ("Bundled assembly name width", applicationConfig.BundledAssemblyNameWidth);
-		log.StatusLine ("Number of assembly store files", applicationConfig.NumberOfAssemblyStoreFiles);
-		log.StatusLine ("Number of DSO cache entries", applicationConfig.NumberOfDsoCacheEntries);
-		log.StatusLine ("Android.Runtime.JNIEnv class token", applicationConfig.AndroidRuntimeJnienvClassToken);
-		log.StatusLine ("Android.Runtime.JNIEnv.Initialize method token", applicationConfig.JnienvInitializeMethodToken);
-		log.StatusLine ("Android.Runtime.JNIEnv.RegisterJniNatives method token", applicationConfig.JnienvRegisterjninativesMethodToken);
-		log.StatusLine ("JNI remapping replacement type count", applicationConfig.JniRemappingReplacementTypeCount);
-		log.StatusLine ("JNI remapping replacement method index entry count", applicationConfig.JniRemappingReplacementMethodIndexEntryCount);
-		log.StatusLine ("Mono components mask", applicationConfig.MonoComponentsMask);
-		log.StatusLine ("Android package name", applicationConfig.AndroidPackageName);
+		log.InfoLine ();
+		log.InfoLine ("Application environment variables");
+		IDictionary<string, string>? dict = xamarinAppInfo.GetEnvironmentVariables ();
+		if (dict == null || dict.Count == 0) {
+			log.InfoLine ("  none defined");
+		} else {
+			PrintKeyValuePairs (dict);
+		}
+
+		log.InfoLine ();
+		log.InfoLine ("Application system properties");
+		dict = xamarinAppInfo.GetSystemProperties ();;
+		if (dict == null || dict.Count == 0) {
+			log.InfoLine ("  none defined");
+		} else {
+			PrintKeyValuePairs (dict);
+		}
+	}
+
+	static void PrintKeyValuePairs (IDictionary<string, string> envvars)
+	{
+		foreach (var kvp in envvars) {
+			log.StatusLine ($"  {kvp.Key}", kvp.Value);
+		}
+	}
+
+	static void PrintAppConfig (ApplicationConfigShim applicationConfig)
+	{
+		log.StatusLine ("  Uses Mono LLVM", applicationConfig.UsesMonoLlvm);
+		log.StatusLine ("  Uses Mono AOT", applicationConfig.UsesMonoAot);
+		log.StatusLine ("  AOT lazy load", applicationConfig.AotLazyLoad);
+		log.StatusLine ("  Uses assembly preload", applicationConfig.UsesAssemblyPreload);
+		log.StatusLine ("  Broken exception transitions", applicationConfig.BrokenExceptionTransitions);
+		log.StatusLine ("  Instant run enabled", applicationConfig.InstantRunEnabled);
+		log.StatusLine ("  JNI add native method registration attribute present", applicationConfig.JniAddNativeMethodRegistrationAttributePresent);
+		log.StatusLine ("  Have runtime config blob", applicationConfig.HaveRuntimeConfigBlob);
+		log.StatusLine ("  Have assemblies blob", applicationConfig.HaveAssembliesBlob);
+		log.StatusLine ("  Marshal methods enabled", applicationConfig.MarshalMethodsEnabled);
+		log.StatusLine ("  Bound stream IO exception type", applicationConfig.BoundStreamIoExceptionType);
+		log.StatusLine ("  Package naming policy", applicationConfig.PackageNamingPolicy);
+		log.StatusLine ("  Environment variables count", applicationConfig.EnvironmentVariableCount);
+		log.StatusLine ("  System property count", applicationConfig.SystemPropertyCount);
+		log.StatusLine ("  Number of assemblies in APK", applicationConfig.NumberOfAssembliesInApk);
+		log.StatusLine ("  Bundled assembly name width", applicationConfig.BundledAssemblyNameWidth);
+		log.StatusLine ("  Number of assembly store files", applicationConfig.NumberOfAssemblyStoreFiles);
+		log.StatusLine ("  Number of DSO cache entries", applicationConfig.NumberOfDsoCacheEntries);
+		log.StatusLine ("  Android.Runtime.JNIEnv class token", applicationConfig.AndroidRuntimeJnienvClassToken);
+		log.StatusLine ("  Android.Runtime.JNIEnv.Initialize method token", applicationConfig.JnienvInitializeMethodToken);
+		log.StatusLine ("  Android.Runtime.JNIEnv.RegisterJniNatives method token", applicationConfig.JnienvRegisterjninativesMethodToken);
+		log.StatusLine ("  JNI remapping replacement type count", applicationConfig.JniRemappingReplacementTypeCount);
+		log.StatusLine ("  JNI remapping replacement method index entry count", applicationConfig.JniRemappingReplacementMethodIndexEntryCount);
+		log.StatusLine ("  Mono components mask", applicationConfig.MonoComponentsMask);
+		log.StatusLine ("  Android package name", applicationConfig.AndroidPackageName);
 	}
 
 	static void PrintAppInfo (DataProviderAppInfo? appInfo)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 using ELFSharp.ELF.Sections;
@@ -10,8 +11,6 @@ namespace Xamarin.Android.Application;
 
 class DataProviderXamarinApp : DataProvider
 {
-	const string ApplicationConfigSymbolName = "application_config";
-
 	readonly AnELF elf;
 	readonly ulong format_tag;
 
@@ -27,9 +26,80 @@ class DataProviderXamarinApp : DataProvider
 		format_tag = GetFormatTag (elf);
 	}
 
+	public string? GetAOTMode ()
+	{
+		if (!elf.HasSymbol (Constants.MonoAotModeNameSymbolName)) {
+			return null;
+		}
+
+		byte[]? data = GetSymbolData (Constants.MonoAotModeNameSymbolName, out ISymbolEntry? symbolEntry);
+		if (data == null || symbolEntry == null) {
+			return null;
+		}
+
+		return elf.GetStringFromPointer (symbolEntry) ?? Constants.UnableToLoadDataForPointer;
+	}
+
+	public IDictionary<string, string>? GetSystemProperties ()
+	{
+		return GetKeyValuePairs (Constants.SystemPropertiesSymbolName, "System properties");
+	}
+
+	public IDictionary<string, string>? GetEnvironmentVariables ()
+	{
+		return GetKeyValuePairs (Constants.EnvironmentVariablesSymbolName, "Environment variables");
+	}
+
+	IDictionary<string, string>? GetKeyValuePairs (string symbolName, string description)
+	{
+		if (!elf.HasSymbol (symbolName)) {
+			return null;
+		}
+
+		byte[]? data = GetSymbolData (symbolName, out ISymbolEntry? symbolEntry);
+		if (data == null || data.Length == 0 || symbolEntry == null) {
+			return null;
+		}
+
+		ulong pointerSize = (ulong)elf.PointerSize;
+		ulong nEntries = (ulong)data.Length / pointerSize;
+		bool oddNumberOfEntries = nEntries % 2 != 0;
+
+		if (oddNumberOfEntries) {
+			Log.WarningLine ($"  {description} array doesn't have an even number of elements");
+		}
+
+		ulong currentOffset = 0;
+		string? name;
+		string? value;
+		var dict = new SortedDictionary<string, string> ();
+
+		while (nEntries > 0) {
+			name = GetNextEntry (symbolEntry);
+			value = GetNextEntry (symbolEntry);
+
+			if (dict.ContainsKey (name)) {
+				Log.WarningLine ($"Duplicate array entry '{name}' (value: '{value}')");
+				continue;
+			}
+			dict.Add (name, value);
+
+			string GetNextEntry (ISymbolEntry symbol)
+			{
+				string ret = elf.GetStringFromPointerField (symbol, currentOffset) ?? Constants.UnableToLoadDataForPointer;
+				currentOffset += pointerSize;
+				nEntries--;
+
+				return ret;
+			}
+		}
+
+		return dict;
+	}
+
 	public ApplicationConfigShim? GetApplicationConfig ()
 	{
-		if (!elf.HasSymbol (ApplicationConfigSymbolName)) {
+		if (!elf.HasSymbol (Constants.ApplicationConfigSymbolName)) {
 			return null;
 		}
 
@@ -62,10 +132,8 @@ class DataProviderXamarinApp : DataProvider
 		size += elf.GetPaddedSize (size, applicationConfig.mono_components_mask);
 		size += elf.GetPaddedSize (size, applicationConfig.android_package_name);
 
-		byte[] data = elf.GetData (ApplicationConfigSymbolName, out ISymbolEntry? symbolEntry);
-		if (data.Length == 0 || symbolEntry == null) {
-			string reason = symbolEntry == null ? "not found" : "is empty";
-			Log.WarningLine ($"Application config symbol '{ApplicationConfigSymbolName}' {reason} in {InputPath}");
+		byte[]? data = GetSymbolData (Constants.ApplicationConfigSymbolName, out ISymbolEntry? symbolEntry);
+		if (data == null || symbolEntry == null) {
 			return null;
 		}
 
@@ -111,11 +179,23 @@ class DataProviderXamarinApp : DataProvider
 
 		int expectedSize = elf.Is64Bit ? ExpectedSize64 : ExpectedSize32;
 		if (data.Length != expectedSize) {
-			Log.WarningLine ($"Failed to read '{ApplicationConfigSymbolName}' data from {InputPath} (expected {expectedSize}, got {data.Length})");
+			Log.WarningLine ($"Failed to read '{Constants.ApplicationConfigSymbolName}' data from {InputPath} (expected {expectedSize}, got {data.Length})");
 			return null;
 		}
 
 		return new ApplicationConfigShim (appConfig);
+	}
+
+	byte[]? GetSymbolData (string symbolName, out ISymbolEntry? symbolEntry)
+	{
+		byte[] data = elf.GetData (symbolName, out symbolEntry);
+		if (data.Length == 0 || symbolEntry == null) {
+			string reason = symbolEntry == null ? "not found" : "is empty";
+			Log.DebugLine ($"Application config symbol '{symbolName}' {reason} in {InputPath}");
+			return null;
+		}
+
+		return data;
 	}
 
 	ulong GetFormatTag (AnELF elfBinary)

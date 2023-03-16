@@ -32,6 +32,7 @@ abstract class AnELF
 	protected ILogger Log { get; }
 
 	public string FilePath => filePath;
+	public int PointerSize => Is64Bit ? 8 : 4;
 
 	public abstract bool Is64Bit { get; }
 	public abstract string Bitness { get; }
@@ -101,18 +102,25 @@ abstract class AnELF
 		return GetData (symbol32);
 	}
 
-	public abstract string GetStringFromPointerField (ISymbolEntry symbolEntry, ulong pointerFieldOffset);
+	public string? GetStringFromPointer (ISymbolEntry symbolEntry)
+	{
+		return GetStringFromPointerField (symbolEntry, 0);
+	}
+
+	public abstract string? GetStringFromPointerField (ISymbolEntry symbolEntry, ulong pointerFieldOffset);
 	public abstract byte[] GetData (ulong symbolValue, ulong size);
 
-	public string GetASCIIZ (ulong symbolValue)
+	public string? GetASCIIZ (ulong symbolValue)
 	{
 		return GetASCIIZ (GetData (symbolValue, 0), 0);
 	}
 
-	public string GetASCIIZ (byte[] data, ulong offset)
+	public string? GetASCIIZ (byte[] data, ulong offset)
 	{
-		if (offset >= (ulong)data.LongLength)
-			throw new InvalidOperationException ("Not enough data to retrieve an ASCIIZ string");
+		if (offset >= (ulong)data.LongLength) {
+			Log.DebugLine ("Not enough data to retrieve an ASCIIZ string");
+			return null;
+		}
 
 		int count = data.Length;
 

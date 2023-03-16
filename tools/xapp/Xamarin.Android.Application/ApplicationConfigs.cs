@@ -130,9 +130,7 @@ sealed class ApplicationConfig_V2 : ApplicationConfigCommon
 		sizeSoFar += ReadField (reader, ref jni_remapping_replacement_method_index_entry_count, sizeSoFar);
 		sizeSoFar += ReadField (reader, ref mono_components_mask, sizeSoFar);
 
-		// TODO: pointers require relocations, to be fixed up at load time. We need to simulate the loading process in order to read pointers.
-		ulong pointerValue = Is64Bit ? reader.ReadUInt64 () : (ulong)reader.ReadUInt32 ();
-		android_package_name = $"READING NOT IMPLEMENTED YET (pointer field value 0x{pointerValue:x})";
+		android_package_name = elf.GetStringFromPointerField (symbolEntry, sizeSoFar) ?? "FAILED TO READ STRING FROM BINARY";
 	}
 }
 
