@@ -10,11 +10,11 @@
 
 1. Build Tests
 
-    There are a number of `Build` related tests which test various aspects of the `.NET Android` build system. This includes not only MSBuild Task tests but build integration tests. Since the SDK is consumed from MSBuild, almost all of the unit tests are MSBuild related.
+    There are a number of `Build` related tests which test various aspects of the .NET Android build system. This includes not only MSBuild Task tests but build integration tests. Since the SDK is consumed from MSBuild, almost all of the unit tests are MSBuild related.
 
 2. Device Tests
 
-    Because `.NET Android` has to work on devices, we have a number of
+    Because .NET Android has to work on devices, we have a number of
     "Integration" tests which check to make sure a final app will function as expected on an Emulator or Device. Our CI system will
     test against an Emulator. However the system will pick up the first attached device, so developers can test one physical hardware
     if needed.
@@ -48,15 +48,30 @@ To run ALL the supported Device Integraton tests runs.
 NOTE: Not all tests work under .NET Android yet. So we need to filter
 them on the `DotNetIgnore` category.
 
+To run a specific test you can use the `Name` argument for the `--filter`,
+
+`dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication`
+
+To list all the available tests use the `-lt` argument
+
+`dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll -lt`
 
 ### Windows
 
 On Windows we can use the same `dotnet-local` script to run the tests
 just like we do on other platforms.
 
-`dotnet-local.cmd test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Category!=DotNetIgnore`
+`dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Category!=DotNetIgnore`
 
-`dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net7.0/MSBuildDeviceIntegration.dll --filter=Category!=DotNetIgnore`
+`dotnet-local.cmd test bin\TestDebug\MSBuildDeviceIntegration\net7.0\MSBuildDeviceIntegration.dll --filter=Category!=DotNetIgnore`
+
+To run a specific test you can use the `Name` argument for the `--filter`,
+
+`dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication`
+
+To list all the available tests use the `-lt` argument
+
+`dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll -lt`
 
 ## Writing Tests
 
