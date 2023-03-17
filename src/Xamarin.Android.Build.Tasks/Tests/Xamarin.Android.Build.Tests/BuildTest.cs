@@ -983,24 +983,13 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 		//This test validates the _CleanIntermediateIfNeeded target
 		[Test]
-		[Category ("DotNetIgnore")] // Xamarin.Forms version is too old, uses net45 MSBuild tasks
 		[NonParallelizable]
 		public void BuildAfterUpgradingNuget ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
 
-			proj.PackageReferences.Add (KnownPackages.XamarinForms_2_3_4_231);
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				//[TearDown] will still delete if test outcome successful, I need logs if assertions fail but build passes
@@ -1010,7 +999,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				if (Directory.Exists (projectDir))
 					Directory.Delete (projectDir, true);
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "`_CleanIntermediateIfNeeded` should have run!");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "`_CleanIntermediateIfNeeded` should have run for the first build!");
 
 				var nugetStamp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "stamp", "_CleanIntermediateIfNeeded.stamp");
 				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNeeded` did not create stamp file!");
@@ -1019,12 +1008,12 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 				proj.PackageReferences.Clear ();
 				//NOTE: we can get all the other dependencies transitively, yay!
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
+				proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat_1_6_0_1);
 				b.Save (proj, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "`_CleanIntermediateIfNeeded` should have run!");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "`_CleanIntermediateIfNeeded` should have run for the second build!");
 				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNeeded` did not create stamp file!");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.AndroidX.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.AndroidX.AppCompat.dll`!");
 				FileAssert.Exists (build_props, "build.props should exist after second build.");
 
 				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
