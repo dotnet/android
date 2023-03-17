@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
 using Xamarin.Android.Tasks;
@@ -14,6 +15,8 @@ class DataProviderXamarinApp : DataProvider
 	readonly AnELF elf;
 	readonly ulong format_tag;
 
+	public string MachineArchitecture { get; }
+
 	public DataProviderXamarinApp (Stream inputStream, string? inputPath, ILogger log)
 		: base (inputStream, inputPath, log)
 	{
@@ -24,6 +27,14 @@ class DataProviderXamarinApp : DataProvider
 
 		elf = maybeELF;
 		format_tag = GetFormatTag (elf);
+
+		MachineArchitecture = elf.AnyELF.Machine switch {
+			Machine.AArch64  => "ARM64 (AArch64)",
+			Machine.AMD64    => "X86_64",
+			Machine.Intel386 => "X86 (i386)",
+			Machine.ARM      => "ARM32 (ARM)",
+			_                => $"[unsupported] {elf.AnyELF.Machine}"
+		};
 	}
 
 	public string? GetAOTMode ()
@@ -38,6 +49,20 @@ class DataProviderXamarinApp : DataProvider
 		}
 
 		return elf.GetStringFromPointer (symbolEntry) ?? Constants.UnableToLoadDataForPointer;
+	}
+
+	public DSOCache? GetDSOCache ()
+	{
+		if (!elf.HasSymbol (Constants.DSOCacheSymbolName)) {
+			return null;
+		}
+
+		byte[]? data = GetSymbolData (Constants.DSOCacheSymbolName, out ISymbolEntry? symbolEntry);
+		if (data == null || data.Length == 0 || symbolEntry == null) {
+			return null;
+		}
+
+		return new DSOCache (data, elf, symbolEntry);
 	}
 
 	public IDictionary<string, string>? GetSystemProperties ()

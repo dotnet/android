@@ -19,47 +19,6 @@ abstract class ApplicationConfigCommon
 	{
 		Is64Bit = is64Bit;
 	}
-
-	protected ulong ReadField (BinaryReader reader, ref bool field, ulong sizeSoFar)
-	{
-		field = reader.ReadBoolean ();
-		return CalculateAdjustedSize<bool> (reader, sizeSoFar);
-	}
-
-	protected ulong ReadField (BinaryReader reader, ref byte field, ulong sizeSoFar)
-	{
-		field = reader.ReadByte ();
-		return CalculateAdjustedSize<byte> (reader, sizeSoFar);
-	}
-
-	protected ulong ReadField (BinaryReader reader, ref uint field, ulong sizeSoFar)
-	{
-		field = reader.ReadUInt32 ();
-		return CalculateAdjustedSize<uint> (reader, sizeSoFar);
-	}
-
-	ulong CalculateAdjustedSize <T> (BinaryReader reader, ulong sizeSoFar)
-	{
-		ulong typeSize = Util.GetNativeTypeSize<T> (Is64Bit);
-		ulong paddedSize = Util.GetPaddedSize<T> (sizeSoFar, Is64Bit);
-
-		if (paddedSize == 0) {
-			throw new InvalidOperationException ("Padded size must not be 0");
-		}
-
-		if (paddedSize < typeSize) {
-			throw new InvalidOperationException ("Padded size must not be smaller than type size");
-		}
-
-		if (paddedSize == typeSize) {
-			return typeSize;
-		}
-
-		ulong seekOffset = paddedSize - typeSize;
-		reader.BaseStream.Seek ((long)seekOffset, SeekOrigin.Current);
-
-		return paddedSize;
-	}
 }
 
 sealed class ApplicationConfig_V1 : ApplicationConfigCommon
@@ -105,30 +64,30 @@ sealed class ApplicationConfig_V2 : ApplicationConfigCommon
 
 		ulong sizeSoFar = 0;
 
-		sizeSoFar += ReadField (reader, ref uses_mono_llvm, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref uses_mono_aot, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref aot_lazy_load, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref uses_assembly_preload, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref broken_exception_transitions, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref instant_run_enabled, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref jni_add_native_method_registration_attribute_present, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref have_runtime_config_blob, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref have_assemblies_blob, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref marshal_methods_enabled, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref bound_stream_io_exception_type, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref package_naming_policy, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref environment_variable_count, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref system_property_count, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref number_of_assemblies_in_apk, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref bundled_assembly_name_width, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref number_of_assembly_store_files, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref number_of_dso_cache_entries, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref android_runtime_jnienv_class_token, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref jnienv_initialize_method_token, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref jnienv_registerjninatives_method_token, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref jni_remapping_replacement_type_count, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref jni_remapping_replacement_method_index_entry_count, sizeSoFar);
-		sizeSoFar += ReadField (reader, ref mono_components_mask, sizeSoFar);
+		sizeSoFar += Util.ReadField (reader, ref uses_mono_llvm, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref uses_mono_aot, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref aot_lazy_load, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref uses_assembly_preload, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref broken_exception_transitions, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref instant_run_enabled, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref jni_add_native_method_registration_attribute_present, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref have_runtime_config_blob, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref have_assemblies_blob, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref marshal_methods_enabled, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref bound_stream_io_exception_type, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref package_naming_policy, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref environment_variable_count, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref system_property_count, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref number_of_assemblies_in_apk, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref bundled_assembly_name_width, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref number_of_assembly_store_files, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref number_of_dso_cache_entries, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref android_runtime_jnienv_class_token, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref jnienv_initialize_method_token, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref jnienv_registerjninatives_method_token, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref jni_remapping_replacement_type_count, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref jni_remapping_replacement_method_index_entry_count, sizeSoFar, Is64Bit);
+		sizeSoFar += Util.ReadField (reader, ref mono_components_mask, sizeSoFar, Is64Bit);
 
 		android_package_name = elf.GetStringFromPointerField (symbolEntry, sizeSoFar) ?? "FAILED TO READ STRING FROM BINARY";
 	}

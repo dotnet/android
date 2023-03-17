@@ -41,7 +41,7 @@ static class Util
 	{
 		Type type = typeof(S);
 
-		if (type == typeof(string)) {
+		if (type == typeof(string) || type == typeof(IntPtr)) {
 			// We treat `string` as a generic pointer
 			return is64Bit ? 8u : 4u;
 		}
@@ -63,6 +63,104 @@ static class Util
 		}
 
 		throw new InvalidOperationException ($"Unable to map managed type {type} to native assembler type");
+	}
+
+	/// <summary>
+	/// When reading binary data for C++ structures from ELF images, we need to account for field alignment.
+	/// This method calculates the number of actual bytes read from the data stream, as well as properly
+	/// adjusts the stream position to read the next field correctly.
+	/// </summary>
+	public static ulong GetSizeAndAdjustPosition <T> (BinaryReader reader, ulong sizeSoFar, bool is64Bit)
+	{
+		ulong typeSize = GetNativeTypeSize<T> (is64Bit);
+		ulong paddedSize = GetPaddedSize<T> (sizeSoFar, is64Bit);
+
+		if (paddedSize == 0) {
+			throw new InvalidOperationException ("Padded size must not be 0");
+		}
+
+		if (paddedSize < typeSize) {
+			throw new InvalidOperationException ("Padded size must not be smaller than type size");
+		}
+
+		if (paddedSize == typeSize) {
+			return typeSize;
+		}
+
+		ulong seekOffset = paddedSize - typeSize;
+		reader.BaseStream.Seek ((long)seekOffset, SeekOrigin.Current);
+
+		return paddedSize;
+	}
+
+	/// <summary>
+	/// Read data from a C++ structure <c>bool</c> field and adjust stream position accordingly.
+	/// </summary>
+	/// <seealso cref="GetSizeAndAdjustPosition"/>
+	/// <returns>Number of actual bytes read (including padding)</returns>
+	public static ulong ReadField (BinaryReader reader, ref bool field, ulong sizeSoFar, bool is64Bit)
+	{
+		field = reader.ReadBoolean ();
+		return GetSizeAndAdjustPosition<bool> (reader, sizeSoFar, is64Bit);
+	}
+
+	/// <summary>
+	/// Read data from a C++ structure <c>byte</c> field and adjust stream position accordingly.
+	/// </summary>
+	/// <seealso cref="GetSizeAndAdjustPosition"/>
+	/// <returns>Number of actual bytes read (including padding)</returns>
+	public static ulong ReadField (BinaryReader reader, ref byte field, ulong sizeSoFar, bool is64Bit)
+	{
+		field = reader.ReadByte ();
+		return GetSizeAndAdjustPosition<bool> (reader, sizeSoFar, is64Bit);
+	}
+
+	/// <summary>
+	/// Read data from a C++ structure <c>uint</c> field and adjust stream position accordingly.
+	/// </summary>
+	/// <seealso cref="GetSizeAndAdjustPosition"/>
+	/// <returns>Number of actual bytes read (including padding)</returns>
+	public static ulong ReadField (BinaryReader reader, ref uint field, ulong sizeSoFar, bool is64Bit)
+	{
+		field = reader.ReadUInt32 ();
+		return GetSizeAndAdjustPosition<bool> (reader, sizeSoFar, is64Bit);
+	}
+
+	/// <summary>
+	/// Read data from a C++ structure <c>ulong</c> field and adjust stream position accordingly.
+	/// </summary>
+	/// <seealso cref="GetSizeAndAdjustPosition"/>
+	/// <returns>Number of actual bytes read (including padding)</returns>
+	public static ulong ReadField (BinaryReader reader, ref ulong field, ulong sizeSoFar, bool is64Bit)
+	{
+		field = reader.ReadUInt64 ();
+		return GetSizeAndAdjustPosition<ulong> (reader, sizeSoFar, is64Bit);
+	}
+
+	/// <summary>
+	/// Read data from a C++ structure <c>pointer</c> field and adjust stream position accordingly.  Nothing is
+	/// actually stored in the <param ref="field"/> parameter, as the pointer will have a value of <c>0</c>. Instead,
+	/// appropriate number of bytes is skipped in the data stream.
+	/// </summary>
+	/// <seealso cref="GetSizeAndAdjustPosition"/>
+	/// <returns>Number of actual bytes read (including padding)</returns>
+	public static ulong ReadField (BinaryReader reader, ref string field, ulong sizeSoFar, bool is64Bit)
+	{
+		var _ = is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
+		return GetSizeAndAdjustPosition<string> (reader, sizeSoFar, is64Bit);
+	}
+
+	/// <summary>
+	/// Read data from a C++ structure <c>pointer</c> field and adjust stream position accordingly.  Nothing is
+	/// actually stored in the <param ref="field"/> parameter, as the pointer will have a value of <c>0</c>. Instead,
+	/// appropriate number of bytes is skipped in the data stream.
+	/// </summary>
+	/// <seealso cref="GetSizeAndAdjustPosition"/>
+	/// <returns>Number of actual bytes read (including padding)</returns>
+	public static ulong ReadField (BinaryReader reader, ref IntPtr field, ulong sizeSoFar, bool is64Bit)
+	{
+		var _ = is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
+		return GetSizeAndAdjustPosition<IntPtr> (reader, sizeSoFar, is64Bit);
 	}
 
 	public static string ToStringOrNull<T> (T? reference) => reference == null ? "<NULL>" : reference.ToString () ?? "[unknown]";

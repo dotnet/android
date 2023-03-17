@@ -74,7 +74,10 @@ class App
 			return;
 		}
 
-		log.InfoLine ("Miscellaneous information");
+		log.InfoLine ("== libxamarin-app.so information ==");
+		log.InfoLine ("-----------------------------------");
+		log.InfoLine ("Miscellaneous");
+		log.StatusLine ("  Machine architecture", xamarinAppInfo.MachineArchitecture);
 		log.StatusLine ("  Mono AOT mode name", xamarinAppInfo.GetAOTMode () ?? "[information unavailable]");
 		log.InfoLine ();
 
@@ -102,6 +105,28 @@ class App
 			log.InfoLine ("  none defined");
 		} else {
 			PrintKeyValuePairs (dict);
+		}
+
+		log.InfoLine ();
+		log.InfoLine ("DSO (shared library) cache");
+		DSOCache? dsoCache = xamarinAppInfo.GetDSOCache ();
+		if (dsoCache == null) {
+			log.InfoLine ("  not available");
+		} else if (dsoCache.Entries.Count == 0) {
+			log.InfoLine ("  empty");
+		} else {
+			PrintDSOCache (dsoCache);
+		}
+	}
+
+	static void PrintDSOCache (DSOCache cache)
+	{
+		for (int i = 0; i < cache.Entries.Count; i++) {
+			DSOCacheEntry entry = cache.Entries[i];
+			log.StatusLine ($"  {i}", entry.name);
+			log.StatusLine ("    Hash", $"0x{entry.hash:08x}");
+			log.StatusYesNo ($"    Ignored", entry.ignore);
+			log.InfoLine ();
 		}
 	}
 
