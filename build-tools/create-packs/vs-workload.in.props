@@ -14,6 +14,5 @@
     </ShortNames>
     <ComponentResources Include="android" Version="@WORKLOAD_VERSION@" Category=".NET" Title=".NET SDK for Android" Description=".NET SDK Workload for building Android applications."/>
     <WorkloadPackages Include="$(NuGetPackagePath)\Microsoft.NET.Sdk.Android.Manifest*.nupkg" Version="@WORKLOAD_VERSION@" SupportsMachineArch="true" />
-    <MultiTargetPackNames Include="Microsoft.Android.Sdk" />
   </ItemGroup>
 </Project>
