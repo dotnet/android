@@ -730,7 +730,7 @@ using System.Runtime.Serialization.Json;
 			}
 			// Build a NuGet Package
 			var nuget = new XASdkProject (outputType: "Library") {
-				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha2",
+				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",
 				ProjectName = "Test.Nuget.Package",
 				IsRelease = true,
 			};
