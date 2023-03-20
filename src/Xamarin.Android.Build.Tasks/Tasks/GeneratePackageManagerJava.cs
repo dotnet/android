@@ -413,7 +413,7 @@ namespace Xamarin.Android.Tasks
 					Log
 				);
 			} else {
-				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (uniqueAssemblyNames);
+				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (assemblyCount, uniqueAssemblyNames);
 			}
 			marshalMethodsAsmGen.Init ();
 

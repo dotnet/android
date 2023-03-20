@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAssemblyCacheWithSatelliteAssemblies ()
+		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
@@ -49,6 +49,7 @@ namespace Xamarin.Android.Build.Tests
 
 			proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
+				EnableMarshalMethods = enableMarshalMethods,
 			};
 			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");

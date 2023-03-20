@@ -23,6 +23,8 @@ namespace Xamarin.ProjectTools
 		static readonly string default_main_activity_cs, default_main_activity_fs;
 		static readonly string default_android_manifest;
 
+		public bool? EnableMarshalMethods { get; set; } = null;
+
 		static XamarinAndroidApplicationProject ()
 		{
 			var folder = Builder.UseDotNet ? "DotNet" : "Base";
@@ -41,6 +43,10 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			if (Builder.UseDotNet) {
+				if (EnableMarshalMethods.HasValue) {
+					SetProperty (KnownProperties.AndroidEnableMarshalMethods, EnableMarshalMethods.Value ? "True" : "False");
+				}
+
 				SetProperty (KnownProperties.OutputType, "Exe");
 				SetProperty (KnownProperties.Nullable, "enable");
 				SetProperty (KnownProperties.ImplicitUsings, "enable");

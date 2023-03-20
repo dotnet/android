@@ -204,8 +204,9 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (ICollection<string> uniqueAssemblyNames)
+		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
 		{
+			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			generateEmptyCode = true;
 		}
