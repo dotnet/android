@@ -19,7 +19,6 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-1")]
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest : BaseTest
 	{
@@ -83,6 +82,42 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void CheckWhetherLibcAndLibmAreReferencedInAOTLibraries ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				EmbedAssembliesIntoApk = true,
+				AotAssemblies = true,
+			};
+			proj.SetProperty ("EnableLLVM", "True");
+
+			var abis = new [] { "arm64-v8a", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+
+			var libPaths = new List<string> ();
+			if (Builder.UseDotNet) {
+				libPaths.Add (Path.Combine ("android-arm64", "aot", "Mono.Android.dll.so"));
+				libPaths.Add (Path.Combine ("android-x64", "aot", "Mono.Android.dll.so"));
+			} else {
+				libPaths.Add (Path.Combine ("aot", "arm64-v8a", "libaot-Mono.Android.dll.so"));
+				libPaths.Add (Path.Combine ("aot", "x86_64", "libaot-Mono.Android.dll.so"));
+			}
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+
+				foreach (string libPath in libPaths) {
+					string lib = Path.Combine (objPath, libPath);
+
+					Assert.IsTrue (File.Exists (lib), $"Library {lib} should exist on disk");
+					Assert.IsTrue (ELFHelper.ReferencesLibrary (lib, "libc.so"), $"Library {lib} should reference libc.so");
+					Assert.IsTrue (ELFHelper.ReferencesLibrary (lib, "libm.so"), $"Library {lib} should reference libm.so");
+				}
+			}
+		}
+
 		static object [] CheckAssemblyCountsSource = new object [] {
 			new object[] {
 				/*isRelease*/ false,
@@ -101,7 +136,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (CheckAssemblyCountsSource))]
 		[NonParallelizable]
-		[Category ("SmokeTests")]
 		public void CheckAssemblyCounts (bool isRelease, bool aot)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -146,7 +180,6 @@ namespace Xamarin.Android.Build.Tests
 		// DotNet fails, see https://github.com/dotnet/runtime/issues/65484
 		// Enable the commented out signature (and AOT) once the above is fixed
 		[Test]
-		[Category ("SmokeTests")]
 		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (false /*, true*/)] bool aot)
 		{
 			var testName = "テスト";
@@ -282,7 +315,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		[Category ("SmokeTests")]
 		public void BuildWithNativeLibraries ([Values (true, false)] bool isRelease)
 		{
 			var dll = new XamarinAndroidLibraryProject () {
@@ -410,7 +442,6 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void BuildWithExternalJavaLibrary ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -778,7 +809,7 @@ public class Test
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("AOT")]
+		[Category ("AOT")]
 		[NonParallelizable]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool)
 		{
@@ -1042,7 +1073,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		[Category ("DotNetIgnore")] // .mdb and non-portable .pdb files not supported in .NET 5+
 		public void BuildBasicApplicationCheckPdb ()
 		{

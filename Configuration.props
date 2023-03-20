@@ -42,7 +42,7 @@
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
-    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.26</AndroidNet7Version>
+    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.46</AndroidNet7Version>
     <AndroidNet6Version Condition=" '$(AndroidNet6Version)' == '' ">32.0.485</AndroidNet6Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
@@ -109,8 +109,8 @@
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
-    <MonoDarwinPackageUrl>https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2020-02/151/c633fe923832f0c3db3c4e6aa98e5592bf5a06e7/MonoFramework-MDK-6.12.0.145.macos10.xamarin.universal.pkg</MonoDarwinPackageUrl>
-    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">6.12.0.145</MonoRequiredMinimumVersion>
+    <MonoDarwinPackageUrl>https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg</MonoDarwinPackageUrl>
+    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">6.12.0.188</MonoRequiredMinimumVersion>
     <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">$(MonoRequiredMinimumVersion)</MonoRequiredMaximumVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' And '$(RunningOnCI)' == 'true' ">False</IgnoreMaxMonoVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>

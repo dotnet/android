@@ -493,6 +493,10 @@ Lütfen değeri '{1}' türünden devralan derlemeye uygun bir tür adına dönü
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
 {0} - The name of the assembly</comment>
   </data>
+  <data name="XA1035" xml:space="preserve">
+    <value>'BundleAssemblies' özelliği kullanım dışıdır ve uygulama derlemesi üzerinde etkisi yoktur. Eşdeğer işlev 'AndroidUseAssemblyStore' ve 'AndroidEnableAssemblyCompression' özellikleri ile uygulanmalıdır.</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>{0} bütünleştirilmiş kodunda AppDomain.CreateDomain() metodunun kullanıldığı saptandı. .NET 6 üstünde yalnızca tek bir AppDomain destekleneceğinden bu API, .NET 6 yayımlandıktan sonra artık Xamarin.Android içinde bulunmayacaktır.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain

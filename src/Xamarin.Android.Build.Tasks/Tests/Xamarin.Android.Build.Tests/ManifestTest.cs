@@ -11,7 +11,6 @@ using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-3")]
 	[Parallelizable (ParallelScope.Children)]
 	public partial class ManifestTest : BaseTest
 	{
@@ -772,7 +771,6 @@ public class TestActivity2 : FragmentActivity {
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void AllActivityAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
 		{
 			var proj = new XamarinAndroidApplicationProject {

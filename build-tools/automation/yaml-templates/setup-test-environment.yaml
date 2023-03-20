@@ -8,6 +8,11 @@ parameters:
   jdkTestFolder: $(JAVA_HOME_11_X64)
   remove_dotnet: false
   installTestSlicer: false
+  installApkDiff: true
+  installLegacyDotNet: true
+  restoreNUnitConsole: true
+  updateMono: true
+  androidSdkPlatforms: 33
 
 steps:
 - checkout: self
@@ -40,11 +45,12 @@ steps:
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
 # Install .NET 6 for legacy tests
-- template: use-dot-net.yaml
-  parameters:
-    version: 6.0
-    quality: GA
-    remove_dotnet: ${{ parameters.remove_dotnet }}
+- ${{ if eq(parameters.installLegacyDotNet, true) }}:
+  - template: use-dot-net.yaml
+    parameters:
+      version: 6.0
+      quality: GA
+      remove_dotnet: ${{ parameters.remove_dotnet }}
 
 # Install latest .NET
 - template: use-dot-net.yaml
@@ -56,26 +62,28 @@ steps:
     custom: build-server
     arguments: shutdown
 
-- template: run-xaprepare.yaml
-  parameters:
-    displayName: run xaprepare-UpdateMono
-    arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
-    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-    xaSourcePath: ${{ parameters.xaSourcePath }}
+- ${{ if eq(parameters.updateMono, true) }}:
+  - template: run-xaprepare.yaml
+    parameters:
+      displayName: run xaprepare-UpdateMono
+      arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
+      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - template: run-xaprepare.yaml
   parameters:
-    arguments: --s=AndroidTestDependencies  --android-sdk-platforms="19,21,26,32,33"
+    arguments: --s=AndroidTestDependencies  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
-- task: DotNetCoreCLI@2
-  displayName: restore NUnit.Console
-  inputs:
-    command: restore
-    projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj
-    restoreArguments: -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.ProjectTools.binlog
-    nugetConfigPath: ${{ parameters.xaSourcePath }}/NuGet.config
-    feedsToUse: config
+- ${{ if eq(parameters.restoreNUnitConsole, true) }}:
+  - task: DotNetCoreCLI@2
+    displayName: restore NUnit.Console
+    inputs:
+      command: restore
+      projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj
+      restoreArguments: -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.ProjectTools.binlog
+      nugetConfigPath: ${{ parameters.xaSourcePath }}/NuGet.config
+      feedsToUse: config
 
 - task: DotNetCoreCLI@2
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
@@ -101,7 +109,8 @@ steps:
     projects: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
 
-- template: install-apkdiff.yaml
+- ${{ if eq(parameters.installApkDiff, true) }}:
+  - template: install-apkdiff.yaml
 
 - ${{ if eq(parameters.installTestSlicer, true) }}:
   - template: install-dotnet-test-slicer.yaml

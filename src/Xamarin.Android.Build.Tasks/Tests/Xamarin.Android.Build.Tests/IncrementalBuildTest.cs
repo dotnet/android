@@ -12,7 +12,6 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-6")]
 	[Parallelizable (ParallelScope.Children)]
 	public class IncrementalBuildTest : BaseTest
 	{
@@ -43,7 +42,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void BasicApplicationRepetitiveReleaseBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
@@ -423,7 +421,6 @@ namespace Lib2
 
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
-		[Category ("SmokeTests")]
 		[NonParallelizable] // Do not run timing sensitive tests in parallel
 		public void AppProjectTargetsDoNotBreak ()
 		{
@@ -567,7 +564,6 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void ProduceReferenceAssembly ()
 		{
 			var path = Path.Combine ("temp", TestName);

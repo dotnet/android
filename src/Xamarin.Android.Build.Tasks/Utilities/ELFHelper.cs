@@ -28,7 +28,47 @@ namespace Xamarin.Android.Tasks
 				log.LogWarningFromException (ex, showStackTrace: true);
 				return false;
 			}
+		}
 
+		public static bool ReferencesLibrary (string libraryPath, string referencedLibraryName)
+		{
+			if (String.IsNullOrEmpty (libraryPath) || !File.Exists (libraryPath)) {
+				return false;
+			}
+
+			IELF elf = ELFReader.Load (libraryPath);
+			var dynstr = GetSection (elf, ".dynstr") as IStringTable;
+			if (dynstr == null) {
+				return false;
+			}
+
+			foreach (IDynamicSection section in elf.GetSections<IDynamicSection> ()) {
+				foreach (IDynamicEntry entry in section.Entries) {
+					if (IsLibraryReference (dynstr, entry, referencedLibraryName)) {
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		static bool IsLibraryReference (IStringTable stringTable, IDynamicEntry dynEntry, string referencedLibraryName)
+		{
+			if (dynEntry.Tag != DynamicTag.Needed) {
+				return false;
+			}
+
+			ulong index;
+			if (dynEntry is DynamicEntry<ulong> entry64) {
+				index = entry64.Value;
+			} else if (dynEntry is DynamicEntry<uint> entry32) {
+				index = (ulong)entry32.Value;
+			} else {
+				return false;
+			}
+
+			return String.Compare (referencedLibraryName, stringTable[(long)index], StringComparison.Ordinal) == 0;
 		}
 
 		static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path, IELF elf)

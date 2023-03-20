@@ -70,7 +70,7 @@ namespace Xamarin.ProjectTools
 				project.NuGetRestore (Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory), PackagesDirectory);
 			}
 
-			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables, restore: project.ShouldRestorePackageReferences);
+			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables, restore: project.ShouldRestorePackageReferences, binlogName: Path.GetFileNameWithoutExtension (BuildLogFile));
 			built_before = true;
 
 			if (CleanupAfterSuccessfulBuild)

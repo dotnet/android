@@ -300,8 +300,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test, Category ("UsesDevice")]
 		public void ApkSet ()
 		{
-			AssertHasDevices ();
-
 			appBuilder.BuildLogFile = "install.log";
 			Assert.IsTrue (appBuilder.RunTarget (app, "Install"), "App should have installed.");
 

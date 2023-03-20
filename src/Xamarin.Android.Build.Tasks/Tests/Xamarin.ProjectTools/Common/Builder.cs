@@ -186,7 +186,7 @@ namespace Xamarin.ProjectTools
 			RegexOptions.Multiline | RegexOptions.Compiled
 		);
 
-		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool restore = true)
+		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool restore = true, string binlogName = "msbuild")
 		{
 			buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
 				? Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
@@ -256,7 +256,7 @@ namespace Xamarin.ProjectTools
 				}
 
 				psi.SetEnvironmentVariable ("MSBUILD", "msbuild");
-				sw.WriteLine ($"/bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
+				sw.WriteLine ($"/bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), $"{binlogName}.binlog"))}\"");
 
 				if (environmentVariables != null) {
 					foreach (var kvp in environmentVariables) {

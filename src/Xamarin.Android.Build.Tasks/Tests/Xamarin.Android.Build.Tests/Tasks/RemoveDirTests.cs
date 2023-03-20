@@ -11,7 +11,6 @@ using Microsoft.Android.Build.Tasks;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-5")]
 	public class RemoveDirTests : BaseTest
 	{
 		List<BuildMessageEventArgs> messages;

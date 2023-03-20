@@ -55,6 +55,8 @@ variables:
   value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
 - name: DotNetNUnitCategories
   value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != SystemApplication'
+- name: ExcludedNUnitCategories
+  value: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != PackagesConfig & cat != StaticProject & cat != SystemApplication'
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - group: AzureDevOps-Artifact-Feeds-Pats
   - group: DotNet-MSRC-Storage
@@ -91,7 +93,7 @@ stages:
 - template: yaml-templates/build-linux.yaml
 
 - stage: smoke_tests
-  displayName: Smoke Tests
+  displayName: Package Tests
   dependsOn: mac_build
   jobs:
   # Check - "Xamarin.Android (macOS > Tests > APKs Classic)"
@@ -294,6 +296,11 @@ stages:
       parameters:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies
+        
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     # Set up dependencies to run tests in both debug and release configurations
     - task: DotNetCoreCLI@2
@@ -398,6 +405,12 @@ stages:
         extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
         useDotNet: true
 
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
+        testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
+
     - task: MSBuild@1
       displayName: shut down emulator
       inputs:
@@ -440,78 +453,6 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # Xamarin.Android (Smoke Tests MSBuild - Mac-0)
-  - template: yaml-templates/run-msbuild-mac-tests.yaml
-    parameters:
-      job_name: mac_dotnet_tests_0
-      job_suffix: One .NET
-      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  # Xamarin.Android (Smoke Tests MSBuild - Win-0)
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      job_name: win_dotnet_tests_0
-      job_suffix: One .NET
-      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator)"
-  - job: mac_msbuilddevice_tests
-    displayName: macOS > Tests > MSBuild+Emulator One .NET
-    pool:
-      vmImage: $(HostedMacImage)
-    timeoutInMinutes: 180
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: start emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: MSBuildDeviceIntegration Smoke - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
-        testResultsFile: TestResult-MSBuildDeviceIntegrationSmoke-$(XA.Build.Configuration).xml
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild Smoke With Emulator - macOS - One .NET
-
-    - template: yaml-templates/fail-on-issue.yaml
-
 - stage: linux_tests
   displayName: Linux Tests
   dependsOn:
@@ -550,109 +491,16 @@ stages:
         artifactName: Test Results - MSBuild Smoke - Linux
 
     - template: yaml-templates/fail-on-issue.yaml
-
-- stage: msbuild_dotnet
-  displayName: One .NET Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
-  jobs:
-  # Xamarin.Android (Test MSBuild One .NET - macOS)
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: mac_dotnet_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: mac_dotnet_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: mac_dotnet_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 4
-      job_name: mac_dotnet_tests_4
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 5
-      job_name: mac_dotnet_tests_5
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 6
-      job_name: mac_dotnet_tests_6
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  # Xamarin.Android (Test MSBuild One .NET - Windows)
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 1
-      additional_node_id: 4
-      job_name: win_dotnet_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 2
-      additional_node_id: 5
-      job_name: win_dotnet_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 3
-      additional_node_id: 6
-      job_name: win_dotnet_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
+      
+- template: yaml-templates/stage-msbuild-tests.yaml
+      
 - template: yaml-templates/stage-msbuild-emulator-tests.yaml
-  parameters:
-    provisionatorChannel: ${{ parameters.provisionatorChannel }}
-    stageCondition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
-    nunit_categories: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != PackagesConfig & cat != StaticProject & cat != SystemApplication'
 
 - stage: bcl_tests
   displayName: BCL Emulator Tests
   dependsOn: mac_build
   # Disabled on .NET release branches
-  condition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'BCL')))
+  condition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
   jobs:
   # Check - "Xamarin.Android (macOS > Tests > BCL (Emulator))"
   - job: mac_bcl_tests
@@ -1147,54 +995,26 @@ stages:
       packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
       GitHub.Token: $(GitHub.Token)
 
-- stage: tenets
-  dependsOn: []
-  displayName: Tenets
-  jobs:
-  # Check - "Xamarin.Android (Tenets Code Analysis)"
-  - job: run_static_analysis
-    displayName: Code Analysis
-    pool:
-      vmImage: $(HostedWinImage)
-    timeoutInMinutes: 60
-    cancelTimeoutInMinutes: 5
-    steps:
-    - checkout: self
-      submodules: recursive
-
-    - template: security\credscan\v2.yml@yaml-templates
-      parameters:
-        suppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
-
-    - template: security\policheck\v1.yml@yaml-templates
-      parameters:
-        exclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
-        pE: 1|2|3|4
-        rulesDBPath: $(System.DefaultWorkingDirectory)\build-tools\automation\policheck-rules-db.mdb
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@3
-      displayName: Run AntiMalware (Defender) Scan
-      inputs:
-        FileDirPath: $(System.DefaultWorkingDirectory)
-        EnableServices: true
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
-      displayName: Create Security Analysis Report
-      inputs:
-        CredScan: true
-        PoliCheck: true
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
-      displayName: Publish Security Analysis Logs
-      inputs:
-        ArtifactName: CodeAnalysisLogs
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
-      displayName: Fail Job if Security Issues are Detected
-      inputs:
-        CredScan: true
-        PoliCheck: true
-      condition: succeededOrFailed()
+# Check - "Xamarin.Android (Compliance)"
+- template: security/full/v0.yml@yaml-templates
+  parameters:
+    stageDependsOn: []
+    credScanSuppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\CredScanSuppressions.json
+    sourceGdnSuppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\source.gdnsuppress
+    tsaConfigFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\tsaoptions-v2.json
+    policheckLocScanEnabled: true
+    policheckExclusionFilesFolder: $(Build.SourcesDirectory)\build-tools\automation\guardian
+    policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\build-tools\automation\guardian
+    policheckChsScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hans
+    policheckChtScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hant
+    policheckCsyScanFolder: $(Build.SourcesDirectory)\Localize\loc\cs
+    policheckDeuScanFolder: $(Build.SourcesDirectory)\Localize\loc\de
+    policheckEsnScanFolder: $(Build.SourcesDirectory)\Localize\loc\es
+    policheckFraScanFolder: $(Build.SourcesDirectory)\Localize\loc\fr
+    policheckItaScanFolder: $(Build.SourcesDirectory)\Localize\loc\it
+    policheckJpnScanFolder: $(Build.SourcesDirectory)\Localize\loc\ja
+    policheckKorScanFolder: $(Build.SourcesDirectory)\Localize\loc\ko
+    policheckPlkScanFolder: $(Build.SourcesDirectory)\Localize\loc\pl
+    policheckPtbScanFolder: $(Build.SourcesDirectory)\Localize\loc\pt-BR
+    policheckRusScanFolder: $(Build.SourcesDirectory)\Localize\loc\ru
+    policheckTrkScanFolder: $(Build.SourcesDirectory)\Localize\loc\tr

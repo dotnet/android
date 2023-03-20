@@ -493,6 +493,10 @@ Zmień wartość na nazwę typu kwalifikowalnego zestawu, która dziedziczy po �
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
 {0} - The name of the assembly</comment>
   </data>
+  <data name="XA1035" xml:space="preserve">
+    <value>Właściwość „BundleAssemblies” jest przestarzała i nie ma wpływu na kompilację aplikacji. Równoważna funkcjonalność jest implementowana przez właściwości „AndroidUseAssemblyStore” i „AndroidEnableAssemblyCompression”.</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Wykryto użycie metody AppDomain.CreateDomain() w zestawie: {0}. Platforma .NET 6 lub nowsza wersja obsługuje tylko jedną domenę aplikacji, dlatego ten interfejs API nie będzie już dostępny w rozszerzeniu Xamarin.Android po wydaniu platformy .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain

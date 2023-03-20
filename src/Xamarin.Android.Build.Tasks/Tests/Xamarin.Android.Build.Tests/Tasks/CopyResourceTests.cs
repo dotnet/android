@@ -1,4 +1,4 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +7,6 @@ using Xamarin.Android.Tasks;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-2")]
 	public class CopyResourceTests
 	{
 		string tempFile;

@@ -19,8 +19,6 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	// Contains ~half of the BuildTest cases, so we can run them on a different CI agent
-	[Category ("Node-4")]
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest2 : BaseTest
 	{
@@ -119,7 +117,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void BuildBasicApplicationThenMoveIt ([Values (true, false)] bool isRelease)
 		{
 			string path = Path.Combine (Root, "temp", TestName, "App1");
@@ -159,7 +156,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void BuildReleaseArm64 ([Values (false, true)] bool forms)
 		{
 			var proj = forms ?
@@ -513,7 +509,7 @@ class MemTest {
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("XamarinBuildDownload")]
+		[Category ("XamarinBuildDownload")]
 		[NonParallelizable] // parallel NuGet restore causes failures
 		public void BuildXamarinFormsMapsApplication ([Values (true, false)] bool multidex)
 		{

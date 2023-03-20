@@ -21,12 +21,13 @@
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' and '$(HostOS)' == 'Darwin' and  '$(HostOSArchitecture)' == 'Arm64' ">arm64-v8a</TestAvdAbi>
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' ">x86_64</TestAvdAbi>
     <TestAvdType Condition=" '$(TestAvdType)' == '' ">default</TestAvdType>
+    <TestAvdForceCreation Condition=" '$(TestAvdForceCreation)' == '' ">true</TestAvdForceCreation>
+    <TestAvdShowWindow Condition=" '$(TestAvdShowWindow)' == '' and '$(RunningOnCI)' == 'true' ">false</TestAvdShowWindow>
+    <TestAvdExtraBootArgs Condition=" '$(TestAvdShowWindow)' == 'false' ">-no-window -no-boot-anim $(TestAvdExtraBootArgs)</TestAvdExtraBootArgs>
     <TestDeviceName Condition=" '$(TestDeviceName)' == '' ">pixel_4</TestDeviceName>
     <SdkManagerImageName Condition=" '$(SdkManagerImageName)' == '' ">system-images;android-$(TestAvdApiLevel);$(TestAvdType);$(TestAvdAbi)</SdkManagerImageName>
     <TestAvdName>XamarinAndroidTestRunner$(TestAvdApiLevel)-$(TestAvdAbi)</TestAvdName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
-    <_AdbEmulatorShowWindow Condition=" '$(RunningOnCI)' == 'True' And '$(_AdbEmulatorShowWindow)' == '' ">False</_AdbEmulatorShowWindow>
-    <_AdbEmulatorShowWindow Condition=" '$(_AdbEmulatorShowWindow)' == '' ">True</_AdbEmulatorShowWindow>
     <_ApkSizesReferenceDirectory>$(MSBuildThisFileDirectory)..\..\tests\apk-sizes-reference</_ApkSizesReferenceDirectory>
     <AvdLaunchTimeoutMinutes Condition=" '$(AvdLaunchTimeoutMinutes)' == '' ">10</AvdLaunchTimeoutMinutes>
     <AvdLaunchTimeoutSeconds>$([MSBuild]::Multiply($(AvdLaunchTimeoutMinutes), 60))</AvdLaunchTimeoutSeconds>
@@ -56,7 +57,7 @@
       <Output TaskParameter="IsValidTarget" PropertyName="_ValidAdbTarget"  />
     </Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget>
     <CreateAndroidEmulator
-        Condition=" '$(_ValidAdbTarget)' != 'True' "
+        Condition=" '$(_ValidAdbTarget)' != 'True' and ( '$(TestAvdForceCreation)' == 'true' or !Exists('$(AvdManagerHome)\.android\avd\$(TestAvdName).avd') ) "
         AndroidAbi="$(TestAvdAbi)"
         AvdManagerHome="$(AvdManagerHome)"
         JavaSdkHome="$(JavaSdkDirectory)"
@@ -74,11 +75,10 @@
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         AndroidSdkDirectory="$(AndroidSdkDirectory)"
         AvdManagerHome="$(AvdManagerHome)"
-        Arguments="$(TestEmulatorArguments)"
+        Arguments="$(TestAvdExtraBootArgs)"
         ImageName="$(TestAvdName)"
         LogcatFile="$(_LogcatFilenameBase)-full.txt"
         Port="$(_AdbEmulatorPort)"
-        ShowWindow="$(_AdbEmulatorShowWindow)"
         ToolExe="$(EmulatorToolExe)"
         ToolPath="$(EmulatorToolPath)">
       <Output TaskParameter="AdbTarget" PropertyName="_AdbTarget" />
@@ -124,6 +124,9 @@
   </Target>
 
   <Target Name="ReleaseAndroidTarget">
+    <PropertyGroup>
+      <_EmuTarget Condition=" '$(_EmuTarget)' == '' ">-s emulator-$(_AdbEmulatorPort)</_EmuTarget>
+    </PropertyGroup>
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition="'@(_FailedComponent)' != ''"
         ContinueOnError="ErrorAndContinue"
@@ -141,7 +144,7 @@
         Timeout="60000"
     />
     <KillProcess
-        Condition=" '$(_EmuTarget)' != '' "
+        Condition=" '$(_EmuPid)' != '' "
         ContinueOnError="ErrorAndContinue"
         ProcessId="$(_EmuPid)"
     />

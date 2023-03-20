@@ -18,7 +18,6 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[NonParallelizable] // On MacOS, parallel /restore causes issues
-	[Category ("Node-5")]
 	public class XASdkTests : BaseTest
 	{
 		/// <summary>
@@ -60,7 +59,6 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildLibrarySource))]
 		public void DotNetBuildLibrary (bool isRelease, bool duplicateAar, bool useDesignerAssembly)
 		{
@@ -543,7 +541,6 @@ public class FooA {
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void DotNetBuildBinding ()
 		{
 			var proj = new XASdkProject (outputType: "Library");
@@ -862,7 +859,6 @@ public class FooA {
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void DotNetBuildXamarinForms ([Values (true, false)] bool useInterpreter)
 		{
 			var proj = new XamarinFormsXASdkProject ();

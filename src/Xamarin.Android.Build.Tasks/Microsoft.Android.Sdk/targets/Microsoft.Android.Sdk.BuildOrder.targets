@@ -110,8 +110,6 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CreatePropertiesCache;
       _SeparateAppExtensionReferences;
       $(ResolveReferencesDependsOn);
-      _ConvertAndroidMamMappingFileToXml;
-      _CollectAndroidRemapMembers;
       _AddAndroidCustomMetaData;
       _ResolveAars;
     </CoreResolveReferencesDependsOn>

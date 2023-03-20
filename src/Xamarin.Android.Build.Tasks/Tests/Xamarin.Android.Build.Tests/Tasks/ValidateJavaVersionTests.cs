@@ -10,7 +10,6 @@ using ValidateJavaVersion = Xamarin.Android.Tasks.Legacy.ValidateJavaVersion;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-5")]
 	public class ValidateJavaVersionTests : BaseTest
 	{
 		string path;
