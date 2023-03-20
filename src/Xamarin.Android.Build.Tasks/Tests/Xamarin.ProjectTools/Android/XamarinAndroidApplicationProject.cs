@@ -23,8 +23,6 @@ namespace Xamarin.ProjectTools
 		static readonly string default_main_activity_cs, default_main_activity_fs;
 		static readonly string default_android_manifest;
 
-		public bool? EnableMarshalMethods { get; set; } = null;
-
 		static XamarinAndroidApplicationProject ()
 		{
 			var folder = Builder.UseDotNet ? "DotNet" : "Base";
@@ -43,10 +41,6 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			if (Builder.UseDotNet) {
-				if (EnableMarshalMethods.HasValue) {
-					SetProperty (KnownProperties.AndroidEnableMarshalMethods, EnableMarshalMethods.Value ? "True" : "False");
-				}
-
 				SetProperty (KnownProperties.OutputType, "Exe");
 				SetProperty (KnownProperties.Nullable, "enable");
 				SetProperty (KnownProperties.ImplicitUsings, "enable");
@@ -170,6 +164,11 @@ namespace Xamarin.ProjectTools
 				return Enum.TryParse<AndroidLinkMode> (GetProperty (ReleaseProperties, KnownProperties.AndroidLinkMode), out m) ? m : AndroidLinkMode.None;
 			}
 			set { SetProperty (ReleaseProperties, KnownProperties.AndroidLinkMode, value.ToString ()); }
+		}
+
+		public bool EnableMarshalMethods {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableMarshalMethods), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidEnableMarshalMethods, value.ToString ()); }
 		}
 
 		public string AndroidManifest { get; set; }
