@@ -83,7 +83,7 @@ namespace System.NetTests {
 		void DoHttpsShouldWork ()
 		{
 			// string url = "https://bugzilla.novell.com/show_bug.cgi?id=634817";
-			string url = "https://encrypted.google.com/";
+			string url = "https://dotnet.microsoft.com/";
 			// string url = "http://slashdot.org";
 			HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
 			request.Method = "GET";
