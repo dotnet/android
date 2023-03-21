@@ -254,12 +254,16 @@ namespace Xamarin.Android.Tasks
 								continue;
 							}
 							// check for ignored items
+							bool exclude = false;
 							foreach (var pattern in excludePatterns) {
 								if(pattern.IsMatch (path)) {
 									Log.LogDebugMessage ($"Ignoring jar entry '{name}' from '{Path.GetFileName (jarFile)}'. Filename matched the exclude pattern '{pattern}'.");
-									continue;
+									exclude = true;
+									break;
 								}
 							}
+							if (exclude)
+								continue;
 							if (string.Compare (Path.GetFileName (name), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0) {
 								Log.LogDebugMessage ("Ignoring jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
 								continue;
