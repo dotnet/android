@@ -98,6 +98,86 @@ And the output files should be found in the current directory. You can
 use the `-o` switch if you would prefer to output them to a specific
 directory.
 
+## How to get GC memory dumps?
+
+If running on desktop, you can use the `dotnet-gcdump` global tool.
+This can be installed via:
+
+```dotnetcli
+$ dotnet tool install --global dotnet-gcdump
+```
+
+To use it, for example:
+
+```sh
+# `hw-readline` is a standard Hello World, with a `Console.ReadLine()` at the end
+$ dotnet run --project hw-readline.csproj
+Hello, World!
+Press <ENTER> to continue
+
+# Then from another shell...
+
+# Determine which process ID to dump
+$ ps | grep 'dotnet.*hw-re'
+33972 ttys049    0:01.86 dotnet run --project hw-readline.csproj
+33977 ttys050    0:00.00 grep dotnet.*hw-re
+
+# Collect the GC info
+$ dotnet gcdump collect --process-id 33972
+Writing gcdump to '.../hw-readline/20230314_113922_33972.gcdump'...
+	Finished writing 5624131 bytes.
+```
+See the [`dotnet-gcdump` documentation][dotnet-gcdump]
+for further details about its usage.
+
+This will connect to a process and save a `*.gcdump` file. You can
+open this file in Visual Studio on Windows, for example:
+
+![Visual Studio GC Heap Dump](../images/VS-GC-Dump.png)
+
+To get this data from an Android application, you need all the above
+setup for `adb shell`, `dsrouter`, etc. except you need to change the
+provider for `dotnet-trace`:
+
+```sh
+$  dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-DotNETRuntimeMonoProfiler:0xC900001:4
+```
+
+`0xC900001`, a bitmask, enables the following event types:
+
+* `GCKeyword`
+* `GCHeapCollectKeyword`
+* `GCRootKeyword`
+
+See the [`Microsoft-DotNETRuntimeMonoProfiler` event types][mono-events] for more info.
+
+`:4` enables "Informational" verbosity, where the different logging
+levels are described by [`dotnet-trace help` output][dotnet-trace-help].
+
+This saves a `.nettrace` file with GC events that are not available
+with the default provider.
+
+To actually view this data, you'll have to use one of:
+
+* https://github.com/lateralusX/diagnostics-nettrace-samples
+* https://github.com/filipnavara/mono-gcdump
+
+Using `mono-gcdump`:
+
+```sh
+$ dotnet run --project path/to/filipnavara/mono-gcdump/mono-gcdump.csproj -- convert foo.nettrace
+```
+
+This saves a `foo.gcdump` that you can open in Visual Studio.
+
+See the [dotnet/runtime documentation][gc-dumps-on-mono] for
+additional details.
+
+[dotnet-gcdump]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-gcdump
+[mono-events]: https://github.com/dotnet/runtime/blob/c887c92d8af4ce65b19962b777f96ae8eb997a42/src/coreclr/vm/ClrEtwAll.man#L7433-L7468
+[dotnet-trace-help]: https://github.com/dotnet/diagnostics/blob/6d755e8b5435b1380c118e9d81e075654b0330c9/documentation/dotnet-trace-instructions.md#dotnet-trace-help
+[gc-dumps-on-mono]: https://github.com/dotnet/runtime/blob/728fd85bc7ad04f5a0ea2ad0d4d8afe371ff9b64/docs/design/mono/diagnostics-tracing.md#collect-gc-dumps-on-monovm
+
 ## How to `dotnet trace` our build?
 
 Setting this up is easy, the main issue is there end up being
