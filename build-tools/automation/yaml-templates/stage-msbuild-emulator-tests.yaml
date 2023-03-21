@@ -21,8 +21,6 @@ stages:
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
-    variables:
-      androidSdkPlatforms: 33
     steps:
     - template: setup-test-environment.yaml
       parameters:
@@ -38,7 +36,7 @@ stages:
     - template: run-xaprepare.yaml
       parameters:
         displayName: install emulator
-        arguments: --s=EmulatorTestDependencies --android-sdk-platforms="$(androidSdkPlatforms)"
+        arguments: --s=EmulatorTestDependencies --android-sdk-platforms="$(DefaultTestSdkPlatforms)"
         
     - task: DownloadPipelineArtifact@2
       inputs:

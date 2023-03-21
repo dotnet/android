@@ -44,7 +44,8 @@ steps:
 - script: >
     DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&
     mkdir -p "$DEST" &&
-    cp "${{ parameters.artifactSource }}" "$DEST"
+    cp "${{ parameters.artifactSource }}" "$DEST" ||
+    echo "copy apk/aab failed"  # We don't need to report the error
   displayName: copy apk/aab
   condition: ne(variables['Agent.JobStatus'], 'Succeeded')
   continueOnError: true
