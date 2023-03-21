@@ -923,7 +923,7 @@ public class Test
 				string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
 				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsFalse (zip.ContainsEntry ("Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
+					Assert.IsFalse (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
 				}
 			}
 		}
