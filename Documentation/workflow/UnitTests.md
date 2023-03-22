@@ -279,4 +279,17 @@ There are a category of tests which run on the device itself, these tests the ru
 behaviour. These run `NUnit` tests directly on the device. Some of these are located in the runtime itself. We build them within the repo then run the tests on the device. They use a custom mobile version of
 `NUnit` called `NUnitLite`. For the most part they are the same.
 
-These tests are generally found in the `tests/Mono.Android-Tests` directory.
+These tests are generally found in the `tests/Mono.Android-Tests` directory and are used to test the
+functions of the bound C# API on device. The following is an example.
+
+```csharp
+[Test]
+public void ApplicationContextIsApp ()
+{
+    Assert.IsTrue (Application.Context is App);
+    Assert.IsTrue (App.Created);
+}
+```
+
+Tests in this area are usually located in a directory representing the namespace of the API being tested.
+For example the above test exists in the `Android.App` folder, since it is testing the `Android.App.Application` class.
