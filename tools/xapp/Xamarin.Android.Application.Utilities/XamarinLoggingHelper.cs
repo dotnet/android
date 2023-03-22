@@ -9,7 +9,8 @@ enum LogLevel
 	Warning,
 	Info,
 	Message,
-	Debug
+	Debug,
+	Verbose,
 }
 
 class XamarinLoggingHelper : ILogger
@@ -28,7 +29,8 @@ class XamarinLoggingHelper : ILogger
 	public const ConsoleColor StatusYes    = ConsoleColor.Green;
 	public const ConsoleColor StatusNo     = ConsoleColor.Red;
 
-	public bool Verbose { get; set; }
+	public LogLevel Level { get; set; } = LogLevel.Message;
+
 	public string? LogFilePath {
 		get => logFilePath;
 		set {
@@ -94,6 +96,16 @@ class XamarinLoggingHelper : ILogger
 		Debug ($"{message ?? String.Empty}{Environment.NewLine}");
 	}
 
+	public void Verbose (string? message)
+	{
+		Log (LogLevel.Verbose, message);
+	}
+
+	public void VerboseLine (string? message = null)
+	{
+		Verbose ($"{message ?? String.Empty}{Environment.NewLine}");
+	}
+
 	void Status (string label, string text, ConsoleColor color)
 	{
 		Log (LogLevel.Info, $"{label}: ", StatusLabel);
@@ -105,9 +117,9 @@ class XamarinLoggingHelper : ILogger
 		Status (label, text, StatusText);
 	}
 
-	public void Status (string label, IFormattable val)
+	public void Status (string label, IFormattable? val, string missingText = "missing")
 	{
-		Status (label, val.ToString () ?? String.Empty);
+		Status (label, val?.ToString () ?? missingText);
 	}
 
 	public void StatusLine (string label, string text)
@@ -116,7 +128,7 @@ class XamarinLoggingHelper : ILogger
 		Log (LogLevel.Info, Environment.NewLine);
 	}
 
-	public void StatusLine (string label, IFormattable val)
+	public void StatusLine (string label, IFormattable? val, string missingText = "missing")
 	{
 		Status (label, val);
 		Log (LogLevel.Info, Environment.NewLine);
@@ -137,7 +149,7 @@ class XamarinLoggingHelper : ILogger
 
 	public void Log (LogLevel level, string? message)
 	{
-		if (!Verbose && level == LogLevel.Debug) {
+		if (level > Level) {
 			LogToFile (message);
 			return;
 		}
@@ -155,7 +167,7 @@ class XamarinLoggingHelper : ILogger
 	{
 		LogToFile (message);
 
-		if (!Verbose && level == LogLevel.Debug) {
+		if (level > Level) {
 			return;
 		}
 

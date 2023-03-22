@@ -251,7 +251,7 @@ class AXMLParser
 					nsUriToPrefix[nsUri] = nsPrefix ?? String.Empty;
 				}
 
-				log.DebugLine ($"Start of Namespace mapping: prefix {prefixIndex}: '{nsPrefix}' --> uri {uriIndex}: '{nsUri}'");
+				log.VerboseLine ($"Start of Namespace mapping: prefix {prefixIndex}: '{nsPrefix}' --> uri {uriIndex}: '{nsUri}'");
 
 				if (String.IsNullOrEmpty (nsUri)) {
 					log.WarningLine ($"Namespace prefix '{nsPrefix}' resolves to empty URI.");
@@ -266,7 +266,7 @@ class AXMLParser
 				uint endPrefixIndex = reader.ReadUInt32 ();
 				uint endUriIndex = reader.ReadUInt32 ();
 
-				log.DebugLine ($"End of Namespace mapping: prefix {endPrefixIndex}, uri {endUriIndex}");
+				log.VerboseLine ($"End of Namespace mapping: prefix {endPrefixIndex}, uri {endUriIndex}");
 				if (endPrefixIndex != prefixIndex) {
 					log.WarningLine ($"Prefix index of Namespace end doesn't match the last Namespace prefix index: {prefixIndex} != {endPrefixIndex}");
 				}
@@ -311,8 +311,8 @@ class AXMLParser
 				// Tag name is, of course, required but instead of throwing an exception should we find none, we use a fake name in hope that we can still salvage
 				// the document.
 				tagName = stringPool.GetString (tagNameIndex) ?? "unnamedTag";
-				log.DebugLine ($"Start of tag '{tagName}', NS URI index {tagNsUriIndex}");
-				log.DebugLine ($"Reading tag attributes ({attributeCount}):");
+				log.VerboseLine ($"Start of tag '{tagName}', NS URI index {tagNsUriIndex}");
+				log.VerboseLine ($"Reading tag attributes ({attributeCount}):");
 
 				string? tagNsUri = tagNsUriIndex != 0xffffffff ? stringPool.GetString (tagNsUriIndex) : null;
 				string? tagNsPrefix;
@@ -347,7 +347,7 @@ class AXMLParser
 						continue;
 					}
 
-					log.DebugLine ($"  '{attrName}': ns == '{attrNs}'; value == 0x{attrValue:x}; type == 0x{attrType:x}; data == 0x{attrData:x}");
+					log.VerboseLine ($"  '{attrName}': ns == '{attrNs}'; value == 0x{attrValue:x}; type == 0x{attrType:x}; data == 0x{attrData:x}");
 					XmlAttribute attr;
 
 					if (!String.IsNullOrEmpty (attrNs)) {
@@ -366,7 +366,7 @@ class AXMLParser
 				tagNameIndex = reader.ReadUInt32 ();
 
 				tagName = stringPool.GetString (tagNameIndex);
-				log.DebugLine ($"End of tag '{tagName}', NS URI index {tagNsUriIndex}");
+				log.VerboseLine ($"End of tag '{tagName}', NS URI index {tagNsUriIndex}");
 				currentNode = currentNode?.ParentNode!;
 				continue;
 			}
@@ -440,7 +440,7 @@ class AXMLParser
 
 	bool SkipOverResourceMap (ARSCHeader header, BinaryReader reader)
 	{
-		log.DebugLine ("AXML contains a resource map");
+		log.VerboseLine ("AXML contains a resource map");
 
 		// Check size: < 8 bytes mean that the chunk is not complete
 		// Should be aligned to 4 bytes.

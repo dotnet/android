@@ -14,6 +14,8 @@ interface ILogger
 	void InfoLine (string? message = null);
 	void Debug (string? message);
 	void DebugLine (string? message = null);
+	void Verbose (string? message);
+	void VerboseLine (string? message = null);
 	void Status (string label, string text);
 	void StatusLine (string label, string text);
 	void Log (LogLevel level, string? message);

@@ -7,6 +7,7 @@ namespace Xamarin.Android.Application.Utilities;
 static class Util
 {
 	public static readonly ArrayPool<byte> BytePool = ArrayPool<byte>.Shared;
+	public static ILogger? Log;
 
 	public static void CreateFileDirectory (string filePath)
 	{
@@ -16,11 +17,11 @@ static class Util
 		}
 	}
 
-	public static ulong GetPaddedSize<S> (ulong sizeSoFar, bool is64Bit)
+	static ulong GetPadding<S> (ulong sizeSoFar, bool is64Bit, out ulong typeSize)
 	{
-		ulong typeSize = Util.GetNativeTypeSize<S> (is64Bit);
+		typeSize = Util.GetNativeTypeSize<S> (is64Bit);
 		if (typeSize == 1) {
-			return 1;
+			return 0;
 		}
 
 		ulong modulo;
@@ -31,10 +32,27 @@ static class Util
 		}
 
 		ulong alignment = sizeSoFar % modulo;
-		if (alignment == 0)
-			return typeSize;
+		if (alignment == 0) {
+			return 0;
+		}
 
-		return typeSize + (modulo - alignment);
+		return modulo - alignment;
+	}
+
+	public static ulong GetPadding<S> (ulong sizeSoFar, bool is64Bit)
+	{
+		return GetPadding<S> (sizeSoFar, is64Bit, out ulong _);
+	}
+
+	public static ulong GetPaddedSize<S> (ulong sizeSoFar, bool is64Bit)
+	{
+		ulong padding = GetPadding<S> (sizeSoFar, is64Bit, out ulong typeSize);
+
+		if (padding == 0) {
+			return typeSize;
+		}
+
+		return typeSize + padding;
 	}
 
 	public static ulong GetNativeTypeSize<S> (bool is64Bit)
@@ -100,8 +118,9 @@ static class Util
 	/// <returns>Number of actual bytes read (including padding)</returns>
 	public static ulong ReadField (BinaryReader reader, ref bool field, ulong sizeSoFar, bool is64Bit)
 	{
+		ulong ret = GetSizeAndAdjustPosition<bool> (reader, sizeSoFar, is64Bit);
 		field = reader.ReadBoolean ();
-		return GetSizeAndAdjustPosition<bool> (reader, sizeSoFar, is64Bit);
+		return ret;
 	}
 
 	/// <summary>
@@ -111,8 +130,9 @@ static class Util
 	/// <returns>Number of actual bytes read (including padding)</returns>
 	public static ulong ReadField (BinaryReader reader, ref byte field, ulong sizeSoFar, bool is64Bit)
 	{
+		ulong ret = GetSizeAndAdjustPosition<byte> (reader, sizeSoFar, is64Bit);
 		field = reader.ReadByte ();
-		return GetSizeAndAdjustPosition<bool> (reader, sizeSoFar, is64Bit);
+		return ret;
 	}
 
 	/// <summary>
@@ -122,8 +142,9 @@ static class Util
 	/// <returns>Number of actual bytes read (including padding)</returns>
 	public static ulong ReadField (BinaryReader reader, ref uint field, ulong sizeSoFar, bool is64Bit)
 	{
+		ulong ret = GetSizeAndAdjustPosition<uint> (reader, sizeSoFar, is64Bit);
 		field = reader.ReadUInt32 ();
-		return GetSizeAndAdjustPosition<bool> (reader, sizeSoFar, is64Bit);
+		return ret;
 	}
 
 	/// <summary>
@@ -133,8 +154,9 @@ static class Util
 	/// <returns>Number of actual bytes read (including padding)</returns>
 	public static ulong ReadField (BinaryReader reader, ref ulong field, ulong sizeSoFar, bool is64Bit)
 	{
+		ulong ret = GetSizeAndAdjustPosition<ulong> (reader, sizeSoFar, is64Bit);
 		field = reader.ReadUInt64 ();
-		return GetSizeAndAdjustPosition<ulong> (reader, sizeSoFar, is64Bit);
+		return ret;
 	}
 
 	/// <summary>
@@ -146,8 +168,9 @@ static class Util
 	/// <returns>Number of actual bytes read (including padding)</returns>
 	public static ulong ReadField (BinaryReader reader, ref string field, ulong sizeSoFar, bool is64Bit)
 	{
+		ulong ret = GetSizeAndAdjustPosition<string> (reader, sizeSoFar, is64Bit);
 		var _ = is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
-		return GetSizeAndAdjustPosition<string> (reader, sizeSoFar, is64Bit);
+		return ret;
 	}
 
 	/// <summary>
@@ -159,11 +182,13 @@ static class Util
 	/// <returns>Number of actual bytes read (including padding)</returns>
 	public static ulong ReadField (BinaryReader reader, ref IntPtr field, ulong sizeSoFar, bool is64Bit)
 	{
+		ulong ret = GetSizeAndAdjustPosition<IntPtr> (reader, sizeSoFar, is64Bit);
 		var _ = is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
-		return GetSizeAndAdjustPosition<IntPtr> (reader, sizeSoFar, is64Bit);
+		return ret;
 	}
 
 	public static string ToStringOrNull<T> (T? reference) => reference == null ? "<NULL>" : reference.ToString () ?? "[unknown]";
 
 	public static string YesNo (bool yes) => yes ? "yes" : "no";
+	public static string AreOrNot (bool are) => are ? "are" : "are not";
 }

@@ -31,8 +31,8 @@ class XamarinAppReleaseDSO : XamarinAppDSO
 
 		xapp = null;
 		ulong format_tag = 0;
-		if (elf.HasSymbol (Constants.FormatTagSymbolName))
-			format_tag = elf.GetUInt64 (Constants.FormatTagSymbolName);
+		if (elf.HasSymbol (Constants.SymbolNames.FormatTag))
+			format_tag = elf.GetUInt64 (Constants.SymbolNames.FormatTag);
 
 		XamarinAppReleaseDSO_Version? reader = null;
 		switch (format_tag) {

@@ -48,15 +48,17 @@ abstract class AnELF
 		symbolsSection = symSection;
 	}
 
-	protected ISymbolEntry? GetSymbol (string symbolName)
+	public ISymbolEntry? GetSymbol (string symbolName)
 	{
 		ISymbolEntry? symbol = null;
 
-		if (symbolsSection != null)
+		if (symbolsSection != null) {
 			symbol = GetSymbol (symbolsSection, symbolName);
+		}
 
-		if (symbol == null)
+		if (symbol == null) {
 			symbol = GetSymbol (dynamicSymbolsSection, symbolName);
+		}
 
 		return symbol;
 	}
@@ -159,11 +161,11 @@ abstract class AnELF
 	protected byte[] GetData (ISection section, ulong size, ulong offset)
 	{
 		ulong sectionOffset = (elf.Class == Class.Bit64 ? ((Section<ulong>)section).Offset : ((Section<uint>)section).Offset);
-		Log.DebugLine ($"AnELF.GetData: section == {section.Name}; type == {section.Type}; flags == {section.Flags}; offset into binary == {sectionOffset}; size == {size}");
+		Log.VerboseLine ($"AnELF.GetData: section == {section.Name}; type == {section.Type}; flags == {section.Flags}; offset into binary == {sectionOffset}; size == {size}");
 		byte[] data = section.GetContents ();
 
-		Log.DebugLine ($"  section data length: {data.Length} (long: {data.LongLength})");
-		Log.DebugLine ($"  offset into section: {offset}; symbol data length: {size}");
+		Log.VerboseLine ($"  section data length: {data.Length} (long: {data.LongLength})");
+		Log.VerboseLine ($"  offset into section: {offset}; symbol data length: {size}");
 		if ((ulong)data.LongLength < (offset + size)) {
 			return EmptyArray;
 		}

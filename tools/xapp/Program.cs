@@ -22,7 +22,8 @@ class App
 
 	static int Main (string[] args)
 	{
-		log.Verbose = true;
+		Util.Log = log;
+		log.Level = LogLevel.Debug;
 
 		var parsedOptions = new ParsedOptions ();
 
@@ -117,6 +118,31 @@ class App
 		} else {
 			PrintDSOCache (dsoCache);
 		}
+
+		log.InfoLine ();
+		log.InfoLine ("Marshal methods");
+		MarshalMethods? marshalMethods = xamarinAppInfo.GetMarshalMethods ();
+		if (marshalMethods == null) {
+			log.InfoLine ("  not available");
+		} else {
+			PrintMarshalMethods (marshalMethods);
+		}
+	}
+
+	static void PrintMarshalMethods (MarshalMethods marshalMethods)
+	{
+		log.StatusLine ("  Format version", marshalMethods.FormatVersion);
+		log.StatusLine ("  Init function", InitFuncStatus (marshalMethods.XamarinAppInitFuncValid));
+		log.StatusLine ("  Number of classes with marshal methods", marshalMethods.NumberOfClasses, Constants.ItemUnsupported);
+
+		string InitFuncStatus (bool? val)
+		{
+			if (val == null) {
+				return "absent";
+			}
+
+			return val.Value ? "present and valid" : "present but invalid";
+		}
 	}
 
 	static void PrintDSOCache (DSOCache cache)
@@ -124,7 +150,7 @@ class App
 		for (int i = 0; i < cache.Entries.Count; i++) {
 			DSOCacheEntry entry = cache.Entries[i];
 			log.StatusLine ($"  {i}", entry.name);
-			log.StatusLine ("    Hash", $"0x{entry.hash:08x}");
+			log.StatusLine ("    Hash", $"0x{entry.hash:x08}");
 			log.StatusYesNo ($"    Ignored", entry.ignore);
 			log.InfoLine ();
 		}
@@ -180,7 +206,8 @@ class App
 		//  - Supported ABIs must be at least 1
 
 		log.InfoLine ();
-		log.MessageLine ("Application info:");
+		log.InfoLine ("== Application info ==");
+		log.InfoLine ("----------------------");
 		log.StatusLine ("  Archive type", appInfo.ArchiveType);
 		log.StatusYesNoLine ($"  Signed", appInfo.IsSigned);
 		log.StatusLine ("  Package name", appInfo.PackageName);

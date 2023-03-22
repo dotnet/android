@@ -37,13 +37,22 @@ class DataProviderXamarinApp : DataProvider
 		};
 	}
 
-	public string? GetAOTMode ()
+	public MarshalMethods? GetMarshalMethods ()
 	{
-		if (!elf.HasSymbol (Constants.MonoAotModeNameSymbolName)) {
+		if (!MarshalMethods.Supported (elf, format_tag)) {
 			return null;
 		}
 
-		byte[]? data = GetSymbolData (Constants.MonoAotModeNameSymbolName, out ISymbolEntry? symbolEntry);
+		return MarshalMethods.Create (Log, elf, format_tag);
+	}
+
+	public string? GetAOTMode ()
+	{
+		if (!elf.HasSymbol (Constants.SymbolNames.MonoAotModeName)) {
+			return null;
+		}
+
+		byte[]? data = GetSymbolData (Constants.SymbolNames.MonoAotModeName, out ISymbolEntry? symbolEntry);
 		if (data == null || symbolEntry == null) {
 			return null;
 		}
@@ -53,26 +62,26 @@ class DataProviderXamarinApp : DataProvider
 
 	public DSOCache? GetDSOCache ()
 	{
-		if (!elf.HasSymbol (Constants.DSOCacheSymbolName)) {
+		if (!elf.HasSymbol (Constants.SymbolNames.DSOCache)) {
 			return null;
 		}
 
-		byte[]? data = GetSymbolData (Constants.DSOCacheSymbolName, out ISymbolEntry? symbolEntry);
+		byte[]? data = GetSymbolData (Constants.SymbolNames.DSOCache, out ISymbolEntry? symbolEntry);
 		if (data == null || data.Length == 0 || symbolEntry == null) {
 			return null;
 		}
 
-		return new DSOCache (data, elf, symbolEntry);
+		return new DSOCache (Log, data, elf, symbolEntry);
 	}
 
 	public IDictionary<string, string>? GetSystemProperties ()
 	{
-		return GetKeyValuePairs (Constants.SystemPropertiesSymbolName, "System properties");
+		return GetKeyValuePairs (Constants.SymbolNames.SystemProperties, "System properties");
 	}
 
 	public IDictionary<string, string>? GetEnvironmentVariables ()
 	{
-		return GetKeyValuePairs (Constants.EnvironmentVariablesSymbolName, "Environment variables");
+		return GetKeyValuePairs (Constants.SymbolNames.EnvironmentVariables, "Environment variables");
 	}
 
 	IDictionary<string, string>? GetKeyValuePairs (string symbolName, string description)
@@ -124,7 +133,7 @@ class DataProviderXamarinApp : DataProvider
 
 	public ApplicationConfigShim? GetApplicationConfig ()
 	{
-		if (!elf.HasSymbol (Constants.ApplicationConfigSymbolName)) {
+		if (!elf.HasSymbol (Constants.SymbolNames.ApplicationConfig)) {
 			return null;
 		}
 
@@ -157,7 +166,7 @@ class DataProviderXamarinApp : DataProvider
 		size += elf.GetPaddedSize (size, applicationConfig.mono_components_mask);
 		size += elf.GetPaddedSize (size, applicationConfig.android_package_name);
 
-		byte[]? data = GetSymbolData (Constants.ApplicationConfigSymbolName, out ISymbolEntry? symbolEntry);
+		byte[]? data = GetSymbolData (Constants.SymbolNames.ApplicationConfig, out ISymbolEntry? symbolEntry);
 		if (data == null || symbolEntry == null) {
 			return null;
 		}
@@ -204,7 +213,7 @@ class DataProviderXamarinApp : DataProvider
 
 		int expectedSize = elf.Is64Bit ? ExpectedSize64 : ExpectedSize32;
 		if (data.Length != expectedSize) {
-			Log.WarningLine ($"Failed to read '{Constants.ApplicationConfigSymbolName}' data from {InputPath} (expected {expectedSize}, got {data.Length})");
+			Log.WarningLine ($"Failed to read '{Constants.SymbolNames.ApplicationConfig}' data from {InputPath} (expected {expectedSize}, got {data.Length})");
 			return null;
 		}
 
@@ -225,10 +234,10 @@ class DataProviderXamarinApp : DataProvider
 
 	ulong GetFormatTag (AnELF elfBinary)
 	{
-		if (!elfBinary.HasSymbol (Constants.FormatTagSymbolName)) {
+		if (!elfBinary.HasSymbol (Constants.SymbolNames.FormatTag)) {
 			return 0;
 		}
 
-		return elf.GetUInt64 (Constants.FormatTagSymbolName);
+		return elf.GetUInt64 (Constants.SymbolNames.FormatTag);
 	}
 }

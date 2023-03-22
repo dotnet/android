@@ -15,15 +15,17 @@ sealed class DSOCacheEntry
 	public readonly string    name;
 	public readonly IntPtr    handle = IntPtr.Zero;
 
-	public DSOCacheEntry (BinaryReader reader, AnELF elf, ISymbolEntry symbolEntry)
+	public DSOCacheEntry (ILogger log, BinaryReader reader, AnELF elf, ISymbolEntry symbolEntry)
 	{
 		bool is64Bit = elf.Is64Bit;
 		ulong sizeSoFar = 0;
+		ulong entryOffset = (ulong)reader.BaseStream.Position;
 
 		sizeSoFar += Util.ReadField (reader, ref hash, sizeSoFar, is64Bit);
 		sizeSoFar += Util.ReadField (reader, ref ignore, sizeSoFar, is64Bit);
 
-		name = elf.GetStringFromPointerField (symbolEntry, sizeSoFar) ?? Constants.UnableToLoadDataForPointer;
+		ulong pointerOffset = Util.GetPadding<string> (sizeSoFar, is64Bit) + sizeSoFar + entryOffset;
+		name = elf.GetStringFromPointerField (symbolEntry, pointerOffset) ?? Constants.UnableToLoadDataForPointer;
 		sizeSoFar += Util.ReadField (reader, ref name, sizeSoFar, is64Bit);
 		sizeSoFar += Util.ReadField (reader, ref handle, sizeSoFar, is64Bit);
 	}
@@ -45,7 +47,7 @@ class DSOCache
 {
 	public List<DSOCacheEntry> Entries { get; } = new List<DSOCacheEntry> ();
 
-	public DSOCache (byte[] data, AnELF elf, ISymbolEntry symbolEntry)
+	public DSOCache (ILogger log, byte[] data, AnELF elf, ISymbolEntry symbolEntry)
 	{
 		using var stream = new MemoryStream (data);
 		using var reader = new BinaryReader (stream);
@@ -53,8 +55,7 @@ class DSOCache
 		ulong structSize = DSOCacheEntry.GetSize (elf);
 		int n = 0;
 		while (stream.Position < stream.Length) {
-			Console.WriteLine ($"DSO entry #{n++}");
-			Entries.Add (new DSOCacheEntry (reader, elf, symbolEntry));
+			Entries.Add (new DSOCacheEntry (log, reader, elf, symbolEntry));
 		}
 	}
 }
