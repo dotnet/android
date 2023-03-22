@@ -22,9 +22,10 @@
 ## Test Count
 
 | Test | Count |
-| :---------: | ----: |
-| Test | 0 |
-| Test | 100 |
+| :------------------: | -----: |
+| MSBuild Tests | 436 |
+| MSBuild Device Tests | 105 |
+| On Device Tests | 177 |
 
 
 ## Running Tests
