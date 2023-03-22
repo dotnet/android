@@ -353,6 +353,30 @@ namespace generatortests
 		}
 
 		[Test]
+		public void CompatVirtualMethod_Class ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuff' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var klass = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
+		}
+
+		[Test]
 		public void WriteDuplicateInterfaceEventArgs ()
 		{
 			// If we have 2 methods that would each create the same EventArgs class,

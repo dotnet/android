@@ -19,6 +19,7 @@ namespace MonoDroid.Generation
 		public bool GenerateAsyncWrapper { get; set; }
 		public bool GenerateDispatchingSetter { get; set; }
 		public bool IsAbstract { get; set; }
+		public bool IsCompatVirtualMethod { get; set; }
 		public bool IsFinal { get; set; }
 		public bool IsInterfaceDefaultMethod { get; set; }
 		public Method OverriddenInterfaceMethod { get; set; }

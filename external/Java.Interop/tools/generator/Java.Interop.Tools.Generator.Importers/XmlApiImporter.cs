@@ -371,6 +371,7 @@ namespace MonoDroid.Generation
 				GenericArguments = elem.GenericArguments (),
 				IsAbstract = elem.XGetAttribute ("abstract") == "true",
 				IsAcw = true,
+				IsCompatVirtualMethod = elem.XGetAttribute ("compatVirtualMethod") == "true",
 				IsFinal = elem.XGetAttribute ("final") == "true",
 				IsReturnEnumified = elem.Attribute ("enumReturn") != null,
 				IsStatic = elem.XGetAttribute ("static") == "true",
@@ -383,6 +384,10 @@ namespace MonoDroid.Generation
 				SourceApiLevel = GetApiLevel (elem.XGetAttribute ("merge.SourceFile")),
 				Visibility = elem.Visibility ()
 			};
+
+			// CompatVirtualMethods aren't abstract
+			if (method.IsCompatVirtualMethod)
+				method.IsAbstract = false;
 
 			method.IsVirtual = !method.IsStatic && elem.XGetAttribute ("final") == "false";
 

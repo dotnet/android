@@ -490,5 +490,29 @@ namespace generatortests
 
 			AssertTargetedExpected (nameof (WriteInterfaceFieldAsDimProperty), writer.ToString ());
 		}
+
+		[Test]
+		public void CompatVirtualMethod_Interface ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Cursor' static='false' visibility='public' jni-signature='Landroid/database/Cursor;'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='getNotificationUri' jni-signature='()Ljava/lang/Object;' bridge='false' native='false' return='java.lang.Object' jni-return='Ljava/lang/Object;' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true' />
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var klass = gens.Single (g => g.Name == "ICursor");
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
+		}
 	}
 }
