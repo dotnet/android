@@ -271,16 +271,6 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
 			new object[] {
-				"net6.0",
-				"android",
-				31,
-			},
-			new object[] {
-				"net6.0",
-				"android31",
-				31,
-			},
-			new object[] {
 				"net7.0",
 				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
@@ -372,11 +362,7 @@ public class JavaSourceTest {
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
-
-			//TODO: this issue is not fixed in net6.0-android MSBuild targets
-			if (dotnetVersion != "net6.0") {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
-			}
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
 		}
 
 		[Test]
@@ -870,11 +856,6 @@ public class FooA {
 
 		static readonly object[] DotNetTargetFrameworks = new object[] {
 			new object[] {
-				"net6.0",
-				"android",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
-			},
-			new object[] {
 				"net7.0",
 				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
@@ -1009,10 +990,10 @@ public class FooA {
 		}
 
 		[Test]
-		public void XamarinLegacySdk ([Values ("net6.0-android32.0", "net7.0-android33.0", "net8.0-android33.0")] string dotnetTargetFramework)
+		public void XamarinLegacySdk ([Values ("net7.0-android33.0", "net8.0-android33.0")] string dotnetTargetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
-				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha2",
+				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",
 				Sources = {
 					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
