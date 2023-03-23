@@ -55,16 +55,6 @@ namespace Xamarin.Android.Build.Tests
 				/* xamarinForms */   true,
 				/* targetFramework*/ "net7.0-android",
 			},
-			new object[] {
-				/* isRelease */      false,
-				/* xamarinForms */   true,
-				/* targetFramework*/ "net6.0-android",
-			},
-			new object[] {
-				/* isRelease */      true,
-				/* xamarinForms */   true,
-				/* targetFramework*/ "net6.0-android",
-			},
 		};
 
 		[Test]
@@ -207,7 +197,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[Category ("Debugger")]
 		[Retry(5)]
-		public void DotNetDebug ([Values("net6.0-android", "net7.0-android")] string targetFramework)
+		public void DotNetDebug ([Values("net7.0-android", "net8.0-android")] string targetFramework)
 		{
 			AssertCommercialBuild ();
 
