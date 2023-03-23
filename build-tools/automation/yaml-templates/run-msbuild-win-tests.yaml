@@ -28,6 +28,7 @@ jobs:
 
     - template: setup-test-environment.yaml
       parameters:
+        provisionClassic: ${{ ne(parameters.target_framework, parameters.dotnet_targetframework) }}
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
         remove_dotnet: true
 

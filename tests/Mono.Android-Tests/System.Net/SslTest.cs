@@ -77,11 +77,24 @@ namespace System.NetTests {
 		void DoHttpsShouldWork ()
 		{
 			// string url = "https://bugzilla.novell.com/show_bug.cgi?id=634817";
-			string url = "https://encrypted.google.com/";
+			string[] urls = new string[]  {
+				"https://dotnet.microsoft.com/",
+				"https://www.bing.com/",
+				"https://httpbin.org/get",
+			};
 			// string url = "http://slashdot.org";
-			HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-			request.Method = "GET";
-			var response = (HttpWebResponse) request.GetResponse ();
+			HttpWebResponse response = null;
+			foreach (var url in urls) {
+				HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
+				request.Method = "GET";
+				response = (HttpWebResponse) request.GetResponse ();
+				if (response.StatusCode == HttpStatusCode.TooManyRequests) {
+					// try the next url.
+					continue;
+				}
+				break;
+			}
+			Assert.IsNotNull (response);
 			int len = 0;
 			using (var _r = new StreamReader (response.GetResponseStream ())) {
 				char[] buf = new char [4096];
