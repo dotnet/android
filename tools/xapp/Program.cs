@@ -131,17 +131,49 @@ class App
 
 	static void PrintMarshalMethods (MarshalMethods marshalMethods)
 	{
-		log.StatusLine ("  Format version", marshalMethods.FormatVersion);
-		log.StatusLine ("  Init function", InitFuncStatus (marshalMethods.XamarinAppInitFuncValid));
-		log.StatusLine ("  Number of classes with marshal methods", marshalMethods.NumberOfClasses, Constants.ItemUnsupported);
+		if (marshalMethods is MarshalMethods_V2 v2) {
+			PrintMarshalMethods (v2);
+		} else {
+			log.WarningLine ($"Marshal methods format {marshalMethods.FormatName} not supported");
+		}
+	}
 
-		string InitFuncStatus (bool? val)
-		{
-			if (val == null) {
-				return "absent";
+	static void PrintMarshalMethods (MarshalMethods_V2 marshalMethods)
+	{
+		log.StatusLine ("  Format version", marshalMethods.FormatName);
+		log.StatusLine ("  Init function", marshalMethods.XamarinAppInitFuncValid ? "valid" : "invalid");
+		log.StatusLine ("  Number of classes with marshal methods", marshalMethods.NumberOfClasses);
+
+		const string classCacheLabel = "  Class cache (managed tokens)";
+		if (marshalMethods.ClassCache.Count == 0) {
+			log.StatusLine (classCacheLabel, "empty");
+		} else {
+			log.LogLine (LogLevel.Info, $"{classCacheLabel}:", XamarinLoggingHelper.StatusLabel);
+			for (int i = 0; i < marshalMethods.ClassCache.Count; i++) {
+				MarshalMethodsManagedClass_V2 entry = marshalMethods.ClassCache[i];
+				log.StatusLine ($"    {i:0000}", $"0x{entry.token:x}");
 			}
+		}
 
-			return val.Value ? "present and valid" : "present but invalid";
+		const string classNamesLabel = "  Class names";
+		if (marshalMethods.ClassNames.Count == 0) {
+			log.StatusLine (classNamesLabel, "none");
+		} else {
+			log.LogLine (LogLevel.Info, $"{classNamesLabel}:", XamarinLoggingHelper.StatusLabel);
+			for (int i = 0; i < marshalMethods.ClassNames.Count; i++) {
+				log.StatusLine ($"    {i:0000}", marshalMethods.ClassNames[i]);
+			}
+		}
+
+		const string methodNamesLabel = "  Method names";
+		if (marshalMethods.MethodNames.Count == 0) {
+			log.StatusLine (methodNamesLabel, "none");
+		} else {
+			log.LogLine (LogLevel.Info, $"{methodNamesLabel}:", XamarinLoggingHelper.StatusLabel);
+			for (int i = 0; i < marshalMethods.MethodNames.Count; i++) {
+				MarshalMethodName_V2 methodName = marshalMethods.MethodNames[i];
+				log.StatusLine ($"    {i:0000}", $"{methodName.name}; id: 0x{methodName.id:x} (assembly index: {methodName.AssemblyIndex}; method token: 0x{methodName.MethodToken:X})");
+			}
 		}
 	}
 

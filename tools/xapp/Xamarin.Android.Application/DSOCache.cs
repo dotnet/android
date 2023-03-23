@@ -29,18 +29,6 @@ sealed class DSOCacheEntry
 		sizeSoFar += Util.ReadField (reader, ref name, sizeSoFar, is64Bit);
 		sizeSoFar += Util.ReadField (reader, ref handle, sizeSoFar, is64Bit);
 	}
-
-	public static ulong GetSize (AnELF elf)
-	{
-		ulong size = 0;
-
-		size += elf.GetPaddedSize<ulong> (size);  // hash
-		size += elf.GetPaddedSize<bool> (size);   // ignore
-		size += elf.GetPaddedSize<string> (size); // name
-		size += elf.GetPaddedSize<IntPtr> (size); // handle
-
-		return size;
-	}
 }
 
 class DSOCache
@@ -52,8 +40,6 @@ class DSOCache
 		using var stream = new MemoryStream (data);
 		using var reader = new BinaryReader (stream);
 
-		ulong structSize = DSOCacheEntry.GetSize (elf);
-		int n = 0;
 		while (stream.Position < stream.Length) {
 			Entries.Add (new DSOCacheEntry (log, reader, elf, symbolEntry));
 		}
