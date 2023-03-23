@@ -1725,52 +1725,37 @@
   <!-- These reabstracted methods with covariant return types need to be manaully marked as 'override'. -->
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer; java/nio/ByteBuffer.slice(II)Ljava/nio/ByteBuffer;</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
   <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
 	
-  <!-- These are new abstract methods in existing classes, so they must be converted to virtual compatible method for back-compat. -->
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='slice' and count(parameter)=2]" name="abstract">false</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='slice' and count(parameter)=2]" name="abstract">false</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='slice' and count(parameter)=2]" name="abstract">false</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='slice' and count(parameter)=2]" name="abstract">false</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='slice' and count(parameter)=2]" name="abstract">false</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='slice' and count(parameter)=2]" name="abstract">false</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='slice' and count(parameter)=2]" name="abstract">false</attr>
-  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
-
   <!-- A new nested class "Request" was added which has a name conflict with existing methods named "Request" -->
   <attr api-since="34" path="/api/package[@name='android.view']/class[@name='PixelCopy.Request']" name="managedName">PixelCopyRequest</attr>
 
