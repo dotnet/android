@@ -19,7 +19,7 @@
     <DotNetSdkManifestsFolder>$(DotNetPreviewVersionBand)</DotNetSdkManifestsFolder>
     <!-- NOTE: sometimes we hardcode these when transitioning to new version bands -->
     <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
-    <DotNetMonoManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetMonoManifestVersionBand>
-    <DotNetEmscriptenManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetEmscriptenManifestVersionBand>
+    <DotNetMonoManifestVersionBand>8.0.100-preview.3</DotNetMonoManifestVersionBand>
+    <DotNetEmscriptenManifestVersionBand>8.0.100-preview.3</DotNetEmscriptenManifestVersionBand>
   </PropertyGroup>
 </Project>
