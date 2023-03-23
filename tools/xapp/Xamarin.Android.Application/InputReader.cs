@@ -32,7 +32,7 @@ abstract class InputReader
 		throw new NotImplementedException ("Not implemented by this input reader");
 	}
 
-	protected virtual DataProviderTypemaps? ReadTypemaps ()
+	protected virtual IDataProviderTypemaps? ReadTypemaps ()
 	{
 		throw new NotImplementedException ("Not implemented by this input reader");
 	}
@@ -74,7 +74,7 @@ abstract class InputReader
 		return ReadXamarinApp ();
 	}
 
-	public DataProviderTypemaps? GetTypemaps ()
+	public IDataProviderTypemaps? GetTypemaps ()
 	{
 		if (!SupportsTypemaps) {
 			throw new NotSupportedException ("Type maps are not supported by this input reader");
@@ -92,7 +92,7 @@ abstract class InputReader
 		return ReadAssemblyStore ();
 	}
 
-	protected T? CreateProvider<T> (string? filePath, ref Stream? stream, ref T? instance, Func<Stream, string?, ILogger, T> createInstance) where T: DataProvider
+	protected T? CreateProvider<T> (string? filePath, ref Stream? stream, ref T? instance, Func<Stream, string?, ILogger, T> createInstance) where T: class, IDataProvider
 	{
 		lock (providerCreatorLock) {
 			if (instance != null) {

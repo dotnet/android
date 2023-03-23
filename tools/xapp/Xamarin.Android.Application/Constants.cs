@@ -22,6 +22,9 @@ sealed class Constants
 	public const ulong FormatTag_V1 = 0x015E6972616D58;
 	public const ulong FormatTag_V2 = 0x00026E69726D6158;
 
+	public const uint CompressedDataMagicInt = 0x5A4C4158; // 'XALZ', little-endian
+	public static readonly byte[] CompressedDataMagic = { 0x58, 0x41, 0x4c, 0x5a }; // 'XALZ', little-endian
+
 	public const string UnableToLoadDataForPointer = "[unable to load data a pointer indicates]";
 	public const string ItemUnsupported = "unsupported";
 }

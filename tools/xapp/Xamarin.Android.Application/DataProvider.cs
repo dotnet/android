@@ -4,7 +4,12 @@ using Xamarin.Android.Application.Utilities;
 
 namespace Xamarin.Android.Application;
 
-abstract class DataProvider
+interface IDataProvider
+{
+	public string? InputPath      { get; }
+}
+
+abstract class DataProvider : IDataProvider
 {
 	protected ILogger Log         { get; }
 	protected Stream? InputStream { get; }

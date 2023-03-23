@@ -47,7 +47,7 @@ abstract class InputReaderZip : InputReader
 		throw new NotImplementedException ();
 	}
 
-	protected override DataProviderTypemaps? ReadTypemaps ()
+	protected override IDataProviderTypemaps? ReadTypemaps ()
 	{
 		throw new NotImplementedException ();
 	}

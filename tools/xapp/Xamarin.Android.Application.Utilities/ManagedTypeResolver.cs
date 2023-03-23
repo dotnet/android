@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 
 using Mono.Cecil;
-using Xamarin.Android.Application.Utilities;
 
-namespace Xamarin.Android.Application.Typemaps;
+namespace Xamarin.Android.Application.Utilities;
 
 abstract class ManagedTypeResolver
 {
@@ -70,7 +69,7 @@ abstract class ManagedTypeResolver
 		return false;
 	}
 
-	protected abstract AssemblyDefinition ReadAssembly (string assemblyPath);
+	protected abstract AssemblyDefinition? ReadAssembly (string assemblyPath);
 	protected abstract string? FindAssembly (string assemblyName);
 
 	void LoadAssembly (string assemblyPath)
@@ -80,7 +79,12 @@ abstract class ManagedTypeResolver
 		}
 
 		Log.DebugLine ($"Loading '{assemblyPath}'");
-		AssemblyDefinition asm = ReadAssembly (assemblyPath);
+		AssemblyDefinition? asm = ReadAssembly (assemblyPath);
+		if (asm == null) {
+			Log.WarningLine ($"Failed to read assembly {assemblyPath}");
+			return;
+		}
+
 		foreach (ModuleDefinition module in asm.Modules) {
 			foreach (TypeDefinition type in module.Types) {
 				LoadType (type);

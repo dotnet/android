@@ -1,13 +1,166 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Text;
+
+using K4os.Compression.LZ4;
 
 namespace Xamarin.Android.Application.Utilities;
 
 static class Util
 {
+	//
+	// See src/monodroid/jni/xamarin-app.hh; struct CompressedAssemblyHeader
+	//
+	// LZ4 compressed assembly header format (12 bytes):
+	//   uint magic;                 // 0x5A4C4158; 'XALZ', little-endian
+	//   uint descriptor_index;      // Index into an internal assembly descriptor table
+	//   uint uncompressed_length;   // Size of assembly, uncompressed
+	//
+	const int CompressionHeaderLength = 12;
+
 	public static readonly ArrayPool<byte> BytePool = ArrayPool<byte>.Shared;
 	public static ILogger? Log;
+
+	/// <summary>
+	/// <para>
+	/// Checks whether assembly data in <paramref name="stream"/> is compressed.  The method checks whether there
+	/// is enough data available in the stream, but it REQUIRES that the stream is positioned at the start of the
+	/// potentially compressed data.  This is required since sometimes (e.g. in the assembly store reader), the
+	/// stream contains more than one entry and we mustn't assume anything about positions there.
+	/// </para>
+	/// <para>
+	/// Stream position is unmodified after this method returns, but stream must support seeking.
+	/// </para>
+	/// </summary>
+	public static bool IsCompressedAssembly (Stream stream)
+	{
+		if (!EnoughDataInStreamForCompressedAssembly (stream, nameof (IsCompressedAssembly))) {
+			return false;
+		}
+
+		long pos = stream.Position;
+		try {
+			foreach (byte b in Constants.CompressedDataMagic) {
+				int rval = stream.ReadByte ();
+				if (rval == -1) {
+					return false;
+				}
+
+				var r = (byte)rval;
+				if (r != b) {
+					return false;
+				}
+			}
+		} finally {
+			stream.Seek (pos, SeekOrigin.Begin);
+		}
+
+		return true;
+	}
+
+	/// <summary>
+	/// <para>
+	/// Attempt to decompress assembly data from <paramref name="input"/>.  The method checks whether there
+	/// is enough data available in the stream, and that the data has a valid compression signature, but it
+	/// REQUIRES that the stream is positioned at the start of the potentially compressed data.  This is
+	/// required since sometimes (e.g. in the assembly store reader), the stream contains more than one
+	/// entry and we mustn't assume anything about positions there.
+	/// </para>
+	/// <para>
+	/// The <paramref name="size"/> parameter may be set to a value equal to or less than zero to indicate that
+	/// all the data available in the <paramref name="input"/> stream from its current position to the end is to
+	/// be read.
+	/// </para>
+	/// <para>
+	/// Data is decompressed into <paramref name="output"/>, overwriting any data that might have been previously
+	/// found in it.  On return, <paramref name="output"/> is positioned at the start of decompressed data.
+	/// </para>
+	/// <para>
+	/// Both streams must support seeking.
+	/// </para>
+	/// </summary>
+	/// <returns><c>true</c> upon successful completion, <c>false</c> otherwise</returns>
+	public static bool DecompressAssembly (Stream input, Stream output, long size = 0)
+	{
+		if (!EnoughDataInStreamForCompressedAssembly (input, nameof (DecompressAssembly))) {
+			return false;
+		}
+
+		// Compressed header format is at the top of this class
+		using var reader = new BinaryReader (input, Encoding.UTF8, leaveOpen: true);
+
+		// magic
+		uint magic = reader.ReadUInt32 ();
+		if (magic != Constants.CompressedDataMagicInt) {
+			Log?.DebugLine ($"Stream cannot be compressed, invalid magic number. Expected 0x{Constants.CompressedDataMagicInt:x}, got 0x{magic:x}");
+			return false;
+		}
+
+		// descriptor_index, ignore
+		reader.ReadUInt32 ();
+
+		if (size <= 0) {
+			size = input.Length - input.Position;
+		}
+
+		output.SetLength (0);
+
+		int uncompressedLength = (int)reader.ReadUInt32 ();
+		int dataSize = (int)size - CompressionHeaderLength; // subtract the compression header size
+		byte[]  inputBytes = BytePool.Rent (dataSize);
+		byte[]? outputBytes = null;
+
+		try {
+			int nread = reader.Read (inputBytes, 0, dataSize);
+			if (nread < dataSize) {
+				Log?.DebugLine ($"{nameof(DecompressAssembly)}: read less data from stream ({nread} than expected ({inputBytes.Length})");
+				return false;
+			}
+
+			outputBytes = BytePool.Rent (uncompressedLength);
+			int decoded = LZ4Codec.Decode (inputBytes, 0, dataSize, outputBytes, 0, uncompressedLength);
+			if (decoded < uncompressedLength) {
+				Log?.DebugLine ($"{nameof(DecompressAssembly)}: LZ4 decoded less bytes ({decoded}) than expected ({uncompressedLength})");
+				return false;
+			}
+
+			output.Write (outputBytes, 0, decoded);
+			output.Flush ();
+			output.Seek (0, SeekOrigin.Begin);
+		} finally {
+			BytePool.Return (inputBytes);
+			if (outputBytes != null) {
+				BytePool.Return (outputBytes);
+			}
+		}
+
+		return true;
+	}
+
+	// Check whether there's enough data for compression header + at least one byte of data
+	static bool EnoughDataInStreamForCompressedAssembly (Stream stream, string where)
+	{
+		bool enough = EnoughDataInStream (stream, CompressionHeaderLength + 1);
+		if (!enough) {
+			Log?.DebugLine ($"{where}: stream cannot be compressed, not enough data");
+		}
+
+		return enough;
+	}
+
+	static bool EnoughDataInStream (Stream stream, long needed)
+	{
+		if (needed < 0) {
+			return false;
+		}
+
+		if (needed == 0) {
+			return true;
+		}
+
+		return stream.Length - stream.Position >= needed;
+	}
 
 	public static void CreateFileDirectory (string filePath)
 	{

@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 
 using Xamarin.Android.Application.Utilities;
@@ -10,7 +9,7 @@ class InputReaderXamarinApp : InputReader
 	Stream? inputStream;
 	string? filePath;
 	DataProviderXamarinApp? xamarinApp;
-	DataProviderTypemaps? typeMaps;
+	IDataProviderTypemaps? typeMaps;
 
 	public override bool SupportsAssemblyExtraction => false;
 	public override bool SupportsAssemblyStore      => false;
@@ -42,13 +41,13 @@ class InputReaderXamarinApp : InputReader
 		);
 	}
 
-	protected override DataProviderTypemaps? ReadTypemaps ()
+	protected override IDataProviderTypemaps? ReadTypemaps ()
 	{
 		return CreateProvider (
 			filePath,
 			ref inputStream,
 			ref typeMaps,
-			(Stream s, string? path, ILogger logger) => new DataProviderTypemaps (s, path, logger)
+			(Stream s, string? path, ILogger logger) => new DataProviderTypemapsXamarinApp (s, path, logger)
 		);
 	}
 }
