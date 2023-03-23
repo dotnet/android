@@ -15,23 +15,25 @@ abstract class DataProviderTypemapsXamarinApp : DataProviderXamarinApp, IDataPro
 	{
 	}
 
-	public static DataProviderXamarinApp? Create (ILogger log, AnELF elf, ulong format_tag, Stream inputStream, string? inputPath)
+	public static IDataProviderTypemaps? Create (Stream inputStream, string? inputPath, ILogger log)
 	{
-		switch (format_tag) {
-			case Constants.FormatTag_V1:
-				return null;
+		// TODO: load ELF here, for detection
+		return null;
 
-			case Constants.FormatTag_V2:
-				return null;
+		// switch (format_tag) {
+		// 	case Constants.FormatTag_V1:
+		// 		return null;
 
-			default:
-				//WarnNotSupported (elf, format_tag);
-				return null;
-		}
+		// 	case Constants.FormatTag_V2:
+		// 		return null;
+
+		// 	default:
+		// 		//WarnNotSupported (elf, format_tag);
+		// 		return null;
+		// }
 	}
 }
 
-class DataProviderTypeMapsXamarinApp_V2
 class DataProviderTypemapsFastDev : DataProvider, IDataProviderTypemaps
 {
 	public DataProviderTypemapsFastDev (Stream inputStream, string? inputPath, ILogger log)

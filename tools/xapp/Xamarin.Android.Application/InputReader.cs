@@ -92,7 +92,7 @@ abstract class InputReader
 		return ReadAssemblyStore ();
 	}
 
-	protected T? CreateProvider<T> (string? filePath, ref Stream? stream, ref T? instance, Func<Stream, string?, ILogger, T> createInstance) where T: class, IDataProvider
+	protected T? CreateProvider<T> (string? filePath, ref Stream? stream, ref T? instance, Func<Stream, string?, ILogger, T?> createInstance) where T: class, IDataProvider
 	{
 		lock (providerCreatorLock) {
 			if (instance != null) {

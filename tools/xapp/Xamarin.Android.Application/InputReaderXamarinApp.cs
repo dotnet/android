@@ -47,7 +47,7 @@ class InputReaderXamarinApp : InputReader
 			filePath,
 			ref inputStream,
 			ref typeMaps,
-			(Stream s, string? path, ILogger logger) => new DataProviderTypemapsXamarinApp (s, path, logger)
+			(Stream s, string? path, ILogger logger) => DataProviderTypemapsXamarinApp.Create (s, path, logger)
 		);
 	}
 }
