@@ -57,6 +57,8 @@ variables:
   value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != SystemApplication'
 - name: ExcludedNUnitCategories
   value: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != PackagesConfig & cat != StaticProject & cat != SystemApplication'
+- name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
+  value: 33
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - group: AzureDevOps-Artifact-Feeds-Pats
   - group: DotNet-MSRC-Storage
@@ -312,11 +314,14 @@ stages:
       parameters:
         provisionClassic: false
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        installLegacyDotNet: false
+        restoreNUnitConsole: false
+        updateMono: false
 
     - template: yaml-templates/run-xaprepare.yaml
       parameters:
         displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
+        arguments: --s=EmulatorTestDependencies --android-sdk-platforms="$(DefaultTestSdkPlatforms)"
         
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -334,7 +339,7 @@ stages:
       parameters:
         project: Xamarin.Android.sln
         arguments: >-
-          -t:PrepareJavaInterop -c Debug -m:1 -v:n
+          -t:PrepareJavaInterop -c Debug --no-restore
           -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
         displayName: prepare java.interop Debug
         continueOnError: false
@@ -342,9 +347,11 @@ stages:
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
+      
+    - template: yaml-templates/start-stop-emulator.yaml
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -411,15 +418,9 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
         testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
 
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
+    - template: yaml-templates/start-stop-emulator.yaml
+      parameters:
+        command: stop
 
     - template: yaml-templates/upload-results.yaml
       parameters:
