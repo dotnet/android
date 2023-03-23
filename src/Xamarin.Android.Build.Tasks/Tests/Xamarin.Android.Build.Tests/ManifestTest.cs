@@ -527,6 +527,8 @@ namespace Bug12935
 		[TestCase ("1", true, "x86_64=500001;arm64-v8a=400001")]
 		[TestCase ("2", false, "manifest=2")]
 		[TestCase ("2", true, "x86_64=500002;arm64-v8a=400002")]
+		[TestCase ("999", false, "manifest=999")]
+		[TestCase ("999", true, "x86_64=500999;arm64-v8a=400999")]
 		public void ApplicationVersionTests (string applicationVersion, bool seperateApk, string expected)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -546,7 +548,7 @@ namespace Bug12935
 				var expectedItems = expected.Split (';');
 				foreach (var item in expectedItems) {
 					var items = item.Split ('=');
-					var path = seperateApk ? Path.Combine ("android", items [0], "AndroidManifest.xml") : Path.Combine ("android", "manifest", "AndroidManifest.xml");
+					var path = Path.Combine ("android", items [0], "AndroidManifest.xml");
 					var manifest = builder.Output.GetIntermediaryAsText (Root, path);
 					var doc = XDocument.Parse (manifest);
 					var m = doc.XPathSelectElement ("/manifest") as XElement;
