@@ -166,6 +166,11 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (ReleaseProperties, KnownProperties.AndroidLinkMode, value.ToString ()); }
 		}
 
+		public bool EnableMarshalMethods {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableMarshalMethods), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidEnableMarshalMethods, value.ToString ()); }
+		}
+
 		public string AndroidManifest { get; set; }
 		public string LayoutMain { get; set; }
 		public string MainActivity { get; set; }
