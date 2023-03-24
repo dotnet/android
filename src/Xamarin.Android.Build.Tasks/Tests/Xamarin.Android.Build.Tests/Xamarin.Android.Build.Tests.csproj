@@ -35,6 +35,10 @@
     <Compile Remove="Expected\**" />
     <Compile Include="..\..\..\..\tools\xabuild\SymbolicLink.cs" />
     <Compile Include="..\..\..\..\tools\xapp\Xamarin.Android.Application.AssemblyStore\AssemblyStore*.cs" />
+    <Compile Include="..\..\..\..\tools\xapp\Xamarin.Android.Application\Constants.cs" />
+    <Compile Include="..\..\..\..\tools\xapp\Xamarin.Android.Application.Utilities\ILogger.cs" />
+    <Compile Include="..\..\..\..\tools\xapp\Xamarin.Android.Application.Utilities\LogLevel.cs" />
+    <Compile Include="..\..\..\..\tools\xapp\Xamarin.Android.Application.Utilities\Util.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

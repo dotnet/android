@@ -3,16 +3,6 @@ using System.IO;
 
 namespace Xamarin.Android.Application.Utilities;
 
-enum LogLevel
-{
-	Error,
-	Warning,
-	Info,
-	Message,
-	Debug,
-	Verbose,
-}
-
 class XamarinLoggingHelper : ILogger
 {
 	static readonly object consoleLock = new object ();

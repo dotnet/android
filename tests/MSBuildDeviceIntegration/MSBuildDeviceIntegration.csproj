@@ -25,6 +25,10 @@
    <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
     <Compile Include="..\..\tools\xapp\Xamarin.Android.Application.AssemblyStore\AssemblyStore*.cs" />
+    <Compile Include="..\..\tools\xapp\Xamarin.Android.Application\Constants.cs" />
+    <Compile Include="..\..\tools\xapp\Xamarin.Android.Application.Utilities\ILogger.cs" />
+    <Compile Include="..\..\tools\xapp\Xamarin.Android.Application.Utilities\LogLevel.cs" />
+    <Compile Include="..\..\tools\xapp\Xamarin.Android.Application.Utilities\Util.cs" />
     <EmbeddedResource Include="Resources\LinkDescTest\*.*" />
   </ItemGroup>
   <ItemGroup>
