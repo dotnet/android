@@ -15,11 +15,12 @@
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->
     <VersionBand Condition=" '$(VersionBand)' == '' ">$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), `^\d+\.\d+\.\d`))00</VersionBand>
-    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), `\-(preview|rc|alpha).\d+`))</DotNetPreviewVersionBand>
+    <VersionSuffixRegex>\-(preview|rc|alpha).\d+</VersionSuffixRegex>
+    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), $(VersionSuffixRegex)))</DotNetPreviewVersionBand>
     <DotNetSdkManifestsFolder>$(DotNetPreviewVersionBand)</DotNetSdkManifestsFolder>
-    <!-- NOTE: sometimes we hardcode these when transitioning to new version bands -->
+    <DotNetMonoManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETCoreAppRefPackageVersion), $(VersionSuffixRegex)))</DotNetMonoManifestVersionBand>
+    <DotNetEmscriptenManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETWorkloadEmscriptenPackageVersion), $(VersionSuffixRegex)))</DotNetEmscriptenManifestVersionBand>
+    <!-- NOTE: sometimes we hardcode this when transitioning to new version bands -->
     <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
-    <DotNetMonoManifestVersionBand>8.0.100-preview.3</DotNetMonoManifestVersionBand>
-    <DotNetEmscriptenManifestVersionBand>8.0.100-preview.3</DotNetEmscriptenManifestVersionBand>
   </PropertyGroup>
 </Project>
