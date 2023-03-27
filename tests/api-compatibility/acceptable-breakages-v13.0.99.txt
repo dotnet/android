@@ -1,15 +1,2 @@
 Compat issues with assembly Mono.Android:
-MembersMustExist : Member 'public void Android.Views.PixelCopy.Request(Android.Views.Surface, Android.Graphics.Bitmap, Android.Views.PixelCopy.IOnPixelCopyFinishedListener, Android.OS.Handler)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'public void Android.Views.PixelCopy.Request(Android.Views.Surface, Android.Graphics.Rect, Android.Graphics.Bitmap, Android.Views.PixelCopy.IOnPixelCopyFinishedListener, Android.OS.Handler)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'public void Android.Views.PixelCopy.Request(Android.Views.SurfaceView, Android.Graphics.Bitmap, Android.Views.PixelCopy.IOnPixelCopyFinishedListener, Android.OS.Handler)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'public void Android.Views.PixelCopy.Request(Android.Views.SurfaceView, Android.Graphics.Rect, Android.Graphics.Bitmap, Android.Views.PixelCopy.IOnPixelCopyFinishedListener, Android.OS.Handler)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'public void Android.Views.PixelCopy.Request(Android.Views.Window, Android.Graphics.Bitmap, Android.Views.PixelCopy.IOnPixelCopyFinishedListener, Android.OS.Handler)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'public void Android.Views.PixelCopy.Request(Android.Views.Window, Android.Graphics.Rect, Android.Graphics.Bitmap, Android.Views.PixelCopy.IOnPixelCopyFinishedListener, Android.OS.Handler)' does not exist in the implementation but it does exist in the contract.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Dalvik.SystemInterop.DexFile' in the contract but not the implementation.
-CannotAddAbstractMembers : Member 'public Java.Nio.ByteBuffer Java.Nio.ByteBuffer.Slice(System.Int32, System.Int32)' is abstract in the implementation but is missing in the contract.
-CannotAddAbstractMembers : Member 'public Java.Nio.CharBuffer Java.Nio.CharBuffer.Slice(System.Int32, System.Int32)' is abstract in the implementation but is missing in the contract.
-CannotAddAbstractMembers : Member 'public Java.Nio.DoubleBuffer Java.Nio.DoubleBuffer.Slice(System.Int32, System.Int32)' is abstract in the implementation but is missing in the contract.
-CannotAddAbstractMembers : Member 'public Java.Nio.FloatBuffer Java.Nio.FloatBuffer.Slice(System.Int32, System.Int32)' is abstract in the implementation but is missing in the contract.
-CannotAddAbstractMembers : Member 'public Java.Nio.IntBuffer Java.Nio.IntBuffer.Slice(System.Int32, System.Int32)' is abstract in the implementation but is missing in the contract.
-CannotAddAbstractMembers : Member 'public Java.Nio.LongBuffer Java.Nio.LongBuffer.Slice(System.Int32, System.Int32)' is abstract in the implementation but is missing in the contract.
-CannotAddAbstractMembers : Member 'public Java.Nio.ShortBuffer Java.Nio.ShortBuffer.Slice(System.Int32, System.Int32)' is abstract in the implementation but is missing in the contract.
