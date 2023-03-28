@@ -66,62 +66,6 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make all-tests
 
-# Restore needs to be executed first or MicroBuild targets won't be imported in time
-- task: MSBuild@1
-  displayName: msbuild /t:Restore sign-content.proj
-  inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    configuration: $(XA.Build.Configuration)
-    msbuildArguments: /t:Restore /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
-
-- task: MSBuild@1
-  displayName: PKG signing - add entitlements and sign classic libraries
-  inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    configuration: $(XA.Build.Configuration)
-    msbuildArguments: >-
-      /t:AddMachOEntitlements;AddMSBuildFilesUnixSign;Build
-      /p:SignType=$(MicroBuildSignType)
-      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
-  condition: and(succeeded(), eq('${{ parameters.signClassicPkgContent }}', 'true'))
-
-- task: MSBuild@1
-  displayName: PKG signing - sign classic executables
-  inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    configuration: $(XA.Build.Configuration)
-    msbuildArguments: >-
-      /t:AddMSBuildFilesUnixSignAndHarden;Build
-      /p:SignType=$(MicroBuildSignType)
-      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
-  condition: and(succeeded(), eq('${{ parameters.signClassicPkgContent }}', 'true'))
-
-- task: MSBuild@1
-  displayName: PKG signing - sign binutils libraries
-  inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    configuration: $(XA.Build.Configuration)
-    msbuildArguments: >-
-      /t:AddBinUtilsFilesUnixSign;Build
-      /p:SignType=$(MicroBuildSignType)
-      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
-  condition: and(succeeded(), eq('${{ parameters.signClassicPkgContent }}', 'true'))
-
-- task: MSBuild@1
-  displayName: PKG signing - sign binutils executables
-  inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    configuration: $(XA.Build.Configuration)
-    msbuildArguments: >-
-      /t:AddBinUtilsFilesUnixSignAndHarden;Build
-      /p:SignType=$(MicroBuildSignType)
-      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
-  condition: and(succeeded(), eq('${{ parameters.signClassicPkgContent }}', 'true'))
-
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
@@ -131,32 +75,6 @@ steps:
   inputs:
     artifactName: ${{ parameters.nugetArtifactName }}
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
-
-- script: >
-    mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
-    cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
-    cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: copy unsigned installers
-
-- script: >
-    VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct` &&
-    echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: create updateinfo file
-
-- task: PublishPipelineArtifact@1
-  displayName: upload installers
-  inputs:
-    artifactName: ${{ parameters.installerArtifactName }}
-    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-
-# Upload test assemblies
-- script: >
-    cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests &&
-    cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: copy bcl-tests assemblies
 
 - task: PublishPipelineArtifact@1
   displayName: upload test assemblies

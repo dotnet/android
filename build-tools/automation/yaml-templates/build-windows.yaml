@@ -93,13 +93,6 @@ stages:
         continueOnError: false
 
     - task: MSBuild@1
-      displayName: msbuild create-vsix
-      inputs:
-        solution: build-tools\create-vsix\create-vsix.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-create-vsix.binlog
-
-    - task: MSBuild@1
       displayName: msbuild xabuild
       inputs:
         solution: tools\xabuild\xabuild.csproj
