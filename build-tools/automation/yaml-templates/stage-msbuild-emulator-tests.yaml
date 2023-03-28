@@ -24,8 +24,6 @@ stages:
     steps:
     - template: setup-test-environment.yaml
       parameters:
-        provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         installTestSlicer: true
         installApkDiff: false
         installLegacyDotNet: false
@@ -81,8 +79,6 @@ stages:
     steps:
     - template: setup-test-environment.yaml
       parameters:
-        provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         configuration: $(XA.Build.Configuration)
         installApkDiff: false
         installLegacyDotNet: false

@@ -22,9 +22,6 @@ jobs:
       clean: all
     steps:
     - template: setup-test-environment.yaml
-      parameters:
-        provisionClassic: ${{ ne(parameters.target_framework, parameters.dotnet_targetframework) }}
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: run-xaprepare.yaml
       parameters:
