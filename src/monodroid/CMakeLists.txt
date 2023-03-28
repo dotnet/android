@@ -472,6 +472,7 @@ endif()
 set(XAMARIN_INTERNAL_API_LIB xa-internal-api${CHECKED_BUILD_INFIX})
 set(XAMARIN_DEBUG_APP_HELPER_LIB xamarin-debug-app-helper${CHECKED_BUILD_INFIX})
 set(XAMARIN_APP_STUB_LIB xamarin-app)
+set(XAMARIN_MARSHAL_METHODS_TRACING_LIB marshal-methods-tracing)
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
@@ -539,6 +540,10 @@ if(UNIX)
 endif()
 
 if(ANDROID AND ENABLE_NET)
+  set(MARSHAL_METHODS_TRACING_SOURCES
+    ${SOURCES_DIR}/marshal-methods-tracing.cc
+  )
+
   list(APPEND XAMARIN_MONODROID_SOURCES
     ${SOURCES_DIR}/monovm-properties.cc
     ${SOURCES_DIR}/pinvoke-override-api.cc
@@ -677,6 +682,13 @@ add_library(
   )
 
 if(ANDROID)
+  if(ENABLE_NET AND NOT DEBUG_BUILD)
+    add_library(
+      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
+      STATIC ${MARSHAL_METHODS_TRACING_SOURCES}
+    )
+  endif()
+
   # Ugly, but this is the only way to change LZ4 symbols visibility without modifying lz4.h
   set(LZ4_VISIBILITY_OPTS "-DLZ4LIB_VISIBILITY=__attribute__ ((visibility (\"hidden\")))")
 endif()

@@ -29,6 +29,7 @@ namespace Xamarin.Android.Tasks
 		{
 			public List<string> ObjectFiles;
 			public string OutputSharedLibrary;
+			public List<string> ExtraLibraries;
 		}
 
 		[Required]
@@ -42,6 +43,10 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
+
+		public string AndroidNdkDirectory { get; set; }
+
+		public bool EnableMarshalMethodTracing { get; set; }
 
 		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
@@ -112,14 +117,22 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<Config> GetLinkerConfigs ()
 		{
+			NdkTools ndk = null;
+			if (EnableMarshalMethodTracing) {
+				ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: false, log: Log);
+			}
+
+			string runtimeNativeLibsDir = Path.GetFullPath (Path.Combine (AndroidBinUtilsDirectory, "..", "..", "..", "lib"));
 			var abis = new Dictionary <string, InputFiles> (StringComparer.Ordinal);
 			ITaskItem[] dsos = ApplicationSharedLibraries;
 			foreach (ITaskItem item in dsos) {
 				string abi = item.GetMetadata ("abi");
-				abis [abi] = GatherFilesForABI(item.ItemSpec, abi, ObjectFiles);
+				abis [abi] = GatherFilesForABI (item.ItemSpec, abi, ObjectFiles, runtimeNativeLibsDir, ndk);
 			}
 
 			const string commonLinkerArgs =
+				"--shared " +
+				"--allow-shlib-undefined " +
 				"--unresolved-symbols=ignore-in-shared-libs " +
 				"--export-dynamic " +
 				"-soname libxamarin-app.so " +
@@ -132,7 +145,7 @@ namespace Xamarin.Android.Tasks
 				"--warn-shared-textrel " +
 				"--fatal-warnings";
 
-			string stripSymbolsArg = DebugBuild ? String.Empty : " -s";
+			string stripSymbolsArg = DebugBuild || EnableMarshalMethodTracing ? String.Empty : " -s";
 
 			string ld = Path.Combine (AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, "ld"));
 			var targetLinkerArgs = new List<string> ();
@@ -177,6 +190,12 @@ namespace Xamarin.Android.Tasks
 				targetLinkerArgs.Add ("-o");
 				targetLinkerArgs.Add (QuoteFileName (inputs.OutputSharedLibrary));
 
+				if (inputs.ExtraLibraries != null) {
+					foreach (string lib in inputs.ExtraLibraries) {
+						targetLinkerArgs.Add (lib);
+					}
+				}
+
 				string targetArgs = String.Join (" ", targetLinkerArgs);
 				yield return new Config {
 					LinkerPath = ld,
@@ -186,11 +205,28 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		InputFiles GatherFilesForABI (string runtimeSharedLibrary, string abi, ITaskItem[] objectFiles)
+		InputFiles GatherFilesForABI (string runtimeSharedLibrary, string abi, ITaskItem[] objectFiles, string runtimeNativeLibsDir, NdkTools ndk)
 		{
+			List<string> extraLibraries = null;
+
+			if (EnableMarshalMethodTracing) {
+				if (ndk == null) {
+					throw new ArgumentNullException (nameof (ndk));
+				}
+
+				string libPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, MonoAndroidHelper.AbiToTargetArch (abi), 21); // TODO: don't hardcode the API level
+				extraLibraries = new List<string> {
+					Path.Combine (runtimeNativeLibsDir, MonoAndroidHelper.AbiToRid (abi), "libmarshal-methods-tracing.a"),
+					$"-L \"{libPath}\"",
+					"-lc",
+					"-llog", // tracing uses android logger
+				};
+			}
+
 			return new InputFiles {
 				OutputSharedLibrary = runtimeSharedLibrary,
 				ObjectFiles = GetItemsForABI (abi, objectFiles),
+				ExtraLibraries = extraLibraries,
 			};
 		}
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Reflection;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
@@ -90,7 +89,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		uint localSlot = 0;
 		uint indentLevel = 1;
 
-		public LlvmIrFunction (string name, Type returnType, int attributeSetID, List<LlvmIrFunctionParameter>? parameters = null)
+		public LlvmIrFunction (string name, Type returnType, int attributeSetID, IList<LlvmIrFunctionParameter>? parameters = null)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				throw new ArgumentException ("must not be null or empty", nameof (name));

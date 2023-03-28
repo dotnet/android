@@ -28,18 +28,18 @@ using namespace xamarin::android::internal;
 
 // Must match the same ordering as LogCategories
 static const char* log_names[] = {
-	"*none*",
-	"monodroid",
-	"monodroid-assembly",
-	"monodroid-debug",
-	"monodroid-gc",
-	"monodroid-gref",
-	"monodroid-lref",
-	"monodroid-timing",
-	"monodroid-bundle",
-	"monodroid-network",
-	"monodroid-netlink",
-	"*error*",
+	SharedConstants::LOG_CATEGORY_NAME_NONE,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID_DEBUG,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID_GC,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID_GREF,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID_LREF,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID_TIMING,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID_BUNDLE,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID_NETWORK,
+	SharedConstants::LOG_CATEGORY_NAME_MONODROID_NETLINK,
+	SharedConstants::LOG_CATEGORY_NAME_ERROR,
 };
 
 #if defined(__i386__) && defined(__GNUC__)

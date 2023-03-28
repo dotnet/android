@@ -23,21 +23,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		bool codeOutputInitialized = false;
 
-		/// <summary>
-		/// Writes the function definition up to the opening curly brace
-		/// </summary>
-		public void WriteFunctionStart (LlvmIrFunction function, string? comment = null)
+		void ValidateFunction (LlvmIrFunction function, out LlvmFunctionAttributeSet? attributes)
 		{
 			if (function == null) {
 				throw new ArgumentNullException (nameof (function));
 			}
 
-			LlvmFunctionAttributeSet? attributes = null;
+			attributes = null;
 			if (function.AttributeSetID >= 0 && !FunctionAttributes.TryGetValue (function.AttributeSetID, out attributes)) {
 				throw new InvalidOperationException ($"Function '{function.Name}' refers to attribute set that does not exist (ID: {function.AttributeSetID})");
 			}
+		}
 
-			Output.WriteLine ();
+		void WriteFunctionSignature (LlvmIrFunction function, string statementKindKeyword, LlvmFunctionAttributeSet? attributes, string? comment)
+		{
 			if (!String.IsNullOrEmpty (comment)) {
 				foreach (string line in comment.Split ('\n')) {
 					WriteCommentLine (line);
@@ -48,12 +47,34 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				WriteCommentLine ($"Function attributes: {attributes.Render ()}");
 			}
 
-			Output.Write ($"define {GetKnownIRType (function.ReturnType)} @{function.Name} (");
+			Output.Write ($"{statementKindKeyword} {GetKnownIRType (function.ReturnType)} @{function.Name} (");
 			WriteFunctionParameters (function.Parameters, writeNames: true);
 			Output.Write(") local_unnamed_addr ");
 			if (attributes != null) {
 				Output.Write ($"#{function.AttributeSetID}");
 			}
+		}
+
+		/// <summary>
+		/// Writes function forward declaration
+		/// </summary>
+		public void WriteFunctionForwardDeclaration (LlvmIrFunction function, string? comment = null)
+		{
+			ValidateFunction (function, out LlvmFunctionAttributeSet? attributes);
+
+			Output.WriteLine ();
+			WriteFunctionSignature (function, "declare", attributes, comment);
+			Output.WriteLine (";");
+		}
+
+		/// <summary>
+		/// Writes the function definition up to the opening curly brace
+		/// </summary>
+		public void WriteFunctionStart (LlvmIrFunction function, string? comment = null)
+		{
+			ValidateFunction (function, out LlvmFunctionAttributeSet? attributes);
+			Output.WriteLine ();
+			WriteFunctionSignature (function, "define", attributes, comment);
 			Output.WriteLine ();
 			Output.WriteLine ("{");
 		}

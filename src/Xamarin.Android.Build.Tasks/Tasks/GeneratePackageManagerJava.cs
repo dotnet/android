@@ -66,6 +66,7 @@ namespace Xamarin.Android.Tasks
 		public bool InstantRunEnabled { get; set; }
 
 		public bool EnableMarshalMethods { get; set; }
+		public bool EnableMarshalMethodTracing { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
 
@@ -410,7 +411,8 @@ namespace Xamarin.Android.Tasks
 					assemblyCount,
 					uniqueAssemblyNames,
 					marshalMethodsState?.MarshalMethods,
-					Log
+					Log,
+					EnableMarshalMethodTracing
 				);
 			} else {
 				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (assemblyCount, uniqueAssemblyNames);

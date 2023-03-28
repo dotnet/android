@@ -171,6 +171,9 @@ namespace Xamarin.Android.Tasks
 			{ 'L', typeof(_jobjectArray) },
 		};
 
+		const string mm_trace_func_enter_name = "_mm_trace_func_enter";
+		const string mm_trace_func_leave_name = "_mm_trace_func_leave";
+
 		ICollection<string> uniqueAssemblyNames;
 		int numberOfAssembliesInApk;
 		IDictionary<string, IList<MarshalMethodEntry>> marshalMethods;
@@ -199,7 +202,12 @@ namespace Xamarin.Android.Tasks
 		List<MarshalMethodInfo> methods;
 		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
+		// Tracing
+		LlvmIrVariableReference? mm_trace_func_enter_ref;
+		LlvmIrVariableReference? mm_trace_func_leave_ref;
+
 		readonly bool generateEmptyCode;
+		readonly bool emitTracing;
 
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
@@ -214,7 +222,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, TaskLoggingHelper logger)
+		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, TaskLoggingHelper logger, bool emitTracing)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
@@ -222,6 +230,7 @@ namespace Xamarin.Android.Tasks
 			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
 
 			generateEmptyCode = false;
+			this.emitTracing = emitTracing;
 		}
 
 		public override void Init ()
@@ -577,6 +586,7 @@ namespace Xamarin.Android.Tasks
 		{
 			WriteAssemblyImageCache (generator, out Dictionary<string, uint> asmNameToIndex);
 			WriteClassCache (generator);
+			WriteInitTracing (generator);
 			LlvmIrVariableReference get_function_pointer_ref = WriteXamarinAppInitFunction (generator);
 			WriteNativeMethods (generator, asmNameToIndex, get_function_pointer_ref);
 
@@ -650,6 +660,47 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		void WriteInitTracing (LlvmIrGenerator generator)
+		{
+			if (!emitTracing) {
+				return;
+			}
+
+			// Function names and declarations must match those in src/monodroid/jni/marshal-methods-tracing.hh
+			var mm_trace_func_enter_or_leave_params = new List<LlvmIrFunctionParameter> {
+				new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
+				new LlvmIrFunctionParameter (typeof(uint), "class_index"),
+				new LlvmIrFunctionParameter (typeof(uint), "method_token")
+			};
+
+			var mm_trace_func_enter_sig = new LlvmNativeFunctionSignature (
+				returnType: typeof(void),
+				parameters: mm_trace_func_enter_or_leave_params
+
+			);
+			mm_trace_func_enter_ref = new LlvmIrVariableReference (mm_trace_func_enter_sig, mm_trace_func_enter_name, isGlobal: true);
+
+			var mm_trace_func_leave_sig = new LlvmNativeFunctionSignature (
+				returnType: typeof(void),
+				parameters: mm_trace_func_enter_or_leave_params
+			);
+			mm_trace_func_leave_ref = new LlvmIrVariableReference (mm_trace_func_leave_sig, mm_trace_func_leave_name, isGlobal: true);
+
+			WriteTraceDeclaration (mm_trace_func_enter_name, mm_trace_func_enter_sig.ReturnType, mm_trace_func_enter_sig.Parameters);
+			WriteTraceDeclaration (mm_trace_func_leave_name, mm_trace_func_leave_sig.ReturnType, mm_trace_func_leave_sig.Parameters);
+
+			void WriteTraceDeclaration (string name, Type returnType, IList<LlvmIrFunctionParameter> parameters)
+			{
+				var func = new LlvmIrFunction (
+					name: name,
+					returnType: returnType,
+					attributeSetID: LlvmIrGenerator.FunctionAttributesJniMethods,
+					parameters: parameters
+				);
+				generator.WriteFunctionForwardDeclaration (func);
+			}
+		}
+
 		void WriteNativeMethods (LlvmIrGenerator generator, Dictionary<string, uint> asmNameToIndex, LlvmIrVariableReference get_function_pointer_ref)
 		{
 			if (generateEmptyCode || methods == null || methods.Count == 0) {
@@ -694,6 +745,18 @@ namespace Xamarin.Android.Tasks
 			);
 
 			generator.WriteFunctionStart (func, $"Method: {nativeCallback.FullName}\nAssembly: {nativeCallback.Module.Assembly.Name}");
+
+			List<LlvmIrFunctionArgument>? trace_enter_leave_args = null;
+
+			if (emitTracing) {
+				trace_enter_leave_args = new List<LlvmIrFunctionArgument> {
+					new LlvmIrFunctionArgument (typeof(uint), method.AssemblyCacheIndex),
+					new LlvmIrFunctionArgument (typeof(uint), method.ClassCacheIndex),
+					new LlvmIrFunctionArgument (typeof(uint), nativeCallback.MetadataToken.ToUInt32 ())
+				};
+
+				generator.EmitCall (func, mm_trace_func_enter_ref, trace_enter_leave_args);
+			}
 
 			LlvmIrFunctionLocalVariable callbackVariable1 = generator.EmitLoadInstruction (func, backingFieldRef, "cb1");
 			var callbackVariable1Ref = new LlvmIrVariableReference (callbackVariable1, isGlobal: false);
@@ -746,6 +809,10 @@ namespace Xamarin.Android.Tasks
 				fnVariableRef,
 				func.ParameterVariables.Select (pv => new LlvmIrFunctionArgument (pv)).ToList ()
 			);
+
+			if (emitTracing) {
+				generator.EmitCall (func, mm_trace_func_leave_ref, trace_enter_leave_args);
+			}
 
 			if (result != null) {
 				generator.EmitReturnInstruction (func, result);

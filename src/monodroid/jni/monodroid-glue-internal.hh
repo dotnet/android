@@ -351,7 +351,6 @@ namespace xamarin::android::internal
 
 #if defined (RELEASE) && defined (ANDROID)
 		static const char* get_method_name (uint32_t mono_image_index, uint32_t method_token) noexcept;
-		static const char* get_class_name (uint32_t class_index) noexcept;
 
 		template<bool NeedsLocking>
 		static void get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept;

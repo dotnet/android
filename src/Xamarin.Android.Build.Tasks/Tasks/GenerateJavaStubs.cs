@@ -249,7 +249,7 @@ namespace Xamarin.Android.Tasks
 						targetPaths.Add (Path.Combine (IntermediateOutputDirectory, "linked"));
 					} else {
 						foreach (string abi in SupportedAbis) {
-							targetPaths.Add (Path.Combine (IntermediateOutputDirectory, AbiToRid (abi), "linked"));
+							targetPaths.Add (Path.Combine (IntermediateOutputDirectory, MonoAndroidHelper.AbiToRid (abi), "linked"));
 						}
 					}
 				}
@@ -431,26 +431,6 @@ namespace Xamarin.Android.Tasks
 				}
 
 				assemblyPaths.Add (asm.ItemSpec);
-			}
-
-			string AbiToRid (string abi)
-			{
-				switch (abi) {
-					case "arm64-v8a":
-						return "android-arm64";
-
-					case "armeabi-v7a":
-						return "android-arm";
-
-					case "x86":
-						return "android-x86";
-
-					case "x86_64":
-						return "android-x64";
-
-					default:
-						throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
-				}
 			}
 		}
 

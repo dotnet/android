@@ -534,5 +534,45 @@ namespace Xamarin.Android.Tasks
 			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
 			return path;
 		}
+
+		public static string AbiToRid (string abi)
+		{
+			switch (abi) {
+				case "arm64-v8a":
+					return "android-arm64";
+
+				case "armeabi-v7a":
+					return "android-arm";
+
+				case "x86":
+					return "android-x86";
+
+				case "x86_64":
+					return "android-x64";
+
+				default:
+					throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
+			}
+		}
+
+		public static AndroidTargetArch AbiToTargetArch (string abi)
+		{
+			switch (abi) {
+				case "arm64-v8a":
+					return AndroidTargetArch.Arm64;
+
+				case "armeabi-v7a":
+					return AndroidTargetArch.Arm;
+
+				case "x86":
+					return AndroidTargetArch.X86;
+
+				case "x86_64":
+					return AndroidTargetArch.X86_64;
+
+				default:
+					throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
+			}
+		}
 	}
 }
