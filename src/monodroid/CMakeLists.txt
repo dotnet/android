@@ -40,8 +40,10 @@ option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" 
 
 if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
   set(STRIP_DEBUG_DEFAULT OFF)
+  set(ANALYZERS_ENABLED ON)
 else()
   set(STRIP_DEBUG_DEFAULT ON)
+  set(ANALYZERS_ENABLED OFF)
 endif()
 
 option(ENABLE_NET "Enable compilation for .NET 6+" OFF)
@@ -722,7 +724,7 @@ target_link_libraries(
   ${LINK_LIBS} xamarin-app
   )
 
-if(ANDROID AND ENABLE_NET)
+if(ANDROID AND ENABLE_NET AND (NOT ANALYZERS_ENABLED))
   add_library(
     c
     SHARED ${XAMARIN_STUB_LIB_SOURCES}
