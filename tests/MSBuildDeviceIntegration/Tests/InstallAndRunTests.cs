@@ -1130,5 +1130,32 @@ namespace UnnamedProject
 				Assert.IsTrue (didLaunch, "Activity should have started.");
 			}
 		}
+
+		[Test]
+		public void MicrosoftIntune ([Values (false, true)] bool isRelease)
+		{
+			if (!Builder.UseDotNet)
+				Assert.Ignore ("Test is only valid in .NET 7+");
+			proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				PackageReferences = {
+					KnownPackages.AndroidXAppCompat,
+					KnownPackages.Microsoft_Intune_Maui_Essentials_android,
+				},
+			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
+			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+			builder = CreateApkBuilder ();
+			builder.BuildLogFile = "install.log";
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			RunProjectAndAssert (proj, builder);
+
+			var timeoutInSeconds = 120;
+			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds);
+			Assert.IsTrue (didStart, "Activity should have started.");
+		}
 	}
 }
