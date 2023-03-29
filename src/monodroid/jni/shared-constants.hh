@@ -91,6 +91,30 @@ namespace xamarin::android::internal
 		static constexpr char LOG_CATEGORY_NAME_MONODROID_NETWORK[] = "monodroid-network";
 		static constexpr char LOG_CATEGORY_NAME_MONODROID_NETLINK[] = "monodroid-netlink";
 		static constexpr char LOG_CATEGORY_NAME_ERROR[] = "*error*";
+
+#if defined (__aarch64__)
+		static constexpr bool IsARM64 = true;
+#else
+		static constexpr bool IsARM64 = false;
+#endif
+
+#if defined (__arm__)
+		static constexpr bool IsARM32 = true;
+#else
+		static constexpr bool IsARM32 = false;
+#endif
+
+#if defined (__i386__)
+		static constexpr bool IsX86 = true;
+#else
+		static constexpr bool IsX86 = false;
+#endif
+
+#if defined (__x86_64__)
+		static constexpr bool IsX64 = true;
+#else
+		static constexpr bool IsX64 = false;
+#endif
 	};
 }
 #endif // __SHARED_CONSTANTS_HH

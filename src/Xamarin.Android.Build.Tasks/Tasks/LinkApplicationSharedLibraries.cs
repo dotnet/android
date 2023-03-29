@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class LinkApplicationSharedLibraries : AndroidAsyncTask
 	{
+		const int NDK_API_LEVEL = 21; // TODO: don't hardcode the API level
+
 		public override string TaskPrefix => "LAS";
 
 		sealed class Config
@@ -118,8 +120,30 @@ namespace Xamarin.Android.Tasks
 		IEnumerable<Config> GetLinkerConfigs ()
 		{
 			NdkTools ndk = null;
+			string clangRuntimeDirTop = null;
+
 			if (EnableMarshalMethodTracing) {
 				ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: false, log: Log);
+
+				// Doesn't matter for which arch we run the compiler, they all share the same topmost runtime dir
+				string clangPath = ndk.GetToolPath (NdkToolKind.CompilerCPlusPlus, AndroidTargetArch.Arm64, NDK_API_LEVEL);
+				int ret = MonoAndroidHelper.RunProcess (
+					clangPath, "-print-runtime-dir",
+					(object sender, DataReceivedEventArgs e) => { // stdout
+						if (clangRuntimeDirTop == null && !String.IsNullOrEmpty (e.Data)) {
+							clangRuntimeDirTop = e.Data;
+						}
+					},
+					(object sender, DataReceivedEventArgs e) => { // stderr
+						if (!String.IsNullOrEmpty (e.Data)) {
+							Log.LogError (e.Data);
+						}
+					}
+				);
+
+				if (ret != 0) {
+					Log.LogError ($"Failed to obtain clang runtime path from {clangPath}");
+				}
 			}
 
 			string runtimeNativeLibsDir = Path.GetFullPath (Path.Combine (AndroidBinUtilsDirectory, "..", "..", "..", "lib"));
@@ -127,7 +151,7 @@ namespace Xamarin.Android.Tasks
 			ITaskItem[] dsos = ApplicationSharedLibraries;
 			foreach (ITaskItem item in dsos) {
 				string abi = item.GetMetadata ("abi");
-				abis [abi] = GatherFilesForABI (item.ItemSpec, abi, ObjectFiles, runtimeNativeLibsDir, ndk);
+				abis [abi] = GatherFilesForABI (item.ItemSpec, abi, ObjectFiles, runtimeNativeLibsDir, ndk, clangRuntimeDirTop);
 			}
 
 			const string commonLinkerArgs =
@@ -205,7 +229,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		InputFiles GatherFilesForABI (string runtimeSharedLibrary, string abi, ITaskItem[] objectFiles, string runtimeNativeLibsDir, NdkTools ndk)
+		InputFiles GatherFilesForABI (string runtimeSharedLibrary, string abi, ITaskItem[] objectFiles, string runtimeNativeLibsDir, NdkTools ndk, string clangRuntimeDirTop)
 		{
 			List<string> extraLibraries = null;
 
@@ -214,11 +238,22 @@ namespace Xamarin.Android.Tasks
 					throw new ArgumentNullException (nameof (ndk));
 				}
 
-				string libPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, MonoAndroidHelper.AbiToTargetArch (abi), 21); // TODO: don't hardcode the API level
+				AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
+				string clangRuntimeAbi = MonoAndroidHelper.ArchToClangRuntimeAbi (targetArch);
+				string clangLibraryAbi = MonoAndroidHelper.ArchToClangLibraryAbi (targetArch);
+				string unwindLibPath = Path.GetFullPath (Path.Combine (clangRuntimeDirTop, clangRuntimeAbi, "libunwind.a"));
+				string builtinsLibPath = Path.GetFullPath (Path.Combine (clangRuntimeDirTop, $"libclang_rt.builtins-{clangLibraryAbi}-android.a"));
+				string libPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, targetArch, NDK_API_LEVEL);
+				string cxxAbiLibPath = Path.GetFullPath (Path.Combine (libPath, "..", "libc++abi.a"));
+
 				extraLibraries = new List<string> {
 					Path.Combine (runtimeNativeLibsDir, MonoAndroidHelper.AbiToRid (abi), "libmarshal-methods-tracing.a"),
 					$"-L \"{libPath}\"",
+					$"\"{builtinsLibPath}\"",
+					$"\"{cxxAbiLibPath}\"",
+					$"\"{unwindLibPath}\"",
 					"-lc",
+					"-ldl",
 					"-llog", // tracing uses android logger
 				};
 			}

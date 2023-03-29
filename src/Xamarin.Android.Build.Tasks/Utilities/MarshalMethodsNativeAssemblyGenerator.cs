@@ -670,7 +670,8 @@ namespace Xamarin.Android.Tasks
 			var mm_trace_func_enter_or_leave_params = new List<LlvmIrFunctionParameter> {
 				new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
 				new LlvmIrFunctionParameter (typeof(uint), "class_index"),
-				new LlvmIrFunctionParameter (typeof(uint), "method_token")
+				new LlvmIrFunctionParameter (typeof(uint), "method_token"),
+				new LlvmIrFunctionParameter (typeof(string), "native_method_name"),
 			};
 
 			var mm_trace_func_enter_sig = new LlvmNativeFunctionSignature (
@@ -752,7 +753,8 @@ namespace Xamarin.Android.Tasks
 				trace_enter_leave_args = new List<LlvmIrFunctionArgument> {
 					new LlvmIrFunctionArgument (typeof(uint), method.AssemblyCacheIndex),
 					new LlvmIrFunctionArgument (typeof(uint), method.ClassCacheIndex),
-					new LlvmIrFunctionArgument (typeof(uint), nativeCallback.MetadataToken.ToUInt32 ())
+					new LlvmIrFunctionArgument (typeof(uint), nativeCallback.MetadataToken.ToUInt32 ()),
+					new LlvmIrFunctionArgument (typeof(string), method.NativeSymbolName),
 				};
 
 				generator.EmitCall (func, mm_trace_func_enter_ref, trace_enter_leave_args);

@@ -418,6 +418,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 						} else {
 							throw new InvalidOperationException ($"Unexpected pointer type in argument {i}, '{argument.Type}'");
 						}
+					} else if (argument.Value is string str) {
+						StringSymbolInfo info = StringManager.Add (str);
+						WriteGetStringPointer (info.SymbolName, info.Size, indent: false, detectBitness: true, skipPointerType: true);
 					} else {
 						Output.Write (argument.Value.ToString ());
 					}

@@ -574,5 +574,45 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
 			}
 		}
+
+		public static string ArchToClangRuntimeAbi (AndroidTargetArch arch)
+		{
+			switch (arch) {
+				case AndroidTargetArch.Arm64:
+					return "aarch64";
+
+				case AndroidTargetArch.Arm:
+					return "arm";
+
+				case AndroidTargetArch.X86:
+					return "i386";
+
+				case AndroidTargetArch.X86_64:
+					return "x86_64";
+
+				default:
+					throw new InvalidOperationException ($"Internal error: unsupported architecture '{arch}'");
+			}
+		}
+
+		public static string ArchToClangLibraryAbi (AndroidTargetArch arch)
+		{
+			switch (arch) {
+				case AndroidTargetArch.Arm64:
+					return "aarch64";
+
+				case AndroidTargetArch.Arm:
+					return "arm";
+
+				case AndroidTargetArch.X86:
+					return "i686";
+
+				case AndroidTargetArch.X86_64:
+					return "x86_64";
+
+				default:
+					throw new InvalidOperationException ($"Internal error: unsupported architecture '{arch}'");
+			}
+		}
 	}
 }

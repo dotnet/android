@@ -52,18 +52,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public sealed class StringSymbolInfo
-		{
-			public readonly string SymbolName;
-			public readonly ulong Size;
-
-			public StringSymbolInfo (string symbolName, ulong size)
-			{
-				SymbolName = symbolName;
-				Size = size;
-			}
-		}
-
 		static readonly Dictionary<Type, string> typeMap = new Dictionary<Type, string> {
 			{ typeof (bool), "i8" },
 			{ typeof (byte), "i8" },
@@ -165,11 +153,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public AndroidTargetArch TargetArch { get; }
 
 		protected LlvmIrMetadataManager MetadataManager { get; }
+		protected LlvmIrStringManager StringManager { get; }
 
 		protected LlvmIrGenerator (AndroidTargetArch arch, TextWriter output, string fileName)
 		{
 			Output = output;
 			MetadataManager = new LlvmIrMetadataManager ();
+			StringManager = new LlvmIrStringManager ();
 			TargetArch = arch;
 			Is64Bit = arch == AndroidTargetArch.X86_64 || arch == AndroidTargetArch.Arm64;
 			this.fileName = fileName;
@@ -455,7 +445,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			StringSymbolInfo stringSymbol = WriteUniqueString ($"__{info.Name}_{smi.Info.Name}", str, ref structStringCounter);
+			StringSymbolInfo stringSymbol = StringManager.Add (str, groupName: info.Name, symbolSuffix: smi.Info.Name);//WriteUniqueString ($"__{info.Name}_{smi.Info.Name}", str, ref structStringCounter);
 			instance.AddPointerData (smi, stringSymbol.SymbolName, stringSymbol.Size);
 
 			return true;
@@ -622,12 +612,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteEOL ();
 			WriteEOL (initialComment ?? symbolName);
 
-			ulong arrayStringCounter = 0;
-			var strings = new List<StringSymbolInfo> ();
+						var strings = new List<StringSymbolInfo> ();
 
 			foreach (string s in values) {
-				StringSymbolInfo symbol = WriteUniqueString ($"__{symbolName}", s, ref arrayStringCounter, LlvmIrVariableOptions.LocalConstexprString);
-				strings.Add (new StringSymbolInfo (symbol.SymbolName, symbol.Size));
+				StringSymbolInfo symbol = StringManager.Add (s, groupName: symbolName);
+				strings.Add (symbol);
 			}
 
 			if (strings.Count > 0) {
@@ -1137,12 +1126,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		void WriteGetStringPointer (string? variableName, ulong size, bool indent = true, TextWriter? output = null)
+		void WriteGetStringPointer (string? variableName, ulong size, bool indent = true, TextWriter? output = null, bool detectBitness = false, bool skipPointerType = false)
 		{
-			WriteGetBufferPointer (variableName, "i8*", size, indent, output);
+			WriteGetBufferPointer (variableName, "i8*", size, indent, output, detectBitness, skipPointerType);
 		}
 
-		void WriteGetBufferPointer (string? variableName, string irType, ulong size, bool indent = true, TextWriter? output = null)
+		void WriteGetBufferPointer (string? variableName, string irType, ulong size, bool indent = true, TextWriter? output = null, bool detectBitness = false, bool skipPointerType = false)
 		{
 			output = EnsureOutput (output);
 			if (indent) {
@@ -1160,8 +1149,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					irBaseType = irType;
 				}
 
+				string indexType = detectBitness && Is64Bit ? "i64" : "i32";
 				// $"{irType} getelementptr inbounds ([{size} x {irBaseType}], [{size} x {irBaseType}]* @{variableName}, i32 0, i32 0)"
-				output.Write (irType);
+				if (!skipPointerType) {
+					output.Write (irType);
+				}
+
 				output.Write (" getelementptr inbounds ([");
 				output.Write (size);
 				output.Write (" x ");
@@ -1172,7 +1165,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				output.Write (irBaseType);
 				output.Write ("]* @");
 				output.Write (variableName);
-				output.Write (", i32 0, i32 0)");
+				output.Write (", ");
+				output.Write (indexType);
+				output.Write (" 0, ");
+				output.Write (indexType);
+				output.Write (" 0)");
 			}
 		}
 
@@ -1186,7 +1183,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			var strings = new List<StringSymbolInfo> ();
 			long i = 0;
-			ulong arrayStringCounter = 0;
 
 			foreach (var kvp in arrayContents) {
 				string name = kvp.Key;
@@ -1205,8 +1201,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WriteArrayString (string str, string symbolSuffix)
 			{
-				StringSymbolInfo symbol = WriteUniqueString ($"__{symbolName}_{symbolSuffix}", str, ref arrayStringCounter, LlvmIrVariableOptions.LocalConstexprString);
-				strings.Add (new StringSymbolInfo (symbol.SymbolName, symbol.Size));
+				StringSymbolInfo symbol = StringManager.Add (str, groupName: symbolName, symbolSuffix: symbolSuffix);
+				strings.Add (symbol);
 			}
 		}
 
@@ -1280,28 +1276,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		/// <summary>
-		/// Writes a private string. Strings without symbol names aren't exported, but they may be referenced by other
-		/// symbols
-		/// </summary>
-		public string WriteString (string value)
-		{
-			return WriteString (value, LlvmIrVariableOptions.LocalString);
-		}
-
-		/// <summary>
-		/// Writes a string with automatically generated symbol name and symbol options (writeability, visibility etc) specified in the <paramref name="options"/> parameter.
-		/// </summary>
-		public string WriteString (string value, LlvmIrVariableOptions options)
-		{
-			string name = $"@.str";
-			if (stringCounter > 0) {
-				name += $".{stringCounter}";
-			}
-			stringCounter++;
-			return WriteString (name, value, options);
-		}
-
-		/// <summary>
 		/// Writes a global, C++ constexpr style string
 		/// </summary>
 		public string WriteString (string symbolName, string value)
@@ -1318,98 +1292,24 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		/// <summary>
-		/// Writes a local, constexpr style string and returns its size in <paramref name="stringSize"/>
-		/// </summary>
-		public string WriteString (string symbolName, string value, out ulong stringSize)
-		{
-			return WriteString (symbolName, value, LlvmIrVariableOptions.LocalConstexprString, out stringSize);
-		}
-
-		/// <summary>
 		/// Writes a string with specified <paramref name="symbolName"/>, and symbol options (writeability, visibility etc) specified in the <paramref name="options"/>
 		/// parameter.  Returns string size (in bytes) in <paramref name="stringSize"/>
 		/// </summary>
 		public string WriteString (string symbolName, string value, LlvmIrVariableOptions options, out ulong stringSize)
 		{
-			string strSymbolName;
-			bool global = options.IsGlobal;
-			if (global) {
-				strSymbolName = $"__{symbolName}";
-			} else {
-				strSymbolName = symbolName;
-			}
-
-			string quotedString = QuoteString (value, out stringSize);
-
-			// It might seem counter-intuitive that when we're requested to write a global string, here we generate a **local** one,
-			// but global strings are actually pointers to local storage.
-			WriteGlobalSymbolStart (strSymbolName, global ? LlvmIrVariableOptions.LocalConstexprString : options);
-
-			// WriteLine $"[{stringSize} x i8] c{quotedString}, align {GetAggregateAlignment (1, stringSize)}"
-			Output.Write ('[');
-			Output.Write (stringSize);
-			Output.Write (" x i8] c");
-			Output.Write (quotedString);
-			Output.Write (", align ");
-			Output.WriteLine (GetAggregateAlignment (1, stringSize));
-
-			if (!global) {
+			StringSymbolInfo info = StringManager.Add (value, groupName: symbolName);
+			stringSize = info.Size;
+			if (!options.IsGlobal) {
 				return symbolName;
 			}
 
 			string indexType = Is64Bit ? "i64" : "i32";
 			WriteGlobalSymbolStart (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer);
-
-			// WriteLine $"i8* getelementptr inbounds ([{stringSize} x i8], [{stringSize} x i8]* @{strSymbolName}, {indexType} 0, {indexType} 0), align {GetAggregateAlignment (PointerSize, stringSize)}"
-			Output.Write ("i8* getelementptr inbounds ([");
-			Output.Write (stringSize);
-			Output.Write (" x i8], [");
-			Output.Write (stringSize);
-			Output.Write (" x i8]* @");
-			Output.Write (strSymbolName);
-			Output.Write (", ");
-			Output.Write (indexType);
-			Output.Write (" 0, ");
-			Output.Write (indexType);
-			Output.Write (" 0), align ");
+			WriteGetStringPointer (info.SymbolName, info.Size, indent: false, detectBitness: true);
+			Output.Write (", align ");
 			Output.WriteLine (GetAggregateAlignment (PointerSize, stringSize));
 
 			return symbolName;
-		}
-
-		/// <summary>
-		/// Writes a string, creating a new symbol if the <paramref name="value"/> is unique or returns name of a previously created symbol with the same
-		/// string value.  If a new symbol is written, its name is constructed by combining prefix (<paramref name="potentialSymbolNamePrefix"/>) with value
-		/// of a string counter referenced by the <paramref name="counter"/> parameter.  Symbol is created as a local, C++ constexpr style string.
-		/// </summary>
-		public StringSymbolInfo WriteUniqueString (string potentialSymbolName, string value, ref ulong counter)
-		{
-			return WriteUniqueString (potentialSymbolName, value, ref counter, LlvmIrVariableOptions.LocalConstexprString);
-		}
-
-		/// <summary>
-		/// Writes a string, creating a new symbol if the <paramref name="value"/> is unique or returns name of a previously created symbol with the same
-		/// string value.  If a new symbol is written, its name is constructed by combining prefix (<paramref name="potentialSymbolNamePrefix"/>) with value
-		/// of a string counter referenced by the <paramref name="counter"/> parameter.  Symbol options (writeability, visibility etc) are specified in the <paramref
-		/// name="options"/> parameter.  String size (in bytes) is returned in <paramref name="stringSize"/>.
-		/// </summary>
-		public StringSymbolInfo WriteUniqueString (string potentialSymbolNamePrefix, string value, ref ulong counter, LlvmIrVariableOptions options)
-		{
-			if (value == null) {
-				return null;
-			}
-
-			StringSymbolInfo info;
-			if (stringSymbolCache.TryGetValue (value, out info)) {
-				return info;
-			}
-
-			string newSymbolName = $"{potentialSymbolNamePrefix}.{counter++}";
-			WriteString (newSymbolName, value, options, out ulong stringSize);
-			info = new StringSymbolInfo (newSymbolName, stringSize);
-			stringSymbolCache.Add (value, info);
-
-			return info;
 		}
 
 		public virtual void WriteFileTop ()
@@ -1423,7 +1323,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public virtual void WriteFileEnd ()
 		{
 			Output.WriteLine ();
+			StringManager.Flush (this);
 
+			Output.WriteLine ();
 			WriteAttributeSets ();
 
 			foreach (LlvmIrMetadataItem metadata in MetadataManager.Items) {
