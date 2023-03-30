@@ -126,9 +126,13 @@ namespace MonoDroid.Generation
 			clone.SourceFile = SourceFile;
 			clone.JavadocInfo = JavadocInfo;
 
-			if (GenericArguments != null)
+			if (GenericArguments != null) {
+				if (clone.GenericArguments is null)
+					clone.GenericArguments = new GenericParameterDefinitionList ();
+
 				foreach (var ga in GenericArguments)
 					clone.GenericArguments.Add (ga.Clone ());
+			}
 
 			foreach (var p in Parameters)
 				clone.Parameters.Add (p.Clone ());

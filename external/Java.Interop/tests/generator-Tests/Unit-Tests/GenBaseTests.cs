@@ -91,6 +91,22 @@ namespace generatortests
 			Assert.False (c.RequiresNew (m.Name, m));
 		}
 
+		[Test]
+		public void TestMethodClone_GenericArguments ()
+		{
+			var c = SupportTypeBuilder.CreateClass ("java.myClass", options);
+			var m = SupportTypeBuilder.CreateMethod (c, "DoStuff", options);
+
+			m.GenericArguments = new GenericParameterDefinitionList {
+				new GenericParameterDefinition ("T", null)
+			};
+
+			var clone = m.Clone (c);
+
+			Assert.AreEqual (1, clone.GenericArguments.Count);
+			Assert.AreEqual ("T", clone.GenericArguments [0].Name);
+		}
+
 		void TestParameterlessMethods (string name)
 		{
 			var c = SupportTypeBuilder.CreateClass ("java.myClass", options);
