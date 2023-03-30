@@ -35,9 +35,6 @@ parameters:
 - name: provisionatorChannel
   type: string
   default: latest           # Support for launching a build against a Provisionator PR (e.g., pr/[github-account-name]/[pr-number]) as a means to test in-progress Provisionator changes
-- name: signClassicPkgContent
-  type: boolean
-  default: true             # Queue time variable that can be used to skip classic pkg signing
 
 # Global variables
 variables:
@@ -87,7 +84,6 @@ stages:
 - template: yaml-templates/build-macos.yaml
   parameters:
     provisionatorChannel: ${{ parameters.provisionatorChannel }}
-    signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
 
 - template: yaml-templates/build-windows.yaml
 
@@ -532,7 +528,6 @@ stages:
   - template: compliance/sbom/job.v1.yml@yaml-templates
     parameters:
       artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
-      statusContexts: [ 'vsts-devdiv artifacts' ]
       packageName: xamarin-android
       packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
       GitHub.Token: $(GitHub.Token)

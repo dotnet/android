@@ -4,7 +4,6 @@ parameters:
   makeMSBuildArgs: ''
   nugetArtifactName: $(NuGetArtifactName)
   provisionatorChannel: latest
-  signClassicPkgContent: true
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
 
 steps:
@@ -65,6 +64,47 @@ steps:
 - script: make all-tests CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make all-tests
+
+# Restore needs to be executed first or MicroBuild targets won't be imported in time
+- task: MSBuild@1
+  displayName: msbuild /t:Restore sign-content.proj
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: /t:Restore /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
+
+- task: MSBuild@1
+  displayName: PKG signing - add entitlements and sign
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: >-
+      /t:AddMachOEntitlements;AddMSBuildFilesUnixSign;AddMSBuildFilesUnixSignAndHarden;Build
+      /p:SignType=$(MicroBuildSignType)
+      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
+
+- task: MSBuild@1
+  displayName: PKG signing - sign binutils libraries
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: >-
+      /t:AddBinUtilsFilesUnixSign;Build
+      /p:SignType=$(MicroBuildSignType)
+      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-bu-lib.binlog
+
+- task: MSBuild@1
+  displayName: PKG signing - sign binutils executables
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: >-
+      /t:AddBinUtilsFilesUnixSignAndHarden;Build
+      /p:SignType=$(MicroBuildSignType)
+      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-bu-ex.binlog
 
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
