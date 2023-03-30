@@ -22,6 +22,7 @@
     <File Path="api-31.xml.in" Level="31" />
     <File Path="api-32.xml.in" Level="32" />
     <File Path="api-33.xml.in" Level="33" />
+    <File Path="api-UpsideDownCake.xml.in" Level="34" />
   </Inputs>
   <Outputs>
     <File Path="api-19.xml" LastLevel="19" />
@@ -39,5 +40,6 @@
     <File Path="api-31.xml" LastLevel="31" />
     <File Path="api-32.xml" LastLevel="32" />
     <File Path="api-33.xml" LastLevel="33" />
+    <File Path="api-UpsideDownCake.xml" LastLevel="34" />
   </Outputs>
 </Configuration>
