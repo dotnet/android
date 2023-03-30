@@ -121,6 +121,7 @@
     <MingwZlibRootDirectory64>$(MingwZlibRootDirectory)\x86_64-w64-mingw32</MingwZlibRootDirectory64>
     <MingwZlibLibraryName>libz.a</MingwZlibLibraryName>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
+    <LibUnwindSourceDirectory Condition=" '$(LibUnwindSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libunwind</LibUnwindSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
     <ThirdPartySourcePath>$(MSBuildThisFileDirectory)src-ThirdParty\</ThirdPartySourcePath>
     <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
@@ -175,6 +176,7 @@
     <MonoSourceFullPath>$([System.IO.Path]::GetFullPath ('$(MonoSourceDirectory)'))</MonoSourceFullPath>
     <LinkerSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LinkerSourceDirectory)'))</LinkerSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
+    <LibUnwindSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindSourceDirectory)'))</LibUnwindSourceFullPath>
     <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
   </PropertyGroup>
   <PropertyGroup>

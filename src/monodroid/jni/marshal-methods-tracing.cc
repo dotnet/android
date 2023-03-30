@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <limits>
 #include <dlfcn.h>
 #include <cxxabi.h>
 
@@ -10,6 +11,19 @@
 #include "marshal-methods-tracing.hh"
 #include "marshal-methods-utilities.hh"
 
+struct unw_context_t {
+  uint64_t data[_LIBUNWIND_CONTEXT_SIZE];
+};
+typedef struct unw_context_t unw_context_t;
+
+struct unw_cursor_t {
+  uint64_t data[_LIBUNWIND_CURSOR_SIZE];
+} LIBUNWIND_CURSOR_ALIGNMENT_ATTR;
+typedef struct unw_cursor_t unw_cursor_t;
+
+extern int unw_getcontext(unw_context_t *);
+extern int unw_init_local(unw_cursor_t *, unw_context_t *);
+
 using namespace xamarin::android::internal;
 
 constexpr int PRIORITY = ANDROID_LOG_INFO;
@@ -20,8 +34,19 @@ constexpr char LEAD[] = "MM: ";
 
 static _Unwind_Reason_Code backtrace_frame_callback (_Unwind_Context* context, [[maybe_unused]] void* arg)
 {
-	auto ptr = reinterpret_cast<void*>(_Unwind_GetIP (context));
+	int ip_before_instruction = 0;
+	uintptr_t ip = _Unwind_GetIPInfo (context, &ip_before_instruction);
 
+	if (ip_before_instruction == 0) {
+		if (ip == 0) {
+			// It's as if 0 - 1, but without tripping up static analyzers claiming an underflow
+			ip = std::numeric_limits<uintptr_t>::max();
+		} else {
+			ip -= 1;
+		}
+	}
+
+	auto ptr = reinterpret_cast<void*>(ip);
 	Dl_info info {};
 	const char *symbol_name = nullptr;
 	bool symbol_name_allocated = false;
@@ -55,6 +80,7 @@ static _Unwind_Reason_Code backtrace_frame_callback (_Unwind_Context* context, [
 
 static void print_native_backtrace () noexcept
 {
+
 	_Unwind_Backtrace (backtrace_frame_callback, nullptr);
 }
 
