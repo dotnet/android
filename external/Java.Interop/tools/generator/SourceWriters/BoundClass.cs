@@ -126,8 +126,12 @@ namespace generator.SourceWriters
 		void AddConstructors (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
 			// Add required constructor for all JLO inheriting classes
-			if (klass.FullName != "Java.Lang.Object" && klass.InheritsObject)
-				Constructors.Add (new JavaLangObjectConstructor (klass, opt));
+			if (klass.FullName != "Java.Lang.Object" && klass.InheritsObject) {
+				if (!string.IsNullOrWhiteSpace (klass.PeerConstructorPartialMethod)) {
+					Methods.Add (new ConstructorPartialMethod (klass.PeerConstructorPartialMethod));
+				}
+				Constructors.Add (new JavaLangObjectConstructor (klass, opt, klass.PeerConstructorPartialMethod));
+			}
 
 			foreach (var ctor in klass.Ctors) {
 				// Don't bind final or protected constructors

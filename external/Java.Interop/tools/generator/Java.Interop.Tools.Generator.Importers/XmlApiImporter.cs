@@ -110,6 +110,7 @@ namespace MonoDroid.Generation
 				FromXml = true,
 				IsAbstract = elem.XGetAttribute ("abstract") == "true",
 				IsFinal = elem.XGetAttribute ("final") == "true",
+				PeerConstructorPartialMethod = elem.XGetAttribute ("peerConstructorPartialMethod"),
 				// Only use an explicitly set XML attribute
 				Unnest = elem.XGetAttribute ("unnest") == "true" ? true :
 					 elem.XGetAttribute ("unnest") == "false" ? false :

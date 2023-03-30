@@ -302,6 +302,8 @@ namespace MonoDroid.Generation
 
 		public bool NeedsNew { get; set; }
 
+		public string PeerConstructorPartialMethod { get; set; }
+
 		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			if (validated)

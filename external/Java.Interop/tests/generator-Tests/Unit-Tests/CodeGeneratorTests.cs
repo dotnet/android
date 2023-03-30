@@ -377,6 +377,34 @@ namespace generatortests
 		}
 
 		[Test]
+		public void PeerConstructorPartialMethod_Class ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated'
+			        extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;'
+			        peerConstructorPartialMethod='_OnMyClassCreated'
+			        jni-signature='Lcom/xamarin/android/MyClass;'
+			        name='MyClass'
+			        final='false' static='false' visibility='public'>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var klass = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("partial void _OnMyClassCreated ();".NormalizeLineEndings ()), $"was: `{writer}`");
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("{ _OnMyClassCreated (); }".NormalizeLineEndings ()), $"was: `{writer}`");
+		}
+		[Test]
 		public void WriteDuplicateInterfaceEventArgs ()
 		{
 			// If we have 2 methods that would each create the same EventArgs class,

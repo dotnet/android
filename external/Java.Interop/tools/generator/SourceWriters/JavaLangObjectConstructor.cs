@@ -11,7 +11,7 @@ namespace generator.SourceWriters
 {
 	public class JavaLangObjectConstructor : ConstructorWriter
 	{
-		public JavaLangObjectConstructor (ClassGen klass, CodeGenerationOptions opt)
+		public JavaLangObjectConstructor (ClassGen klass, CodeGenerationOptions opt, string callPartialMethod)
 		{
 			Name = klass.Name;
 
@@ -30,6 +30,9 @@ namespace generator.SourceWriters
 				Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
 
 				BaseCall = "base (javaReference, transfer)";
+			}
+			if (!string.IsNullOrWhiteSpace (callPartialMethod)) {
+				Body.Add ($"{callPartialMethod} ();");
 			}
 		}
 	}

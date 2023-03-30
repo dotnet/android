@@ -19,6 +19,7 @@ namespace Xamarin.SourceWriter
 		public List<string> Body { get; set; } = new List<string> ();
 		public bool IsSealed { get; set; }
 		public bool IsStatic { get; set; }
+		public bool IsPartial { get; set; }
 		public bool IsPrivate { get => visibility == Visibility.Private; set => visibility = value ? Visibility.Private : Visibility.Default; }
 		public bool IsProtected { get => visibility == Visibility.Protected; set => visibility = value ? Visibility.Protected : Visibility.Default; }
 		public bool IsOverride { get; set; }
@@ -102,6 +103,9 @@ namespace Xamarin.SourceWriter
 
 			if (IsUnsafe)
 				writer.Write ("unsafe ");
+
+			if (IsPartial)
+				writer.Write ("partial ");
 
 			WriteReturnType (writer);
 
