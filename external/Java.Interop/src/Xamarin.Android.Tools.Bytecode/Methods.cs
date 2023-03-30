@@ -294,17 +294,20 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (methodParams == null)
 				return;
 
-			const MethodParameterAccessFlags OuterThis =
-				MethodParameterAccessFlags.Mandated | MethodParameterAccessFlags.Final;
+			const MethodParameterAccessFlags OuterThis1 =
+				 MethodParameterAccessFlags.Final | MethodParameterAccessFlags.Mandated;
+			const MethodParameterAccessFlags OuterThis2 =
+				 MethodParameterAccessFlags.Final | MethodParameterAccessFlags.Synthetic;
 			var pinfo = methodParams.ParameterInfo;
 			int startIndex = 0;
 			while (startIndex < pinfo.Count &&
-				   (pinfo [startIndex].AccessFlags & OuterThis) == OuterThis) {
+				   ((pinfo [startIndex].AccessFlags & OuterThis1) == OuterThis1 ||
+				    (pinfo [startIndex].AccessFlags & OuterThis2) == OuterThis2)) {
 				startIndex++;
 			}
 			Debug.Assert (
 					parameters.Length == pinfo.Count - startIndex,
-					$"Unexpected number of method parameters; expected {parameters.Length}, got {pinfo.Count - startIndex}");
+					$"Unexpected number of method parameters in `{DeclaringType.FullJniName}.{Name}{Descriptor}`: expected {parameters.Length}, got {pinfo.Count - startIndex}");
 			int end = Math.Min (parameters.Length, pinfo.Count - startIndex);
 			for (int i = 0; i < end; ++i) {
 				var p = pinfo [i + startIndex];
