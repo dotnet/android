@@ -6,6 +6,7 @@
   <PropertyGroup>
     <_LibUnwindBaseLibName>unwind_xamarin</_LibUnwindBaseLibName>
     <_LibUnwindLibName>lib$(_LibUnwindBaseLibName).a</_LibUnwindLibName>
+    <_LibUnwindHeadersOutputDir>$(LibUnwindGeneratedHeadersFullPath)</_LibUnwindHeadersOutputDir>
   </PropertyGroup>
 
   <Target Name="_BuildLibUnwind" BeforeTargets="Build" DependsOnTargets="_ConfigureLibUnwind;_BuildAndroidLibUnwind" />
@@ -16,7 +17,7 @@
       <_ConfigureLibUnwindCommands
           Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>$(_CmakeAndroidFlags) -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)" -DCMAKE_BUILD_TYPE=$(Configuration) -DLIBUNWIND_SOURCE_DIR="$(LibUnwindSourceFullPath)" -DLIBUNWIND_LIBRARY_NAME="$(_LibUnwindBaseLibName)" -DLIBUNWIND_OUTPUT_DIR="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)')" $(MSBuildThisFileDirectory)</Arguments>
+        <Arguments>$(_CmakeAndroidFlags) -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)" -DCMAKE_BUILD_TYPE=$(Configuration) -DLIBUNWIND_SOURCE_DIR="$(LibUnwindSourceFullPath)" -DLIBUNWIND_LIBRARY_NAME="$(_LibUnwindBaseLibName)" -DLIBUNWIND_OUTPUT_DIR="@(AndroidSupportedTargetJitAbi->'$(OutputPath)/%(AndroidRID)')" -DLIBUNWIND_HEADERS_OUTPUT_DIR="$(_LibUnwindHeadersOutputDir)" $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)</WorkingDirectory>
       </_ConfigureLibUnwindCommands>
     </ItemGroup>
@@ -42,7 +43,7 @@
 
   <Target Name="_BuildAndroidLibUnwind"
 	        DependsOnTargets="_PrepareBuildAndroidLibUnwind"
-	        Inputs="$(LibUnwindSourceFullPath)\dist\sqlite3.c;@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configuration)\build.ninja');;..\..\build-tools\scripts\Ndk.targets"
+	        Inputs="$(LibUnwindSourceFullPath)\src\**\*.c;@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configuration)\build.ninja');;..\..\build-tools\scripts\Ndk.targets"
 	        Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\$(_LibUnwindLibName)')">
     <RunParallelCmds Commands="@(_BuildLibUnwindCommands)" />
   </Target>

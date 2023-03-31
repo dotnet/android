@@ -49,6 +49,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Diagnost
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Cecil", "external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj", "{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libunwind", "src\libunwind-xamarin\libunwind-xamarin.csproj", "{F8E4961B-C427-47F9-92D6-0BEB5B76B3D7}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "monodroid", "src\monodroid\monodroid.csproj", "{53EE4C57-1C03-405A-8243-8DA539546C88}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.NUnitLite", "src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.csproj", "{4D603AA3-3BFD-43C8-8050-0CD6C2601126}"

@@ -101,6 +101,16 @@ if(NOT DEFINED XA_LIB_TOP_DIR)
   message(FATAL_ERROR "Please set the XA_LIB_TOP_DIR variable on command line (-DXA_LIB_TOP_DIR=path)")
 endif()
 
+if(NOT DEFINED LIBUNWIND_SOURCE_DIR)
+  message(FATAL_ERROR "Please set the LIBUNWIND_SOURCE_DIR on command line (-DLIBUNWIND_SOURCE_DIR=path)")
+endif()
+
+if(ANDROID AND ENABLE_NET)
+  if(NOT DEFINED LIBUNWIND_HEADERS_DIR)
+    message(FATAL_ERROR "Please set the LIBUNWIND_HEADERS_DIR on command line (-DLIBUNWIND_HEADERS_DIR=path)")
+  endif()
+endif()
+
 if(NOT ANDROID)
   if (NOT DEFINED JDK_INCLUDE)
     message(FATAL_ERROR "Please set the JDK_INCLUDE variable on command line (-DJDK_INCLUDE)")
@@ -683,9 +693,16 @@ add_library(
 
 if(ANDROID)
   if(ENABLE_NET AND NOT DEBUG_BUILD)
+    # TODO: make it a shared library instead, will make it possible to not require NDK when building
+    #      an app with tracing
     add_library(
       ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
       STATIC ${MARSHAL_METHODS_TRACING_SOURCES}
+    )
+
+    target_include_directories(
+      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
+      PRIVATE ${LIBUNWIND_SOURCE_DIR}/include ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
     )
   endif()
 

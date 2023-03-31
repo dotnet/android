@@ -1,5 +1,5 @@
 #if !defined (__LIBUNWIND_CONFIG_H)
-#define (__LIBUNWIND_CONFIG_H)
+#define __LIBUNWIND_CONFIG_H
 
 #cmakedefine01 HAVE_ELF_H
 #cmakedefine01 HAVE_ENDIAN_H

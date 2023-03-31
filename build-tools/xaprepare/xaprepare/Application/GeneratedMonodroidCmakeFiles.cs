@@ -63,6 +63,8 @@ namespace Xamarin.Android.Prepare
 				{ "@NinjaPath@", "${NINJA}" },
 				{ "@OUTPUT_DIRECTORY@", "${__OUTPUT_DIR}" },
 				{ "@SOURCE_DIRECTORY@", "${MONODROID_SOURCE_DIR}" },
+				{ "@LibUnwindSourceFullPath@", "${LIBUNWIND_SOURCE_FULL_PATH}" },
+				{ "@LibUnwindGeneratedHeadersFullPath@", "${LIBUNWIND_HEADERS_FULL_PATH}" },
 			};
 
 			var androidRuntimeReplacements = new Dictionary<string, string> (StringComparer.Ordinal) {
@@ -98,6 +100,8 @@ namespace Xamarin.Android.Prepare
 			sw.WriteLine ($"NINJA=\"{context.Properties.GetRequiredValue(KnownProperties.NinjaPath)}\"");
 			sw.WriteLine ($"XA_BUILD_CONFIGURATION={context.Configuration}");
 			sw.WriteLine ($"XA_INSTALL_DIR=\"{Configurables.Paths.InstallMSBuildDir}/lib\"");
+			sw.WriteLine ($"LIBUNWIND_SOURCE_FULL_PATH=\"{context.Properties.GetRequiredValue(KnownProperties.LibUnwindSourceFullPath)}\"");
+			sw.WriteLine ($"LIBUNWIND_HEADERS_FULL_PATH=\"{context.Properties.GetRequiredValue(KnownProperties.LibUnwindGeneratedHeadersFullPath)}\"");
 			sw.WriteLine ();
 
 			string indent = "\t";
@@ -329,6 +333,8 @@ namespace Xamarin.Android.Prepare
 				{ "@BUILD_TYPE@", "" },
 				{ "@CONFIGURATION@", "" },
 				{ "@SOURCE_DIRECTORY@", $"$(MSBuildThisFileDirectory){sourceDir}" },
+				{ "@LibUnwindSourceFullPath@", "$(LibUnwindSourceFullPath)" },
+				{ "@LibUnwindGeneratedHeadersFullPath@", "$(LibUnwindGeneratedHeadersFullPath)" },
 			};
 
 			var androidRuntimeReplacements = new Dictionary<string, string> (StringComparer.Ordinal) {
@@ -445,6 +451,8 @@ namespace Xamarin.Android.Prepare
 				{ "@AndroidNdkDirectory@", "$(AndroidNdkDirectory)" },
 				{ "@MonoSourceFullPath@", "$(MonoSourceFullPath)" },
 				{ "@AndroidToolchainPath@", GetRelativeToolchainDefinitionPath () },
+				{ "@LibUnwindSourceFullPath@", "$(LibUnwindSourceFullPath)" },
+				{ "@LibUnwindGeneratedHeadersFullPath@", "$(LibUnwindGeneratedHeadersFullPath)" },
 			};
 
 			var MSBuildMingwReplacements = new Dictionary<string, string> (StringComparer.Ordinal) {

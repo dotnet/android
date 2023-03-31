@@ -241,17 +241,16 @@ namespace Xamarin.Android.Tasks
 				AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
 				string clangRuntimeAbi = MonoAndroidHelper.ArchToClangRuntimeAbi (targetArch);
 				string clangLibraryAbi = MonoAndroidHelper.ArchToClangLibraryAbi (targetArch);
-				string unwindLibPath = Path.GetFullPath (Path.Combine (clangRuntimeDirTop, clangRuntimeAbi, "libunwind.a"));
 				string builtinsLibPath = Path.GetFullPath (Path.Combine (clangRuntimeDirTop, $"libclang_rt.builtins-{clangLibraryAbi}-android.a"));
 				string libPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, targetArch, NDK_API_LEVEL);
 				string cxxAbiLibPath = Path.GetFullPath (Path.Combine (libPath, "..", "libc++abi.a"));
 
 				extraLibraries = new List<string> {
 					Path.Combine (runtimeNativeLibsDir, MonoAndroidHelper.AbiToRid (abi), "libmarshal-methods-tracing.a"),
+					Path.Combine (runtimeNativeLibsDir, MonoAndroidHelper.AbiToRid (abi), "libunwind_xamarin.a"),
 					$"-L \"{libPath}\"",
 					$"\"{builtinsLibPath}\"",
-					$"\"{cxxAbiLibPath}\"",
-					$"\"{unwindLibPath}\"",
+					 $"\"{cxxAbiLibPath}\"",
 					"-lc",
 					"-ldl",
 					"-llog", // tracing uses android logger

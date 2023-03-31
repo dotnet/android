@@ -35,7 +35,9 @@ namespace Xamarin.Android.Prepare
 			"-GNinja",
 			"-DCMAKE_MAKE_PROGRAM=\"@NinjaPath@\"",
 			"-DXA_BUILD_CONFIGURATION=@XA_BUILD_CONFIGURATION@",
-			"-DXA_LIB_TOP_DIR=@XA_LIB_TOP_DIR@",
+			"-DXA_LIB_TOP_DIR=\"@XA_LIB_TOP_DIR@\"",
+			"-DLIBUNWIND_SOURCE_DIR=\"@LibUnwindSourceFullPath@\"",
+			"-DLIBUNWIND_HEADERS_DIR=\"@LibUnwindGeneratedHeadersFullPath@\"",
 		};
 
 		public static readonly List<string> AndroidFlags = new List<string> {
@@ -43,7 +45,9 @@ namespace Xamarin.Android.Prepare
 			"-DANDROID_CPP_FEATURES=\"no-rtti no-exceptions\"",
 			"-DANDROID_TOOLCHAIN=clang",
 			"-DCMAKE_TOOLCHAIN_FILE=\"@AndroidNdkDirectory@@AndroidToolchainPath@\"",
-			"-DANDROID_NDK=@AndroidNdkDirectory@"
+			"-DANDROID_NDK=@AndroidNdkDirectory@",
+			"-DLIBUNWIND_SOURCE_DIR=\"@LibUnwindSourceFullPath@\"",
+			"-DLIBUNWIND_HEADERS_DIR=\"@LibUnwindGeneratedHeadersFullPath@\"",
 		};
 
 		public static readonly List<string> MonodroidCommonDefines = new List<string> {
