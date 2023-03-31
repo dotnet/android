@@ -53,19 +53,4 @@
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.8.9.2</MdocPackageVersion>
   </PropertyGroup>
 
-  <!-- Properties to help us run managed assemblies on various runtimes.
-       Ex:
-       * Mono: mono xaprepare.exe
-       * Windows .NET: xaprepare.exe
-       * dotnet: dotnet xaprepare.dll
--->
-  <PropertyGroup Condition=" '$(MSBuildRuntimeType)' != 'Core' ">
-    <ManagedToolInvocationRuntime>$(Runtime) </ManagedToolInvocationRuntime>
-    <ManagedToolInvocationExtension>.exe</ManagedToolInvocationExtension>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(MSBuildRuntimeType)' == 'Core' ">
-    <ManagedToolInvocationRuntime>dotnet </ManagedToolInvocationRuntime>
-    <ManagedToolInvocationExtension>.dll</ManagedToolInvocationExtension>
-  </PropertyGroup>
 </Project>
