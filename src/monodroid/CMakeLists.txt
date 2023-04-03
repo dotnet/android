@@ -195,6 +195,13 @@ endif()
 include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
 
 if(ENABLE_NET)
+  if(ANDROID)
+      if(ENABLE_NET)
+        set(NDK_CXX_SOURCES_PATH ${CMAKE_ANDROID_NDK}/sources/cxx-stl)
+        set(NDK_CXX_LIBCPPABI_SOURCE_PATH ${NDK_CXX_SOURCES_PATH}/llvm-libc++abi)
+      endif()
+  endif()
+
   if(ANDROID_ABI MATCHES "^arm64-v8a")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
   elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
@@ -552,8 +559,14 @@ if(UNIX)
 endif()
 
 if(ANDROID AND ENABLE_NET)
+
   set(MARSHAL_METHODS_TRACING_SOURCES
+    ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/src/cxa_demangle.cpp
+    ${SOURCES_DIR}/cxx-abi/string.cc
+    ${SOURCES_DIR}/cxx-abi/terminate.cc
+    ${SOURCES_DIR}/helpers.cc
     ${SOURCES_DIR}/marshal-methods-tracing.cc
+    ${SOURCES_DIR}/new_delete.cc
   )
 
   list(APPEND XAMARIN_MONODROID_SOURCES
@@ -702,9 +715,25 @@ if(ANDROID)
       STATIC ${MARSHAL_METHODS_TRACING_SOURCES}
     )
 
-    target_include_directories(
+    target_compile_definitions(
       ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
-      PRIVATE ${LIBUNWIND_SOURCE_DIR}/include ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+      PRIVATE
+      MARSHAL_METHODS_TRACING
+    )
+
+    target_compile_options(
+      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
+      PRIVATE
+      # Avoid the 'warning: dynamic exception specifications are deprecated' warning from libc++ headers
+      -Wno-deprecated-dynamic-exception-spec
+    )
+
+    target_include_directories(
+      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB} BEFORE
+      PRIVATE
+      ${LIBUNWIND_SOURCE_DIR}/include
+      ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+      ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/include
     )
   endif()
 
@@ -754,55 +783,38 @@ target_link_libraries(
   )
 
 if(ANDROID AND ENABLE_NET AND (NOT ANALYZERS_ENABLED))
-  add_library(
-    c
-    SHARED ${XAMARIN_STUB_LIB_SOURCES}
-  )
+  macro(xa_add_stub_library _libname)
+    add_library(
+      ${_libname}
+      SHARED ${XAMARIN_STUB_LIB_SOURCES}
+    )
 
-  target_compile_definitions(
-    c
-    PRIVATE STUB_LIB_NAME=libc
-  )
+    target_compile_definitions(
+      ${_libname}
+      PRIVATE STUB_LIB_NAME=libc
+    )
 
-  target_compile_options(
-    c
-    PRIVATE -nostdlib -fno-exceptions -fno-rtti
-  )
+    target_compile_options(
+      ${_libname}
+      PRIVATE -nostdlib -fno-exceptions -fno-rtti
+    )
 
-  target_link_options(
-    c
-    PRIVATE -nostdlib -fno-exceptions -fno-rtti
-  )
+    target_link_options(
+      ${_libname}
+      PRIVATE -nostdlib -fno-exceptions -fno-rtti
+    )
 
-  set_target_properties(
-    c
-    PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_STUBS_OUTPUT_DIRECTORY}"
-  )
+    set_target_properties(
+      ${_libname}
+      PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_STUBS_OUTPUT_DIRECTORY}"
+    )
+  endmacro()
 
-  add_library(
-    m
-    SHARED ${XAMARIN_STUB_LIB_SOURCES}
-  )
+  xa_add_stub_library(c)
+  xa_add_stub_library(m)
 
-  target_compile_definitions(
-    m
-    PRIVATE STUB_LIB_NAME=libm
-  )
-
-  target_compile_options(
-    m
-    PRIVATE -nostdlib -fno-exceptions -fno-rtti
-  )
-
-  target_link_options(
-    m
-    PRIVATE -nostdlib -fno-exceptions -fno-rtti
-  )
-
-  set_target_properties(
-    m
-    PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_STUBS_OUTPUT_DIRECTORY}"
-  )
+  # These two are used by the marshal methods tracing library when linking libxamarin-app.so
+  xa_add_stub_library(log)
+  xa_add_stub_library(dl)
 endif()
