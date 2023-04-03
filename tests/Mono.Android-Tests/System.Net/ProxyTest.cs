@@ -13,7 +13,7 @@ namespace System.NetTests {
 		[Test]
 		public void QuoteInvalidQuoteUrlsShouldWork ()
 		{
-			string url      = "https://bing.com/?query&foo|bar";
+			string url      = "http://www.msftconnecttest.com/connecttest.txt?query&foo|bar";
 			var request     = (HttpWebRequest) WebRequest.Create (url);
 			request.Method  = "GET";
 			var response    = (HttpWebResponse) request.GetResponse ();
