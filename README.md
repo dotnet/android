@@ -25,7 +25,7 @@ Support for classic Xamarin.Android will end on **May 1, 2024** as per the [Xama
 > Xamarin support will end on May 1, 2024 for all classic Xamarin SDKs. Android 13 will be the final version classic Xamarin.Android will target.
 
 [maui-support-lifecycle]: https://dotnet.microsoft.com/en-us/platform/support/policy/maui
-[xamarin-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/xamarin
+[xamarin-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/xamarin 
 
 # Build Status
 
