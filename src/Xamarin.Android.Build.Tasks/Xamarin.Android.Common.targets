@@ -2088,7 +2088,6 @@ because xbuild doesn't support framework reference assemblies.
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       EnableMarshalMethodTracing="$(_AndroidEnableMarshalMethodTracing)"
-      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />

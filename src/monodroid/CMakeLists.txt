@@ -204,12 +204,16 @@ if(ENABLE_NET)
 
   if(ANDROID_ABI MATCHES "^arm64-v8a")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
+    set(COMPILER_BUILTINS_LIB_ABI "aarch64")
   elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM}")
+    set(COMPILER_BUILTINS_LIB_ABI "arm")
   elseif(ANDROID_ABI MATCHES "^x86_64")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86_64}")
+    set(COMPILER_BUILTINS_LIB_ABI "x86_64")
   elseif(ANDROID_ABI MATCHES "^x86")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86}")
+    set(COMPILER_BUILTINS_LIB_ABI "i686")
   else()
     message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
   endif()
@@ -735,6 +739,22 @@ if(ANDROID)
       ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
       ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/include
     )
+
+    execute_process(
+      COMMAND ${CMAKE_CXX_COMPILER} -print-runtime-dir
+      RESULT_VARIABLE _CXX_COMPILER_EXIT_CODE
+      OUTPUT_VARIABLE _CXX_COMPILER_RUNTIME_DIR
+      ECHO_OUTPUT_VARIABLE
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(NOT ${_CXX_COMPILER_EXIT_CODE} EQUAL 0)
+      message(FATAL_ERROR "Unable to determine compiler runtime directory")
+    endif()
+
+    message(STATUS "Runtime dir: ${_CXX_COMPILER_RUNTIME_DIR}")
+    set(BUILTINS_LIB ${_CXX_COMPILER_RUNTIME_DIR}/libclang_rt.builtins-${COMPILER_BUILTINS_LIB_ABI}-android.a)
+    file(COPY ${BUILTINS_LIB} DESTINATION ${XA_LIBRARY_OUTPUT_DIRECTORY})
   endif()
 
   # Ugly, but this is the only way to change LZ4 symbols visibility without modifying lz4.h

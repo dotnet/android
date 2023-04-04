@@ -28,7 +28,46 @@ constexpr char LEAD[] = "MM: ";
 
 // https://www.nongnu.org/libunwind/docs.html
 
-static void print_native_backtrace () noexcept
+[[gnu::always_inline]]
+unw_word_t adjust_address (unw_word_t addr) noexcept
+{
+	// This is what bionic does, let's do the same so that our backtrace addresses match bionic output
+	// Code copied verbatim from
+	//    https://android.googlesource.com/platform/bionic/+/refs/tags/android-13.0.0_r37/libc/bionic/execinfo.cpp#50
+	if (addr != 0) {
+#if defined (__arm__)
+		// If the address is suspiciously low, do nothing to avoid a segfault trying
+		// to access this memory.
+		if (addr >= 4096) {
+			// Check bits [15:11] of the first halfword assuming the instruction
+			// is 32 bits long. If the bits are any of these values, then our
+			// assumption was correct:
+			//  b11101
+			//  b11110
+			//  b11111
+			// Otherwise, this is a 16 bit instruction.
+			uint16_t value = (*reinterpret_cast<uint16_t*>(addr - 2)) >> 11;
+			if (value == 0x1f || value == 0x1e || value == 0x1d) {
+				return addr - 4;
+			}
+
+			return addr - 2;
+		}
+#elif defined (__aarch64__)
+		// All instructions are 4 bytes long, skip back one instruction.
+		return addr - 4;
+#elif defined (__i386__) || defined (__x86_64__)
+		// It's difficult to decode exactly where the previous instruction is,
+		// so subtract 1 to estimate where the instruction lives.
+		return addr - 1;
+#endif
+	}
+
+	return addr;
+}
+
+[[gnu::always_inline]]
+static void print_native_backtrace (std::string const& first_line) noexcept
 {
 	constexpr int FRAME_OFFSET_WIDTH = sizeof(uintptr_t) * 2;
 
@@ -45,18 +84,17 @@ static void print_native_backtrace () noexcept
 	unw_getcontext (&uc);
 	unw_init_local (&cursor, &uc);
 
-	// TODO: improve presentation of collected data, most likely will need to use a dynamic buffer to make it
-	//      less messy
-	std::string trace;
+	std::string trace {first_line};
 	size_t frame_counter = 0;
 	bool got_anon = false;
 
+	trace.append ("\n  Native stack trace:");
 	while (unw_step (&cursor) > 0) {
-		if (!trace.empty ()) {
-			trace.append ("\n");
-		}
+		trace.append ("\n");
 
 		unw_get_reg (&cursor, UNW_REG_IP, &ip);
+		ip = adjust_address (ip);
+
 		auto ptr = reinterpret_cast<void*>(ip);
 		const char *fname = nullptr;
 		const void *symptr = nullptr;
@@ -74,9 +112,7 @@ static void print_native_backtrace () noexcept
 			frame_offset = ip;
 		}
 
-		// TODO: Bionic adjusts the IP (and, thus, frame offset) by an amount specific to the platform to point to the
-		// instruction **before** IP. Consider whether we want to do the same or not
-		trace.append ("  #");
+		trace.append ("    #");
 		std::snprintf (num_buf.data (), num_buf.size (), "%-3zu: ", frame_counter++);
 		trace.append (num_buf.data ());
 		std::snprintf (num_buf.data (), num_buf.size (), "%0*zx (", FRAME_OFFSET_WIDTH, frame_offset);
@@ -92,6 +128,7 @@ static void print_native_backtrace () noexcept
 		}
 
 		bool symbol_name_allocated = false;
+		offp = 0;
 		if (unw_get_proc_name (&cursor, name_buf.data (), name_buf.size (), &offp) == 0) {
 			symbol_name = name_buf.data ();
 		} else if (info_valid && info.dli_sname != nullptr) {
@@ -99,6 +136,7 @@ static void print_native_backtrace () noexcept
 		} else {
 			symbol_name = nullptr;
 		}
+		offp = adjust_address (offp);
 
 		if (symbol_name != nullptr) {
 			char *demangled_symbol_name;
@@ -135,9 +173,9 @@ static void print_native_backtrace () noexcept
 	}
 
 	__android_log_write (PRIORITY, SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY, trace.c_str ());
-	// if (got_anon) {
-	// 	std::abort ();
-	// }
+	if (got_anon) {
+		std::abort ();
+	}
 }
 
 void _mm_trace (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* method_name, const char *message)
@@ -151,10 +189,28 @@ static void _mm_trace_func_leave_enter (uint32_t mono_image_index, uint32_t clas
 	const char *managed_method_name = MarshalMethodsUtilities::get_method_name (method_id);
 	const char *class_name = MarshalMethodsUtilities::get_class_name (class_index);
 
-	__android_log_print (PRIORITY, SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY, "%s%s: %s (%s) in class %s", LEAD, which, native_method_name, managed_method_name, class_name);
 	if (need_trace) {
-		__android_log_print (PRIORITY, SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY, "Native stack trace:");
-		print_native_backtrace ();
+		std::string first_line { LEAD };
+		first_line.append (which);
+		first_line.append (": ");
+		first_line.append (native_method_name);
+		first_line.append (" (");
+		first_line.append (managed_method_name);
+		first_line.append (") in class ");
+		first_line.append (class_name);
+
+		print_native_backtrace (first_line);
+	} else {
+		__android_log_print (
+			PRIORITY,
+			SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY,
+			"%s%s: %s (%s) in class %s",
+			LEAD,
+			which,
+			native_method_name,
+			managed_method_name,
+			class_name
+		);
 	}
 }
 
