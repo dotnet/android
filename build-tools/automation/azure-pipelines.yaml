@@ -529,7 +529,7 @@ stages:
     parameters:
       artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
       packageName: xamarin-android
-      packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
+      packageFilter: '*.nupkg;*.msi'
       GitHub.Token: $(GitHub.Token)
 
 # Check - "Xamarin.Android (Compliance)"
