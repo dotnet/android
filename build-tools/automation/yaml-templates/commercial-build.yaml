@@ -60,11 +60,6 @@ steps:
   displayName: CodeQL 3000 Finalize
   condition: and(succeededOrFailed(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-# Build test assemblies
-- script: make all-tests CONFIGURATION=$(XA.Build.Configuration)
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make all-tests
-
 # Restore needs to be executed first or MicroBuild targets won't be imported in time
 - task: MSBuild@1
   displayName: msbuild /t:Restore sign-content.proj
