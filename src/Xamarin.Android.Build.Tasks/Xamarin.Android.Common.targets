@@ -340,7 +340,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' != 'True' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
-  <_AndroidEnableMarshalMethodTracing Condition=" '$(_AndroidEnableMarshalMethodTracing)' == '' ">False</_AndroidEnableMarshalMethodTracing>
+
+  <!-- Accepted values are:
+       none - disable tracing completely (the default)
+       basic - log marshal method function enter/leave messages
+       full - like 'basic' but also include stack traces at the entry to a marshal method
+  -->
+  <_AndroidMarshalMethodsTracingMode Condition=" '$(_AndroidMarshalMethodsTracingMode)' == '' ">none</_AndroidMarshalMethodsTracingMode>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
@@ -1792,7 +1798,7 @@ because xbuild doesn't support framework reference assemblies.
     UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-    EnableMarshalMethodTracing="$(_AndroidEnableMarshalMethodTracing)"
+    MarshalMethodsTracingMode="$(_AndroidMarshalMethodsTracingMode)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
@@ -2087,7 +2093,7 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      EnableMarshalMethodTracing="$(_AndroidEnableMarshalMethodTracing)"
+      MarshalMethodsTracingMode="$(_AndroidMarshalMethodsTracingMode)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />

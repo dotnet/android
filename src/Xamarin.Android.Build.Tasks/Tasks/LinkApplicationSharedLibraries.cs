@@ -44,10 +44,16 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
-		public bool EnableMarshalMethodTracing { get; set; }
+		public string MarshalMethodsTracingMode { get; set; }
+
+		MarshalMethodsTracingMode mmTracingMode;
+		bool mmTracingEnabled;
 
 		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
+			mmTracingMode = MonoAndroidHelper.ParseMarshalMethodsTracingMode (MarshalMethodsTracingMode);
+			mmTracingEnabled = mmTracingMode != Tasks.MarshalMethodsTracingMode.None;
+
 			return this.WhenAll (GetLinkerConfigs (), RunLinker);
 		}
 
@@ -137,7 +143,7 @@ namespace Xamarin.Android.Tasks
 				"--warn-shared-textrel " +
 				"--fatal-warnings";
 
-			string stripSymbolsArg = DebugBuild || EnableMarshalMethodTracing ? String.Empty : " -s";
+			string stripSymbolsArg = DebugBuild || mmTracingEnabled ? String.Empty : " -s";
 
 			string ld = Path.Combine (AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, "ld"));
 			var targetLinkerArgs = new List<string> ();
@@ -201,7 +207,7 @@ namespace Xamarin.Android.Tasks
 		{
 			List<string> extraLibraries = null;
 
-			if (EnableMarshalMethodTracing) {
+			if (mmTracingEnabled) {
 				string RID = MonoAndroidHelper.AbiToRid (abi);
 				AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
 				string clangLibraryAbi = MonoAndroidHelper.ArchToClangLibraryAbi (targetArch);

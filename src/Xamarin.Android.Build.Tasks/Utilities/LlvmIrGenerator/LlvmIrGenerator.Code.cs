@@ -336,7 +336,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new ArgumentException ("must be reference to native function", nameof (targetRef));
 			}
 
-			if (targetSignature.Parameters.Count > 0) {
+			bool haveParameters = targetSignature.Parameters != null && targetSignature.Parameters.Count > 0;
+			if (haveParameters) {
 				if (arguments == null) {
 					throw new ArgumentNullException (nameof (arguments));
 				}
@@ -377,7 +378,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			Output.Write ($"call {GetKnownIRType (targetSignature.ReturnType)} {targetRef.Reference} (");
 
-			if (targetSignature.Parameters.Count > 0) {
+			if (haveParameters) {
 				for (int i = 0; i < targetSignature.Parameters.Count; i++) {
 					LlvmIrFunctionParameter parameter = targetSignature.Parameters[i];
 					LlvmIrFunctionArgument argument = arguments[i];

@@ -638,7 +638,7 @@ MonodroidRuntime::set_debug_options (void)
 }
 
 void
-MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args)
+MonodroidRuntime::mono_runtime_init (JNIEnv *env, [[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args)
 {
 #if defined (DEBUG) && !defined (WINDOWS)
 	RuntimeOptions options{};
@@ -808,7 +808,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 #endif
 
 #if defined (RELEASE) && defined (ANDROID) && defined (NET)
-	xamarin_app_init (get_function_pointer_at_startup);
+	xamarin_app_init (env, get_function_pointer_at_startup);
 #endif // def RELEASE && def ANDROID && def NET
 }
 
@@ -2308,7 +2308,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		mono_runtime_init_index = internal_timing->start_event (TimingEventKind::MonoRuntimeInit);
 	}
 
-	mono_runtime_init (runtime_args);
+	mono_runtime_init (env, runtime_args);
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		internal_timing->end_event (mono_runtime_init_index);
@@ -2354,7 +2354,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 
 #if defined (RELEASE) && defined (ANDROID) && defined (NET)
-	xamarin_app_init (get_function_pointer_at_runtime);
+	xamarin_app_init (env, get_function_pointer_at_runtime);
 #endif // def RELEASE && def ANDROID && def NET
 	startup_in_progress = false;
 }

@@ -14,11 +14,21 @@
 
 #include "marshal-methods-tracing.hh"
 #include "marshal-methods-utilities.hh"
+#include "helpers.hh"
 
 using namespace xamarin::android::internal;
 
 constexpr int PRIORITY = ANDROID_LOG_INFO;
 constexpr char LEAD[] = "MM: ";
+
+// java.lang.Thread
+static jclass java_lang_Thread;
+static jmethodID java_lang_Thread_currentThread;
+static jmethodID java_lang_Thread_getStackTrace;
+
+// java.lang.StackTraceElement
+static jclass java_lang_StackTraceElement;
+static jmethodID java_lang_StackTraceElement_toString;
 
 // TODO: implement Java trace (use similar approach as our managed code uses, by instantiating a Java exception)
 //      https://developer.android.com/reference/java/lang/Error?hl=en and use `getStackTrace`
@@ -67,7 +77,17 @@ unw_word_t adjust_address (unw_word_t addr) noexcept
 }
 
 [[gnu::always_inline]]
-static void print_native_backtrace (std::string const& first_line) noexcept
+static void append_frame_number (std::string &trace, size_t count) noexcept
+{
+	std::array<char, 32>   num_buf; // Enough for text representation of a decimal 64-bit integer + some possible
+									// additions (sign, padding, punctuation etc)
+	trace.append ("    #");
+	std::snprintf (num_buf.data (), num_buf.size (), "%-3zu: ", count);
+	trace.append (num_buf.data ());
+}
+
+[[gnu::always_inline]]
+static void get_native_backtrace (std::string& trace) noexcept
 {
 	constexpr int FRAME_OFFSET_WIDTH = sizeof(uintptr_t) * 2;
 
@@ -84,9 +104,7 @@ static void print_native_backtrace (std::string const& first_line) noexcept
 	unw_getcontext (&uc);
 	unw_init_local (&cursor, &uc);
 
-	std::string trace {first_line};
 	size_t frame_counter = 0;
-	bool got_anon = false;
 
 	trace.append ("\n  Native stack trace:");
 	while (unw_step (&cursor) > 0) {
@@ -112,9 +130,8 @@ static void print_native_backtrace (std::string const& first_line) noexcept
 			frame_offset = ip;
 		}
 
-		trace.append ("    #");
-		std::snprintf (num_buf.data (), num_buf.size (), "%-3zu: ", frame_counter++);
-		trace.append (num_buf.data ());
+		append_frame_number (trace, frame_counter++);
+
 		std::snprintf (num_buf.data (), num_buf.size (), "%0*zx (", FRAME_OFFSET_WIDTH, frame_offset);
 		trace.append (num_buf.data ());
 		std::snprintf (num_buf.data (), num_buf.size (), "%p) ", ptr);
@@ -123,9 +140,6 @@ static void print_native_backtrace (std::string const& first_line) noexcept
 		// TODO: consider searching /proc/self/maps for the beginning of the corresponding region to calculate the
 		// correct offset (like done in bionic stack trace)
 		trace.append (fname != nullptr ? fname : "[anonymous]");
-		if (fname == nullptr) {
-			got_anon = true;
-		}
 
 		bool symbol_name_allocated = false;
 		offp = 0;
@@ -171,35 +185,56 @@ static void print_native_backtrace (std::string const& first_line) noexcept
 			std::free (reinterpret_cast<void*>(const_cast<char*>(symbol_name)));
 		}
 	}
+}
 
-	__android_log_write (PRIORITY, SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY, trace.c_str ());
-	if (got_anon) {
-		std::abort ();
+[[gnu::always_inline]]
+static void get_java_backtrace (JNIEnv *env, std::string &trace) noexcept
+{
+	// TODO: error handling
+	trace.append ("\n  Java stack trace:");
+	jobject current_thread = env->CallStaticObjectMethod (java_lang_Thread, java_lang_Thread_currentThread);
+	auto stack_trace_array = static_cast<jobjectArray>(env->CallNonvirtualObjectMethod (current_thread, java_lang_Thread, java_lang_Thread_getStackTrace));
+	jsize nframes = env->GetArrayLength (stack_trace_array);
+
+	for (jsize i = 0; i < nframes; i++) {
+		jobject frame = env->GetObjectArrayElement (stack_trace_array, i);
+		auto frame_desc_java = static_cast<jstring>(env->CallNonvirtualObjectMethod (frame, java_lang_StackTraceElement, java_lang_StackTraceElement_toString));
+		const char *frame_desc = env->GetStringUTFChars (frame_desc_java, nullptr);
+
+		trace.append ("\n");
+		append_frame_number (trace, i);
+		trace.append (frame_desc);
+		env->ReleaseStringUTFChars (frame_desc_java, frame_desc);
 	}
 }
 
-void _mm_trace (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* method_name, const char *message)
+void _mm_trace (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* method_name, const char *message) noexcept
 {
 
 }
 
-static void _mm_trace_func_leave_enter (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* which, const char* native_method_name, bool need_trace)
+static void _mm_trace_func_leave_enter (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token,
+                                        const char* which, const char* native_method_name, bool need_trace) noexcept
 {
 	uint64_t method_id = MarshalMethodsUtilities::get_method_id (mono_image_index, method_token);
 	const char *managed_method_name = MarshalMethodsUtilities::get_method_name (method_id);
 	const char *class_name = MarshalMethodsUtilities::get_class_name (class_index);
 
-	if (need_trace) {
-		std::string first_line { LEAD };
-		first_line.append (which);
-		first_line.append (": ");
-		first_line.append (native_method_name);
-		first_line.append (" (");
-		first_line.append (managed_method_name);
-		first_line.append (") in class ");
-		first_line.append (class_name);
+	if (need_trace && tracing_mode == TracingModeFull) {
+		std::string trace { LEAD };
+		trace.append (which);
+		trace.append (": ");
+		trace.append (native_method_name);
+		trace.append (" (");
+		trace.append (managed_method_name);
+		trace.append (") in class ");
+		trace.append (class_name);
 
-		print_native_backtrace (first_line);
+		get_native_backtrace (trace);
+		trace.append ("\n");
+		get_java_backtrace (env, trace);
+
+		__android_log_write (PRIORITY, SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY, trace.c_str ());
 	} else {
 		__android_log_print (
 			PRIORITY,
@@ -214,14 +249,64 @@ static void _mm_trace_func_leave_enter (uint32_t mono_image_index, uint32_t clas
 	}
 }
 
-void _mm_trace_func_enter (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name)
+void _mm_trace_func_enter (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name) noexcept
 {
 	constexpr char ENTER[] = "ENTER";
-	_mm_trace_func_leave_enter (mono_image_index, class_index, method_token, ENTER, native_method_name, true /* need_trace */);
+	_mm_trace_func_leave_enter (env, tracing_mode, mono_image_index, class_index, method_token, ENTER, native_method_name, true /* need_trace */);
 }
 
-void _mm_trace_func_leave (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name)
+void _mm_trace_func_leave (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name) noexcept
 {
 	constexpr char LEAVE[] = "LEAVE";
-	_mm_trace_func_leave_enter (mono_image_index, class_index, method_token, LEAVE, native_method_name, false /* need_trace */);
+	_mm_trace_func_leave_enter (env, tracing_mode, mono_image_index, class_index, method_token, LEAVE, native_method_name, false /* need_trace */);
+}
+
+static bool assert_valid_pointer (void *o, const char *missing_kind, const char *missing_name) noexcept
+{
+	if (o != nullptr) {
+		return true;
+	}
+
+	__android_log_print (
+		PRIORITY,
+		SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY,
+		"%smissing Java %s: %s",
+		LEAD,
+		missing_kind,
+		missing_name
+	);
+
+	return false;
+}
+
+void _mm_trace_init (JNIEnv *env) noexcept
+{
+	// We might be called more than once, ignore all but the first call
+	if (java_lang_Thread != nullptr) {
+		return;
+	}
+
+	java_lang_Thread = env->FindClass ("java/lang/Thread");
+	java_lang_Thread_currentThread = env->GetStaticMethodID (java_lang_Thread, "currentThread", "()Ljava/lang/Thread;");
+	java_lang_Thread_getStackTrace = env->GetMethodID (java_lang_Thread, "getStackTrace", "()[Ljava/lang/StackTraceElement;");
+	java_lang_StackTraceElement = env->FindClass ("java/lang/StackTraceElement");
+	java_lang_StackTraceElement_toString = env->GetMethodID (java_lang_StackTraceElement, "toString", "()Ljava/lang/String;");
+
+	// We check for the Java exception and possible null pointers only here, since all the calls JNI before the last one
+	// would do the exception check for us.
+	if (env->ExceptionOccurred ()) {
+		env->ExceptionDescribe ();
+		env->ExceptionClear ();
+		xamarin::android::Helpers::abort_application ();
+	}
+
+	bool all_found = assert_valid_pointer (java_lang_Thread, "class", "java.lang.Thread");
+	all_found &= assert_valid_pointer (java_lang_Thread_currentThread, "method", "java.lang.Thread.currentThread ()");
+	all_found &= assert_valid_pointer (java_lang_Thread_getStackTrace, "method", "java.lang.Thread.getStackTrace ()");
+	all_found &= assert_valid_pointer (java_lang_Thread, "class", "java.lang.StackTraceElement");
+	all_found &= assert_valid_pointer (java_lang_Thread_currentThread, "method", "java.lang.StackTraceElement.toString ()");
+
+	if (!all_found) {
+		xamarin::android::Helpers::abort_application ();
+	}
 }

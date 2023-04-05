@@ -614,5 +614,22 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Internal error: unsupported architecture '{arch}'");
 			}
 		}
+
+		public static MarshalMethodsTracingMode ParseMarshalMethodsTracingMode (string input)
+		{
+			if (String.IsNullOrEmpty (input) || String.Compare ("none", input, StringComparison.InvariantCultureIgnoreCase) == 0) {
+				return MarshalMethodsTracingMode.None;
+			}
+
+			if (String.Compare ("basic", input, StringComparison.InvariantCultureIgnoreCase) == 0) {
+				return MarshalMethodsTracingMode.Basic;
+			}
+
+			if (String.Compare ("full", input, StringComparison.InvariantCultureIgnoreCase) == 0) {
+				return MarshalMethodsTracingMode.Full;
+			}
+
+			throw new InvalidOperationException ($"Unsupported marshal methods tracing mode '{input}'");
+		}
 	}
 }
