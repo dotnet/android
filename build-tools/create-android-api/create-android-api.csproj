@@ -12,7 +12,7 @@
     <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\api-merge\api-merge.csproj" ReferenceOutputAssembly="False" />
-    <ProjectReference Include="..\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="False" SkipGetTargetFrameworkProperties="True" AdditionalProperties="TargetFramework=net472" />
+    <ProjectReference Include="..\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="False" SkipGetTargetFrameworkProperties="True" />
   </ItemGroup>
   
   <PropertyGroup>
