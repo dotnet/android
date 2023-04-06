@@ -50,6 +50,7 @@
     <SystemCollectionsImmutableVersion>6.0.0</SystemCollectionsImmutableVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>6.0.0</SystemRuntimeCompilerServicesUnsafeVersion>
     <ELFSharpVersion>2.13.1</ELFSharpVersion>
+    <HumanizerVersion>2.14.1</HumanizerVersion>
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.8.9.2</MdocPackageVersion>
   </PropertyGroup>
 

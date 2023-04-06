@@ -73,6 +73,25 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.PackageReferences.Add (new Package {
+				Id = "Humanizer.Core",
+				Version = "2.14.1",
+			});
+			proj.PackageReferences.Add (new Package {
+				Id = "Humanizer.Core.es",
+				Version = "2.14.1",
+			});
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", @"using System;
+using Humanizer;
+using System.Globalization;")
+				.Replace ("//${AFTER_ONCREATE}", @"var c = new CultureInfo (""es-ES"");
+Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
+//${AFTER_ONCREATE}");
+			if (Builder.UseDotNet) {
+				proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
+				proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
+			}
 			if (!Builder.UseDotNet) {
 				proj.PackageReferences.Add (new Package {
 					Id = "System.Runtime.InteropServices.WindowsRuntime",
@@ -80,7 +99,7 @@ namespace Xamarin.Android.Build.Tests
 					TargetFramework = "monoandroid71",
 				});
 				proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite.dll"));
-				proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "var command = new Mono.Data.Sqlite.SqliteCommand ();");
+				proj.MainActivity = proj.MainActivity.Replace ("//${AFTER_ONCREATE}", "var command = new Mono.Data.Sqlite.SqliteCommand ();");
 			}
 			var expectedFiles = Builder.UseDotNet ?
 				new [] {
@@ -95,6 +114,11 @@ namespace Xamarin.Android.Build.Tests
 					"System.Linq.dll",
 					"UnnamedProject.dll",
 					"_Microsoft.Android.Resource.Designer.dll",
+					"Humanizer.dll",
+					"es/Humanizer.resources.dll",
+					"System.Collections.dll",
+					"System.Collections.Concurrent.dll",
+					"System.Text.RegularExpressions.dll",
 				} :
 				new [] {
 					"Java.Interop.dll",
@@ -106,6 +130,8 @@ namespace Xamarin.Android.Build.Tests
 					"UnnamedProject.dll",
 					"Mono.Data.Sqlite.dll",
 					"Mono.Data.Sqlite.dll.config",
+					"Humanizer.dll",
+					//"es/Humanizer.resources.dll", <- Bug in classic.
 				};
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");

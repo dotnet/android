@@ -7,6 +7,7 @@ using Mono.Unix.Native;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Xamarin.ProjectTools;
+using Humanizer;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -30,14 +31,23 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			proj = new XamarinAndroidApplicationProject (packageName: "LocalizationTests");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"button.Text = $""Strings.SomeString={Strings.SomeString}"";
+			proj.PackageReferences.Add (new Package {
+				Id = "Humanizer",
+				Version = "2.14.1",
+			});
+			var source = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", @"using Humanizer;
+using System.Globalization;");
+			source = source.Replace ("//${AFTER_ONCREATE}", @"button.Text = $""Strings.SomeString={Strings.SomeString}"";
 			Console.WriteLine ($""LocaleNative={Java.Util.Locale.Default.Language}-{Java.Util.Locale.Default.Country}"");
 			Console.WriteLine ($""CurrentCulture={System.Globalization.CultureInfo.CurrentCulture.Name}"");
 			Console.WriteLine ($""Strings.SomeString={Strings.SomeString}"");
+			Console.WriteLine ($""Humanizer={DateTime.UtcNow.AddHours(-30).Humanize()}"");
 ");
+			proj.MainActivity = source;
 			InlineData.AddCultureResourcesToProject (proj, "Strings", "SomeString");
 			InlineData.AddCultureResourceDesignerToProject (proj, proj.RootNamespace ?? proj.ProjectName, "Strings", "SomeString");
-			
+
 			builder = CreateApkBuilder (Path.Combine ("temp", "LocalizationTests"));
 			builder.BuildLogFile = "onetimesetup-install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -247,8 +257,21 @@ namespace Xamarin.Android.Build.Tests
 				}
 				return false;
 			}, appStartupLogcatFile, 45), $"App output did not contain '{logcatSearchString}'");
-
 			Assert.IsTrue (logLine.Contains (expectedLogcatOutput), $"Line '{logLine}' did not contain '{expectedLogcatOutput}'");
+
+			string humanizerLogCatFile = Path.Combine (Root, builder.ProjectDirectory, $"humanizer-logcat-{locale.Replace ("/", "-")}.log");
+			var culture = new CultureInfo (locale);
+			expectedLogcatOutput = DateTime.UtcNow.AddHours(-30).Humanize(culture: culture);
+			logcatSearchString = "Humanizer=";
+			Assert.IsTrue (MonitorAdbLogcat ((line) => {
+				if (line.Contains (logcatSearchString)) {
+					logLine = line;
+					return true;
+				}
+				return false;
+			}, humanizerLogCatFile, timeout:45), $"App output did not contain '{logcatSearchString}'");
+			Assert.IsTrue (logLine.Contains (expectedLogcatOutput), $"Line '{logLine}' did not contain '{expectedLogcatOutput}'");
+
 		}
 	}
 }

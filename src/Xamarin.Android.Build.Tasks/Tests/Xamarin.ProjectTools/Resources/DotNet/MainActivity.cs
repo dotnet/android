@@ -1,3 +1,4 @@
+//${USINGS}
 namespace ${ROOT_NAMESPACE}
 {
 	[Android.Runtime.Register ("${JAVA_PACKAGENAME}.MainActivity"), Activity (Label = "${PROJECT_NAME}", MainLauncher = true, Icon = "@drawable/icon")]

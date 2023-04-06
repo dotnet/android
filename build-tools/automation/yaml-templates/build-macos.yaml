@@ -13,7 +13,6 @@ parameters:
   nugetArtifactName: $(NuGetArtifactName)
   provisionatorChannel: latest
   repositoryAlias: self
-  signClassicPkgContent: false
   stageName: mac_build
   stageDisplayName: Mac
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
@@ -55,7 +54,6 @@ stages:
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
-        signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
 
     - template: remove-microbuild-tooling.yaml
