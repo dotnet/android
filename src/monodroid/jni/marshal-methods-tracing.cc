@@ -4,6 +4,7 @@
 #include <limits>
 #include <string>
 
+#include <signal.h>
 #include <dlfcn.h>
 #include <cxxabi.h>
 
@@ -208,6 +209,72 @@ static void get_java_backtrace (JNIEnv *env, std::string &trace) noexcept
 	}
 }
 
+[[gnu::always_inline]]
+static void get_interesting_signal_handlers (std::string &trace) noexcept
+{
+	constexpr char SA_SIGNAL[] = "signal";
+	constexpr char SA_SIGACTION[] = "sigaction";
+	constexpr char SIG_IGNORED[] = "[ignored]";
+
+	trace.append ("\n  Signal handlers:");
+
+	std::array<char, 32>   num_buf;
+	Dl_info info;
+	struct sigaction cur_sa;
+	for (int i = 0; i < _NSIG; i++) {
+		if (sigaction (i, nullptr, &cur_sa) != 0) {
+			continue; // ignore
+		}
+
+		void *handler;
+		const char *installed_with;
+		if (cur_sa.sa_flags & SA_SIGINFO) {
+			handler = reinterpret_cast<void*>(cur_sa.sa_sigaction);
+			installed_with = SA_SIGACTION;
+		} else {
+			handler = reinterpret_cast<void*>(cur_sa.sa_handler);
+			installed_with = SA_SIGNAL;
+		}
+
+		if (handler == SIG_DFL) {
+			continue;
+		}
+
+		trace.append ("\n");
+		const char *symbol_name = nullptr;
+		const char *file_name = nullptr;
+		if (handler == SIG_IGN) {
+			symbol_name = SIG_IGNORED;
+		} else {
+			if (dladdr (handler, &info) != 0) {
+				symbol_name = info.dli_sname;
+				file_name = info.dli_fname;
+			}
+		}
+
+		trace.append ("    ");
+		trace.append (strsignal (i));
+		trace.append (" (");
+		std::snprintf (num_buf.data (), num_buf.size (), "%d", i);
+		trace.append (num_buf.data ());
+		trace.append ("), with ");
+		trace.append (installed_with);
+		trace.append (": ");
+
+		if (file_name != nullptr) {
+			trace.append (file_name);
+			trace.append (" ");
+		}
+
+		if (symbol_name == nullptr) {
+			std::snprintf (num_buf.data (), num_buf.size (), "%p", handler);
+			trace.append (num_buf.data ());
+		} else {
+			trace.append (symbol_name);
+		}
+	}
+}
+
 void _mm_trace (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* method_name, const char *message) noexcept
 {
 
@@ -233,6 +300,8 @@ static void _mm_trace_func_leave_enter (JNIEnv *env, int32_t tracing_mode, uint3
 		get_native_backtrace (trace);
 		trace.append ("\n");
 		get_java_backtrace (env, trace);
+		trace.append ("\n");
+		get_interesting_signal_handlers (trace);
 
 		__android_log_write (PRIORITY, SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY, trace.c_str ());
 	} else {
