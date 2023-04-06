@@ -62,15 +62,6 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
 
-# Build test assemblies
-- script: make all-tests CONFIGURATION=$(XA.Build.Configuration)
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make all-tests
-
-- template: install-microbuild-tooling.yaml
-  parameters:
-    condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
 # Restore needs to be executed first or MicroBuild targets won't be imported in time
 - task: MSBuild@1
   displayName: msbuild /t:Restore sign-content.proj

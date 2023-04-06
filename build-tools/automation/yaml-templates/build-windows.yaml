@@ -45,11 +45,6 @@ stages:
       parameters:
         remove_dotnet: true
 
-    # xabuild still depends on .NET Core 3 or earlier
-    - template: use-dot-net.yaml
-      parameters:
-        version: 3.1.417
-
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
     # VSIXInstaller.exe will exit non-zero when the downgrade attempt is a no-op, so we will allow this step to fail silently.
@@ -90,26 +85,6 @@ stages:
           -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
         displayName: Build Solution
         continueOnError: false
-
-    - task: MSBuild@1
-      displayName: msbuild create-vsix
-      inputs:
-        solution: build-tools\create-vsix\create-vsix.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-create-vsix.binlog
-
-    - task: MSBuild@1
-      displayName: msbuild xabuild
-      inputs:
-        solution: tools\xabuild\xabuild.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-xabuild.binlog
-
-    - task: CmdLine@1
-      displayName: xabuild Xamarin.Android-Tests
-      inputs:
-        filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-        arguments: Xamarin.Android-Tests.sln /restore /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\dotnet-build-tests.binlog
 
     - template: install-apkdiff.yaml
 
