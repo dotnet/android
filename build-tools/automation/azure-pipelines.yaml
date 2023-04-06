@@ -30,19 +30,11 @@ resources:
     name: xamarin/release-scripts
     ref: refs/heads/sign-and-notarized
     endpoint: xamarin
-  - repository: uitools
-    type: github
-    name: xamarin/UITools
-    ref: refs/heads/main
-    endpoint: xamarin
 
 parameters:
 - name: provisionatorChannel
   type: string
   default: latest           # Support for launching a build against a Provisionator PR (e.g., pr/[github-account-name]/[pr-number]) as a means to test in-progress Provisionator changes
-- name: signClassicPkgContent
-  type: boolean
-  default: true             # Queue time variable that can be used to skip classic pkg signing
 
 # Global variables
 variables:
@@ -60,6 +52,10 @@ variables:
   value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
 - name: DotNetNUnitCategories
   value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != SystemApplication'
+- name: ExcludedNUnitCategories
+  value: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != PackagesConfig & cat != StaticProject & cat != SystemApplication'
+- name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
+  value: 33,UpsideDownCake
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - group: AzureDevOps-Artifact-Feeds-Pats
   - group: DotNet-MSRC-Storage
@@ -88,7 +84,6 @@ stages:
 - template: yaml-templates/build-macos.yaml
   parameters:
     provisionatorChannel: ${{ parameters.provisionatorChannel }}
-    signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
 
 - template: yaml-templates/build-windows.yaml
 
@@ -96,269 +91,9 @@ stages:
 - template: yaml-templates/build-linux.yaml
 
 - stage: smoke_tests
-  displayName: Smoke Tests
+  displayName: Package Tests
   dependsOn: mac_build
   jobs:
-  # Check - "Xamarin.Android (macOS > Tests > APKs Classic)"
-  - job: mac_apk_tests_legacy
-    displayName: macOS > Tests > APKs Classic
-    # Disabled on .NET release branches
-    condition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
-    pool:
-      vmImage: $(HostedMacImage)
-    timeoutInMinutes: 180
-    workspace:
-      clean: all
-    variables:
-      ApkTestConfiguration: Release
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
-
-    - template: yaml-templates/run-dotnet-preview.yaml
-      parameters:
-        project: Xamarin.Android.sln
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
-        displayName: prepare java.interop $(XA.Build.Configuration)
-        continueOnError: false
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_Tests
-        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
-        artifactFolder: Default
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_Tests-Aot
-        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=True /p:EnableLLVM=True
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
-        artifactFolder: AotLlvm
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_Tests-Profiled-Aot
-        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Profiled-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
-        artifactFolder: Profiled-Aot
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_Tests-Bundle
-        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Bundle.xml
-        extraBuildArgs: /p:BundleAssemblies=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_Tests-Signed.apk
-        artifactFolder: Bundle
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_TestsAppBundle
-        project: tests/Mono.Android-Tests/Runtime-AppBundle/Mono.Android-TestsAppBundle.csproj
-        testResultsFiles: TestResult-Mono.Android_TestsAppBundle-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_TestsAppBundle-Signed.aab
-        artifactFolder: Aab
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_TestsMultiDex
-        project: tests/Mono.Android-Tests/Runtime-MultiDex/Mono.Android-TestsMultiDex.csproj
-        testResultsFiles: TestResult-Mono.Android_TestsMultiDex-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Mono.Android_TestsMultiDex-Signed.apk
-        artifactFolder: MultiDex
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.JcwGen_Tests
-        project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.JcwGen_Tests-Signed.apk
-        artifactFolder: Default
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.JcwGen_Tests_FastDev
-        project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.JcwGen_Tests-Signed.apk
-        artifactFolder: FastDev_Assemblies_Dexes
-        extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.Locale_Tests
-        project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Locale_Tests-Signed.apk
-        artifactFolder: Default
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.Locale_Tests-Aot
-        project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=True
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Locale_Tests-Signed.apk
-        artifactFolder: Aot
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.Locale_Tests-Profiled-Aot
-        project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Profiled-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.Locale_Tests-Signed.apk
-        artifactFolder: Profiled-Aot
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.EmbeddedDSO_Test
-        project: tests/EmbeddedDSOs/EmbeddedDSO/EmbeddedDSO.csproj
-        testResultsFiles: TestResult-Xamarin.Android.EmbeddedDSO_Test.nunit-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Android.EmbeddedDSO_Test-Signed.apk
-        artifactFolder: Default
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Forms-Performance-Integration
-        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
-        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
-        artifactFolder: Default
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Forms-Performance-Integration-Aot
-        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
-        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
-        artifactFolder: Aot
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Forms-Performance-Integration-Profiled-Aot
-        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
-        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Profiled-Aot.xml
-        extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
-        artifactFolder: Profiled-Aot
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Forms-Performance-Integration-Bundle
-        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
-        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Bundle.xml
-        extraBuildArgs: /p:BundleAssemblies=true
-        artifactSource: bin/Test$(ApkTestConfiguration)/Xamarin.Forms_Performance_Integration-Signed.apk
-        artifactFolder: Bundle
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        testName: VSAndroidApp
-        project: samples/VSAndroidAppProxy.csproj
-        testResultsFiles: TestResult-apkdiff-com.companyname.vsandroidapp-Signed-$(ApkTestConfiguration).xml
-        artifactSource: bin/Test$(ApkTestConfiguration)/com.companyname.vsandroidapp-Signed.apk
-        artifactFolder: Default
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(ApkTestConfiguration)
-        msbuildArguments: >-
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        configuration: $(ApkTestConfiguration)
-        artifactName: Test Results - APKs Legacy - macOS
-
-    # Plots: Utilize command-line utility built here to send plot information contained in CSV files to AppInsights
-    - task: MSBuild@1
-      displayName: build plots-to-appinsights
-      inputs:
-        solution: build-tools/plots-to-appinsights/ProcessPlotCSVFile.csproj
-        configuration: $(ApkTestConfiguration)
-        msbuildArguments: >-
-          /restore
-          /t:Build
-          /v:normal
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/plots-to-appinsights.binlog
-      continueOnError: true
-      condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-
-    # Process Plot CSV files and send results to AppInsights
-    # XamarinAndroidMetrics: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/64e11c84-c922-4ffd-bea9-67ab39354edd/resourceGroups/XamarinMetrics/providers/microsoft.insights/components/XamarinAndroidMetrics/overview
-    # UNDONE: Need plot definitions for the following files:
-    #  TestResult-Xamarin.Android.EmbeddedDSO_Test-times.csv
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test times
-        plotTitle: Runtime merged
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_Tests-times.csv
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test times
-        plotTitle: Jcw
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.JcwGen_Tests-times.csv
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test times
-        plotTitle: Locale
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.Locale_Tests-times.csv
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test times
-        plotTitle: Xamarin.Forms app startup
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Test-times.csv
-
-    - template: yaml-templates/fail-on-issue.yaml
-
  # Check - "Xamarin.Android (macOS > Tests > APKs .NET)"
   - job: mac_apk_tests_net
     displayName: macOS > Tests > APKs .NET
@@ -372,11 +107,19 @@ stages:
       parameters:
         provisionClassic: false
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        installLegacyDotNet: false
+        restoreNUnitConsole: false
+        updateMono: false
 
     - template: yaml-templates/run-xaprepare.yaml
       parameters:
         displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
+        arguments: --s=EmulatorTestDependencies --android-sdk-platforms="$(DefaultTestSdkPlatforms)"
+        
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     # Set up dependencies to run tests in both debug and release configurations
     - task: DotNetCoreCLI@2
@@ -389,7 +132,7 @@ stages:
       parameters:
         project: Xamarin.Android.sln
         arguments: >-
-          -t:PrepareJavaInterop -c Debug -m:1 -v:n
+          -t:PrepareJavaInterop -c Debug --no-restore
           -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
         displayName: prepare java.interop Debug
         continueOnError: false
@@ -397,9 +140,11 @@ stages:
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
+      
+    - template: yaml-templates/start-stop-emulator.yaml
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -409,7 +154,6 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration).xml
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-$(XA.Build.Configuration)
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -420,7 +164,6 @@ stages:
         testResultsFiles: TestResult-Mono.Android.NET_Tests-Debug.xml
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-Debug
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -431,7 +174,6 @@ stages:
         extraBuildArgs: -p:TestsFlavor=NoAab -p:AndroidPackageFormat=apk
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-NoAab
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -442,7 +184,6 @@ stages:
         extraBuildArgs: -p:TestsFlavor=Interpreter -p:UseInterpreter=True
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-Interpreter
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -453,7 +194,6 @@ stages:
         extraBuildArgs: -p:TestsFlavor=NoAot -p:RunAOTCompilation=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-NoAot
-        useDotNet: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -464,17 +204,16 @@ stages:
         extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
-        useDotNet: true
 
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
+        testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates/start-stop-emulator.yaml
+      parameters:
+        command: stop
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -508,79 +247,6 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # Xamarin.Android (Smoke Tests MSBuild - Mac-0)
-  - template: yaml-templates/run-msbuild-mac-tests.yaml
-    parameters:
-      job_name: mac_dotnet_tests_0
-      job_suffix: One .NET
-      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  # Xamarin.Android (Smoke Tests MSBuild - Win-0)
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      job_name: win_dotnet_tests_0
-      job_suffix: One .NET
-      nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator)"
-  - job: mac_msbuilddevice_tests
-    displayName: macOS > Tests > MSBuild+Emulator One .NET
-    pool:
-      vmImage: $(HostedMacImage)
-    timeoutInMinutes: 180
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: start emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        useDotNet: true
-        testRunTitle: MSBuildDeviceIntegration Smoke - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
-        testResultsFile: TestResult-MSBuildDeviceIntegrationSmoke-$(XA.Build.Configuration).xml
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild Smoke With Emulator - macOS - One .NET
-
-    - template: yaml-templates/fail-on-issue.yaml
-
 - stage: linux_tests
   displayName: Linux Tests
   dependsOn:
@@ -608,7 +274,6 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        useDotNet: true
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
@@ -620,561 +285,10 @@ stages:
         artifactName: Test Results - MSBuild Smoke - Linux
 
     - template: yaml-templates/fail-on-issue.yaml
-
-- stage: msbuild_legacy
-  displayName: Legacy Tests
-  dependsOn: mac_build
-  # Disabled on .NET release branches
-  condition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
-  jobs:
-  # Xamarin.Android (Test MSBuild Legacy - macOS)
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: mac_msbuild_tests_1
-      job_suffix: Legacy
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: mac_msbuild_tests_2
-      job_suffix: Legacy
-      run_extra_tests: true
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: mac_msbuild_tests_3
-      job_suffix: Legacy
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 4
-      job_name: mac_msbuild_tests_4
-      job_suffix: Legacy
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 5
-      job_name: mac_msbuild_tests_5
-      job_suffix: Legacy
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 6
-      job_name: mac_msbuild_tests_6
-      job_suffix: Legacy
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  # Xamarin.Android (Test MSBuild Legacy - Windows)
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 1
-      additional_node_id: 4
-      job_name: win_msbuild_tests_1
-      job_suffix: Legacy
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 2
-      additional_node_id: 5
-      job_name: win_msbuild_tests_2
-      job_suffix: Legacy
-      run_extra_tests: true
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 3
-      additional_node_id: 6
-      job_name: win_msbuild_tests_3
-      job_suffix: Legacy
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-- stage: msbuild_dotnet
-  displayName: One .NET Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
-  jobs:
-  # Xamarin.Android (Test MSBuild One .NET - macOS)
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: mac_dotnet_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: mac_dotnet_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: mac_dotnet_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 4
-      job_name: mac_dotnet_tests_4
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 5
-      job_name: mac_dotnet_tests_5
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 6
-      job_name: mac_dotnet_tests_6
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  # Xamarin.Android (Test MSBuild One .NET - Windows)
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 1
-      additional_node_id: 4
-      job_name: win_dotnet_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 2
-      additional_node_id: 5
-      job_name: win_dotnet_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 3
-      additional_node_id: 6
-      job_name: win_dotnet_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-- stage: msbuilddevice_tests
-  displayName: MSBuild Emulator Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
-  jobs:
-  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator Legacy #N)"
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: mac_msbuilddevice_tests_1
-      job_suffix: Legacy
-      nunit_categories: '&& cat != Debugger'
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-      jobCondition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: mac_msbuilddevice_tests_2
-      job_suffix: Legacy
-      nunit_categories: '&& cat != Debugger'
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-      jobCondition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: mac_msbuilddevice_tests_3
-      job_suffix: Legacy
-      nunit_categories: '&& cat != Debugger'
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-      jobCondition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 4
-      job_name: mac_msbuilddevice_tests_with_debugger
-      job_suffix: Legacy
-      jdkTestFolder: $(XA.Jdk11.Folder)
-      nunit_categories: '&& cat == Debugger'
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-      jobCondition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'))
-
-  # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator One .NET #N)"
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: mac_dotnetdevice_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: mac_dotnetdevice_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: mac_dotnetdevice_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-  - template: yaml-templates/run-msbuild-device-tests.yaml
-    parameters:
-      node_id: 4
-      job_name: mac_dotnetdevice_tests_4
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-- stage: wear_tests
-  displayName: WearOS Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
-  jobs:
-  - job: wear_tests
-    displayName: macOS > Tests > WearOS 
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 2
-    strategy:
-      matrix:
-        Android30-x86:
-          avdApiLevel: 30
-          avdAbi: x86
-          avdType: android-wear
-          deviceName: wear_square
-    pool:
-      vmImage: $(HostedMacImage)
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install required brew tools and prepare java.interop
-        arguments: --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
-
-    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
-      displayName: set Java8SdkDirectory
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: install and launch emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:InstallAvdImage;AcquireAndroidTarget /p:TestDeviceName=$(deviceName) /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-$(avdApiLevel).binlog
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        useDotNet: true
-        testRunTitle: WearOS On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        dotNetTestExtraArgs: --filter "TestCategory = WearOS"
-        testResultsFile: TestResult-WearOS--$(XA.Build.Configuration).xml
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:AcquireAndroidTarget,ReleaseAndroidTarget /p:TestDeviceName=$(deviceName) /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
-
-    - template: yaml-templates/fail-on-issue.yaml
-
-
-
-- stage: designer_tests
-  displayName: Designer Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'Designer')))
-  jobs:
-  # Check - "Xamarin.Android (macOS > Tests > Designer Integration)"
-  - job: designer_integration_mac
-    condition: false #TODO: Enable once test issues are fixed.
-    displayName: macOS > Tests > Designer Integration
-    pool:
-      vmImage: $(HostedMacImage)
-    timeoutInMinutes: 120
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    variables:
-      EnableRegressionTest: true
-    steps:
-    - checkout: uitools
-      clean: true
-      submodules: recursive
-      path: s/UITools
-      persistCredentials: true
-
-    - powershell: |
-        # Use the branch name of the source being built or the PR target branch name. Fall back to 'main' if the branch is unknown.
-        $branchPrefix = "/refs/heads/"
-        $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
-        if ("$(Build.Reason)" -eq "PullRequest") {
-            $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
-        }
-        if (("$branchName" -ne "main") -and ("$branchName" -notlike "d1*")) {
-            $branchName = "main"
-        }
-        Set-Location -Path $(System.DefaultWorkingDirectory)/UITools
-        git checkout $branchName
-        git submodule update -q --init --recursive
-      displayName: Clone and update UITools
-
-    - task: NuGetAuthenticate@0
-      displayName: authenticate with azure artifacts
-      inputs:
-        forceReinstallCredentialProvider: true
-
-    - task: provisionator@2
-      displayName: provision designer dependencies
-      inputs:
-        github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)/UITools/src/bot-provisioning/dependencies.csx
-        provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
-      env:
-        PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
-
-    - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-        jdkTestFolder: $(JAVA_HOME_8_X64)
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-    - template: designer/android-designer-build-mac.yaml@yaml-templates
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/src
-
-    - template: designer/android-designer-tests.yaml@yaml-templates
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/src
-        runAddinTests: false
-
-    - task: CopyFiles@2
-      displayName: 'Copy binlogs'
-      inputs:
-        sourceFolder: $(System.DefaultWorkingDirectory)/UITools/src/Xamarin.Designer.Android
-        contents: '**/*.binlog'
-        targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
-        overWrite: true
-        flattenFolders: true
-      condition: ne(variables['Agent.JobStatus'], 'Succeeded')
-
-    - template: yaml-templates/publish-artifact.yaml
-      parameters:
-        displayName: upload designer binlogs
-        artifactName: Test Results - Designer - macOS
-        targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
-        condition: ne(variables['Agent.JobStatus'], 'Succeeded')
-
-  # Check - "Xamarin.Android (Windows > Tests > Designer Integration)"
-  - job: designer_integration_win
-    displayName: Windows > Tests > Designer Integration
-    pool:
-      vmImage: $(HostedWinImage)
-    timeoutInMinutes: 120
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    variables:
-      EnableRegressionTest: true
-      RegressionTestSuiteOutputDir: C:\Git\ADesRegTestSuite
-      VisualStudioInstallationPath: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
-    steps:
-    - checkout: uitools
-      clean: true
-      submodules: recursive
-      path: s\UITools
-      persistCredentials: true
-
-    - powershell: |
-        # Use the branch name of the source being built or the PR target branch name. Fall back to 'main' if the branch is unknown.
-        $branchPrefix = "/refs/heads/"
-        $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
-        if ("$(Build.Reason)" -eq "PullRequest") {
-            $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
-        }
-        if (("$branchName" -ne "main") -and ("$branchName" -notlike "d1*")) {
-            $branchName = "main"
-        }
-        Set-Location -Path $(System.DefaultWorkingDirectory)\UITools
-        git checkout $branchName
-        git submodule update -q --init --recursive
-      displayName: Clone and update UITools
-
-    - task: NuGetAuthenticate@0
-      displayName: authenticate with azure artifacts
-      inputs:
-        forceReinstallCredentialProvider: true
-
-    - task: provisionator@2
-      displayName: provision designer dependencies
-      inputs:
-        github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)\UITools\src\bot-provisioning\dependencies.csx
-        provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
-      env:
-        PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
-
-    - template: yaml-templates\setup-test-environment.yaml
-      parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)\xamarin-android
-        jdkTestFolder: $(JAVA_HOME_8_X64)
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-    - task: VSBuild@1
-      displayName: Restore Xamarin.AndroidDesigner
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)\UITools\src\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
-        vsVersion: 17.0
-        msbuildArgs: >-
-          /t:Restore /p:RestoreDisableParallel=true
-          /p:RestoreConfigFile="$(System.DefaultWorkingDirectory)\UITools\NuGet.Config"
-          /p:JavaSdkDirectory="$(JAVA_HOME_8_X64)"
-        platform: Any CPU
-        configuration: DebugWin32
-
-    - task: VSBuild@1
-      displayName: Build Xamarin.AndroidDesigner
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)\UITools\src\Xamarin.Designer.Android\Xamarin.AndroidDesigner.sln
-        vsVersion: 17.0
-        msbuildArgs: /t:Build /p:GitHubToken=$(GitHub.Token)
-        platform: Any CPU
-        configuration: DebugWin32
-
-    - template: yaml-templates/run-designer-tests.yml
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\src
-
-- stage: bcl_tests
-  displayName: BCL Emulator Tests
-  dependsOn: mac_build
-  # Disabled on .NET release branches
-  condition: and(succeeded(), eq(variables.IsRelOrTargetingRel, 'False'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'BCL')))
-  jobs:
-  # Check - "Xamarin.Android (macOS > Tests > BCL (Emulator))"
-  - job: mac_bcl_tests
-    displayName: macOS > Tests > BCL (Emulator)
-    pool:
-      vmImage: $(HostedMacImage)
-    timeoutInMinutes: 180
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: build remap-assembly-ref.csproj
-      inputs:
-        solution: build-tools/remap-assembly-ref/remap-assembly-ref.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/remap-assembly-ref.binlog
-
-    - template: yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Xamarin.Android.Bcl-Tests
-        project: tests/BCL-Tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.nunit-$(XA.Build.Configuration).xml
-        artifactSource: bin/Test$(XA.Build.Configuration)/Xamarin.Android.Bcl_Tests-Signed.apk
-        artifactFolder: Default
-
-    - task: PublishTestResults@2
-      displayName: publish Xamarin.Android.Bcl-Tests-XUnit results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.xunit-$(XA.Build.Configuration).xml
-        testRunTitle: Xamarin.Android.Bcl-Tests-NUnit
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/BCL-Tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - BCL With Emulator - macOS
-
-    - template: yaml-templates/fail-on-issue.yaml
+      
+- template: yaml-templates/stage-msbuild-tests.yaml
+      
+- template: yaml-templates/stage-msbuild-emulator-tests.yaml
 
 - stage: dotnet_prepare_release
   displayName: Prepare .NET Release
@@ -1405,255 +519,39 @@ stages:
         nuGetFeedType: external
         publishFeedCredentials: Xamarin nuget.org - xamarinc
 
-- stage: finalize_installers
-  displayName: Prepare Classic Release
-  dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
-  jobs:
-  # Check - "Xamarin.Android (Prepare Classic Release Sign VSIX)"
-  - job: sign_vsix
-    displayName: Sign VSIX
-    pool: $(VSEngMicroBuildPool)
-    timeoutInMinutes: 180
-    workspace:
-      clean: all
-    steps:
-    - checkout: self
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(InstallerArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\vsix-artifact
-        patterns: |
-          Xamarin.Android*.vsix
-
-    - powershell: |
-        $vsix = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\vsix-artifact\*" -Include *.vsix -File
-        if (![System.IO.File]::Exists($vsix)) {
-            throw [System.IO.FileNotFoundException] "Did not find .vsix file in $(System.DefaultWorkingDirectory)\vsix-artifact"
-        }
-        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Vsix]$vsix"
-      displayName: set variables to unsigned installers
-
-    - powershell: |
-        $signList = "$(System.DefaultWorkingDirectory)\build-tools\create-packs\SignList.xml"
-        (Get-Content $signList).Replace("*", "%2A") | Set-Content -Path $signList
-      displayName: Escape SignList.xml
-
-    - template: yaml-templates\install-microbuild-tooling.yaml
-
-    - task: MSBuild@1
-      displayName: msbuild /t:Restore sign-content.proj
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\restore-sign-content.binlog
-
-    - task: MSBuild@1
-      displayName: unzip and sign .vsix content
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:AddVsixContent;Build
-          /p:SignType=$(MicroBuildSignType)
-          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)\MicroBuild\Plugins
-          /p:VsixPath=$(XA.Unsigned.Vsix)
-          /p:OutDir=$(Build.StagingDirectory)\
-          /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\sign-vsix-content.binlog
-
-    - task: MSBuild@1
-      displayName: rezip .vsix
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:ZipVsixContent
-          /p:VsixPath=$(XA.Unsigned.Vsix)
-          /p:OutDir=$(Build.StagingDirectory)\
-          /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\zip-vsix-content.binlog
-
-    - task: MSBuild@1
-      displayName: sign .vsix
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)\build-tools\installers\sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:SignVsix;Build
-          /p:SignType=$(MicroBuildSignType)
-          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)\MicroBuild\Plugins
-          /p:OutDir=$(System.DefaultWorkingDirectory)\vsix-artifact
-          /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\sign-vsix.binlog
-
-    - task: MicroBuildCodesignVerify@3
-      displayName: verify signed .vsix
-      inputs:
-        TargetFolders: $(System.DefaultWorkingDirectory)\vsix-artifact
-        ExcludeSNVerify: true
-        ApprovalListPathForCerts: $(System.DefaultWorkingDirectory)\build-tools\create-packs\SignVerifyIgnore.txt
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload signed vsix
-      inputs:
-        artifactName: vsix-signed
-        targetPath: $(XA.Unsigned.Vsix)
-
-    - template: yaml-templates\remove-microbuild-tooling.yaml
-
-    - template: yaml-templates\upload-results.yaml
-      parameters:
-        artifactName: Clasic Signing Results - vsix
-        includeBuildResults: true
-
-  # Check - "Xamarin.Android (Prepare Classic Release Notarize and Upload)"
-  - job: sign_upload_storage
-    dependsOn: sign_vsix
-    displayName: Notarize and Upload
-    pool:
-      name: $(MacBuildPoolName)
-      vmImage: $(MacBuildPoolImage)
-    timeoutInMinutes: 180
-    workspace:
-      clean: all
-    variables:
-    - group: Xamarin Notarization
-    steps:
-    - checkout: self
-      submodules: recursive
-      path: s/xamarin-android
-
-    - checkout: release_scripts
-      clean: true
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(InstallerArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
-        patterns: |
-          xamarin.android*.pkg
-          updateinfo
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: vsix-signed
-        downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
-
-    - powershell: |
-        $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File
-        if (![System.IO.File]::Exists($pkg)) {
-            throw [System.IO.FileNotFoundException] "Did not find .pkg file in $(System.DefaultWorkingDirectory)/storage-artifacts"
-        }
-        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
-      displayName: set variables to unsigned installers
-
-    - template: yaml-templates/install-microbuild-tooling.yaml
-
-    - task: MSBuild@1
-      displayName: msbuild /t:Restore sign-content.proj
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
-
-    - task: MSBuild@1
-      displayName: sign .pkg
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/installers/sign-content.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:SignPkg;Build
-          /p:SignType=$(MicroBuildSignType)
-          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-          /p:OutDir=$(System.DefaultWorkingDirectory)/storage-artifacts
-          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-pkg.binlog
-
-    - script: >
-        cd $(System.DefaultWorkingDirectory)/release-scripts &&
-        pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/storage-artifacts
-      failOnStderr: true
-      displayName: Notarize PKG
-
-    - script: xcrun stapler validate $(XA.Unsigned.Pkg)
-      displayName: validate notarized pkg
-
-    - template: upload-to-storage.yml@yaml-templates
-      parameters:
-        BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
-        AzureContainerName: $(Azure.Container.Name)
-        AzureUploadLocation: $(Build.DefinitionName)/public/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
-        SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-
-    - template: yaml-templates/remove-microbuild-tooling.yaml
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-        artifactName: Classic Signing Results - pkg
-        includeBuildResults: true
-
 - stage: post_build
   displayName: Post Build
   dependsOn:
   - dotnet_prepare_release
-  - finalize_installers
-  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'), eq(dependencies.finalize_installers.result, 'Succeeded'))
+  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'))
   jobs:
   - template: compliance/sbom/job.v1.yml@yaml-templates
     parameters:
       artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
-      statusContexts: [ 'vsts-devdiv artifacts' ]
       packageName: xamarin-android
-      packageFilter: '*.nupkg;*.msi;*.pkg;*.vsix'
+      packageFilter: '*.nupkg;*.msi'
       GitHub.Token: $(GitHub.Token)
 
-- stage: tenets
-  dependsOn: []
-  displayName: Tenets
-  jobs:
-  # Check - "Xamarin.Android (Tenets Code Analysis)"
-  - job: run_static_analysis
-    displayName: Code Analysis
-    pool:
-      vmImage: $(HostedWinImage)
-    timeoutInMinutes: 60
-    cancelTimeoutInMinutes: 5
-    steps:
-    - checkout: self
-      submodules: recursive
-
-    - template: security\credscan\v2.yml@yaml-templates
-      parameters:
-        suppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
-
-    - template: security\policheck\v1.yml@yaml-templates
-      parameters:
-        exclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
-        pE: 1|2|3|4
-        rulesDBPath: $(System.DefaultWorkingDirectory)\build-tools\automation\policheck-rules-db.mdb
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@3
-      displayName: Run AntiMalware (Defender) Scan
-      inputs:
-        FileDirPath: $(System.DefaultWorkingDirectory)
-        EnableServices: true
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
-      displayName: Create Security Analysis Report
-      inputs:
-        CredScan: true
-        PoliCheck: true
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
-      displayName: Publish Security Analysis Logs
-      inputs:
-        ArtifactName: CodeAnalysisLogs
-      condition: succeededOrFailed()
-
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
-      displayName: Fail Job if Security Issues are Detected
-      inputs:
-        CredScan: true
-        PoliCheck: true
-      condition: succeededOrFailed()
+# Check - "Xamarin.Android (Compliance)"
+- template: security/full/v0.yml@yaml-templates
+  parameters:
+    stageDependsOn: []
+    credScanSuppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\CredScanSuppressions.json
+    sourceGdnSuppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\source.gdnsuppress
+    tsaConfigFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\tsaoptions-v2.json
+    policheckLocScanEnabled: true
+    policheckExclusionFilesFolder: $(Build.SourcesDirectory)\build-tools\automation\guardian
+    policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\build-tools\automation\guardian
+    policheckChsScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hans
+    policheckChtScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hant
+    policheckCsyScanFolder: $(Build.SourcesDirectory)\Localize\loc\cs
+    policheckDeuScanFolder: $(Build.SourcesDirectory)\Localize\loc\de
+    policheckEsnScanFolder: $(Build.SourcesDirectory)\Localize\loc\es
+    policheckFraScanFolder: $(Build.SourcesDirectory)\Localize\loc\fr
+    policheckItaScanFolder: $(Build.SourcesDirectory)\Localize\loc\it
+    policheckJpnScanFolder: $(Build.SourcesDirectory)\Localize\loc\ja
+    policheckKorScanFolder: $(Build.SourcesDirectory)\Localize\loc\ko
+    policheckPlkScanFolder: $(Build.SourcesDirectory)\Localize\loc\pl
+    policheckPtbScanFolder: $(Build.SourcesDirectory)\Localize\loc\pt-BR
+    policheckRusScanFolder: $(Build.SourcesDirectory)\Localize\loc\ru
+    policheckTrkScanFolder: $(Build.SourcesDirectory)\Localize\loc\tr

@@ -11,7 +11,6 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
-	[Category ("Node-5")]
 	[Parallelizable (ParallelScope.Children)]
 	public class GetDependenciesTest : BaseTest {
 

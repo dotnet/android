@@ -5,7 +5,7 @@ USE_COMMERCIAL_INSTALLER_NAME=true
 EXPERIMENTAL=false
 endif
 
-create-installers: create-nupkgs create-pkg create-vsix
+create-installers: create-nupkgs
 
 create-nupkgs:
 	@echo Disk usage before create-nupkgs

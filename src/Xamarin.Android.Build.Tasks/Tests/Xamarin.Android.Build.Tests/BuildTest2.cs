@@ -19,8 +19,6 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	// Contains ~half of the BuildTest cases, so we can run them on a different CI agent
-	[Category ("Node-4")]
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest2 : BaseTest
 	{
@@ -119,7 +117,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void BuildBasicApplicationThenMoveIt ([Values (true, false)] bool isRelease)
 		{
 			string path = Path.Combine (Root, "temp", TestName, "App1");
@@ -159,7 +156,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void BuildReleaseArm64 ([Values (false, true)] bool forms)
 		{
 			var proj = forms ?
@@ -513,7 +509,7 @@ class MemTest {
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("XamarinBuildDownload")]
+		[Category ("XamarinBuildDownload")]
 		[NonParallelizable] // parallel NuGet restore causes failures
 		public void BuildXamarinFormsMapsApplication ([Values (true, false)] bool multidex)
 		{
@@ -1098,63 +1094,6 @@ namespace UnamedProject
 			});
 			using (var b = bindingProject ? CreateDllBuilder () : CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
-		[Test]
-		[Category ("SmokeTests"), Category ("MkBundle")]
-		public void BuildMkBundleApplicationRelease ()
-		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true, BundleAssemblies = true };
-			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
-			using (var b = CreateApkBuilder ("temp/BuildMkBundleApplicationRelease", false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"bundles", "armeabi-v7a", "assemblies.o");
-				Assert.IsTrue (File.Exists (assemblies), "assemblies.o does not exist");
-				var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"bundles", "armeabi-v7a", "libmonodroid_bundle_app.so");
-				Assert.IsTrue (File.Exists (libapp), "libmonodroid_bundle_app.so does not exist");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-						"lib/armeabi-v7a/libmonodroid_bundle_app.so"),
-						$"lib/armeabi-v7a/libmonodroid_bundle_app.so should be in the {proj.PackageName}-Signed.apk");
-					Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-						Path.Combine ("assemblies", "UnnamedProject.dll")),
-						$"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
-				}
-			}
-		}
-
-		[Test]
-		[Category ("Minor"), Category ("MkBundle")]
-		public void BuildMkBundleApplicationReleaseAllAbi ()
-		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true, BundleAssemblies = true };
-			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			using (var b = CreateApkBuilder ("temp/BuildMkBundleApplicationReleaseAllAbi", false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				foreach (var abi in new string [] { "armeabi-v7a", "x86" }) {
-					var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"bundles", abi, "assemblies.o");
-					Assert.IsTrue (File.Exists (assemblies), abi + " assemblies.o does not exist");
-					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"bundles", abi, "libmonodroid_bundle_app.so");
-					Assert.IsTrue (File.Exists (libapp), abi + " libmonodroid_bundle_app.so does not exist");
-					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-					using (var zipFile = ZipHelper.OpenZip (apk)) {
-						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-							"lib/" + abi + "/libmonodroid_bundle_app.so"),
-							$"lib/{0}/libmonodroid_bundle_app.so should be in the {proj.PackageName}-Signed.apk", abi);
-						Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-							Path.Combine ("assemblies", "UnnamedProject.dll")),
-							$"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
-					}
-				}
 			}
 		}
 

@@ -471,27 +471,31 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1031" xml:space="preserve">
-    <value>The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.
-Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.</value>
+    <value>'AndroidHttpClientHandlerType' 屬性值 '{0}' 必須衍生自 '{1}'。
+請將值變更為繼承自 '{1}' 或完全移除屬性的 assembly-qualifed 類型名稱。</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.
 {1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
   </data>
   <data name="XA1032" xml:space="preserve">
-    <value>Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <value>無法從 '{0}' 解析 '{1}'。請檢查您的 'AndroidHttpClientHandlerType' 設定。</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.
 {1} - The name of the assembly.</comment>
   </data>
   <data name="XA1033" xml:space="preserve">
-    <value>Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <value>無法解析 '{0}'。請檢查您的 'AndroidHttpClientHandlerType' 設定。</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
-    <value>Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.</value>
+    <value>您的專案參考 '{0}' 使用 '_Microsoft.Android.Resource.Designer' 組件，但您未啟用此功能。請將專案檔案中的 'AndroidUseDesignerAssembly' MSBuild 屬性設定為 'true'。</value>
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
 {0} - The name of the assembly</comment>
+  </data>
+  <data name="XA1035" xml:space="preserve">
+    <value>'BundleAssemblies' 屬性已過時，對應用程式組建沒有任何作用。將由 'AndroidUseAssemblyStore' 和 'AndroidEnableAssemblyCompression' 屬性實作同等功能。</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
     <value>在下列組件中偵測到使用 AppDomain.CreateDomain(): {0}。.NET 6 及更新版本只支援單一 AppDomain，因此在 .NET 6 發行之後，此 API 就無法再於 Xamarin.Android 中使用。</value>
@@ -529,6 +533,10 @@ Please change the value to an assembly-qualifed type name which inherits from '{
     <value>在參考的組件 {0} 中，Java.Interop.DoNotPackageAttribute 需要非 Null 的檔案名稱。</value>
     <comment>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
 {0} - The assembly name</comment>
+  </data>
+  <data name="APT2264" xml:space="preserve">
+    <value>這可能是因為專案超過 Windows 最大路徑長度限制所造成。如需詳細資料，請參閱https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264。</value>
+    <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
     <value>無法對組件進行 AOT 編譯: {0}</value>

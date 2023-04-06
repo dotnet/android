@@ -471,27 +471,31 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1031" xml:space="preserve">
-    <value>The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.
-Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.</value>
+    <value>'{0}' 'AndroidHttpClientHandlerType' özellik değeri '{1}' türünden türetilmelidir.
+Lütfen değeri '{1}' türünden devralan derlemeye uygun bir tür adına dönüştürün veya özelliği tamamen kaldırın.</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.
 {1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
   </data>
   <data name="XA1032" xml:space="preserve">
-    <value>Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <value>'{0}' değeri '{1}' derlemesinden çözümlenemedi. Lütfen `AndroidHttpClientHandlerType` ayarınızı kontrol edin.</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.
 {1} - The name of the assembly.</comment>
   </data>
   <data name="XA1033" xml:space="preserve">
-    <value>Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <value>'{0}' değeri çözümlenemedi. Lütfen `AndroidHttpClientHandlerType` ayarınızı kontrol edin.</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
-    <value>Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.</value>
+    <value>Projeniz `_Microsoft.Android.Resource.Designer` derlemesini kullanan '{0}' özelliğine başvuruyor ancak bu özellik etkin değil. Lütfen proje dosyanızda `AndroidUseDesignerAssembly` MSBuild özelliğini `true` olarak ayarlayın.</value>
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
 {0} - The name of the assembly</comment>
+  </data>
+  <data name="XA1035" xml:space="preserve">
+    <value>'BundleAssemblies' özelliği kullanım dışıdır ve uygulama derlemesi üzerinde etkisi yoktur. Eşdeğer işlev 'AndroidUseAssemblyStore' ve 'AndroidEnableAssemblyCompression' özellikleri ile uygulanmalıdır.</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
     <value>{0} bütünleştirilmiş kodunda AppDomain.CreateDomain() metodunun kullanıldığı saptandı. .NET 6 üstünde yalnızca tek bir AppDomain destekleneceğinden bu API, .NET 6 yayımlandıktan sonra artık Xamarin.Android içinde bulunmayacaktır.</value>
@@ -529,6 +533,10 @@ Please change the value to an assembly-qualifed type name which inherits from '{
     <value>Başvurulan {0} bütünleştirilmiş kodundaki Java.Interop.DoNotPackageAttribute, null olmayan dosya adı gerektiriyor.</value>
     <comment>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
 {0} - The assembly name</comment>
+  </data>
+  <data name="APT2264" xml:space="preserve">
+    <value>Bunun nedeni, projenin Windows yol uzunluğu üst sınırını aşması olabilir. Ayrıntılar için bkz. https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.</value>
+    <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
     <value>Bütünleştirilmiş koda AOT uygulanamadı: {0}</value>

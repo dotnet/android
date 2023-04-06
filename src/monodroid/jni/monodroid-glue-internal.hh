@@ -304,7 +304,6 @@ namespace xamarin::android::internal
 		void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader);
 #else //def NET
 		void init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader);
-		void setup_bundled_app (const char *dso_name);
 #endif // ndef NET
 		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
 

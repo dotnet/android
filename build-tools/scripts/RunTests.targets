@@ -159,22 +159,6 @@
         Condition=" '$(_CrossCompilerAvailable)' == 'True' "
         Properties="AndroidEnableProfiledAot=True;AotAssemblies=True"
     />
-    <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
-      <_ApkTestProjectBundle>
-        <_BinLog>$(_XABinLogPrefix)-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))-%(Filename)-Bundle.binlog"</_BinLog>
-      </_ApkTestProjectBundle>
-    </ItemGroup>
-    <Exec
-        Command="$(_XABuild) %(_ApkTestProjectBundle.Identity) %(_ApkTestProjectBundle._BinLog) /t:SignAndroidPackage $(_XABuildProperties) /p:BundleAssemblies=True /p:EmbedAssembliesIntoApk=True"
-        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
-    />
-    <MSBuild
-        ContinueOnError="ErrorAndContinue"
-        Projects="$(_TopDir)\tests\RunApkTests.targets"
-        Targets="$(RunApkTestsTarget)"
-        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
-        Properties="BundleAssemblies=True"
-    />
   </Target>
   <Target Name="RunPerformanceTests">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\timing\timing.csproj" Targets="MSBuildTiming" />

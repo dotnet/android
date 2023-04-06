@@ -17,15 +17,5 @@
   
   <ItemGroup>
     <ProjectReference Include="..\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="False" />
-    <!--
-      `jnimarshalmethod-gen.exe` needs to be built first because our
-      `_CreateJavaInteropDllConfigs` target replaces
-      `Java.Runtime.Environment.dll.config`, which will be created as
-      part of the `jnimarshalmethod-gen.exe` build.
-      
-      We don't want our updated version to be replaced by the
-      `jnimarshalmethod-gen.exe` build.
-      -->
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
 </Project>

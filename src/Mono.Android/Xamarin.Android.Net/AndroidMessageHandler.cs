@@ -69,11 +69,46 @@ namespace Xamarin.Android.Net
 			public bool MethodChanged;
 		}
 
+		/// <summary>
+		/// Some requests require modification to the set of headers returned from the native client.
+		/// However, the headers collection in it is immutable, so we need to perform the adjustments
+		/// in CopyHeaders.  This class describes the necessary operations.
+		/// </summary>
+		sealed class ContentState
+		{
+			public bool? RemoveContentLengthHeader;
+
+			/// <summary>
+			/// If this is `true`, then `NewContentEncodingHeaderValue` is entirely ignored
+			/// </summary>
+			public bool? RemoveContentEncodingHeader;
+
+			/// <summary>
+			/// New 'Content-Encoding' header value. Ignored if not null and empty.
+			/// </summary>
+			public List<string>? NewContentEncodingHeaderValue;
+
+			/// <summary>
+			/// Reset the class to values that indicate there's no action to take.  MUST be
+			/// called BEFORE any of the class members are assigned values and AFTER the state
+			/// modification is applied
+			/// </summary>
+			public void Reset ()
+			{
+				RemoveContentEncodingHeader = null;
+				RemoveContentLengthHeader = null;
+				NewContentEncodingHeaderValue = null;
+			}
+		}
+
 		internal const string LOG_APP = "monodroid-net";
 
 		const string GZIP_ENCODING = "gzip";
 		const string DEFLATE_ENCODING = "deflate";
+		const string BROTLI_ENCODING = "br";
 		const string IDENTITY_ENCODING = "identity";
+		const string ContentEncodingHeaderName = "Content-Encoding";
+		const string ContentLengthHeaderName = "Content-Length";
 
 		static readonly IDictionary<string, string> headerSeparators = new Dictionary<string, string> {
 			["User-Agent"] = " ",
@@ -82,9 +117,9 @@ namespace Xamarin.Android.Net
 		static readonly HashSet <string> known_content_headers = new HashSet <string> (StringComparer.OrdinalIgnoreCase) {
 			"Allow",
 			"Content-Disposition",
-			"Content-Encoding",
+			ContentEncodingHeaderName,
 			"Content-Language",
-			"Content-Length",
+			ContentLengthHeaderName,
 			"Content-Location",
 			"Content-MD5",
 			"Content-Range",
@@ -571,6 +606,7 @@ namespace Xamarin.Android.Net
 			CancellationTokenRegistration cancelRegistration = default (CancellationTokenRegistration);
 			HttpStatusCode statusCode = HttpStatusCode.OK;
 			Uri? connectionUri = null;
+			var contentState = new ContentState ();
 
 			try {
 				cancelRegistration = cancellationToken.Register (() => {
@@ -608,13 +644,13 @@ namespace Xamarin.Android.Net
 			if (!IsErrorStatusCode (statusCode)) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Reading...");
-				ret.Content = GetContent (httpConnection, httpConnection.InputStream!);
+				ret.Content = GetContent (httpConnection, httpConnection.InputStream!, contentState);
 			} else {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Status code is {statusCode}, reading...");
 				// For 400 >= response code <= 599 the Java client throws the FileNotFound exception when attempting to read from the input stream.
 				// Instead we try to read the error stream and return an empty string if the error stream isn't readable.
-				ret.Content = GetErrorContent (httpConnection, new StringContent (String.Empty, Encoding.ASCII));
+				ret.Content = GetErrorContent (httpConnection, new StringContent (String.Empty, Encoding.ASCII), contentState);
 			}
 
 			bool disposeRet;
@@ -633,7 +669,7 @@ namespace Xamarin.Android.Net
 					}
 				}
 
-				CopyHeaders (httpConnection, ret);
+				CopyHeaders (httpConnection, ret, contentState);
 				ParseCookies (ret, connectionUri);
 
 				if (disposeRet) {
@@ -661,8 +697,8 @@ namespace Xamarin.Android.Net
 					// We return the body of the response too, but the Java client will throw
 					// a FileNotFound exception if we attempt to access the input stream.
 					// Instead we try to read the error stream and return an default message if the error stream isn't readable.
-					ret.Content = GetErrorContent (httpConnection, new StringContent ("Unauthorized", Encoding.ASCII));
-					CopyHeaders (httpConnection, ret);
+					ret.Content = GetErrorContent (httpConnection, new StringContent ("Unauthorized", Encoding.ASCII), contentState);
+					CopyHeaders (httpConnection, ret, contentState);
 
 					if (ret.Headers.WwwAuthenticate != null) {
 						ProxyAuthenticationRequested = false;
@@ -676,7 +712,7 @@ namespace Xamarin.Android.Net
 					return ret;
 			}
 
-			CopyHeaders (httpConnection, ret);
+			CopyHeaders (httpConnection, ret, contentState);
 			ParseCookies (ret, connectionUri);
 
 			if (Logger.LogNet)
@@ -684,29 +720,57 @@ namespace Xamarin.Android.Net
 			return ret;
 		}
 
-		HttpContent GetErrorContent (HttpURLConnection httpConnection, HttpContent fallbackContent)
+		HttpContent GetErrorContent (HttpURLConnection httpConnection, HttpContent fallbackContent, ContentState contentState)
 		{
 			var contentStream = httpConnection.ErrorStream;
 
 			if (contentStream != null) {
-				return GetContent (httpConnection, contentStream);
+				return GetContent (httpConnection, contentStream, contentState);
 			}
 
 			return fallbackContent;
 		}
 
-		HttpContent GetContent (URLConnection httpConnection, Stream contentStream)
+		Stream GetDecompressionWrapper (URLConnection httpConnection, Stream inputStream, ContentState contentState)
 		{
-			Stream inputStream = new BufferedStream (contentStream);
-			if (decompress_here) {
-				var encodings = httpConnection.ContentEncoding?.Split (',');
-				if (encodings != null) {
-					if (encodings.Contains (GZIP_ENCODING, StringComparer.OrdinalIgnoreCase))
-						inputStream = new GZipStream (inputStream, CompressionMode.Decompress);
-					else if (encodings.Contains (DEFLATE_ENCODING, StringComparer.OrdinalIgnoreCase))
-						inputStream = new DeflateStream (inputStream, CompressionMode.Decompress);
+			contentState.Reset ();
+			if (!decompress_here || String.IsNullOrEmpty (httpConnection.ContentEncoding)) {
+				return inputStream;
+			}
+
+			var encodings = new HashSet<string> (httpConnection.ContentEncoding?.Split (','), StringComparer.OrdinalIgnoreCase);
+			Stream? ret = null;
+			string? supportedEncoding = null;
+			if (encodings.Contains (GZIP_ENCODING)) {
+				supportedEncoding = GZIP_ENCODING;
+				ret = new GZipStream (inputStream, CompressionMode.Decompress);
+			} else if (encodings.Contains (DEFLATE_ENCODING)) {
+				supportedEncoding = DEFLATE_ENCODING;
+				ret = new DeflateStream (inputStream, CompressionMode.Decompress);
+			}
+#if NETCOREAPP
+			else if (encodings.Contains (BROTLI_ENCODING)) {
+				supportedEncoding = BROTLI_ENCODING;
+				ret = new BrotliStream (inputStream, CompressionMode.Decompress);
+			}
+#endif
+			if (!String.IsNullOrEmpty (supportedEncoding)) {
+				contentState.RemoveContentLengthHeader = true;
+
+				encodings.Remove (supportedEncoding!);
+				if (encodings.Count == 0) {
+					contentState.RemoveContentEncodingHeader = true;
+				} else {
+					contentState.NewContentEncodingHeaderValue = new List<string> (encodings);
 				}
 			}
+
+			return ret ?? inputStream;
+		}
+
+		HttpContent GetContent (URLConnection httpConnection, Stream contentStream, ContentState contentState)
+		{
+			Stream inputStream = GetDecompressionWrapper (httpConnection, new BufferedStream (contentStream), contentState);
 			return new StreamContent (inputStream);
 		}
 
@@ -881,9 +945,13 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		void CopyHeaders (HttpURLConnection httpConnection, HttpResponseMessage response)
+		void CopyHeaders (HttpURLConnection httpConnection, HttpResponseMessage response, ContentState contentState)
 		{
 			var headers = httpConnection.HeaderFields;
+			bool removeContentLength = contentState.RemoveContentLengthHeader ?? false;
+			bool removeContentEncoding = contentState.RemoveContentEncodingHeader ?? false;
+			bool setNewContentEncodingValue = !removeContentEncoding && contentState.NewContentEncodingHeaderValue != null && contentState.NewContentEncodingHeaderValue.Count > 0;
+
 			foreach (var key in headers!.Keys) {
 				if (key == null) // First header entry has null key, it corresponds to the response message
 					continue;
@@ -895,8 +963,25 @@ namespace Xamarin.Android.Net
 				} else {
 					item_headers = response.Headers;
 				}
-				item_headers.TryAddWithoutValidation (key, headers [key]);
+
+				IEnumerable<string> values = headers [key];
+				if (removeContentLength && String.Compare (ContentLengthHeaderName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+					removeContentLength = false;
+					continue;
+				}
+
+				if ((removeContentEncoding || setNewContentEncodingValue) && String.Compare (ContentEncodingHeaderName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+					if (removeContentEncoding) {
+						removeContentEncoding = false;
+						continue;
+					}
+
+					setNewContentEncodingValue = false;
+					values = contentState.NewContentEncodingHeaderValue!;
+				}
+				item_headers.TryAddWithoutValidation (key, values);
 			}
+			contentState.Reset ();
 		}
 
 		/// <summary>
@@ -1006,19 +1091,24 @@ namespace Xamarin.Android.Net
 			List <string>? accept_encoding = null;
 
 			decompress_here = false;
-			if ((AutomaticDecompression & DecompressionMethods.GZip) != 0) {
-				AppendEncoding (GZIP_ENCODING, ref accept_encoding);
-				decompress_here = true;
-			}
-
-			if ((AutomaticDecompression & DecompressionMethods.Deflate) != 0) {
-				AppendEncoding (DEFLATE_ENCODING, ref accept_encoding);
-				decompress_here = true;
-			}
-
 			if (AutomaticDecompression == DecompressionMethods.None) {
-				accept_encoding?.Clear ();
 				AppendEncoding (IDENTITY_ENCODING, ref accept_encoding); // Turns off compression for the Java client
+			} else {
+				if ((AutomaticDecompression & DecompressionMethods.GZip) != 0) {
+					AppendEncoding (GZIP_ENCODING, ref accept_encoding);
+					decompress_here = true;
+				}
+
+				if ((AutomaticDecompression & DecompressionMethods.Deflate) != 0) {
+					AppendEncoding (DEFLATE_ENCODING, ref accept_encoding);
+					decompress_here = true;
+				}
+#if NETCOREAPP
+				if ((AutomaticDecompression & DecompressionMethods.Brotli) != 0) {
+					AppendEncoding (BROTLI_ENCODING, ref accept_encoding);
+					decompress_here = true;
+				}
+#endif
 			}
 
 			if (accept_encoding?.Count > 0)

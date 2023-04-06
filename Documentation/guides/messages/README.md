@@ -30,6 +30,7 @@ ms.date: 01/24/2020
 + APT0002: Invalid file name: It must contain only \[^a-zA-Z0-9_.-\]+.
 + APT0003: Invalid file name: It must contain only \[^a-zA-Z0-9_.\]+.
 + APT0004: Invalid file name: It must start with either A-Z or a-z or an underscore.
++ [APT2264](apt2264.md): The system cannot find the file specified. (2).
 
 ## JAVAxxxx: Java Tool
 
@@ -133,6 +134,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA1031](xa1031.md): The 'AndroidHttpClientHandlerType' has an invalid value.
 + [XA1032](xa1032.md):Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.
 + [XA1033](xa1033.md): Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.
++ [XA1035](xa1035.md): The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.
 
 ## XA2xxx: Linker
 

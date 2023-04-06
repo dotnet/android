@@ -31,13 +31,18 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
-  <!-- Only build the .NET 6+ version of 'Mono.Android.Export.dll' for the latest stable Android version. -->
-  <PropertyGroup Condition=" '$(AndroidApiLevel)' != '$(AndroidLatestStableApiLevel)' ">
+  <!-- Only build the .NET 6+ version of 'Mono.Android.Runtime.dll' for the latest stable Android version. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &lt; '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
-
+  
+  <!-- Do not build classic for API versions above 33 -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' And '$(AndroidApiLevel)' &gt; '33'">
+    <BuildDependsOn></BuildDependsOn>
+  </PropertyGroup> 
+  
   <!-- Copy .NET ref/runtime assemblies to bin/$(Configuration)/dotnet/packs folder -->
-  <PropertyGroup Condition=" '$(AndroidApiLevel)' == '$(AndroidLatestStableApiLevel)' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn>
       $(BuildDependsOn);
       _CopyToPackDirs;

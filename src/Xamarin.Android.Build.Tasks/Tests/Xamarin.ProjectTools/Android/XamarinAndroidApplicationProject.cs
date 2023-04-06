@@ -103,11 +103,6 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public string MinSdkVersion { get; set; } = "19";
 
-		public bool BundleAssemblies {
-			get { return string.Equals (GetProperty (KnownProperties.BundleAssemblies), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.BundleAssemblies, value.ToString ()); }
-		}
-
 		string AotAssembliesPropertyName => Builder.UseDotNet ? KnownProperties.RunAOTCompilation : KnownProperties.AotAssemblies;
 
 		public bool AotAssemblies {
@@ -169,6 +164,11 @@ namespace Xamarin.ProjectTools
 				return Enum.TryParse<AndroidLinkMode> (GetProperty (ReleaseProperties, KnownProperties.AndroidLinkMode), out m) ? m : AndroidLinkMode.None;
 			}
 			set { SetProperty (ReleaseProperties, KnownProperties.AndroidLinkMode, value.ToString ()); }
+		}
+
+		public bool EnableMarshalMethods {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableMarshalMethods), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidEnableMarshalMethods, value.ToString ()); }
 		}
 
 		public string AndroidManifest { get; set; }

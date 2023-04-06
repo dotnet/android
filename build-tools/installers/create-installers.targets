@@ -14,7 +14,6 @@
     <LegacyMSBuildSrcDir>$(XAInstallPrefix)xbuild\Xamarin\Android\</LegacyMSBuildSrcDir>
     <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
     <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)\..\create-pkg\runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
-    <FirstInstallerFrameworkVersion Condition="Exists('$(FrameworkSrcDir)\$(AndroidFirstFrameworkVersion)')">$(AndroidFirstFrameworkVersion)</FirstInstallerFrameworkVersion>
     <FirstInstallerFrameworkVersion Condition="'$(FirstInstallerFrameworkVersion)' == ''">$(AndroidLatestStableFrameworkVersion)</FirstInstallerFrameworkVersion>
     <BclFrameworkVersion>v1.0</BclFrameworkVersion>
     <LibExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</LibExtension>
@@ -38,7 +37,7 @@
   <Target Name="_FindFrameworkDirs">
     <ItemGroup>
       <_FrameworkDirs Include="@(AndroidApiInfo->'$(FrameworkSrcDir)%(Identity)\')" />
-      <_FrameworkDirsThatExist Condition="Exists('%(Identity)')" Include="@(_FrameworkDirs)" />
+      <_FrameworkDirsThatExist Condition="Exists('%(Identity)')" Include="@(_FrameworkDirs)" Exclude="$(FrameworkSrcDir)v13.0.99\" />
       <_EarlierFrameworkDir Include="@(_FrameworkDirsThatExist)" Exclude="$(_LatestStableFrameworkDir)" />
     </ItemGroup>
   </Target>
@@ -156,12 +155,6 @@
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jcw-gen.pdb" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jit-times.exe" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jit-times.pdb" />
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jnimarshalmethod-gen.exe" />
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jnimarshalmethod-gen.pdb" />
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Java.Interop.dll.config" />
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Java.Runtime.Environment.dll" /> <!-- Required by jnimarshalmethod-gen.exe -->
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Java.Runtime.Environment.pdb" />
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Java.Runtime.Environment.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)logcat-parse.exe" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)logcat-parse.pdb" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Mono.CSharp.dll" />  <!-- Required by logcat-parse.exe -->
@@ -249,7 +242,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mkbundle.exe"          ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mkbundle.pdb"          ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mkbundle-api.h" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mono-symbolicate.exe"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)mono-symbolicate.pdb"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.CompilerServices.SymbolWriter.dll" />
@@ -278,6 +270,7 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.CodeDom.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Collections.Immutable.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Buffers.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.IO.Hashing.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Aapt.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Analysis.targets" />
@@ -323,9 +316,16 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Build.AsyncTask.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Build.AsyncTask.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)K4os.Compression.LZ4.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)K4os.Hash.xxHash.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ELFSharp.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ManifestOverlays\Timing.xml" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libc.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libm.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libc.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libm.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libc.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libm.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libc.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libm.so" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />

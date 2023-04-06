@@ -6,6 +6,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+//${USINGS}
 
 namespace ${ROOT_NAMESPACE}
 {

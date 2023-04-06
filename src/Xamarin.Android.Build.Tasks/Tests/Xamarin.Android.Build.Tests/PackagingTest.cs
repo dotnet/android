@@ -12,7 +12,6 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-6")]
 	[Parallelizable (ParallelScope.Children)]
 	public class PackagingTest : BaseTest
 	{
@@ -74,6 +73,25 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.PackageReferences.Add (new Package {
+				Id = "Humanizer.Core",
+				Version = "2.14.1",
+			});
+			proj.PackageReferences.Add (new Package {
+				Id = "Humanizer.Core.es",
+				Version = "2.14.1",
+			});
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", @"using System;
+using Humanizer;
+using System.Globalization;")
+				.Replace ("//${AFTER_ONCREATE}", @"var c = new CultureInfo (""es-ES"");
+Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
+//${AFTER_ONCREATE}");
+			if (Builder.UseDotNet) {
+				proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
+				proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
+			}
 			if (!Builder.UseDotNet) {
 				proj.PackageReferences.Add (new Package {
 					Id = "System.Runtime.InteropServices.WindowsRuntime",
@@ -81,7 +99,7 @@ namespace Xamarin.Android.Build.Tests
 					TargetFramework = "monoandroid71",
 				});
 				proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite.dll"));
-				proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "var command = new Mono.Data.Sqlite.SqliteCommand ();");
+				proj.MainActivity = proj.MainActivity.Replace ("//${AFTER_ONCREATE}", "var command = new Mono.Data.Sqlite.SqliteCommand ();");
 			}
 			var expectedFiles = Builder.UseDotNet ?
 				new [] {
@@ -96,6 +114,11 @@ namespace Xamarin.Android.Build.Tests
 					"System.Linq.dll",
 					"UnnamedProject.dll",
 					"_Microsoft.Android.Resource.Designer.dll",
+					"Humanizer.dll",
+					"es/Humanizer.resources.dll",
+					"System.Collections.dll",
+					"System.Collections.Concurrent.dll",
+					"System.Text.RegularExpressions.dll",
 				} :
 				new [] {
 					"Java.Interop.dll",
@@ -107,6 +130,8 @@ namespace Xamarin.Android.Build.Tests
 					"UnnamedProject.dll",
 					"Mono.Data.Sqlite.dll",
 					"Mono.Data.Sqlite.dll.config",
+					"Humanizer.dll",
+					//"es/Humanizer.resources.dll", <- Bug in classic.
 				};
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
@@ -351,7 +376,6 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void CheckSignApk ([Values(true, false)] bool useApkSigner, [Values(true, false)] bool perAbiApk)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".bat" : "";
@@ -484,7 +508,6 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void CheckAppBundle ([Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -513,7 +536,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("DotNetIgnore")] // Xamarin.Forms version is too old, uses net45 MSBuild tasks
+		[Category ("DotNetIgnore")] // Xamarin.Forms version is too old, uses net45 MSBuild tasks
 		public void NetStandardReferenceTest ()
 		{
 			var netStandardProject = new DotNetStandard () {
@@ -807,11 +830,17 @@ namespace App1
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
 					},
-					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
-					}
 				}
 			};
+
+			var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
+			foreach (string lang in languages) {
+				lib.OtherBuildItems.Add (
+					new BuildItem ("EmbeddedResource", $"Foo.{lang}.resx") {
+						TextContent = () => InlineData.ResxWithContents ($"<data name=\"CancelButton\"><value>{lang}</value></data>")
+					}
+				);
+			}
 
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -829,7 +858,10 @@ namespace App1
 				var apk = Path.Combine (Root, appBuilder.ProjectDirectory,
 					app.OutputPath, $"{app.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk);
-				Assert.IsTrue (helper.Exists ($"assemblies/es/{lib.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+
+				foreach (string lang in languages) {
+					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+				}
 			}
 		}
 
@@ -925,7 +957,7 @@ public class Test
 				string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
 				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsFalse (zip.ContainsEntry ("Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
+					Assert.IsFalse (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
 				}
 			}
 		}

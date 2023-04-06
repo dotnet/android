@@ -11,7 +11,6 @@ using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-3")]
 	[Parallelizable (ParallelScope.Children)]
 	public partial class ManifestTest : BaseTest
 	{
@@ -524,6 +523,46 @@ namespace Bug12935
 		}
 
 		[Test]
+		[TestCase ("1", false, "manifest=1")]
+		[TestCase ("1", true, "x86_64=500001;arm64-v8a=400001")]
+		[TestCase ("2", false, "manifest=2")]
+		[TestCase ("2", true, "x86_64=500002;arm64-v8a=400002")]
+		[TestCase ("999", false, "manifest=999")]
+		[TestCase ("999", true, "x86_64=500999;arm64-v8a=400999")]
+		public void ApplicationVersionTests (string applicationVersion, bool seperateApk, string expected)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				MinSdkVersion = null,
+			};
+			proj.SetProperty (proj.ReleaseProperties, "ApplicationVersion", applicationVersion);
+			proj.SetProperty (proj.ReleaseProperties, "ApplicationDisplayVersion", applicationVersion);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
+			proj.AndroidManifest = proj.AndroidManifest
+				.Replace ("android:versionCode=\"1\"", string.Empty)
+				.Replace ("android:versionName=\"1.0\"", string.Empty);
+			using (var builder = CreateApkBuilder ()) {
+				Assert.True (builder.Build (proj), "Build should have succeeded.");
+				XNamespace aNS = "http://schemas.android.com/apk/res/android";
+
+				var expectedItems = expected.Split (';');
+				foreach (var item in expectedItems) {
+					var items = item.Split ('=');
+					var path = Path.Combine ("android", items [0], "AndroidManifest.xml");
+					var manifest = builder.Output.GetIntermediaryAsText (Root, path);
+					var doc = XDocument.Parse (manifest);
+					var m = doc.XPathSelectElement ("/manifest") as XElement;
+					Assert.IsNotNull (m, "no manifest element found");
+					var vc = m.Attribute (aNS + "versionCode");
+					Assert.IsNotNull (vc, "no versionCode attribute found");
+					StringAssert.AreEqualIgnoringCase (items [1], vc.Value,
+						$"Version Code is incorrect. Found {vc.Value} expect {items [1]}");
+				}
+
+			}
+		}
+
+		[Test]
 		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -772,7 +811,6 @@ public class TestActivity2 : FragmentActivity {
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void AllActivityAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
 		{
 			var proj = new XamarinAndroidApplicationProject {

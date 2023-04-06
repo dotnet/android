@@ -6,7 +6,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("UsesDevice"), Category ("AOT"), Category ("ProfiledAOT"), Category ("Node-3")]
+	[Category ("UsesDevice"), Category ("AOT"), Category ("ProfiledAOT")]
 	public class AotProfileTests : DeviceTest
 	{
 
@@ -21,8 +21,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BuildBasicApplicationAndAotProfileIt ()
 		{
-			AssertHasDevices ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = false,

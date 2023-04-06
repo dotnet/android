@@ -471,27 +471,31 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1031" xml:space="preserve">
-    <value>The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.
-Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.</value>
+    <value>Il valore della proprietà 'AndroidHttpClientHandlerType' '{0}' deve derivare da '{1}'.
+Modificare il valore in un nome di tipo con qualifica assembly che eredita da '{1}' o rimuovere completamente la proprietà.</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.
 {1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
   </data>
   <data name="XA1032" xml:space="preserve">
-    <value>Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <value>Non è stato possibile risolvere '{0}' da '{1}'. Controllare l'impostazione 'AndroidHttpClientHandlerType'.</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.
 {1} - The name of the assembly.</comment>
   </data>
   <data name="XA1033" xml:space="preserve">
-    <value>Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.</value>
+    <value>Non è stato possibile risolvere '{0}'. Controllare l'impostazione 'AndroidHttpClientHandlerType'.</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
-    <value>Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.</value>
+    <value>Il progetto fa riferimento '{0}' che usa l'assembly '_Microsoft.Android.Resource.Designer', ma questa funzionalità non è abilitata. Impostare la proprietà 'AndroidUseDesignerAssembly' di MSBuild su 'true' nel file di progetto.</value>
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
 {0} - The name of the assembly</comment>
+  </data>
+  <data name="XA1035" xml:space="preserve">
+    <value>La proprietà 'BundleAssemblies' è deprecata e non ha alcun effetto sul build dell'applicazione. La funzione equivalente è implementata dalle proprietà 'AndroidUseAssemblyStore' e 'AndroidEnableAssemblyCompression'.</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
     <value>È stato rilevato l'uso di AppDomain.CreateDomain() nell'assembly: {0}. .NET 6 e versioni successive supporteranno solo un singolo AppDomain, quindi questa API non sarà più disponibile in Xamarin.Android dopo il rilascio di .NET 6.</value>
@@ -529,6 +533,10 @@ Please change the value to an assembly-qualifed type name which inherits from '{
     <value>Nell'assembly di riferimento {0} Java.Interop.DoNotPackageAttribute richiede un nome file diverso da Null.</value>
     <comment>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
 {0} - The assembly name</comment>
+  </data>
+  <data name="APT2264" xml:space="preserve">
+    <value>È possibile che il progetto abbia superato la limitazione della lunghezza massima del percorso di Windows. Per i dettagli, vedere https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.</value>
+    <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
     <value>Non è stato possibile eseguire la compilazione AOT dell'assembly: {0}</value>

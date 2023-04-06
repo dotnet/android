@@ -8,7 +8,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("Node-3")]
+	[Category ("UsesDevice")]
 	public class UncaughtExceptionTests : DeviceTest
 	{
 		class LogcatLine
@@ -22,8 +22,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void EnsureUncaughtExceptionWorks ()
 		{
-			AssertHasDevices ();
-
 			var lib = new XamarinAndroidBindingProject {
 				ProjectName = "Scratch.Try",
 				AndroidClassParser = "class-parse",
@@ -163,9 +161,6 @@ namespace Scratch.JMJMException
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 				Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
-
-				ClearAdbLogcat ();
-
 				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
 
 				string logcatPath = Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log");

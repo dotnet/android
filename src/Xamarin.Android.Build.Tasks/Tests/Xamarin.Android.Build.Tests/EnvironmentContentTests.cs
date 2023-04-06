@@ -10,13 +10,11 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Children)]
 	public class EnvironmentContentTests : BaseTest
 	{
 		[Test]
 		[NonParallelizable]
-		[Category ("SmokeTests")]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";

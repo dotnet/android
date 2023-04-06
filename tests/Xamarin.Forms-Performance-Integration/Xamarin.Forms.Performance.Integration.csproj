@@ -10,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
     <PackageReference Include="Xam.Plugin.Connectivity" Version="3.2.0" />
-    <PackageReference Condition=" '$(BundleAssemblies)' == 'true' " Include="Xamarin.Forms" Version="4.0.0.425677" />
-    <PackageReference Condition=" '$(BundleAssemblies)' != 'true' " Include="Xamarin.Forms" Version="4.5.0.617" />
+    <PackageReference Include="Xamarin.Forms" Version="4.5.0.617" />
   </ItemGroup>
 </Project>

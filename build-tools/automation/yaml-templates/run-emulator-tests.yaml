@@ -1,15 +1,17 @@
-# Runs TimeZoneInfo tests against an emulator running on macOS
+# Runs a test or set of tests on an emulator running on macOS
 
 parameters:
-  node_id: 0
+  emulatorMSBuildArgs: ''
+  jobName: CheckTimeZoneInfoIsCorrectNode1
+  jobTimeout: 360
+  testSteps: []
 
 jobs:
-  - job: mac_timezoneinfo_tests_${{ parameters.node_id }}
-    displayName: TimeZoneInfo Emulator Tests ${{ parameters.node_id }}
+  - job: mac_${{ parameters.jobName }}_tests
+    displayName: ${{ parameters.jobName }} Emulator Tests
     pool:
       vmImage: $(HostedMacImage)
-    timeoutInMinutes: 120
-    cancelTimeoutInMinutes: 5
+    timeoutInMinutes: ${{ parameters.jobTimeout }}
     workspace:
       clean: all
     steps:
@@ -30,14 +32,9 @@ jobs:
         solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
-          /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+          /t:AcquireAndroidTarget ${{ parameters.emulatorMSBuildArgs }} /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
-    - template: run-nunit-tests.yaml
-      parameters:
-        testRunTitle: TimeZoneInfoTests On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrectNode${{ parameters.node_id }}"
-        testResultsFile: TestResult-TimeZoneInfoTests-Node${{ parameters.node_id }}-$(XA.Build.Configuration).xml
+    - ${{ parameters.testSteps }}
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -51,6 +48,6 @@ jobs:
 
     - template: upload-results.yaml
       parameters:
-        artifactName: Test Results - TimeZoneInfo With Emulator - macOS - ${{ parameters.node_id }}
+        artifactName: Test Results - ${{ parameters.jobName }} With Emulator - macOS
 
     - template: fail-on-issue.yaml

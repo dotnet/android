@@ -80,7 +80,6 @@
 #include "debug.hh"
 #include "embedded-assemblies.hh"
 #include "monodroid-glue.hh"
-#include "mkbundle-api.h"
 #include "monodroid-glue-internal.hh"
 #include "globals.hh"
 #include "xamarin-app.hh"
@@ -103,10 +102,6 @@
 using namespace microsoft::java_interop;
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
-
-// This is below the above because we don't want to modify the header with our internal
-// implementation details as it would prevent mkbundle from working
-#include "mkbundle-api.h"
 
 #if !defined (NET)
 #include "config.include"
@@ -157,6 +152,10 @@ get_xamarin_android_msbuild_path (void)
 
 	// Compute the final path
 	base_path = utils.utf16_to_utf8 (buffer);
+	if (base_path == nullptr) {
+		log_fatal (LOG_DEFAULT, "Failed to convert UTF-16 to UTF-8 in %s", __PRETTY_FUNCTION__);
+		Helpers::abort_application ();
+	}
 	CoTaskMemFree (buffer);
 	msbuild_folder_path = utils.path_combine (base_path, suffix);
 	free (base_path);
@@ -170,58 +169,6 @@ setenv(const char *name, const char *value, int overwrite)
 	return androidSystem.setenv (name, value, overwrite);
 }
 #endif // def WINDOWS
-
-#if !defined (NET)
-typedef void* (*mono_mkbundle_init_ptr) (void (*)(const MonoBundledAssembly **), void (*)(const char* assembly_name, const char* config_xml),void (*) (int mode));
-mono_mkbundle_init_ptr mono_mkbundle_init;
-
-typedef void (*mono_mkbundle_initialize_mono_api_ptr) (const BundleMonoAPI *info);
-mono_mkbundle_initialize_mono_api_ptr mono_mkbundle_initialize_mono_api;
-
-void
-MonodroidRuntime::setup_bundled_app (const char *dso_name)
-{
-	if (!application_config.is_a_bundled_app)
-		return;
-
-	static unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
-	void *libapp = nullptr;
-
-	if (androidSystem.is_embedded_dso_mode_enabled ()) {
-		log_info (LOG_DEFAULT, "bundle app: embedded DSO mode");
-		libapp = androidSystem.load_dso_from_any_directories (dso_name, dlopen_flags);
-	} else {
-		log_info (LOG_DEFAULT, "bundle app: normal mode");
-		dynamic_local_string<SENSIBLE_PATH_MAX> bundle_path;
-		if (!androidSystem.get_full_dso_path_on_disk (dso_name, bundle_path)) {
-			log_info (LOG_DEFAULT, "bundle %s not found on filesystem", dso_name);
-			return;
-		}
-		log_info (LOG_BUNDLE, "Attempting to load bundled app from %s", bundle_path.get ());
-		libapp = androidSystem.load_dso (bundle_path.get (), dlopen_flags, true);
-	}
-
-	if (libapp == nullptr) {
-		log_info (LOG_DEFAULT, "No libapp!");
-		if (!androidSystem.is_embedded_dso_mode_enabled ()) {
-			log_fatal (LOG_BUNDLE, "bundled app initialization error");
-			Helpers::abort_application ();
-		} else {
-			log_info (LOG_BUNDLE, "bundled app not found in the APK, ignoring.");
-			return;
-		}
-	}
-
-	mono_mkbundle_initialize_mono_api = reinterpret_cast<mono_mkbundle_initialize_mono_api_ptr> (java_interop_lib_symbol (libapp, "initialize_mono_api", nullptr));
-	if (mono_mkbundle_initialize_mono_api == nullptr)
-		log_error (LOG_BUNDLE, "Missing initialize_mono_api in the application");
-
-	mono_mkbundle_init = reinterpret_cast<mono_mkbundle_init_ptr> (java_interop_lib_symbol (libapp, "mono_mkbundle_init", nullptr));
-	if (mono_mkbundle_init == nullptr)
-		log_error (LOG_BUNDLE, "Missing mono_mkbundle_init in the application");
-	log_info (LOG_BUNDLE, "Bundled app loaded: %s", dso_name);
-}
-#endif
 
 void
 MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
@@ -266,7 +213,7 @@ MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name)
 	char* name = mono_method_full_name (method, 1);
 
 	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, static_cast<long int>(diff.sec), diff.ms, diff.ns);
+	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, static_cast<long>(diff.sec), diff.ms, diff.ns);
 
 	free (name);
 }
@@ -409,7 +356,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 	if (application_config.instant_run_enabled) {
 		for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 			const char *p = androidSystem.get_override_dir (i);
-			if (!utils.directory_exists (p))
+			if (p == nullptr || !utils.directory_exists (p))
 				continue;
 			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", p);
 			embeddedAssemblies.try_load_typemaps_from_directory (p);
@@ -850,24 +797,6 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 
 	osBridge.register_gc_hooks ();
 
-#if !defined (NET)
-	if (mono_mkbundle_initialize_mono_api) {
-		BundleMonoAPI bundle_mono_api = {
-			.mono_register_bundled_assemblies = mono_register_bundled_assemblies,
-			.mono_register_config_for_assembly = mono_register_config_for_assembly,
-			.mono_jit_set_aot_mode = reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode),
-			.mono_aot_register_module = mono_aot_register_module,
-			.mono_config_parse_memory = mono_config_parse_memory,
-			.mono_register_machine_config = reinterpret_cast<void (*)(const char *)>(mono_register_machine_config),
-		};
-
-		/* The initialization function copies the struct */
-		mono_mkbundle_initialize_mono_api (&bundle_mono_api);
-	}
-
-	if (mono_mkbundle_init)
-		mono_mkbundle_init (mono_register_bundled_assemblies, mono_register_config_for_assembly, reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode));
-#endif // ndef NET
 	/*
 	 * Assembly preload hooks are invoked in _reverse_ registration order.
 	 * Looking for assemblies from the update dir takes precedence over
@@ -901,11 +830,6 @@ MonoDomain*
 MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks)
 {
 	size_t user_assemblies_count   = 0;
-#if defined (NET)
-	constexpr bool have_mono_mkbundle_init = false;
-#else // def NET
-	bool have_mono_mkbundle_init = mono_mkbundle_init != nullptr;
-#endif // ndef NET
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
@@ -926,7 +850,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	}
 #endif // def NET
 
-	if (!have_mono_mkbundle_init && user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
+	if (user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
 #if defined (DEBUG)
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
 		           androidSystem.get_override_dir (0),
@@ -1488,6 +1412,10 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 			const char *last_sep = strrchr (the_path, MONODROID_PATH_SEPARATOR_CHAR);
 			if (last_sep != nullptr) {
 				char *dir = utils.strdup_new (the_path, last_sep - the_path);
+				if (dir == nullptr) {
+					return false;
+				}
+
 				tmp_name = utils.string_concat (dir, MONODROID_PATH_SEPARATOR, API_DSO_NAME);
 				delete[] dir;
 				if (!utils.file_exists (tmp_name)) {
@@ -1514,7 +1442,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 		if (!found) {
 			// Next lets try the location of the XA runtime DLL, libxa-internal-api.dll should be next to it.
 			const char *path = get_my_location (false);
-			found = probe_dll_at (path);
+			found = probe_dll_at (path); // lgtm [cpp/unguardednullreturndereference] probe_dll_at checks whether the passed pointer is nullptr
 			if (path != nullptr) {
 				free (reinterpret_cast<void*>(const_cast<char*>(path)));
 			}
@@ -1879,6 +1807,11 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 	}
 
 	const char *assm_name = assembly.get_cstr ();
+	if (XA_UNLIKELY (assm_name == nullptr)) {
+		log_warn (LOG_ASSEMBLY, "Unable to load assembly into ALC, name is null");
+		return;
+	}
+
 	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
 
 	MonoImageOpenStatus open_status;
@@ -1908,6 +1841,11 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 	}
 
 	const char *assm_name = assembly.get_cstr ();
+	if (XA_UNLIKELY (assm_name == nullptr)) {
+		log_warn (LOG_ASSEMBLY, "Unable to load assembly into AppDomain, name is null");
+		return;
+	}
+
 	MonoAssemblyName *aname = mono_assembly_name_new (assm_name);
 
 #ifndef ANDROID
@@ -1979,6 +1917,10 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
                                                 bool force_preload_assemblies, bool have_split_apks)
 {
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
+#if defined (ANDROID)
+	// Asserting this on desktop apparently breaks a Designer test
+	abort_unless (domain != nullptr, "Failed to create AppDomain");
+#endif
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if constexpr (is_running_on_desktop) {
@@ -1996,7 +1938,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 #endif // def NET
 
 #ifndef ANDROID
-	if (assembliesBytes != nullptr)
+	if (assembliesBytes != nullptr && domain != nullptr)
 		designerAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes, assembliesPaths);
 #endif
 	bool preload = (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
@@ -2238,10 +2180,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #if DEBUG
 	setup_gc_logging ();
 	set_debug_env_vars ();
-#endif
-
-#if !defined (NET)
-	setup_bundled_app ("libmonodroid_bundle_app.so");
 #endif
 
 #if defined (ANDROID)

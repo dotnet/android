@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("UsesDevice"), Category ("Node-2")]
+	[Category ("UsesDevice")]
 	public class InstallAndRunTests : DeviceTest
 	{
 		static ProjectBuilder builder;
@@ -17,22 +20,61 @@ namespace Xamarin.Android.Build.Tests
 		[TearDown]
 		public void Teardown ()
 		{
-			if (HasDevices && proj != null)
-				RunAdbCommand ($"uninstall {proj.PackageName}");
-
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed
-				&& builder != null && Directory.Exists (builder.ProjectDirectory))
-				Directory.Delete (builder.ProjectDirectory, recursive: true);
-
 			builder?.Dispose ();
+			builder = null;
 			proj = null;
+		}
+
+		[Test]
+		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Localization",
+				OtherBuildItems = {
+					new BuildItem ("EmbeddedResource", "Foo.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+				}
+			};
+
+			var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
+			foreach (string lang in languages) {
+				lib.OtherBuildItems.Add (
+					new BuildItem ("EmbeddedResource", $"Foo.{lang}.resx") {
+						TextContent = () => InlineData.ResxWithContents ($"<data name=\"CancelButton\"><value>{lang}</value></data>")
+					}
+				);
+			}
+
+			proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				EnableMarshalMethods = enableMarshalMethods,
+			};
+			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+				builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+				Assert.IsTrue (libBuilder.Build (lib), "Library Build should have succeeded.");
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+				var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				var helper = new ArchiveAssemblyHelper (apk);
+
+				foreach (string lang in languages) {
+					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+				}
+
+				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				                                     Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+			}
 		}
 
 		[Test]
 		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values (false, true)] bool isRelease)
 		{
-			AssertHasDevices ();
-
 			string expectedLogcatOutput = "Bug 29730: GlobalLayout event handler called!";
 
 			proj = new XamarinAndroidApplicationProject () {
@@ -52,7 +94,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 ");
 			builder = CreateApkBuilder (Path.Combine ("temp", $"Bug29730-{isRelease}"));
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			Assert.IsTrue (MonitorAdbLogcat ((line) => {
 				return line.Contains (expectedLogcatOutput);
@@ -62,8 +103,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test]
 		public void SubscribeToAppDomainUnhandledException ()
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -77,11 +116,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 ");
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			ClearAdbLogcat ();
-			if (CommercialBuildAvailable)
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
-			else
-				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			RunProjectAndAssert (proj, builder);
 
 #if NETCOREAPP
 			string expectedLogcatOutput = "# Unhandled Exception: sender=System.Object; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
@@ -142,8 +177,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test, Category ("MonoSymbolicate")]
 		public void MonoSymbolicateAndroidStackTrace ()
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -156,12 +189,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			var archivePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk.mSYM");
 			Assert.IsTrue (Directory.Exists (archivePath), $"Symbol archive path {archivePath} should exist.");
-
-			ClearAdbLogcat ();
-			if (CommercialBuildAvailable)
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
-			else
-				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			RunProjectAndAssert (proj, builder);
 
 			var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
 			MonitorAdbLogcat ((line) => {
@@ -179,10 +207,9 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
-		[Category ("UsesDevice"), Category ("SmokeTests")]
+		[Category ("UsesDevice")]
 		public void SmokeTestBuildAndRunWithSpecialCharacters ()
 		{
-			AssertHasDevices ();
 			var testName = "テスト";
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
@@ -190,11 +217,11 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				ProjectName = testName,
 				IsRelease = true,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			proj.SetDefaultTargetDevice ();
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				Assert.IsTrue (builder.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true), "Project should have run.");
+				RunProjectAndAssert (proj, builder);
 				var timeoutInSeconds = 120;
 				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds));
@@ -204,8 +231,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test, Category ("MonoSymbolicate")]
 		public void MonoSymbolicateNetStandardStackTrace ()
 		{
-			AssertHasDevices ();
-
 			var lib = new DotNetStandard {
 				ProjectName = "Library1",
 				Sdk = "Microsoft.NET.Sdk",
@@ -252,12 +277,7 @@ namespace Library1 {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 				var archivePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk.mSYM");
 				Assert.IsTrue (Directory.Exists (archivePath), $"Symbol archive path {archivePath} should exist.");
-
-				ClearAdbLogcat ();
-				if (CommercialBuildAvailable)
-					Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
-				else
-					AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+				RunProjectAndAssert (proj, builder);
 
 				var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
 				MonitorAdbLogcat ((line) => {
@@ -291,7 +311,6 @@ namespace Library1 {
 		[Category ("DotNetIgnore")] // TODO: libmono-profiler-log.so is missing in .NET 6
 		public void ProfilerLogOptions_ShouldCreateMlpdFiles ([ValueSource (nameof (ProfilerOptions))] string profilerOption)
 		{
-			AssertHasDevices ();
 			AssertCommercialBuild ();
 
 			proj = new XamarinAndroidApplicationProject () {
@@ -303,7 +322,7 @@ namespace Library1 {
 				File.Delete (mlpdDestination);
 
 			RunAdbCommand ($"shell setprop debug.mono.profile {profilerOption}");
-			Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+			RunProjectAndAssert (proj, builder);
 			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 
@@ -333,8 +352,6 @@ namespace Library1 {
 		[Test]
 		public void CustomLinkDescriptionPreserve ([Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode)
 		{
-			AssertHasDevices ();
-
 			var lib1 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
 				Sources = {
@@ -481,12 +498,7 @@ namespace Library1 {
 
 			builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
 			Assert.IsTrue (builder.Install (proj), "First install should have succeeded.");
-
-			ClearAdbLogcat ();
-			if (CommercialBuildAvailable)
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
-			else
-				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			RunProjectAndAssert (proj, builder);
 
 			var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
 			Assert.IsTrue (MonitorAdbLogcat ((line) => {
@@ -505,8 +517,6 @@ namespace Library1 {
 		[Test]
 		public void JsonDeserializationCreatesJavaHandle ([Values (false, true)] bool isRelease)
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -620,7 +630,6 @@ using System.Runtime.Serialization.Json;
 
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			Assert.IsFalse (MonitorAdbLogcat ((line) => {
 				return line.Contains ("TestJsonDeserializationCreatesJavaHandle");
@@ -630,8 +639,6 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void RunWithInterpreterEnabled ([Values (false, true)] bool isRelease)
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
@@ -650,16 +657,10 @@ using System.Runtime.Serialization.Json;
 				}
 			}
 
-			ClearAdbLogcat ();
 			RunAdbCommand ("shell setprop debug.mono.log all");
 			var logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
 			Assert.AreEqual (logProp, "all", "The debug.mono.log prop was not set correctly.");
-
-			builder.BuildLogFile = "run.log";
-			if (CommercialBuildAvailable)
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
-			else
-				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			RunProjectAndAssert (proj, builder);
 
 			Func<string, bool> checkForInterpMessage = line => {
 				return line.Contains ("Enabling Mono Interpreter");
@@ -681,12 +682,10 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void RunWithLLVMEnabled ()
 		{
-			AssertHasDevices ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			proj.SetProperty ("EnableLLVM", true.ToString ());
 			if (!Builder.UseDotNet) {
 				proj.AotAssemblies = true;
@@ -694,23 +693,37 @@ using System.Runtime.Serialization.Json;
 
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			RunProjectAndAssert (proj, builder);
 
-			if (Builder.UseDotNet)
-				Assert.True (builder.RunTarget (proj, "Run"), "Project should have run.");
-			else if (CommercialBuildAvailable)
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
-			else
-				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			var activityNamespace   = proj.PackageName;
+			var activityName        = "MainActivity";
+			var logcatFilePath      = Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log");
+			var failedToLoad        = new List<string> ();
+			bool appLaunched        = MonitorAdbLogcat ((line) => {
+				if (SeenFailedToLoad (line))
+					failedToLoad.Add (line);
+				return SeenActivityDisplayed (line);
+			}, logcatFilePath, timeout: 120);
 
-			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")));
+			Assert.IsTrue (appLaunched, "LLVM app did not launch");
+			Assert.AreEqual (0, failedToLoad.Count, $"LLVM .so files not loaded:\n{string.Join ("\n", failedToLoad)}");
+
+			bool SeenActivityDisplayed (string line)
+			{
+				var idx1 = line.IndexOf ("ActivityManager: Displayed", StringComparison.OrdinalIgnoreCase);
+				var idx2 = idx1 > 0 ? 0 : line.IndexOf ("ActivityTaskManager: Displayed", StringComparison.OrdinalIgnoreCase);
+				return (idx1 > 0 || idx2 > 0) && line.Contains (activityNamespace) && line.Contains (activityName);
+			}
+
+			bool SeenFailedToLoad (string line)
+			{
+				return line.Contains ("Failed to load shared library");
+			}
 		}
 
 		[Test]
 		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android33.0")] string dotnetTargetFramework)
 		{
-			AssertHasDevices ();
-
 			string path = Path.Combine (Root, "temp", TestName);
 
 			if (!Builder.UseDotNet) {
@@ -718,7 +731,7 @@ using System.Runtime.Serialization.Json;
 			}
 			// Build a NuGet Package
 			var nuget = new XASdkProject (outputType: "Library") {
-				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha2",
+				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",
 				ProjectName = "Test.Nuget.Package",
 				IsRelease = true,
 			};
@@ -743,7 +756,7 @@ using System.Runtime.Serialization.Json;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			proj.OtherBuildItems.Add (new BuildItem ("None", "NuGet.config") {
 				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
 <configuration>
@@ -764,24 +777,18 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void SingleProject_ApplicationId ()
+		public void SingleProject_ApplicationId ([Values (false, true)] bool testOnly)
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
+			if (testOnly)
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
 
 			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-
-			if (Builder.UseDotNet)
-				Assert.True (builder.RunTarget (proj, "Run"), "Project should have run.");
-			else if (CommercialBuildAvailable)
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
-			else
-				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			RunProjectAndAssert (proj, builder);
 
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
@@ -791,8 +798,6 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void AppWithStyleableUsageRuns ([Values (true, false)] bool isRelease, [Values (true, false)] bool linkResources)
 		{
-			AssertHasDevices ();
-
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Styleable.Library"
@@ -886,18 +891,138 @@ namespace Styleable.Library {
 
 
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-
-			if (Builder.UseDotNet)
-				Assert.True (builder.RunTarget (proj, "Run"), "Project should have run.");
-			else if (CommercialBuildAvailable)
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
-			else
-				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			RunProjectAndAssert (proj, builder);
 
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
+
+		[Test]
+		public void CheckXamarinFormsAppDeploysAndAButtonWorks ()
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
+			var builder = CreateApkBuilder ();
+
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			builder.BuildLogFile = "install.log";
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 15);
+			ClearAdbLogcat ();
+			ClearBlockingDialogs ();
+			ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
+			Assert.IsTrue (MonitorAdbLogcat ((line) => {
+				return line.Contains ("Button was Clicked!");
+			}, Path.Combine (Root, builder.ProjectDirectory, "button-logcat.log")), "Button Should have been Clicked.");
+		}
+
+
+		[Test]
+		public void CheckResouceIsOverridden ([Values (true, false)] bool useAapt2)
+		{
+			AssertAaptSupported (useAapt2);
+
+			var library = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library1",
+				AndroidResources = {
+					new AndroidItem.AndroidResource (() => "Resources\\values\\strings2.xml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""hello_me"">Click Me! One</string>
+</resources>",
+					},
+				},
+			};
+			var library2 = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library2",
+				AndroidResources = {
+					new AndroidItem.AndroidResource (() => "Resources\\values\\strings2.xml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""hello_me"">Click Me! Two</string>
+</resources>",
+					},
+				},
+			};
+			var app = new XamarinAndroidApplicationProject () {
+				PackageName = "Xamarin.ResourceTest",
+				References = {
+					new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"),
+					new BuildItem.ProjectReference ("..\\Library2\\Library2.csproj"),
+				},
+			};
+			library.AndroidUseAapt2 =
+				library2.AndroidUseAapt2 =
+				app.AndroidUseAapt2 = useAapt2;
+			app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
+			using (var l1 = CreateDllBuilder (Path.Combine ("temp", TestName, library.ProjectName)))
+			using (var l2 = CreateDllBuilder (Path.Combine ("temp", TestName, library2.ProjectName)))
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
+				b.ThrowOnBuildFailure = false;
+				string apiLevel;
+				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+
+				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">
+	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
+	<application android:label=""${{PROJECT_NAME}}"">
+	</application >
+</manifest> ";
+				Assert.IsTrue (l1.Build (library, doNotCleanupOnUpdate: true), $"Build of {library.ProjectName} should have suceeded.");
+				Assert.IsTrue (l2.Build (library2, doNotCleanupOnUpdate: true), $"Build of {library2.ProjectName} should have suceeded.");
+				b.BuildLogFile = "build1.log";
+				Assert.IsTrue (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have suceeded.");
+				b.BuildLogFile = "install1.log";
+				Assert.IsTrue (b.Install (app, doNotCleanupOnUpdate: true), "Install should have suceeded.");
+				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+				WaitForPermissionActivity (Path.Combine (Root, b.ProjectDirectory, "permission-logcat.log"));
+				WaitForActivityToStart (app.PackageName, "MainActivity",
+					Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), 15);
+				ClearBlockingDialogs ();
+				XDocument ui = GetUI ();
+				XElement node = ui.XPathSelectElement ($"//node[contains(@resource-id,'myButton')]");
+				Assert.IsNotNull (node , "Could not find `my-Button` in the user interface. Check the screenshot of the test failure.");
+				StringAssert.AreEqualIgnoringCase ("Click Me! One", node.Attribute ("text").Value, "Text of Button myButton should have been \"Click Me! One\"");
+				b.BuildLogFile = "clean.log";
+				Assert.IsTrue (b.Clean (app, doNotCleanupOnUpdate: true), "Clean should have suceeded.");
+
+				app = new XamarinAndroidApplicationProject () {
+					PackageName = "Xamarin.ResourceTest",
+					References = {
+						new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"),
+						new BuildItem.ProjectReference ("..\\Library2\\Library2.csproj"),
+					},
+				};
+
+				library2.References.Add (new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"));
+				app.AndroidUseAapt2 = useAapt2;
+				app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
+				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+
+				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">
+	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
+	<application android:label=""${{PROJECT_NAME}}"">
+	</application >
+</manifest> ";
+				b.BuildLogFile = "build.log";
+				Assert.IsTrue (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have suceeded.");
+				b.BuildLogFile = "install.log";
+				Assert.IsTrue (b.Install (app, doNotCleanupOnUpdate: true), "Install should have suceeded.");
+				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+				WaitForPermissionActivity (Path.Combine (Root, b.ProjectDirectory, "permission-logcat.log"));
+				WaitForActivityToStart (app.PackageName, "MainActivity",
+					Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), 15);
+				ui = GetUI ();
+				node = ui.XPathSelectElement ($"//node[contains(@resource-id,'myButton')]");
+				StringAssert.AreEqualIgnoringCase ("Click Me! One", node.Attribute ("text").Value, "Text of Button myButton should have been \"Click Me! One\"");
+			}
+		}
+
 
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
 		{

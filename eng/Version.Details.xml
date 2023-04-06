@@ -1,20 +1,24 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="8.0.100-alpha.1.23070.23">
+    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="8.0.100-preview.4.23176.5">
       <Uri>https://github.com/dotnet/installer</Uri>
-      <Sha>779a6442daf6b95c5662d2f0c20801de5e179a05</Sha>
+      <Sha>d109cba3ff8ff46fe70be93a40c45002e5770267</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="8.0.100-1.23067.1" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
-      <Uri>https://github.com/dotnet/linker</Uri>
-      <Sha>c790896f128957acd2999208f44f09ae1e826c8c</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="8.0.0-alpha.1.23070.1" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="8.0.0-preview.4.23174.4" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>ddb69889684da95dc8d83a51b987774de5e47598</Sha>
+      <Sha>96a003edd9e25a7b4b693b6a7717ad4d46937a8b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.net7.Manifest-8.0.100" Version="8.0.0-alpha.1.23066.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="8.0.0-preview.4.23174.4" CoherentParentDependency="Microsoft.Dotnet.Sdk.Internal">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>96a003edd9e25a7b4b693b6a7717ad4d46937a8b</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-8.0.100.Transport" Version="8.0.0-preview.4.23170.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>5b46122b31036064483ce2e55b5e2240e5548204</Sha>
+      <Sha>a464820353b7956538b07c9b53103d793b5e15b6</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.4-alpha.23163.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+      <Uri>https://github.com/dotnet/cecil</Uri>
+      <Sha>f32e148d67dbf348685c3076a37e8bc68ab3a30f</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>

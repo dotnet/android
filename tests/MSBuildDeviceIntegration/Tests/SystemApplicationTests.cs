@@ -11,7 +11,7 @@ using System.Collections.Generic;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Commercial"), Category ("UsesDevice"), Category ("Node-1")]
+	[Category ("Commercial"), Category ("UsesDevice")]
 	public class SystemApplicationTests : DeviceTest
 	{
 		// All Tests here require the emulator to be started with -writable-system
@@ -19,7 +19,6 @@ namespace Xamarin.Android.Build.Tests
 		public void SystemApplicationCanInstall ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,

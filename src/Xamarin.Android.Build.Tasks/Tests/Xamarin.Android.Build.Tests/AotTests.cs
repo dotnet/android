@@ -11,7 +11,7 @@ using Xamarin.Android.Build;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-2"), Category ("AOT")]
+	[Category ("AOT")]
 	[Parallelizable (ParallelScope.Children)]
 	public class AotTests : BaseTest
 	{
@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.ContainsRegex (@$"Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
 		}
 
-		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
+		[Test, Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseProfiledAot ([Values (true, false)] bool enableLLVM)
 		{
 			if (Builder.UseDotNet && enableLLVM) {
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertProfiledAotBuildMessages (b);
 		}
 
-		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
+		[Test, Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseWithCustomAotProfile ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -144,9 +144,7 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = true,
 				PackageName = "com.xamarin.buildaotappwithspecialchars",
 			};
-			if (!Builder.UseDotNet) {
-				proj.BundleAssemblies = true;
-			}
+
 			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
@@ -194,12 +192,7 @@ namespace Xamarin.Android.Build.Tests
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
 					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
-					if (!Builder.UseDotNet) {
-						// BundleAssemblies=true
-						Assert.IsFalse (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should not be in the {proj.PackageName}-Signed.apk");
-					} else {
-						Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
-					}
+					Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
@@ -262,7 +255,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		[Category ("SmokeTests"), Category ("XamarinBuildDownload")]
+		[Category ("XamarinBuildDownload")]
 		public void BuildAMassiveApp ()
 		{
 			var testPath = Path.Combine ("temp", "BuildAMassiveApp");

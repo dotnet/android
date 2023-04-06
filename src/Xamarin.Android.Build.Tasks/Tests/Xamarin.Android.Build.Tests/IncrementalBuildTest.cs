@@ -12,7 +12,6 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-6")]
 	[Parallelizable (ParallelScope.Children)]
 	public class IncrementalBuildTest : BaseTest
 	{
@@ -43,7 +42,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void BasicApplicationRepetitiveReleaseBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
@@ -423,7 +421,6 @@ namespace Lib2
 
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
-		[Category ("SmokeTests")]
 		[NonParallelizable] // Do not run timing sensitive tests in parallel
 		public void AppProjectTargetsDoNotBreak ()
 		{
@@ -567,7 +564,6 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void ProduceReferenceAssembly ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -857,6 +853,7 @@ namespace Lib2
 
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				FileAssert.Exists (cacheFile);
 				var actual = ReadCache (cacheFile);
 				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec),
 					expected.Jars.Select (j => j.ItemSpec));
@@ -871,6 +868,7 @@ namespace Lib2
 
 				b.BuildLogFile = "build3.log";
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
+				FileAssert.Exists (cacheFile);
 				actual = ReadCache (cacheFile);
 				Assert.AreEqual (expected.Jars.Length + 1, actual.Jars.Length,
 					$"{nameof (expected.Jars)} should have one more item");
@@ -885,6 +883,7 @@ namespace Lib2
 				// Build with no changes, checking we are skipping targets appropriately
 				b.BuildLogFile = "build4.log";
 				Assert.IsTrue (b.Build (proj), "fourth build should have succeeded.");
+				FileAssert.Exists (cacheFile);
 				var targets = new List<string> {
 					"_UpdateAndroidResgen",
 					"_CompileJava",
@@ -1090,7 +1089,6 @@ namespace Lib2
 			var path = Path.Combine ("temp", $"BuildAotApplication_{supportedAbis}_{androidAotMode}_{aotAssemblies}_{expectedResult}");
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				BundleAssemblies = false,
 				AotAssemblies = aotAssemblies,
 			};
 			if (aotAssemblies) {

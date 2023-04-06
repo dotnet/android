@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -11,7 +11,6 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
-	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Self)]
 	public class AndroidResourceTests : BaseTest {
 		[Test]

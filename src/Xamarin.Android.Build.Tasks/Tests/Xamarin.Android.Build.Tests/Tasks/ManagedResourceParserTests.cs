@@ -13,7 +13,6 @@ using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
-	[Category ("Node-5")]
 	[Parallelizable (ParallelScope.Children)]
 	public class ManagedResourceParserTests : BaseTest {
 		const string ValuesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -513,7 +512,6 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void RtxtGeneratorOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -546,7 +544,6 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void CompareAapt2AndManagedParserOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);

@@ -12,6 +12,7 @@ namespace Xamarin.ProjectTools
 		public const string AndroidUseLatestPlatformSdk = "AndroidUseLatestPlatformSdk";
 		public const string AndroidUseAapt2 = "AndroidUseAapt2";
 		public const string AndroidCreatePackagePerAbi = "AndroidCreatePackagePerAbi";
+		public const string AndroidEnableMarshalMethods = "AndroidEnableMarshalMethods";
 
 		public const string AndroidSupportedAbis = "AndroidSupportedAbis";
 		public const string RuntimeIdentifier = "RuntimeIdentifier";
@@ -21,7 +22,6 @@ namespace Xamarin.ProjectTools
 		public const string SupportedOSPlatformVersion = "SupportedOSPlatformVersion";
 
 		public const string Deterministic = "Deterministic";
-		public const string BundleAssemblies = "BundleAssemblies";
 		public const string AndroidEnableDesugar = "AndroidEnableDesugar";
 		public const string AndroidManifestMerger = "AndroidManifestMerger";
 		public const string AndroidLinkTool = "AndroidLinkTool";
@@ -39,4 +39,3 @@ namespace Xamarin.ProjectTools
 		public const string ImplicitUsings = "ImplicitUsings";
 	}
 }
-

@@ -334,7 +334,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <PropertyGroup>
   <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
   <_AndroidStripNativeLibraries Condition=" '$(_AndroidStripNativeLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidStripNativeLibraries>
-  <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true' or '$(BundleAssemblies)' == 'true') ">false</AndroidUseAssemblyStore>
+  <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' == 'True' And '$(AndroidEnableMarshalMethods)' == '' ">True</AndroidEnableMarshalMethods>
@@ -562,6 +562,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1026_dotnet"
       Condition=" '$(AndroidUseAapt2)' != 'true' and '$(UsingAndroidNETSdk)' == 'true' "
   />
+  <AndroidWarning Code="XA1035"
+      ResourceName="XA1035"
+      Condition=" '$(BundleAssemblies)' == 'true' and '$(UsingAndroidNETSdk)' == 'true' "
+  />
 </Target>
 
 <!--
@@ -597,7 +601,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_AndroidPackage>$(ApplicationId)</_AndroidPackage>
     <_ApplicationLabel>$(ApplicationTitle)</_ApplicationLabel>
     <_AndroidVersionName>$(ApplicationDisplayVersion)</_AndroidVersionName>
-    <_AndroidVersionCode Condition=" '$(AndroidCreatePackagePerAbi)' != 'true' ">$(ApplicationVersion)</_AndroidVersionCode>
+    <_AndroidVersionCode>$(ApplicationVersion)</_AndroidVersionCode>
   </PropertyGroup>
   <AndroidError Code="XA1018"
       ResourceName="XA1018"
@@ -963,6 +967,7 @@ because xbuild doesn't support framework reference assemblies.
 		<AndroidAddKeepAlives Condition="'$(AndroidAddKeepAlives)' == '' And '$(AndroidIncludeDebugSymbols)' != 'True'">True</AndroidAddKeepAlives>
 		<AndroidLinkResources Condition="'$(AndroidLinkResources)' == '' And '$(AndroidIncludeDebugSymbols)' != 'True'">False</AndroidLinkResources>
 		<_AndroidBuildPropertiesCacheExists Condition=" Exists('$(_AndroidBuildPropertiesCache)') ">True</_AndroidBuildPropertiesCacheExists>
+		<_NuGetAssetsFile      Condition=" Exists('$(ProjectAssetsFile)') ">$(ProjectAssetsFile)</_NuGetAssetsFile>
 		<_NuGetAssetsFile      Condition=" Exists('$(ProjectLockFile)') ">$(ProjectLockFile)</_NuGetAssetsFile>
 		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('packages.config') ">packages.config</_NuGetAssetsFile>
 		<_NuGetAssetsTimestamp Condition=" '$(_NuGetAssetsFile)' != '' ">$([System.IO.File]::GetLastWriteTime('$(_NuGetAssetsFile)').Ticks)</_NuGetAssetsTimestamp>
@@ -972,7 +977,6 @@ because xbuild doesn't support framework reference assemblies.
 	</PropertyGroup>
 	<ItemGroup>
 		<!-- List of items we want to trigger a build if changed -->
-		<_PropertyCacheItems Include="BundleAssemblies=$(BundleAssemblies)" />
 		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
 		<_PropertyCacheItems Include="AndroidAddKeepAlives=$(AndroidAddKeepAlives)" />
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
@@ -1458,22 +1462,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_GetReferenceAssemblyPaths;_SetLatestTargetFrameworkVersion"
     Inputs="$(_AndroidBuildPropertiesCache);@(ResolvedUserAssemblies)"
     Outputs="$(_AndroidStampDirectory)_GenerateJniMarshalMethods.stamp">
-  <ItemGroup>
-    <_JniFrameworkAssembly Include="Mono.Android.dll" />
-    <_JniFrameworkAssembly Include="OpenTK.dll" />
-    <_JniFrameworkAssembly Include="Xamarin.Android.NUnitLite.dll" />
-    <_AssembliesToProcess Include="@(ResolvedUserAssemblies)" />
-    <_AssembliesToProcess Include="@(ResolvedFrameworkAssemblies)" Condition=" '%(Filename)' == '@(_JniFrameworkAssembly->'%(Filename)')' " />
-  </ItemGroup>
-  <RemoveDirFixed Directories="$(_JniMarshalMethodsOutputDir)" />
-  <MakeDir Directories="$(_JniMarshalMethodsOutputDir)" />
-  <Exec
-      Command="DYLD_LIBRARY_PATH=&quot;$(MonoAndroidLibDirectory)&quot; MONO_CONFIG=&quot;$(MonoAndroidBinDirectory)mono.config&quot; MONO_PATH=&quot;$(MonoAndroidBinDirectory)\bcl&quot;:&quot;$(MonoAndroidBinDirectory)\bcl\Facades&quot;:&quot;$(_XATargetFrameworkDirectories)&quot; &quot;$(MonoAndroidBinDirectory)mono&quot; --debug &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; @(ResolvedAssemblies->'--r=&quot;%(Identity)&quot;', ' ') --o=&quot;$(_JniMarshalMethodsOutputDir)&quot; $(AndroidGenerateJniMarshalMethodsAdditionalArguments) @(_AssembliesToProcess->'&quot;%(Identity)&quot;', ' ')"
-  />
-  <Touch Files="$(_AndroidStampDirectory)_GenerateJniMarshalMethods.stamp" AlwaysCreate="True" />
-  <ItemGroup>
-    <FileWrites Include="$(_AssembliesToProcess)" />
-  </ItemGroup>
+  <Error Text="%24(AndroidGenerateJniMarshalMethods)=True is not supported at this time." />
 </Target>
 
 <Target Name="_LinkAssembliesNoShrinkInputs">
@@ -1646,6 +1635,7 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="EmbeddedDSOsEnabled" PropertyName="_EmbeddedDSOsEnabled" />
     <Output TaskParameter="UsesLibraries"       ItemName="AndroidExternalJavaLibrary" />
     <Output TaskParameter="UseEmbeddedDex"      PropertyName="_UseEmbeddedDex" />
+    <Output TaskParameter="IsTestOnly"          PropertyName="_AndroidIsTestOnlyPackage" />
   </ReadAndroidManifest>
   <PropertyGroup>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' ">.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
@@ -1722,8 +1712,16 @@ because xbuild doesn't support framework reference assemblies.
    />
 </Target>
 
+<PropertyGroup>
+  <_GenerateAndroidRemapNativeCodeDependsOn>
+    _ConvertAndroidMamMappingFileToXml;
+    _CollectAndroidRemapMembers;
+    _PrepareAndroidRemapNativeAssemblySources
+  </_GenerateAndroidRemapNativeCodeDependsOn>
+</PropertyGroup>
+
 <Target Name="_GenerateAndroidRemapNativeCode"
-        DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
+        DependsOnTargets="$(_GenerateAndroidRemapNativeCodeDependsOn)"
         Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
         Inputs="$(_XARemapMembersFilePath)"
         Outputs="@(_AndroidRemapAssemblySource)">
@@ -1788,7 +1786,6 @@ because xbuild doesn't support framework reference assemblies.
     Debug="$(AndroidIncludeDebugSymbols)"
     AndroidSequencePointsMode="$(_SequencePointsMode)"
     EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
-    IsBundledApplication="$(BundleAssemblies)"
     SupportedAbis="@(_BuildTargetAbis)"
     AndroidPackageName="$(_AndroidPackage)"
     EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
@@ -2150,7 +2147,6 @@ because xbuild doesn't support framework reference assemblies.
     AndroidNdkDirectory="$(_AndroidNdkDirectory)"
     ApkInputPath="$(_PackagedResources)"
     ApkOutputPath="$(ApkFileIntermediate)"
-    BundleAssemblies="$(BundleAssemblies)"
     BundleNativeLibraries="$(_BundleResultNativeLibraries)"
     EmbedAssemblies="$(EmbedAssembliesIntoApk)"
     ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
@@ -2186,7 +2182,6 @@ because xbuild doesn't support framework reference assemblies.
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkInputPath="$(_PackagedResources)"
       ApkOutputPath="$(_BaseZipIntermediate)"
-      BundleAssemblies="$(BundleAssemblies)"
       BundleNativeLibraries="$(_BundleResultNativeLibraries)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
@@ -2773,7 +2768,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
-    <_NdkRequired Condition="'$(BundleAssemblies)' == 'True' Or '$(EnableLLVM)' == 'True'">true</_NdkRequired>
+    <_NdkRequired Condition="'$(EnableLLVM)' == 'True'">true</_NdkRequired>
     <_NdkRequired Condition="'$(_NdkRequired)' == ''">false</_NdkRequired>
   </PropertyGroup>
   <Error Text="AndroidManifest file does not exist" Condition="'$(_ProjectAndroidManifest)'!='' And !Exists ('$(_ProjectAndroidManifest)')"/>

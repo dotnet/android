@@ -11,7 +11,6 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-2")]
 	public class PerformanceTest : DeviceTest
 	{
 		const int Retry = 2;
@@ -66,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 
 		double GetDurationFromBinLog (ProjectBuilder builder)
 		{
-			var binlog = Path.Combine (Root, builder.ProjectDirectory, "msbuild.binlog");
+			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
 			FileAssert.Exists (binlog);
 
 			var build = BinaryLog.ReadBuild (binlog);
@@ -306,7 +305,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (install) {
 				AssertCommercialBuild (); // This test will fail without Fast Deployment
-				AssertHasDevices ();
 			}
 
 			var path = Path.Combine ("temp", TestName);
@@ -382,7 +380,6 @@ namespace Xamarin.Android.Build.Tests
 		public void Install_CSharp_Change ()
 		{
 			AssertCommercialBuild (); // This test will fail without Fast Deployment
-			AssertHasDevices ();
 
 			var proj = CreateApplicationProject ();
 			proj.PackageName = "com.xamarin.install_csharp_change";

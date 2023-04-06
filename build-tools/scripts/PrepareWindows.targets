@@ -4,7 +4,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
-    <_XAPrepareExe Condition=" '$(MSBuildRuntimeType)' != 'Core' ">"$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe"</_XAPrepareExe>
     <_XAPrepareExe Condition=" '$(MSBuildRuntimeType)' == 'Core' ">"$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\$(DotNetStableTargetFramework)\xaprepare.dll"</_XAPrepareExe>
     <_XAPrepareStandardArgs Condition=" '$(RunningOnCI)' == 'true' ">--no-emoji --run-mode=CI -v:d</_XAPrepareStandardArgs>
     <_XAPrepareStandardArgs Condition=" '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
@@ -15,7 +14,7 @@
   </Target>
   <Target Name="PrepareExternal"
           DependsOnTargets="_BuildXAPrepare">
-    <Exec Command="$(ManagedToolInvocationRuntime)$(_XAPrepareExe) -s:PrepareExternalGitDependencies $(_XAPrepareStandardArgs)" />
+    <Exec Command="dotnet $(_XAPrepareExe) -s:PrepareExternalGitDependencies $(_XAPrepareStandardArgs)" />
   </Target>
   <Target Name="Prepare"
           DependsOnTargets="_BuildXAPrepare">
@@ -23,7 +22,7 @@
         Text="The specified `%24(AndroidToolchainDirectory)` '$(AndroidToolchainDirectory)' contains a space. Android NDK commands do not support this. Please create a Configuration.Override.props file that sets the AndroidToolchainDirectory property to a different path."
         Condition="$(AndroidToolchainDirectory.Contains (' '))"
     />
-    <Exec Command="$(ManagedToolInvocationRuntime)$(_XAPrepareExe) $(_XAPrepareStandardArgs) -a" WorkingDirectory="$(_TopDir)" />
+    <Exec Command="dotnet $(_XAPrepareExe) $(_XAPrepareStandardArgs) -a" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="$(_TopDir)\Xamarin.Android.BootstrapTasks.sln" Targets="Restore;Build" />
   </Target>
 </Project>

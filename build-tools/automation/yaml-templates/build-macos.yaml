@@ -13,7 +13,6 @@ parameters:
   nugetArtifactName: $(NuGetArtifactName)
   provisionatorChannel: latest
   repositoryAlias: self
-  signClassicPkgContent: false
   stageName: mac_build
   stageDisplayName: Mac
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
@@ -32,7 +31,7 @@ stages:
     pool:
       name: ${{ parameters.buildPoolName }}
       vmImage: ${{ parameters.buildPoolImage }}
-      ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), eq(variables['Build.Reason'], 'PullRequest')) }}:
+      ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private'), ne(variables['Build.DefinitionName'], 'xamarin.megapipeline')), eq(variables['Build.Reason'], 'PullRequest')) }}:
         demands: macOS.Name -equals Monterey
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -55,7 +54,6 @@ stages:
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
-        signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
 
     - template: remove-microbuild-tooling.yaml
@@ -80,11 +78,3 @@ stages:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
-
-    - template: run-xaprepare.yaml
-      parameters:
-        arguments: --s=DetermineApplicableTests
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-        displayName: determine which test stages to run
-        name: TestConditions
-        condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))

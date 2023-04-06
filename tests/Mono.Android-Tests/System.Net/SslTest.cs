@@ -71,17 +71,36 @@ namespace System.NetTests {
 		[Test]
 		public void HttpsShouldWork ()
 		{
+#if NET6_0_OR_GREATER
+			if (!OperatingSystem.IsAndroidVersionAtLeast (24)) {
+				Assert.Ignore ("Not supported on API 23 and lower.");
+			}
+#endif // NET6_0_OR_GREATER
+
 			RunIgnoringWebException (DoHttpsShouldWork);
 		}
 
 		void DoHttpsShouldWork ()
 		{
 			// string url = "https://bugzilla.novell.com/show_bug.cgi?id=634817";
-			string url = "https://encrypted.google.com/";
+			string[] urls = new string[]  {
+				"https://dotnet.microsoft.com/",
+				"https://www.bing.com/",
+				"https://httpbin.org/get",
+			};
 			// string url = "http://slashdot.org";
-			HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-			request.Method = "GET";
-			var response = (HttpWebResponse) request.GetResponse ();
+			HttpWebResponse response = null;
+			foreach (var url in urls) {
+				HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
+				request.Method = "GET";
+				response = (HttpWebResponse) request.GetResponse ();
+				if (response.StatusCode == HttpStatusCode.TooManyRequests) {
+					// try the next url.
+					continue;
+				}
+				break;
+			}
+			Assert.IsNotNull (response);
 			int len = 0;
 			using (var _r = new StreamReader (response.GetResponseStream ())) {
 				char[] buf = new char [4096];
@@ -98,6 +117,12 @@ namespace System.NetTests {
 		[Test (Description="Bug https://bugzilla.xamarin.com/show_bug.cgi?id=18962")]
 		public void VerifyTrustedCertificates ()
 		{
+#if NET6_0_OR_GREATER
+			if (!OperatingSystem.IsAndroidVersionAtLeast (24)) {
+				Assert.Ignore ("Not supported on API 23 and lower.");
+			}
+#endif // NET6_0_OR_GREATER
+
 			Assert.DoesNotThrow (() => RunIgnoringWebException (DoVerifyTrustedCertificates), "Certificate validation");
 		}
 

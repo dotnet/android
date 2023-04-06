@@ -160,6 +160,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "debug-session-prep", "tools
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xadebug", "tools\xadebug\xadebug.csproj", "{F4D105FA-D394-437A-B3BA-0EC56C6734C3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Aidl-Tests", "tests\Xamarin.Android.Tools.Aidl-Tests\Xamarin.Android.Tools.Aidl-Tests.csproj", "{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -434,6 +436,10 @@ Global
 		{F4D105FA-D394-437A-B3BA-0EC56C6734C3}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{F4D105FA-D394-437A-B3BA-0EC56C6734C3}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{F4D105FA-D394-437A-B3BA-0EC56C6734C3}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -507,6 +513,7 @@ Global
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{BA4D889D-066B-4C2C-A973-09E319CBC396} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{F4D105FA-D394-437A-B3BA-0EC56C6734C3} = {864062D3-A415-4A6F-9324-5820237BA058}
+		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708} = {CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}

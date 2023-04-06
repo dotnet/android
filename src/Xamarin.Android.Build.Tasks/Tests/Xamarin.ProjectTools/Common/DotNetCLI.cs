@@ -14,8 +14,7 @@ namespace Xamarin.ProjectTools
 		public string Verbosity { get; set; } = "diag";
 		public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
 		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
-
-		public string ProjectDirectory { get; private set; }
+		public string ProjectDirectory { get; set; }
 
 		readonly XASdkProject project;
 		readonly string projectOrSolution;
@@ -140,20 +139,16 @@ namespace Xamarin.ProjectTools
 
 		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string runtimeIdentifier = null, string [] parameters = null)
 		{
-			string testDir = Path.GetDirectoryName (projectOrSolution);
-			if (string.IsNullOrEmpty (ProcessLogFile))
-				ProcessLogFile = Path.Combine (testDir, "process.log");
-
+			string testDir = string.IsNullOrEmpty (ProjectDirectory) ? Path.GetDirectoryName (projectOrSolution) : ProjectDirectory;
 			if (string.IsNullOrEmpty (BuildLogFile))
 				BuildLogFile = Path.Combine (testDir, "build.log");
 
-			var binlog = string.IsNullOrEmpty (target) ? Path.GetFileNameWithoutExtension (string.IsNullOrEmpty (BuildLogFile) ? "msbuild" : BuildLogFile) : target;
 			var arguments = new List<string> {
 				verb,
 				$"\"{projectOrSolution}\"",
 				"/noconsolelogger",
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
-				$"/bl:\"{Path.Combine (testDir, $"{binlog}.binlog")}\"",
+				$"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"",
 				"-m:1",
 				"-nr:false",
 				"/p:_DisableParallelAot=true",
