@@ -44,15 +44,8 @@ class BackgroundProcessManager : IDisposable
 		GC.SuppressFinalize (this);
 	}
 
-	public void Add (ToolRunner runner)
-	{
-		// Task continuation = task.ContinueWith (TaskFailed, TaskContinuationOptions.OnlyOnFaulted);
-		// tasks.Add (task);
-		// tasks.Add (continuation);
-		lock (runnersLock) {
-			runners.Add (runner);
-		}
-	}
+	public void RunInBackground (ProcessRunner2 runner, ProcessRunner2.BackgroundActionCompletionHandler? completionHandler)
+	{}
 
 	void TaskFailed (Task task)
 	{

@@ -9,6 +9,8 @@ namespace Xamarin.Android.Utilities;
 
 class ProcessRunner2 : IDisposable
 {
+	public delegate void BackgroundActionCompletionHandler (ProcessRunner2 runner, ProcessStatus status);
+
 	static readonly TimeSpan DefaultProcessTimeout = TimeSpan.FromMinutes (5);
 	static readonly TimeSpan DefaultOutputTimeout = TimeSpan.FromSeconds (10);
 
@@ -234,7 +236,7 @@ class ProcessRunner2 : IDisposable
 	/// process but without us actively monitoring them or awaiting their completion. By default the process will run without a timeout (the <see cref="ProcessTimeout"/>
 	/// property is ignored). Timeout can be changed by setting the <param ref="processTimeout"/> parameter to anything other than <c>TimeSpan.MaxValue</c>
 	/// </summary>
-	public void RunInBackground (Action<ProcessRunner2, ProcessStatus> completionHandler, TimeSpan? processTimeout = null)
+	public void RunInBackground (BackgroundActionCompletionHandler completionHandler, TimeSpan? processTimeout = null)
 	{
 		backgroundProcess = new Task<ProcessStatus> (
 			() => Run (processTimeout ?? TimeSpan.MaxValue),
@@ -265,7 +267,6 @@ class ProcessRunner2 : IDisposable
 			TaskContinuationOptions.OnlyOnCanceled
 		);
 
-		backgroundProcess.ConfigureAwait (false);
 		backgroundProcess.Start ();
 	}
 

@@ -129,7 +129,6 @@ class AdbRunner2 : ToolRunner2
 		return await RunAs (packageName, "/system/bin/sh", "-c", "pwd");
 	}
 
-
 	public async Task<(bool success, string output)> CreateDirectoryAs (string packageName, string directoryPath)
 	{
 		return await RunAs (packageName, "mkdir", "-p", directoryPath);
@@ -142,6 +141,37 @@ class AdbRunner2 : ToolRunner2
 	}
 
 	public async Task<(bool success, string output)> RunAs (string packageName, string command, params string[] args)
+	{
+		return await Shell (
+			"run-as",
+			RunAsPrepareArgs (packageName, command, args),
+			lineFilter: null
+		);
+	}
+
+	public void RunAsInBackground (BackgroundProcessManager processManager, string packageName, string command, params string[] args)
+	{
+		RunAsInBackground (processManager, null, null, packageName, command, args);
+	}
+
+	public void RunAsInBackground (BackgroundProcessManager processManager, ProcessRunner2.BackgroundActionCompletionHandler? completionHandler, string packageName, string command, params string[] args)
+	{
+		RunAsInBackground (processManager, completionHandler, null, packageName, command, args);
+	}
+
+	public void RunAsInBackground (BackgroundProcessManager processManager, ProcessRunner2.BackgroundActionCompletionHandler? completionHandler, TimeSpan? processTimeout, string packageName, string command, params string[] args)
+	{
+		ShellInBackground (
+			processManager,
+			completionHandler,
+			processTimeout,
+			"run-as",
+			RunAsPrepareArgs (packageName, command, args),
+			lineFilter: null
+		);
+	}
+
+	IEnumerable<string> RunAsPrepareArgs (string packageName, string command, params string[] args)
 	{
 		if (String.IsNullOrEmpty (packageName)) {
 			throw new ArgumentException ("must not be null or empty", nameof (packageName));
@@ -156,7 +186,7 @@ class AdbRunner2 : ToolRunner2
 			shellArgs.AddRange (args);
 		}
 
-		return await Shell ("run-as", (IEnumerable<string>)shellArgs, lineFilter: null);
+		return shellArgs;
 	}
 
 	public async Task<(bool success, string output)> Shell (string command, List<string> args, OutputLineFilter? lineFilter = null)
@@ -191,6 +221,11 @@ class AdbRunner2 : ToolRunner2
 		runner.AddArguments (args);
 
 		return await CaptureAdbOutput (runner, captureState);
+	}
+
+	void ShellInBackground (BackgroundProcessManager processManager, ProcessRunner2.BackgroundActionCompletionHandler? completionHandler, TimeSpan? processTimeout,
+	                        string command, IEnumerable<string>? args, OutputLineFilter? lineFilter)
+	{
 	}
 
 	async Task<bool> RunAdbAsync (ProcessRunner2 runner)

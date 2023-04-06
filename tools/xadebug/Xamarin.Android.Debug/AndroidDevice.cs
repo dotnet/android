@@ -265,7 +265,7 @@ class AndroidDevice
 	// TODO: handle multiple pids
 	bool KillDebugServer (string debugServerPath)
 	{
-		long serverPID = GetDeviceProcessID (debugServerPath, quiet: false);
+		long serverPID = GetDeviceProcessID (debugServerPath, quiet: true);
 		if (serverPID <= 0) {
 			return true;
 		}
@@ -279,10 +279,9 @@ class AndroidDevice
 	{
 		(bool success, string output) = adb.Shell ("pidof", Path.GetFileName (processName)).Result;
 		if (!success) {
-			if (!quiet) {
-				log.ErrorLine ($"Failed to obtain PID of process '{processName}'");
-				log.ErrorLine (output);
-			}
+			Action<string?> logger = quiet ? log.DebugLine : log.ErrorLine;
+			logger ($"Failed to obtain PID of process '{processName}'");
+			logger (output);
 			return -1;
 		}
 
