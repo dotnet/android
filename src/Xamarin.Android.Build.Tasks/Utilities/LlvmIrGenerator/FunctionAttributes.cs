@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Globalization;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
@@ -113,7 +114,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderParams (StringBuilder sb)
 		{
-			sb.Append (alignment);
+			sb.Append (alignment.ToString (CultureInfo.InvariantCulture));
 		}
 	}
 
@@ -165,13 +166,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderParams (StringBuilder sb)
 		{
-			sb.Append (elementSize);
+			sb.Append (elementSize.ToString (CultureInfo.InvariantCulture));
 			if (!numberOfElements.HasValue) {
 				return;
 			}
 
 			sb.Append (", ");
-			sb.Append (numberOfElements.Value);
+			sb.Append (numberOfElements.Value.ToString (CultureInfo.InvariantCulture));
 		}
 	}
 
@@ -701,13 +702,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderParams (StringBuilder sb)
 		{
-			sb.Append (min);
+			sb.Append (min.ToString (CultureInfo.InvariantCulture));
 			if (!max.HasValue) {
 				return;
 			}
 
 			sb.Append (", ");
-			sb.Append (max.Value);
+			sb.Append (max.Value.ToString (CultureInfo.InvariantCulture));
 		}
 	}
 
@@ -721,7 +722,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			this.size = size;
 		}
 
-		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size);
+		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size.ToString (CultureInfo.InvariantCulture));
 	}
 
 	class StackProtectorBufferSizeFunctionAttribute : LLVMFunctionAttribute
@@ -734,7 +735,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			this.size = size;
 		}
 
-		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size);
+		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size.ToString (CultureInfo.InvariantCulture));
 	}
 
 	class TargetCpuFunctionAttribute : LLVMFunctionAttribute
