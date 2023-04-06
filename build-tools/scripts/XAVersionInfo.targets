@@ -16,9 +16,6 @@
       <_SubmoduleBranchInfo Include="external/Java.Interop">
         <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
-      <_SubmoduleBranchInfo Include="external/sqlite">
-        <OutputPropertyName>_BuildInfo_SqliteCommit</OutputPropertyName>
-      </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/xamarin-android-tools">
         <OutputPropertyName>_BuildInfo_XamarinAndroidToolsCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
