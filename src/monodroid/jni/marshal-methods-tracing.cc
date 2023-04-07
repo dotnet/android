@@ -348,6 +348,18 @@ static bool assert_valid_pointer (void *o, const char *missing_kind, const char 
 	return false;
 }
 
+template<class TJavaPointer>
+static TJavaPointer to_gref (JNIEnv *env, TJavaPointer lref) noexcept
+{
+	if (lref == nullptr) {
+		return nullptr;
+	}
+
+	auto ret = static_cast<TJavaPointer> (env->NewGlobalRef (lref));
+	env->DeleteLocalRef (lref);
+	return ret;
+}
+
 void _mm_trace_init (JNIEnv *env) noexcept
 {
 	// We might be called more than once, ignore all but the first call
@@ -355,10 +367,10 @@ void _mm_trace_init (JNIEnv *env) noexcept
 		return;
 	}
 
-	java_lang_Thread = env->FindClass ("java/lang/Thread");
+	java_lang_Thread = to_gref (env, env->FindClass ("java/lang/Thread"));
 	java_lang_Thread_currentThread = env->GetStaticMethodID (java_lang_Thread, "currentThread", "()Ljava/lang/Thread;");
 	java_lang_Thread_getStackTrace = env->GetMethodID (java_lang_Thread, "getStackTrace", "()[Ljava/lang/StackTraceElement;");
-	java_lang_StackTraceElement = env->FindClass ("java/lang/StackTraceElement");
+	java_lang_StackTraceElement = to_gref (env, env->FindClass ("java/lang/StackTraceElement"));
 	java_lang_StackTraceElement_toString = env->GetMethodID (java_lang_StackTraceElement, "toString", "()Ljava/lang/String;");
 
 	// We check for the Java exception and possible null pointers only here, since all the calls JNI before the last one

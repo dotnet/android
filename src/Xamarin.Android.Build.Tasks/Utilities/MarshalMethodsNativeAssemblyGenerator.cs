@@ -12,6 +12,9 @@ using Xamarin.Android.Tasks.LLVMIR;
 using CecilMethodDefinition = global::Mono.Cecil.MethodDefinition;
 using CecilParameterDefinition = global::Mono.Cecil.ParameterDefinition;
 
+// TODO: generate code to check for pending Java exceptions (maybe?)
+// TODO: check whether delegates not converted to marshale methods work correctly.  It's possible something isn't called when it should be and that's
+//      why Blazor hangs.
 namespace Xamarin.Android.Tasks
 {
 	class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
