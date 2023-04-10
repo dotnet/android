@@ -26,18 +26,10 @@
     path = external/nrefactory
     url = https://github.com/xamarin/NRefactory.git
     branch = master
-[submodule "external/opentk"]
-    path = external/opentk
-    url = https://github.com/mono/opentk.git
-    branch = main
 [submodule "external/robin-map"]
     path = external/robin-map
     url = https://github.com/Tessil/robin-map.git
     branch = master
-[submodule "external/sqlite"]
-    path = external/sqlite
-    url = https://github.com/xamarin/sqlite.git
-    branch = 3.35.2
 [submodule "external/xamarin-android-tools"]
     path = external/xamarin-android-tools
     url = https://github.com/xamarin/xamarin-android-tools

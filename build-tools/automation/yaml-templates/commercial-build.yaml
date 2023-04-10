@@ -43,6 +43,14 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: delete legacy xamarin-android submodule
 
+- script: rm -rf external/opentk
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: delete legacy opentk submodule
+
+- script: rm -rf external/sqlite
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: delete legacy sqlite submodule
+
 - task: CodeQL3000Init@0
   displayName: CodeQL 3000 Init
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
